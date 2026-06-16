@@ -1,0 +1,353 @@
+import mongoose from 'mongoose';
+import { ACHIEVEMENTS } from '../data/achievements.js';
+import type { MusculoPrincipal } from '../types/index.js';
+import { XP_DAILY_CAP } from '../types/index.js';
+import { User, type UserDocument } from '../models/User.js';
+import { WorkoutHistory } from '../models/WorkoutHistory.js';
+import { getTodaySaoPaulo } from '../utils/timezone.js';
+
+export { ACHIEVEMENTS };
+
+export const XP_WORKOUT_BASE = 20;
+export const XP_SERIES = 5;
+export const XP_STREAK_BONUS = 10;
+export const XP_ACHIEVEMENT = 50;
+
+function toUserObjectId(userId: string) {
+  return new mongoose.Types.ObjectId(userId);
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return startOfDay(a).getTime() === startOfDay(b).getTime();
+}
+
+function getWeekStart(date: Date): Date {
+  const d = startOfDay(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function getSaoPauloHour(date: Date): number {
+  return Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Sao_Paulo',
+      hour: 'numeric',
+      hour12: false,
+    }).format(date),
+  );
+}
+
+function getSaoPauloWeekday(date: Date): number {
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    weekday: 'short',
+  }).format(date);
+  const map: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+  return map[weekday] ?? 0;
+}
+
+export async function countTotalExercises(userId: string): Promise<number> {
+  const result = await WorkoutHistory.aggregate([
+    { $match: { usuario_id: toUserObjectId(userId) } },
+    { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
+  ]);
+  return result[0]?.total ?? 0;
+}
+
+type HistorySummary = {
+  concluido_em: Date;
+  exercicios: unknown[];
+  musculos_estimulados: MusculoPrincipal[];
+  treino_tipo?: string;
+};
+
+function computeStreakFromHistories(histories: HistorySummary[]): { atual: number; maior: number } {
+  if (histories.length === 0) return { atual: 0, maior: 0 };
+
+  const uniqueDays = [
+    ...new Set(histories.map((h) => startOfDay(new Date(h.concluido_em)).getTime())),
+  ]
+    .map((ts) => new Date(ts))
+    .sort((a, b) => b.getTime() - a.getTime());
+
+  const today = startOfDay(new Date());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const mostRecent = uniqueDays[0];
+  if (!isSameDay(mostRecent, today) && !isSameDay(mostRecent, yesterday)) {
+    return { atual: 0, maior: userStreakMaior(uniqueDays) };
+  }
+
+  let atual = 0;
+  let cursor = isSameDay(mostRecent, today) ? today : yesterday;
+
+  for (const day of uniqueDays) {
+    if (isSameDay(day, cursor)) {
+      atual += 1;
+      cursor = new Date(cursor);
+      cursor.setDate(cursor.getDate() - 1);
+    } else if (day < cursor) {
+      break;
+    }
+  }
+
+  return { atual, maior: Math.max(atual, userStreakMaior(uniqueDays)) };
+}
+
+export async function computeStreak(userId: string): Promise<{ atual: number; maior: number }> {
+  const histories = await WorkoutHistory.find({ usuario_id: toUserObjectId(userId) })
+    .sort({ concluido_em: -1 })
+    .select('concluido_em')
+    .lean();
+
+  return computeStreakFromHistories(histories as HistorySummary[]);
+}
+
+function userStreakMaior(days: Date[]): number {
+  if (days.length === 0) return 0;
+  const sorted = [...days].sort((a, b) => a.getTime() - b.getTime());
+  let max = 1;
+  let current = 1;
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const curr = sorted[i];
+    const diff = (startOfDay(curr).getTime() - startOfDay(prev).getTime()) / 86400000;
+    if (diff === 1) {
+      current += 1;
+      max = Math.max(max, current);
+    } else if (diff > 1) {
+      current = 1;
+    }
+  }
+
+  return max;
+}
+
+function hasWeekendWarrior(histories: HistorySummary[]): boolean {
+  const weeks = new Map<string, Set<number>>();
+
+  for (const history of histories) {
+    const date = new Date(history.concluido_em);
+    const weekday = getSaoPauloWeekday(date);
+    if (weekday !== 0 && weekday !== 6) continue;
+
+    const weekKey = getWeekStart(date).toISOString();
+    const days = weeks.get(weekKey) ?? new Set<number>();
+    days.add(weekday);
+    weeks.set(weekKey, days);
+  }
+
+  return [...weeks.values()].some((days) => days.has(0) && days.has(6));
+}
+
+function hasPerfectWeek(histories: HistorySummary[]): boolean {
+  const weeks = new Map<string, Set<number>>();
+
+  for (const history of histories) {
+    const date = new Date(history.concluido_em);
+    const weekKey = getWeekStart(date).toISOString();
+    const days = weeks.get(weekKey) ?? new Set<number>();
+    days.add(getSaoPauloWeekday(date));
+    weeks.set(weekKey, days);
+  }
+
+  return [...weeks.values()].some((days) => days.size >= 7);
+}
+
+function weeklyTreinoTypes(histories: HistorySummary[], weekStart: Date): Set<string> {
+  return new Set(
+    histories
+      .filter((h) => new Date(h.concluido_em) >= weekStart)
+      .map((h) => h.treino_tipo)
+      .filter(Boolean) as string[],
+  );
+}
+
+export async function getWeeklyMuscles(
+  userId: string,
+  resetAt: Date | null,
+): Promise<Record<MusculoPrincipal, number>> {
+  const weekStart = getWeekStart(new Date());
+  const since = resetAt ? new Date(Math.max(weekStart.getTime(), resetAt.getTime())) : weekStart;
+
+  const histories = await WorkoutHistory.find({
+    usuario_id: toUserObjectId(userId),
+    concluido_em: { $gte: since },
+  }).lean();
+
+  const counts: Record<MusculoPrincipal, number> = {
+    superior: 0,
+    inferior: 0,
+    obliquos: 0,
+    core: 0,
+    completo: 0,
+  };
+
+  for (const history of histories) {
+    for (const muscle of history.musculos_estimulados) {
+      counts[muscle as MusculoPrincipal] += 1;
+    }
+  }
+
+  return counts;
+}
+
+export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
+  const today = getTodaySaoPaulo();
+  if (!user.xp_diario || user.xp_diario.data_reset !== today) {
+    user.xp_diario = { ganho_hoje: 0, data_reset: today };
+    return true;
+  }
+  return false;
+}
+
+/** Aplica XP respeitando o teto diário (reset em America/Sao_Paulo). */
+export function awardXp(user: UserDocument, amount: number): number {
+  resetXpDiarioIfNeeded(user);
+  const remaining = XP_DAILY_CAP - user.xp_diario.ganho_hoje;
+  const awarded = Math.max(0, Math.min(amount, remaining));
+  user.xp_diario.ganho_hoje += awarded;
+  user.gamificacao.nivel_xp += awarded;
+  return awarded;
+}
+
+export async function evaluateAchievements(user: UserDocument): Promise<string[]> {
+  const weekStart = getWeekStart(new Date());
+  const since = user.muscle_map_reset_at
+    ? new Date(Math.max(weekStart.getTime(), user.muscle_map_reset_at.getTime()))
+    : weekStart;
+
+  const histories = await WorkoutHistory.find({ usuario_id: user._id })
+    .sort({ concluido_em: -1 })
+    .select('concluido_em exercicios musculos_estimulados treino_tipo')
+    .lean();
+
+  const summary = histories as HistorySummary[];
+  const totalWorkouts = summary.length;
+  const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
+  const totalMinutes = user.gamificacao.total_minutos;
+  const streak = computeStreakFromHistories(summary);
+  const level = Math.floor(user.gamificacao.nivel_xp / 100) + 1;
+
+  const weeklyHistories = summary.filter((h) => new Date(h.concluido_em) >= since);
+  const counts: Record<MusculoPrincipal, number> = {
+    superior: 0,
+    inferior: 0,
+    obliquos: 0,
+    core: 0,
+    completo: 0,
+  };
+
+  for (const history of weeklyHistories) {
+    for (const muscle of history.musculos_estimulados) {
+      counts[muscle as MusculoPrincipal] += 1;
+    }
+  }
+
+  const ciclosSemana = weeklyTreinoTypes(summary, weekStart);
+  const unlocked = new Set(user.gamificacao.conquistas);
+
+  // Fáceis
+  if (totalWorkouts > 0) unlocked.add('primeiro_treino');
+  if (streak.atual >= 2 || streak.maior >= 2) unlocked.add('streak_2');
+  if (streak.atual >= 3 || streak.maior >= 3) unlocked.add('streak_3');
+  if (totalWorkouts >= 5) unlocked.add('treinos_5');
+  if (totalMinutes >= 60) unlocked.add('minutos_60');
+
+  // Médias
+  if (streak.atual >= 7 || streak.maior >= 7) unlocked.add('streak_7');
+  if (totalExercises >= 50) unlocked.add('exercicios_50');
+  if (level >= 3) unlocked.add('nivel_3');
+  if (summary.some((h) => getSaoPauloHour(new Date(h.concluido_em)) < 8)) unlocked.add('early_bird');
+  if (summary.some((h) => getSaoPauloHour(new Date(h.concluido_em)) >= 22)) unlocked.add('night_owl');
+  if (hasWeekendWarrior(summary)) unlocked.add('fim_de_semana');
+  if (ciclosSemana.has('A') && ciclosSemana.has('B')) unlocked.add('ciclo_ab');
+
+  // Difíceis
+  if (streak.atual >= 14 || streak.maior >= 14) unlocked.add('streak_14');
+  if (streak.atual >= 30 || streak.maior >= 30) unlocked.add('streak_30');
+  if (totalExercises >= 100) unlocked.add('exercicios_100');
+
+  const allMusclesTrained = (['superior', 'inferior', 'obliquos', 'core'] as MusculoPrincipal[]).every(
+    (m) => counts[m] > 0,
+  );
+  if (allMusclesTrained) unlocked.add('treino_completo');
+
+  if (level >= 5) unlocked.add('nivel_5');
+  if (['A', 'B', 'C'].every((c) => ciclosSemana.has(c))) unlocked.add('ciclo_completo');
+  if (totalMinutes >= 500) unlocked.add('minutos_500');
+  if (totalWorkouts >= 25) unlocked.add('treinos_25');
+
+  // Lendárias
+  if (streak.atual >= 60 || streak.maior >= 60) unlocked.add('streak_60');
+  if (streak.atual >= 100 || streak.maior >= 100) unlocked.add('streak_100');
+  if (totalExercises >= 500) unlocked.add('exercicios_500');
+  if (level >= 10) unlocked.add('nivel_10');
+  if (totalWorkouts >= 100) unlocked.add('treinos_100');
+  if (hasPerfectWeek(summary)) unlocked.add('semana_perfeita');
+  if (streak.atual >= 365 || streak.maior >= 365) unlocked.add('streak_365');
+  if (user.gamificacao.nivel_xp >= 5000) unlocked.add('xp_mestre');
+
+  return [...unlocked];
+}
+
+export async function syncUserGamification(userId: string): Promise<UserDocument | null> {
+  const user = await User.findById(userId);
+  if (!user) return null;
+
+  resetXpDiarioIfNeeded(user);
+
+  const streak = await computeStreak(userId);
+  const totalMinutes = await WorkoutHistory.aggregate([
+    { $match: { usuario_id: toUserObjectId(userId) } },
+    { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
+  ]);
+
+  user.gamificacao.total_minutos = Math.round((totalMinutes[0]?.total ?? 0) / 60);
+  user.gamificacao.streak_atual = streak.atual;
+  user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streak.maior);
+  user.gamificacao.conquistas = await evaluateAchievements(user);
+
+  await user.save();
+  return user;
+}
+
+export function calculateWorkoutXp(
+  exerciseCount: number,
+  streakAtual: number,
+  newAchievements: string[],
+): number {
+  let xp = XP_WORKOUT_BASE + exerciseCount * XP_SERIES;
+  if (streakAtual > 0) xp += XP_STREAK_BONUS;
+  xp += newAchievements.length * XP_ACHIEVEMENT;
+  return xp;
+}
+
+export function hasTrainedToday(userId: string): Promise<boolean> {
+  const todayStart = startOfDay(new Date());
+  const tomorrow = new Date(todayStart);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return WorkoutHistory.exists({
+    usuario_id: toUserObjectId(userId),
+    concluido_em: { $gte: todayStart, $lt: tomorrow },
+  }).then(Boolean);
+}
+
+export { XP_DAILY_CAP };

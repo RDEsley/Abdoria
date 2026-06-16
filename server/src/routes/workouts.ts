@@ -1,0 +1,241 @@
+import { Router } from 'express';
+import mongoose from 'mongoose';
+import { Exercise } from '../models/Exercise.js';
+import { User, sanitizeUser } from '../models/User.js';
+import { WorkoutHistory } from '../models/WorkoutHistory.js';
+import type { AuthRequest } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
+import {
+  ACHIEVEMENTS,
+  awardXp,
+  calculateWorkoutXp,
+  getWeeklyMuscles,
+  hasTrainedToday,
+  resetXpDiarioIfNeeded,
+  syncUserGamification,
+  XP_DAILY_CAP,
+} from '../services/gamification.js';
+import type { MusculoPrincipal } from '../types/index.js';
+import { getSuggestedWorkout } from '../services/recommendation.js';
+
+export const workoutsRouter = Router();
+
+workoutsRouter.use(requireAuth);
+
+workoutsRouter.get('/history', async (req: AuthRequest, res) => {
+  try {
+    const histories = await WorkoutHistory.find({ usuario_id: req.userId })
+      .sort({ concluido_em: -1 })
+      .limit(365)
+      .lean();
+
+    res.json(histories);
+  } catch (error) {
+    console.error('GET /api/workouts/history error:', error);
+    res.status(500).json({ error: 'Erro ao buscar histórico.' });
+  }
+});
+
+workoutsRouter.get('/achievements', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    res.json(
+      ACHIEVEMENTS.map((a) => ({
+        ...a,
+        desbloqueada: user.gamificacao.conquistas.includes(a.id),
+      })),
+    );
+  } catch (error) {
+    console.error('GET /api/workouts/achievements error:', error);
+    res.status(500).json({ error: 'Erro ao buscar conquistas.' });
+  }
+});
+
+workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
+  try {
+    let user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    await syncUserGamification(user._id.toString());
+    user = (await User.findById(req.userId))!;
+
+    if (resetXpDiarioIfNeeded(user)) {
+      await user.save();
+    }
+
+    const userId = user._id.toString();
+
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+
+    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, treinoSugerido] = await Promise.all([
+      hasTrainedToday(userId),
+      getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
+      WorkoutHistory.aggregate([
+        { $match: { usuario_id: user._id, concluido_em: { $gte: sixMonthsAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m', date: '$concluido_em' } },
+            minutos: { $sum: { $divide: ['$duracao_total_segundos', 60] } },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      WorkoutHistory.aggregate([
+        { $match: { usuario_id: user._id } },
+        { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
+      ]),
+      getSuggestedWorkout(user),
+    ]);
+
+    const muscles = Object.entries(weeklyMuscles) as [MusculoPrincipal, number][];
+    const trained = muscles.filter(([, count]) => count > 0);
+    const sorted = [...trained].sort((a, b) => b[1] - a[1]);
+
+    const conquistas = ACHIEVEMENTS.map((a) => ({
+      ...a,
+      desbloqueada: user.gamificacao.conquistas.includes(a.id),
+    }));
+
+    res.json({
+      treino_hoje: treinoHoje,
+      proximo_treino: treinoHoje
+        ? 'Descanso ativo'
+        : treinoSugerido?.nome ?? 'Treino do dia',
+      treino_sugerido: treinoSugerido,
+      total_minutos: user.gamificacao.total_minutos,
+      streak_atual: user.gamificacao.streak_atual,
+      streak_maior: user.gamificacao.streak_maior,
+      nivel_xp: user.gamificacao.nivel_xp,
+      xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
+      xp_diario_limite: XP_DAILY_CAP,
+      conquistas,
+      musculos_semana: weeklyMuscles,
+      evolucao_mensal: monthly.map((m: { _id: string; minutos: number }) => ({ mes: m._id, minutos: Math.round(m.minutos) })),
+      area_mais_treinada: sorted[0]?.[0] ?? null,
+      area_menos_treinada: trained.length > 0 ? trained.sort((a, b) => a[1] - b[1])[0][0] : null,
+      total_exercicios: totalExercisesAgg[0]?.total ?? 0,
+    });
+  } catch (error) {
+    console.error('GET /api/workouts/stats error:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas.' });
+  }
+});
+
+/** Persiste histórico, recalcula streak/conquistas e aplica XP com teto diário. */
+workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const { treino_nome, treino_tipo, exercicios, duracao_total_segundos } = req.body;
+
+    if (!treino_nome || !Array.isArray(exercicios) || exercicios.length === 0) {
+      res.status(400).json({ error: 'Dados do treino inválidos.' });
+      return;
+    }
+
+    const musculosSet = new Set<MusculoPrincipal>();
+    const prevAchievements = new Set(user.gamificacao.conquistas);
+    const slugs = exercicios.map((e: { slug: string }) => e.slug);
+    const foundExercises = await Exercise.find({ slug: { $in: slugs } }).lean();
+    const exerciseBySlug = new Map(foundExercises.map((ex) => [ex.slug, ex]));
+
+    const resolvedExercises = exercicios.map((e: {
+      exercicio_id?: string;
+      slug: string;
+      nome: string;
+      duracao_segundos: number;
+      musculo_principal: MusculoPrincipal;
+      series?: number;
+      repeticoes_realizadas?: number;
+      modo?: string;
+      descanso_seg?: number;
+    }) => {
+      let exerciseId = e.exercicio_id;
+      const found = exerciseBySlug.get(e.slug);
+
+      if (!exerciseId || !mongoose.Types.ObjectId.isValid(exerciseId)) {
+        exerciseId = found?._id?.toString();
+      }
+
+      musculosSet.add(e.musculo_principal);
+      if (found?.musculos_secundarios) {
+        for (const m of found.musculos_secundarios) {
+          musculosSet.add(m as MusculoPrincipal);
+        }
+      }
+
+      return {
+        exercicio_id: exerciseId ? new mongoose.Types.ObjectId(exerciseId) : new mongoose.Types.ObjectId(),
+        slug: e.slug,
+        nome: e.nome,
+        duracao_segundos: e.duracao_segundos,
+        musculo_principal: e.musculo_principal,
+        series: e.series,
+        repeticoes_realizadas: e.repeticoes_realizadas,
+        modo: e.modo,
+        descanso_seg: e.descanso_seg,
+      };
+    });
+
+    const musculos = [...musculosSet];
+    const streakBefore = user.gamificacao.streak_atual;
+
+    const history = await WorkoutHistory.create({
+      usuario_id: user._id,
+      treino_nome,
+      treino_tipo,
+      exercicios: resolvedExercises,
+      duracao_total_segundos: duracao_total_segundos ?? exercicios.length * 45,
+      musculos_estimulados: musculos,
+      concluido_em: new Date(),
+    });
+
+    await syncUserGamification(user._id.toString());
+    const updatedUser = await User.findById(user._id);
+    if (!updatedUser) {
+      res.status(500).json({ error: 'Erro ao atualizar usuário.' });
+      return;
+    }
+
+    const newAchievements = updatedUser.gamificacao.conquistas.filter((a) => !prevAchievements.has(a));
+    const xpAmount = calculateWorkoutXp(
+      exercicios.length,
+      Math.max(streakBefore, updatedUser.gamificacao.streak_atual),
+      newAchievements,
+    );
+    const xpAwarded = awardXp(updatedUser, xpAmount);
+
+    history.xp_ganho = xpAwarded;
+    await history.save();
+    await updatedUser.save();
+
+    const streakAfter = updatedUser.gamificacao.streak_atual;
+    const streakExtended = streakAfter > streakBefore;
+
+    res.status(201).json({
+      history,
+      user: sanitizeUser(updatedUser),
+      xp_ganho: xpAwarded,
+      streak_celebration: streakExtended
+        ? { streak_atual: streakAfter, streak_anterior: streakBefore }
+        : null,
+    });
+  } catch (error) {
+    console.error('POST /api/workouts/complete error:', error);
+    res.status(500).json({ error: 'Erro ao salvar treino.' });
+  }
+});

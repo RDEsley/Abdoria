@@ -1,0 +1,47 @@
+import bcrypt from 'bcryptjs';
+import { User } from '../models/User.js';
+import { getTodaySaoPaulo } from '../utils/timezone.js';
+import { DEMO_USERS } from '../seeds/demo-users.js';
+
+/** Cria ou atualiza jogadores fictícios para ranking (idempotente). */
+export async function seedDemoUsers(): Promise<void> {
+  const npcHash = await bcrypt.hash('npc-no-login', 10);
+  const today = getTodaySaoPaulo();
+
+  for (const demo of DEMO_USERS) {
+    await User.findOneAndUpdate(
+      { email: demo.email },
+      {
+        $set: {
+          email: demo.email,
+          passwordHash: npcHash,
+          nome: demo.nome,
+          idade: demo.idade,
+          peso_kg: 70,
+          altura_cm: 170,
+          imc: 24.2,
+          nivel: demo.nivel,
+          objetivo: demo.objetivo,
+          onboarding_completed: true,
+          terms_accepted_at: new Date(),
+          is_demo_npc: true,
+          is_guest: false,
+          gamificacao: demo.gamificacao,
+          preferencias: {
+            descanso_padrao_seg: 25,
+            som_habilitado: true,
+            sfx_volume: 0.7,
+            ciclo_treinos: ['A', 'B', 'C'],
+            modo_padrao: 'tempo',
+            tutorial_visto: true,
+          },
+          xp_diario: { ganho_hoje: 0, data_reset: today },
+        },
+      },
+      { upsert: true, runValidators: true },
+    );
+    console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, streak ${demo.gamificacao.streak_atual}`);
+  }
+
+  console.log(`Total NPCs: ${DEMO_USERS.length}`);
+}
