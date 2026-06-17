@@ -21,7 +21,7 @@ Treine em casa, ganhe pontos, desbloqueie conquistas, personalize seu perfil e d
 
 O **Abdoria** é um aplicativo web de treinos de **abdômen com peso corporal**. Você monta ou recebe treinos, executa exercício por exercício com timer e descanso, e acompanha sua evolução como se fosse um jogo.
 
-Não precisa entender de programação para usar — basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
+Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
 > **Importante:** o Abdoria é educacional e de entretenimento. **Não substitui** acompanhamento médico, nutricional ou de educação física.
 
