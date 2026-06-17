@@ -8,6 +8,7 @@ import { allExercises } from '../seeds/all-exercises.js';
 import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
 import { workoutPresets } from '../seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
+import { buildAdminUserPayload } from './admin-user-payload.js';
 import { syncAllUsersProgressData } from '../services/user-data-sync.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
@@ -60,6 +61,7 @@ async function seed() {
   console.log(`Total presets: ${workoutPresets.length}`);
 
   const adminHash = await bcrypt.hash('admin123', 10);
+  const gmailAdminHash = await bcrypt.hash('1234569', 10);
   const today = getTodaySaoPaulo();
 
   await User.findOneAndUpdate(
@@ -99,9 +101,16 @@ async function seed() {
     { upsert: true, new: true, runValidators: true },
   );
 
+  await User.findOneAndUpdate(
+    { email: 'admin@gmail.com' },
+    { $set: buildAdminUserPayload(gmailAdminHash) },
+    { upsert: true, new: true, runValidators: true },
+  );
+
   await seedDemoUsers();
 
   console.log('Administrador: admin@abdoria.local / admin123');
+  console.log('Admin completo: admin@gmail.com / 1234569');
   console.log('Seed concluído.');
   await mongoose.disconnect();
 }

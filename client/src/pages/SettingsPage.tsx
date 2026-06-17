@@ -11,7 +11,7 @@ import { updateMe } from '@/lib/api';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
-import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE } from '@/types';
+import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, normalizeCicloTreinos, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE } from '@/types';
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
@@ -23,7 +23,9 @@ export function SettingsPage() {
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
-  const [ciclo, setCiclo] = useState<TreinoBase[]>(user?.preferencias?.ciclo_treinos ?? ['A', 'B', 'C']);
+  const [ciclo, setCiclo] = useState<TreinoBase[]>(
+    normalizeCicloTreinos(user?.preferencias?.ciclo_treinos),
+  );
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
@@ -35,7 +37,7 @@ export function SettingsPage() {
           som_habilitado: som,
           sfx_volume: volume,
           descanso_padrao_seg: descanso,
-          ciclo_treinos: ciclo,
+          ciclo_treinos: normalizeCicloTreinos(ciclo),
         },
       });
       setSoundSettings(som, volume);
@@ -57,7 +59,13 @@ export function SettingsPage() {
   };
 
   const toggleCiclo = (c: TreinoBase) => {
-    setCiclo((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    setCiclo((prev) => {
+      if (prev.includes(c)) {
+        if (prev.length <= 2) return prev;
+        return prev.filter((x) => x !== c);
+      }
+      return normalizeCicloTreinos([...prev, c]);
+    });
   };
 
   const handleTutorialClose = () => {
@@ -92,6 +100,9 @@ export function SettingsPage() {
           <input type="range" min={10} max={90} value={descanso} onChange={(e) => setDescanso(Number(e.target.value))} className="mt-2 w-full cursor-pointer" />
         </label>
         <p className="mt-4 text-sm font-bold">Ciclo de treinos</p>
+        <p className="mt-1 text-xs font-medium text-stone-500">
+          Escolha quais ciclos aparecem em Treinos sugeridos (mínimo 2). Ativos: {ciclo.length}
+        </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {CICLOS.map((c) => {
             const optional = CICLOS_OPCIONAIS.includes(c);
