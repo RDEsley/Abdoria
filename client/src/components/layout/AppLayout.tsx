@@ -9,6 +9,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
+import { resolveCosmeticos } from '@/types';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
 
 const navItems = [
@@ -62,6 +63,9 @@ export function AppLayout() {
     }
   };
 
+  const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
+  const hudFundoClass = `game-card-fundo--${cosmeticos.fundo_equipado.replace('fundo_', '')}`;
+
   return (
     <div className="game-app relative flex min-h-screen flex-col md:flex-row text-stone-800">
       <AnimatedBackground variant="app" />
@@ -96,7 +100,7 @@ export function AppLayout() {
       </aside>
 
       <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
-        <div className="game-hud-shell px-4 pt-4 md:px-8 md:pt-6">
+        <div className={`game-hud-shell ${hudFundoClass} px-4 pt-4 md:px-8 md:pt-6`}>
           <GameHud />
         </div>
 
