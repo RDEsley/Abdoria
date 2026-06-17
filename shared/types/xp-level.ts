@@ -1,7 +1,15 @@
+/** Step de incremento do requisito de XP ao subir de nível (tier a cada 10 níveis). */
+export function xpStepForLevel(currentLevel: number): number {
+  const level = Math.max(1, Math.floor(currentLevel));
+  const tier = Math.floor((level - 1) / 10);
+  return 50 * (tier + 1);
+}
+
 /** XP necessário para sair do nível atual e ir ao próximo. */
 export function xpRequiredForNextLevel(currentLevel: number): number {
   const level = Math.max(1, Math.floor(currentLevel));
-  return 50 * level * level + 50 * level;
+  if (level === 1) return 100;
+  return xpRequiredForNextLevel(level - 1) + xpStepForLevel(level);
 }
 
 export function xpLevelFromTotal(totalXp: number): number {

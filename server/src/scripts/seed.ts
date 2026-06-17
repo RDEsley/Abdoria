@@ -10,6 +10,9 @@ import { workoutPresets } from '../seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
+/** Exercícios removidos do catálogo — desativados no banco a cada seed. */
+const RETIRED_EXERCISE_SLUGS = ['pallof-press'];
+
 const mongoUri = process.env.MONGODB_URI;
 
 if (!mongoUri) {
@@ -31,6 +34,16 @@ async function seed() {
     console.log(`Exercício: ${result.nome} (${result.slug})`);
   }
   console.log(`Total exercícios: ${allExercises.length}`);
+
+  if (RETIRED_EXERCISE_SLUGS.length > 0) {
+    const retired = await Exercise.updateMany(
+      { slug: { $in: RETIRED_EXERCISE_SLUGS } },
+      { $set: { ativo: false } },
+    );
+    if (retired.modifiedCount > 0) {
+      console.log(`Exercícios desativados: ${retired.modifiedCount}`);
+    }
+  }
 
   for (const preset of workoutPresets) {
     const result = await WorkoutPreset.findOneAndUpdate(

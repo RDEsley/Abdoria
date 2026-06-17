@@ -250,18 +250,6 @@ export const additionalExercises = [
     media: { gif: 'thread-the-needle.gif' },
     ativo: true,
   }),
-  withLevelParams({
-    slug: 'pallof-press',
-    nome: 'Pallof Press',
-    nivel: 2,
-    musculo_principal: 'obliquos',
-    musculos_secundarios: ['core'],
-    tempo_recomendado: 30,
-    prioridade: 'B',
-    descricao: 'Anti-rotação com banda ou cabo para core e oblíquos.',
-    media: { gif: 'pallof-press.gif' },
-    ativo: true,
-  }),
   withCustomParams(
     {
       slug: 'dragon-flag',

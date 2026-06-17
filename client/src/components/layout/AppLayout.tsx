@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
+import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
 import { GameHud } from '@/components/layout/GameHud';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
+import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
+import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
+import type { LevelUpCelebration as LevelUpData } from '@/types';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Início' },
@@ -17,9 +21,27 @@ const navItems = [
 
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
+  const { refresh: refreshApp } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
+  const [levelUpLevel, setLevelUpLevel] = useState<number | null>(null);
+
+  const handleMidnightRefresh = useCallback(() => {
+    void refreshApp();
+    void refreshUser();
+  }, [refreshApp, refreshUser]);
+
+  useSaoPauloMidnightRefresh(handleMidnightRefresh);
+
+  useEffect(() => {
+    const onLevelUp = (event: Event) => {
+      const detail = (event as CustomEvent<LevelUpData>).detail;
+      if (detail?.level_novo) setLevelUpLevel(detail.level_novo);
+    };
+    window.addEventListener('abdoria:level-up', onLevelUp);
+    return () => window.removeEventListener('abdoria:level-up', onLevelUp);
+  }, []);
 
   useEffect(() => {
     setShowTutorial(shouldShowFirstTimeTutorial(user));
@@ -73,7 +95,7 @@ export function AppLayout() {
         <div className="game-sidebar__grass" aria-hidden />
       </aside>
 
-      <div className="relative flex min-h-screen flex-1 flex-col">
+      <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
         <div className="game-hud-shell px-4 pt-4 md:px-8 md:pt-6">
           <GameHud />
         </div>
@@ -101,6 +123,10 @@ export function AppLayout() {
       </div>
 
       <TutorialOverlay open={showTutorial} onClose={handleTutorialClose} />
+
+      {levelUpLevel !== null && (
+        <LevelUpOverlay level={levelUpLevel} onDone={() => setLevelUpLevel(null)} />
+      )}
     </div>
   );
 }

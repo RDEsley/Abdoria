@@ -1,21 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Coins, LogOut, Pause, Play, SkipForward, Timer, X, Zap } from 'lucide-react';
+import { Check, Coins, LogOut, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
+import { useAuth } from '@/context/AuthContext';
 import { exerciseMediaUrl } from '@/lib/media';
 import {
   playBeep,
   playCompleteSet,
   playRestStart,
-  playSuccess,
+  playTimerDone,
+  playWorkoutComplete,
+  setSoundSettings,
 } from '@/lib/sounds';
 import { getErrorMessage } from '@/lib/api-errors';
+import { updateMe } from '@/lib/api';
 import { formatTime } from '@/lib/utils';
 import {
   clearWorkoutDurationSession,
@@ -49,6 +53,7 @@ function readActiveWorkout(): ActiveWorkout | null {
 export function PlayerPage() {
   const navigate = useNavigate();
   const { saveWorkout } = useApp();
+  const { user: authUser } = useAuth();
   const [workout] = useState<ActiveWorkout | null>(readActiveWorkout);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [seriesIndex, setSeriesIndex] = useState(0);
@@ -65,12 +70,31 @@ export function PlayerPage() {
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
+  const mutedRef = useRef(muted);
+  const prefsRef = useRef(authUser?.preferencias);
   const startTimeRef = useRef(0);
   const endTimeRef = useRef(0);
   const pausedMsRef = useRef(0);
   const pauseStartedRef = useRef<number | null>(null);
   const sessionStartedRef = useRef(false);
   const tickHandledRef = useRef(false);
+
+  useEffect(() => {
+    mutedRef.current = muted;
+    prefsRef.current = authUser?.preferencias;
+    setSoundSettings(!muted, authUser?.preferencias?.sfx_volume ?? 0.7);
+  }, [muted, authUser?.preferencias]);
+
+  useEffect(() => {
+    return () => {
+      const prefs = prefsRef.current;
+      if (!prefs) return;
+      void updateMe({
+        preferencias: { ...prefs, som_habilitado: !mutedRef.current },
+      });
+    };
+  }, []);
 
   useEffect(() => {
     if (!workout) return;
@@ -145,7 +169,7 @@ export function PlayerPage() {
 
     setPhase('done');
     endTimeRef.current = persistWorkoutEndedAt();
-    playSuccess();
+    playWorkoutComplete();
   }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds, startRest]);
 
   const runsCountdown =
@@ -182,6 +206,7 @@ export function PlayerPage() {
 
     if (phase === 'working' && current?.modo === 'tempo') {
       tickHandledRef.current = true;
+      playTimerDone();
       advanceAfterSeries();
     }
   }, [secondsLeft, workout, paused, phase, current?.modo, advanceAfterSeries]);
@@ -435,12 +460,15 @@ export function PlayerPage() {
         </div>
         <button
           type="button"
-          onClick={togglePause}
-          className="cursor-pointer text-stone-600 disabled:opacity-30"
-          disabled={!canTogglePause}
-          aria-label={paused ? 'Continuar cronômetro' : 'Pausar cronômetro'}
+          onClick={() => {
+            const next = !muted;
+            setMuted(next);
+            setSoundSettings(!next, authUser?.preferencias?.sfx_volume ?? 0.7);
+          }}
+          className="cursor-pointer text-stone-600"
+          aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
         >
-          {paused ? <Play size={24} /> : <Pause size={24} />}
+          {muted ? <VolumeX size={24} /> : <Volume2 size={24} />}
         </button>
       </header>
 

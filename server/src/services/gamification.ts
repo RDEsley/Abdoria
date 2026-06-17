@@ -10,7 +10,15 @@ import {
 } from '../types/index.js';
 import { User, type UserDocument } from '../models/User.js';
 import { WorkoutHistory } from '../models/WorkoutHistory.js';
-import { getTodaySaoPaulo } from '../utils/timezone.js';
+import {
+  getTodaySaoPaulo,
+  getHourSaoPaulo,
+  getSaoPauloWeekday,
+  getWeekStartSaoPaulo,
+  startOfDaySaoPaulo,
+  endOfDaySaoPaulo,
+  isSameDaySaoPaulo,
+} from '../utils/timezone.js';
 
 export { ACHIEVEMENTS };
 
@@ -28,46 +36,17 @@ function toUserObjectId(userId: string) {
 }
 
 function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return startOfDaySaoPaulo(date);
 }
 
 function isSameDay(a: Date, b: Date): boolean {
-  return startOfDay(a).getTime() === startOfDay(b).getTime();
+  return isSameDaySaoPaulo(a, b);
 }
 
 function getWeekStart(date: Date): Date {
-  const d = startOfDay(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
-
-function getSaoPauloHour(date: Date): number {
-  return Number(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Sao_Paulo',
-      hour: 'numeric',
-      hour12: false,
-    }).format(date),
-  );
-}
-
-function getSaoPauloWeekday(date: Date): number {
-  const weekday = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Sao_Paulo',
-    weekday: 'short',
-  }).format(date);
-  const map: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6,
-  };
-  return map[weekday] ?? 0;
+  const weekKey = getWeekStartSaoPaulo(date);
+  const [y, m, d] = weekKey.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
 }
 
 export async function countTotalExercises(userId: string): Promise<number> {
@@ -277,8 +256,8 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
   if (streak.atual >= 7 || streak.maior >= 7) unlocked.add('streak_7');
   if (totalExercises >= 50) unlocked.add('exercicios_50');
   if (level >= 3) unlocked.add('nivel_3');
-  if (summary.some((h) => getSaoPauloHour(new Date(h.concluido_em)) < 8)) unlocked.add('early_bird');
-  if (summary.some((h) => getSaoPauloHour(new Date(h.concluido_em)) >= 22)) unlocked.add('night_owl');
+  if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) < 8)) unlocked.add('early_bird');
+  if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) >= 22)) unlocked.add('night_owl');
   if (hasWeekendWarrior(summary)) unlocked.add('fim_de_semana');
   if (ciclosSemana.has('A') && ciclosSemana.has('B')) unlocked.add('ciclo_ab');
 
@@ -342,9 +321,8 @@ export function calculateWorkoutXp(
 }
 
 export function hasTrainedToday(userId: string): Promise<boolean> {
-  const todayStart = startOfDay(new Date());
-  const tomorrow = new Date(todayStart);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const todayStart = startOfDaySaoPaulo();
+  const tomorrow = endOfDaySaoPaulo();
 
   return WorkoutHistory.exists({
     usuario_id: toUserObjectId(userId),

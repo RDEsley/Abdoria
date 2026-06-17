@@ -89,6 +89,31 @@ export function playRestStart() {
   playTone(getPack().rest, 0.1, 'sine', 0.05);
 }
 
+export function playTimerDone() {
+  playTone(880, 0.15, 'square', 0.08);
+  setTimeout(() => playTone(1047, 0.2, 'sine', 0.09), 120);
+}
+
+export function playWorkoutComplete() {
+  getPack().success.forEach((freq, index) => {
+    setTimeout(() => playTone(freq, 0.14, 'sine', 0.08), index * 100);
+  });
+}
+
+export function playTabSwitch() {
+  playTone(620, 0.05, 'triangle', 0.04);
+}
+
+export function playPurchase() {
+  playTone(740, 0.08, 'triangle', 0.06);
+  setTimeout(() => playTone(988, 0.1, 'sine', 0.07), 70);
+}
+
+export function playEquip() {
+  playTone(523, 0.07, 'sine', 0.055);
+  setTimeout(() => playTone(659, 0.09, 'sine', 0.06), 60);
+}
+
 export function playUnlock() {
   getPack().unlock.forEach((freq, index) => {
     setTimeout(() => playTone(freq, 0.1, 'square', 0.055), index * 80);

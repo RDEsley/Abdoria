@@ -25,7 +25,6 @@ export const EXERCISE_NOME_PT: Record<string, string> = {
   'hanging-knee-raise': 'Elevação de joelhos na barra',
   'stability-ball-crunch': 'Abdominal na bola',
   'thread-the-needle': 'Passar a agulha',
-  'pallof-press': 'Pallof press',
   'dragon-flag': 'Bandeira do dragão',
   'l-sit': 'Posição em L',
   'ab-wheel': 'Rolinho abdominal',

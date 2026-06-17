@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { playLevelUp } from '@/lib/sounds';
@@ -16,11 +16,8 @@ const SPARKS = Array.from({ length: 12 }, (_, i) => ({
   distance: 36 + (i % 3) * 10,
 }));
 
-export function LevelUpCelebration({ previousLevel, level, compact = false }: Props) {
-  const label = useMemo(
-    () => (level - previousLevel > 1 ? `Níveis ${previousLevel} → ${level}!` : `Subiu para o nível ${level}!`),
-    [level, previousLevel],
-  );
+export function LevelUpCelebration({ level, compact = false }: Props) {
+  const label = `Subiu para o nível ${level}!`;
 
   useEffect(() => {
     const t = window.setTimeout(() => playLevelUp(), 220);

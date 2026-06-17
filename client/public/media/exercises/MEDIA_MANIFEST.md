@@ -4,7 +4,7 @@ Arquivos esperados em `client/public/media/exercises/{slug}.gif`.
 
 Quando o GIF não está disponível, a interface exibe a inicial do exercício.
 
-## Catálogo (30)
+## Catálogo (29)
 
 | Arquivo | Exercício |
 |---------|-----------|
@@ -37,6 +37,5 @@ Quando o GIF não está disponível, a interface exibe a inicial do exercício.
 | `l-sit.gif` | L-Sit |
 | `ab-wheel.gif` | Ab Wheel Rollout |
 | `copenhagen-plank.gif` | Copenhagen Plank |
-| `pallof-press.gif` | Pallof Press |
 
 URL pública: `/media/exercises/{slug}.gif` (ver `client/src/lib/media.ts`).
