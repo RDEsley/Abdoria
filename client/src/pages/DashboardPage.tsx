@@ -14,7 +14,7 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { formatTrainingDuration } from '@/lib/utils';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { MUSCULO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, formatExerciseName, formatExercisePrescription, spendableXpForShop, xpProgressFromTotal } from '@/types';
+import { MUSCULO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, formatExerciseName, formatExercisePrescription, spendableXpForShop, xpProgressFromTotal } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 
 const ActivityCalendar = lazy(() =>
@@ -45,7 +45,7 @@ export function DashboardPage() {
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
   const xpDisponivelTrocas = spendableXpForShop(stats.nivel_xp);
   const sugerido = stats.treino_sugerido;
-  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${XP_DAILY_FULL_EXERCISES} exercícios = 100 XP/dia`;
+  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · teto ${stats.xp_diario_limite} XP/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios enchem o teto`;
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
   return (
