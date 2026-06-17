@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, SkipForward } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { GameButton } from '@/components/ui/GameButton';
 import { TermsModal } from '@/components/legal/TermsModal';
@@ -9,7 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
 import { digitsOnly, validateBodyMetrics } from '@/lib/utils';
 import {
+  ABDORIA_XP_STEP,
   calcImc,
+  CICLO_LABELS,
+  CICLOS_OPCIONAIS,
   NIVEL_LABELS,
   OBJETIVO_HINTS,
   OBJETIVO_LABELS,
@@ -20,14 +23,14 @@ import {
 } from '@/types';
 
 const STEPS = ['terms', 'body', 'level', 'objective', 'cycle', 'prefs', 'tutorial'] as const;
-const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E'];
-const CICLO_LABELS: Record<TreinoBase, string> = {
-  A: 'Superior',
-  B: 'Oblíquos',
-  C: 'Inferior',
-  D: 'Core',
-  E: 'Completo',
-};
+const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+const REP_SCHEMES = [
+  { id: '12x3', series: 3, repeticoes: 12, label: '12 × 3' },
+  { id: '14x3', series: 3, repeticoes: 14, label: '14 × 3' },
+  { id: '15x3', series: 3, repeticoes: 15, label: '15 × 3' },
+  { id: '15x5', series: 5, repeticoes: 15, label: '15 × 5' },
+] as const;
 
 const inputClass =
   'rounded-xl border border-stone-300 bg-white px-4 py-3 font-medium text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20';
@@ -46,6 +49,7 @@ export function OnboardingPage() {
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [descanso, setDescanso] = useState(30);
   const [modo, setModo] = useState<'tempo' | 'reps'>('tempo');
+  const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
   const [saving, setSaving] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
 
@@ -72,6 +76,7 @@ export function OnboardingPage() {
     setSaving(true);
     setFieldError(null);
     try {
+      const scheme = REP_SCHEMES.find((s) => s.id === repSchemeId) ?? REP_SCHEMES[0];
       const payload: Parameters<typeof completeOnboarding>[0] = {
         terms_accepted: termsAccepted,
         onboarding_completed: true,
@@ -79,6 +84,8 @@ export function OnboardingPage() {
         preferencias: {
           descanso_padrao_seg: descanso,
           modo_padrao: modo,
+          reps_series_padrao: scheme.series,
+          reps_repeticoes_padrao: scheme.repeticoes,
           ciclo_treinos: ciclo.length >= 2 ? ciclo : ['A', 'B', 'C'],
           som_habilitado: true,
           sfx_volume: 0.7,
@@ -127,7 +134,13 @@ export function OnboardingPage() {
     else void saveAndFinish(true);
   };
 
+  const prev = () => {
+    setFieldError(null);
+    if (step > 0) setStep((s) => s - 1);
+  };
+
   const toggleCiclo = (c: TreinoBase) => {
+    if (CICLOS_OPCIONAIS.includes(c)) return;
     setCiclo((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
   };
 
@@ -291,20 +304,30 @@ export function OnboardingPage() {
             {step === 4 && (
               <>
                 <h2 className="text-2xl font-extrabold">Seu ciclo de treinos</h2>
-                <p className="mt-1 text-sm text-stone-500">Escolha pelo menos 2 (A–E)</p>
+                <p className="mt-1 text-sm text-stone-500">Escolha pelo menos 2 ciclos ativos (A–E). F e G chegam em breve.</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {CICLOS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => toggleCiclo(c)}
-                      className={`cursor-pointer rounded-xl border-2 px-4 py-3 font-bold ${
-                        ciclo.includes(c) ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                      }`}
-                    >
-                      {c} — {CICLO_LABELS[c]}
-                    </button>
-                  ))}
+                  {CICLOS.map((c) => {
+                    const optional = CICLOS_OPCIONAIS.includes(c);
+                    const active = ciclo.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        disabled={optional}
+                        onClick={() => toggleCiclo(c)}
+                        className={`rounded-xl border-2 px-4 py-3 font-bold ${
+                          optional
+                            ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+                            : active
+                              ? 'cursor-pointer border-emerald-500 bg-emerald-50'
+                              : 'cursor-pointer border-stone-200'
+                        }`}
+                      >
+                        {c} — {CICLO_LABELS[c]}
+                        {optional && <span className="ml-1 text-[0.65rem] font-semibold">(em breve)</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -333,21 +356,42 @@ export function OnboardingPage() {
                         modo === m ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
                       }`}
                     >
-                      {m === 'tempo' ? 'Por tempo' : 'Por reps'}
+                      {m === 'tempo' ? 'Por tempo' : 'Por repetições'}
                     </button>
                   ))}
                 </div>
+                {modo === 'reps' && (
+                  <div className="mt-4">
+                    <p className="mb-2 text-sm font-bold text-stone-700">Esquema de repetições padrão</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {REP_SCHEMES.map((scheme) => (
+                        <button
+                          key={scheme.id}
+                          type="button"
+                          onClick={() => setRepSchemeId(scheme.id)}
+                          className={`cursor-pointer rounded-xl border-2 px-3 py-2 text-sm font-bold ${
+                            repSchemeId === scheme.id ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                          }`}
+                        >
+                          {scheme.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
             {step === 6 && (
               <>
-                <h2 className="text-2xl font-extrabold">Como funciona</h2>
+                <h2 className="text-2xl font-extrabold">Bem-vindo ao Abdoria!</h2>
+                <p className="mt-2 text-sm font-semibold text-emerald-700">Sua jornada começa agora — passo 7/7</p>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
-                  <li><strong>XP:</strong> Ganhe XP diário completando treinos — teto base 100 + 5 por nível (reset 00:00 SP).</li>
-                  <li><strong>Durante o treino:</strong> Você inicia cada série quando estiver pronto e marca quando terminar.</li>
-                  <li><strong>Ciclos:</strong> Rotacione treinos A–E conforme seu plano.</li>
-                  <li><strong>Ranking:</strong> Compare seu progresso com outros usuários.</li>
+                  <li><strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Teto = 100 + 1 por nível. Reseta à meia-noite (SP).</li>
+                  <li><strong>Abdoria coins:</strong> 1 moeda a cada {ABDORIA_XP_STEP} XP ganhos — use na loja de cosméticos.</li>
+                  <li><strong>Treinos:</strong> Monte ou escolha sugestões no Construtor. Ciclos A–E alternam foco muscular.</li>
+                  <li><strong>Ranking semanal:</strong> Top 25 ganham Abdoria coins todo domingo.</li>
+                  <li><strong>Streak & conquistas:</strong> XP extra fora do teto diário.</li>
                 </ul>
               </>
             )}
@@ -357,6 +401,11 @@ export function OnboardingPage() {
             )}
 
             <div className="mt-6 flex gap-3">
+              {step > 0 && (
+                <GameButton type="button" variant="secondary" onClick={prev} className="flex items-center gap-1" size="lg">
+                  <ChevronLeft size={18} /> Voltar
+                </GameButton>
+              )}
               <GameButton
                 onClick={next}
                 disabled={saving}

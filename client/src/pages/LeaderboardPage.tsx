@@ -87,6 +87,12 @@ export function LeaderboardPage() {
     <div className="flex flex-col gap-5">
       <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
 
+      {metric === 'xp' && (
+        <p className="text-center text-xs font-semibold text-stone-500">
+          Recompensas semanais (todo domingo): 1º 15 · 2º 10 · 3º 5 · 4º–25º 3 {CURRENCY_NAME}
+        </p>
+      )}
+
       <SwipeScroll
         className="game-swipe-scroll--snap flex gap-2 pb-1"
         role="tablist"

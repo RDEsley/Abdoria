@@ -57,11 +57,12 @@ interface GameAuthPanelProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  className?: string;
 }
 
-export function GameAuthPanel({ title, children, footer }: GameAuthPanelProps) {
+export function GameAuthPanel({ title, children, footer, className }: GameAuthPanelProps) {
   return (
-    <main className="game-login__panel">
+    <main className={`game-login__panel${className ? ` ${className}` : ''}`}>
       <img
         src="/brand/logo.png"
         alt="Abdoria"

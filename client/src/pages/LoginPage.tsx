@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthAlert } from '@/components/auth/AuthAlert';
+import { AuthField } from '@/components/auth/AuthField';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
 import { getHealth } from '@/lib/api';
 import { DATABASE_BANNER, getErrorMessage, OFFLINE_BANNER } from '@/lib/api-errors';
 import { getSavedEmail, isRememberMeEnabled } from '@/lib/auth-storage';
+import { validateEmail, validateLoginForm, validatePassword, type AuthFieldErrors } from '@/lib/auth-validation';
 import { useAuth } from '@/context/AuthContext';
 
 export function LoginPage() {
@@ -13,7 +16,8 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
-  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
+  const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -38,32 +42,49 @@ export function LoginPage() {
       });
   }, []);
 
+  const clearFieldError = (field: keyof AuthFieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setSubmitError('');
+
+    const errors = validateLoginForm(email, password);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setLoading(true);
     try {
       await login(email, password, rememberMe);
       navigate('/');
     } catch (err) {
-      setError(getErrorMessage(err));
+      setSubmitError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
   const handleGuest = async () => {
-    setError('');
+    setSubmitError('');
+    setFieldErrors({});
     setGuestLoading(true);
     try {
       await loginAsGuest();
       navigate('/onboarding');
     } catch (err) {
-      setError(getErrorMessage(err));
+      setSubmitError(getErrorMessage(err));
     } finally {
       setGuestLoading(false);
     }
   };
+
+  const showSystemAlert = apiOnline === false || (apiOnline === true && dbOnline === false);
 
   return (
     <GameAuthScene>
@@ -75,31 +96,61 @@ export function LoginPage() {
           </Link>
         }
       >
-        {apiOnline === false && (
-          <p className="game-login__error game-login__error--warn">{OFFLINE_BANNER}</p>
-        )}
-        {apiOnline === true && dbOnline === false && (
-          <p className="game-login__error game-login__error--warn">{DATABASE_BANNER}</p>
+        {showSystemAlert && (
+          <div className="game-auth-alerts">
+            {apiOnline === false && (
+              <AuthAlert
+                variant="warn"
+                title="Sem conexão"
+                message={OFFLINE_BANNER}
+              />
+            )}
+            {apiOnline === true && dbOnline === false && (
+              <AuthAlert
+                variant="warn"
+                title="Dados indisponíveis"
+                message={DATABASE_BANNER}
+              />
+            )}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="game-login__form">
-          <input
+        <form onSubmit={handleSubmit} className="game-login__form" noValidate>
+          <AuthField
+            label="Email"
+            name="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="EMAIL"
+            onChange={(e) => {
+              setEmail(e.target.value);
+              clearFieldError('email');
+              setSubmitError('');
+            }}
+            onBlur={() => {
+              const err = validateEmail(email);
+              setFieldErrors((prev) => (err ? { ...prev, email: err } : { ...prev, email: undefined }));
+            }}
+            error={fieldErrors.email}
+            placeholder="seu@email.com"
             autoComplete="email"
-            required
-            className="game-input"
           />
-          <input
+          <AuthField
+            label="Senha"
+            name="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="SENHA"
+            onChange={(e) => {
+              setPassword(e.target.value);
+              clearFieldError('password');
+              setSubmitError('');
+            }}
+            onBlur={() => {
+              const err = validatePassword(password, 1);
+              setFieldErrors((prev) => (err ? { ...prev, password: err } : { ...prev, password: undefined }));
+            }}
+            error={fieldErrors.password}
+            placeholder="••••••••"
             autoComplete="current-password"
-            required
-            className="game-input"
           />
 
           <div className="game-auth-extras">
@@ -120,12 +171,14 @@ export function LoginPage() {
             </button>
           </div>
 
-          {error && <p className="game-login__error">{error}</p>}
-
           <button type="submit" disabled={loading || guestLoading} className="game-btn game-btn--primary">
-            {loading ? '...' : 'JOGAR'}
+            {loading ? 'Entrando…' : 'Jogar'}
           </button>
         </form>
+
+        {submitError && (
+          <AuthAlert variant="error" title="Não foi possível entrar" message={submitError} live />
+        )}
 
         <button
           type="button"
@@ -133,7 +186,7 @@ export function LoginPage() {
           disabled={loading || guestLoading}
           className="game-btn game-btn--secondary game-auth-guest"
         >
-          {guestLoading ? '...' : 'VISITANTE'}
+          {guestLoading ? 'Carregando…' : 'Visitante'}
         </button>
       </GameAuthPanel>
 

@@ -12,8 +12,9 @@ interface Props {
 }
 
 export function ExerciseVideoModal({ exercise, onClose }: Props) {
-  const [videoError, setVideoError] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
   const displayName = formatExerciseName(exercise);
+  const gifUrl = exerciseMediaUrl(exercise.slug, 'gif');
 
   return (
     <div className="game-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exercise-video-title">
@@ -40,27 +41,17 @@ export function ExerciseVideoModal({ exercise, onClose }: Props) {
         {exercise.descricao && <p className="game-modal__desc">{exercise.descricao}</p>}
 
         <div className="game-video-frame">
-          {videoError ? (
+          {mediaError ? (
             <div className="game-video-frame__placeholder">
-              <p className="game-modal__text">Vídeo em breve para este exercício.</p>
-              <img
-                src={exerciseMediaUrl(exercise.slug)}
-                alt={displayName}
-                className="mt-3 max-h-48 w-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              <p className="game-modal__text">Demonstração em breve para este exercício.</p>
             </div>
           ) : (
-            <video
+            <img
               key={exercise.slug}
+              src={gifUrl}
+              alt={`Demonstração: ${displayName}`}
               className="h-full w-full object-contain"
-              src={exerciseMediaUrl(exercise.slug, 'mp4')}
-              controls
-              autoPlay
-              playsInline
-              onError={() => setVideoError(true)}
+              onError={() => setMediaError(true)}
             />
           )}
         </div>

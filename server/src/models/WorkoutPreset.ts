@@ -29,7 +29,7 @@ const workoutPresetSchema = new Schema(
     ciclo_id: {
       type: String,
       required: true,
-      enum: ['A', 'B', 'C', 'D', 'E'] satisfies TreinoBase[],
+      enum: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] satisfies TreinoBase[],
     },
     descricao: { type: String, required: true },
     recomendado: { type: Boolean, default: true },

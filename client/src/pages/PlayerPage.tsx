@@ -14,6 +14,7 @@ import {
   playBeep,
   playCompleteSet,
   playRestStart,
+  playRestEnd,
   playTimerDone,
   playWorkoutComplete,
   setSoundSettings,
@@ -198,6 +199,7 @@ export function PlayerPage() {
 
     if (phase === 'resting') {
       tickHandledRef.current = true;
+      playRestEnd();
       setPhase('ready');
       setSecondsLeft(0);
       setRestTotalSec(0);
@@ -438,9 +440,16 @@ export function PlayerPage() {
         ? current.modo === 'reps'
           ? `Meta: ${targetReps} repetições · toque em "Série concluída" ao terminar.`
           : `Segure a posição · o tempo conta sozinho.`
-        : paused
-          ? `Descanso pausado · ${formatTime(secondsLeft)} restantes · ${nextSeriesLabel}.`
-          : `Descanso de ${formatTime(restTotalSec)} · ${nextSeriesLabel}.`;
+        : null;
+
+  const restStatus =
+    phase === 'resting'
+      ? {
+          main: paused ? 'Descanso pausado' : `Descanso · ${formatTime(restTotalSec)}`,
+          timer: formatTime(secondsLeft),
+          next: nextSeriesLabel,
+        }
+      : null;
 
   const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
   const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
@@ -491,7 +500,17 @@ export function PlayerPage() {
         <div className="text-center">
           <h2 className="game-page-header__title !text-base">{currentName}</h2>
           <p className="mt-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">Meta: {prescription}</p>
-          <p className="mt-2 max-w-xs text-xs font-bold leading-relaxed text-stone-600">{statusText}</p>
+          {restStatus ? (
+            <div className="game-player-rest-status mt-2">
+              <p className="game-player-rest-status__main">{restStatus.main}</p>
+              <p className="game-player-rest-status__timer tabular-nums">{restStatus.timer}</p>
+              <p className="game-player-rest-status__next">{restStatus.next}</p>
+            </div>
+          ) : (
+            statusText && (
+              <p className="mt-2 max-w-xs text-xs font-bold leading-relaxed text-stone-600">{statusText}</p>
+            )
+          )}
         </div>
 
         <div className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}>

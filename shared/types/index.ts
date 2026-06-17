@@ -16,7 +16,20 @@ export type MusculoPrincipal =
 
 export type Prioridade = 'S' | 'A' | 'B' | 'C' | 'dinamico' | 'isometrico';
 
-export type TreinoBase = 'A' | 'B' | 'C' | 'D' | 'E';
+export type TreinoBase = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+
+export const CICLO_LABELS: Record<TreinoBase, string> = {
+  A: 'Superior',
+  B: 'Oblíquos',
+  C: 'Inferior',
+  D: 'Core',
+  E: 'Completo',
+  F: 'HIIT',
+  G: 'Mobilidade',
+};
+
+/** Ciclos extras — disponíveis nas configurações, fora do padrão inicial. */
+export const CICLOS_OPCIONAIS: TreinoBase[] = ['F', 'G'];
 
 export type TreinoTipo = TreinoBase | 'custom';
 
@@ -90,6 +103,8 @@ export interface UserPreferencias {
   sfx_volume: number;
   ciclo_treinos: TreinoBase[];
   modo_padrao: ModoExercicio;
+  reps_series_padrao?: number;
+  reps_repeticoes_padrao?: number;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
 }
@@ -146,7 +161,7 @@ export interface CosmeticDefinition {
 export interface Cosmeticos {
   /** Saldo da moeda Abdoria. */
   moedas: number;
-  /** Blocos de 5 XP já convertidos em Abdoria. */
+  /** Blocos de XP já convertidos em Abdoria. */
   moedas_xp_blocos: number;
   avatar_equipado: string;
   borda_equipada: string;
@@ -315,7 +330,7 @@ export const SHOP_XP_COST_PER_ABDORIA = 25;
 export const SHOP_ABDORIA_COST_PER_XP = 5;
 /** Abdoria passiva: 1 moeda a cada N XP totais ganhos. */
 export const ABDORIA_XP_STEP = 10;
-export const CURRENCY_NAME = 'Abdoria';
+export const CURRENCY_NAME = 'Abdoria coins';
 
 /** @deprecated Use SHOP_XP_COST_PER_ABDORIA */
 export const XP_TO_ABDORIA_RATE = SHOP_XP_COST_PER_ABDORIA;
@@ -834,6 +849,8 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   sfx_volume: 0.7,
   ciclo_treinos: ['A', 'B', 'C'],
   modo_padrao: 'tempo',
+  reps_series_padrao: 3,
+  reps_repeticoes_padrao: 12,
   preset_favorito_id: null,
   tutorial_visto: false,
 };

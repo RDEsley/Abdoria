@@ -284,12 +284,23 @@ export async function recommendWorkout(
 
 export async function getRecommendedPresetsList(user: UserDocument) {
   const ciclo = (user.preferencias?.ciclo_treinos ?? ['A', 'B', 'C']) as TreinoBase[];
-  return WorkoutPreset.find({
+  const strict = await WorkoutPreset.find({
     nivel: user.nivel,
     objetivo: user.objetivo,
     ciclo_id: { $in: ciclo },
     recomendado: true,
   }).lean();
+
+  if (strict.length > 0) return strict;
+
+  const relaxed = await WorkoutPreset.find({
+    nivel: user.nivel,
+    ciclo_id: { $in: ciclo },
+    recomendado: true,
+  }).lean();
+  if (relaxed.length > 0) return relaxed;
+
+  return WorkoutPreset.find({ recomendado: true, ciclo_id: { $in: ciclo } }).limit(6).lean();
 }
 
 export { getWeekStartSaoPaulo };

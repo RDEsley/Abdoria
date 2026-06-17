@@ -8,9 +8,19 @@ interface Props {
 
 const MUSCLE_ORDER: MusculoPrincipal[] = ['superior', 'inferior', 'obliquos', 'core', 'completo'];
 
+const MONTH_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function formatMonthLabel(mes: string): string {
+  const monthPart = mes.slice(5);
+  const idx = Number(monthPart) - 1;
+  if (idx >= 0 && idx < 12) return MONTH_SHORT[idx];
+  return monthPart;
+}
+
 export function MuscleBarChart({ muscles, monthly }: Props) {
   const maxMuscle = Math.max(...Object.values(muscles), 1);
-  const maxMonthly = Math.max(...monthly.map((m) => m.minutos), 1);
+  const recentMonthly = monthly.slice(-6);
+  const maxMonthly = Math.max(...recentMonthly.map((m) => m.minutos), 1);
   const entries = MUSCLE_ORDER.map((muscle) => ({ muscle, count: muscles[muscle] }));
   const mostTrained = entries.reduce((best, item) => (item.count > best.count ? item : best), entries[0]);
   const leastTrained = entries
@@ -57,20 +67,25 @@ export function MuscleBarChart({ muscles, monthly }: Props) {
         })}
       </div>
 
-      {monthly.length > 0 && (
+      {recentMonthly.length > 0 && (
         <div className="muscle-bar-chart__monthly">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-500">
             Evolução mensal (minutos)
           </p>
-          <div className="flex h-24 items-end gap-2">
-            {monthly.map((m) => (
-              <div key={m.mes} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-t bg-sky-400"
-                  style={{ height: `${(m.minutos / maxMonthly) * 100}%`, minHeight: m.minutos > 0 ? 4 : 0 }}
-                  title={`${m.minutos} min`}
-                />
-                <span className="text-[9px] font-medium text-stone-400">{m.mes.slice(5)}</span>
+          <div className="muscle-bar-chart__monthly-grid">
+            {recentMonthly.map((m) => (
+              <div key={m.mes} className="muscle-bar-chart__monthly-col">
+                <div className="muscle-bar-chart__monthly-bar-wrap">
+                  <div
+                    className="muscle-bar-chart__monthly-bar"
+                    style={{
+                      height: `${Math.max(8, (m.minutos / maxMonthly) * 100)}%`,
+                    }}
+                    title={`${m.minutos} min`}
+                  />
+                </div>
+                <span className="muscle-bar-chart__monthly-label">{formatMonthLabel(m.mes)}</span>
+                <span className="muscle-bar-chart__monthly-value">{m.minutos}m</span>
               </div>
             ))}
           </div>

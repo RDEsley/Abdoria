@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, Coins, Flame, Zap } from 'lucide-react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
@@ -7,7 +7,7 @@ import { XpBar } from '@/components/ui/XpBar';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { CURRENCY_NAME, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal } from '@/types';
+import { CURRENCY_NAME, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal } from '@/types';
 
 export function GameHud() {
   const { stats, user: appUser } = useApp();
@@ -15,6 +15,8 @@ export function GameHud() {
   const user = appUser ?? authUser;
   const [showCosmetics, setShowCosmetics] = useState(false);
   const [coinsEarnedPulse, setCoinsEarnedPulse] = useState<number | null>(null);
+
+  const closeCosmetics = useCallback(() => setShowCosmetics(false), []);
 
   useEffect(() => {
     const onCoinsEarned = (event: Event) => {
@@ -29,6 +31,7 @@ export function GameHud() {
 
   const xpTotal = stats?.nivel_xp ?? user?.gamificacao.nivel_xp ?? 0;
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(xpTotal);
+  const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const equippedTitle = cosmeticos.titulo_equipado ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome : null;
@@ -38,8 +41,8 @@ export function GameHud() {
       : 'game-hud__title';
   const dailyXpLimit = stats?.xp_diario_limite;
   const dailyXpTitle = dailyXpLimit
-    ? `XP diário de exercícios: ${dailyXpLimit}/dia (+${XP_DAILY_CAP_PER_LEVEL} por nível) · ${XP_DAILY_PER_EXERCISE} XP por exercício (mín. ${XP_DAILY_MIN_EXERCISES} no treino)`
-    : `XP diário de exercícios · ${XP_DAILY_PER_EXERCISE} XP por exercício (mín. ${XP_DAILY_MIN_EXERCISES} no treino)`;
+    ? `XP diário: ${stats?.xp_hoje ?? 0}/${dailyXpLimit} (+${XP_DAILY_CAP_PER_LEVEL}/nível)`
+    : `XP diário · ${XP_DAILY_PER_EXERCISE} XP/exercício`;
 
   return (
     <>
@@ -61,6 +64,11 @@ export function GameHud() {
             </span>
           </div>
           <XpBar value={xpInLevel} max={xpToNext} showValues={false} variant="xp" />
+          <div className="game-hud__xp-meta">
+            <span title="XP neste nível">{xpInLevel}/{xpToNext} XP</span>
+            <span className="game-hud__xp-meta-sep">·</span>
+            <span title="Falta para o próximo nível">+{xpParaLevelUp} p/ nv.{level + 1}</span>
+          </div>
           {stats && (
             <div className="game-hud__stats">
               <span className="game-hud__chip">
@@ -68,8 +76,12 @@ export function GameHud() {
               </span>
               <span className="game-hud__chip game-hud__chip--gold" title={dailyXpTitle}>
                 XP {stats.xp_hoje}/{stats.xp_diario_limite}
-                {stats.xp_extra_hoje > 0 ? ` +${stats.xp_extra_hoje}` : ''}
               </span>
+              {stats.xp_extra_hoje > 0 && (
+                <span className="game-hud__chip game-hud__chip--extra" title="XP extra (streak, conquistas, loja)">
+                  +{stats.xp_extra_hoje} extra
+                </span>
+              )}
               <span className="game-hud__chip game-hud__chip--coins relative">
                 <Coins size={12} /> {cosmeticos.moedas} {CURRENCY_NAME}
                 <AnimatePresence>
@@ -91,7 +103,7 @@ export function GameHud() {
         <ChevronRight size={18} className="game-hud__chevron" aria-hidden />
       </button>
 
-      <CosmeticsModal open={showCosmetics} onClose={() => setShowCosmetics(false)} />
+      <CosmeticsModal open={showCosmetics} onClose={closeCosmetics} />
     </>
   );
 }

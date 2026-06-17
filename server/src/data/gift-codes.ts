@@ -14,11 +14,11 @@ export interface GiftCodeDefinition {
 export const GIFT_CODES: GiftCodeDefinition[] = [
   {
     code: 'abdoria',
-    xp: 10_000,
+    xp: 0,
     abdoria: 999,
-    desbloqueia: ['titulo_eu_sou_heroi'],
-    titulo_equipar: 'titulo_eu_sou_heroi',
-    mensagem: 'Código Abdoria resgatado! Você recebeu 10.000 XP, 999 Abdoria e o título Eu sou herói.',
+    desbloqueia: ['titulo_dono_do_jogo'],
+    titulo_equipar: 'titulo_dono_do_jogo',
+    mensagem: 'Código Abdoria resgatado! Você recebeu 999 Abdoria coins e o título Dono do Jogo.',
     active: true,
   },
 ];

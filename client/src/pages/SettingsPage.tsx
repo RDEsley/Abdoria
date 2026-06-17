@@ -11,8 +11,9 @@ import { updateMe } from '@/lib/api';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
+import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE } from '@/types';
 
-const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E'];
+const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 export function SettingsPage() {
   const { user, logout, refreshUser } = useAuth();
@@ -92,17 +93,31 @@ export function SettingsPage() {
         </label>
         <p className="mt-4 text-sm font-bold">Ciclo de treinos</p>
         <div className="mt-2 flex flex-wrap gap-2">
-          {CICLOS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => toggleCiclo(c)}
-              className={`cursor-pointer rounded-lg border-2 px-3 py-1 font-bold ${ciclo.includes(c) ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'}`}
-            >
-              {c}
-            </button>
-          ))}
+          {CICLOS.map((c) => {
+            const optional = CICLOS_OPCIONAIS.includes(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => toggleCiclo(c)}
+                className={`cursor-pointer rounded-lg border-2 px-3 py-1.5 text-left text-sm font-bold ${
+                  ciclo.includes(c) ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                }`}
+              >
+                {c} — {CICLO_LABELS[c]}
+                {optional && <span className="block text-[0.6rem] font-semibold text-stone-400">Opcional</span>}
+              </button>
+            );
+          })}
         </div>
+      </section>
+
+      <section id="regras-xp" className="glass-card scroll-mt-28 p-4">
+        <h3 className="game-section-title mb-2">Regras de XP</h3>
+        <p className="text-sm font-medium leading-relaxed text-stone-600">
+          {XP_DAILY_PER_EXERCISE} XP por exercício · mínimo {XP_DAILY_MIN_EXERCISES} no treino · teto diário = 100 + {XP_DAILY_CAP_PER_LEVEL} por nível.
+          Bônus de streak, conquistas e loja não contam no teto. Abdoria coins: 1 a cada {ABDORIA_XP_STEP} XP ganhos.
+        </p>
       </section>
 
       <GiftCodeSection />

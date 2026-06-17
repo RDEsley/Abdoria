@@ -287,6 +287,24 @@ export const COSMETICS: CosmeticDefinition[] = [
     raridade: 'epico',
     unlock: { tipo: 'conquista', conquista_id: 'streak_7' },
   },
+  {
+    id: 'efeito_agua',
+    kind: 'efeito',
+    nome: 'Onda Azul',
+    descricao: 'Chuva de pixels aquáticos no perfil.',
+    icon: 'star',
+    raridade: 'raro',
+    unlock: { tipo: 'moedas', preco_moedas: 85 },
+  },
+  {
+    id: 'efeito_glitch',
+    kind: 'efeito',
+    nome: 'Quebra de Tela',
+    descricao: 'Glitch pixelado de alta raridade.',
+    icon: 'zap',
+    raridade: 'lendario',
+    unlock: { tipo: 'moedas', preco_moedas: 180 },
+  },
 
   {
     id: 'titulo_dono_do_jogo',

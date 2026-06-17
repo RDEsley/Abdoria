@@ -17,8 +17,8 @@ client/.env
 *.pfx
 
 # Bundle da API (gerado no deploy / build:vercel)
-lib/
-lib/server-dist/
+/lib/
+/lib/server-dist/
 
 # Build output
 dist/

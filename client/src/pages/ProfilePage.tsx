@@ -12,7 +12,7 @@ import { updateMe } from '@/lib/api';
 import { playTabSwitch } from '@/lib/sounds';
 import { formatTrainingDuration } from '@/lib/utils';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -204,9 +204,10 @@ export function ProfilePage() {
           </p>
           <p className="mt-1 text-xs font-bold text-stone-500">
             {XP_DAILY_PER_EXERCISE} XP/exercício · mín. {XP_DAILY_MIN_EXERCISES} no treino · teto{' '}
-            {stats.xp_diario_limite} XP/dia (+{XP_DAILY_CAP_PER_LEVEL}/nível) ·{' '}
-            {dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios enchem o teto. Bônus (streak,
-            conquistas, loja) não contam no teto.
+            {stats.xp_diario_limite} XP/dia (+{XP_DAILY_CAP_PER_LEVEL}/nível). Bônus (streak, conquistas, loja) não contam no teto.{' '}
+            <Link to="/configuracoes#regras-xp" className="text-emerald-700 underline">
+              Editar regras de XP
+            </Link>
           </p>
         </div>
       )}

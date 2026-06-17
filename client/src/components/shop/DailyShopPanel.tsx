@@ -135,19 +135,18 @@ export function DailyShopPanel() {
     <>
       <section className="glass-card p-4">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="game-section-title flex items-center gap-2">
-              <Gift size={14} className="text-emerald-600" /> Loja diária
-            </h3>
-            <p className="mt-1 text-[0.65rem] font-bold leading-relaxed text-stone-500">
-              Renova todo dia à meia-noite (horário de Brasília). A 1ª opção é grátis. Taxas: {xpPerAbdoria} XP = 1{' '}
-              {CURRENCY_NAME} · {abdoriaPerXp} {CURRENCY_NAME} = 1 XP.
-            </p>
-            <p className="game-daily-reset mt-2" aria-live="polite">
-              <Clock size={13} aria-hidden />
-              <span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h3 className="game-section-title !mb-0 flex items-center gap-2">
+                <Gift size={14} className="text-emerald-600" /> Loja diária
+              </h3>
+              <p className="game-daily-reset-inline" aria-live="polite">
+                <Clock size={13} aria-hidden />
                 Renova em <strong className="tabular-nums">{formatCountdown(resetSecondsLeft)}</strong>
-              </span>
+              </p>
+            </div>
+            <p className="mt-1 text-[0.65rem] font-bold leading-relaxed text-stone-500">
+              1ª opção grátis · {xpPerAbdoria} XP = 1 {CURRENCY_NAME} · {abdoriaPerXp} {CURRENCY_NAME} = 1 XP
             </p>
             {shopMeta && (
               <p className="mt-1 text-[0.65rem] font-bold text-emerald-700">
