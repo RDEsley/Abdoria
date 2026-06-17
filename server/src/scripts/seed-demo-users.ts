@@ -27,6 +27,8 @@ export async function seedDemoUsers(): Promise<void> {
           is_demo_npc: true,
           is_guest: false,
           gamificacao: demo.gamificacao,
+          'cosmeticos.moedas': Math.floor(demo.gamificacao.nivel_xp / 10) + 12,
+          'cosmeticos.moedas_xp_blocos': Math.floor(demo.gamificacao.nivel_xp / 10),
           preferencias: {
             descanso_padrao_seg: 25,
             som_habilitado: true,
@@ -35,12 +37,12 @@ export async function seedDemoUsers(): Promise<void> {
             modo_padrao: 'tempo',
             tutorial_visto: true,
           },
-          xp_diario: { ganho_hoje: 0, data_reset: today },
+          xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
         },
       },
       { upsert: true, runValidators: true },
     );
-    console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, streak ${demo.gamificacao.streak_atual}`);
+    console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, ${Math.floor(demo.gamificacao.nivel_xp / 10) + 12} moedas, streak ${demo.gamificacao.streak_atual}`);
   }
 
   console.log(`Total NPCs: ${DEMO_USERS.length}`);

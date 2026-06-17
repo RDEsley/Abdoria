@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
-import { DEFAULT_PREFERENCIAS } from '../types/index.js';
+import { DEFAULT_PREFERENCIAS, resolveCosmeticos } from '../types/index.js';
 import type { UserDocument } from '../models/User.js';
+import { resolveDadosSalvosForUser } from './user-dados.js';
 
 /** Resposta JSON segura do usuário para o client (sem senha, IDs como string). */
 export function sanitizeUser(user: UserDocument | Record<string, unknown>) {
@@ -18,6 +19,13 @@ export function sanitizeUser(user: UserDocument | Record<string, unknown>) {
     ...DEFAULT_PREFERENCIAS,
     ...((obj.preferencias as Record<string, unknown> | undefined) ?? {}),
   };
+
+  obj.cosmeticos = resolveCosmeticos(
+    obj.cosmeticos as Parameters<typeof resolveCosmeticos>[0],
+    Number((obj.gamificacao as { nivel_xp?: number } | undefined)?.nivel_xp ?? 0),
+  );
+
+  obj.dados_salvos = resolveDadosSalvosForUser(obj.dados_salvos as Parameters<typeof resolveDadosSalvosForUser>[0]);
 
   if (obj.simulacao_definicao && typeof obj.simulacao_definicao === 'object') {
     const sim = obj.simulacao_definicao as Record<string, unknown>;

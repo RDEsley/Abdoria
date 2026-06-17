@@ -5,6 +5,7 @@ import { Exercise } from '../models/Exercise.js';
 import { User } from '../models/User.js';
 import { WorkoutPreset } from '../models/WorkoutPreset.js';
 import { allExercises } from '../seeds/all-exercises.js';
+import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
 import { workoutPresets } from '../seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
@@ -24,7 +25,7 @@ async function seed() {
   for (const exercise of allExercises) {
     const result = await Exercise.findOneAndUpdate(
       { slug: exercise.slug },
-      { $set: exercise },
+      { $set: { ...exercise, nome_pt: EXERCISE_NOME_PT[exercise.slug] } },
       { upsert: true, new: true, runValidators: true },
     );
     console.log(`Exercício: ${result.nome} (${result.slug})`);
@@ -74,7 +75,7 @@ async function seed() {
           modo_padrao: 'tempo',
           tutorial_visto: true,
         },
-        xp_diario: { ganho_hoje: 0, data_reset: today },
+        xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
         simulacao_definicao: { gordura_atual_pct: 18, gordura_meta_pct: 12 },
       },
     },

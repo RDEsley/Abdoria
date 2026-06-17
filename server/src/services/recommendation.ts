@@ -3,6 +3,7 @@ import { WorkoutHistory } from '../models/WorkoutHistory.js';
 import { WorkoutPreset } from '../models/WorkoutPreset.js';
 import type { UserDocument } from '../models/User.js';
 import type { ModoExercicio, TreinoBase, TreinoSugerido } from '../types/index.js';
+import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 
 function resolveNextCiclo(ciclo: TreinoBase[], lastTipo?: string | null): TreinoBase {
   if (!lastTipo || lastTipo === 'custom' || !ciclo.includes(lastTipo as TreinoBase)) {
@@ -41,9 +42,14 @@ export async function getSuggestedWorkout(user: UserDocument): Promise<TreinoSug
 
   const slugs = preset.exercicios.map((e) => e.slug);
   const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true })
-    .select('slug nome')
+    .select('slug nome nome_pt')
     .lean();
-  const nameBySlug = new Map(exercises.map((e) => [e.slug, e.nome]));
+  const nameBySlug = new Map(
+    exercises.map((e) => [
+      e.slug,
+      formatExerciseName({ nome: e.nome, slug: e.slug, nome_pt: e.nome_pt ?? undefined }),
+    ]),
+  );
 
   const exercicios = preset.exercicios.map((pe) => ({
     slug: pe.slug,

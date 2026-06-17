@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X } from 'lucide-react';
 import type { WorkoutQueueItem } from '@/types';
-import { formatExercisePrescription } from '@/types';
+import { formatExerciseName, formatExercisePrescription } from '@/types';
 import { MuscleZoneLabel } from '@/components/library/MuscleZoneLabel';
 
 interface Props {
@@ -42,7 +42,7 @@ export function SortableExerciseItem({ id, item, index, onRemove }: Props) {
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-stone-900">{item.nome}</p>
+        <p className="truncate font-medium text-stone-900">{formatExerciseName(item)}</p>
         <div className="mt-0.5">
           <MuscleZoneLabel muscle={item.musculo_principal} showHint />
           <p className="mt-0.5 text-xs text-stone-500">{formatExercisePrescription(item)}</p>

@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { exerciseMediaUrl } from '@/lib/media';
 import type { IExerciseDocument } from '@/types';
-import { PRIORIDADE_LABELS } from '@/types';
+import { PRIORIDADE_LABELS, formatExerciseName } from '@/types';
 import { MuscleZoneLabel } from '@/components/library/MuscleZoneLabel';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 export function ExerciseVideoModal({ exercise, onClose }: Props) {
   const [videoError, setVideoError] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const displayName = formatExerciseName(exercise);
 
   return (
     <div className="game-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exercise-video-title">
@@ -28,7 +28,7 @@ export function ExerciseVideoModal({ exercise, onClose }: Props) {
         </button>
 
         <h2 id="exercise-video-title" className="game-modal__title">
-          {exercise.nome}
+          {displayName}
         </h2>
         <div className="mt-1">
           <MuscleZoneLabel muscle={exercise.musculo_principal} showHint />
@@ -40,26 +40,12 @@ export function ExerciseVideoModal({ exercise, onClose }: Props) {
         {exercise.descricao && <p className="game-modal__desc">{exercise.descricao}</p>}
 
         <div className="game-video-frame">
-          {!playing ? (
-            <div className="game-video-frame__placeholder">
-              <img
-                src={exerciseMediaUrl(exercise.slug)}
-                alt=""
-                className="h-full w-full object-cover opacity-40"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <GameButton size="lg" className="game-video-frame__play" onClick={() => setPlaying(true)}>
-                ▶ Assistir treino
-              </GameButton>
-            </div>
-          ) : videoError ? (
+          {videoError ? (
             <div className="game-video-frame__placeholder">
               <p className="game-modal__text">Vídeo em breve para este exercício.</p>
               <img
                 src={exerciseMediaUrl(exercise.slug)}
-                alt={exercise.nome}
+                alt={displayName}
                 className="mt-3 max-h-48 w-full object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';

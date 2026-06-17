@@ -1,17 +1,61 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { Coins, Trophy } from 'lucide-react';
+import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
+import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
-import type { LeaderboardEntry } from '@/types';
+import { CURRENCY_NAME, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
 
-const PODIUM_HEIGHTS = ['h-28', 'h-36', 'h-24'] as const;
-const PODIUM_ORDER = [1, 0, 2] as const;
-const PODIUM_STYLES = ['game-podium__bar--silver', 'game-podium__bar--gold', 'game-podium__bar--bronze'] as const;
+const PODIUM_SLOTS = [
+  { entryIndex: 1, medal: 'silver', height: 'h-28' },
+  { entryIndex: 0, medal: 'gold', height: 'h-36' },
+  { entryIndex: 2, medal: 'bronze', height: 'h-24' },
+] as const;
+
+const METRICS: { id: LeaderboardMetric; label: string }[] = [
+  { id: 'xp', label: 'Pontos (XP)' },
+  { id: 'streak', label: 'Dias seguidos' },
+  { id: 'moedas', label: `+ ${CURRENCY_NAME}` },
+];
+
+function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
+  if (metric === 'xp') return `Nv.${entry.level}`;
+  if (metric === 'streak') return `${entry.streak_atual}d`;
+  return `${entry.moedas}`;
+}
+
+function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: LeaderboardMetric }) {
+  return (
+    <span className="game-rank-row__value">
+      {metric === 'moedas' && <Coins size={14} aria-hidden />}
+      {metric === 'xp' ? `${entry.nivel_xp} XP` : metric === 'streak' ? `${entry.streak_atual}d` : `${entry.moedas}`}
+    </span>
+  );
+}
+
+function RankRow({
+  entry,
+  metric,
+  label,
+}: {
+  entry: LeaderboardEntry;
+  metric: LeaderboardMetric;
+  label?: string;
+}) {
+  return (
+    <li className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}>
+      <span className="game-rank-row__rank">#{entry.rank}</span>
+      <LeaderboardUserAvatar entry={entry} size="sm" />
+      <span className="game-rank-row__name">{label ?? entry.nome}</span>
+      <RankValue entry={entry} metric={metric} />
+    </li>
+  );
+}
 
 export function LeaderboardPage() {
-  const [metric, setMetric] = useState<'xp' | 'streak'>('xp');
+  const [metric, setMetric] = useState<LeaderboardMetric>('xp');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,75 +72,92 @@ export function LeaderboardPage() {
 
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
+  const isMeInTop = me != null && entries.some((entry) => entry.is_me);
+  const showMeAtBottom = me != null && !isMeInTop;
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="PvE Global" title="Arena" />
+      <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
 
-      <div className="flex gap-2">
-        {(['xp', 'streak'] as const).map((m) => (
+      <SwipeScroll
+        className="game-swipe-scroll--snap flex gap-2 pb-1"
+        role="tablist"
+        aria-label="Critério de classificação"
+        prevLabel="Ver critérios anteriores"
+        nextLabel="Ver mais critérios"
+      >
+        {METRICS.map(({ id, label }) => (
           <button
-            key={m}
+            key={id}
             type="button"
-            onClick={() => setMetric(m)}
-            className={`game-tab${metric === m ? ' game-tab--active' : ''}`}
+            role="tab"
+            aria-selected={metric === id}
+            onClick={() => setMetric(id)}
+            className={`game-tab game-tab--scroll shrink-0${metric === id ? ' game-tab--active' : ''}`}
           >
-            {m === 'xp' ? 'XP' : 'STREAK'}
+            {id === 'moedas' ? (
+              <span className="inline-flex items-center gap-1">
+                <Coins size={14} aria-hidden />
+                {label}
+              </span>
+            ) : (
+              label
+            )}
           </button>
         ))}
-      </div>
-
-      {me && (
-        <div className="game-rank-row game-rank-row--me">
-          <span>Você · #{me.rank}</span>
-          <span>{metric === 'xp' ? `${me.nivel_xp} XP` : `${me.streak_atual} dias`}</span>
-        </div>
-      )}
+      </SwipeScroll>
 
       {loading ? (
         <PageLoader />
       ) : (
         <>
-          <div className="game-podium">
-            {PODIUM_ORDER.map((idx, visualIdx) => {
-              const e = top3[idx];
-              if (!e) return null;
-              return (
-                <motion.div
-                  key={e.user_id}
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: visualIdx * 0.1 }}
-                  className={`game-podium__slot ${idx === 0 ? 'order-2' : idx === 1 ? 'order-1' : 'order-3'}`}
-                >
-                  <div className={`game-podium__bar ${PODIUM_STYLES[idx]} ${PODIUM_HEIGHTS[idx]} flex justify-center`}>
-                    <span className="game-podium__rank">#{e.rank}</span>
-                  </div>
-                  <p className="mt-2 max-w-full truncate text-center text-xs font-extrabold text-stone-800">{e.nome}</p>
-                  <p className="text-[10px] font-bold text-stone-500">
-                    {metric === 'xp' ? `Nv.${e.level}` : `${e.streak_atual}d`}
-                  </p>
-                </motion.div>
-              );
-            })}
-          </div>
+          {top3.length > 0 && (
+            <div className="game-podium">
+              {PODIUM_SLOTS.map((slot, visualIdx) => {
+                const entry = top3[slot.entryIndex];
+                if (!entry) return null;
 
-          <ul className="flex flex-col gap-2">
-            {rest.map((e) => (
-              <li
-                key={e.user_id}
-                className={`game-rank-row${e.is_me ? ' game-rank-row--me' : ''}`}
-              >
-                <span className="font-mono text-stone-500">#{e.rank}</span>
-                <span className="flex-1 px-3 text-stone-900">{e.nome}</span>
-                <span className="text-emerald-700">
-                  {metric === 'xp' ? `${e.nivel_xp} XP` : `${e.streak_atual}d`}
-                </span>
-              </li>
-            ))}
-          </ul>
+                return (
+                  <motion.div
+                    key={entry.user_id}
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: visualIdx * 0.1 }}
+                    className={`game-podium__slot game-podium__slot--${slot.medal}`}
+                  >
+                    <LeaderboardUserAvatar entry={entry} size="md" className="game-podium__avatar" />
+                    <p className="game-podium__name">{entry.nome}</p>
+                    <div className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}>
+                      <span className="game-podium__rank">#{entry.rank}</span>
+                    </div>
+                    <p className="game-podium__detail">
+                      {metric === 'moedas' && <Coins size={10} aria-hidden className="inline" />}
+                      {formatPodiumDetail(entry, metric)}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
 
-          {entries.length === 0 && (
+          {rest.length > 0 && (
+            <ul className="game-rank-list">
+              {rest.map((entry) => (
+                <RankRow key={entry.user_id} entry={entry} metric={metric} />
+              ))}
+            </ul>
+          )}
+
+          {showMeAtBottom && me && (
+            <>
+              <p className="game-rank-list__divider">• • •</p>
+              <ul className="game-rank-list">
+                <RankRow entry={me} metric={metric} label="Você" />
+              </ul>
+            </>
+          )}
+
+          {entries.length === 0 && !showMeAtBottom && (
             <p className="text-center text-sm font-bold text-stone-500">
               <Trophy size={16} className="mr-1 inline" />
               Nenhum guerreiro no ranking ainda.

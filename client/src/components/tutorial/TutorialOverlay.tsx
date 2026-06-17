@@ -4,11 +4,11 @@ import { ChevronLeft, ChevronRight, X, Zap, Trophy, Play, Target } from 'lucide-
 import { GameButton } from '@/components/ui/GameButton';
 
 const SLIDES = [
-  { icon: Zap, title: 'Ganhe XP', body: 'Complete séries e treinos para ganhar XP. Limite diário de 100 XP (reset à meia-noite, horário de São Paulo).' },
-  { icon: Target, title: 'Ciclos A–E', body: 'Monte seu ciclo personalizado: Superior, Oblíquos, Inferior, Core e Completo. Recomendações baseadas no seu nível.' },
-  { icon: Play, title: 'Player interativo', body: 'Você inicia cada série manualmente e conclui quando terminar. Modo reps ou tempo conforme o exercício.' },
-  { icon: Trophy, title: 'Ranking', body: 'Compare seu XP e streak com outros atletas no leaderboard.' },
-  { icon: Zap, title: 'Conquistas', body: 'Desbloqueie medalhas por streaks, volume de treino e variedade muscular.' },
+  { icon: Zap, title: 'Ganhe pontos (XP)', body: 'Complete séries e treinos para ganhar pontos. Você pode ganhar até 100 pontos por dia; o contador zera à meia-noite.' },
+  { icon: Target, title: 'Tipos de treino', body: 'Escolha treinos prontos ou monte o seu: abdômen superior, oblíquos, inferior, core ou completo. As sugestões seguem o seu nível.' },
+  { icon: Play, title: 'Durante o treino', body: 'Você começa cada série quando estiver pronto e marca quando terminar. Alguns exercícios são por repetições, outros por tempo.' },
+  { icon: Trophy, title: 'Classificação', body: 'Veja como você está em relação a outros atletas na aba Arena, por pontos ou por dias seguidos treinando.' },
+  { icon: Zap, title: 'Conquistas', body: 'Desbloqueie medalhas quando mantiver a rotina, treinar com frequência e variar os músculos trabalhados.' },
 ];
 
 interface Props {

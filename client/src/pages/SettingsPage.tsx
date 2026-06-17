@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, LogOut, Volume2 } from 'lucide-react';
 import { TermsModal } from '@/components/legal/TermsModal';
+import { GiftCodeSection } from '@/components/settings/GiftCodeSection';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
@@ -103,6 +104,8 @@ export function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <GiftCodeSection />
 
       <section className="glass-card rounded-2xl p-4">
         <h3 className="mb-4 flex items-center gap-2 font-bold">

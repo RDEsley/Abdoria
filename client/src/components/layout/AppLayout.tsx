@@ -8,10 +8,10 @@ import { useAuth } from '@/context/AuthContext';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Base' },
-  { to: '/biblioteca', icon: Layers, label: 'Itens' },
+  { to: '/', icon: Home, label: 'Início' },
+  { to: '/biblioteca', icon: Layers, label: 'Exercícios' },
   { to: '/construtor', icon: Dumbbell, label: 'Missão' },
-  { to: '/ranking', icon: Trophy, label: 'Arena' },
+  { to: '/ranking', icon: Trophy, label: 'Ranking' },
   { to: '/perfil', icon: User, label: 'Herói' },
 ];
 

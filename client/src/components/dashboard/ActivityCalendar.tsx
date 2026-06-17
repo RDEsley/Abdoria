@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { ActivityCalendar as ReactActivityCalendar, type Activity } from 'react-activity-calendar';
+import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { useApp } from '@/hooks/useApp';
 import { toLocalDateKey } from '@/lib/utils';
 
@@ -38,7 +39,7 @@ export function ActivityCalendar() {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <SwipeScroll className="pb-1" aria-label="Calendário de treinos" nextLabel="Ver mais do calendário">
       <ReactActivityCalendar
         data={data}
         maxLevel={maxLevel}
@@ -54,6 +55,6 @@ export function ActivityCalendar() {
           totalCount: '{{count}} treinos em {{year}}',
         }}
       />
-    </div>
+    </SwipeScroll>
   );
 }

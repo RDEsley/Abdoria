@@ -1,10 +1,26 @@
 let enabled = true;
 let volume = 0.7;
+let sfxPack = 'som_classico';
 let audioContext: AudioContext | null = null;
+
+const PACKS: Record<string, { click: number; success: number[]; complete: number; rest: number; unlock: number[] }> = {
+  som_classico: { click: 880, success: [523, 659, 784], complete: 660, rest: 440, unlock: [523, 659, 784, 1047] },
+  som_arcade: { click: 1200, success: [784, 988, 1175], complete: 880, rest: 620, unlock: [880, 988, 1175, 1319] },
+  som_pixel: { click: 640, success: [440, 554, 659], complete: 520, rest: 330, unlock: [440, 554, 659, 880] },
+  som_epico: { click: 980, success: [622, 740, 880], complete: 740, rest: 494, unlock: [622, 740, 880, 988] },
+};
 
 export function setSoundSettings(on: boolean, vol: number) {
   enabled = on;
   volume = Math.max(0, Math.min(1, vol));
+}
+
+export function setSfxPack(pack: string) {
+  sfxPack = PACKS[pack] ? pack : 'som_classico';
+}
+
+function getPack() {
+  return PACKS[sfxPack] ?? PACKS.som_classico;
 }
 
 function getAudioContext(): AudioContext | null {
@@ -39,13 +55,13 @@ function playTone(freq: number, duration: number, type: OscillatorType = 'sine',
 }
 
 export function playClick() {
-  playTone(880, 0.06, 'triangle', 0.05);
+  playTone(getPack().click, 0.06, 'triangle', 0.05);
 }
 
 export function playSuccess() {
-  playTone(523, 0.1, 'sine', 0.07);
-  setTimeout(() => playTone(659, 0.1, 'sine', 0.07), 80);
-  setTimeout(() => playTone(784, 0.15, 'sine', 0.08), 160);
+  getPack().success.forEach((freq, index) => {
+    setTimeout(() => playTone(freq, 0.1, 'sine', 0.07), index * 80);
+  });
 }
 
 export function playLevelUp() {
@@ -66,15 +82,22 @@ export function playBeep(freq = 520, duration = 0.05) {
 }
 
 export function playCompleteSet() {
-  playTone(660, 0.08, 'triangle', 0.06);
+  playTone(getPack().complete, 0.08, 'triangle', 0.06);
 }
 
 export function playRestStart() {
-  playTone(440, 0.1, 'sine', 0.05);
+  playTone(getPack().rest, 0.1, 'sine', 0.05);
 }
 
 export function playUnlock() {
-  [523, 659, 784, 1047].forEach((f, i) => {
-    setTimeout(() => playTone(f, 0.1, 'square', 0.055), i * 80);
+  getPack().unlock.forEach((freq, index) => {
+    setTimeout(() => playTone(freq, 0.1, 'square', 0.055), index * 80);
   });
+}
+
+export function previewSfxPack(pack: string) {
+  const previous = sfxPack;
+  if (PACKS[pack]) sfxPack = pack;
+  playUnlock();
+  sfxPack = previous;
 }

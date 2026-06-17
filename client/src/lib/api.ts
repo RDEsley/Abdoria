@@ -2,16 +2,26 @@ import type {
   AuthResponse,
   CompleteWorkoutPayload,
   CompleteWorkoutResponse,
+  CosmeticKind,
+  CosmeticsResponse,
   DashboardStats,
+  EquipCosmeticResponse,
+  LojaDiaria,
+  RedeemCodeResponse,
+  ShopResponse,
   ExerciseFilters,
   IExerciseDocument,
   IUserDocument,
   IWorkoutHistoryDocument,
   IWorkoutPresetDocument,
   LeaderboardEntry,
+  LeaderboardMetric,
   OnboardingPayload,
   MusculoPrincipal,
+  UpdateUserDadosResponse,
+  UserDadosSalvos,
 } from '@/types';
+import { LEADERBOARD_DISPLAY_LIMIT } from '@/types';
 import { getToken, clearToken } from '@/lib/auth-storage';
 import { ApiError, mapHttpStatus, toApiError } from '@/lib/api-errors';
 
@@ -90,6 +100,10 @@ export function updateMe(data: Partial<IUserDocument>): Promise<IUserDocument> {
   return fetchJson('/users/me', { method: 'PATCH', body: JSON.stringify(data) });
 }
 
+export function updateUserDados(data: Partial<UserDadosSalvos>): Promise<UpdateUserDadosResponse> {
+  return fetchJson('/users/me/dados', { method: 'PATCH', body: JSON.stringify(data) });
+}
+
 export function completeOnboarding(data: OnboardingPayload): Promise<IUserDocument> {
   return fetchJson('/users/me/onboarding', { method: 'PATCH', body: JSON.stringify(data) });
 }
@@ -118,12 +132,44 @@ export function getPreset(id: string): Promise<IWorkoutPresetDocument> {
   return fetchJson(`/presets/${id}`);
 }
 
-export function getLeaderboard(metric: 'xp' | 'streak' = 'xp'): Promise<LeaderboardEntry[]> {
-  return fetchJson(`/leaderboard?metric=${metric}&limit=50`);
+export function getLeaderboard(metric: LeaderboardMetric = 'xp'): Promise<LeaderboardEntry[]> {
+  return fetchJson(`/leaderboard?metric=${metric}&limit=${LEADERBOARD_DISPLAY_LIMIT}`);
 }
 
-export function getMyLeaderboardRank(metric: 'xp' | 'streak' = 'xp'): Promise<LeaderboardEntry> {
+export function getMyLeaderboardRank(metric: LeaderboardMetric = 'xp'): Promise<LeaderboardEntry> {
   return fetchJson(`/leaderboard/me?metric=${metric}`);
+}
+
+export function getCosmetics(): Promise<CosmeticsResponse> {
+  return fetchJson('/shop');
+}
+
+export function getShop(): Promise<ShopResponse> {
+  return fetchJson('/shop');
+}
+
+export function purchaseShopItem(id: string): Promise<{ user: IUserDocument; abdoria_gasta?: number }> {
+  return fetchJson('/shop/purchase', { method: 'POST', body: JSON.stringify({ id }) });
+}
+
+export function purchaseCosmetic(id: string): Promise<{ user: IUserDocument; moedas_gastas?: number }> {
+  return purchaseShopItem(id);
+}
+
+export function equipShopItem(kind: CosmeticKind, id: string): Promise<EquipCosmeticResponse> {
+  return fetchJson('/shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });
+}
+
+export function equipCosmetic(kind: CosmeticKind, id: string): Promise<{ user: IUserDocument }> {
+  return equipShopItem(kind, id);
+}
+
+export function claimDailyShopSlot(slot: number): Promise<{ user: IUserDocument; loja_diaria: LojaDiaria }> {
+  return fetchJson('/shop/daily/claim', { method: 'POST', body: JSON.stringify({ slot }) });
+}
+
+export function redeemGiftCode(code: string): Promise<RedeemCodeResponse> {
+  return fetchJson('/shop/redeem-code', { method: 'POST', body: JSON.stringify({ code }) });
 }
 
 export interface HealthResponse {

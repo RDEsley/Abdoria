@@ -4,14 +4,16 @@ import { motion } from 'framer-motion';
 import { Flame, Play, Timer, Zap } from 'lucide-react';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
+import { DailyShopPanel } from '@/components/shop/DailyShopPanel';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { XpBar } from '@/components/ui/XpBar';
+import { getErrorMessage } from '@/lib/api-errors';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { MUSCULO_LABELS, formatExercisePrescription } from '@/types';
+import { MUSCULO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, formatExerciseName, formatExercisePrescription, xpProgressFromTotal } from '@/types';
 
 const ActivityCalendar = lazy(() =>
   import('@/components/dashboard/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })),
@@ -32,21 +34,20 @@ export function DashboardPage() {
   if (!stats) {
     return (
       <p className="game-login__error">
-        {error ?? 'Não foi possível carregar o dashboard.'}
+        {getErrorMessage(error, 'Não foi possível carregar sua tela inicial.')}
       </p>
     );
   }
 
-  const xpProgress = stats.nivel_xp % 100;
-  const level = Math.floor(stats.nivel_xp / 100) + 1;
+  const { level, xpInLevel, xpToNext } = xpProgressFromTotal(stats.nivel_xp);
   const sugerido = stats.treino_sugerido;
-  const unlockedCount = stats.conquistas.filter((c) => c.desbloqueada).length;
+  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${XP_DAILY_FULL_EXERCISES} exercícios = 100 XP/dia`;
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="flex flex-col gap-5">
       <motion.div variants={item}>
-        <GamePageHeader eyebrow={`Bem-vindo, ${firstName}`} title="Sua Base de Treino" />
+        <GamePageHeader eyebrow={`Bem-vindo, ${firstName}`} title="Seu painel de treinos" />
         {error && <p className="mt-2 game-login__error game-login__error--warn">{error}</p>}
       </motion.div>
 
@@ -67,15 +68,15 @@ export function DashboardPage() {
                 <p className="text-xs font-bold text-emerald-700">
                   Ciclo {sugerido.ciclo_id} · {sugerido.total_exercicios} exercícios
                 </p>
-                {sugerido.primeiro_exercicio && (
+                {sugerido.exercicios[0] && (
                   <p className="text-xs font-extrabold text-stone-700">
-                    Começa com: {sugerido.primeiro_exercicio}
+                    Começa com: {formatExerciseName(sugerido.exercicios[0])}
                   </p>
                 )}
                 <ul className="mt-1 space-y-0.5">
                   {sugerido.exercicios.slice(0, 4).map((ex) => (
                     <li key={ex.slug} className="truncate text-[0.65rem] font-bold text-stone-500">
-                      · {ex.nome} — {formatExercisePrescription(ex)}
+                      · {formatExerciseName(ex)} — {formatExercisePrescription(ex)}
                     </li>
                   ))}
                   {sugerido.exercicios.length > 4 && (
@@ -88,7 +89,7 @@ export function DashboardPage() {
             )}
             {!stats.treino_hoje && !sugerido && (
               <p className="mt-2 text-xs font-bold text-stone-500">
-                Escolha um treino no construtor para começar.
+                Toque em <strong>Missão</strong> (ícone de haltere) para escolher ou montar um treino.
               </p>
             )}
             <div className="mt-2">
@@ -106,8 +107,18 @@ export function DashboardPage() {
       </motion.div>
 
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
-        <StatCard icon={<Flame className="text-orange-500" size={18} />} label="Recorde" value={`${stats.streak_maior}d`} />
-        <StatCard icon={<Timer className="text-sky-600" size={18} />} label="Tempo" value={`${stats.total_minutos}m`} />
+        <StatCard
+          icon={<Flame className="text-orange-500" size={22} />}
+          title="Streak"
+          value={`${stats.streak_maior}d`}
+          hint="Seu recorde de dias seguidos treinando"
+        />
+        <StatCard
+          icon={<Timer className="text-sky-600" size={22} />}
+          title="Tempo total"
+          value={`${stats.total_minutos} min`}
+          hint="Minutos somados de todos os treinos"
+        />
       </motion.div>
 
       <motion.section variants={item} className="glass-card p-4">
@@ -117,13 +128,23 @@ export function DashboardPage() {
         <div className="flex items-center gap-4">
           <div className="game-level-badge">{level}</div>
           <div className="flex-1">
-            <XpBar value={xpProgress} max={100} label="XP do nível" />
-            <div className="mt-3">
+            <XpBar value={xpInLevel} max={xpToNext} label="Progresso do nível" />
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <XpBar
                 value={stats.xp_hoje}
                 max={stats.xp_diario_limite}
-                label="XP hoje"
+                label="XP diário"
+                hint={dailyXpHint}
                 variant="daily"
+                pulseWhenFull
+              />
+              <XpBar
+                value={stats.xp_extra_hoje}
+                max={Math.max(stats.xp_extra_hoje, 1)}
+                label="XP extra"
+                hint="Streak, conquistas, loja e habilidades"
+                variant="extra"
+                valueOnly
               />
             </div>
           </div>
@@ -133,7 +154,7 @@ export function DashboardPage() {
       <motion.div variants={item}>
         <AchievementsPreview
           conquistas={stats.conquistas}
-          unlockedCount={unlockedCount}
+          unlockedCount={stats.conquistas.filter((c) => c.desbloqueada).length}
           total={stats.conquistas.length}
         />
       </motion.div>
@@ -158,16 +179,33 @@ export function DashboardPage() {
         )}
         <MuscleBarChart muscles={stats.musculos_semana} monthly={stats.evolucao_mensal} />
       </motion.section>
+
+      <motion.div variants={item}>
+        <DailyShopPanel />
+      </motion.div>
     </motion.div>
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function StatCard({
+  icon,
+  title,
+  value,
+  hint,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  hint?: string;
+}) {
   return (
     <div className="game-stat">
-      <div>{icon}</div>
-      <p className="game-stat__label">{label}</p>
+      <div className="game-stat__head">
+        {icon}
+        <span className="game-stat__title">{title}</span>
+      </div>
       <p className="game-stat__value">{value}</p>
+      {hint && <p className="game-stat__hint">{hint}</p>}
     </div>
   );
 }

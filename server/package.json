@@ -10,7 +10,6 @@
     "seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
-    "abdoria": "file:..",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

@@ -10,7 +10,7 @@ export function StreakBadge({ streak }: Props) {
   return (
     <span className={`game-streak game-streak--${tier}`}>
       <Flame size={14} />
-      {streak}d
+      Streak · {streak}d
     </span>
   );
 }

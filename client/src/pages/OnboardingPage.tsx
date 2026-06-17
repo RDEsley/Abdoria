@@ -344,7 +344,7 @@ export function OnboardingPage() {
                 <h2 className="text-2xl font-extrabold">Como funciona</h2>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
                   <li><strong>XP:</strong> Ganhe até 100 XP/dia completando treinos (reset 00:00 SP).</li>
-                  <li><strong>Player:</strong> Você inicia cada série manualmente e conclui quando terminar.</li>
+                  <li><strong>Durante o treino:</strong> Você inicia cada série quando estiver pronto e marca quando terminar.</li>
                   <li><strong>Ciclos:</strong> Rotacione treinos A–E conforme seu plano.</li>
                   <li><strong>Ranking:</strong> Compare seu progresso com outros usuários.</li>
                 </ul>

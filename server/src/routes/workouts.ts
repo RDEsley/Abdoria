@@ -7,16 +7,20 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   ACHIEVEMENTS,
-  awardXp,
-  calculateWorkoutXp,
   getWeeklyMuscles,
   hasTrainedToday,
   resetXpDiarioIfNeeded,
   syncUserGamification,
-  XP_DAILY_CAP,
 } from '../services/gamification.js';
-import type { MusculoPrincipal } from '../types/index.js';
+import { awardAbdoriaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
+import {
+  awardBonusXp,
+  awardDailyExerciseXp,
+  calculateWorkoutXpBreakdown,
+} from '../services/economy.js';
 import { getSuggestedWorkout } from '../services/recommendation.js';
+import type { MusculoPrincipal } from '../types/index.js';
+import { XP_DAILY_CAP_BASE, xpLevelFromTotal } from '../types/index.js';
 
 export const workoutsRouter = Router();
 
@@ -117,7 +121,8 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       streak_maior: user.gamificacao.streak_maior,
       nivel_xp: user.gamificacao.nivel_xp,
       xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
-      xp_diario_limite: XP_DAILY_CAP,
+      xp_extra_hoje: user.xp_diario?.extra_hoje ?? 0,
+      xp_diario_limite: XP_DAILY_CAP_BASE,
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: monthly.map((m: { _id: string; minutos: number }) => ({ mes: m._id, minutos: Math.round(m.minutos) })),
@@ -212,12 +217,25 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     }
 
     const newAchievements = updatedUser.gamificacao.conquistas.filter((a) => !prevAchievements.has(a));
-    const xpAmount = calculateWorkoutXp(
+    const xpBreakdown = calculateWorkoutXpBreakdown(
       exercicios.length,
       Math.max(streakBefore, updatedUser.gamificacao.streak_atual),
       newAchievements,
     );
-    const xpAwarded = awardXp(updatedUser, xpAmount);
+    const levelBefore = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
+    const dailyAwarded = awardDailyExerciseXp(updatedUser, xpBreakdown.total_diario);
+    const extraAwarded = awardBonusXp(updatedUser, xpBreakdown.total_extra);
+    xpBreakdown.aplicado_diario = dailyAwarded;
+    xpBreakdown.aplicado_extra = extraAwarded;
+    xpBreakdown.aplicado = dailyAwarded + extraAwarded;
+    const xpAwarded = xpBreakdown.aplicado;
+    const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
+    const levelUp =
+      levelAfter > levelBefore
+        ? { level_anterior: levelBefore, level_novo: levelAfter }
+        : null;
+    const abdoriaGanha = awardAbdoriaFromXpProgress(updatedUser);
+    syncShopUnlocks(updatedUser);
 
     history.xp_ganho = xpAwarded;
     await history.save();
@@ -230,9 +248,13 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       history,
       user: sanitizeUser(updatedUser),
       xp_ganho: xpAwarded,
+      abdoria_ganha: abdoriaGanha,
+      moedas_ganhas: abdoriaGanha,
+      xp_breakdown: xpBreakdown,
       streak_celebration: streakExtended
         ? { streak_atual: streakAfter, streak_anterior: streakBefore }
         : null,
+      level_up: levelUp,
     });
   } catch (error) {
     console.error('POST /api/workouts/complete error:', error);

@@ -4,6 +4,9 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { calcImc, suggestNivel } from '../types/index.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
+import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
+import { awardAbdoriaFromXp, awardSkillUnlockXp, countNewSkillUnlocks } from '../services/economy.js';
+import { syncUserGamification } from '../services/gamification.js';
 
 export const usersRouter = Router();
 
@@ -77,6 +80,45 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/users/me error:', error);
     res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+  }
+});
+
+usersRouter.patch('/me/dados', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const previousUnlocked = resolveDadosSalvosForUser(user.dados_salvos).exercicios_desbloqueados;
+    const dados = mergeDadosSalvos(user.dados_salvos, req.body ?? {});
+    const newUnlockCount = countNewSkillUnlocks(previousUnlocked, dados.exercicios_desbloqueados);
+
+    user.set('dados_salvos', dados);
+
+    let xpGanhoHabilidades = 0;
+    if (newUnlockCount > 0) {
+      xpGanhoHabilidades = awardSkillUnlockXp(user, newUnlockCount);
+      awardAbdoriaFromXp(user);
+    }
+
+    await user.save();
+
+    if (newUnlockCount > 0) {
+      await syncUserGamification(req.userId!);
+    }
+
+    const refreshed = await User.findById(req.userId).lean();
+    if (!refreshed) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    res.json({ user: sanitizeUser(refreshed), xp_ganho_habilidades: xpGanhoHabilidades });
+  } catch (error) {
+    console.error('PATCH /api/users/me/dados error:', error);
+    res.status(500).json({ error: 'Erro ao salvar dados da conta.' });
   }
 });
 

@@ -72,6 +72,7 @@ export interface ExerciseLevelParams {
 export interface IExercise extends ExerciseLevelParams {
   slug: string;
   nome: string;
+  nome_pt?: string;
   nivel: 1 | 2 | 3 | 4;
   musculo_principal: MusculoPrincipal;
   musculos_secundarios?: MusculoPrincipal[];
@@ -94,7 +95,10 @@ export interface UserPreferencias {
 }
 
 export interface XpDiario {
+  /** XP de exercícios hoje (teto 100/dia). */
   ganho_hoje: number;
+  /** XP bônus hoje (streak, conquistas, loja, habilidades — sem teto). */
+  extra_hoje: number;
   data_reset: string;
 }
 
@@ -104,6 +108,264 @@ export interface Gamificacao {
   streak_maior: number;
   total_minutos: number;
   conquistas: string[];
+}
+
+export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito';
+
+export type CosmeticUnlockType = 'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo';
+
+export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario';
+
+export type DailyRewardRarity = 'comum' | 'incomum' | 'raro' | 'epico';
+
+export type DailyRewardType = 'xp' | 'abdoria' | 'pacote';
+
+export type DailyShopPaidOfferKind = 'surto_xp' | 'bolsa_abdoria' | 'pacote_misto';
+
+export type DailyShopSlotKind = 'recompensa_diaria' | 'oferta';
+
+export type CosmeticAvatarIcon = AchievementIcon | 'letter';
+
+export interface CosmeticUnlockRule {
+  tipo: CosmeticUnlockType;
+  nivel_min?: number;
+  conquista_id?: string;
+  preco_moedas?: number;
+}
+
+export interface CosmeticDefinition {
+  id: string;
+  kind: CosmeticKind;
+  nome: string;
+  descricao: string;
+  icon: CosmeticAvatarIcon;
+  raridade: CosmeticRarity;
+  unlock: CosmeticUnlockRule;
+}
+
+export interface Cosmeticos {
+  /** Saldo da moeda Abdoria. */
+  moedas: number;
+  /** Blocos de 5 XP já convertidos em Abdoria. */
+  moedas_xp_blocos: number;
+  avatar_equipado: string;
+  borda_equipada: string;
+  titulo_equipado: string | null;
+  som_equipado: string;
+  efeito_equipado: string;
+  desbloqueados: string[];
+  codigos_resgatados: string[];
+}
+
+export interface LojaDiariaSlot {
+  slot: number;
+  kind: DailyShopSlotKind;
+  recompensa_tipo: DailyRewardType;
+  valor: number;
+  raridade: DailyRewardRarity;
+  preco_abdoria: number;
+  /** Custo em XP (progresso do nível) para ofertas de Abdoria ou pacotes mistos. */
+  preco_xp?: number;
+  resgatado: boolean;
+  label: string;
+  /** Nome curto da oferta paga (slots 1 e 2). */
+  oferta_nome?: string;
+  bonus_xp?: number;
+  bonus_abdoria?: number;
+}
+
+export interface LojaDiaria {
+  data_reset: string;
+  slots: LojaDiariaSlot[];
+}
+
+export interface ShopCatalogItem extends CosmeticDefinition {
+  desbloqueada: boolean;
+  equipada: boolean;
+  pode_comprar: boolean;
+  unlock_label: string;
+}
+
+export interface CosmeticCatalogItem extends ShopCatalogItem {}
+
+export interface ShopResponse {
+  abdoria: number;
+  xp_level: number;
+  nivel_xp: number;
+  spendable_xp: number;
+  /** XP necessário para comprar 1 Abdoria na loja. */
+  shop_xp_cost_per_abdoria: number;
+  /** Abdoria necessária para comprar 1 XP na loja. */
+  shop_abdoria_cost_per_xp: number;
+  /** @deprecated Use shop_xp_cost_per_abdoria */
+  xp_to_abdoria_rate: number;
+  /** @deprecated Use shop_abdoria_cost_per_xp */
+  abdoria_to_xp_rate: number;
+  /** Abdoria passiva a cada N XP totais. */
+  abdoria_por_xp: number;
+  avatar_equipado: string;
+  borda_equipada: string;
+  titulo_equipado: string | null;
+  som_equipado: string;
+  efeito_equipado: string;
+  avatares: ShopCatalogItem[];
+  bordas: ShopCatalogItem[];
+  titulos: ShopCatalogItem[];
+  sons: ShopCatalogItem[];
+  efeitos: ShopCatalogItem[];
+  loja_diaria: LojaDiaria;
+}
+
+export interface CosmeticsResponse extends ShopResponse {
+  moedas: number;
+  moedas_por_nivel: number;
+}
+
+export interface UpdateUserDadosResponse {
+  user: IUserDocument;
+  xp_ganho_habilidades: number;
+}
+
+export interface XpBreakdown {
+  exercicios: number;
+  streak: number;
+  conquistas: number;
+  total_diario: number;
+  total_extra: number;
+  total_bruto: number;
+  aplicado_diario: number;
+  aplicado_extra: number;
+  aplicado: number;
+}
+
+export interface RedeemCodeResponse {
+  user: IUserDocument;
+  codigo: string;
+  xp_ganho: number;
+  abdoria_ganha: number;
+  itens_desbloqueados: string[];
+  titulo?: string;
+  mensagem?: string;
+}
+
+export interface PurchaseCosmeticResponse {
+  user: IUserDocument;
+  item: CosmeticCatalogItem;
+  moedas_gastas: number;
+}
+
+export interface EquipCosmeticResponse {
+  user: IUserDocument;
+  item: CosmeticCatalogItem;
+}
+
+export const XP_DAILY_CAP_BASE = 100;
+/** Limite diário de XP por exercícios (fixo). */
+export const XP_DAILY_CAP = XP_DAILY_CAP_BASE;
+/** @deprecated Conquistas não aumentam mais o teto diário. */
+export const XP_DAILY_CAP_PER_ACHIEVEMENT = 0;
+/** XP diário por exercício concluído (treino com mín. 3 exercícios). */
+export const XP_DAILY_PER_EXERCISE = 20;
+/** Mínimo de exercícios no treino para contar XP diário. */
+export const XP_DAILY_MIN_EXERCISES = 3;
+/** Exercícios para encher o teto diário (5 × 20 = 100). */
+export const XP_DAILY_FULL_EXERCISES = 5;
+
+export function dailyXpCap(_unlockedAchievementCount = 0): number {
+  return XP_DAILY_CAP_BASE;
+}
+export const XP_STREAK_BONUS_PER_DAY = 1;
+export const XP_STREAK_BONUS_MAX = 32;
+export const XP_ACHIEVEMENT_BONUS = 1;
+/** @deprecated Use XP_DAILY_PER_EXERCISE for daily exercise XP. */
+export const XP_WORKOUT_BASE = 0;
+/** @deprecated Use XP_DAILY_PER_EXERCISE for daily exercise XP. */
+export const XP_PER_EXERCISE = XP_DAILY_PER_EXERCISE;
+export const XP_PER_SKILL_UNLOCK = 1;
+/** Loja: comprar 1 Abdoria custa N XP (progresso do nível). */
+export const SHOP_XP_COST_PER_ABDORIA = 25;
+/** Loja: comprar 1 XP custa N Abdoria. */
+export const SHOP_ABDORIA_COST_PER_XP = 5;
+/** Abdoria passiva: 1 moeda a cada N XP totais ganhos. */
+export const ABDORIA_XP_STEP = 10;
+export const CURRENCY_NAME = 'Abdoria';
+
+/** @deprecated Use SHOP_XP_COST_PER_ABDORIA */
+export const XP_TO_ABDORIA_RATE = SHOP_XP_COST_PER_ABDORIA;
+/** @deprecated Use SHOP_ABDORIA_COST_PER_XP */
+export const ABDORIA_TO_XP_RATE = SHOP_ABDORIA_COST_PER_XP;
+
+/** @deprecated Use ABDORIA_XP_STEP */
+export const COINS_PER_LEVEL = ABDORIA_XP_STEP;
+
+export function abdoriaCostForXpReward(xpAmount: number): number {
+  return Math.max(1, Math.ceil(xpAmount * SHOP_ABDORIA_COST_PER_XP));
+}
+
+export function xpCostForAbdoriaReward(abdoriaAmount: number): number {
+  return Math.max(1, Math.ceil(abdoriaAmount * SHOP_XP_COST_PER_ABDORIA));
+}
+
+export const DAILY_RARITY_LABELS: Record<DailyRewardRarity, string> = {
+  comum: 'Comum',
+  incomum: 'Incomum',
+  raro: 'Raro',
+  epico: 'Épico',
+};
+
+export const DAILY_LUCK_LABELS: Partial<Record<DailyRewardRarity, string>> = {
+  raro: 'Sorte grande!',
+  epico: 'Jackpot! Sorte épica!',
+};
+
+export const DAILY_PAID_OFFER_LABELS: Record<DailyShopPaidOfferKind, string> = {
+  surto_xp: 'Surto de XP',
+  bolsa_abdoria: 'Bolsa Abdoria',
+  pacote_misto: 'Pacote misto',
+};
+
+export const DEFAULT_COSMETICOS: Cosmeticos = {
+  moedas: 0,
+  moedas_xp_blocos: 0,
+  avatar_equipado: 'avatar_inicial',
+  borda_equipada: 'borda_basica',
+  titulo_equipado: null,
+  som_equipado: 'som_classico',
+  efeito_equipado: 'efeito_padrao',
+  desbloqueados: ['avatar_inicial', 'borda_basica', 'som_classico', 'efeito_padrao'],
+  codigos_resgatados: [],
+};
+
+export const COSMETIC_RARITY_LABELS: Record<CosmeticRarity, string> = {
+  comum: 'Comum',
+  raro: 'Raro',
+  epico: 'Épico',
+  lendario: 'Lendário',
+};
+
+export function resolveCosmeticos(
+  cosmeticos?: Partial<Cosmeticos> | null,
+  nivelXp = 0,
+): Cosmeticos {
+  const merged = {
+    ...DEFAULT_COSMETICOS,
+    ...cosmeticos,
+    desbloqueados: cosmeticos?.desbloqueados?.length
+      ? [...new Set([...DEFAULT_COSMETICOS.desbloqueados, ...cosmeticos.desbloqueados])]
+      : [...DEFAULT_COSMETICOS.desbloqueados],
+    codigos_resgatados: cosmeticos?.codigos_resgatados ?? [],
+  };
+
+  if (merged.moedas_xp_blocos === 0 && nivelXp > 0 && !cosmeticos?.moedas_xp_blocos) {
+    merged.moedas_xp_blocos = Math.floor(nivelXp / ABDORIA_XP_STEP);
+  }
+
+  return merged;
+}
+
+export function streakXpBonus(streakAtual: number): number {
+  if (streakAtual <= 0) return 0;
+  return Math.min(streakAtual * XP_STREAK_BONUS_PER_DAY, XP_STREAK_BONUS_MAX);
 }
 
 export type SexoBiologico = 'masculino' | 'feminino';
@@ -127,8 +389,11 @@ export interface IUser {
   nivel: NivelUsuario;
   objetivo: Objetivo;
   gamificacao: Gamificacao;
+  cosmeticos: Cosmeticos;
+  loja_diaria?: LojaDiaria;
   simulacao_definicao?: SimulacaoDefinicao;
   preferencias: UserPreferencias;
+  dados_salvos?: UserDadosSalvos;
   xp_diario: XpDiario;
     onboarding_completed: boolean;
     terms_accepted_at?: string | null;
@@ -214,6 +479,7 @@ export interface DashboardStats {
   streak_maior: number;
   nivel_xp: number;
   xp_hoje: number;
+  xp_extra_hoje: number;
   xp_diario_limite: number;
   conquistas: Achievement[];
   musculos_semana: Record<MusculoPrincipal, number>;
@@ -234,11 +500,21 @@ export interface StreakCelebration {
   streak_anterior: number;
 }
 
+export interface LevelUpCelebration {
+  level_anterior: number;
+  level_novo: number;
+}
+
 export interface CompleteWorkoutResponse {
   history: IWorkoutHistoryDocument;
   user: IUserDocument;
   xp_ganho: number;
+  abdoria_ganha?: number;
+  /** @deprecated Use abdoria_ganha */
+  moedas_ganhas?: number;
+  xp_breakdown?: XpBreakdown;
   streak_celebration: StreakCelebration | null;
+  level_up: LevelUpCelebration | null;
 }
 
 export interface CompleteWorkoutPayload {
@@ -251,6 +527,7 @@ export interface CompleteWorkoutPayload {
 export interface WorkoutQueueItem {
   slug: string;
   nome: string;
+  nome_pt?: string;
   exercicio_id?: string;
   musculo_principal: MusculoPrincipal;
   tempo_recomendado: number;
@@ -259,6 +536,76 @@ export interface WorkoutQueueItem {
   repeticoes?: number;
   tempo_seg?: number;
   descanso_seg: number;
+}
+
+export interface StoredRepScheme extends RepSchemeRecommendation {
+  isCustom: boolean;
+}
+
+export interface SavedWorkoutPreset {
+  id: string;
+  nome: string;
+  queue: WorkoutQueueItem[];
+  descanso_padrao_seg: number;
+  savedAt: string;
+}
+
+export interface UserDadosSalvos {
+  treino_personalizado: WorkoutQueueItem[];
+  treinos_salvos: SavedWorkoutPreset[];
+  esquemas_reps: Partial<Record<NivelUsuario, StoredRepScheme[]>>;
+  exercicios_desbloqueados: string[];
+}
+
+export const DEFAULT_USER_DADOS_SALVOS: UserDadosSalvos = {
+  treino_personalizado: [],
+  treinos_salvos: [],
+  esquemas_reps: {},
+  exercicios_desbloqueados: [],
+};
+
+export function resolveUserDadosSalvos(dados?: Partial<UserDadosSalvos> | null): UserDadosSalvos {
+  const esquemas = dados?.esquemas_reps;
+  return {
+    treino_personalizado: dados?.treino_personalizado ?? [],
+    treinos_salvos: dados?.treinos_salvos ?? [],
+    esquemas_reps: esquemas ? { ...esquemas } : {},
+    exercicios_desbloqueados: dados?.exercicios_desbloqueados ?? [],
+  };
+}
+
+export function mergeUserDadosSalvos(
+  current: UserDadosSalvos,
+  patch: Partial<UserDadosSalvos>,
+): UserDadosSalvos {
+  return {
+    treino_personalizado: patch.treino_personalizado ?? current.treino_personalizado,
+    treinos_salvos: patch.treinos_salvos ?? current.treinos_salvos,
+    esquemas_reps: patch.esquemas_reps
+      ? { ...current.esquemas_reps, ...patch.esquemas_reps }
+      : current.esquemas_reps,
+    exercicios_desbloqueados: patch.exercicios_desbloqueados ?? current.exercicios_desbloqueados,
+  };
+}
+
+export const SAVED_PRESET_PREFIX = 'saved:';
+
+export function isSavedPresetId(id: string): boolean {
+  return id.startsWith(SAVED_PRESET_PREFIX);
+}
+
+export function toSavedPresetId(id: string): string {
+  return `${SAVED_PRESET_PREFIX}${id}`;
+}
+
+export function fromSavedPresetId(id: string): string {
+  return id.slice(SAVED_PRESET_PREFIX.length);
+}
+
+export function savedWorkoutSummary(preset: SavedWorkoutPreset): string {
+  const count = preset.queue.length;
+  const reps = preset.queue.filter((item) => item.modo === 'reps' || !item.modo).length;
+  return `${count} exercícios${reps > 0 ? ` · ${reps} com repetições` : ''}`;
 }
 
 export interface ActiveWorkoutConfig {
@@ -302,8 +649,15 @@ export interface LeaderboardEntry {
   nivel_xp: number;
   level: number;
   streak_atual: number;
+  moedas: number;
+  avatar_equipado: string;
+  borda_equipada: string;
   is_me?: boolean;
 }
+
+export type LeaderboardMetric = 'xp' | 'streak' | 'moedas';
+
+export const LEADERBOARD_DISPLAY_LIMIT = 25;
 
 export interface AuthResponse {
   token: string;
@@ -421,8 +775,6 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
     { id: 'vol-12x3', label: '12 × 3', series: 3, repeticoes: 12, descricao: 'Manutenção técnica com volume' },
   ],
 };
-
-export const XP_DAILY_CAP = 100;
 
 export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   descanso_padrao_seg: 30,
@@ -606,3 +958,13 @@ export function getExerciseParamsForNivel(
     descanso_seg: descMap[nivel],
   };
 }
+
+export { EXERCISE_NOME_PT, formatExerciseName, resolveExerciseNomePt } from './exercise-display.js';
+export {
+  xpFloorForCurrentLevel,
+  spendableXpForShop,
+  xpLevelFromTotal,
+  xpProgressFromTotal,
+  xpRequiredForNextLevel,
+  type XpLevelProgress,
+} from './xp-level.js';

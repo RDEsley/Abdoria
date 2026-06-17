@@ -8,6 +8,9 @@ node_modules/
 server/.env
 client/.env
 
+# Bundle da API (gerado no deploy)
+lib/server-dist/
+
 # Build output
 dist/
 build/
@@ -57,3 +60,4 @@ temp/
 # Optional local MongoDB dumps
 *.dump
 dump/
+.vercel

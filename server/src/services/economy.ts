@@ -1,0 +1,150 @@
+import type { UserDocument } from '../models/User.js';
+import type { XpBreakdown } from '../types/index.js';
+import {
+  ABDORIA_XP_STEP,
+  XP_ACHIEVEMENT_BONUS,
+  XP_DAILY_CAP_BASE,
+  XP_DAILY_MIN_EXERCISES,
+  XP_DAILY_PER_EXERCISE,
+  XP_PER_SKILL_UNLOCK,
+  XP_STREAK_BONUS_MAX,
+  XP_STREAK_BONUS_PER_DAY,
+  spendableXpForShop,
+  streakXpBonus,
+  xpFloorForCurrentLevel,
+  xpLevelFromTotal,
+} from '../types/index.js';
+import { resetXpDiarioIfNeeded } from './gamification.js';
+
+export function getDailyXpCapForUser(_user: UserDocument): number {
+  return XP_DAILY_CAP_BASE;
+}
+
+function ensureExtraHoje(user: UserDocument): void {
+  if (typeof user.xp_diario.extra_hoje !== 'number') {
+    user.xp_diario.extra_hoje = 0;
+  }
+}
+
+/** XP de exercícios — respeita teto diário de 100. */
+export function awardDailyExerciseXp(user: UserDocument, amount: number): number {
+  if (amount <= 0) return 0;
+  resetXpDiarioIfNeeded(user);
+  ensureExtraHoje(user);
+
+  const remaining = XP_DAILY_CAP_BASE - user.xp_diario.ganho_hoje;
+  const awarded = Math.max(0, Math.min(amount, remaining));
+  user.xp_diario.ganho_hoje += awarded;
+  user.gamificacao.nivel_xp += awarded;
+  return awarded;
+}
+
+/** XP bônus (streak, conquistas, loja, habilidades) — sem teto diário. */
+export function awardBonusXp(user: UserDocument, amount: number): number {
+  if (amount <= 0) return 0;
+  resetXpDiarioIfNeeded(user);
+  ensureExtraHoje(user);
+
+  user.xp_diario.extra_hoje += amount;
+  user.gamificacao.nivel_xp += amount;
+  return amount;
+}
+
+/** @deprecated Use awardBonusXp para fontes extras ou awardDailyExerciseXp para exercícios. */
+export function awardXp(user: UserDocument, amount: number): number {
+  return awardBonusXp(user, amount);
+}
+
+export function calculateWorkoutXpBreakdown(
+  exerciseCount: number,
+  streakAtual: number,
+  newAchievements: string[],
+): XpBreakdown {
+  const exercicios =
+    exerciseCount >= XP_DAILY_MIN_EXERCISES ? exerciseCount * XP_DAILY_PER_EXERCISE : 0;
+  const streak = streakXpBonus(streakAtual);
+  const conquistas = newAchievements.length * XP_ACHIEVEMENT_BONUS;
+  const total_diario = exercicios;
+  const total_extra = streak + conquistas;
+  const total_bruto = total_diario + total_extra;
+
+  return {
+    exercicios,
+    streak,
+    conquistas,
+    total_diario,
+    total_extra,
+    total_bruto,
+    aplicado_diario: 0,
+    aplicado_extra: 0,
+    aplicado: 0,
+  };
+}
+
+export function awardAbdoriaFromXp(user: UserDocument): number {
+  const blocks = Math.floor(user.gamificacao.nivel_xp / ABDORIA_XP_STEP);
+  const previous = user.cosmeticos.moedas_xp_blocos ?? 0;
+  const gained = Math.max(0, blocks - previous);
+  if (gained > 0) {
+    user.cosmeticos.moedas += gained;
+    user.cosmeticos.moedas_xp_blocos = blocks;
+  }
+  return gained;
+}
+
+export function grantAbdoria(user: UserDocument, amount: number): void {
+  if (amount <= 0) return;
+  user.cosmeticos.moedas += amount;
+}
+
+export function spendXpForShop(
+  user: UserDocument,
+  amount: number,
+): { spent: number } | { error: string } {
+  if (amount <= 0) return { spent: 0 };
+
+  const totalXp = user.gamificacao.nivel_xp;
+  const spendable = spendableXpForShop(totalXp);
+  if (amount > spendable) {
+    return {
+      error: `XP insuficiente no progresso do nível. Você pode usar até ${spendable} XP (0–99% do nível atual).`,
+    };
+  }
+
+  const currentLevel = xpLevelFromTotal(totalXp);
+  const nextTotal = totalXp - amount;
+  if (xpLevelFromTotal(nextTotal) < currentLevel) {
+    return { error: 'Não é possível gastar XP abaixo do patamar do seu nível atual.' };
+  }
+
+  user.gamificacao.nivel_xp = nextTotal;
+
+  const floor = xpFloorForCurrentLevel(nextTotal);
+  const newBlocks = Math.floor(nextTotal / ABDORIA_XP_STEP);
+  const previousBlocks = user.cosmeticos.moedas_xp_blocos ?? 0;
+  if (newBlocks < previousBlocks) {
+    user.cosmeticos.moedas = Math.max(0, user.cosmeticos.moedas - (previousBlocks - newBlocks));
+    user.cosmeticos.moedas_xp_blocos = Math.max(newBlocks, Math.floor(floor / ABDORIA_XP_STEP));
+  }
+
+  return { spent: amount };
+}
+
+export function awardSkillUnlockXp(user: UserDocument, newUnlockCount: number): number {
+  if (newUnlockCount <= 0) return 0;
+  return awardBonusXp(user, newUnlockCount * XP_PER_SKILL_UNLOCK);
+}
+
+export function countNewSkillUnlocks(previous: string[], next: string[]): number {
+  const prev = new Set(previous);
+  return next.filter((slug) => slug && !prev.has(slug)).length;
+}
+
+export {
+  XP_DAILY_CAP_BASE as XP_DAILY_CAP,
+  ABDORIA_XP_STEP,
+  streakXpBonus,
+  XP_PER_SKILL_UNLOCK,
+  XP_STREAK_BONUS_PER_DAY,
+  XP_STREAK_BONUS_MAX,
+};

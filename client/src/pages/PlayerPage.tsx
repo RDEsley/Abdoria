@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LogOut, Pause, Play, Plus, X } from 'lucide-react';
+import { Check, Coins, LogOut, Pause, Play, SkipForward, Timer, X, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
+import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
@@ -14,9 +15,10 @@ import {
   playRestStart,
   playSuccess,
 } from '@/lib/sounds';
+import { getErrorMessage } from '@/lib/api-errors';
 import { formatTime } from '@/lib/utils';
-import { formatExercisePrescription } from '@/types';
-import type { ActiveWorkout, WorkoutQueueItem } from '@/types';
+import { CURRENCY_NAME, formatExerciseName, formatExercisePrescription, type LevelUpCelebration as LevelUpData } from '@/types';
+import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 
 type Phase = 'ready' | 'working' | 'resting' | 'done';
 
@@ -42,13 +44,16 @@ export function PlayerPage() {
   const [seriesIndex, setSeriesIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [repsDone, setRepsDone] = useState(0);
+  const [restTotalSec, setRestTotalSec] = useState(0);
   const [paused, setPaused] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
+  const [abdoriaGained, setAbdoriaGained] = useState(0);
+  const [xpBreakdown, setXpBreakdown] = useState<XpBreakdown | null>(null);
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
+  const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const startTimeRef = useRef(0);
   const sessionStartedRef = useRef(false);
@@ -79,6 +84,17 @@ export function PlayerPage() {
     return current.descanso_seg ?? workout?.config.descanso_padrao_seg ?? 30;
   }, [current, workout]);
 
+  const startRest = useCallback(
+    (restSec: number) => {
+      setRestTotalSec(restSec);
+      setSecondsLeft(restSec);
+      setPhase('resting');
+      setPaused(false);
+      playRestStart();
+    },
+    [],
+  );
+
   const advanceAfterSeries = useCallback(() => {
     if (!workout || !current) return;
 
@@ -86,61 +102,67 @@ export function PlayerPage() {
 
     if (seriesIndex + 1 < totalSeries) {
       setSeriesIndex((s) => s + 1);
-      setPhase('resting');
-      setSecondsLeft(getRestSeconds());
-      playRestStart();
-      setRepsDone(0);
+      startRest(getRestSeconds());
       return;
     }
 
     if (exerciseIndex + 1 < workout.queue.length) {
       setExerciseIndex((i) => i + 1);
       setSeriesIndex(0);
-      setPhase('resting');
-      setSecondsLeft(getRestSeconds());
-      playRestStart();
-      setRepsDone(0);
+      startRest(getRestSeconds());
       setMediaError(false);
       return;
     }
 
     setPhase('done');
     playSuccess();
-  }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds]);
+  }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds, startRest]);
+
+  const runsCountdown =
+    phase === 'resting' || (phase === 'working' && current?.modo === 'tempo');
 
   useEffect(() => {
-    if (!workout || paused || phase === 'ready' || phase === 'done') return;
-    if (phase === 'working' && current?.modo === 'reps') return;
+    if (!workout || paused || !runsCountdown) return;
 
     const timer = window.setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) return 0;
-        if (prev <= 5) playBeep(520, 0.05);
+        if (phase === 'resting' && prev <= 5) playBeep(520, 0.05);
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [workout, paused, phase, current?.modo]);
+  }, [workout, paused, runsCountdown, phase]);
 
   useEffect(() => {
     if (secondsLeft !== 0) {
       tickHandledRef.current = false;
       return;
     }
-    if (!workout || paused || phase !== 'resting' || tickHandledRef.current) return;
-    tickHandledRef.current = true;
-    setPhase('ready');
-    setSecondsLeft(0);
-  }, [secondsLeft, workout, paused, phase]);
+    if (!workout || paused || tickHandledRef.current) return;
+
+    if (phase === 'resting') {
+      tickHandledRef.current = true;
+      setPhase('ready');
+      setSecondsLeft(0);
+      setRestTotalSec(0);
+      return;
+    }
+
+    if (phase === 'working' && current?.modo === 'tempo') {
+      tickHandledRef.current = true;
+      advanceAfterSeries();
+    }
+  }, [secondsLeft, workout, paused, phase, current?.modo, advanceAfterSeries]);
 
   const startSeries = () => {
     if (!sessionStartedRef.current) {
       startTimeRef.current = Date.now();
       sessionStartedRef.current = true;
     }
+    setPaused(false);
     if (current?.modo === 'reps') {
-      setRepsDone(0);
       setPhase('working');
     } else {
       setSecondsLeft(getTargetSeconds());
@@ -150,21 +172,21 @@ export function PlayerPage() {
 
   const completeSeries = () => {
     if (phase !== 'working') return;
-    if (current?.modo === 'reps' && repsDone < getTargetReps()) return;
     advanceAfterSeries();
   };
 
-  const addRep = () => {
-    if (phase !== 'working' || current?.modo !== 'reps') return;
-    setRepsDone((r) => Math.min(r + 1, getTargetReps()));
-    playBeep(660, 0.04);
+  const skipRest = () => {
+    if (phase !== 'resting') return;
+    tickHandledRef.current = true;
+    setPhase('ready');
+    setSecondsLeft(0);
+    setRestTotalSec(0);
+    setPaused(false);
   };
 
-  const skipRest = () => {
-    if (phase === 'resting') {
-      setPhase('ready');
-      setSecondsLeft(0);
-    }
+  const togglePause = () => {
+    if (phase === 'ready' || phase === 'done') return;
+    setPaused((value) => !value);
   };
 
   const quitWorkout = () => {
@@ -195,13 +217,18 @@ export function PlayerPage() {
         duracao_total_segundos: Math.max(duration, 1),
       });
       setXpGained(result.xp_ganho ?? 0);
+      setAbdoriaGained(result.abdoria_ganha ?? 0);
+      setXpBreakdown(result.xp_breakdown ?? null);
       if (result.streak_celebration) {
         setStreakCelebration(result.streak_celebration.streak_atual);
+      }
+      if (result.level_up) {
+        setLevelUpCelebration(result.level_up);
       }
       sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
       setTimeout(() => navigate('/'), 2500);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Erro ao salvar treino');
+      setSaveError(getErrorMessage(err, 'Não foi possível salvar seu treino. Tente novamente.'));
     } finally {
       setSaving(false);
     }
@@ -217,15 +244,55 @@ export function PlayerPage() {
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="game-victory relative z-10">
           {streakCelebration !== null ? (
             <StreakFireCelebration streak={streakCelebration} />
+          ) : levelUpCelebration ? (
+            <LevelUpCelebration
+              level={levelUpCelebration.level_novo}
+              previousLevel={levelUpCelebration.level_anterior}
+            />
           ) : (
             <div className="game-level-badge mx-auto mb-4">✓</div>
           )}
           <h2 className="game-victory__title">MISSÃO COMPLETA!</h2>
+          {levelUpCelebration && streakCelebration !== null && (
+            <LevelUpCelebration
+              compact
+              level={levelUpCelebration.level_novo}
+              previousLevel={levelUpCelebration.level_anterior}
+            />
+          )}
           <p className="mt-2 text-sm font-bold text-stone-600">{workout.treino_nome}</p>
-          {xpGained > 0 && <p className="game-victory__xp">+{xpGained} XP</p>}
+          {xpGained > 0 && (
+            <div className="game-victory__rewards">
+              <p className="game-victory__xp">
+                <Zap size={14} aria-hidden /> +{xpGained} XP
+              </p>
+              {abdoriaGained > 0 && (
+                <p className="game-victory__abdoria">
+                  <Coins size={14} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
+                </p>
+              )}
+              {xpBreakdown && (
+                <ul className="game-victory__breakdown">
+                  {xpBreakdown.exercicios > 0 && (
+                    <li>Exercícios (diário) +{xpBreakdown.aplicado_diario}</li>
+                  )}
+                  {xpBreakdown.exercicios === 0 && xpBreakdown.total_diario === 0 && (
+                    <li className="game-victory__breakdown-cap">Mín. 3 exercícios para XP diário</li>
+                  )}
+                  {xpBreakdown.streak > 0 && <li>Streak (extra) +{xpBreakdown.streak}</li>}
+                  {xpBreakdown.conquistas > 0 && <li>Conquistas (extra) +{xpBreakdown.conquistas}</li>}
+                  {xpBreakdown.total_diario > xpBreakdown.aplicado_diario && (
+                    <li className="game-victory__breakdown-cap">
+                      Teto diário · +{xpBreakdown.aplicado_diario}/{xpBreakdown.total_diario} de exercícios
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+          )}
           {saveError && <p className="mt-4 game-login__error">{saveError}</p>}
           <GameButton onClick={handleFinish} size="lg" className="mt-6 w-full" disabled={saving}>
-            {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar à base' : 'Salvar e voltar'}
+            {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar ao início' : 'Salvar e voltar'}
           </GameButton>
         </motion.div>
       </div>
@@ -233,112 +300,191 @@ export function PlayerPage() {
   }
 
   const targetReps = getTargetReps();
+  const targetSeconds = getTargetSeconds();
   const prescription = formatExercisePrescription(current);
+  const currentName = formatExerciseName(current);
+  const nextExercise = workout.queue[exerciseIndex + 1];
+  const nextSeriesLabel =
+    seriesIndex + 1 < totalSeries
+      ? `próxima: série ${seriesIndex + 2}`
+      : nextExercise
+        ? `próximo: ${formatExerciseName(nextExercise)}`
+        : 'última série do treino';
+
   const progressPct =
-    phase === 'working' && current.modo === 'tempo' && getTargetSeconds() > 0
-      ? ((getTargetSeconds() - secondsLeft) / getTargetSeconds()) * 100
+    phase === 'working' && current.modo === 'tempo' && targetSeconds > 0
+      ? ((targetSeconds - secondsLeft) / targetSeconds) * 100
       : phase === 'working' && current.modo === 'reps'
-        ? (repsDone / targetReps) * 100
-        : phase === 'resting' && getRestSeconds() > 0
-          ? ((getRestSeconds() - secondsLeft) / getRestSeconds()) * 100
+        ? ((seriesIndex + 1) / totalSeries) * 100
+        : phase === 'resting' && restTotalSec > 0
+          ? ((restTotalSec - secondsLeft) / restTotalSec) * 100
           : 0;
 
+  const ringCenter =
+    phase === 'resting' ? (
+      <>
+        <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
+        <span className="game-timer-ring__sublabel">descanso</span>
+      </>
+    ) : phase === 'working' && current.modo === 'tempo' ? (
+      <>
+        <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
+        <span className="game-timer-ring__sublabel">exercício</span>
+      </>
+    ) : phase === 'working' ? (
+      <>
+        <span className="game-timer-ring__label tabular-nums">
+          {seriesIndex + 1}/{totalSeries}
+        </span>
+        <span className="game-timer-ring__sublabel">série</span>
+      </>
+    ) : (
+      <>
+        <Play size={32} className="text-emerald-500" />
+        <span className="game-timer-ring__sublabel mt-1">pronta</span>
+      </>
+    );
+
+  const phaseBadge =
+    phase === 'resting' ? (
+      <span className="game-player-phase game-player-phase--rest">
+        <Timer size={14} /> Cronômetro de descanso
+      </span>
+    ) : phase === 'working' ? (
+      <span className="game-player-phase game-player-phase--work">Série {seriesIndex + 1} de {totalSeries}</span>
+    ) : (
+      <span className="game-player-phase game-player-phase--ready">Pronto para a série {seriesIndex + 1}</span>
+    );
+
+  const statusText =
+    phase === 'ready'
+      ? current.modo === 'reps'
+        ? `Faça ${targetReps} repetições quando iniciar a série ${seriesIndex + 1}.`
+        : `Segure por ${targetSeconds}s na série ${seriesIndex + 1}.`
+      : phase === 'working'
+        ? current.modo === 'reps'
+          ? `Meta: ${targetReps} repetições · toque em "Série concluída" ao terminar.`
+          : `Segure a posição · o tempo conta sozinho.`
+        : paused
+          ? `Descanso pausado · ${formatTime(secondsLeft)} restantes · ${nextSeriesLabel}.`
+          : `Descanso de ${formatTime(restTotalSec)} · ${nextSeriesLabel}.`;
+
+  const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
+  const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
+
   return (
-    <div className="game-app fixed inset-0 z-50 flex flex-col">
+    <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
       <AnimatedBackground variant="player" />
-      <header className="game-player-hud relative flex items-center justify-between">
+      <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
         <button type="button" onClick={() => setShowQuitModal(true)} className="cursor-pointer font-bold text-stone-600" aria-label="Desistir do treino">
           <X size={24} />
         </button>
         <div className="text-center">
           <p className="game-page-header__eyebrow !mb-0">{workout.treino_nome}</p>
           <p className="text-xs font-extrabold text-stone-800">
-            {exerciseIndex + 1}/{workout.queue.length} · Série {seriesIndex + 1}/{totalSeries}
+            Exercício {exerciseIndex + 1}/{workout.queue.length}
           </p>
         </div>
-        <button type="button" onClick={() => setPaused((p) => !p)} className="cursor-pointer text-stone-600" disabled={phase === 'ready'} aria-label={paused ? 'Retomar' : 'Pausar'}>
+        <button
+          type="button"
+          onClick={togglePause}
+          className="cursor-pointer text-stone-600 disabled:opacity-30"
+          disabled={!canTogglePause}
+          aria-label={paused ? 'Continuar cronômetro' : 'Pausar cronômetro'}
+        >
           {paused ? <Play size={24} /> : <Pause size={24} />}
         </button>
       </header>
 
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 px-6">
+      <div className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
+        <div className="game-player-content flex flex-col items-center gap-3 px-4 py-3 sm:gap-5 sm:px-6 sm:py-5">
+        {phaseBadge}
+
         <AnimatePresence mode="wait">
           <motion.div key={`${current.slug}-${exerciseIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-            <div className="game-player-frame relative mx-auto aspect-square w-full max-w-xs">
+            <div className="game-player-frame relative mx-auto aspect-square w-full max-w-[10.5rem] sm:max-w-xs">
               {!mediaError ? (
-                <img src={exerciseMediaUrl(current.slug)} alt={current.nome} className="h-full w-full object-cover" onError={() => setMediaError(true)} />
+                <img src={exerciseMediaUrl(current.slug)} alt={currentName} className="h-full w-full object-cover" onError={() => setMediaError(true)} />
               ) : (
-                <div className="flex h-full items-center justify-center text-5xl font-extrabold text-emerald-200">{current.nome[0]}</div>
+                <div className="flex h-full items-center justify-center text-5xl font-extrabold text-emerald-200">{currentName[0]}</div>
               )}
             </div>
           </motion.div>
         </AnimatePresence>
 
         <div className="text-center">
-          <h2 className="game-page-header__title !text-base">{current.nome}</h2>
-          <p className="mt-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">
-            Meta: {prescription}
-          </p>
-          <p className="mt-2 text-xs font-extrabold text-stone-600">
-            {phase === 'ready' && (current.modo === 'reps' ? `Faça ${targetReps} reps · série ${seriesIndex + 1}` : `Segure ${getTargetSeconds()}s · série ${seriesIndex + 1}`)}
-            {phase === 'working' && (current.modo === 'reps' ? `${repsDone}/${targetReps} reps` : formatTime(secondsLeft))}
-            {phase === 'resting' && `Descanso ${formatTime(secondsLeft)} · próxima: série ${seriesIndex + 1 < totalSeries ? seriesIndex + 2 : 1}`}
-          </p>
+          <h2 className="game-page-header__title !text-base">{currentName}</h2>
+          <p className="mt-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">Meta: {prescription}</p>
+          <p className="mt-2 max-w-xs text-xs font-bold leading-relaxed text-stone-600">{statusText}</p>
         </div>
 
-        <div className="relative">
-          <svg className="h-40 w-40 -rotate-90" viewBox="0 0 100 100">
+        <div className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}>
+          <svg className="game-timer-ring__svg -rotate-90" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="none" stroke="#e7e5e4" strokeWidth="6" />
             <circle
-              cx="50" cy="50" r="45" fill="none"
-              stroke={phase === 'resting' ? '#0284c7' : '#059669'}
-              strokeWidth="6" strokeLinecap="round"
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke={ringStroke}
+              strokeWidth="6"
+              strokeLinecap="round"
               strokeDasharray={`${progressPct * 2.83} 283`}
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            {phase === 'working' && current.modo === 'reps' ? (
-              <span className="game-timer-ring__label tabular-nums">{repsDone}</span>
-            ) : phase !== 'ready' ? (
-              <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-            ) : (
-              <Play size={36} className="text-emerald-500" />
-            )}
-          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">{ringCenter}</div>
         </div>
 
-        {paused && <p className="text-sm font-bold text-amber-600">Pausado</p>}
-      </div>
+        {paused && canTogglePause && (
+          <p className="game-player-paused">
+            <Pause size={14} /> Cronômetro pausado · toque em continuar
+          </p>
+        )}
+        </div>
 
-      <div className="flex flex-col gap-3 p-6">
+      <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
         {phase === 'ready' && (
-          <GameButton size="lg" className="w-full" onClick={startSeries}>
-            INICIAR SÉRIE {seriesIndex + 1}
+          <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={startSeries}>
+            <Play size={20} fill="currentColor" />
+            Iniciar série {seriesIndex + 1}
           </GameButton>
         )}
-        {phase === 'working' && current.modo === 'reps' && (
-          <div className="flex gap-3">
-            <GameButton variant="secondary" size="lg" className="flex-1 flex items-center justify-center gap-2" onClick={addRep} disabled={repsDone >= targetReps}>
-              <Plus size={22} /> +1 rep
-            </GameButton>
-            <GameButton size="lg" className="flex-1" onClick={completeSeries} disabled={repsDone < targetReps}>
-              Concluir ({repsDone}/{targetReps})
-            </GameButton>
-          </div>
-        )}
-        {phase === 'working' && current.modo === 'tempo' && (
-          <GameButton size="lg" className="w-full" onClick={completeSeries}>
-            Concluir série
+
+        {phase === 'working' && (
+          <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={completeSeries}>
+            <Check size={22} />
+            Série concluída
           </GameButton>
         )}
+
         {phase === 'resting' && (
-          <GameButton variant="secondary" size="lg" className="w-full" onClick={skipRest}>
-            Pular descanso
-          </GameButton>
+          <>
+            <GameButton
+              size="lg"
+              className="w-full flex items-center justify-center gap-2"
+              variant={paused ? 'primary' : 'secondary'}
+              onClick={togglePause}
+            >
+              {paused ? (
+                <>
+                  <Play size={20} fill="currentColor" /> Continuar descanso
+                </>
+              ) : (
+                <>
+                  <Pause size={20} /> Pausar descanso
+                </>
+              )}
+            </GameButton>
+            <GameButton variant="secondary" size="lg" className="w-full flex items-center justify-center gap-2" onClick={skipRest}>
+              <SkipForward size={18} /> Pular descanso
+            </GameButton>
+          </>
         )}
+
         <GameButton variant="secondary" size="lg" className="w-full flex items-center justify-center gap-2 text-red-700" onClick={() => setShowQuitModal(true)}>
           <LogOut size={18} /> Desistir do treino
         </GameButton>
+      </div>
       </div>
 
       <AnimatePresence>
@@ -357,7 +503,8 @@ export function PlayerPage() {
             >
               <h3 className="game-victory__title !text-base">Desistir do treino?</h3>
               <p className="mt-2 text-sm font-bold text-stone-600">
-                O progresso desta sessão não será salvo. Você pode recomeçar no construtor.
+                Se você sair agora, este treino não será contado — nada do que fez até aqui será salvo. Para
+                treinar de novo, volte na aba <strong>Missão</strong> (ícone de haltere) e inicie outro treino.
               </p>
               <div className="mt-5 flex flex-col gap-2">
                 <GameButton variant="secondary" size="lg" className="w-full" onClick={() => setShowQuitModal(false)}>

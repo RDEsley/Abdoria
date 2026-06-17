@@ -8,6 +8,7 @@ import {
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { useApp } from '@/hooks/useApp';
+import { getErrorMessage } from '@/lib/api-errors';
 import { ACHIEVEMENT_DIFFICULTY_LABELS, type AchievementDifficulty } from '@/types';
 
 const DIFFICULTY_ORDER: AchievementDifficulty[] = ['facil', 'media', 'dificil', 'lendaria'];
@@ -18,7 +19,7 @@ export function AchievementsPage() {
   if (loading) return <PageLoader />;
 
   if (!stats) {
-    return <p className="game-login__error">{error ?? 'Não foi possível carregar conquistas.'}</p>;
+    return <p className="game-login__error">{getErrorMessage(error, 'Não foi possível carregar suas conquistas.')}</p>;
   }
 
   const sorted = sortAchievements(stats.conquistas);

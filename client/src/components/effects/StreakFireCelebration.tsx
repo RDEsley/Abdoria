@@ -16,7 +16,7 @@ const EMBERS = Array.from({ length: 14 }, (_, i) => ({
 /** Fogo acendendo ao estender o streak — inspirado no ritual do Duolingo. */
 export function StreakFireCelebration({ streak }: Props) {
   const label = useMemo(
-    () => (streak === 1 ? 'Streak iniciado!' : `${streak} dias de streak!`),
+    () => (streak === 1 ? 'Primeiro dia seguido!' : `${streak} dias seguidos treinando!`),
     [streak],
   );
 

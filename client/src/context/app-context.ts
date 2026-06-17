@@ -6,8 +6,14 @@ import type {
   IUserDocument,
   IWorkoutHistoryDocument,
   MusculoPrincipal,
+  NivelUsuario,
+  RepSchemeRecommendation,
+  SavedWorkoutPreset,
+  StoredRepScheme,
+  LevelUpCelebration,
   StreakCelebration,
   WorkoutQueueItem,
+  XpBreakdown,
 } from '@/types';
 
 export interface AppContextValue {
@@ -16,6 +22,8 @@ export interface AppContextValue {
   stats: DashboardStats | null;
   history: IWorkoutHistoryDocument[];
   customWorkout: WorkoutQueueItem[];
+  savedWorkouts: SavedWorkoutPreset[];
+  unlockedExercises: Set<string>;
   loading: boolean;
   exercisesLoading: boolean;
   historyLoading: boolean;
@@ -26,7 +34,22 @@ export interface AppContextValue {
   ensureExercises: () => Promise<void>;
   ensureHistory: () => Promise<void>;
   setCustomWorkout: (items: WorkoutQueueItem[]) => void;
-  saveWorkout: (payload: CompleteWorkoutPayload) => Promise<{ xp_ganho: number; streak_celebration: StreakCelebration | null }>;
+  saveWorkoutPreset: (preset: SavedWorkoutPreset) => SavedWorkoutPreset[];
+  getRepSchemes: (nivel: NivelUsuario) => StoredRepScheme[];
+  saveRepSchemes: (nivel: NivelUsuario, schemes: StoredRepScheme[]) => StoredRepScheme[];
+  addRepScheme: (
+    nivel: NivelUsuario,
+    scheme: Omit<RepSchemeRecommendation, 'id'> & { isCustom?: boolean },
+  ) => StoredRepScheme[];
+  removeRepScheme: (nivel: NivelUsuario, schemeId: string) => StoredRepScheme[];
+  unlockExercise: (slug: string) => Set<string>;
+  saveWorkout: (payload: CompleteWorkoutPayload) => Promise<{
+    xp_ganho: number;
+    abdoria_ganha: number;
+    xp_breakdown: XpBreakdown | null;
+    streak_celebration: StreakCelebration | null;
+    level_up: LevelUpCelebration | null;
+  }>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

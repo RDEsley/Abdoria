@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, User as UserIcon } from 'lucide-react';
+import { Save, Settings, User as UserIcon } from 'lucide-react';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
+import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -144,9 +145,17 @@ export function ProfilePage() {
             </select>
             <p className="text-xs font-medium text-stone-500">{OBJETIVO_HINTS[profile.objetivo]}</p>
           </label>
-          <button type="submit" disabled={saving} className="cursor-pointer rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
-            {saving ? 'Salvando...' : 'Salvar perfil'}
-          </button>
+          <div className="game-profile-form__actions">
+            <GameButton
+              type="submit"
+              size="lg"
+              disabled={saving}
+              className="game-profile-save-btn w-full"
+            >
+              <Save size={18} strokeWidth={2.5} aria-hidden />
+              {saving ? 'Salvando...' : 'Salvar perfil'}
+            </GameButton>
+          </div>
         </form>
       )}
 
@@ -155,12 +164,21 @@ export function ProfilePage() {
           <div className="flex items-center gap-3 mb-4">
             <UserIcon className="text-emerald-600" />
             <div>
-              <p className="font-extrabold">Nível {Math.floor(stats.nivel_xp / 100) + 1}</p>
+              <p className="font-extrabold">Nível {xpProgressFromTotal(stats.nivel_xp).level}</p>
               <p className="text-sm text-stone-500">{stats.total_exercicios} exercícios · {stats.total_minutos} min</p>
             </div>
           </div>
-          <p className="text-sm font-bold text-stone-600">Streak atual: {stats.streak_atual} dias (recorde: {stats.streak_maior})</p>
-          <p className="mt-2 text-sm font-bold text-amber-600">XP hoje: {stats.xp_hoje}/{stats.xp_diario_limite}</p>
+          <p className="text-sm font-bold text-stone-600">
+            Dias seguidos treinando: {stats.streak_atual} (recorde: {stats.streak_maior})
+          </p>
+          <p className="mt-2 text-sm font-bold text-amber-600">
+            XP diário (exercícios): {stats.xp_hoje}/{stats.xp_diario_limite}
+            {stats.xp_extra_hoje > 0 ? ` · extra +${stats.xp_extra_hoje}` : ''}
+          </p>
+          <p className="mt-1 text-xs font-bold text-stone-500">
+            {XP_DAILY_PER_EXERCISE} XP/exercício · mín. {XP_DAILY_MIN_EXERCISES} no treino ·{' '}
+            {XP_DAILY_FULL_EXERCISES} exercícios = 100 XP/dia. Bônus (streak, conquistas, loja) não contam no teto.
+          </p>
         </div>
       )}
 

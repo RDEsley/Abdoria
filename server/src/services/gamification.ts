@@ -1,17 +1,27 @@
 import mongoose from 'mongoose';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import type { MusculoPrincipal } from '../types/index.js';
-import { XP_DAILY_CAP } from '../types/index.js';
+import {
+  XP_ACHIEVEMENT_BONUS,
+  XP_DAILY_MIN_EXERCISES,
+  XP_DAILY_PER_EXERCISE,
+  streakXpBonus,
+  xpLevelFromTotal,
+} from '../types/index.js';
 import { User, type UserDocument } from '../models/User.js';
 import { WorkoutHistory } from '../models/WorkoutHistory.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
 export { ACHIEVEMENTS };
 
-export const XP_WORKOUT_BASE = 20;
-export const XP_SERIES = 5;
-export const XP_STREAK_BONUS = 10;
-export const XP_ACHIEVEMENT = 50;
+export {
+  XP_WORKOUT_BASE,
+  XP_PER_EXERCISE as XP_SERIES,
+  XP_ACHIEVEMENT_BONUS as XP_ACHIEVEMENT,
+  XP_DAILY_CAP_BASE as XP_DAILY_CAP,
+  dailyXpCap,
+  streakXpBonus,
+} from '../types/index.js';
 
 function toUserObjectId(userId: string) {
   return new mongoose.Types.ObjectId(userId);
@@ -211,20 +221,13 @@ export async function getWeeklyMuscles(
 export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
   const today = getTodaySaoPaulo();
   if (!user.xp_diario || user.xp_diario.data_reset !== today) {
-    user.xp_diario = { ganho_hoje: 0, data_reset: today };
+    user.xp_diario = { ganho_hoje: 0, extra_hoje: 0, data_reset: today };
     return true;
   }
+  if (typeof user.xp_diario.extra_hoje !== 'number') {
+    user.xp_diario.extra_hoje = 0;
+  }
   return false;
-}
-
-/** Aplica XP respeitando o teto diário (reset em America/Sao_Paulo). */
-export function awardXp(user: UserDocument, amount: number): number {
-  resetXpDiarioIfNeeded(user);
-  const remaining = XP_DAILY_CAP - user.xp_diario.ganho_hoje;
-  const awarded = Math.max(0, Math.min(amount, remaining));
-  user.xp_diario.ganho_hoje += awarded;
-  user.gamificacao.nivel_xp += awarded;
-  return awarded;
 }
 
 export async function evaluateAchievements(user: UserDocument): Promise<string[]> {
@@ -243,7 +246,7 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
   const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
   const totalMinutes = user.gamificacao.total_minutos;
   const streak = computeStreakFromHistories(summary);
-  const level = Math.floor(user.gamificacao.nivel_xp / 100) + 1;
+  const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
 
   const weeklyHistories = summary.filter((h) => new Date(h.concluido_em) >= since);
   const counts: Record<MusculoPrincipal, number> = {
@@ -333,10 +336,9 @@ export function calculateWorkoutXp(
   streakAtual: number,
   newAchievements: string[],
 ): number {
-  let xp = XP_WORKOUT_BASE + exerciseCount * XP_SERIES;
-  if (streakAtual > 0) xp += XP_STREAK_BONUS;
-  xp += newAchievements.length * XP_ACHIEVEMENT;
-  return xp;
+  const exercicios =
+    exerciseCount >= XP_DAILY_MIN_EXERCISES ? exerciseCount * XP_DAILY_PER_EXERCISE : 0;
+  return exercicios + streakXpBonus(streakAtual) + newAchievements.length * XP_ACHIEVEMENT_BONUS;
 }
 
 export function hasTrainedToday(userId: string): Promise<boolean> {
@@ -350,4 +352,3 @@ export function hasTrainedToday(userId: string): Promise<boolean> {
   }).then(Boolean);
 }
 
-export { XP_DAILY_CAP };

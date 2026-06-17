@@ -6,6 +6,7 @@ import { exerciseMediaUrl } from '@/lib/media';
 import { playUnlock } from '@/lib/sounds';
 import type { IExerciseDocument } from '@/types';
 import { PRIORIDADE_LABELS } from '@/types';
+import { formatExerciseName } from '@/types';
 import { MuscleZoneLabel } from '@/components/library/MuscleZoneLabel';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 
 export function ExerciseCard({ exercise, compact, unlocked, onUnlock }: Props) {
   const [unlocking, setUnlocking] = useState(false);
+  const displayName = formatExerciseName(exercise);
   const [showVideo, setShowVideo] = useState(false);
 
   const finishUnlock = useCallback(() => {
@@ -43,7 +45,7 @@ export function ExerciseCard({ exercise, compact, unlocked, onUnlock }: Props) {
           className="game-item-card__unlock-btn"
           onClick={handleUnlockClick}
           disabled={unlocking}
-          aria-label={`Desbloquear ${exercise.nome}`}
+          aria-label={`Desbloquear ${displayName}`}
         >
           <div className="game-item-card__thumb game-item-card__thumb--locked">
             {unlocking ? (
@@ -72,7 +74,7 @@ export function ExerciseCard({ exercise, compact, unlocked, onUnlock }: Props) {
           <div className="game-item-card__thumb">
             <img
               src={exerciseMediaUrl(exercise.slug)}
-              alt={exercise.nome}
+              alt={displayName}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover"
@@ -88,7 +90,7 @@ export function ExerciseCard({ exercise, compact, unlocked, onUnlock }: Props) {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-extrabold leading-tight text-stone-900">{exercise.nome}</h3>
+            <h3 className="text-sm font-extrabold leading-tight text-stone-900">{displayName}</h3>
             <div className="mt-0.5">
               <MuscleZoneLabel muscle={exercise.musculo_principal} showHint className="text-xs" />
               <p className="mt-0.5 text-xs font-semibold text-stone-500">

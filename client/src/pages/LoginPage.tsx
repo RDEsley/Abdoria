@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
 import { getHealth } from '@/lib/api';
-import { getErrorMessage } from '@/lib/api-errors';
+import { DATABASE_BANNER, getErrorMessage, OFFLINE_BANNER } from '@/lib/api-errors';
 import { getSavedEmail, isRememberMeEnabled } from '@/lib/auth-storage';
 import { useAuth } from '@/context/AuthContext';
 
@@ -76,16 +76,10 @@ export function LoginPage() {
         }
       >
         {apiOnline === false && (
-          <p className="game-login__error game-login__error--warn">
-            API offline. Rode <strong>npm run dev</strong> na pasta do projeto e abra{' '}
-            <strong>http://localhost:5173</strong>.
-          </p>
+          <p className="game-login__error game-login__error--warn">{OFFLINE_BANNER}</p>
         )}
         {apiOnline === true && dbOnline === false && (
-          <p className="game-login__error game-login__error--warn">
-            API online, mas o MongoDB está desconectado. Confira <strong>server/.env</strong> e o IP
-            liberado no Atlas.
-          </p>
+          <p className="game-login__error game-login__error--warn">{DATABASE_BANNER}</p>
         )}
 
         <form onSubmit={handleSubmit} className="game-login__form">

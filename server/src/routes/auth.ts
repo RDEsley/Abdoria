@@ -36,7 +36,7 @@ authRouter.post('/register', async (req, res) => {
       passwordHash,
       nome: nome.trim(),
       preferencias: DEFAULT_PREFERENCIAS,
-      xp_diario: { ganho_hoje: 0, data_reset: today },
+      xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
       onboarding_completed: false,
     });
 
@@ -95,7 +95,7 @@ authRouter.post('/guest', async (_req, res) => {
       nome: `Visitante ${suffix.slice(0, 4).toUpperCase()}`,
       is_guest: true,
       preferencias: DEFAULT_PREFERENCIAS,
-      xp_diario: { ganho_hoje: 0, data_reset: today },
+      xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
       onboarding_completed: false,
     });
 

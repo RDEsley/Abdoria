@@ -13,6 +13,7 @@ const exerciseSchema = new Schema(
   {
     slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
     nome: { type: String, required: true, trim: true },
+    nome_pt: { type: String, trim: true },
     nivel: { type: Number, required: true, min: 1, max: 4 },
     musculo_principal: {
       type: String,
