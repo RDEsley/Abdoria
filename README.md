@@ -1,151 +1,168 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="Abdoria" width="120" />
+# Abdoria · Core Quest
 
-# Abdoria
+**Seu treino de abdômen virou uma aventura.**
 
-Treinos gamificados de abdômen com peso corporal — auth JWT, player interativo, XP, streaks e ranking.
+Treine em casa, ganhe pontos, desbloqueie conquistas, personalize seu perfil e dispute o ranking — tudo de um jeito simples e motivador.
 
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
-[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+
+[Guia para quem vai usar o app](./docs/GUIA-DO-USUARIO.md) · [Instalação para desenvolvedores](#-instalação-rápida)
 
 </div>
 
 ---
 
-## Sobre
+## O que é o Abdoria?
 
-O **Abdoria** é uma aplicação full-stack para treinos de core em casa. O usuário passa por onboarding, monta ou recebe treinos recomendados por nível e objetivo, executa séries no player interativo e acompanha evolução com gamificação.
+O **Abdoria** é um aplicativo web de treinos de **abdômen com peso corporal**. Você monta ou recebe treinos, executa exercício por exercício com timer e descanso, e acompanha sua evolução como se fosse um jogo.
 
-> **Aviso:** aplicativo educacional. Não substitui orientação de profissionais de saúde.
+Não precisa entender de programação para usar — basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
-## Funcionalidades
+> **Importante:** o Abdoria é educacional e de entretenimento. **Não substitui** acompanhamento médico, nutricional ou de educação física.
 
-| Módulo | Descrição |
-|--------|-----------|
-| Autenticação | Cadastro, login, visitante e JWT |
-| Onboarding | Perfil, termos, nível, objetivo e preferências |
-| Biblioteca | 30 exercícios com filtros por músculo |
-| Construtor | Presets recomendados (ciclos A–E) e treino customizado |
-| Player | Séries manual (reps/tempo), descanso configurável |
-| Gamificação | XP diário (teto 100), streaks e conquistas |
-| Ranking | Leaderboard por XP ou streak |
+---
 
-## Estrutura do repositório
+## Para quem é?
+
+| Perfil | O que você ganha |
+|--------|------------------|
+| **Iniciante** | Treinos sugeridos, exercícios explicados e progressão suave |
+| **Quem treina em casa** | Biblioteca de exercícios, montagem de treino e player guiado |
+| **Quem gosta de metas** | XP, streak, conquistas, loja diária e ranking |
+| **Quem quer constância** | Calendário de treinos, lembretes visuais e recompensas diárias |
+
+---
+
+## O que você pode fazer no app
+
+### Treinar de verdade
+- Biblioteca com dezenas de exercícios de core (superior, inferior, oblíquos, etc.)
+- Treinos prontos por ciclo (**A, B, C…**) ou **monte o seu** arrastando exercícios
+- **Player interativo**: séries por tempo ou repetições, descanso configurável
+- Salve treinos favoritos na sua conta
+
+### Evoluir e se motivar
+- **XP diário** — só conta exercício do treino (até **100 XP/dia**; mínimo **3 exercícios**; **20 XP** por exercício)
+- **XP extra** — streak, conquistas, loja e habilidades desbloqueadas (sem limite diário)
+- **Streak** — dias seguidos treinando
+- **Conquistas** — metas fáceis, médias, difíceis e lendárias
+- **Ranking** — compare XP, dias seguidos ou moedas **Abdoria** com outros atletas
+
+### Personalizar e recompensar
+- **Loja Abdoria** — avatares, bordas, títulos, sons e efeitos visuais
+- **Loja diária** — recompensa grátis + ofertas que renovam todo dia
+- **Código presente** — resgate em **Opções** (ex.: código promocional)
+- Perfil com nível, IMC, simulador de definição e estatísticas
+
+---
+
+## Como funciona a “gamificação”?
+
+Pense em **dois tipos de pontos**:
+
+| Tipo | O que é | Limite |
+|------|---------|--------|
+| **XP diário** | Pontos dos exercícios do treino | Máx. **100/dia** (5 exercícios × 20 XP) |
+| **XP extra** | Bônus de streak, conquistas, loja, etc. | Sem teto diário |
+
+A moeda **Abdoria** você usa na loja de cosméticos e na loja diária. Parte dela vem do seu progresso de XP ao longo do tempo.
+
+Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
+
+---
+
+## Estrutura do projeto
+
+Organização pensada para quem for dar manutenção no código:
 
 ```
-abdoria/
-├── assets/                 # Logo e recursos para documentação
-├── client/                 # Front-end React + Vite + Tailwind
-│   ├── public/brand/       # Logo e favicons
-│   └── src/
-│       ├── components/     # UI, auth, gamificação, legal
-│       ├── context/        # Auth e estado global
-│       ├── lib/            # API, storage, utils, sons
-│       └── pages/          # Rotas da aplicação
-├── server/                 # API Express + Mongoose
-│   └── src/
-│       ├── models/         # Schemas MongoDB
-│       ├── routes/         # Endpoints REST
-│       ├── services/       # Gamificação e regras de negócio
-│       └── seeds/          # Exercícios e presets
-├── shared/types/           # Tipos TypeScript compartilhados
-└── package.json            # Scripts do monorepo
+Abdoria/
+├── client/          → Interface (React + Vite + Tailwind)
+├── server/          → API e regras do jogo (Node + Express + MongoDB)
+├── shared/types/    → Tipos compartilhados entre front e back
+├── docs/            → Documentação amigável e técnica
+└── scripts/         → Setup e deploy
 ```
 
-## Pré-requisitos
+---
 
-- [Node.js](https://nodejs.org/) 20+
-- Conta no [MongoDB Atlas](https://cloud.mongodb.com)
+## Instalação rápida
 
-## Instalação
+> Seção para **desenvolvedores** ou quem for rodar o app no próprio computador.
+
+### Pré-requisitos
+
+- [Node.js](https://nodejs.org/) 20 ou superior
+- Conta gratuita no [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
+
+### Passos
 
 ```bash
-git clone https://github.com/SEU_USUARIO/abdoria.git
-cd abdoria
-
+git clone https://github.com/RDEsley/Abdoria.git
+cd Abdoria
 npm install
-npm install --prefix client
-npm install --prefix server
-```
-
-### Variáveis de ambiente
-
-```bash
 cp server/.env.example server/.env
-```
-
-Edite `server/.env`:
-
-```env
-MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/abdoria
-PORT=3001
-JWT_SECRET=sua-chave-secreta-longa-e-aleatoria
-JWT_EXPIRES_IN=7d
-```
-
-### MongoDB Atlas
-
-1. Crie um cluster (tier gratuito).
-2. **Database Access** — usuário com senha.
-3. **Network Access** — libere seu IP de desenvolvimento.
-4. Cole a connection string em `MONGODB_URI`.
-
-**Índices recomendados** (`users`):
-
-| Campo | Tipo |
-|-------|------|
-| `email` | unique |
-| `gamificacao.nivel_xp` | descending |
-| `gamificacao.streak_atual` | descending |
-
-### Seed
-
-```bash
+# Edite server/.env com sua MONGODB_URI e JWT_SECRET
 npm run seed
-```
-
-Cria 30 exercícios, 15 presets e usuário demo:
-
-| Email | Senha |
-|-------|-------|
-| `admin@abdoria.local` | `admin123` |
-
-## Desenvolvimento
-
-```bash
 npm run dev
 ```
 
-| Serviço | URL |
-|---------|-----|
-| Front-end | http://localhost:5173 |
+| Serviço | Endereço local |
+|---------|----------------|
+| App (navegador) | http://localhost:5173 |
 | API | http://localhost:3001 |
-| Health | http://localhost:3001/api/health |
+| Saúde da API | http://localhost:3001/api/health |
 
-## Scripts
+**Conta demo** (após `npm run seed`):
 
-| Comando | Descrição |
+| E-mail | Senha |
+|--------|-------|
+| `admin@abdoria.local` | `admin123` |
+
+### Scripts úteis
+
+| Comando | O que faz |
 |---------|-----------|
-| `npm run dev` | Client + server em paralelo |
-| `npm run build` | Build de produção |
-| `npm run seed` | Popula banco de dados |
+| `npm run dev` | Sobe app + API juntos |
+| `npm run build` | Gera versão de produção |
+| `npm run seed` | Popula exercícios, presets e usuário demo |
+| `npm run setup` | Assistente de configuração inicial |
 
-## API (principais rotas)
+Variáveis de ambiente: veja [`server/.env.example`](./server/.env.example).
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/api/auth/register` | Cadastro |
-| `POST` | `/api/auth/login` | Login |
-| `GET` | `/api/users/me` | Perfil autenticado |
-| `PATCH` | `/api/users/me/onboarding` | Concluir onboarding |
-| `GET` | `/api/presets/recommended` | Presets do usuário |
-| `GET` | `/api/leaderboard` | Ranking |
-| `POST` | `/api/workouts/complete` | Registrar treino |
+---
+
+## Documentação
+
+| Documento | Público |
+|-----------|---------|
+| [Guia do usuário](./docs/GUIA-DO-USUARIO.md) | Quem vai **usar** o app |
+| [Contribuindo](./CONTRIBUTING.md) | Quem vai **desenvolver** |
+| [Configurar página no GitHub](./docs/GITHUB-ABOUT.md) | Textos prontos para About / Topics |
+
+---
+
+## Tecnologias
+
+React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion · Express 5 · Mongoose · JWT · MongoDB Atlas
+
+---
 
 ## Licença
 
 Projeto privado. Todos os direitos reservados.
+
+---
+
+<div align="center">
+
+**Feito para transformar consistência em diversão.**
+
+[Abrir um issue](https://github.com/RDEsley/Abdoria/issues) · [Ver guia do usuário](./docs/GUIA-DO-USUARIO.md)
+
+</div>

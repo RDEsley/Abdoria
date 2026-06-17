@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Guia do usuário
+    url: https://github.com/RDEsley/Abdoria/blob/main/docs/GUIA-DO-USUARIO.md
+    about: Dúvidas sobre XP, loja, treinos e ranking
+  - name: README
+    url: https://github.com/RDEsley/Abdoria#readme
+    about: Visão geral do projeto

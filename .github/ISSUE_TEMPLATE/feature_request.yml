@@ -1,0 +1,36 @@
+name: Sugestão
+description: Ideia para melhorar o Abdoria
+title: "[Sugestão]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Conte o que facilitaria sua rotina de treino. Não precisa usar termos técnicos.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema isso resolve?
+      placeholder: Ex.: Fico perdido quando não sei qual treino fazer no fim de semana.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: O que você imagina que o app poderia fazer?
+      placeholder: Ex.: Sugerir um treino curto só de oblíquos aos sábados.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Quão importante é para você?
+      options:
+        - Nice to have
+        - Seria muito útil
+        - Essencial para eu usar o app
+    validations:
+      required: true

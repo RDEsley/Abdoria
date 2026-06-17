@@ -1,0 +1,56 @@
+name: Bug report
+description: Algo não funcionou como esperado
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar. Quanto mais detalhes, mais rápido corrigimos.
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que você esperava?
+      placeholder: Ex.: Ao terminar o treino, deveria ganhar XP diário.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: O que aconteceu?
+      placeholder: Ex.: Apareceu 0 XP mesmo com 4 exercícios.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      placeholder: |
+        1. Entrar na conta
+        2. Montar treino com 4 exercícios
+        3. Concluir treino
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área do app
+      options:
+        - Painel / XP
+        - Treino / Player
+        - Loja / Abdoria
+        - Ranking
+        - Conta / Login
+        - Outro
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Navegador ou dispositivo
+      placeholder: Ex.: Chrome no Windows 11, iPhone Safari

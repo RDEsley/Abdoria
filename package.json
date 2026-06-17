@@ -1,5 +1,6 @@
 {
   "name": "abdoria",
+  "description": "App gamificado de treino de abdômen — XP, streak, conquistas, loja Abdoria e ranking. Para quem treina em casa.",
   "private": true,
   "version": "0.1.0",
   "type": "module",
