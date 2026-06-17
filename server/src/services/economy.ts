@@ -187,7 +187,6 @@ export function countNewSkillUnlocks(previous: string[], next: string[]): number
 
 export {
   dailyXpCapForLevel,
-  getDailyXpCapForUser,
   ABDORIA_XP_STEP,
   streakXpBonus,
   XP_PER_SKILL_UNLOCK,
