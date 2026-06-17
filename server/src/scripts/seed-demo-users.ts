@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
+import { ABDORIA_XP_STEP } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { DEMO_USERS } from '../seeds/demo-users.js';
+import { buildNpcCosmeticos } from '../services/abdoria-leaderboard.js';
 
 /** Cria ou atualiza jogadores fictícios para ranking (idempotente). */
 export async function seedDemoUsers(): Promise<void> {
@@ -9,6 +11,7 @@ export async function seedDemoUsers(): Promise<void> {
   const today = getTodaySaoPaulo();
 
   for (const demo of DEMO_USERS) {
+    const moedas = Math.floor(demo.gamificacao.nivel_xp / ABDORIA_XP_STEP) + 12;
     await User.findOneAndUpdate(
       { email: demo.email },
       {
@@ -27,8 +30,7 @@ export async function seedDemoUsers(): Promise<void> {
           is_demo_npc: true,
           is_guest: false,
           gamificacao: demo.gamificacao,
-          'cosmeticos.moedas': Math.floor(demo.gamificacao.nivel_xp / 10) + 12,
-          'cosmeticos.moedas_xp_blocos': Math.floor(demo.gamificacao.nivel_xp / 10),
+          cosmeticos: buildNpcCosmeticos(demo.gamificacao.nivel_xp),
           preferencias: {
             descanso_padrao_seg: 25,
             som_habilitado: true,
@@ -42,7 +44,7 @@ export async function seedDemoUsers(): Promise<void> {
       },
       { upsert: true, runValidators: true },
     );
-    console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, ${Math.floor(demo.gamificacao.nivel_xp / 10) + 12} moedas, streak ${demo.gamificacao.streak_atual}`);
+    console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, ${moedas} moedas, streak ${demo.gamificacao.streak_atual}`);
   }
 
   console.log(`Total NPCs: ${DEMO_USERS.length}`);

@@ -123,29 +123,6 @@ body {
   right: 0.1rem;
 }
 
-.game-swipe-scroll-wrap--can-next::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 2.75rem;
-  pointer-events: none;
-  background: linear-gradient(to left, rgba(255, 253, 247, 0.98), transparent);
-}
-
-.game-swipe-scroll-wrap--can-prev::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 2.75rem;
-  pointer-events: none;
-  background: linear-gradient(to right, rgba(255, 253, 247, 0.98), transparent);
-  z-index: 1;
-}
-
 .game-scroll-y {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -1035,8 +1012,11 @@ input[type='range'] {
 
 /* HUD */
 .game-hud-shell {
-  position: relative;
-  z-index: 2;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding-bottom: 0.35rem;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.98) 72%, rgba(255, 253, 247, 0));
 }
 
 .game-hud {
@@ -3559,6 +3539,173 @@ input[type='range'] {
 }
 
 /* Daily shop */
+.game-daily-reward-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.game-daily-reward-card {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 22rem);
+  padding: 1.1rem 1rem 1rem;
+  text-align: center;
+  background: linear-gradient(180deg, #fff, #fafaf9);
+  border: 4px solid var(--game-ink);
+  border-radius: 1.1rem;
+  box-shadow: 6px 6px 0 var(--game-ink);
+}
+
+.game-daily-reward-card--incomum {
+  border-color: #059669;
+  box-shadow: 6px 6px 0 rgba(5, 150, 105, 0.35);
+}
+
+.game-daily-reward-card--raro {
+  border-color: #2563eb;
+  box-shadow: 6px 6px 0 rgba(37, 99, 235, 0.35);
+}
+
+.game-daily-reward-card--epico {
+  border-color: #9333ea;
+  box-shadow: 6px 6px 0 rgba(147, 51, 234, 0.35);
+}
+
+.game-daily-reward-card__luck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: -1.1rem -1rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.game-daily-reward-card__luck--raro {
+  background: linear-gradient(90deg, #2563eb, #38bdf8, #2563eb);
+}
+
+.game-daily-reward-card__luck--epico {
+  background: linear-gradient(90deg, #9333ea, #f59e0b, #ec4899, #9333ea);
+}
+
+.game-daily-reward-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #059669;
+}
+
+.game-daily-reward-card__title {
+  margin: 0.35rem 0 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--game-ink);
+}
+
+.game-daily-reward-card__message {
+  margin: 0.55rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #57534e;
+}
+
+.game-daily-reward-card__loot {
+  margin-top: 0.85rem;
+  padding: 0.85rem 0.75rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: 3px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.9rem;
+}
+
+.game-daily-reward-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto;
+  color: #fff;
+  background: linear-gradient(180deg, #34d399, #059669);
+  border: 3px solid var(--game-ink);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--game-ink);
+}
+
+.game-daily-reward-card__icon--abdoria {
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+}
+
+.game-daily-reward-card__icon--pacote {
+  background: linear-gradient(180deg, #38bdf8, #2563eb);
+}
+
+.game-daily-reward-card__reward {
+  margin: 0.65rem 0 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--game-ink);
+}
+
+.game-daily-reward-card__rarity {
+  margin: 0.35rem 0 0;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716c;
+}
+
+.game-daily-reward-card--incomum .game-daily-reward-card__rarity { color: #059669; }
+.game-daily-reward-card--raro .game-daily-reward-card__rarity { color: #2563eb; }
+.game-daily-reward-card--epico .game-daily-reward-card__rarity { color: #9333ea; }
+
+.game-daily-reward-card__offer {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #44403c;
+}
+
+.game-daily-reward-card__label {
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #57534e;
+}
+
+.game-daily-reward-card__spent {
+  margin: 0.75rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-daily-reward-card__cta {
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
 .game-daily-reset {
   display: inline-flex;
   align-items: center;
@@ -3576,6 +3723,29 @@ input[type='range'] {
 .game-daily-reset strong {
   font-weight: 900;
   color: #0c4a6e;
+}
+
+.game-daily-xp-link {
+  display: inline;
+  padding: 0;
+  font: inherit;
+  font-weight: 800;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(4, 120, 87, 0.45);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.game-daily-xp-link:hover {
+  color: #047857;
+  text-decoration-color: currentColor;
+}
+
+.game-daily-xp-link strong {
+  font-weight: 900;
 }
 
 .game-daily-card {
@@ -3749,6 +3919,13 @@ input[type='range'] {
   pointer-events: none;
 }
 
+.game-daily-celebration--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  border-radius: 0;
+}
+
 .game-daily-celebration__flash {
   position: absolute;
   inset: 0;
@@ -3821,24 +3998,164 @@ input[type='range'] {
   text-align: center;
 }
 
-/* ── Loja Abdoria (redesign) ── */
-.game-shop-overlay {
-  align-items: flex-start;
-  padding: 0.75rem;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.game-gift-reward-overlay {
+  z-index: 85;
 }
 
-.game-shop-overlay::-webkit-scrollbar {
-  display: none;
+.game-gift-reward-card {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 24rem);
+  padding: 0 0 1rem;
+  overflow: hidden;
+  text-align: center;
+  background: linear-gradient(180deg, #fff, #fafaf9);
+  border: 4px solid var(--game-ink);
+  border-radius: 1.1rem;
+  box-shadow: 6px 6px 0 var(--game-ink);
+}
+
+.game-gift-reward-card__banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(90deg, #059669, #34d399, #059669);
+}
+
+.game-gift-reward-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.85rem 0 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0369a1;
+}
+
+.game-gift-reward-card__title {
+  margin: 0.35rem 1rem 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--game-ink);
+}
+
+.game-gift-reward-card__message {
+  margin: 0.55rem 1rem 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #57534e;
+}
+
+.game-gift-reward-list {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0 0.85rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.game-gift-reward-list__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.7rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.92);
+  border: 3px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.85rem;
+}
+
+.game-gift-reward-list__item--xp {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(180deg, #fffbeb, #fff);
+}
+
+.game-gift-reward-list__item--abdoria {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: linear-gradient(180deg, #fff7ed, #fff);
+}
+
+.game-gift-reward-list__item--cosmetico {
+  border-color: rgba(147, 51, 234, 0.35);
+  background: linear-gradient(180deg, #faf5ff, #fff);
+}
+
+.game-gift-reward-list__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  color: #fff;
+  background: linear-gradient(180deg, #34d399, #059669);
+  border: 3px solid var(--game-ink);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--game-ink);
+}
+
+.game-gift-reward-list__item--xp .game-gift-reward-list__icon {
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+}
+
+.game-gift-reward-list__item--abdoria .game-gift-reward-list__icon {
+  background: linear-gradient(180deg, #fbbf24, #b45309);
+}
+
+.game-gift-reward-list__item--cosmetico .game-gift-reward-list__icon {
+  background: linear-gradient(180deg, #c084fc, #9333ea);
+}
+
+.game-gift-reward-list__value {
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.58rem;
+  line-height: 1.55;
+  color: var(--game-ink);
+}
+
+.game-gift-reward-list__hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-gift-reward-list__mark {
+  color: #059669;
+}
+
+.game-gift-reward-card__cta {
+  width: calc(100% - 1.7rem);
+  margin: 0.85rem auto 0;
+}
+
+/* ── Loja Abdoria (redesign) ── */
+.game-shop-overlay {
+  align-items: center;
+  padding: 0.75rem;
+  overflow: hidden;
 }
 
 .game-shop-modal {
+  width: 100%;
   max-width: 44rem;
-  max-height: calc(100vh - 1.5rem);
+  height: min(calc(100dvh - 1.5rem), 52rem);
+  max-height: calc(100dvh - 1.5rem);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   padding: 1rem 1rem 1.25rem;
   background:
     linear-gradient(180deg, #fffdf7 0%, #f8fafc 42%, #eef2ff 100%);
@@ -4082,11 +4399,26 @@ input[type='range'] {
   top: 0;
   z-index: 3;
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.35rem;
   padding: 0.35rem 0.15rem 0.55rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.75rem;
   background: linear-gradient(180deg, rgba(255, 253, 247, 0.98), rgba(255, 253, 247, 0.92));
   border-bottom: 2px solid rgba(28, 25, 23, 0.08);
+}
+
+.game-shop-nav.game-swipe-scroll {
+  overflow-y: visible;
+  width: 100%;
+}
+
+.game-swipe-scroll-wrap:has(.game-shop-nav) {
+  flex-shrink: 0;
+  margin-bottom: 0.75rem;
+}
+
+.game-swipe-scroll-wrap:has(.game-shop-nav) .game-shop-nav {
+  margin-bottom: 0;
 }
 
 .game-shop-nav__btn {
@@ -4119,11 +4451,12 @@ input[type='range'] {
 .game-shop-scroll {
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-right: 0.15rem;
   scroll-behavior: smooth;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(28, 25, 23, 0.2) transparent;
 }
 
 .game-shop-scroll::-webkit-scrollbar {

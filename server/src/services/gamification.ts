@@ -322,7 +322,7 @@ export async function syncUserGamification(userId: string): Promise<UserDocument
     { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
   ]);
 
-  user.gamificacao.total_minutos = Math.round((totalMinutes[0]?.total ?? 0) / 60);
+  user.gamificacao.total_minutos = Math.floor((totalMinutes[0]?.total ?? 0) / 60);
   user.gamificacao.streak_atual = streak.atual;
   user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streak.maior);
   user.gamificacao.conquistas = await evaluateAchievements(user);

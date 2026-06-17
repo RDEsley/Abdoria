@@ -2,22 +2,63 @@ import type { UserDocument } from '../models/User.js';
 import type { XpBreakdown } from '../types/index.js';
 import {
   ABDORIA_XP_STEP,
+  DEFAULT_COSMETICOS,
   XP_ACHIEVEMENT_BONUS,
-  XP_DAILY_CAP_BASE,
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
   XP_PER_SKILL_UNLOCK,
   XP_STREAK_BONUS_MAX,
   XP_STREAK_BONUS_PER_DAY,
+  dailyXpCapForLevel,
   spendableXpForShop,
   streakXpBonus,
+  projectedAbdoriaAfterXpSpend as projectedAbdoriaAfterXpSpendFromState,
   xpFloorForCurrentLevel,
   xpLevelFromTotal,
 } from '../types/index.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
 
-export function getDailyXpCapForUser(_user: UserDocument): number {
-  return XP_DAILY_CAP_BASE;
+/** Garante carteira Abdoria numérica no documento do usuário. */
+export function ensureAbdoriaWallet(user: UserDocument): void {
+  if (!user.cosmeticos || typeof user.cosmeticos !== 'object') {
+    user.cosmeticos = { ...DEFAULT_COSMETICOS } as UserDocument['cosmeticos'];
+  }
+
+  if (typeof user.cosmeticos.moedas !== 'number' || Number.isNaN(user.cosmeticos.moedas)) {
+    user.cosmeticos.moedas = 0;
+  }
+
+  if (
+    typeof user.cosmeticos.moedas_xp_blocos !== 'number'
+    || Number.isNaN(user.cosmeticos.moedas_xp_blocos)
+  ) {
+    user.cosmeticos.moedas_xp_blocos = 0;
+  }
+}
+
+/** Saldo Abdoria para exibição — usa valor salvo ou estimativa a partir do XP. */
+export function readAbdoriaBalance(user: {
+  gamificacao: { nivel_xp: number };
+  cosmeticos?: { moedas?: number | null; moedas_xp_blocos?: number | null } | null;
+}): number {
+  const stored = user.cosmeticos?.moedas;
+  if (typeof stored === 'number' && !Number.isNaN(stored)) return stored;
+  return Math.floor(Math.max(0, user.gamificacao.nivel_xp) / ABDORIA_XP_STEP);
+}
+
+/** Saldo Abdoria após gastar XP na loja (desconta conversão passiva por blocos). */
+export function projectedAbdoriaAfterXpSpend(user: UserDocument, xpCost: number): number {
+  ensureAbdoriaWallet(user);
+  return projectedAbdoriaAfterXpSpendFromState(
+    user.gamificacao.nivel_xp,
+    readAbdoriaBalance(user),
+    user.cosmeticos.moedas_xp_blocos,
+    xpCost,
+  );
+}
+
+export function getDailyXpCapForUser(user: UserDocument): number {
+  return dailyXpCapForLevel(xpLevelFromTotal(user.gamificacao.nivel_xp));
 }
 
 function ensureExtraHoje(user: UserDocument): void {
@@ -26,13 +67,14 @@ function ensureExtraHoje(user: UserDocument): void {
   }
 }
 
-/** XP de exercícios — respeita teto diário de 100. */
+/** XP de exercícios — respeita teto diário (base + bônus por nível). */
 export function awardDailyExerciseXp(user: UserDocument, amount: number): number {
   if (amount <= 0) return 0;
   resetXpDiarioIfNeeded(user);
   ensureExtraHoje(user);
 
-  const remaining = XP_DAILY_CAP_BASE - user.xp_diario.ganho_hoje;
+  const cap = getDailyXpCapForUser(user);
+  const remaining = cap - user.xp_diario.ganho_hoje;
   const awarded = Math.max(0, Math.min(amount, remaining));
   user.xp_diario.ganho_hoje += awarded;
   user.gamificacao.nivel_xp += awarded;
@@ -82,8 +124,9 @@ export function calculateWorkoutXpBreakdown(
 }
 
 export function awardAbdoriaFromXp(user: UserDocument): number {
+  ensureAbdoriaWallet(user);
   const blocks = Math.floor(user.gamificacao.nivel_xp / ABDORIA_XP_STEP);
-  const previous = user.cosmeticos.moedas_xp_blocos ?? 0;
+  const previous = user.cosmeticos.moedas_xp_blocos;
   const gained = Math.max(0, blocks - previous);
   if (gained > 0) {
     user.cosmeticos.moedas += gained;
@@ -94,6 +137,7 @@ export function awardAbdoriaFromXp(user: UserDocument): number {
 
 export function grantAbdoria(user: UserDocument, amount: number): void {
   if (amount <= 0) return;
+  ensureAbdoriaWallet(user);
   user.cosmeticos.moedas += amount;
 }
 
@@ -120,8 +164,9 @@ export function spendXpForShop(
   user.gamificacao.nivel_xp = nextTotal;
 
   const floor = xpFloorForCurrentLevel(nextTotal);
+  ensureAbdoriaWallet(user);
   const newBlocks = Math.floor(nextTotal / ABDORIA_XP_STEP);
-  const previousBlocks = user.cosmeticos.moedas_xp_blocos ?? 0;
+  const previousBlocks = user.cosmeticos.moedas_xp_blocos;
   if (newBlocks < previousBlocks) {
     user.cosmeticos.moedas = Math.max(0, user.cosmeticos.moedas - (previousBlocks - newBlocks));
     user.cosmeticos.moedas_xp_blocos = Math.max(newBlocks, Math.floor(floor / ABDORIA_XP_STEP));

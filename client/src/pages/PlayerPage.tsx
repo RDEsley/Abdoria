@@ -17,6 +17,16 @@ import {
 } from '@/lib/sounds';
 import { getErrorMessage } from '@/lib/api-errors';
 import { formatTime } from '@/lib/utils';
+import {
+  clearWorkoutDurationSession,
+  computeWorkoutElapsedSeconds,
+  persistWorkoutEndedAt,
+  persistWorkoutPausedMs,
+  persistWorkoutStartedAt,
+  readWorkoutEndedAt,
+  readWorkoutPausedMs,
+  readWorkoutStartedAt,
+} from '@/lib/workout-duration';
 import { CURRENCY_NAME, formatExerciseName, formatExercisePrescription, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 
@@ -56,8 +66,27 @@ export function PlayerPage() {
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const startTimeRef = useRef(0);
+  const endTimeRef = useRef(0);
+  const pausedMsRef = useRef(0);
+  const pauseStartedRef = useRef<number | null>(null);
   const sessionStartedRef = useRef(false);
   const tickHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (!workout) return;
+
+    const storedStart = readWorkoutStartedAt();
+    if (storedStart) {
+      startTimeRef.current = storedStart;
+      sessionStartedRef.current = true;
+    }
+
+    pausedMsRef.current = readWorkoutPausedMs();
+    const storedEnd = readWorkoutEndedAt();
+    if (storedEnd) {
+      endTimeRef.current = storedEnd;
+    }
+  }, [workout]);
 
   useEffect(() => {
     if (!workout) {
@@ -115,6 +144,7 @@ export function PlayerPage() {
     }
 
     setPhase('done');
+    endTimeRef.current = persistWorkoutEndedAt();
     playSuccess();
   }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds, startRest]);
 
@@ -158,7 +188,7 @@ export function PlayerPage() {
 
   const startSeries = () => {
     if (!sessionStartedRef.current) {
-      startTimeRef.current = Date.now();
+      startTimeRef.current = persistWorkoutStartedAt();
       sessionStartedRef.current = true;
     }
     setPaused(false);
@@ -186,11 +216,22 @@ export function PlayerPage() {
 
   const togglePause = () => {
     if (phase === 'ready' || phase === 'done') return;
-    setPaused((value) => !value);
+    setPaused((value) => {
+      const next = !value;
+      if (next) {
+        pauseStartedRef.current = Date.now();
+      } else if (pauseStartedRef.current) {
+        pausedMsRef.current += Date.now() - pauseStartedRef.current;
+        pauseStartedRef.current = null;
+        persistWorkoutPausedMs(pausedMsRef.current);
+      }
+      return next;
+    });
   };
 
   const quitWorkout = () => {
     sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
+    clearWorkoutDurationSession();
     navigate('/construtor', { replace: true });
   };
 
@@ -199,7 +240,13 @@ export function PlayerPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
+      const duration = computeWorkoutElapsedSeconds({
+        workout,
+        startedAt: startTimeRef.current || readWorkoutStartedAt(),
+        endedAt: endTimeRef.current || readWorkoutEndedAt(),
+        pausedMs: pausedMsRef.current,
+        pauseStartedAt: pauseStartedRef.current,
+      });
       const result = await saveWorkout({
         treino_nome: workout.treino_nome,
         treino_tipo: workout.treino_tipo,
@@ -226,6 +273,7 @@ export function PlayerPage() {
         setLevelUpCelebration(result.level_up);
       }
       sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
+      clearWorkoutDurationSession();
       setTimeout(() => navigate('/'), 2500);
     } catch (err) {
       setSaveError(getErrorMessage(err, 'Não foi possível salvar seu treino. Tente novamente.'));

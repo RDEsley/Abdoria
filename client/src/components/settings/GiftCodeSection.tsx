@@ -1,71 +1,120 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Ticket } from 'lucide-react';
+import { GiftCodeRewardReveal } from '@/components/settings/GiftCodeRewardReveal';
 import { GameButton } from '@/components/ui/GameButton';
 import { redeemGiftCode } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { CURRENCY_NAME } from '@/types';
+import { CURRENCY_NAME, type RedeemCodeResponse, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';
 
+const GIFT_CODE_PATTERN = /^[a-z0-9_-]+$/;
+const GIFT_CODE_MIN_LENGTH = 3;
+const GIFT_CODE_MAX_LENGTH = 32;
+
+function normalizeGiftCodeInput(raw: string): string {
+  return raw.trim().toLowerCase();
+}
+
+function validateGiftCodeInput(code: string): string | null {
+  if (!code) return 'Informe o código presente.';
+  if (code.length < GIFT_CODE_MIN_LENGTH || code.length > GIFT_CODE_MAX_LENGTH) {
+    return `O código deve ter entre ${GIFT_CODE_MIN_LENGTH} e ${GIFT_CODE_MAX_LENGTH} caracteres.`;
+  }
+  if (!GIFT_CODE_PATTERN.test(code)) {
+    return 'Use apenas letras, números, _ ou -.';
+  }
+  return null;
+}
+
 export function GiftCodeSection() {
-  const { applyUser } = useAuth();
+  const { user, applyUser } = useAuth();
   const { refresh: refreshApp } = useApp();
   const [giftCode, setGiftCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [rewardReveal, setRewardReveal] = useState<RedeemCodeResponse | null>(null);
+
+  const cosmeticos = useMemo(
+    () => resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp),
+    [user?.cosmeticos, user?.gamificacao.nivel_xp],
+  );
 
   const handleRedeem = async () => {
+    const normalized = normalizeGiftCodeInput(giftCode);
+    const validationError = validateGiftCodeInput(normalized);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setBusy(true);
     setError(null);
-    setSuccess(null);
+
     try {
-      const res = await redeemGiftCode(giftCode);
+      const res = await redeemGiftCode(normalized);
       applyUser(res.user);
       setSfxPack(res.user.cosmeticos?.som_equipado ?? 'som_classico');
       await refreshApp();
       setGiftCode('');
-      setSuccess(res.mensagem ?? 'Código resgatado!');
+      setRewardReveal(res);
     } catch (err) {
-      setError(getErrorMessage(err, 'Código inválido ou já usado.'));
+      setError(getErrorMessage(err, 'Código inválido ou já usado nesta conta.'));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <section className="glass-card p-4">
-      <h3 className="game-section-title mb-4 flex items-center gap-2">
-        <Ticket size={14} /> Código presente
-      </h3>
+    <>
+      <section className="glass-card p-4">
+        <h3 className="game-section-title mb-4 flex items-center gap-2">
+          <Ticket size={14} /> Código presente
+        </h3>
 
-      <div className="game-gift-code">
-        <label className="game-gift-code__label" htmlFor="settings-gift-code">
-          Resgatar código promocional
-        </label>
-        <input
-          id="settings-gift-code"
-          className="game-input mt-2 w-full"
-          value={giftCode}
-          onChange={(e) => setGiftCode(e.target.value)}
-          placeholder="Ex.: abdoria"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && giftCode.trim()) void handleRedeem();
-          }}
-        />
-        <div className="game-gift-code__actions">
-          <GameButton disabled={!giftCode.trim() || busy} onClick={() => void handleRedeem()}>
-            Resgatar código
-          </GameButton>
+        <div className="game-gift-code">
+          <label className="game-gift-code__label" htmlFor="settings-gift-code">
+            Resgatar código promocional
+          </label>
+          <input
+            id="settings-gift-code"
+            className="game-input mt-2 w-full"
+            value={giftCode}
+            onChange={(e) => {
+              setGiftCode(e.target.value);
+              if (error) setError(null);
+            }}
+            placeholder="Ex.: abdoria"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            maxLength={GIFT_CODE_MAX_LENGTH}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && giftCode.trim()) void handleRedeem();
+            }}
+          />
+          <div className="game-gift-code__actions">
+            <GameButton disabled={!giftCode.trim() || busy} onClick={() => void handleRedeem()}>
+              Resgatar código
+            </GameButton>
+          </div>
+          <p className="game-gift-code__hint">
+            Dica: use <strong>abdoria</strong> para ganhar <strong>10.000 XP</strong>,{' '}
+            <strong>999 {CURRENCY_NAME}</strong> e título exclusivo — válido <strong>1 vez por conta</strong>.
+          </p>
         </div>
-        <p className="game-gift-code__hint">
-          Dica: use <strong>abdoria</strong> para XP, {CURRENCY_NAME} e título exclusivo.
-        </p>
-      </div>
 
-      {error && <p className="game-login__error mt-3">{error}</p>}
-      {success && <p className="game-modal__success mt-3">{success}</p>}
-    </section>
+        {error && <p className="game-login__error mt-3">{error}</p>}
+      </section>
+
+      {rewardReveal && (
+        <GiftCodeRewardReveal
+          result={rewardReveal}
+          effectId={cosmeticos.efeito_equipado}
+          onClose={() => setRewardReveal(null)}
+        />
+      )}
+    </>
   );
 }

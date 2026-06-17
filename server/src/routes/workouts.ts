@@ -81,7 +81,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
 
-    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, treinoSugerido] = await Promise.all([
+    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg, treinoSugerido] = await Promise.all([
       hasTrainedToday(userId),
       getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
       WorkoutHistory.aggregate([
@@ -98,6 +98,10 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
         { $match: { usuario_id: user._id } },
         { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
       ]),
+      WorkoutHistory.aggregate([
+        { $match: { usuario_id: user._id } },
+        { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
+      ]),
       getSuggestedWorkout(user),
     ]);
 
@@ -110,13 +114,16 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       desbloqueada: user.gamificacao.conquistas.includes(a.id),
     }));
 
+    const totalSegundos = Math.round(totalDurationAgg[0]?.total ?? 0);
+
     res.json({
       treino_hoje: treinoHoje,
       proximo_treino: treinoHoje
         ? 'Descanso ativo'
         : treinoSugerido?.nome ?? 'Treino do dia',
       treino_sugerido: treinoSugerido,
-      total_minutos: user.gamificacao.total_minutos,
+      total_segundos: totalSegundos,
+      total_minutos: Math.floor(totalSegundos / 60),
       streak_atual: user.gamificacao.streak_atual,
       streak_maior: user.gamificacao.streak_maior,
       nivel_xp: user.gamificacao.nivel_xp,

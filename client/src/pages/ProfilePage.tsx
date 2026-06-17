@@ -8,6 +8,7 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
+import { formatTrainingDuration } from '@/lib/utils';
 import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
@@ -165,7 +166,10 @@ export function ProfilePage() {
             <UserIcon className="text-emerald-600" />
             <div>
               <p className="font-extrabold">Nível {xpProgressFromTotal(stats.nivel_xp).level}</p>
-              <p className="text-sm text-stone-500">{stats.total_exercicios} exercícios · {stats.total_minutos} min</p>
+              <p className="text-sm text-stone-500">
+                {stats.total_exercicios} exercícios ·{' '}
+                {formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
+              </p>
             </div>
           </div>
           <p className="text-sm font-bold text-stone-600">

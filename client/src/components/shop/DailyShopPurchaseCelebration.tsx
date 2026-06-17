@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 
 interface Props {
   effectId: string;
-  message: string;
-  onComplete: () => void;
+  message?: string;
+  onComplete?: () => void;
+  fullscreen?: boolean;
 }
 
 const CONFETE = ['#059669', '#34d399', '#fbbf24', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -14,8 +15,9 @@ const PADRAO = ['#059669', '#34d399', '#fbbf24', '#38bdf8'];
 
 const PARTICLE_COUNT = 24;
 
-export function DailyShopPurchaseCelebration({ effectId, message, onComplete }: Props) {
+export function DailyShopPurchaseCelebration({ effectId, message, onComplete, fullscreen = false }: Props) {
   useEffect(() => {
+    if (!onComplete) return;
     const timer = window.setTimeout(onComplete, 1800);
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -33,7 +35,12 @@ export function DailyShopPurchaseCelebration({ effectId, message, onComplete }: 
   const isEmber = effectId === 'efeito_fogo';
 
   return (
-    <div className="game-daily-celebration" role="status" aria-live="polite">
+    <div
+      className={`game-daily-celebration${fullscreen ? ' game-daily-celebration--fullscreen' : ''}`}
+      role="status"
+      aria-live="polite"
+      aria-hidden={fullscreen ? true : undefined}
+    >
       <motion.div
         className="game-daily-celebration__flash"
         initial={{ opacity: 0 }}
@@ -64,14 +71,16 @@ export function DailyShopPurchaseCelebration({ effectId, message, onComplete }: 
         />
       ))}
 
-      <motion.p
-        className="game-daily-celebration__message"
-        initial={{ scale: 0.5, opacity: 0, y: 12 }}
-        animate={{ scale: [0.5, 1.08, 1], opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.15 }}
-      >
-        {message}
-      </motion.p>
+      {message && (
+        <motion.p
+          className="game-daily-celebration__message"
+          initial={{ scale: 0.5, opacity: 0, y: 12 }}
+          animate={{ scale: [0.5, 1.08, 1], opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.15 }}
+        >
+          {message}
+        </motion.p>
+      )}
     </div>
   );
 }

@@ -2,6 +2,19 @@
 export const WORK_SECONDS = 30;
 export const REST_SECONDS = 15;
 
+/** Formata duração acumulada de treino para exibição no dashboard/perfil. */
+export function formatTrainingDuration(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  if (seconds < 60) return `${seconds} seg`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+}
+
 /** Formata segundos no padrão `m:ss` para timers do player. */
 export function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
