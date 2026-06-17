@@ -24,14 +24,6 @@ import {
   resolveCosmeticos,
   SHOP_ABDORIA_COST_PER_XP,
   SHOP_XP_COST_PER_ABDORIA,
-  XP_ACHIEVEMENT_BONUS,
-  XP_DAILY_CAP_BASE,
-  XP_DAILY_FULL_EXERCISES,
-  XP_DAILY_MIN_EXERCISES,
-  XP_DAILY_PER_EXERCISE,
-  XP_PER_SKILL_UNLOCK,
-  XP_STREAK_BONUS_MAX,
-  XP_STREAK_BONUS_PER_DAY,
   xpLevelFromTotal,
 } from '@/types';
 
@@ -224,7 +216,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
   return createPortal(
     <div className="game-modal-overlay game-shop-overlay" onClick={onClose} role="presentation">
       <div
-        className="game-modal game-modal--wide game-shop-modal"
+        className="game-modal game-shop-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cosmetics-title"
@@ -244,12 +236,8 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
         <ul className="game-economy-rules game-economy-rules--compact">
           <li>Você recebe 1 {CURRENCY_NAME} a cada {ABDORIA_XP_STEP} XP ganhos</li>
-          <li>Loja diária: gaste {SHOP_XP_COST_PER_ABDORIA} XP → 1 {CURRENCY_NAME} · gaste {SHOP_ABDORIA_COST_PER_XP} {CURRENCY_NAME} → 1 XP</li>
-          <li>Dias seguidos treinando = +{XP_STREAK_BONUS_PER_DAY} ponto extra por dia (máx. {XP_STREAK_BONUS_MAX})</li>
-          <li>Cada conquista nova = +{XP_ACHIEVEMENT_BONUS} ponto extra no treino</li>
-          <li>Cada habilidade desbloqueada na biblioteca = +{XP_PER_SKILL_UNLOCK} ponto</li>
-          <li>XP diário: {XP_DAILY_PER_EXERCISE} XP/exercício · mín. {XP_DAILY_MIN_EXERCISES} · teto {XP_DAILY_CAP_BASE}/dia ({XP_DAILY_FULL_EXERCISES} exercícios)</li>
-          <li>Streak, conquistas, loja e habilidades = XP extra (fora do teto diário)</li>
+          <li>Loja diária: {SHOP_XP_COST_PER_ABDORIA} XP → 1 {CURRENCY_NAME} · {SHOP_ABDORIA_COST_PER_XP} {CURRENCY_NAME} → 1 XP</li>
+          <li>Streak, conquistas e habilidades = XP extra (fora do teto diário)</li>
         </ul>
 
         <ShopPreviewStage
@@ -263,32 +251,32 @@ export function CosmeticsModal({ open, onClose }: Props) {
           onResetPreview={resetPreview}
         />
 
-        <SwipeScroll
-          ref={navRef}
-          as="nav"
-          className="game-shop-nav"
-          aria-label="Filtrar seções da loja"
-          prevLabel="Ver seções anteriores"
-          nextLabel="Ver mais seções"
-        >
-          {SECTIONS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              data-shop-section={id}
-              className={`game-shop-nav__btn ${activeSection === id ? 'game-shop-nav__btn--active' : ''}`}
-              onClick={() => scrollToSection(id)}
-            >
-              <Icon size={14} />
-              {label}
-            </button>
-          ))}
-        </SwipeScroll>
-
         {error && <p className="game-login__error mt-3">{error}</p>}
         {success && <p className="game-modal__success mt-3">{success}</p>}
 
         <div ref={scrollRef} className="game-shop-scroll">
+          <SwipeScroll
+            ref={navRef}
+            as="nav"
+            className="game-shop-nav"
+            aria-label="Filtrar seções da loja"
+            prevLabel="Ver seções anteriores"
+            nextLabel="Ver mais seções"
+          >
+            {SECTIONS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                data-shop-section={id}
+                className={`game-shop-nav__btn ${activeSection === id ? 'game-shop-nav__btn--active' : ''}`}
+                onClick={() => scrollToSection(id)}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            ))}
+          </SwipeScroll>
+
           {loading ? (
             <p className="game-loader mt-6">Carregando catálogo...</p>
           ) : (

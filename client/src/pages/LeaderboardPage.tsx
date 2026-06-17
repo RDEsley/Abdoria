@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Coins, Trophy } from 'lucide-react';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
+import { getErrorMessage } from '@/lib/api-errors';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -17,20 +18,20 @@ const PODIUM_SLOTS = [
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'xp', label: 'Pontos (XP)' },
   { id: 'streak', label: 'Dias seguidos' },
-  { id: 'moedas', label: `+ ${CURRENCY_NAME}` },
+  { id: 'moedas', label: CURRENCY_NAME },
 ];
 
 function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
   if (metric === 'xp') return `Nv.${entry.level}`;
   if (metric === 'streak') return `${entry.streak_atual}d`;
-  return `${entry.moedas}`;
+  return `${entry.moedas} ${CURRENCY_NAME}`;
 }
 
 function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: LeaderboardMetric }) {
   return (
     <span className="game-rank-row__value">
       {metric === 'moedas' && <Coins size={14} aria-hidden />}
-      {metric === 'xp' ? `${entry.nivel_xp} XP` : metric === 'streak' ? `${entry.streak_atual}d` : `${entry.moedas}`}
+      {metric === 'xp' ? `${entry.nivel_xp} XP` : metric === 'streak' ? `${entry.streak_atual}d` : `${entry.moedas} ${CURRENCY_NAME}`}
     </span>
   );
 }
@@ -59,13 +60,20 @@ export function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     void Promise.all([getLeaderboard(metric), getMyLeaderboardRank(metric)])
       .then(([list, myRank]) => {
         setEntries(list);
         setMe(myRank);
+      })
+      .catch((err: unknown) => {
+        setEntries([]);
+        setMe(null);
+        setError(getErrorMessage(err, 'Não foi possível carregar o ranking.'));
       })
       .finally(() => setLoading(false));
   }, [metric]);
@@ -106,6 +114,12 @@ export function LeaderboardPage() {
           </button>
         ))}
       </SwipeScroll>
+
+      {error && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700">
+          {error}
+        </p>
+      )}
 
       {loading ? (
         <PageLoader />

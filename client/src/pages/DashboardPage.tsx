@@ -11,9 +11,11 @@ import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { XpBar } from '@/components/ui/XpBar';
 import { getErrorMessage } from '@/lib/api-errors';
+import { formatTrainingDuration } from '@/lib/utils';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { MUSCULO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, formatExerciseName, formatExercisePrescription, xpProgressFromTotal } from '@/types';
+import { MUSCULO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, formatExerciseName, formatExercisePrescription, spendableXpForShop, xpProgressFromTotal } from '@/types';
+import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 
 const ActivityCalendar = lazy(() =>
   import('@/components/dashboard/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })),
@@ -40,6 +42,8 @@ export function DashboardPage() {
   }
 
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(stats.nivel_xp);
+  const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
+  const xpDisponivelTrocas = spendableXpForShop(stats.nivel_xp);
   const sugerido = stats.treino_sugerido;
   const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${XP_DAILY_FULL_EXERCISES} exercícios = 100 XP/dia`;
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
@@ -116,16 +120,25 @@ export function DashboardPage() {
         <StatCard
           icon={<Timer className="text-sky-600" size={22} />}
           title="Tempo total"
-          value={`${stats.total_minutos} min`}
-          hint="Minutos somados de todos os treinos"
+          value={formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
+          hint="Tempo real somado de todos os treinos"
         />
       </motion.div>
 
-      <motion.section variants={item} className="glass-card p-4">
+      <motion.section
+        id={DASHBOARD_LEVEL_XP_SECTION_ID}
+        variants={item}
+        className="glass-card scroll-mt-28 p-4 md:scroll-mt-24"
+      >
         <h3 className="game-section-title flex items-center gap-2">
           <Zap size={14} className="text-amber-500" /> Nível & XP
         </h3>
-        <div className="flex items-center gap-4">
+        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[0.65rem] font-bold text-stone-600">
+          <span>{stats.nivel_xp} XP total</span>
+          <span className="text-emerald-700">{xpDisponivelTrocas} XP para trocas hoje</span>
+          <span>Faltam {xpParaLevelUp} XP para o nível {level + 1}</span>
+        </div>
+        <div className="mt-3 flex items-center gap-4">
           <div className="game-level-badge">{level}</div>
           <div className="flex-1">
             <XpBar value={xpInLevel} max={xpToNext} label="Progresso do nível" />

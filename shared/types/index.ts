@@ -238,6 +238,13 @@ export interface XpBreakdown {
   aplicado: number;
 }
 
+export interface GiftCodeRewardLine {
+  tipo: 'xp' | 'abdoria' | 'cosmetico';
+  valor?: number;
+  nome?: string;
+  item_id?: string;
+}
+
 export interface RedeemCodeResponse {
   user: IUserDocument;
   codigo: string;
@@ -246,6 +253,7 @@ export interface RedeemCodeResponse {
   itens_desbloqueados: string[];
   titulo?: string;
   mensagem?: string;
+  recompensas: GiftCodeRewardLine[];
 }
 
 export interface PurchaseCosmeticResponse {
@@ -260,19 +268,33 @@ export interface EquipCosmeticResponse {
 }
 
 export const XP_DAILY_CAP_BASE = 100;
-/** Limite diário de XP por exercícios (fixo). */
-export const XP_DAILY_CAP = XP_DAILY_CAP_BASE;
+/** Bônus de teto diário por nível de gamificação (+5 XP por nível). */
+export const XP_DAILY_CAP_PER_LEVEL = 5;
+/** Limite diário no nível 1 (base + 1× bônus). */
+export const XP_DAILY_CAP = XP_DAILY_CAP_BASE + XP_DAILY_CAP_PER_LEVEL;
 /** @deprecated Conquistas não aumentam mais o teto diário. */
 export const XP_DAILY_CAP_PER_ACHIEVEMENT = 0;
 /** XP diário por exercício concluído (treino com mín. 3 exercícios). */
 export const XP_DAILY_PER_EXERCISE = 20;
 /** Mínimo de exercícios no treino para contar XP diário. */
 export const XP_DAILY_MIN_EXERCISES = 3;
-/** Exercícios para encher o teto diário (5 × 20 = 100). */
-export const XP_DAILY_FULL_EXERCISES = 5;
+/** Exercícios para encher o teto no nível 1 (6 × 20 = 120 com bônus de nível 1). */
+export const XP_DAILY_FULL_EXERCISES = Math.ceil(
+  (XP_DAILY_CAP_BASE + XP_DAILY_CAP_PER_LEVEL) / XP_DAILY_PER_EXERCISE,
+);
 
-export function dailyXpCap(_unlockedAchievementCount = 0): number {
-  return XP_DAILY_CAP_BASE;
+export function dailyXpCapForLevel(level: number): number {
+  const safeLevel = Math.max(1, Math.floor(level));
+  return XP_DAILY_CAP_BASE + safeLevel * XP_DAILY_CAP_PER_LEVEL;
+}
+
+export function dailyFullExercisesForCap(cap: number): number {
+  return Math.ceil(Math.max(0, cap) / XP_DAILY_PER_EXERCISE);
+}
+
+export function dailyXpCap(_unlockedAchievementCount = 0, level = 1): number {
+  void _unlockedAchievementCount;
+  return dailyXpCapForLevel(level);
 }
 export const XP_STREAK_BONUS_PER_DAY = 1;
 export const XP_STREAK_BONUS_MAX = 32;
@@ -304,6 +326,20 @@ export function abdoriaCostForXpReward(xpAmount: number): number {
 
 export function xpCostForAbdoriaReward(abdoriaAmount: number): number {
   return Math.max(1, Math.ceil(abdoriaAmount * SHOP_XP_COST_PER_ABDORIA));
+}
+
+/** Estima Abdoria restante após gastar XP na loja (conversão passiva por blocos). */
+export function projectedAbdoriaAfterXpSpend(
+  nivelXp: number,
+  moedas: number,
+  moedasXpBlocos: number,
+  xpCost: number,
+): number {
+  if (xpCost <= 0) return moedas;
+  const nextTotal = Math.max(0, nivelXp - xpCost);
+  const newBlocks = Math.floor(nextTotal / ABDORIA_XP_STEP);
+  const clawback = Math.max(0, moedasXpBlocos - newBlocks);
+  return Math.max(0, moedas - clawback);
 }
 
 export const DAILY_RARITY_LABELS: Record<DailyRewardRarity, string> = {
@@ -474,6 +510,7 @@ export interface DashboardStats {
   treino_hoje: boolean;
   proximo_treino: string;
   treino_sugerido: TreinoSugerido | null;
+  total_segundos: number;
   total_minutos: number;
   streak_atual: number;
   streak_maior: number;

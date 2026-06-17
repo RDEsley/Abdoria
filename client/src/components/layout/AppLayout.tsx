@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameHud } from '@/components/layout/GameHud';
@@ -17,13 +17,21 @@ const navItems = [
 
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
-  const [showTutorial, setShowTutorial] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
 
   useEffect(() => {
-    if (shouldShowFirstTimeTutorial(user)) {
-      setShowTutorial(true);
-    }
+    setShowTutorial(shouldShowFirstTimeTutorial(user));
   }, [user]);
+
+  useEffect(() => {
+    const state = location.state as { showTutorial?: boolean } | null;
+    if (!state?.showTutorial) return;
+
+    setShowTutorial(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const handleTutorialClose = () => {
     setShowTutorial(false);

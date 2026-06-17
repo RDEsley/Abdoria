@@ -64,6 +64,7 @@ export {
   SHOP_XP_COST_PER_ABDORIA,
   abdoriaCostForXpReward,
   xpCostForAbdoriaReward,
+  projectedAbdoriaAfterXpSpend,
   spendableXpForShop,
   xpFloorForCurrentLevel,
   dailyXpCap,

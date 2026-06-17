@@ -10,7 +10,7 @@ import {
   pickFreeDailyRewardType,
   isStaleDailyOffer,
 } from '../data/daily-shop-config.js';
-import { GIFT_CODE_BY_KEY } from '../data/gift-codes.js';
+import { GIFT_CODE_BY_KEY, hasGiftCodeRewards, isGiftCodeExpired, type GiftCodeDefinition } from '../data/gift-codes.js';
 import {
   COSMETIC_BY_ID,
   COSMETICS,
@@ -41,7 +41,8 @@ import {
   xpLevelFromTotal,
 } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
-import { awardAbdoriaFromXp, awardBonusXp, grantAbdoria, spendXpForShop } from './economy.js';
+import { giftCodeFormatError, isValidGiftCodeFormat, normalizeGiftCode } from '../utils/gift-code.js';
+import { awardAbdoriaFromXp, awardBonusXp, ensureAbdoriaWallet, grantAbdoria, projectedAbdoriaAfterXpSpend, readAbdoriaBalance, spendXpForShop } from './economy.js';
 
 export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
 
@@ -55,11 +56,30 @@ const lojaDiariaSchemaDefaults = (): LojaDiaria => ({
   slots: [],
 });
 
+function cosmeticosSnapshot(user: UserDoc): Partial<typeof DEFAULT_COSMETICOS> {
+  const raw = user.cosmeticos;
+  if (!raw || typeof raw !== 'object') return {};
+  const maybeDoc = raw as { toObject?: () => Partial<typeof DEFAULT_COSMETICOS> };
+  if (typeof maybeDoc.toObject === 'function') {
+    return maybeDoc.toObject();
+  }
+  return { ...(raw as Partial<typeof DEFAULT_COSMETICOS>) };
+}
+
 function ensureCosmeticos(user: UserDoc): void {
-  user.cosmeticos = resolveCosmeticos(
-    user.cosmeticos as Partial<typeof DEFAULT_COSMETICOS>,
-    user.gamificacao.nivel_xp,
-  );
+  const snapshot = cosmeticosSnapshot(user);
+  const resolved = resolveCosmeticos(snapshot, user.gamificacao.nivel_xp);
+  ensureAbdoriaWallet(user);
+
+  if (typeof snapshot.moedas === 'number' && !Number.isNaN(snapshot.moedas)) {
+    resolved.moedas = Math.max(resolved.moedas, snapshot.moedas);
+  }
+  if (typeof snapshot.moedas_xp_blocos === 'number' && !Number.isNaN(snapshot.moedas_xp_blocos)) {
+    resolved.moedas_xp_blocos = Math.max(resolved.moedas_xp_blocos, snapshot.moedas_xp_blocos);
+  }
+
+  user.cosmeticos = resolved as typeof user.cosmeticos;
+  user.markModified('cosmeticos');
 }
 
 function ensureLojaDiaria(user: UserDoc): LojaDiaria & { slots: LojaDiariaSlot[] } {
@@ -252,7 +272,7 @@ function toCatalogItem(item: CosmeticDefinition, user: UserDoc): ShopCatalogItem
   const desbloqueada = unlocked.has(item.id);
   const equipada = isEquipped(user, item);
   const pode_comprar =
-    !desbloqueada && item.unlock.tipo === 'moedas' && (item.unlock.preco_moedas ?? 0) <= user.cosmeticos.moedas;
+    !desbloqueada && item.unlock.tipo === 'moedas' && (item.unlock.preco_moedas ?? 0) <= readAbdoriaBalance(user);
 
   return {
     ...item,
@@ -272,7 +292,7 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
     COSMETICS.filter((item) => item.kind === kind).map((item) => toCatalogItem(item, user));
 
   return {
-    abdoria: user.cosmeticos.moedas,
+    abdoria: readAbdoriaBalance(user),
     xp_level: xpLevelFromTotal(user.gamificacao.nivel_xp),
     nivel_xp: user.gamificacao.nivel_xp,
     spendable_xp: spendableXpForShop(user.gamificacao.nivel_xp),
@@ -321,9 +341,11 @@ export async function purchaseShopItem(userId: string, itemId: string) {
   const price = item.unlock.preco_moedas ?? 0;
   const unlocked = new Set(user.cosmeticos.desbloqueados);
   if (unlocked.has(item.id)) return { error: 'Você já possui este item.', status: 400 as const };
-  if (user.cosmeticos.moedas < price) return { error: `${CURRENCY_NAME} insuficiente.`, status: 400 as const };
+  ensureAbdoriaWallet(user);
+  const balance = readAbdoriaBalance(user);
+  if (balance < price) return { error: `${CURRENCY_NAME} insuficiente.`, status: 400 as const };
 
-  user.cosmeticos.moedas -= price;
+  user.cosmeticos.moedas = balance - price;
   unlocked.add(item.id);
   user.cosmeticos.desbloqueados = [...unlocked];
   await user.save();
@@ -418,7 +440,20 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
     const abdoriaCost = slotDoc.preco_abdoria ?? 0;
     const xpCost = slotDoc.preco_xp ?? 0;
 
-    if (abdoriaCost > 0 && user.cosmeticos.moedas < abdoriaCost) {
+    ensureAbdoriaWallet(user);
+
+    if (xpCost > 0) {
+      const spendable = spendableXpForShop(user.gamificacao.nivel_xp);
+      if (xpCost > spendable) {
+        return {
+          error: `XP insuficiente no progresso do nível. Você pode usar até ${spendable} XP (0–99% do nível atual).`,
+          status: 400 as const,
+        };
+      }
+    }
+
+    const abdoriaAfterXp = projectedAbdoriaAfterXpSpend(user, xpCost);
+    if (abdoriaCost > 0 && abdoriaAfterXp < abdoriaCost) {
       return { error: `${CURRENCY_NAME} insuficiente.`, status: 400 as const };
     }
 
@@ -430,7 +465,7 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
     }
 
     if (abdoriaCost > 0) {
-      user.cosmeticos.moedas -= abdoriaCost;
+      user.cosmeticos.moedas = readAbdoriaBalance(user) - abdoriaCost;
     }
 
     applyDailyReward(user, slotSnapshot);
@@ -466,22 +501,41 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
   const user = await loadUserForShop(userId);
   if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
 
-  const code = rawCode.trim().toLowerCase();
+  const code = normalizeGiftCode(rawCode);
+  if (!isValidGiftCodeFormat(code)) {
+    return { error: giftCodeFormatError(), status: 400 as const };
+  }
+
   const definition = GIFT_CODE_BY_KEY[code];
-  if (!definition) return { error: 'Código inválido ou expirado.', status: 404 as const };
+  if (!definition || definition.active === false) {
+    return { error: 'Código inválido ou expirado.', status: 404 as const };
+  }
+
+  if (!hasGiftCodeRewards(definition)) {
+    return { error: 'Este código não possui recompensas configuradas.', status: 400 as const };
+  }
+
+  if (isGiftCodeExpired(definition, getTodaySaoPaulo())) {
+    return { error: 'Este código expirou.', status: 400 as const };
+  }
 
   const redeemed = new Set(user.cosmeticos.codigos_resgatados ?? []);
-  if (redeemed.has(code)) return { error: 'Código já resgatado.', status: 400 as const };
+  if (redeemed.has(code)) {
+    return { error: 'Você já resgatou este código nesta conta.', status: 400 as const };
+  }
 
   redeemed.add(code);
   user.cosmeticos.codigos_resgatados = [...redeemed];
 
   const xp_ganho = awardBonusXp(user, definition.xp);
   grantAbdoria(user, definition.abdoria);
-  awardAbdoriaFromXp(user);
+  syncGiftCodeAbdoriaBlocks(user);
 
   const unlocked = new Set(user.cosmeticos.desbloqueados);
-  for (const itemId of definition.desbloqueia) unlocked.add(itemId);
+  for (const itemId of definition.desbloqueia) {
+    if (!COSMETIC_BY_ID[itemId]) continue;
+    unlocked.add(itemId);
+  }
   user.cosmeticos.desbloqueados = [...unlocked];
 
   if (definition.titulo_equipar && unlocked.has(definition.titulo_equipar)) {
@@ -490,6 +544,7 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
 
   await user.save();
 
+  const recompensas = buildGiftCodeRewardLines(definition, xp_ganho, definition.abdoria);
   const tituloItem = definition.titulo_equipar ? COSMETIC_BY_ID[definition.titulo_equipar] : undefined;
 
   return {
@@ -497,10 +552,39 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
     codigo: code,
     xp_ganho,
     abdoria_ganha: definition.abdoria,
-    itens_desbloqueados: definition.desbloqueia,
+    itens_desbloqueados: definition.desbloqueia.filter((id) => Boolean(COSMETIC_BY_ID[id])),
     titulo: tituloItem?.nome,
     mensagem: definition.mensagem,
+    recompensas,
   };
+}
+
+function syncGiftCodeAbdoriaBlocks(user: UserDoc): void {
+  user.cosmeticos.moedas_xp_blocos = Math.floor(user.gamificacao.nivel_xp / ABDORIA_XP_STEP);
+}
+
+function buildGiftCodeRewardLines(
+  definition: GiftCodeDefinition,
+  xp_ganho: number,
+  abdoria_ganha: number,
+) {
+  const lines: Array<{
+    tipo: 'xp' | 'abdoria' | 'cosmetico';
+    valor?: number;
+    nome?: string;
+    item_id?: string;
+  }> = [];
+
+  if (xp_ganho > 0) lines.push({ tipo: 'xp', valor: xp_ganho });
+  if (abdoria_ganha > 0) lines.push({ tipo: 'abdoria', valor: abdoria_ganha });
+
+  for (const itemId of definition.desbloqueia) {
+    const item = COSMETIC_BY_ID[itemId];
+    if (!item) continue;
+    lines.push({ tipo: 'cosmetico', item_id: itemId, nome: item.nome });
+  }
+
+  return lines;
 }
 
 /** Compatibilidade com serviço anterior. */

@@ -33,7 +33,7 @@ const inputClass =
   'rounded-xl border border-stone-300 bg-white px-4 py-3 font-medium text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20';
 
 export function OnboardingPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, applyUser } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [showTerms, setShowTerms] = useState(true);
@@ -92,9 +92,10 @@ export function OnboardingPage() {
       if (nivel) payload.nivel = nivel;
       if (objetivo) payload.objetivo = objetivo;
 
-      await completeOnboarding(payload);
+      const updatedUser = await completeOnboarding(payload);
+      applyUser(updatedUser);
       await refreshUser();
-      navigate('/');
+      navigate('/', { replace: true, state: { showTutorial: true } });
     } finally {
       setSaving(false);
     }

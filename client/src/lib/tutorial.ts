@@ -13,5 +13,5 @@ export async function markTutorialSeen(user: IUserDocument): Promise<void> {
 }
 
 export function shouldShowFirstTimeTutorial(user: IUserDocument | null): boolean {
-  return Boolean(user?.onboarding_completed && user.preferencias?.tutorial_visto === false);
+  return Boolean(user?.onboarding_completed && !user.preferencias?.tutorial_visto);
 }

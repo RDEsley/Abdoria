@@ -353,6 +353,7 @@ export function BuilderPage() {
           {saveMessage && <p className="game-modal__success mb-2">{saveMessage}</p>}
           <SwipeScroll
             ref={presetsCarouselRef}
+            arrows={false}
             className="game-swipe-scroll--snap flex gap-3 pb-2"
             prevLabel="Ver treinos anteriores"
             nextLabel="Ver mais treinos"
