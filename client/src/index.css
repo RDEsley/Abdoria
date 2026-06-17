@@ -4575,16 +4575,27 @@ input[type='range'] {
 }
 
 .game-shop-nav {
-  position: sticky;
-  top: 0;
   z-index: 3;
   display: flex;
   flex-wrap: nowrap;
   gap: 0.35rem;
   padding: 0.35rem 0.15rem 0.55rem;
-  margin-bottom: 0.75rem;
   background: linear-gradient(180deg, rgba(255, 253, 247, 0.98), rgba(255, 253, 247, 0.92));
   border-bottom: 2px solid rgba(28, 25, 23, 0.08);
+}
+
+.game-shop-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.game-shop-body > .game-swipe-scroll-wrap,
+.game-shop-body > .game-shop-nav.game-swipe-scroll {
+  flex-shrink: 0;
+  margin-bottom: 0.5rem;
 }
 
 .game-shop-nav.game-swipe-scroll {
@@ -4644,7 +4655,7 @@ input[type='range'] {
 }
 
 .game-shop-section {
-  scroll-margin-top: 4.5rem;
+  scroll-margin-top: 0.5rem;
   margin-bottom: 1.25rem;
 }
 
@@ -5059,7 +5070,7 @@ input[type='range'] {
 }
 
 .game-shop-section--anchored {
-  scroll-margin-top: 3.5rem;
+  scroll-margin-top: 0.5rem;
 }
 
 .game-hud__coins-pulse {

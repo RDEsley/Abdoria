@@ -151,7 +151,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
           setActiveSection(visible.target.id as ShopSectionId);
         }
       },
-      { root, rootMargin: '-5% 0px -55% 0px', threshold: [0.15, 0.35, 0.55, 0.75] },
+      { root, rootMargin: '-8% 0px -52% 0px', threshold: [0.2, 0.4, 0.6] },
     );
 
     SECTIONS.forEach(({ id }) => {
@@ -172,21 +172,24 @@ export function CosmeticsModal({ open, onClose }: Props) {
     const root = scrollRef.current;
     const target = root?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
     if (root && target) {
-      const rootTop = root.getBoundingClientRect().top;
-      const targetTop = target.getBoundingClientRect().top;
+      const top = root.scrollTop + target.getBoundingClientRect().top - root.getBoundingClientRect().top - 6;
       root.scrollTo({
-        top: Math.max(0, root.scrollTop + (targetTop - rootTop) - 12),
+        top: Math.max(0, top),
         behavior: 'smooth',
       });
     }
 
-    const navBtn = navRef.current?.querySelector<HTMLElement>(`[data-shop-section="${id}"]`);
-    navBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    const navEl = navRef.current;
+    const navBtn = navEl?.querySelector<HTMLElement>(`[data-shop-section="${id}"]`);
+    if (navEl && navBtn) {
+      const left = navBtn.offsetLeft - (navEl.clientWidth - navBtn.offsetWidth) / 2;
+      navEl.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
 
     observerResumeTimer.current = window.setTimeout(() => {
       observerPausedRef.current = false;
       observerResumeTimer.current = null;
-    }, 700);
+    }, 900);
   }, []);
 
   const syncUser = async (nextUser: import('@/types').IUserDocument) => {
@@ -289,7 +292,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
         {error && <p className="game-login__error mt-3">{error}</p>}
         {success && <p className="game-modal__success mt-3">{success}</p>}
 
-        <div ref={scrollRef} className="game-shop-scroll">
+        <div className="game-shop-body">
           <SwipeScroll
             ref={navRef}
             as="nav"
@@ -312,37 +315,39 @@ export function CosmeticsModal({ open, onClose }: Props) {
             ))}
           </SwipeScroll>
 
-          {loading ? (
-            <p className="game-loader mt-6">Carregando catálogo...</p>
-          ) : (
-            SECTIONS.map(({ id, kind, label, icon: Icon }) => (
-              <section key={id} id={id} className="game-shop-section game-shop-section--anchored">
-                <div className="game-shop-section__head">
-                  <div className="game-shop-section__ornament" aria-hidden />
-                  <h3 className="game-shop-section__title">
-                    <Icon size={16} /> {label}
-                  </h3>
-                  <div className="game-shop-section__ornament game-shop-section__ornament--mirror" aria-hidden />
-                </div>
+          <div ref={scrollRef} className="game-shop-scroll">
+            {loading ? (
+              <p className="game-loader mt-6">Carregando catálogo...</p>
+            ) : (
+              SECTIONS.map(({ id, kind, label, icon: Icon }) => (
+                <section key={id} id={id} className="game-shop-section game-shop-section--anchored">
+                  <div className="game-shop-section__head">
+                    <div className="game-shop-section__ornament" aria-hidden />
+                    <h3 className="game-shop-section__title">
+                      <Icon size={16} /> {label}
+                    </h3>
+                    <div className="game-shop-section__ornament game-shop-section__ornament--mirror" aria-hidden />
+                  </div>
 
-                <div className="game-shop-list">
-                  {catalog &&
-                    catalogByKind(catalog, kind).map((item) => (
-                      <ShopItemRow
-                        key={item.id}
-                        item={item}
-                        letter={firstName}
-                        busy={busyId === item.id}
-                        isPreviewing={isPreviewingItem(item)}
-                        onPreview={() => handlePreview(item)}
-                        onEquip={() => void handleEquip(item)}
-                        onPurchase={() => void handlePurchase(item)}
-                      />
-                    ))}
-                </div>
-              </section>
-            ))
-          )}
+                  <div className="game-shop-list">
+                    {catalog &&
+                      catalogByKind(catalog, kind).map((item) => (
+                        <ShopItemRow
+                          key={item.id}
+                          item={item}
+                          letter={firstName}
+                          busy={busyId === item.id}
+                          isPreviewing={isPreviewingItem(item)}
+                          onPreview={() => handlePreview(item)}
+                          onEquip={() => void handleEquip(item)}
+                          onPurchase={() => void handlePurchase(item)}
+                        />
+                      ))}
+                  </div>
+                </section>
+              ))
+            )}
+          </div>
         </div>
 
         <GameButton variant="secondary" className="game-modal__close" onClick={onClose}>
