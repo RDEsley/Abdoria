@@ -9,7 +9,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import { formatTrainingDuration } from '@/lib/utils';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_FULL_EXERCISES, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -180,8 +180,10 @@ export function ProfilePage() {
             {stats.xp_extra_hoje > 0 ? ` · extra +${stats.xp_extra_hoje}` : ''}
           </p>
           <p className="mt-1 text-xs font-bold text-stone-500">
-            {XP_DAILY_PER_EXERCISE} XP/exercício · mín. {XP_DAILY_MIN_EXERCISES} no treino ·{' '}
-            {XP_DAILY_FULL_EXERCISES} exercícios = 100 XP/dia. Bônus (streak, conquistas, loja) não contam no teto.
+            {XP_DAILY_PER_EXERCISE} XP/exercício · mín. {XP_DAILY_MIN_EXERCISES} no treino · teto{' '}
+            {stats.xp_diario_limite} XP/dia (+{XP_DAILY_CAP_PER_LEVEL}/nível) ·{' '}
+            {dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios enchem o teto. Bônus (streak,
+            conquistas, loja) não contam no teto.
           </p>
         </div>
       )}

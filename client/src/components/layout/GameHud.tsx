@@ -6,7 +6,7 @@ import { XpBar } from '@/components/ui/XpBar';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { CURRENCY_NAME, XP_DAILY_CAP_BASE, resolveCosmeticos, xpProgressFromTotal } from '@/types';
+import { CURRENCY_NAME, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal } from '@/types';
 
 export function GameHud() {
   const { stats, user: appUser } = useApp();
@@ -19,7 +19,10 @@ export function GameHud() {
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const equippedTitle = cosmeticos.titulo_equipado ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome : null;
-  const dailyXpTitle = `XP diário de exercícios: ${XP_DAILY_CAP_BASE}/dia · 20 XP por exercício (mín. 3 no treino)`;
+  const dailyXpLimit = stats?.xp_diario_limite;
+  const dailyXpTitle = dailyXpLimit
+    ? `XP diário de exercícios: ${dailyXpLimit}/dia (+${XP_DAILY_CAP_PER_LEVEL} por nível) · ${XP_DAILY_PER_EXERCISE} XP por exercício (mín. ${XP_DAILY_MIN_EXERCISES} no treino)`
+    : `XP diário de exercícios · ${XP_DAILY_PER_EXERCISE} XP por exercício (mín. ${XP_DAILY_MIN_EXERCISES} no treino)`;
 
   return (
     <>

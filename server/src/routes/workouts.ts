@@ -20,7 +20,7 @@ import {
 } from '../services/economy.js';
 import { getSuggestedWorkout } from '../services/recommendation.js';
 import type { MusculoPrincipal } from '../types/index.js';
-import { XP_DAILY_CAP_BASE, xpLevelFromTotal } from '../types/index.js';
+import { dailyXpCapForLevel, xpLevelFromTotal } from '../types/index.js';
 
 export const workoutsRouter = Router();
 
@@ -129,7 +129,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       nivel_xp: user.gamificacao.nivel_xp,
       xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
       xp_extra_hoje: user.xp_diario?.extra_hoje ?? 0,
-      xp_diario_limite: XP_DAILY_CAP_BASE,
+      xp_diario_limite: dailyXpCapForLevel(xpLevelFromTotal(user.gamificacao.nivel_xp)),
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: monthly.map((m: { _id: string; minutos: number }) => ({ mes: m._id, minutos: Math.round(m.minutos) })),
