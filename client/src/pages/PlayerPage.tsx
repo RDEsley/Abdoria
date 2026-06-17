@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Coins, LogOut, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { Check, Coins, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
@@ -396,28 +396,71 @@ export function PlayerPage() {
           ? ((restTotalSec - secondsLeft) / restTotalSec) * 100
           : 0;
 
+  const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
+  const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
+
+  const handleRingPress = () => {
+    if (phase === 'ready') {
+      startSeries();
+      return;
+    }
+    if (canTogglePause) {
+      togglePause();
+      return;
+    }
+    if (phase === 'working' && current.modo === 'reps') {
+      completeSeries();
+    }
+  };
+
+  const ringAriaLabel =
+    phase === 'ready'
+      ? `Iniciar série ${seriesIndex + 1}`
+      : phase === 'resting'
+        ? paused
+          ? 'Continuar descanso'
+          : 'Pausar descanso'
+        : phase === 'working' && current.modo === 'tempo'
+          ? paused
+            ? 'Continuar exercício'
+            : 'Pausar exercício'
+          : phase === 'working'
+            ? `Concluir série ${seriesIndex + 1} de ${totalSeries}`
+            : 'Controle do treino';
+
   const ringCenter =
-    phase === 'resting' ? (
+    phase === 'resting' && paused ? (
+      <>
+        <Play size={32} className="text-sky-600" fill="currentColor" />
+        <span className="game-timer-ring__sublabel mt-1">continuar</span>
+      </>
+    ) : phase === 'resting' ? (
       <>
         <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-        <span className="game-timer-ring__sublabel">descanso</span>
+        <span className="game-timer-ring__sublabel">descanso · toque p/ pausar</span>
+      </>
+    ) : phase === 'working' && current.modo === 'tempo' && paused ? (
+      <>
+        <Play size={32} className="text-emerald-500" fill="currentColor" />
+        <span className="game-timer-ring__sublabel mt-1">continuar</span>
       </>
     ) : phase === 'working' && current.modo === 'tempo' ? (
       <>
         <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-        <span className="game-timer-ring__sublabel">exercício</span>
+        <span className="game-timer-ring__sublabel">exercício · toque p/ pausar</span>
       </>
     ) : phase === 'working' ? (
       <>
-        <span className="game-timer-ring__label tabular-nums">
+        <Check size={28} className="text-emerald-600" strokeWidth={3} />
+        <span className="game-timer-ring__label tabular-nums !text-sm">
           {seriesIndex + 1}/{totalSeries}
         </span>
-        <span className="game-timer-ring__sublabel">série</span>
+        <span className="game-timer-ring__sublabel">tocar p/ concluir</span>
       </>
     ) : (
       <>
-        <Play size={32} className="text-emerald-500" />
-        <span className="game-timer-ring__sublabel mt-1">pronta</span>
+        <Play size={32} className="text-emerald-500" fill="currentColor" />
+        <span className="game-timer-ring__sublabel mt-1">iniciar série</span>
       </>
     );
 
@@ -439,8 +482,8 @@ export function PlayerPage() {
         : `Segure por ${targetSeconds}s na série ${seriesIndex + 1}.`
       : phase === 'working'
         ? current.modo === 'reps'
-          ? `Meta: ${targetReps} repetições · toque em "Série concluída" ao terminar.`
-          : `Segure a posição · o tempo conta sozinho.`
+          ? `Meta: ${targetReps} repetições · toque no círculo ao terminar.`
+          : `Segure a posição · toque no círculo para pausar.`
         : null;
 
   const restStatus =
@@ -451,9 +494,6 @@ export function PlayerPage() {
           next: nextSeriesLabel,
         }
       : null;
-
-  const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
-  const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
 
   return (
     <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
@@ -514,8 +554,13 @@ export function PlayerPage() {
           )}
         </div>
 
-        <div className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}>
-          <svg className="game-timer-ring__svg -rotate-90" viewBox="0 0 100 100">
+        <button
+          type="button"
+          className={`game-timer-ring game-timer-ring--action ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}
+          onClick={handleRingPress}
+          aria-label={ringAriaLabel}
+        >
+          <svg className="game-timer-ring__svg -rotate-90" viewBox="0 0 100 100" aria-hidden>
             <circle cx="50" cy="50" r="45" fill="none" stroke="#e7e5e4" strokeWidth="6" />
             <circle
               cx="50"
@@ -529,7 +574,7 @@ export function PlayerPage() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">{ringCenter}</div>
-        </div>
+        </button>
 
         {paused && canTogglePause && (
           <p className="game-player-paused">
@@ -538,48 +583,12 @@ export function PlayerPage() {
         )}
         </div>
 
-      <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-        {phase === 'ready' && (
-          <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={startSeries}>
-            <Play size={20} fill="currentColor" />
-            Iniciar série {seriesIndex + 1}
-          </GameButton>
-        )}
-
-        {phase === 'working' && (
-          <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={completeSeries}>
-            <Check size={22} />
-            Série concluída
-          </GameButton>
-        )}
-
+      <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
         {phase === 'resting' && (
-          <>
-            <GameButton
-              size="lg"
-              className="w-full flex items-center justify-center gap-2"
-              variant={paused ? 'primary' : 'secondary'}
-              onClick={togglePause}
-            >
-              {paused ? (
-                <>
-                  <Play size={20} fill="currentColor" /> Continuar descanso
-                </>
-              ) : (
-                <>
-                  <Pause size={20} /> Pausar descanso
-                </>
-              )}
-            </GameButton>
-            <GameButton variant="secondary" size="lg" className="w-full flex items-center justify-center gap-2" onClick={skipRest}>
-              <SkipForward size={18} /> Pular descanso
-            </GameButton>
-          </>
+          <button type="button" className="game-player-skip-rest" onClick={skipRest}>
+            <SkipForward size={16} aria-hidden /> Pular descanso
+          </button>
         )}
-
-        <GameButton variant="secondary" size="lg" className="w-full flex items-center justify-center gap-2 text-red-700" onClick={() => setShowQuitModal(true)}>
-          <LogOut size={18} /> Desistir do treino
-        </GameButton>
       </div>
       </div>
 

@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { forwardRef, useRef, type ComponentPropsWithoutRef } from 'react';
 import { useHorizontalScrollNav } from '@/hooks/useHorizontalScrollNav';
-import { useSwipeScroll } from '@/hooks/useSwipeScroll';
 import { mergeRefs } from '@/lib/merge-refs';
 
 type SwipeScrollTag = 'div' | 'nav';
@@ -27,16 +26,10 @@ export const SwipeScroll = forwardRef<HTMLDivElement, SwipeScrollProps>(function
   forwardedRef,
 ) {
   const localRef = useRef<HTMLDivElement>(null);
-  const { swipeHandlers } = useSwipeScroll(localRef);
   const { canScrollLeft, canScrollRight, scrollPrev, scrollNext } = useHorizontalScrollNav(localRef);
 
   const scrollable = (
-    <Tag
-      ref={mergeRefs(forwardedRef, localRef)}
-      className={`game-swipe-scroll${className ? ` ${className}` : ''}`}
-      {...swipeHandlers}
-      {...rest}
-    >
+    <Tag ref={mergeRefs(forwardedRef, localRef)} className={`game-swipe-scroll${className ? ` ${className}` : ''}`} {...rest}>
       {children}
     </Tag>
   );

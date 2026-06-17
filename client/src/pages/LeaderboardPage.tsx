@@ -7,7 +7,7 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { CURRENCY_NAME, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
+import { CURRENCY_NAME, weeklyLeaderboardReward, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
 
 const PODIUM_SLOTS = [
   { entryIndex: 1, medal: 'silver', height: 'h-28' },
@@ -25,6 +25,18 @@ function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric):
   if (metric === 'xp') return `Nv.${entry.level}`;
   if (metric === 'streak') return `${entry.streak_atual}d`;
   return `${entry.moedas} ${CURRENCY_NAME}`;
+}
+
+function WeeklyRewardBadge({ rank }: { rank: number }) {
+  const reward = weeklyLeaderboardReward(rank);
+  if (!reward) return null;
+
+  return (
+    <span className="game-rank-reward">
+      <Coins size={11} aria-hidden />
+      +{reward} dom.
+    </span>
+  );
 }
 
 function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: LeaderboardMetric }) {
@@ -49,7 +61,10 @@ function RankRow({
     <li className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}>
       <span className="game-rank-row__rank">#{entry.rank}</span>
       <LeaderboardUserAvatar entry={entry} size="sm" />
-      <span className="game-rank-row__name">{label ?? entry.nome}</span>
+      <div className="game-rank-row__main">
+        <span className="game-rank-row__name">{label ?? entry.nome}</span>
+        {metric === 'xp' && <WeeklyRewardBadge rank={entry.rank} />}
+      </div>
       <RankValue entry={entry} metric={metric} />
     </li>
   );
@@ -88,8 +103,8 @@ export function LeaderboardPage() {
       <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
 
       {metric === 'xp' && (
-        <p className="text-center text-xs font-semibold text-stone-500">
-          Recompensas semanais (todo domingo): 1º 15 · 2º 10 · 3º 5 · 4º–25º 3 {CURRENCY_NAME}
+        <p className="text-center text-xs font-semibold leading-relaxed text-stone-500">
+          O top 25 em XP recebe {CURRENCY_NAME} automaticamente todo domingo.
         </p>
       )}
 
@@ -149,6 +164,12 @@ export function LeaderboardPage() {
                     <p className="game-podium__name">{entry.nome}</p>
                     <div className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}>
                       <span className="game-podium__rank">#{entry.rank}</span>
+                      {metric === 'xp' && weeklyLeaderboardReward(entry.rank) && (
+                        <span className="game-podium__reward">
+                          <Coins size={10} aria-hidden />
+                          +{weeklyLeaderboardReward(entry.rank)}
+                        </span>
+                      )}
                     </div>
                     <p className="game-podium__detail">
                       {metric === 'moedas' && <Coins size={10} aria-hidden className="inline" />}
