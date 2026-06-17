@@ -4377,11 +4377,25 @@ input[type='range'] {
   padding: 0.4rem 0.65rem;
   font-size: 0.72rem;
   font-weight: 900;
+  font-family: inherit;
   color: #854d0e;
   background: linear-gradient(180deg, #fef9c3, #fde68a);
   border: 2px solid #1c1917;
   border-radius: 999px;
   box-shadow: 2px 2px 0 #92400e;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.game-shop-header__coins:hover {
+  background: linear-gradient(180deg, #fef08a, #fcd34d);
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 #92400e;
+}
+
+.game-shop-header__coins:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 #92400e;
 }
 
 .game-economy-rules--compact {
