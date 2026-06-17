@@ -36,4 +36,6 @@ export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: st
   efeito_confete: { id: 'efeito_confete', nome: 'Confete', icon: 'star' },
   efeito_raios: { id: 'efeito_raios', nome: 'Raios', icon: 'zap' },
   efeito_fogo: { id: 'efeito_fogo', nome: 'Chamas', icon: 'flame' },
+  efeito_agua: { id: 'efeito_agua', nome: 'Onda Azul', icon: 'star' },
+  efeito_glitch: { id: 'efeito_glitch', nome: 'Quebra de Tela', icon: 'zap' },
 };

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { AuthAlert } from '@/components/auth/AuthAlert';
+import { AuthField } from '@/components/auth/AuthField';
 import { requestPasswordReset } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { validateEmail } from '@/lib/auth-validation';
 
 interface Props {
   open: boolean;
@@ -10,6 +13,7 @@ interface Props {
 
 export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props) {
   const [email, setEmail] = useState(initialEmail);
+  const [emailError, setEmailError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +23,7 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
       setEmail(initialEmail);
       setError(null);
       setMessage(null);
+      setEmailError(undefined);
     }
   }, [open, initialEmail]);
 
@@ -28,12 +33,17 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
     e.preventDefault();
     setError(null);
     setMessage(null);
+
+    const err = validateEmail(email);
+    setEmailError(err);
+    if (err) return;
+
     setLoading(true);
     try {
       const res = await requestPasswordReset(email);
       setMessage(res.message);
-    } catch (err) {
-      setError(getErrorMessage(err));
+    } catch (submitErr) {
+      setError(getErrorMessage(submitErr));
     } finally {
       setLoading(false);
     }
@@ -50,23 +60,30 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
         <h2 id="forgot-title" className="game-modal__title">
           ESQUECI A SENHA
         </h2>
-        <p className="game-modal__text">Informe seu email cadastrado.</p>
+        <p className="game-modal__text">Informe o email da sua conta. Enviaremos as instruções se ele estiver cadastrado.</p>
 
-        <form onSubmit={handleSubmit} className="game-login__form">
-          <input
+        <form onSubmit={handleSubmit} className="game-login__form" noValidate>
+          <AuthField
+            label="Email"
+            name="forgot-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="EMAIL"
-            required
-            className="game-input"
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError(undefined);
+              setError(null);
+            }}
+            onBlur={() => setEmailError(validateEmail(email))}
+            error={emailError}
+            placeholder="seu@email.com"
+            autoComplete="email"
           />
 
-          {error && <p className="game-login__error">{error}</p>}
-          {message && <p className="game-modal__success">{message}</p>}
+          {error && <AuthAlert variant="error" title="Não foi possível enviar" message={error} live />}
+          {message && <AuthAlert variant="success" title="Verifique seu email" message={message} />}
 
           <button type="submit" disabled={loading} className="game-btn game-btn--primary">
-            {loading ? '...' : 'ENVIAR'}
+            {loading ? 'Enviando…' : 'Enviar link'}
           </button>
         </form>
 

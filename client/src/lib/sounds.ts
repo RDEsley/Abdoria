@@ -89,6 +89,11 @@ export function playRestStart() {
   playTone(getPack().rest, 0.1, 'sine', 0.05);
 }
 
+export function playRestEnd() {
+  playTone(660, 0.08, 'triangle', 0.07);
+  setTimeout(() => playTone(784, 0.12, 'sine', 0.08), 90);
+}
+
 export function playTimerDone() {
   playTone(880, 0.15, 'square', 0.08);
   setTimeout(() => playTone(1047, 0.2, 'sine', 0.09), 120);

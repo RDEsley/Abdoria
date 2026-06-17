@@ -8,6 +8,7 @@ import { allExercises } from '../seeds/all-exercises.js';
 import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
 import { workoutPresets } from '../seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
+import { syncAllUsersProgressData } from '../services/user-data-sync.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
 /** Exercícios removidos do catálogo — desativados no banco a cada seed. */
@@ -44,6 +45,9 @@ async function seed() {
       console.log(`Exercícios desativados: ${retired.modifiedCount}`);
     }
   }
+
+  const sync = await syncAllUsersProgressData();
+  console.log(`Sync usuários: ${sync.users} contas · ${sync.pruned} slugs podados · +${sync.coinsAdjusted} Abdoria coins`);
 
   for (const preset of workoutPresets) {
     const result = await WorkoutPreset.findOneAndUpdate(

@@ -129,7 +129,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, loadCatalog, onClose]);
+  }, [open, loadCatalog]);
 
   useEffect(() => {
     if (!success) return;
@@ -151,7 +151,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
           setActiveSection(visible.target.id as ShopSectionId);
         }
       },
-      { root, rootMargin: '-10% 0px -38% 0px', threshold: [0, 0.2, 0.45, 0.7] },
+      { root, rootMargin: '-5% 0px -55% 0px', threshold: [0.15, 0.35, 0.55, 0.75] },
     );
 
     SECTIONS.forEach(({ id }) => {
@@ -193,7 +193,12 @@ export function CosmeticsModal({ open, onClose }: Props) {
     applyUser(nextUser);
     setSfxPack(nextUser.cosmeticos?.som_equipado ?? 'som_classico');
     await refreshApp();
-    await loadCatalog();
+    try {
+      const data = await getShop();
+      setCatalog(data);
+    } catch {
+      /* mantém catálogo anterior */
+    }
   };
 
   const handlePreview = (item: ShopCatalogItem) => {

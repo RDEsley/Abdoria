@@ -158,28 +158,26 @@ export function DashboardPage() {
           <span className="text-emerald-700">{xpDisponivelTrocas} XP para trocas hoje</span>
           <span>Faltam {xpParaLevelUp} XP para o nível {level + 1}</span>
         </div>
-        <div className="mt-3 flex items-center gap-4">
-          <div className="game-level-badge">{level}</div>
-          <div className="flex-1">
+        <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="game-level-badge shrink-0 self-center sm:self-start">{level}</div>
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
             <XpBar value={xpInLevel} max={xpToNext} label="Progresso do nível" />
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <XpBar
-                value={stats.xp_hoje}
-                max={stats.xp_diario_limite}
-                label="XP diário"
-                hint={dailyXpHint}
-                variant="daily"
-                pulseWhenFull
-              />
-              <XpBar
-                value={stats.xp_extra_hoje}
-                max={Math.max(stats.xp_extra_hoje, 1)}
-                label="XP extra"
-                hint="Streak, conquistas, loja e habilidades"
-                variant="extra"
-                valueOnly
-              />
-            </div>
+            <XpBar
+              value={stats.xp_hoje}
+              max={stats.xp_diario_limite}
+              label="XP diário"
+              hint={dailyXpHint}
+              variant="daily"
+              pulseWhenFull
+            />
+            <XpBar
+              value={stats.xp_extra_hoje}
+              max={Math.max(stats.xp_extra_hoje, 1)}
+              label="XP extra"
+              hint="Streak, conquistas, loja e habilidades"
+              variant="extra"
+              valueOnly
+            />
           </div>
         </div>
       </motion.section>

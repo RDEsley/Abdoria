@@ -5,12 +5,50 @@ interface Props {
   active?: boolean;
 }
 
-const CONFETE = ['#059669', '#34d399', '#fbbf24', '#38bdf8', '#a78bfa', '#f472b6'];
-const FOGO = ['#f97316', '#fb923c', '#ef4444', '#fbbf24'];
-const RAIOS = ['#fde047', '#facc15', '#fef08a'];
+const CONFETE = ['#059669', '#34d399', '#fbbf24', '#38bdf8', '#a78bfa', '#f472b6', '#22d3ee', '#fde047'];
+const FOGO = ['#f97316', '#fb923c', '#ef4444', '#fbbf24', '#dc2626'];
+const RAIOS = ['#fde047', '#facc15', '#fef08a', '#fff'];
+const AGUA = ['#38bdf8', '#0ea5e9', '#22d3ee', '#67e8f9', '#bae6fd'];
 
 export function EffectPreview({ effectId, active = true }: Props) {
   if (!active) return null;
+
+  if (effectId === 'efeito_glitch') {
+    return (
+      <div className="game-shop-effect-preview game-shop-effect-preview--glitch" aria-hidden>
+        {Array.from({ length: 14 }).map((_, i) => (
+          <motion.span
+            key={i}
+            className="game-shop-effect-preview__glitch"
+            style={{ top: `${(i * 13) % 88}%`, left: `${(i * 17) % 90}%` }}
+            initial={{ opacity: 0, x: 0 }}
+            animate={{
+              opacity: [0, 1, 0.2, 1, 0],
+              x: [0, (i % 2 === 0 ? 6 : -6), 0, (i % 2 === 0 ? -4 : 4), 0],
+            }}
+            transition={{ duration: 0.45, delay: i * 0.04, repeat: Infinity, repeatDelay: 0.8 }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (effectId === 'efeito_agua') {
+    return (
+      <div className="game-shop-effect-preview game-shop-effect-preview--agua" aria-hidden>
+        {AGUA.map((color, i) => (
+          <motion.span
+            key={i}
+            className="game-shop-effect-preview__drop"
+            style={{ backgroundColor: color, left: `${6 + i * 18}%` }}
+            initial={{ opacity: 0.9, y: -8, scale: 1 }}
+            animate={{ opacity: [0.9, 0.2, 0], y: [0, 42 + i * 6], scale: [1, 0.5] }}
+            transition={{ duration: 1.2, delay: i * 0.1, repeat: Infinity, repeatDelay: 0.3 }}
+          />
+        ))}
+      </div>
+    );
+  }
 
   if (effectId === 'efeito_raios') {
     return (
@@ -50,7 +88,7 @@ export function EffectPreview({ effectId, active = true }: Props) {
 
   return (
     <div className="game-shop-effect-preview" aria-hidden>
-      {Array.from({ length: 10 }).map((_, i) => (
+      {Array.from({ length: 16 }).map((_, i) => (
         <motion.span
           key={i}
           className="game-shop-effect-preview__piece"

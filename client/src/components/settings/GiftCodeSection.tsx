@@ -6,7 +6,7 @@ import { redeemGiftCode } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { CURRENCY_NAME, type RedeemCodeResponse, resolveCosmeticos } from '@/types';
+import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';
 
 const GIFT_CODE_PATTERN = /^[a-z0-9_-]+$/;
@@ -100,8 +100,8 @@ export function GiftCodeSection() {
             </GameButton>
           </div>
           <p className="game-gift-code__hint">
-            Dica: use <strong>abdoria</strong> para ganhar <strong>10.000 XP</strong>,{' '}
-            <strong>999 {CURRENCY_NAME}</strong> e título exclusivo — válido <strong>1 vez por conta</strong>.
+            Dica: use <strong>abdoria</strong> para ganhar <strong>999 Abdoria coins</strong> e o título{' '}
+            <strong>Dono do Jogo</strong> — válido <strong>1 vez por conta</strong>.
           </p>
         </div>
 

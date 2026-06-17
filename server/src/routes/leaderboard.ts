@@ -6,6 +6,7 @@ import type { LeaderboardMetric } from '../types/index.js';
 import { LEADERBOARD_DISPLAY_LIMIT, xpLevelFromTotal } from '../types/index.js';
 import { readAbdoriaBalance } from '../services/economy.js';
 import { syncAbdoriaBalancesForLeaderboard } from '../services/abdoria-leaderboard.js';
+import { processWeeklyLeaderboardRewardsIfDue } from '../services/weekly-leaderboard-rewards.js';
 
 export const leaderboardRouter = Router();
 
@@ -130,6 +131,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     if (metric === 'moedas') {
       await syncAbdoriaBalancesForLeaderboard();
     }
+    await processWeeklyLeaderboardRewardsIfDue();
 
     const users = await User.find(leaderboardFilter)
       .sort(metricSort(metric))

@@ -379,7 +379,7 @@ export function BuilderPage() {
 
       {showPresetsSection && (
         <section id="builder-presets">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-amber-500" />
               <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
@@ -387,14 +387,14 @@ export function BuilderPage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                className="game-chip-btn"
+                className={`game-builder-action ${recommendBusy ? 'game-builder-action--busy' : ''}`}
                 disabled={recommendBusy}
                 onClick={() => void handleRecommendAnother()}
               >
                 <RefreshCw size={14} className={recommendBusy ? 'animate-spin' : undefined} />
-                Recomendar outro
+                Outro
               </button>
-              <label className="game-chip-btn cursor-pointer">
+              <label className={`game-builder-action game-builder-action--toggle ${allowRepeats ? 'game-builder-action--on' : ''}`}>
                 <input
                   type="checkbox"
                   className="sr-only"
@@ -402,7 +402,7 @@ export function BuilderPage() {
                   onChange={(e) => setAllowRepeats(e.target.checked)}
                 />
                 <Repeat size={14} />
-                Repetir exercícios
+                Repetir
               </label>
             </div>
           </div>
@@ -410,9 +410,9 @@ export function BuilderPage() {
           <SwipeScroll
             ref={presetsCarouselRef}
             arrows
-            className="game-swipe-scroll--snap flex gap-2.5 pb-2"
-            prevLabel="Ver treinos anteriores"
-            nextLabel="Ver mais treinos"
+            className="game-swipe-scroll--snap game-builder-presets flex max-w-full gap-2 pb-2"
+            prevLabel="Anterior"
+            nextLabel="Próximo"
           >
             {presets.map((p) => (
               <motion.button
@@ -421,25 +421,15 @@ export function BuilderPage() {
                 whileTap={{ scale: 0.97 }}
                 type="button"
                 onClick={() => selectPreset(p._id)}
-                className={`min-w-[132px] shrink-0 cursor-pointer p-2.5 text-left ${
+                className={`game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left ${
                   selectedPresetId === p._id ? 'game-quest-card' : 'glass-card'
                 }`}
               >
-                <span className="text-xs font-bold text-emerald-600">Ciclo {p.ciclo_id}</span>
-                <p className="text-sm font-bold text-stone-900">{p.nome.split('—')[1]?.trim() ?? p.nome}</p>
-                <p className="mt-1 text-[0.65rem] font-bold text-stone-500">{presetSummary(p)}</p>
-                <p className="mt-1 line-clamp-2 text-[0.6rem] font-medium text-stone-400">
-                  {p.exercicios
-                    .slice(0, 3)
-                    .map((e) => {
-                      const ex = exerciseMap.get(e.slug);
-                      return ex
-                        ? formatExerciseName(ex)
-                        : formatExerciseName({ nome: e.slug.replace(/-/g, ' '), slug: e.slug });
-                    })
-                    .join(' · ')}
-                  {p.exercicios.length > 3 ? '…' : ''}
+                <span className="text-[0.6rem] font-bold text-emerald-600">Ciclo {p.ciclo_id}</span>
+                <p className="line-clamp-2 text-[0.7rem] font-bold leading-tight text-stone-900">
+                  {p.nome.split('—')[1]?.trim() ?? p.nome}
                 </p>
+                <p className="mt-1 text-[0.58rem] font-bold text-stone-500">{presetSummary(p)}</p>
               </motion.button>
             ))}
             {savedWorkouts.map((saved) => {
@@ -451,17 +441,13 @@ export function BuilderPage() {
                   whileTap={{ scale: 0.97 }}
                   type="button"
                   onClick={() => selectPreset(savedId)}
-                  className={`min-w-[132px] shrink-0 cursor-pointer p-2.5 text-left ${
+                  className={`game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left ${
                     selectedPresetId === savedId ? 'game-quest-card' : 'glass-card'
                   }`}
                 >
-                  <span className="text-xs font-bold text-sky-600">Salvo por você</span>
-                  <p className="text-sm font-bold text-stone-900">{saved.nome}</p>
-                  <p className="mt-1 text-[0.65rem] font-bold text-stone-500">{savedWorkoutSummary(saved)}</p>
-                  <p className="mt-1 line-clamp-2 text-[0.6rem] font-medium text-stone-400">
-                    {saved.queue.slice(0, 3).map((item) => formatExerciseName(item)).join(' · ')}
-                    {saved.queue.length > 3 ? '…' : ''}
-                  </p>
+                  <span className="text-[0.6rem] font-bold text-sky-600">Salvo</span>
+                  <p className="line-clamp-2 text-[0.7rem] font-bold leading-tight text-stone-900">{saved.nome}</p>
+                  <p className="mt-1 text-[0.58rem] font-bold text-stone-500">{savedWorkoutSummary(saved)}</p>
                 </motion.button>
               );
             })}

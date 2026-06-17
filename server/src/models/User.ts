@@ -131,10 +131,12 @@ const preferenciasSchema = new Schema(
     sfx_volume: { type: Number, default: 0.7, min: 0, max: 1 },
     ciclo_treinos: {
       type: [String],
-      enum: ['A', 'B', 'C', 'D', 'E'] satisfies TreinoBase[],
+      enum: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] satisfies TreinoBase[],
       default: ['A', 'B', 'C'],
     },
     modo_padrao: { type: String, enum: ['tempo', 'reps'], default: 'tempo' },
+    reps_series_padrao: { type: Number, default: 3, min: 1, max: 10 },
+    reps_repeticoes_padrao: { type: Number, default: 12, min: 1, max: 50 },
     preset_favorito_id: { type: Schema.Types.ObjectId, ref: 'WorkoutPreset', default: null },
     tutorial_visto: { type: Boolean, default: false },
   },
