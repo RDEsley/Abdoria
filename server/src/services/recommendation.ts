@@ -4,6 +4,7 @@ import { WorkoutHistory } from '../models/WorkoutHistory.js';
 import { WorkoutPreset } from '../models/WorkoutPreset.js';
 import type { UserDocument } from '../models/User.js';
 import type { ModoExercicio, MusculoPrincipal, TreinoBase, TreinoSugerido } from '../types/index.js';
+import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
@@ -21,6 +22,23 @@ export interface RecommendWorkoutOptions {
   shuffle?: boolean;
   excludePresetId?: string | null;
 }
+
+type PresetDoc = {
+  _id: mongoose.Types.ObjectId;
+  ciclo_id: string;
+  nome: string;
+  descricao?: string;
+  nivel?: string;
+  objetivo?: string;
+  exercicios: Array<{
+    slug: string;
+    series: number;
+    modo: string;
+    repeticoes?: number | null;
+    tempo_seg?: number | null;
+    descanso_seg: number;
+  }>;
+};
 
 function resolveNextCiclo(ciclo: TreinoBase[], lastTipo?: string | null): TreinoBase {
   if (!lastTipo || lastTipo === 'custom' || !ciclo.includes(lastTipo as TreinoBase)) {
@@ -45,20 +63,7 @@ async function recentExerciseSlugs(userId: mongoose.Types.ObjectId, limit = 5): 
   return slugs;
 }
 
-async function presetToSugerido(preset: {
-  _id: mongoose.Types.ObjectId;
-  ciclo_id: string;
-  nome: string;
-  descricao?: string;
-  exercicios: Array<{
-    slug: string;
-    series: number;
-    modo: string;
-    repeticoes?: number | null;
-    tempo_seg?: number | null;
-    descanso_seg: number;
-  }>;
-}): Promise<TreinoSugerido> {
+async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
   const slugs = preset.exercicios.map((e) => e.slug);
   const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true })
     .select('slug nome nome_pt musculo_principal')
@@ -91,17 +96,40 @@ async function presetToSugerido(preset: {
   };
 }
 
-async function findPresetCandidates(user: UserDocument, ciclo?: TreinoBase) {
-  const cicloList = (user.preferencias?.ciclo_treinos ?? ['A', 'B', 'C']) as TreinoBase[];
-  const filter: Record<string, unknown> = { recomendado: true, nivel: user.nivel, objetivo: user.objetivo };
-  if (ciclo) filter.ciclo_id = ciclo;
-  else filter.ciclo_id = { $in: cicloList };
+/** Melhor preset recomendado para um ciclo (nível/objetivo do usuário com fallback). */
+async function pickBestPresetForCycle(user: UserDocument, cicloId: TreinoBase): Promise<PresetDoc | null> {
+  const tiers: Array<{ nivel?: string; objetivo?: string }> = [
+    { nivel: user.nivel, objetivo: user.objetivo },
+    { nivel: user.nivel },
+    {},
+  ];
 
-  let presets = await WorkoutPreset.find(filter).lean();
-  if (presets.length === 0) {
-    presets = await WorkoutPreset.find({ recomendado: true, ciclo_id: ciclo ?? { $in: cicloList } }).lean();
+  for (const tier of tiers) {
+    const filter: Record<string, unknown> = { recomendado: true, ciclo_id: cicloId };
+    if (tier.nivel) filter.nivel = tier.nivel;
+    if (tier.objetivo) filter.objetivo = tier.objetivo;
+    const found = await WorkoutPreset.findOne(filter).lean<PresetDoc>();
+    if (found) return found;
+  }
+
+  return WorkoutPreset.findOne({ recomendado: true, ciclo_id: cicloId }).lean<PresetDoc>();
+}
+
+/** Um preset por ciclo configurado nas preferências do usuário. */
+async function presetsForUserCycles(user: UserDocument, onlyCiclo?: TreinoBase): Promise<PresetDoc[]> {
+  const ciclos = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
+  const targetCiclos = onlyCiclo && ciclos.includes(onlyCiclo) ? [onlyCiclo] : ciclos;
+
+  const presets: PresetDoc[] = [];
+  for (const cicloId of targetCiclos) {
+    const preset = await pickBestPresetForCycle(user, cicloId);
+    if (preset) presets.push(preset);
   }
   return presets;
+}
+
+async function findPresetCandidates(user: UserDocument, ciclo?: TreinoBase) {
+  return presetsForUserCycles(user, ciclo);
 }
 
 /** Alertas de personal trainer para o dashboard. */
@@ -178,7 +206,7 @@ export async function recommendWorkout(
   options: RecommendWorkoutOptions = {},
 ): Promise<TreinoSugerido | null> {
   const { allowRepeats = false, extraCount = 0, shuffle = false, excludePresetId = null } = options;
-  const ciclo = (user.preferencias?.ciclo_treinos ?? ['A', 'B', 'C']) as TreinoBase[];
+  const ciclo = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
 
   const last = await WorkoutHistory.findOne({ usuario_id: user._id })
     .sort({ concluido_em: -1 })
@@ -186,7 +214,9 @@ export async function recommendWorkout(
     .lean();
 
   const nextCiclo = resolveNextCiclo(ciclo, last?.treino_tipo);
-  let candidates = await findPresetCandidates(user, shuffle ? undefined : nextCiclo);
+  let candidates = shuffle
+    ? await presetsForUserCycles(user)
+    : await findPresetCandidates(user, nextCiclo);
 
   if (excludePresetId) {
     const filtered = candidates.filter((p) => p._id.toString() !== excludePresetId);
@@ -204,26 +234,9 @@ export async function recommendWorkout(
     });
   }
 
-  type PresetDoc = {
-    _id: mongoose.Types.ObjectId;
-    ciclo_id: string;
-    nome: string;
-    descricao?: string;
-    exercicios: Array<{
-      slug: string;
-      series: number;
-      modo: string;
-      repeticoes?: number | null;
-      tempo_seg?: number | null;
-      descanso_seg: number;
-    }>;
-  };
-
-  let preset: PresetDoc | null = (candidates[0] as PresetDoc | undefined) ?? null;
+  let preset: PresetDoc | null = candidates[0] ?? null;
   if (!preset) {
-    preset =
-      (await WorkoutPreset.findOne({ ciclo_id: nextCiclo, recomendado: true }).lean()) ??
-      (await WorkoutPreset.findOne({ recomendado: true }).lean());
+    preset = await pickBestPresetForCycle(user, nextCiclo);
   }
   if (!preset) return null;
 
@@ -282,25 +295,9 @@ export async function recommendWorkout(
   });
 }
 
+/** Lista de treinos sugeridos: 1 card por ciclo ativo nas configurações. */
 export async function getRecommendedPresetsList(user: UserDocument) {
-  const ciclo = (user.preferencias?.ciclo_treinos ?? ['A', 'B', 'C']) as TreinoBase[];
-  const strict = await WorkoutPreset.find({
-    nivel: user.nivel,
-    objetivo: user.objetivo,
-    ciclo_id: { $in: ciclo },
-    recomendado: true,
-  }).lean();
-
-  if (strict.length > 0) return strict;
-
-  const relaxed = await WorkoutPreset.find({
-    nivel: user.nivel,
-    ciclo_id: { $in: ciclo },
-    recomendado: true,
-  }).lean();
-  if (relaxed.length > 0) return relaxed;
-
-  return WorkoutPreset.find({ recomendado: true, ciclo_id: { $in: ciclo } }).limit(6).lean();
+  return presetsForUserCycles(user);
 }
 
 export { getWeekStartSaoPaulo };

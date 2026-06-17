@@ -47,6 +47,7 @@ import {
   fromSavedPresetId,
   getExerciseParamsForNivel,
   isSavedPresetId,
+  normalizeCicloTreinos,
   savedWorkoutSummary,
   toSavedPresetId,
 } from '@/types';
@@ -120,6 +121,11 @@ export function BuilderPage() {
 
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
   const schemes = getRepSchemes(nivel);
+  const cicloTreinos = normalizeCicloTreinos(
+    user?.preferencias?.ciclo_treinos ?? authUser?.preferencias?.ciclo_treinos,
+  );
+  const cicloTreinosKey = cicloTreinos.join(',');
+
   useEffect(() => {
     void ensureExercises();
   }, [ensureExercises]);
@@ -135,13 +141,15 @@ export function BuilderPage() {
         const suggestedId = stats?.treino_sugerido?.preset_id;
         if (suggestedId && list.some((p) => p._id === suggestedId)) {
           setSelectedPresetId(suggestedId);
-        } else if (list.length > 0 && selectedPresetId === 'custom' && !customWorkout.length) {
-          setSelectedPresetId(list[0]._id);
+        } else if (list.length > 0 && (selectedPresetId === 'custom' || !list.some((p) => p._id === selectedPresetId))) {
+          if (!customWorkout.length && !isSavedPresetId(selectedPresetId)) {
+            setSelectedPresetId(list[0]._id);
+          }
         }
       })
       .catch(() => setPresets([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- presetFromUrl only on mount
-  }, [presetFromUrl, stats?.treino_sugerido?.preset_id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega quando ciclos/nível mudam
+  }, [presetFromUrl, stats?.treino_sugerido?.preset_id, cicloTreinosKey, nivel, user?.objetivo]);
 
   const handleRecommendAnother = useCallback(async () => {
     setRecommendBusy(true);
@@ -382,7 +390,12 @@ export function BuilderPage() {
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-amber-500" />
-              <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
+              <div>
+                <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
+                <p className="mt-0.5 text-[0.65rem] font-semibold text-stone-500">
+                  {presets.length} treino{presets.length === 1 ? '' : 's'} · ciclos {cicloTreinos.join(', ')}
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button

@@ -32,7 +32,7 @@ import {
   readWorkoutPausedMs,
   readWorkoutStartedAt,
 } from '@/lib/workout-duration';
-import { CURRENCY_NAME, formatExerciseName, formatExercisePrescription, type LevelUpCelebration as LevelUpData } from '@/types';
+import { CURRENCY_NAME, formatExerciseName, formatExercisePrescription, resolveCosmeticos, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 
 type Phase = 'ready' | 'working' | 'resting' | 'done';
@@ -73,6 +73,7 @@ export function PlayerPage() {
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const mutedRef = useRef(muted);
+  const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
   const prefsRef = useRef(authUser?.preferencias);
   const startTimeRef = useRef(0);
   const endTimeRef = useRef(0);
@@ -315,7 +316,7 @@ export function PlayerPage() {
     return (
       <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
         <AnimatedBackground variant="player" />
-        <CompletionCelebration />
+        <CompletionCelebration effectId={equippedEffectId} />
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="game-victory relative z-10">
           {streakCelebration !== null ? (
             <StreakFireCelebration streak={streakCelebration} />

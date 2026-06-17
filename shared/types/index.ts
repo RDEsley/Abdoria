@@ -31,6 +31,16 @@ export const CICLO_LABELS: Record<TreinoBase, string> = {
 /** Ciclos extras — disponíveis nas configurações, fora do padrão inicial. */
 export const CICLOS_OPCIONAIS: TreinoBase[] = ['F', 'G'];
 
+/** Ordem canônica dos ciclos (A → G). */
+export const CICLO_ORDER: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+/** Normaliza ciclos do usuário: ordem fixa, mínimo 2, sem duplicatas. */
+export function normalizeCicloTreinos(ciclos?: TreinoBase[] | null): TreinoBase[] {
+  const raw = ciclos ?? ['A', 'B', 'C'];
+  const selected = CICLO_ORDER.filter((c) => raw.includes(c));
+  return selected.length >= 2 ? selected : ['A', 'B', 'C'];
+}
+
 export type TreinoTipo = TreinoBase | 'custom';
 
 export type ModoExercicio = 'tempo' | 'reps';
