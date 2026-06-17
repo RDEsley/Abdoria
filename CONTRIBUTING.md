@@ -13,7 +13,7 @@ Obrigado por considerar contribuir. Este projeto é mantido em português (Brasi
 - **TypeScript** em client, server e `shared/types`.
 - Siga o estilo existente: nomes em português no domínio (rotas, UI), inglês ok em infra.
 - Mudanças **pequenas e focadas** — um assunto por PR.
-- Não commite `.env`, secrets ou pasta `.cursor`.
+- Não commite `.env`, secrets, `.cursor`, `.cursorignore` ou `.vercel`.
 
 ## Fluxo
 
