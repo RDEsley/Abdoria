@@ -16,23 +16,22 @@ interface Props {
 export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
   const recommendations = REP_SCHEME_BY_NIVEL[nivel];
   const [series, setSeries] = useState(3);
-  const [repeticoes, setRepeticoes] = useState(12);
-  const [nome, setNome] = useState('');
+  const [repeticoes, setRepeticoes] = useState(15);
 
   if (!open) return null;
 
+  const schemeLabel = `${repeticoes} × ${series}`;
+
   const handleCustomCreate = () => {
-    const label = nome.trim() || `${repeticoes} × ${series}`;
     onCreate({
       id: `custom-${Date.now()}`,
-      label,
+      label: schemeLabel,
       series,
       repeticoes,
       descricao: 'Esquema personalizado',
     });
-    setNome('');
     setSeries(3);
-    setRepeticoes(12);
+    setRepeticoes(15);
     onClose();
   };
 
@@ -80,19 +79,14 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
           <span>ou crie o seu</span>
         </div>
 
-        <input
-          className="game-input w-full"
-          placeholder="Nome (opcional) — ex.: Meu 15×3"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
+        <p className="text-center text-sm font-extrabold text-stone-800">{schemeLabel}</p>
 
         <div className="mt-3 grid grid-cols-2 gap-3">
           <WheelNumberPicker label="Repetições" value={repeticoes} min={1} max={50} onChange={setRepeticoes} />
           <WheelNumberPicker label="Séries" value={series} min={1} max={10} onChange={setSeries} />
         </div>
 
-        <GameButton className="w-full mt-4 flex items-center justify-center gap-2" onClick={handleCustomCreate}>
+        <GameButton className="!w-full mt-4 flex items-center justify-center gap-2" onClick={handleCustomCreate}>
           <Plus size={18} /> Adicionar esquema
         </GameButton>
       </motion.div>

@@ -835,11 +835,20 @@ export function formatExercisePrescription(item: {
   return `${secs}s × ${item.series} séries`;
 }
 
+/** Prêmios semanais de XP (pago todo domingo). */
+export function weeklyLeaderboardReward(rank: number): number | null {
+  if (rank === 1) return 15;
+  if (rank === 2) return 10;
+  if (rank === 3) return 5;
+  if (rank <= 25) return 3;
+  return null;
+}
+
 export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]> = {
   iniciante: [
     { id: 'vol-12x3', label: '12 × 3', series: 3, repeticoes: 12, descricao: 'Volume clássico — ideal para começar' },
     { id: 'vol-10x3', label: '10 × 3', series: 3, repeticoes: 10, descricao: 'Controle e forma antes da carga' },
-    { id: 'end-15x2', label: '15 × 2', series: 2, repeticoes: 15, descricao: 'Resistência com menos séries' },
+    { id: 'end-15x3', label: '15 × 3', series: 3, repeticoes: 15, descricao: 'Resistência com volume equilibrado' },
   ],
   intermediario: [
     { id: 'vol-14x3', label: '14 × 3', series: 3, repeticoes: 14, descricao: 'Volume moderado-alto' },

@@ -5,8 +5,13 @@ let audioContext: AudioContext | null = null;
 
 const PACKS: Record<string, { click: number; success: number[]; complete: number; rest: number; unlock: number[] }> = {
   som_classico: { click: 880, success: [523, 659, 784], complete: 660, rest: 440, unlock: [523, 659, 784, 1047] },
+  som_suave: { click: 720, success: [392, 494, 587], complete: 520, rest: 392, unlock: [392, 494, 587, 698] },
+  som_chime: { click: 988, success: [659, 784, 988], complete: 784, rest: 523, unlock: [523, 659, 784, 988] },
+  som_pop: { click: 1040, success: [698, 880, 1047], complete: 880, rest: 587, unlock: [587, 698, 880, 1047] },
   som_arcade: { click: 1200, success: [784, 988, 1175], complete: 880, rest: 620, unlock: [880, 988, 1175, 1319] },
+  som_retro: { click: 680, success: [494, 622, 740], complete: 600, rest: 370, unlock: [494, 622, 740, 880] },
   som_pixel: { click: 640, success: [440, 554, 659], complete: 520, rest: 330, unlock: [440, 554, 659, 880] },
+  som_metal: { click: 920, success: [330, 415, 494], complete: 440, rest: 280, unlock: [330, 415, 494, 587] },
   som_epico: { click: 980, success: [622, 740, 880], complete: 740, rest: 494, unlock: [622, 740, 880, 988] },
 };
 

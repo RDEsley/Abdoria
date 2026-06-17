@@ -504,8 +504,7 @@ export function BuilderPage() {
           onCreateClick={() => setShowCreateScheme(true)}
         />
         <p className="mt-2 text-[0.65rem] font-bold text-stone-400">
-          O esquema selecionado aplica repetições × séries em todos os exercícios por contagem. Deslize para o lado
-          para ver mais.
+          O esquema selecionado aplica repetições × séries em todos os exercícios por contagem.
         </p>
       </section>
 
