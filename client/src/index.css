@@ -3559,6 +3559,25 @@ input[type='range'] {
 }
 
 /* Daily shop */
+.game-daily-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 2px solid #7dd3fc;
+  border-radius: 999px;
+}
+
+.game-daily-reset strong {
+  font-weight: 900;
+  color: #0c4a6e;
+}
+
 .game-daily-card {
   position: relative;
   display: flex;

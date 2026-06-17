@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Coins, Gift, Package, Sparkles, Zap } from 'lucide-react';
+import { Coins, Clock, Gift, Package, Sparkles, Zap } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { DailyShopPurchaseCelebration } from '@/components/shop/DailyShopPurchaseCelebration';
 import { getErrorMessage } from '@/lib/api-errors';
 import { claimDailyShopSlot, getShop } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
+import { useDailyShopResetCountdown } from '@/hooks/useDailyShopResetCountdown';
+import { formatCountdown } from '@/lib/timezone';
 import type { LojaDiariaSlot, ShopResponse } from '@/types';
 import {
   CURRENCY_NAME,
@@ -99,6 +101,10 @@ export function DailyShopPanel() {
     void load();
   }, [load]);
 
+  const resetSecondsLeft = useDailyShopResetCountdown(() => {
+    void load();
+  });
+
   const handleClaim = async (slot: LojaDiariaSlot) => {
     setBusySlot(slot.slot);
     setError(null);
@@ -137,8 +143,14 @@ export function DailyShopPanel() {
             <Gift size={14} className="text-emerald-600" /> Loja diária
           </h3>
           <p className="mt-1 text-[0.65rem] font-bold leading-relaxed text-stone-500">
-            Renova todo dia. A 1ª opção é grátis. Taxas: {xpPerAbdoria} XP = 1 {CURRENCY_NAME} ·{' '}
-            {abdoriaPerXp} {CURRENCY_NAME} = 1 XP.
+            Renova todo dia à meia-noite (horário de Brasília). A 1ª opção é grátis. Taxas: {xpPerAbdoria} XP = 1{' '}
+            {CURRENCY_NAME} · {abdoriaPerXp} {CURRENCY_NAME} = 1 XP.
+          </p>
+          <p className="game-daily-reset mt-2" aria-live="polite">
+            <Clock size={13} aria-hidden />
+            <span>
+              Renova em <strong className="tabular-nums">{formatCountdown(resetSecondsLeft)}</strong>
+            </span>
           </p>
           {shopMeta && (
             <p className="mt-1 text-[0.65rem] font-bold text-emerald-700">
