@@ -10,6 +10,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { ShopItemRow } from '@/components/shop/ShopItemRow';
+import { AbdoriaCoinsGuideOverlay } from '@/components/shop/AbdoriaCoinsGuideOverlay';
 import { ShopPreviewStage } from '@/components/shop/ShopPreviewStage';
 import { GameButton } from '@/components/ui/GameButton';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
@@ -20,11 +21,8 @@ import { useApp } from '@/hooks/useApp';
 import { playEquip, playPurchase, setSfxPack } from '@/lib/sounds';
 import type { CosmeticKind, ShopCatalogItem, ShopResponse } from '@/types';
 import {
-  ABDORIA_XP_STEP,
   CURRENCY_NAME,
   resolveCosmeticos,
-  SHOP_ABDORIA_COST_PER_XP,
-  SHOP_XP_COST_PER_ABDORIA,
   xpLevelFromTotal,
 } from '@/types';
 
@@ -85,6 +83,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [coinsGuideOpen, setCoinsGuideOpen] = useState(false);
 
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const xpLevel = user ? xpLevelFromTotal(user.gamificacao.nivel_xp) : 1;
@@ -118,6 +117,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
     if (!open) return;
     setPreview({});
     setActiveSection('shop-avatares');
+    setCoinsGuideOpen(false);
     void loadCatalog();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -267,16 +267,15 @@ export function CosmeticsModal({ open, onClose }: Props) {
             </h2>
             <p className="game-shop-header__subtitle">Personalize seu perfil · teste antes de equipar</p>
           </div>
-          <span className="game-shop-header__coins">
-            <Coins size={16} /> {catalog?.abdoria ?? cosmeticos.moedas} {CURRENCY_NAME}
-          </span>
+          <button
+            type="button"
+            className="game-shop-header__coins"
+            onClick={() => setCoinsGuideOpen(true)}
+            aria-label={`${catalog?.abdoria ?? cosmeticos.moedas} ${CURRENCY_NAME}. Toque para ver como ganhar mais`}
+          >
+            <Coins size={16} aria-hidden /> {catalog?.abdoria ?? cosmeticos.moedas} {CURRENCY_NAME}
+          </button>
         </header>
-
-        <ul className="game-economy-rules game-economy-rules--compact">
-          <li>Você recebe 1 {CURRENCY_NAME} a cada {ABDORIA_XP_STEP} XP ganhos</li>
-          <li>Loja diária: {SHOP_XP_COST_PER_ABDORIA} XP → 1 {CURRENCY_NAME} · {SHOP_ABDORIA_COST_PER_XP} {CURRENCY_NAME} → 1 XP</li>
-          <li>Streak, conquistas e habilidades = XP extra (fora do teto diário)</li>
-        </ul>
 
         <ShopPreviewStage
           user={user}
@@ -353,6 +352,8 @@ export function CosmeticsModal({ open, onClose }: Props) {
         <GameButton variant="secondary" className="game-modal__close" onClick={onClose}>
           Fechar
         </GameButton>
+
+        <AbdoriaCoinsGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
       </div>
     </div>,
     document.body,
