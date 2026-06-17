@@ -4,6 +4,7 @@ import {
   Coins,
   Crown,
   Frame,
+  Image,
   Music,
   UserRound,
   Wand2,
@@ -16,7 +17,7 @@ import { equipCosmetic, getShop, purchaseCosmetic } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { setSfxPack } from '@/lib/sounds';
+import { playEquip, playPurchase, setSfxPack } from '@/lib/sounds';
 import type { CosmeticKind, ShopCatalogItem, ShopResponse } from '@/types';
 import {
   ABDORIA_XP_STEP,
@@ -32,7 +33,13 @@ interface Props {
   onClose: () => void;
 }
 
-type ShopSectionId = 'shop-avatares' | 'shop-bordas' | 'shop-titulos' | 'shop-sons' | 'shop-efeitos';
+type ShopSectionId =
+  | 'shop-avatares'
+  | 'shop-bordas'
+  | 'shop-titulos'
+  | 'shop-fundos'
+  | 'shop-sons'
+  | 'shop-efeitos';
 
 type PreviewState = Partial<Record<CosmeticKind, string>>;
 
@@ -45,6 +52,7 @@ const SECTIONS: {
   { id: 'shop-avatares', kind: 'avatar', label: 'Ícones', icon: UserRound },
   { id: 'shop-bordas', kind: 'borda', label: 'Bordas', icon: Frame },
   { id: 'shop-titulos', kind: 'titulo', label: 'Títulos', icon: Crown },
+  { id: 'shop-fundos', kind: 'fundo', label: 'Fundos', icon: Image },
   { id: 'shop-sons', kind: 'som', label: 'Sons', icon: Music },
   { id: 'shop-efeitos', kind: 'efeito', label: 'Efeitos', icon: Wand2 },
 ];
@@ -54,6 +62,7 @@ function catalogByKind(catalog: ShopResponse, kind: CosmeticKind): ShopCatalogIt
     avatar: catalog.avatares,
     borda: catalog.bordas,
     titulo: catalog.titulos,
+    fundo: catalog.fundos ?? [],
     som: catalog.sons,
     efeito: catalog.efeitos,
   };
@@ -66,6 +75,8 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const user = appUser ?? authUser;
   const scrollRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const observerPausedRef = useRef(false);
+  const observerResumeTimer = useRef<number | null>(null);
 
   const [activeSection, setActiveSection] = useState<ShopSectionId>('shop-avatares');
   const [preview, setPreview] = useState<PreviewState>({});
@@ -84,6 +95,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
       (preview.avatar !== undefined && preview.avatar !== cosmeticos.avatar_equipado) ||
       (preview.borda !== undefined && preview.borda !== cosmeticos.borda_equipada) ||
       (preview.titulo !== undefined && preview.titulo !== (cosmeticos.titulo_equipado ?? undefined)) ||
+      (preview.fundo !== undefined && preview.fundo !== cosmeticos.fundo_equipado) ||
       (preview.som !== undefined && preview.som !== cosmeticos.som_equipado) ||
       (preview.efeito !== undefined && preview.efeito !== cosmeticos.efeito_equipado)
     );
@@ -120,11 +132,18 @@ export function CosmeticsModal({ open, onClose }: Props) {
   }, [open, loadCatalog, onClose]);
 
   useEffect(() => {
+    if (!success) return;
+    const timer = window.setTimeout(() => setSuccess(null), 2000);
+    return () => window.clearTimeout(timer);
+  }, [success]);
+
+  useEffect(() => {
     if (!open || !scrollRef.current) return;
 
     const root = scrollRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
+        if (observerPausedRef.current) return;
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -132,7 +151,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
           setActiveSection(visible.target.id as ShopSectionId);
         }
       },
-      { root, rootMargin: '-8% 0px -52% 0px', threshold: [0, 0.25, 0.5, 0.75] },
+      { root, rootMargin: '-10% 0px -38% 0px', threshold: [0, 0.2, 0.45, 0.7] },
     );
 
     SECTIONS.forEach(({ id }) => {
@@ -145,6 +164,10 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
   const scrollToSection = useCallback((id: ShopSectionId) => {
     setActiveSection(id);
+    observerPausedRef.current = true;
+    if (observerResumeTimer.current !== null) {
+      window.clearTimeout(observerResumeTimer.current);
+    }
 
     const root = scrollRef.current;
     const target = root?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
@@ -152,13 +175,18 @@ export function CosmeticsModal({ open, onClose }: Props) {
       const rootTop = root.getBoundingClientRect().top;
       const targetTop = target.getBoundingClientRect().top;
       root.scrollTo({
-        top: Math.max(0, root.scrollTop + (targetTop - rootTop) - 6),
+        top: Math.max(0, root.scrollTop + (targetTop - rootTop) - 12),
         behavior: 'smooth',
       });
     }
 
     const navBtn = navRef.current?.querySelector<HTMLElement>(`[data-shop-section="${id}"]`);
     navBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+    observerResumeTimer.current = window.setTimeout(() => {
+      observerPausedRef.current = false;
+      observerResumeTimer.current = null;
+    }, 700);
   }, []);
 
   const syncUser = async (nextUser: import('@/types').IUserDocument) => {
@@ -181,6 +209,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
     try {
       const res = await purchaseCosmetic(item.id);
       await syncUser(res.user);
+      playPurchase();
       setSuccess(`${item.nome} comprado!`);
     } catch (err) {
       setError(getErrorMessage(err, 'Não foi possível comprar este item.'));
@@ -196,6 +225,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
     try {
       const res = await equipCosmetic(item.kind, item.id);
       await syncUser(res.user);
+      playEquip();
       setPreview((prev) => {
         const next = { ...prev };
         delete next[item.kind];
@@ -281,7 +311,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
             <p className="game-loader mt-6">Carregando catálogo...</p>
           ) : (
             SECTIONS.map(({ id, kind, label, icon: Icon }) => (
-              <section key={id} id={id} className="game-shop-section">
+              <section key={id} id={id} className="game-shop-section game-shop-section--anchored">
                 <div className="game-shop-section__head">
                   <div className="game-shop-section__ornament" aria-hidden />
                   <h3 className="game-shop-section__title">

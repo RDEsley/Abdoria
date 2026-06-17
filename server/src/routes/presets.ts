@@ -3,6 +3,7 @@ import { WorkoutPreset } from '../models/WorkoutPreset.js';
 import { User } from '../models/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
+import { recommendWorkout, getRecommendedPresetsList } from '../services/recommendation.js';
 
 export const presetsRouter = Router();
 
@@ -18,22 +19,40 @@ presetsRouter.get('/', async (_req, res) => {
   }
 });
 
-presetsRouter.get('/recommended', async (req: AuthRequest, res) => {
+presetsRouter.get('/recommend', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId).lean();
+    const user = await User.findById(req.userId);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
 
-    const ciclo = user.preferencias?.ciclo_treinos ?? ['A', 'B', 'C'];
+    const allowRepeats = req.query.allowRepeats === 'true';
+    const shuffle = req.query.shuffle !== 'false';
+    const extra = Math.min(6, Math.max(0, Number(req.query.extra) || 0));
+    const excludePresetId = typeof req.query.excludePresetId === 'string' ? req.query.excludePresetId : null;
 
-    const presets = await WorkoutPreset.find({
-      nivel: user.nivel,
-      objetivo: user.objetivo,
-      ciclo_id: { $in: ciclo },
-      recomendado: true,
-    }).lean();
+    const treino = await recommendWorkout(user, { allowRepeats, shuffle, extraCount: extra, excludePresetId });
+    if (!treino) {
+      res.status(404).json({ error: 'Nenhum treino recomendado encontrado.' });
+      return;
+    }
+    res.json(treino);
+  } catch (error) {
+    console.error('GET /api/presets/recommend error:', error);
+    res.status(500).json({ error: 'Erro ao recomendar treino.' });
+  }
+});
+
+presetsRouter.get('/recommended', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const presets = await getRecommendedPresetsList(user);
 
     res.json(presets);
   } catch (error) {

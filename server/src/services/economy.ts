@@ -36,7 +36,7 @@ export function ensureAbdoriaWallet(user: UserDocument): void {
   }
 }
 
-/** Saldo Abdoria para exibição — usa valor salvo ou estimativa a partir do XP. */
+/** Saldo Abdoria — sempre usa valor persistido após primeira sincronização. */
 export function readAbdoriaBalance(user: {
   gamificacao: { nivel_xp: number };
   cosmeticos?: { moedas?: number | null; moedas_xp_blocos?: number | null } | null;

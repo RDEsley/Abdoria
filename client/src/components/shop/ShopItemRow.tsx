@@ -18,6 +18,15 @@ function rarityFrameClass(raridade: ShopCatalogItem['raridade']) {
 }
 
 function ItemThumb({ item, letter }: { item: ShopCatalogItem; letter: string }) {
+  if (item.kind === 'fundo') {
+    return (
+      <div
+        className={`game-shop-row__thumb-fundo game-card-fundo--${item.id.replace('fundo_', '')}`}
+        aria-hidden
+      />
+    );
+  }
+
   if (item.kind === 'borda') {
     return (
       <div className={`game-shop-row__thumb-ring game-cosmetic-avatar--border-${item.id.replace('borda_', '')}`}>
@@ -53,6 +62,7 @@ export function ShopItemRow({
     item.kind === 'avatar' ||
     item.kind === 'borda' ||
     item.kind === 'titulo' ||
+    item.kind === 'fundo' ||
     item.kind === 'som' ||
     item.kind === 'efeito';
 
@@ -74,7 +84,9 @@ export function ShopItemRow({
 
       <div className="game-shop-row__content">
         <div className="game-shop-row__head">
-          <h4>{item.nome}</h4>
+          <h4 className={item.id === 'titulo_dono_do_jogo' ? 'cosmetic-title--dono-do-jogo' : undefined}>
+            {item.nome}
+          </h4>
           <span className="game-shop-row__rarity">{COSMETIC_RARITY_LABELS[item.raridade]}</span>
         </div>
         <p className="game-shop-row__desc">{item.descricao}</p>

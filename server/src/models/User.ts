@@ -23,9 +23,10 @@ const cosmeticosSchema = new Schema(
     titulo_equipado: { type: String, default: null },
     som_equipado: { type: String, default: 'som_classico' },
     efeito_equipado: { type: String, default: 'efeito_padrao' },
+    fundo_equipado: { type: String, default: 'fundo_padrao' },
     desbloqueados: {
       type: [String],
-      default: () => ['avatar_inicial', 'borda_basica', 'som_classico', 'efeito_padrao'],
+      default: () => ['avatar_inicial', 'borda_basica', 'som_classico', 'efeito_padrao', 'fundo_padrao'],
     },
     codigos_resgatados: { type: [String], default: [] },
   },
@@ -46,6 +47,7 @@ const lojaDiariaSlotSchema = new Schema(
     oferta_nome: { type: String },
     bonus_xp: { type: Number },
     bonus_abdoria: { type: Number },
+    cosmetic_id: { type: String },
   },
   { _id: false },
 );

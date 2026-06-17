@@ -9,6 +9,7 @@ import {
   pickDistinctPaidOfferKinds,
   pickFreeDailyRewardType,
   isStaleDailyOffer,
+  hashDailySeed,
 } from '../data/daily-shop-config.js';
 import { GIFT_CODE_BY_KEY, hasGiftCodeRewards, isGiftCodeExpired, type GiftCodeDefinition } from '../data/gift-codes.js';
 import {
@@ -133,6 +134,7 @@ export function syncShopUnlocks(user: UserDoc): void {
   if (!unlocked.has(user.cosmeticos.borda_equipada)) user.cosmeticos.borda_equipada = DEFAULT_BORDA_ID;
   if (!unlocked.has(user.cosmeticos.som_equipado)) user.cosmeticos.som_equipado = DEFAULT_SOM_ID;
   if (!unlocked.has(user.cosmeticos.efeito_equipado)) user.cosmeticos.efeito_equipado = DEFAULT_EFEITO_ID;
+  if (!unlocked.has(user.cosmeticos.fundo_equipado)) user.cosmeticos.fundo_equipado = 'fundo_padrao';
   if (user.cosmeticos.titulo_equipado && !unlocked.has(user.cosmeticos.titulo_equipado)) {
     user.cosmeticos.titulo_equipado = null;
   }
@@ -244,6 +246,38 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
     generatePaidDailySlot(today, 2, offerKindSlot2),
   ];
 
+  if (hashDailySeed(`${today}:fundo`) % 100 < 15) {
+    slots[1] = {
+      slot: 1,
+      kind: 'oferta',
+      recompensa_tipo: 'abdoria',
+      valor: 0,
+      raridade: 'raro',
+      preco_abdoria: 743,
+      preco_xp: 0,
+      cosmetic_id: 'fundo_galaxia',
+      oferta_nome: 'Fundo Galáxia',
+      resgatado: false,
+      label: 'Cosmético · Fundo Galáxia · 743 Abdoria',
+    };
+  }
+
+  if (hashDailySeed(`${today}:dono`) % 1000 < 3) {
+    slots[2] = {
+      slot: 2,
+      kind: 'oferta',
+      recompensa_tipo: 'abdoria',
+      valor: 0,
+      raridade: 'epico',
+      preco_abdoria: 999,
+      preco_xp: 0,
+      cosmetic_id: 'titulo_dono_do_jogo',
+      oferta_nome: 'Dono do Jogo',
+      resgatado: false,
+      label: 'Título lendário · Dono do Jogo · 999 Abdoria',
+    };
+  }
+
   loja.data_reset = today;
   loja.slots.splice(0, loja.slots.length, ...(slots as never[]));
 
@@ -262,6 +296,8 @@ function isEquipped(user: UserDoc, item: CosmeticDefinition): boolean {
       return user.cosmeticos.som_equipado === item.id;
     case 'efeito':
       return user.cosmeticos.efeito_equipado === item.id;
+    case 'fundo':
+      return user.cosmeticos.fundo_equipado === item.id;
     default:
       return false;
   }
@@ -306,11 +342,13 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
     titulo_equipado: user.cosmeticos.titulo_equipado ?? null,
     som_equipado: user.cosmeticos.som_equipado,
     efeito_equipado: user.cosmeticos.efeito_equipado,
+    fundo_equipado: user.cosmeticos.fundo_equipado,
     avatares: byKind('avatar'),
     bordas: byKind('borda'),
     titulos: byKind('titulo'),
     sons: byKind('som'),
     efeitos: byKind('efeito'),
+    fundos: byKind('fundo'),
     loja_diaria,
   };
 }
@@ -378,6 +416,9 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
       break;
     case 'efeito':
       user.cosmeticos.efeito_equipado = item.id;
+      break;
+    case 'fundo':
+      user.cosmeticos.fundo_equipado = item.id;
       break;
     default:
       return { error: 'Tipo inválido.', status: 400 as const };
@@ -468,7 +509,15 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
       user.cosmeticos.moedas = readAbdoriaBalance(user) - abdoriaCost;
     }
 
-    applyDailyReward(user, slotSnapshot);
+    if (slotDoc.cosmetic_id) {
+      const cosmetic = COSMETIC_BY_ID[slotDoc.cosmetic_id];
+      if (!cosmetic) return { error: 'Oferta indisponível.', status: 400 as const };
+      const unlocked = new Set(user.cosmeticos.desbloqueados);
+      unlocked.add(cosmetic.id);
+      user.cosmeticos.desbloqueados = [...unlocked];
+    } else {
+      applyDailyReward(user, slotSnapshot);
+    }
     slotDoc.resgatado = true;
   }
 

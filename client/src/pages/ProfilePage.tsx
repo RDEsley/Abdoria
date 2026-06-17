@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Save, Settings, User as UserIcon } from 'lucide-react';
+import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -8,8 +9,10 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
+import { playTabSwitch } from '@/lib/sounds';
 import { formatTrainingDuration } from '@/lib/utils';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
+import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -25,6 +28,14 @@ export function ProfilePage() {
   }
 
   const imc = profile.imc ?? (profile.peso_kg && profile.altura_cm ? calcImc(profile.peso_kg, profile.altura_cm) : null);
+  const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
+  const equippedTitle = cosmeticos.titulo_equipado ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome : null;
+  const titleClass =
+    cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
+      ? 'game-profile-hero__title cosmetic-title--dono-do-jogo'
+      : 'game-profile-hero__title';
+  const fundoClass = `game-profile-hero game-card-fundo--${cosmeticos.fundo_equipado.replace('fundo_', '')}`;
+  const xpLevel = xpProgressFromTotal(profile.gamificacao.nivel_xp).level;
 
   const handleRefresh = async () => {
     await refreshUser();
@@ -74,12 +85,24 @@ export function ProfilePage() {
       </header>
       <p className="-mt-3 text-xs font-bold text-stone-500">{profile.email}</p>
 
+      <div className={fundoClass}>
+        <CosmeticAvatar user={profile} size="lg" />
+        <div className="game-profile-hero__meta">
+          <p className="game-profile-hero__name">{profile.nome}</p>
+          {equippedTitle && <p className={titleClass}>{equippedTitle}</p>}
+          <p className="game-profile-hero__level">Nível {xpLevel}</p>
+        </div>
+      </div>
+
       <div className="flex gap-2">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              playTabSwitch();
+              setTab(t.id);
+            }}
             className={`game-tab${tab === t.id ? ' game-tab--active' : ''}`}
           >
             {t.label}

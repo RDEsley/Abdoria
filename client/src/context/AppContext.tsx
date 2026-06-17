@@ -287,6 +287,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await hydrateAccountData(result.user);
       window.dispatchEvent(new CustomEvent('abdoria:user-updated', { detail: result.user }));
 
+      const abdoriaGanha = result.abdoria_ganha ?? result.moedas_ganhas ?? 0;
+      if (abdoriaGanha > 0) {
+        window.dispatchEvent(
+          new CustomEvent('abdoria:coins-earned', { detail: { amount: abdoriaGanha } }),
+        );
+      }
+      if (result.level_up) {
+        window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: result.level_up }));
+      }
+
       const [statsRes, historyRes] = await Promise.allSettled([
         getDashboardStats(),
         getWorkoutHistory(),

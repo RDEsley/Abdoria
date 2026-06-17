@@ -11,6 +11,7 @@ interface PreviewState {
   avatar?: string;
   borda?: string;
   titulo?: string;
+  fundo?: string;
   som?: string;
   efeito?: string;
 }
@@ -40,6 +41,7 @@ export function ShopPreviewStage({
   const avatarId = preview.avatar ?? cosmeticos.avatar_equipado;
   const borderId = preview.borda ?? cosmeticos.borda_equipada;
   const titleId = preview.titulo ?? cosmeticos.titulo_equipado;
+  const fundoId = preview.fundo ?? cosmeticos.fundo_equipado;
   const soundId = preview.som ?? cosmeticos.som_equipado;
   const effectId = preview.efeito ?? cosmeticos.efeito_equipado;
 
@@ -51,13 +53,19 @@ export function ShopPreviewStage({
     avatar: Boolean(preview.avatar && preview.avatar !== cosmeticos.avatar_equipado),
     borda: Boolean(preview.borda && preview.borda !== cosmeticos.borda_equipada),
     titulo: Boolean(preview.titulo && preview.titulo !== (cosmeticos.titulo_equipado ?? '')),
+    fundo: Boolean(preview.fundo && preview.fundo !== cosmeticos.fundo_equipado),
     som: Boolean(preview.som && preview.som !== cosmeticos.som_equipado),
     efeito: Boolean(preview.efeito && preview.efeito !== cosmeticos.efeito_equipado),
   };
 
+  const titleClass =
+    titleId === 'titulo_dono_do_jogo'
+      ? 'game-shop-preview__title cosmetic-title--dono-do-jogo'
+      : `game-shop-preview__title${previewFlags.titulo ? ' game-shop-preview__title--preview' : ''}`;
+
   return (
     <aside className="game-shop-preview">
-      <div className="game-shop-preview__frame">
+      <div className={`game-shop-preview__frame game-card-fundo--${fundoId.replace('fundo_', '')}`}>
         <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--tl" />
         <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--tr" />
         <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--bl" />
@@ -81,11 +89,7 @@ export function ShopPreviewStage({
 
         <div className="game-shop-preview__meta">
           <p className="game-shop-preview__name">{firstName}</p>
-          {titleName && (
-            <p className={`game-shop-preview__title ${previewFlags.titulo ? 'game-shop-preview__title--preview' : ''}`}>
-              {titleName}
-            </p>
-          )}
+          {titleName && <p className={titleClass}>{titleName}</p>}
           <p className="game-shop-preview__level">Nível {xpLevel} · {abdoria} {currencyName}</p>
         </div>
 
@@ -93,6 +97,7 @@ export function ShopPreviewStage({
           {previewFlags.avatar && <span className="game-shop-preview__tag">Ícone teste</span>}
           {previewFlags.borda && <span className="game-shop-preview__tag">Borda teste</span>}
           {previewFlags.titulo && <span className="game-shop-preview__tag">Título teste</span>}
+          {previewFlags.fundo && <span className="game-shop-preview__tag">Fundo teste</span>}
           {previewFlags.som && <span className="game-shop-preview__tag">Som teste</span>}
           {previewFlags.efeito && <span className="game-shop-preview__tag">Efeito teste</span>}
         </div>

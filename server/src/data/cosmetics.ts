@@ -287,6 +287,53 @@ export const COSMETICS: CosmeticDefinition[] = [
     raridade: 'epico',
     unlock: { tipo: 'conquista', conquista_id: 'streak_7' },
   },
+
+  {
+    id: 'titulo_dono_do_jogo',
+    kind: 'titulo',
+    nome: 'Dono do Jogo',
+    descricao: 'Título lendário raríssimo — brilha em cores fortes.',
+    icon: 'crown',
+    raridade: 'lendario',
+    unlock: { tipo: 'moedas', preco_moedas: 999 },
+  },
+
+  {
+    id: 'fundo_padrao',
+    kind: 'fundo',
+    nome: 'Padrão',
+    descricao: 'Fundo clássico do card de jogador.',
+    icon: 'star',
+    raridade: 'comum',
+    unlock: { tipo: 'gratis' },
+  },
+  {
+    id: 'fundo_aurora',
+    kind: 'fundo',
+    nome: 'Aurora',
+    descricao: 'Gradiente verde e dourado em movimento.',
+    icon: 'gem',
+    raridade: 'raro',
+    unlock: { tipo: 'moedas', preco_moedas: 120 },
+  },
+  {
+    id: 'fundo_vulcao',
+    kind: 'fundo',
+    nome: 'Vulcão',
+    descricao: 'Chamas pixeladas para guerreiros do core.',
+    icon: 'flame',
+    raridade: 'epico',
+    unlock: { tipo: 'moedas', preco_moedas: 200 },
+  },
+  {
+    id: 'fundo_galaxia',
+    kind: 'fundo',
+    nome: 'Galáxia',
+    descricao: 'Cosmos profundo — oferta especial da loja diária.',
+    icon: 'moon',
+    raridade: 'lendario',
+    unlock: { tipo: 'moedas', preco_moedas: 743 },
+  },
 ];
 
 export const COSMETIC_BY_ID = Object.fromEntries(COSMETICS.map((item) => [item.id, item])) as Record<

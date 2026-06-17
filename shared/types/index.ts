@@ -110,7 +110,7 @@ export interface Gamificacao {
   conquistas: string[];
 }
 
-export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito';
+export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'fundo';
 
 export type CosmeticUnlockType = 'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo';
 
@@ -153,6 +153,7 @@ export interface Cosmeticos {
   titulo_equipado: string | null;
   som_equipado: string;
   efeito_equipado: string;
+  fundo_equipado: string;
   desbloqueados: string[];
   codigos_resgatados: string[];
 }
@@ -172,6 +173,8 @@ export interface LojaDiariaSlot {
   oferta_nome?: string;
   bonus_xp?: number;
   bonus_abdoria?: number;
+  /** Oferta de cosmético na loja diária. */
+  cosmetic_id?: string;
 }
 
 export interface LojaDiaria {
@@ -208,11 +211,13 @@ export interface ShopResponse {
   titulo_equipado: string | null;
   som_equipado: string;
   efeito_equipado: string;
+  fundo_equipado: string;
   avatares: ShopCatalogItem[];
   bordas: ShopCatalogItem[];
   titulos: ShopCatalogItem[];
   sons: ShopCatalogItem[];
   efeitos: ShopCatalogItem[];
+  fundos: ShopCatalogItem[];
   loja_diaria: LojaDiaria;
 }
 
@@ -268,8 +273,8 @@ export interface EquipCosmeticResponse {
 }
 
 export const XP_DAILY_CAP_BASE = 100;
-/** Bônus de teto diário por nível de gamificação (+5 XP por nível). */
-export const XP_DAILY_CAP_PER_LEVEL = 5;
+/** Bônus de teto diário por nível de gamificação (+1 XP por nível). */
+export const XP_DAILY_CAP_PER_LEVEL = 1;
 /** Limite diário no nível 1 (base + 1× bônus). */
 export const XP_DAILY_CAP = XP_DAILY_CAP_BASE + XP_DAILY_CAP_PER_LEVEL;
 /** @deprecated Conquistas não aumentam mais o teto diário. */
@@ -368,7 +373,8 @@ export const DEFAULT_COSMETICOS: Cosmeticos = {
   titulo_equipado: null,
   som_equipado: 'som_classico',
   efeito_equipado: 'efeito_padrao',
-  desbloqueados: ['avatar_inicial', 'borda_basica', 'som_classico', 'efeito_padrao'],
+  fundo_equipado: 'fundo_padrao',
+  desbloqueados: ['avatar_inicial', 'borda_basica', 'som_classico', 'efeito_padrao', 'fundo_padrao'],
   codigos_resgatados: [],
 };
 
@@ -506,10 +512,18 @@ export interface RepSchemeRecommendation {
   descricao: string;
 }
 
+export interface RecommendationAlert {
+  id: string;
+  tipo: 'troca_treino' | 'desbalanceamento' | 'foco_musculo';
+  titulo: string;
+  mensagem: string;
+}
+
 export interface DashboardStats {
   treino_hoje: boolean;
   proximo_treino: string;
   treino_sugerido: TreinoSugerido | null;
+  alertas_recomendacao?: RecommendationAlert[];
   total_segundos: number;
   total_minutos: number;
   streak_atual: number;
@@ -518,6 +532,7 @@ export interface DashboardStats {
   xp_hoje: number;
   xp_extra_hoje: number;
   xp_diario_limite: number;
+  xp_data_reset: string;
   conquistas: Achievement[];
   musculos_semana: Record<MusculoPrincipal, number>;
   evolucao_mensal: { mes: string; minutos: number }[];

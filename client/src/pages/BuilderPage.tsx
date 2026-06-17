@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bookmark, Play, Sparkles, Settings2, ChevronDown } from 'lucide-react';
+import { Bookmark, Play, RefreshCw, Repeat, Settings2, Sparkles, ChevronDown } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -27,7 +27,7 @@ import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { WheelNumberPicker } from '@/components/ui/WheelNumberPicker';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { getRecommendedPresets } from '@/lib/api';
+import { getRecommendWorkout, getRecommendedPresets } from '@/lib/api';
 import type {
   ActiveWorkout,
   IExerciseDocument,
@@ -88,6 +88,7 @@ export function BuilderPage() {
     exercises,
     customWorkout,
     savedWorkouts,
+    stats,
     setCustomWorkout,
     saveWorkoutPreset,
     getRepSchemes,
@@ -112,6 +113,8 @@ export function BuilderPage() {
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [allowRepeats, setAllowRepeats] = useState(false);
+  const [recommendBusy, setRecommendBusy] = useState(false);
   const schemeApplyKeyRef = useRef('');
   const presetsCarouselRef = useRef<HTMLDivElement>(null);
 
@@ -122,16 +125,46 @@ export function BuilderPage() {
   }, [ensureExercises]);
 
   useEffect(() => {
-    void getRecommendedPresets().then((list) => {
-      setPresets(list);
-      if (presetFromUrl && list.some((p) => p._id === presetFromUrl)) {
-        setSelectedPresetId(presetFromUrl);
-      } else if (list.length > 0 && selectedPresetId === 'custom' && !customWorkout.length) {
-        setSelectedPresetId(list[0]._id);
-      }
-    }).catch(() => setPresets([]));
+    void getRecommendedPresets()
+      .then((list) => {
+        setPresets(list);
+        if (presetFromUrl && list.some((p) => p._id === presetFromUrl)) {
+          setSelectedPresetId(presetFromUrl);
+          return;
+        }
+        const suggestedId = stats?.treino_sugerido?.preset_id;
+        if (suggestedId && list.some((p) => p._id === suggestedId)) {
+          setSelectedPresetId(suggestedId);
+        } else if (list.length > 0 && selectedPresetId === 'custom' && !customWorkout.length) {
+          setSelectedPresetId(list[0]._id);
+        }
+      })
+      .catch(() => setPresets([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- presetFromUrl only on mount
-  }, [presetFromUrl]);
+  }, [presetFromUrl, stats?.treino_sugerido?.preset_id]);
+
+  const handleRecommendAnother = useCallback(async () => {
+    setRecommendBusy(true);
+    setSaveMessage(null);
+    try {
+      const treino = await getRecommendWorkout({
+        allowRepeats,
+        shuffle: true,
+        excludePresetId: selectedPresetId !== 'custom' ? selectedPresetId : null,
+      });
+      setDraftQueue(null);
+      setSelectedPresetId(treino.preset_id);
+      window.requestAnimationFrame(() => {
+        presetsCarouselRef.current
+          ?.querySelector<HTMLElement>(`[data-preset-id="${treino.preset_id}"]`)
+          ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      });
+    } catch {
+      setSaveMessage('Não foi possível sugerir outro treino agora.');
+    } finally {
+      setRecommendBusy(false);
+    }
+  }, [allowRepeats, selectedPresetId]);
 
   useEffect(() => {
     setSelectedSchemeId((current) => {
@@ -346,15 +379,38 @@ export function BuilderPage() {
 
       {showPresetsSection && (
         <section id="builder-presets">
-          <div className="mb-2 flex items-center gap-2">
-            <Sparkles size={18} className="text-amber-500" />
-            <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-amber-500" />
+              <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="game-chip-btn"
+                disabled={recommendBusy}
+                onClick={() => void handleRecommendAnother()}
+              >
+                <RefreshCw size={14} className={recommendBusy ? 'animate-spin' : undefined} />
+                Recomendar outro
+              </button>
+              <label className="game-chip-btn cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={allowRepeats}
+                  onChange={(e) => setAllowRepeats(e.target.checked)}
+                />
+                <Repeat size={14} />
+                Repetir exercícios
+              </label>
+            </div>
           </div>
           {saveMessage && <p className="game-modal__success mb-2">{saveMessage}</p>}
           <SwipeScroll
             ref={presetsCarouselRef}
-            arrows={false}
-            className="game-swipe-scroll--snap flex gap-3 pb-2"
+            arrows
+            className="game-swipe-scroll--snap flex gap-2.5 pb-2"
             prevLabel="Ver treinos anteriores"
             nextLabel="Ver mais treinos"
           >
@@ -365,7 +421,7 @@ export function BuilderPage() {
                 whileTap={{ scale: 0.97 }}
                 type="button"
                 onClick={() => selectPreset(p._id)}
-                className={`min-w-[180px] shrink-0 cursor-pointer p-3 text-left ${
+                className={`min-w-[132px] shrink-0 cursor-pointer p-2.5 text-left ${
                   selectedPresetId === p._id ? 'game-quest-card' : 'glass-card'
                 }`}
               >
@@ -395,7 +451,7 @@ export function BuilderPage() {
                   whileTap={{ scale: 0.97 }}
                   type="button"
                   onClick={() => selectPreset(savedId)}
-                  className={`min-w-[180px] shrink-0 cursor-pointer p-3 text-left ${
+                  className={`min-w-[132px] shrink-0 cursor-pointer p-2.5 text-left ${
                     selectedPresetId === savedId ? 'game-quest-card' : 'glass-card'
                   }`}
                 >

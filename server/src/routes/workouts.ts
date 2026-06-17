@@ -18,7 +18,8 @@ import {
   awardDailyExerciseXp,
   calculateWorkoutXpBreakdown,
 } from '../services/economy.js';
-import { getSuggestedWorkout } from '../services/recommendation.js';
+import { getSuggestedWorkout, getRecommendationAlerts } from '../services/recommendation.js';
+import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { dailyXpCapForLevel, xpLevelFromTotal } from '../types/index.js';
 
@@ -81,7 +82,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
 
-    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg, treinoSugerido] = await Promise.all([
+    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg, treinoSugerido, alertas] = await Promise.all([
       hasTrainedToday(userId),
       getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
       WorkoutHistory.aggregate([
@@ -103,6 +104,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
         { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
       ]),
       getSuggestedWorkout(user),
+      getRecommendationAlerts(user),
     ]);
 
     const muscles = Object.entries(weeklyMuscles) as [MusculoPrincipal, number][];
@@ -122,6 +124,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
         ? 'Descanso ativo'
         : treinoSugerido?.nome ?? 'Treino do dia',
       treino_sugerido: treinoSugerido,
+      alertas_recomendacao: alertas,
       total_segundos: totalSegundos,
       total_minutos: Math.floor(totalSegundos / 60),
       streak_atual: user.gamificacao.streak_atual,
@@ -130,6 +133,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
       xp_extra_hoje: user.xp_diario?.extra_hoje ?? 0,
       xp_diario_limite: dailyXpCapForLevel(xpLevelFromTotal(user.gamificacao.nivel_xp)),
+      xp_data_reset: user.xp_diario?.data_reset ?? getTodaySaoPaulo(),
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: monthly.map((m: { _id: string; minutos: number }) => ({ mes: m._id, minutos: Math.round(m.minutos) })),

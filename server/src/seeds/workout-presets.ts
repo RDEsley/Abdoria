@@ -111,7 +111,7 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'copenhagen-plank', series: 3, modo: 'tempo', tempo_seg: 25, descanso_seg: 20 },
       { slug: 'spiderman-plank', series: 3, repeticoes: 12, descanso_seg: 18 },
       { slug: 'bicycle-crunch', series: 4, repeticoes: 14, descanso_seg: 18 },
-      { slug: 'pallof-press', series: 3, repeticoes: 10, descanso_seg: 20 },
+      { slug: 'side-plank', series: 3, modo: 'tempo', tempo_seg: 25, descanso_seg: 20 },
     ],
   }),
   preset({
@@ -171,7 +171,7 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'dead-bug', series: 3, repeticoes: 10, descanso_seg: 40 },
       { slug: 'thread-the-needle', series: 3, repeticoes: 10, descanso_seg: 40 },
       { slug: 'side-plank', series: 2, modo: 'tempo', tempo_seg: 20, descanso_seg: 40 },
-      { slug: 'pallof-press', series: 2, repeticoes: 10, descanso_seg: 40 },
+      { slug: 'heel-touches', series: 2, repeticoes: 12, descanso_seg: 40 },
     ],
   }),
   preset({
