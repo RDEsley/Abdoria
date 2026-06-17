@@ -90,8 +90,14 @@ export function playRestStart() {
 }
 
 export function playRestEnd() {
-  playTone(660, 0.08, 'triangle', 0.07);
-  setTimeout(() => playTone(784, 0.12, 'sine', 0.08), 90);
+  const repeats = 3;
+  const patternMs = 320;
+
+  for (let i = 0; i < repeats; i++) {
+    const offset = i * patternMs;
+    setTimeout(() => playTone(660, 0.08, 'triangle', 0.07), offset);
+    setTimeout(() => playTone(784, 0.12, 'sine', 0.08), offset + 90);
+  }
 }
 
 export function playTimerDone() {

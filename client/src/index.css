@@ -1196,7 +1196,73 @@ input[type='range'] {
   top: 0;
   z-index: 30;
   padding-bottom: 0.35rem;
+}
+
+.game-hud-shell:not([class*='game-card-fundo--']) {
   background: linear-gradient(180deg, rgba(255, 253, 247, 0.98) 72%, rgba(255, 253, 247, 0));
+}
+
+.game-hud-shell[class*='game-card-fundo--'] {
+  margin-left: 1rem;
+  margin-right: 1rem;
+  margin-top: 1rem;
+  padding: 0.35rem;
+  padding-bottom: 0.5rem;
+  border: 3px solid var(--game-ink);
+  border-radius: 1rem;
+  box-shadow: var(--game-shadow);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .game-hud-shell[class*='game-card-fundo--'] {
+    margin-left: 2rem;
+    margin-right: 2rem;
+    margin-top: 1.5rem;
+  }
+}
+
+.game-hud-shell[class*='game-card-fundo--'] .game-hud {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(28, 25, 23, 0.35);
+  box-shadow: none;
+}
+
+.game-hud-shell.game-card-fundo--padrao .game-hud {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--game-ink);
+}
+
+.game-hud-shell.game-card-fundo--aurora .game-hud,
+.game-hud-shell.game-card-fundo--vulcao .game-hud,
+.game-hud-shell.game-card-fundo--galaxia .game-hud {
+  color: inherit;
+}
+
+.game-hud-shell.game-card-fundo--aurora .game-hud__name,
+.game-hud-shell.game-card-fundo--vulcao .game-hud__name,
+.game-hud-shell.game-card-fundo--galaxia .game-hud__name {
+  color: inherit;
+}
+
+.game-hud-shell.game-card-fundo--aurora .game-hud__xp-meta,
+.game-hud-shell.game-card-fundo--vulcao .game-hud__xp-meta,
+.game-hud-shell.game-card-fundo--galaxia .game-hud__xp-meta {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.game-hud-shell.game-card-fundo--aurora .game-hud__chevron,
+.game-hud-shell.game-card-fundo--vulcao .game-hud__chevron,
+.game-hud-shell.game-card-fundo--galaxia .game-hud__chevron {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.game-hud-shell.game-card-fundo--aurora .game-hud__chip,
+.game-hud-shell.game-card-fundo--vulcao .game-hud__chip,
+.game-hud-shell.game-card-fundo--galaxia .game-hud__chip {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: inherit;
 }
 
 .game-hud {
