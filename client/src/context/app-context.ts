@@ -49,6 +49,7 @@ export interface AppContextValue {
     xp_breakdown: XpBreakdown | null;
     streak_celebration: StreakCelebration | null;
     level_up: LevelUpCelebration | null;
+    rodada_completa: boolean;
   }>;
 }
 

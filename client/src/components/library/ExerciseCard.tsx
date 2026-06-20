@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Lock, Play } from 'lucide-react';
+import { Ban, Lock, Pin, Play } from 'lucide-react';
 import { UnlockCelebration } from '@/components/effects/UnlockCelebration';
 import { ExerciseVideoModal } from '@/components/library/ExerciseVideoModal';
 import { exerciseMediaUrl } from '@/lib/media';
@@ -14,9 +14,22 @@ interface Props {
   compact?: boolean;
   unlocked: boolean;
   onUnlock: (slug: string) => void;
+  isPinned?: boolean;
+  isBlocked?: boolean;
+  onTogglePin?: (slug: string) => void;
+  onToggleBlock?: (slug: string) => void;
 }
 
-export function ExerciseCard({ exercise, compact, unlocked, onUnlock }: Props) {
+export function ExerciseCard({
+  exercise,
+  compact,
+  unlocked,
+  onUnlock,
+  isPinned = false,
+  isBlocked = false,
+  onTogglePin,
+  onToggleBlock,
+}: Props) {
   const [unlocking, setUnlocking] = useState(false);
   const displayName = formatExerciseName(exercise);
   const [showVideo, setShowVideo] = useState(false);
@@ -101,9 +114,31 @@ export function ExerciseCard({ exercise, compact, unlocked, onUnlock }: Props) {
             {!compact && exercise.descricao && (
               <p className="mt-2 line-clamp-2 text-xs text-stone-500">{exercise.descricao}</p>
             )}
-            <button type="button" className="game-item-card__play" onClick={handlePlay}>
-              <Play size={14} fill="currentColor" /> Ver treino
-            </button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" className="game-item-card__play" onClick={handlePlay}>
+                <Play size={14} fill="currentColor" /> Ver treino
+              </button>
+              {onTogglePin && (
+                <button
+                  type="button"
+                  className={`game-item-card__pref${isPinned ? ' game-item-card__pref--active' : ''}`}
+                  onClick={() => onTogglePin(exercise.slug)}
+                  aria-pressed={isPinned}
+                >
+                  <Pin size={13} aria-hidden /> {isPinned ? 'Sempre incluir ✓' : 'Sempre incluir'}
+                </button>
+              )}
+              {onToggleBlock && (
+                <button
+                  type="button"
+                  className={`game-item-card__pref game-item-card__pref--block${isBlocked ? ' game-item-card__pref--active' : ''}`}
+                  onClick={() => onToggleBlock(exercise.slug)}
+                  aria-pressed={isBlocked}
+                >
+                  <Ban size={13} aria-hidden /> {isBlocked ? 'Bloqueado ✓' : 'Não recomendar'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </article>

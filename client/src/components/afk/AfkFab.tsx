@@ -7,11 +7,12 @@ import type { AfkPendingReward } from '@/types';
 const AFK_AUTO_OPEN_KEY = 'abdoria_afk_auto_opened';
 
 function hasAfkRewards(pending: AfkPendingReward): boolean {
+  const cosmeticIds = pending.cosmetic_ids ?? [];
   return (
     pending.xp > 0
     || pending.abdoria > 0
     || pending.energy_drinks > 0
-    || pending.cosmetic_ids.length > 0
+    || cosmeticIds.length > 0
     || pending.titulo_secreto
   );
 }

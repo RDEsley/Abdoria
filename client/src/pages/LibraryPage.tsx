@@ -4,11 +4,14 @@ import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
+import { useAuth } from '@/context/AuthContext';
+import { updateMe } from '@/lib/api';
 import type { MusculoPrincipal, Prioridade } from '@/types';
 import { MUSCULO_LABELS, MUSCULO_HINTS, PRIORIDADE_LABELS, formatExerciseName } from '@/types';
 
 export function LibraryPage() {
   const { exercises, muscleFilter, setMuscleFilter, ensureExercises, exercisesLoading } = useApp();
+  const { user, refreshUser } = useAuth();
   const { unlockedCount, isUnlocked, unlock } = useUnlockedExercises();
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
@@ -33,6 +36,39 @@ export function LibraryPage() {
       return true;
     });
   }, [exercises, muscleFilter, nivelFilter, prioridadeFilter, search]);
+
+  const fixedSlugs = user?.preferencias?.exercicios_fixos ?? [];
+  const blockedSlugs = user?.preferencias?.exercicios_nao_recomendar ?? [];
+
+  const patchPreferences = async (patch: {
+    exercicios_fixos?: string[];
+    exercicios_nao_recomendar?: string[];
+  }) => {
+    if (!user) return;
+    await updateMe({
+      preferencias: {
+        ...user.preferencias,
+        ...patch,
+      },
+    });
+    await refreshUser();
+  };
+
+  const togglePin = (slug: string) => {
+    const nextFixed = fixedSlugs.includes(slug)
+      ? fixedSlugs.filter((s) => s !== slug)
+      : [...fixedSlugs, slug];
+    const nextBlocked = blockedSlugs.filter((s) => s !== slug);
+    void patchPreferences({ exercicios_fixos: nextFixed, exercicios_nao_recomendar: nextBlocked });
+  };
+
+  const toggleBlock = (slug: string) => {
+    const nextBlocked = blockedSlugs.includes(slug)
+      ? blockedSlugs.filter((s) => s !== slug)
+      : [...blockedSlugs, slug];
+    const nextFixed = fixedSlugs.filter((s) => s !== slug);
+    void patchPreferences({ exercicios_nao_recomendar: nextBlocked, exercicios_fixos: nextFixed });
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -110,6 +146,10 @@ export function LibraryPage() {
             exercise={exercise}
             unlocked={isUnlocked(exercise.slug)}
             onUnlock={unlock}
+            isPinned={fixedSlugs.includes(exercise.slug)}
+            isBlocked={blockedSlugs.includes(exercise.slug)}
+            onTogglePin={togglePin}
+            onToggleBlock={toggleBlock}
           />
         ))}
       </div>

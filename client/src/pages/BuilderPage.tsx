@@ -368,6 +368,7 @@ export function BuilderPage() {
       treino_tipo: treinoTipo,
       queue: activeQueue.map((q) => ({ ...q, descanso_seg: q.descanso_seg ?? globalDescanso })),
       config: { descanso_padrao_seg: globalDescanso },
+      preset_id: selectedPresetId !== 'custom' ? selectedPresetId : undefined,
     };
     sessionStorage.setItem('abdoria_active_workout', JSON.stringify(payload));
     if (selectedPresetId === 'custom') setCustomWorkout(activeQueue);

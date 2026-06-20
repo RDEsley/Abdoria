@@ -85,5 +85,8 @@ temp/
 *.dump
 dump/
 
+# Supabase CLI temp
+supabase/.temp/
+
 # Scripts de diagnóstico local (não fazem parte do app)
 server/src/scripts/check-*.ts
