@@ -108,9 +108,11 @@ export const WorkoutHistory = {
     const sb = getSupabase();
     const first = pipeline[0] as { $match?: Record<string, unknown> };
     const match = first?.$match ?? {};
+    const userId = String(match.usuario_id ?? '');
 
-    if (pipeline.some((s) => (s as { $group?: { _id: string } }).$group?._id === '$musculos_estimulados')) {
-      const userId = match.usuario_id as string;
+    if (
+      pipeline.some((s) => (s as { $group?: { _id?: string } }).$group?._id === '$musculos_estimulados')
+    ) {
       const { data } = await sb.from('workout_history').select('musculos_estimulados').eq('usuario_id', userId);
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
@@ -122,7 +124,6 @@ export const WorkoutHistory = {
     }
 
     if (pipeline.some((s) => (s as { $group?: { total?: unknown } }).$group?.total)) {
-      const userId = match.usuario_id as string;
       const groupStage = pipeline.find((s) => (s as { $group?: unknown }).$group) as {
         $group: { total?: { $sum?: unknown } };
       };
@@ -133,22 +134,38 @@ export const WorkoutHistory = {
         return [{ total }];
       }
 
-      if (groupStage?.$group?.total?.$sum && JSON.stringify(groupStage.$group.total.$sum).includes('$size')) {
+      const sumExpr = groupStage?.$group?.total?.$sum;
+      if (sumExpr && JSON.stringify(sumExpr).includes('$size')) {
         const total = (data ?? []).reduce((s, r) => s + ((r.exercicios as unknown[])?.length ?? 0), 0);
         return [{ total }];
       }
     }
 
-    if (pipeline.some((s) => JSON.stringify((s as { $group?: { _id?: unknown } }).$group?._id).includes('dateToString'))) {
-      const userId = match.usuario_id as string;
-      const { data } = await sb.from('workout_history').select('concluido_em,duracao_total_segundos').eq('usuario_id', userId);
+    if (
+      pipeline.some((s) => {
+        const groupId = (s as { $group?: { _id?: unknown } }).$group?._id;
+        if (groupId === undefined) return false;
+        return JSON.stringify(groupId).includes('dateToString');
+      })
+    ) {
+      let query = sb.from('workout_history').select('concluido_em,duracao_total_segundos').eq('usuario_id', userId);
+      const concluidoFilter = match.concluido_em as { $gte?: Date | string } | undefined;
+      if (concluidoFilter?.$gte) {
+        const since = concluidoFilter.$gte instanceof Date
+          ? concluidoFilter.$gte.toISOString()
+          : String(concluidoFilter.$gte);
+        query = query.gte('concluido_em', since);
+      }
+      const { data } = await query;
       const byMonth: Record<string, number> = {};
       for (const row of data ?? []) {
         const d = new Date(row.concluido_em as string);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         byMonth[key] = (byMonth[key] ?? 0) + Number(row.duracao_total_segundos ?? 0) / 60;
       }
-      return Object.entries(byMonth).map(([_id, minutos]) => ({ _id, minutos }));
+      return Object.entries(byMonth)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([_id, minutos]) => ({ _id, minutos }));
     }
 
     return [];
