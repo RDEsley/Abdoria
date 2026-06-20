@@ -219,7 +219,14 @@ export function claimAfkRewards(): Promise<{ user: IUserDocument; claimed: AfkPe
   return fetchJson('/meta/afk/claim', { method: 'POST' });
 }
 
-export function pingAfk(): Promise<{ ok: boolean }> {
+export interface AfkPingResponse {
+  ok: boolean;
+  minutos_acumulados: number;
+  pending: AfkPendingReward;
+  has_rewards: boolean;
+}
+
+export function pingAfk(): Promise<AfkPingResponse> {
   return fetchJson('/meta/afk/ping', { method: 'POST' });
 }
 

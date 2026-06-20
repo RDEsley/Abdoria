@@ -73,6 +73,19 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   }, [open, load]);
 
   useEffect(() => {
+    const onAfkSync = (event: Event) => {
+      const detail = (event as CustomEvent<{ minutos_acumulados: number; pending: AfkPendingReward; has_rewards: boolean }>).detail;
+      if (!detail) return;
+      baseMinutesRef.current = detail.minutos_acumulados;
+      loadedAtRef.current = Date.now();
+      setDisplayMinutes(detail.minutos_acumulados);
+      setMeta((prev) => (prev ? { ...prev, ...detail } : prev));
+    };
+    window.addEventListener('abdoria:afk-sync', onAfkSync);
+    return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
+  }, []);
+
+  useEffect(() => {
     if (!open) return undefined;
     const timer = window.setInterval(() => {
       const elapsedMin = (Date.now() - loadedAtRef.current) / 60_000;

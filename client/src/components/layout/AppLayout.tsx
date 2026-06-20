@@ -9,8 +9,8 @@ import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
+import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
-import { pingAfk } from '@/lib/api';
 import { resolveCosmeticos } from '@/types';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
 
@@ -37,12 +37,7 @@ export function AppLayout() {
 
   useSaoPauloMidnightRefresh(handleMidnightRefresh);
 
-  useEffect(() => {
-    if (!user) return;
-    void pingAfk()
-      .then(() => refreshApp())
-      .catch(() => undefined);
-  }, [user, refreshApp]);
+  useAfkBackgroundSync(Boolean(user));
 
   useEffect(() => {
     const onLevelUp = (event: Event) => {

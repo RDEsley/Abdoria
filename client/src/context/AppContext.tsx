@@ -199,6 +199,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    const onAfkSync = (event: Event) => {
+      const detail = (event as CustomEvent<import('@/lib/api').AfkPingResponse>).detail;
+      if (!detail) return;
+      setStats((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          afk: {
+            ...prev.afk,
+            minutos_acumulados: detail.minutos_acumulados,
+            pending: detail.pending,
+            has_rewards: detail.has_rewards,
+          },
+        };
+      });
+    };
+    window.addEventListener('abdoria:afk-sync', onAfkSync);
+    return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
+  }, []);
+
   useEffect(() => () => {
     if (persistTimer.current !== null) {
       window.clearTimeout(persistTimer.current);
