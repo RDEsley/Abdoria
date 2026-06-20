@@ -3,12 +3,14 @@ interface Props {
   max: number;
   label?: string;
   hint?: string;
-  variant?: 'xp' | 'daily' | 'extra' | 'hp';
+  variant?: 'xp' | 'daily' | 'extra' | 'hp' | 'bonus';
   showValues?: boolean;
   /** Exibe só "+N" (XP extra, sem teto). */
   valueOnly?: boolean;
   /** Balanço leve a cada 5s quando value >= max. */
   pulseWhenFull?: boolean;
+  /** Brilho de Energy Drink ativo (variant bonus). */
+  glow?: boolean;
 }
 
 export function XpBar({
@@ -20,6 +22,7 @@ export function XpBar({
   showValues = true,
   valueOnly = false,
   pulseWhenFull = false,
+  glow = false,
 }: Props) {
   const isFull = !valueOnly && max > 0 && value >= max;
   const visualMax = valueOnly ? Math.max(value, 30) : max;
@@ -45,7 +48,13 @@ export function XpBar({
       )}
       {hint && <p className="game-xp-bar__hint">{hint}</p>}
       <div
-        className={`game-xp-bar game-xp-bar--${variant}${isFull ? ' game-xp-bar--capped' : ''}`}
+        className={[
+          `game-xp-bar game-xp-bar--${variant}`,
+          isFull ? 'game-xp-bar--capped' : '',
+          variant === 'bonus' && glow ? 'game-xp-bar--glow-active' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}

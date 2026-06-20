@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
+import { DailyXpCapModal } from '@/components/player/DailyXpCapModal';
 import { RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
 import { SortableExerciseItem } from '@/components/builder/SortableExerciseItem';
 import { GameButton } from '@/components/ui/GameButton';
@@ -116,6 +117,7 @@ export function BuilderPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [allowRepeats, setAllowRepeats] = useState(false);
   const [recommendBusy, setRecommendBusy] = useState(false);
+  const [showXpCapModal, setShowXpCapModal] = useState(false);
   const schemeApplyKeyRef = useRef('');
   const presetsCarouselRef = useRef<HTMLDivElement>(null);
 
@@ -357,7 +359,7 @@ export function BuilderPage() {
     }, 280);
   };
 
-  const startWorkout = () => {
+  const proceedToWorkout = () => {
     if (activeQueue.length === 0) return;
     const treinoNome = selectedPreset?.nome ?? selectedSavedWorkout?.nome ?? 'Meu Treino';
     const treinoTipo: TreinoBase | 'custom' = selectedPreset?.ciclo_id ?? 'custom';
@@ -370,6 +372,27 @@ export function BuilderPage() {
     sessionStorage.setItem('abdoria_active_workout', JSON.stringify(payload));
     if (selectedPresetId === 'custom') setCustomWorkout(activeQueue);
     navigate('/player');
+  };
+
+  const startWorkout = () => {
+    if (activeQueue.length === 0) return;
+    if (!stats) {
+      proceedToWorkout();
+      return;
+    }
+    const canStillEarnExerciseXp =
+      stats.xp_hoje < stats.xp_diario_limite || (stats.xp_bonus_restante ?? 0) > 0;
+    if (canStillEarnExerciseXp) {
+      proceedToWorkout();
+      return;
+    }
+    const hasEnergyDrink = (stats.energy_drink_count ?? 0) > 0;
+    const hideWarning = authUser?.preferencias?.ocultar_aviso_xp_diario ?? user?.preferencias?.ocultar_aviso_xp_diario;
+    if (hasEnergyDrink || !hideWarning) {
+      setShowXpCapModal(true);
+      return;
+    }
+    proceedToWorkout();
   };
 
   useEffect(() => {
@@ -656,6 +679,16 @@ export function BuilderPage() {
         <Play size={22} fill="currentColor" />
         Iniciar Treino ({activeQueue.length})
       </GameButton>
+
+      <DailyXpCapModal
+        open={showXpCapModal}
+        energyDrinkCount={stats?.energy_drink_count ?? 0}
+        onContinue={() => {
+          setShowXpCapModal(false);
+          proceedToWorkout();
+        }}
+        onCancel={() => setShowXpCapModal(false)}
+      />
     </div>
   );
 }

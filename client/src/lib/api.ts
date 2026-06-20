@@ -1,4 +1,6 @@
 import type {
+  AfkPendingReward,
+  ArmaPreferida,
   AuthResponse,
   CompleteWorkoutPayload,
   CompleteWorkoutResponse,
@@ -6,6 +8,7 @@ import type {
   CosmeticsResponse,
   DashboardStats,
   EquipCosmeticResponse,
+  Inventario,
   LojaDiaria,
   RedeemCodeResponse,
   ShopResponse,
@@ -195,6 +198,51 @@ export interface HealthResponse {
 
 export function getHealth(): Promise<HealthResponse> {
   return fetchJson('/health');
+}
+
+export interface AfkMetaResponse {
+  minutos_acumulados: number;
+  pending: AfkPendingReward;
+  has_rewards: boolean;
+  arma_preferida: ArmaPreferida;
+}
+
+export interface InventarioSummary extends Inventario {
+  energy_drink: number;
+}
+
+export function getAfkMeta(): Promise<AfkMetaResponse> {
+  return fetchJson('/meta/afk');
+}
+
+export function claimAfkRewards(): Promise<{ user: IUserDocument; claimed: AfkPendingReward }> {
+  return fetchJson('/meta/afk/claim', { method: 'POST' });
+}
+
+export function pingAfk(): Promise<{ ok: boolean }> {
+  return fetchJson('/meta/afk/ping', { method: 'POST' });
+}
+
+export function getInventory(): Promise<InventarioSummary> {
+  return fetchJson('/meta/inventory');
+}
+
+export function useEnergyDrink(quantity = 1): Promise<{
+  user: IUserDocument;
+  bonus_added: number;
+  inventario: InventarioSummary;
+}> {
+  return fetchJson('/meta/inventory/energy-drink', {
+    method: 'POST',
+    body: JSON.stringify({ quantity }),
+  });
+}
+
+export function updateMetaPreferences(data: {
+  ocultar_aviso_xp_diario?: boolean;
+  arma_preferida?: ArmaPreferida;
+}): Promise<IUserDocument> {
+  return fetchJson('/meta/preferences', { method: 'PATCH', body: JSON.stringify(data) });
 }
 
 export type { MusculoPrincipal, ApiError };

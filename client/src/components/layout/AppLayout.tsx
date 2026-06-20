@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
+import { AfkFab } from '@/components/afk/AfkFab';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
 import { GameHud } from '@/components/layout/GameHud';
@@ -9,6 +10,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
+import { pingAfk } from '@/lib/api';
 import { resolveCosmeticos } from '@/types';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
 
@@ -34,6 +36,11 @@ export function AppLayout() {
   }, [refreshApp, refreshUser]);
 
   useSaoPauloMidnightRefresh(handleMidnightRefresh);
+
+  useEffect(() => {
+    if (!user) return;
+    void pingAfk().catch(() => undefined);
+  }, [user]);
 
   useEffect(() => {
     const onLevelUp = (event: Event) => {
@@ -131,6 +138,8 @@ export function AppLayout() {
       {levelUpLevel !== null && (
         <LevelUpOverlay level={levelUpLevel} onDone={() => setLevelUpLevel(null)} />
       )}
+
+      <AfkFab />
     </div>
   );
 }

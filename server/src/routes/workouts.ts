@@ -22,6 +22,9 @@ import { getSuggestedWorkout, getRecommendationAlerts } from '../services/recomm
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { dailyXpCapForLevel, xpLevelFromTotal } from '../types/index.js';
+import { getDailyXpCapForUser } from '../services/economy.js';
+import { readInventarioSummary } from '../services/inventory.js';
+import { syncAfkRewards } from '../services/afk.js';
 
 export const workoutsRouter = Router();
 
@@ -75,6 +78,9 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     if (resetXpDiarioIfNeeded(user)) {
       await user.save();
     }
+
+    syncAfkRewards(user);
+    await user.save();
 
     const userId = user._id.toString();
 
@@ -132,8 +138,23 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       nivel_xp: user.gamificacao.nivel_xp,
       xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
       xp_extra_hoje: user.xp_diario?.extra_hoje ?? 0,
-      xp_diario_limite: dailyXpCapForLevel(xpLevelFromTotal(user.gamificacao.nivel_xp)),
+      xp_diario_limite: getDailyXpCapForUser(user),
+      xp_bonus_restante: user.xp_diario?.bonus_pool_restante ?? 0,
+      xp_bonus_total: user.xp_diario?.bonus_pool_total ?? 0,
       xp_data_reset: user.xp_diario?.data_reset ?? getTodaySaoPaulo(),
+      inventario: readInventarioSummary(user),
+      afk: {
+        minutos_acumulados: user.afk?.minutos_acumulados ?? 0,
+        pending: user.afk?.pending ?? { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false },
+        has_rewards: Boolean(
+          (user.afk?.pending?.xp ?? 0) > 0
+          || (user.afk?.pending?.abdoria ?? 0) > 0
+          || (user.afk?.pending?.energy_drinks ?? 0) > 0
+          || (user.afk?.pending?.cosmetic_ids?.length ?? 0) > 0
+          || user.afk?.pending?.titulo_secreto,
+        ),
+      },
+      energy_drink_count: readInventarioSummary(user).energy_drink,
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: monthly.map((m: { _id: string; minutos: number }) => ({ mes: m._id, minutos: Math.round(m.minutos) })),

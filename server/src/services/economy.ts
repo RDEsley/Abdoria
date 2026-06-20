@@ -61,23 +61,69 @@ export function getDailyXpCapForUser(user: UserDocument): number {
   return dailyXpCapForLevel(xpLevelFromTotal(user.gamificacao.nivel_xp));
 }
 
+export function getDailyXpBonusRemaining(user: UserDocument): number {
+  resetXpDiarioIfNeeded(user);
+  return Math.max(0, user.xp_diario?.bonus_pool_restante ?? 0);
+}
+
+export function isDailyXpStandardCapReached(user: UserDocument): boolean {
+  resetXpDiarioIfNeeded(user);
+  return user.xp_diario.ganho_hoje >= getDailyXpCapForUser(user);
+}
+
+export function isDailyXpFullyCapped(user: UserDocument): boolean {
+  resetXpDiarioIfNeeded(user);
+  const bonusLeft = user.xp_diario?.bonus_pool_restante ?? 0;
+  return isDailyXpStandardCapReached(user) && bonusLeft <= 0;
+}
+
 function ensureExtraHoje(user: UserDocument): void {
   if (typeof user.xp_diario.extra_hoje !== 'number') {
     user.xp_diario.extra_hoje = 0;
   }
 }
 
-/** XP de exercícios — respeita teto diário (base + bônus por nível). */
+function ensureBonusPoolFields(user: UserDocument): void {
+  if (typeof user.xp_diario.bonus_pool_restante !== 'number') {
+    user.xp_diario.bonus_pool_restante = 0;
+  }
+  if (typeof user.xp_diario.bonus_pool_total !== 'number') {
+    user.xp_diario.bonus_pool_total = 0;
+  }
+}
+
+/** XP de exercícios — preenche teto padrão primeiro, depois bônus Energy Drink. */
 export function awardDailyExerciseXp(user: UserDocument, amount: number): number {
   if (amount <= 0) return 0;
   resetXpDiarioIfNeeded(user);
   ensureExtraHoje(user);
+  ensureBonusPoolFields(user);
 
   const cap = getDailyXpCapForUser(user);
-  const remaining = cap - user.xp_diario.ganho_hoje;
-  const awarded = Math.max(0, Math.min(amount, remaining));
-  user.xp_diario.ganho_hoje += awarded;
-  user.gamificacao.nivel_xp += awarded;
+  let remaining = amount;
+  let awarded = 0;
+
+  const standardRemaining = cap - user.xp_diario.ganho_hoje;
+  if (standardRemaining > 0 && remaining > 0) {
+    const fromStandard = Math.min(remaining, standardRemaining);
+    user.xp_diario.ganho_hoje += fromStandard;
+    awarded += fromStandard;
+    remaining -= fromStandard;
+  }
+
+  if (remaining > 0 && user.xp_diario.bonus_pool_restante > 0) {
+    const fromBonus = Math.min(remaining, user.xp_diario.bonus_pool_restante);
+    user.xp_diario.bonus_pool_restante -= fromBonus;
+    awarded += fromBonus;
+    remaining -= fromBonus;
+    if (user.xp_diario.bonus_pool_restante <= 0) {
+      user.xp_diario.bonus_pool_total = 0;
+    }
+  }
+
+  if (awarded > 0) {
+    user.gamificacao.nivel_xp += awarded;
+  }
   return awarded;
 }
 

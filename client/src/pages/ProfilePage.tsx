@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Save, Settings, User as UserIcon } from 'lucide-react';
+import { Backpack, Save, Settings, User as UserIcon } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
+import { InventoryModal } from '@/components/inventory/InventoryModal';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -22,6 +23,7 @@ export function ProfilePage() {
   const profile = user ?? appUser;
   const [tab, setTab] = useState<Tab>('dados');
   const [saving, setSaving] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
 
   if (!profile) {
     return <PageLoader />;
@@ -33,7 +35,9 @@ export function ProfilePage() {
   const titleClass =
     cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
       ? 'game-profile-hero__title cosmetic-title--dono-do-jogo'
-      : 'game-profile-hero__title';
+      : cosmeticos.titulo_equipado === 'titulo_secreto'
+        ? 'game-profile-hero__title cosmetic-title--secreto'
+        : 'game-profile-hero__title';
   const fundoClass = `game-profile-hero game-card-fundo--${cosmeticos.fundo_equipado.replace('fundo_', '')}`;
   const xpLevel = xpProgressFromTotal(profile.gamificacao.nivel_xp).level;
 
@@ -79,9 +83,22 @@ export function ProfilePage() {
     <div className="flex flex-col gap-5">
       <header className="flex items-start justify-between gap-3">
         <GamePageHeader eyebrow="Ficha do herói" title={profile.nome} />
-        <Link to="/configuracoes" className="game-nav-item shrink-0 !p-3">
-          <Settings size={20} />
-        </Link>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            className="game-nav-item !p-3"
+            onClick={() => setShowInventory(true)}
+            aria-label="Abrir inventário"
+          >
+            <Backpack size={20} />
+            {(stats?.energy_drink_count ?? 0) > 0 && (
+              <span className="game-inventory-badge">{stats?.energy_drink_count}</span>
+            )}
+          </button>
+          <Link to="/configuracoes" className="game-nav-item !p-3">
+            <Settings size={20} />
+          </Link>
+        </div>
       </header>
       <p className="-mt-3 text-xs font-bold text-stone-500">{profile.email}</p>
 
@@ -93,6 +110,14 @@ export function ProfilePage() {
           <p className="game-profile-hero__level">Nível {xpLevel}</p>
         </div>
       </div>
+
+      <GameButton variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={() => setShowInventory(true)}>
+        <Backpack size={18} />
+        Ver inventário
+        {(stats?.energy_drink_count ?? 0) > 0 && (
+          <span className="game-inventory-badge game-inventory-badge--inline">{stats?.energy_drink_count}</span>
+        )}
+      </GameButton>
 
       <div className="flex gap-2">
         {tabs.map((t) => (
@@ -215,6 +240,8 @@ export function ProfilePage() {
       {tab === 'definicao' && (
         <DefinitionSimulator profile={profile} stats={stats} onSaved={handleRefresh} />
       )}
+
+      <InventoryModal open={showInventory} onClose={() => setShowInventory(false)} />
     </div>
   );
 }

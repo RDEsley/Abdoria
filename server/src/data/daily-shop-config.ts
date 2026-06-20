@@ -152,7 +152,7 @@ export function pickFreeDailyRewardType(date: string, slot: number): Exclude<Dai
 export function pickDailyValue(
   date: string,
   slot: number,
-  tipo: Exclude<DailyRewardType, 'pacote'>,
+  tipo: Exclude<DailyRewardType, 'pacote' | 'item'>,
   raridade: DailyRewardRarity,
   kind: DailyShopSlotKind,
 ): number {
