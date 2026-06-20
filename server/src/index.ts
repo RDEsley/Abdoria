@@ -7,7 +7,7 @@ const PORT = Number(process.env.PORT) || 3001;
 async function start() {
   try {
     await connectDB();
-    console.log('MongoDB conectado.');
+    console.log('Supabase conectado.');
 
     const app = createApp();
     app.listen(PORT, () => {
@@ -15,14 +15,10 @@ async function start() {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    if (msg.includes('whitelist') || msg.includes('IP')) {
-      console.error(
-        'MongoDB Atlas bloqueou a conexão: adicione seu IP em Network Access no painel do Atlas.',
-      );
-    } else if (msg.includes('bad auth') || msg.includes('Authentication failed')) {
-      console.error('Credenciais MongoDB inválidas. Revise usuário e senha em server/.env');
+    if (msg.includes('SUPABASE_URL') || msg.includes('SUPABASE_SERVICE_ROLE_KEY')) {
+      console.error('Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em server/.env');
     } else {
-      console.error('Falha ao conectar no MongoDB:', msg);
+      console.error('Falha ao conectar no Supabase:', msg);
     }
     process.exit(1);
   }
