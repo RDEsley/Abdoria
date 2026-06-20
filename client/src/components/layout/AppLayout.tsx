@@ -39,8 +39,10 @@ export function AppLayout() {
 
   useEffect(() => {
     if (!user) return;
-    void pingAfk().catch(() => undefined);
-  }, [user]);
+    void pingAfk()
+      .then(() => refreshApp())
+      .catch(() => undefined);
+  }, [user, refreshApp]);
 
   useEffect(() => {
     const onLevelUp = (event: Event) => {

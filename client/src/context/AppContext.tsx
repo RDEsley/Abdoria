@@ -314,6 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         xp_breakdown: result.xp_breakdown ?? null,
         streak_celebration: result.streak_celebration ?? null,
         level_up: result.level_up ?? null,
+        rodada_completa: result.rodada_completa ?? false,
       };
     },
     [hydrateAccountData],

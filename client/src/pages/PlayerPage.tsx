@@ -20,7 +20,7 @@ import {
   setSoundSettings,
 } from '@/lib/sounds';
 import { getErrorMessage } from '@/lib/api-errors';
-import { updateMe } from '@/lib/api';
+import { getRecommendWorkout, updateMe } from '@/lib/api';
 import { formatTime } from '@/lib/utils';
 import {
   clearWorkoutDurationSession,
@@ -71,6 +71,8 @@ export function PlayerPage() {
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [showRodadaModal, setShowRodadaModal] = useState(false);
+  const [rodadaBusy, setRodadaBusy] = useState(false);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const mutedRef = useRef(muted);
   const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
@@ -302,11 +304,37 @@ export function PlayerPage() {
       }
       sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
       clearWorkoutDurationSession();
-      setTimeout(() => navigate('/'), 2500);
+      if (result.rodada_completa) {
+        setShowRodadaModal(true);
+      } else {
+        setTimeout(() => navigate('/'), 2500);
+      }
     } catch (err) {
       setSaveError(getErrorMessage(err, 'Não foi possível salvar seu treino. Tente novamente.'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRodadaManter = () => {
+    setShowRodadaModal(false);
+    navigate('/');
+  };
+
+  const handleRodadaTrocar = async () => {
+    setRodadaBusy(true);
+    try {
+      const treino = await getRecommendWorkout({
+        shuffle: true,
+        excludePresetId: workout?.preset_id ?? null,
+      });
+      setShowRodadaModal(false);
+      navigate(`/construtor?preset=${treino.preset_id}`);
+    } catch {
+      setShowRodadaModal(false);
+      navigate('/construtor');
+    } finally {
+      setRodadaBusy(false);
     }
   };
 
@@ -371,6 +399,33 @@ export function PlayerPage() {
             {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar ao início' : 'Salvar e voltar'}
           </GameButton>
         </motion.div>
+
+        {showRodadaModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/50 p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="game-victory w-full max-w-sm !p-6"
+            >
+              <h3 className="game-victory__title !text-base">Rodada completa!</h3>
+              <p className="mt-2 text-sm font-bold text-stone-600">
+                Você completou todos os ciclos ativos. Quer um novo set de treinos?
+              </p>
+              <div className="mt-5 flex flex-col gap-2">
+                <GameButton variant="secondary" size="lg" className="w-full" onClick={handleRodadaManter}>
+                  Manter sugestão atual
+                </GameButton>
+                <GameButton size="lg" className="w-full" disabled={rodadaBusy} onClick={() => void handleRodadaTrocar()}>
+                  {rodadaBusy ? 'Sorteando...' : 'Trocar por novo set'}
+                </GameButton>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     );
   }
@@ -399,68 +454,28 @@ export function PlayerPage() {
   const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
   const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
 
-  const handleRingPress = () => {
-    if (phase === 'ready') {
-      startSeries();
-      return;
-    }
-    if (canTogglePause) {
-      togglePause();
-      return;
-    }
-    if (phase === 'working' && current.modo === 'reps') {
-      completeSeries();
-    }
-  };
-
-  const ringAriaLabel =
-    phase === 'ready'
-      ? `Iniciar série ${seriesIndex + 1}`
-      : phase === 'resting'
-        ? paused
-          ? 'Continuar descanso'
-          : 'Pausar descanso'
-        : phase === 'working' && current.modo === 'tempo'
-          ? paused
-            ? 'Continuar exercício'
-            : 'Pausar exercício'
-          : phase === 'working'
-            ? `Concluir série ${seriesIndex + 1} de ${totalSeries}`
-            : 'Controle do treino';
-
   const ringCenter =
-    phase === 'resting' && paused ? (
-      <>
-        <Play size={32} className="text-sky-600" fill="currentColor" />
-        <span className="game-timer-ring__sublabel mt-1">continuar</span>
-      </>
-    ) : phase === 'resting' ? (
+    phase === 'resting' ? (
       <>
         <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-        <span className="game-timer-ring__sublabel">descanso · toque p/ pausar</span>
-      </>
-    ) : phase === 'working' && current.modo === 'tempo' && paused ? (
-      <>
-        <Play size={32} className="text-emerald-500" fill="currentColor" />
-        <span className="game-timer-ring__sublabel mt-1">continuar</span>
+        <span className="game-timer-ring__sublabel">descanso</span>
       </>
     ) : phase === 'working' && current.modo === 'tempo' ? (
       <>
         <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-        <span className="game-timer-ring__sublabel">exercício · toque p/ pausar</span>
+        <span className="game-timer-ring__sublabel">exercício</span>
       </>
     ) : phase === 'working' ? (
       <>
-        <Check size={28} className="text-emerald-600" strokeWidth={3} />
-        <span className="game-timer-ring__label tabular-nums !text-sm">
+        <span className="game-timer-ring__label tabular-nums">
           {seriesIndex + 1}/{totalSeries}
         </span>
-        <span className="game-timer-ring__sublabel">tocar p/ concluir</span>
+        <span className="game-timer-ring__sublabel">série</span>
       </>
     ) : (
       <>
-        <Play size={32} className="text-emerald-500" fill="currentColor" />
-        <span className="game-timer-ring__sublabel mt-1">iniciar série</span>
+        <Play size={32} className="text-emerald-500" />
+        <span className="game-timer-ring__sublabel mt-1">pronta</span>
       </>
     );
 
@@ -482,8 +497,8 @@ export function PlayerPage() {
         : `Segure por ${targetSeconds}s na série ${seriesIndex + 1}.`
       : phase === 'working'
         ? current.modo === 'reps'
-          ? `Meta: ${targetReps} repetições · toque no círculo ao terminar.`
-          : `Segure a posição · toque no círculo para pausar.`
+          ? `Meta: ${targetReps} repetições · toque em "Série concluída" ao terminar.`
+          : `Segure a posição · o tempo conta sozinho.`
         : null;
 
   const restStatus =
@@ -554,13 +569,11 @@ export function PlayerPage() {
           )}
         </div>
 
-        <button
-          type="button"
-          className={`game-timer-ring game-timer-ring--action ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}
-          onClick={handleRingPress}
-          aria-label={ringAriaLabel}
+        <div
+          className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}
+          aria-hidden
         >
-          <svg className="game-timer-ring__svg -rotate-90" viewBox="0 0 100 100" aria-hidden>
+          <svg className="game-timer-ring__svg -rotate-90" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="none" stroke="#e7e5e4" strokeWidth="6" />
             <circle
               cx="50"
@@ -574,20 +587,71 @@ export function PlayerPage() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">{ringCenter}</div>
-        </button>
+        </div>
 
         {paused && canTogglePause && (
           <p className="game-player-paused">
-            <Pause size={14} /> Cronômetro pausado · toque em continuar
+            <Pause size={14} /> Cronômetro pausado · use o botão abaixo para continuar
           </p>
         )}
         </div>
 
-      <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+      <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+        {phase === 'ready' && (
+          <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={startSeries}>
+            <Play size={20} fill="currentColor" />
+            Iniciar série {seriesIndex + 1}
+          </GameButton>
+        )}
+
+        {phase === 'working' && (
+          <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={completeSeries}>
+            <Check size={22} />
+            Série concluída
+          </GameButton>
+        )}
+
+        {phase === 'working' && current.modo === 'tempo' && (
+          <GameButton
+            size="lg"
+            className="w-full flex items-center justify-center gap-2"
+            variant={paused ? 'primary' : 'secondary'}
+            onClick={togglePause}
+          >
+            {paused ? (
+              <>
+                <Play size={20} fill="currentColor" /> Continuar exercício
+              </>
+            ) : (
+              <>
+                <Pause size={20} /> Pausar exercício
+              </>
+            )}
+          </GameButton>
+        )}
+
         {phase === 'resting' && (
-          <button type="button" className="game-player-skip-rest" onClick={skipRest}>
-            <SkipForward size={16} aria-hidden /> Pular descanso
-          </button>
+          <>
+            <GameButton
+              size="lg"
+              className="w-full flex items-center justify-center gap-2"
+              variant={paused ? 'primary' : 'secondary'}
+              onClick={togglePause}
+            >
+              {paused ? (
+                <>
+                  <Play size={20} fill="currentColor" /> Continuar descanso
+                </>
+              ) : (
+                <>
+                  <Pause size={20} /> Pausar descanso
+                </>
+              )}
+            </GameButton>
+            <GameButton variant="secondary" size="lg" className="w-full flex items-center justify-center gap-2" onClick={skipRest}>
+              <SkipForward size={18} /> Pular descanso
+            </GameButton>
+          </>
         )}
       </div>
       </div>

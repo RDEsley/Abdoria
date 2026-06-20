@@ -1185,15 +1185,28 @@ input[type='range'] {
 }
 
 .game-hud-shell[class*='game-card-fundo--'] {
+  position: relative;
   margin-left: 1rem;
   margin-right: 1rem;
   margin-top: 1rem;
   padding: 0;
   padding-bottom: 0.5rem;
-  border: 3px solid var(--game-ink);
+  border: none;
   border-radius: 1rem;
-  box-shadow: var(--game-shadow);
+  box-shadow: 0 10px 28px rgba(28, 25, 23, 0.14);
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.game-hud-shell[class*='game-card-fundo--']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(12, 10, 9, 0.42);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .game-hud-shell[class*='game-card-fundo--']::after {
@@ -1203,6 +1216,7 @@ input[type='range'] {
   border-radius: inherit;
   pointer-events: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  z-index: 0;
 }
 
 @media (min-width: 768px) {
@@ -1211,6 +1225,11 @@ input[type='range'] {
     margin-right: 2rem;
     margin-top: 1.5rem;
   }
+}
+
+.game-hud-shell[class*='game-card-fundo--'] > * {
+  position: relative;
+  z-index: 1;
 }
 
 .game-hud-shell[class*='game-card-fundo--'] .game-hud {
@@ -2145,6 +2164,37 @@ input[type='range'] {
 .game-item-card__play:active {
   transform: translateY(2px);
   box-shadow: 0 0 0 var(--game-green-dark);
+}
+
+.game-item-card__pref {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #57534e;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(28, 25, 23, 0.15);
+  border-radius: 0.45rem;
+  transition: background 0.12s, color 0.12s;
+}
+
+.game-item-card__pref--active {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
+
+.game-item-card__pref--block.game-item-card__pref--active {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.game-item-card__pref:hover {
+  background: #fafaf9;
 }
 
 @keyframes game-item-shake {
@@ -6012,38 +6062,22 @@ input[type='range'] {
 .game-afk-scene {
   position: relative;
   margin: 0.75rem 0;
-  padding: 0.65rem 0.35rem;
 }
-
-.game-afk-scene__lens {
-  position: absolute;
-  top: 0;
-  width: 46%;
-  height: 100%;
-  border: 3px solid #1c1917;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.55) 70%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.game-afk-scene__lens--left { left: 0; }
-.game-afk-scene__lens--right { right: 0; }
 
 .game-afk-scene__viewport {
   position: relative;
-  height: 9rem;
-  margin: 0 12%;
+  height: 9.5rem;
   overflow: hidden;
   border: 3px solid #1c1917;
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   background: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .game-afk-scene__sky {
   position: absolute;
-  inset: 0 0 35%;
-  background: linear-gradient(180deg, #1e3a8a, #312e81);
+  inset: 0 0 32%;
+  background: linear-gradient(180deg, #0ea5e9 0%, #6366f1 55%, #312e81 100%);
 }
 
 .game-afk-scene__ground {
@@ -6051,22 +6085,22 @@ input[type='range'] {
   right: 0;
   bottom: 0;
   left: 0;
-  height: 35%;
-  background: linear-gradient(180deg, #166534, #14532d);
+  height: 32%;
+  background: linear-gradient(180deg, #15803d, #14532d 60%, #052e16);
 }
 
 .game-afk-hero {
   position: absolute;
-  bottom: 28%;
-  left: 22%;
+  bottom: 30%;
+  left: 18%;
   z-index: 3;
-  width: 2rem;
-  height: 2.5rem;
+  width: 2.5rem;
+  height: 2.75rem;
   transition: transform 0.15s ease;
 }
 
 .game-afk-hero--attack {
-  transform: translateX(4px) scale(1.05);
+  transform: translateX(6px) scale(1.04);
 }
 
 .game-afk-hero__body {
@@ -6078,15 +6112,13 @@ input[type='range'] {
   border-radius: 0.25rem;
 }
 
-.game-afk-hero__bow {
+.game-afk-bow {
   position: absolute;
-  top: 0.35rem;
-  right: -0.65rem;
-  width: 0.85rem;
-  height: 1.1rem;
-  border: 2px solid #fef3c7;
-  border-left: none;
-  border-radius: 0 999px 999px 0;
+  top: 0.15rem;
+  right: -1.35rem;
+  width: 2.75rem;
+  height: 1.75rem;
+  overflow: visible;
 }
 
 .game-afk-hero__sword {
@@ -6150,11 +6182,14 @@ input[type='range'] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.5rem;
-  background: #ecfdf5;
-  border: 2px solid rgba(28, 25, 23, 0.15);
-  border-radius: 0.65rem;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 20px rgba(4, 120, 87, 0.08);
 }
 
 .game-afk-timer__label {
@@ -6167,7 +6202,7 @@ input[type='range'] {
 
 .game-afk-timer__value {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   color: #047857;
 }
 
@@ -6196,10 +6231,13 @@ input[type='range'] {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.45rem 0.5rem;
-  background: #fff;
-  border: 2px solid rgba(28, 25, 23, 0.12);
-  border-radius: 0.55rem;
+  padding: 0.5rem 0.55rem;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 2px solid rgba(28, 25, 23, 0.1);
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 12px rgba(28, 25, 23, 0.06);
 }
 
 .game-afk-reward--secret {
