@@ -63,7 +63,13 @@ metaRouter.post('/afk/ping', async (req: AuthRequest, res) => {
     }
     touchAfkPresence(user);
     await user.save();
-    res.json({ ok: true });
+    const afk = user.afk;
+    res.json({
+      ok: true,
+      minutos_acumulados: afk.minutos_acumulados ?? 0,
+      pending: afk.pending,
+      has_rewards: hasAfkRewardsToClaim(user.afk as Parameters<typeof hasAfkRewardsToClaim>[0]),
+    });
   } catch (error) {
     console.error('POST /api/meta/afk/ping error:', error);
     res.status(500).json({ error: 'Erro ao registrar presença.' });
