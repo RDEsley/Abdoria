@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import mongoose from 'mongoose';
+import crypto from 'crypto';
 import { Exercise } from '../models/Exercise.js';
 import { User, sanitizeUser } from '../models/User.js';
 import { WorkoutHistory } from '../models/WorkoutHistory.js';
@@ -18,13 +18,14 @@ import {
   awardDailyExerciseXp,
   calculateWorkoutXpBreakdown,
 } from '../services/economy.js';
-import { getSuggestedWorkout, getRecommendationAlerts } from '../services/recommendation.js';
+import { getSuggestedWorkout, getRecommendationAlerts, markCycleCompleted } from '../services/recommendation.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
-import { dailyXpCapForLevel, xpLevelFromTotal } from '../types/index.js';
+import { xpLevelFromTotal } from '../types/index.js';
 import { getDailyXpCapForUser } from '../services/economy.js';
 import { readInventarioSummary } from '../services/inventory.js';
 import { syncAfkRewards } from '../services/afk.js';
+import { normalizePending } from '../repositories/user-repository.js';
 
 export const workoutsRouter = Router();
 
@@ -32,10 +33,10 @@ workoutsRouter.use(requireAuth);
 
 workoutsRouter.get('/history', async (req: AuthRequest, res) => {
   try {
-    const histories = await WorkoutHistory.find({ usuario_id: req.userId })
-      .sort({ concluido_em: -1 })
-      .limit(365)
-      .lean();
+    const histories = await WorkoutHistory.find(
+      { usuario_id: req.userId! },
+      { sort: { concluido_em: -1 }, limit: 365 },
+    );
 
     res.json(histories);
   } catch (error) {
@@ -46,7 +47,7 @@ workoutsRouter.get('/history', async (req: AuthRequest, res) => {
 
 workoutsRouter.get('/achievements', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -66,14 +67,14 @@ workoutsRouter.get('/achievements', async (req: AuthRequest, res) => {
 
 workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
   try {
-    let user = await User.findById(req.userId);
+    let user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
 
     await syncUserGamification(user._id.toString());
-    user = (await User.findById(req.userId))!;
+    user = (await User.findById(req.userId!))!;
 
     if (resetXpDiarioIfNeeded(user)) {
       await user.save();
@@ -122,7 +123,8 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       desbloqueada: user.gamificacao.conquistas.includes(a.id),
     }));
 
-    const totalSegundos = Math.round(totalDurationAgg[0]?.total ?? 0);
+    const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
+    const pending = normalizePending(user.afk?.pending);
 
     res.json({
       treino_hoje: treinoHoje,
@@ -145,22 +147,22 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       inventario: readInventarioSummary(user),
       afk: {
         minutos_acumulados: user.afk?.minutos_acumulados ?? 0,
-        pending: user.afk?.pending ?? { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false },
+        pending,
         has_rewards: Boolean(
-          (user.afk?.pending?.xp ?? 0) > 0
-          || (user.afk?.pending?.abdoria ?? 0) > 0
-          || (user.afk?.pending?.energy_drinks ?? 0) > 0
-          || (user.afk?.pending?.cosmetic_ids?.length ?? 0) > 0
-          || user.afk?.pending?.titulo_secreto,
+          pending.xp > 0
+          || pending.abdoria > 0
+          || pending.energy_drinks > 0
+          || pending.cosmetic_ids.length > 0
+          || pending.titulo_secreto,
         ),
       },
       energy_drink_count: readInventarioSummary(user).energy_drink,
       conquistas,
       musculos_semana: weeklyMuscles,
-      evolucao_mensal: monthly.map((m: { _id: string; minutos: number }) => ({ mes: m._id, minutos: Math.round(m.minutos) })),
+      evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({ mes: m._id, minutos: Math.round(m.minutos) })),
       area_mais_treinada: sorted[0]?.[0] ?? null,
       area_menos_treinada: trained.length > 0 ? trained.sort((a, b) => a[1] - b[1])[0][0] : null,
-      total_exercicios: totalExercisesAgg[0]?.total ?? 0,
+      total_exercicios: (totalExercisesAgg[0] as { total?: number })?.total ?? 0,
     });
   } catch (error) {
     console.error('GET /api/workouts/stats error:', error);
@@ -171,7 +173,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
 /** Persiste histórico, recalcula streak/conquistas e aplica XP com teto diário. */
 workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -187,7 +189,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const musculosSet = new Set<MusculoPrincipal>();
     const prevAchievements = new Set(user.gamificacao.conquistas);
     const slugs = exercicios.map((e: { slug: string }) => e.slug);
-    const foundExercises = await Exercise.find({ slug: { $in: slugs } }).lean();
+    const foundExercises = await Exercise.find({ slug: { $in: slugs } });
     const exerciseBySlug = new Map(foundExercises.map((ex) => [ex.slug, ex]));
 
     const resolvedExercises = exercicios.map((e: {
@@ -204,7 +206,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       let exerciseId = e.exercicio_id;
       const found = exerciseBySlug.get(e.slug);
 
-      if (!exerciseId || !mongoose.Types.ObjectId.isValid(exerciseId)) {
+      if (!exerciseId) {
         exerciseId = found?._id?.toString();
       }
 
@@ -216,7 +218,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       }
 
       return {
-        exercicio_id: exerciseId ? new mongoose.Types.ObjectId(exerciseId) : new mongoose.Types.ObjectId(),
+        exercicio_id: exerciseId ?? found?._id ?? crypto.randomUUID(),
         slug: e.slug,
         nome: e.nome,
         duracao_segundos: e.duracao_segundos,
@@ -239,7 +241,10 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       duracao_total_segundos: duracao_total_segundos ?? exercicios.length * 45,
       musculos_estimulados: musculos,
       concluido_em: new Date(),
+      xp_ganho: 0,
     });
+
+    const rodadaCompleta = await markCycleCompleted(user, treino_tipo);
 
     await syncUserGamification(user._id.toString());
     const updatedUser = await User.findById(user._id);
@@ -269,15 +274,14 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const abdoriaGanha = awardAbdoriaFromXpProgress(updatedUser);
     syncShopUnlocks(updatedUser);
 
-    history.xp_ganho = xpAwarded;
-    await history.save();
+    await WorkoutHistory.updateById(history._id, { xp_ganho: xpAwarded });
     await updatedUser.save();
 
     const streakAfter = updatedUser.gamificacao.streak_atual;
     const streakExtended = streakAfter > streakBefore;
 
     res.status(201).json({
-      history,
+      history: { ...history, xp_ganho: xpAwarded },
       user: sanitizeUser(updatedUser),
       xp_ganho: xpAwarded,
       abdoria_ganha: abdoriaGanha,
@@ -287,6 +291,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
         ? { streak_atual: streakAfter, streak_anterior: streakBefore }
         : null,
       level_up: levelUp,
+      rodada_completa: rodadaCompleta,
     });
   } catch (error) {
     console.error('POST /api/workouts/complete error:', error);

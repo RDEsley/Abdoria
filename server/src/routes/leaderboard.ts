@@ -22,14 +22,14 @@ function parseMetric(raw: string | undefined): LeaderboardMetric {
   return 'xp';
 }
 
-function metricSort(metric: LeaderboardMetric): Record<string, -1 | 1> {
+function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
   if (metric === 'streak') {
-    return { 'gamificacao.streak_atual': -1, 'gamificacao.nivel_xp': -1, nome: 1 };
+    return { 'gamificacao.streak_atual': -1 };
   }
   if (metric === 'moedas') {
-    return { 'cosmeticos.moedas': -1, 'gamificacao.nivel_xp': -1, nome: 1 };
+    return { 'cosmeticos.moedas': -1 };
   }
-  return { 'gamificacao.nivel_xp': -1, 'cosmeticos.moedas': -1, nome: 1 };
+  return { 'gamificacao.nivel_xp': -1 };
 }
 
 function metricValue(
@@ -46,7 +46,7 @@ function metricValue(
 
 function toEntry(
   user: {
-    _id: { toString(): string };
+    _id: string;
     nome: string;
     gamificacao: { nivel_xp: number; streak_atual: number };
     cosmeticos?: {
@@ -60,7 +60,7 @@ function toEntry(
 ) {
   return {
     rank,
-    user_id: user._id.toString(),
+    user_id: user._id,
     nome: user.nome,
     nivel_xp: user.gamificacao.nivel_xp,
     level: levelFromXp(user.gamificacao.nivel_xp),
@@ -77,50 +77,30 @@ const leaderboardFilter = {
   is_guest: { $ne: true },
 };
 
-async function countUsersAbove(
-  metric: LeaderboardMetric,
+function countUsersAboveInList(
+  users: Array<{
+    _id: string;
+    nome: string;
+    gamificacao: { nivel_xp: number; streak_atual: number };
+    cosmeticos?: { moedas?: number | null } | null;
+  }>,
   user: {
+    _id: string;
     nome: string;
     gamificacao: { nivel_xp: number; streak_atual: number };
     cosmeticos?: { moedas?: number | null } | null;
   },
-): Promise<number> {
+  metric: LeaderboardMetric,
+): number {
   const value = metricValue(user, metric);
-
-  if (metric === 'xp') {
-    return User.countDocuments({
-      ...leaderboardFilter,
-      $or: [
-        { 'gamificacao.nivel_xp': { $gt: value } },
-        { 'gamificacao.nivel_xp': value, nome: { $lt: user.nome } },
-      ],
-    });
-  }
-
-  if (metric === 'streak') {
-    return User.countDocuments({
-      ...leaderboardFilter,
-      $or: [
-        { 'gamificacao.streak_atual': { $gt: value } },
-        {
-          'gamificacao.streak_atual': value,
-          'gamificacao.nivel_xp': { $gt: user.gamificacao.nivel_xp },
-        },
-      ],
-    });
-  }
-
-  const moedas = readAbdoriaBalance(user);
-  return User.countDocuments({
-    ...leaderboardFilter,
-    $or: [
-      { 'cosmeticos.moedas': { $gt: moedas } },
-      {
-        'cosmeticos.moedas': moedas,
-        'gamificacao.nivel_xp': { $gt: user.gamificacao.nivel_xp },
-      },
-    ],
-  });
+  return users.filter((other) => {
+    if (other._id === user._id) return false;
+    const otherValue = metricValue(other, metric);
+    if (otherValue > value) return true;
+    if (otherValue < value) return false;
+    if (metric === 'xp') return other.nome < user.nome;
+    return other.gamificacao.nivel_xp > user.gamificacao.nivel_xp;
+  }).length;
 }
 
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
@@ -133,14 +113,13 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     }
     await processWeeklyLeaderboardRewardsIfDue();
 
-    const users = await User.find(leaderboardFilter)
-      .sort(metricSort(metric))
-      .limit(limit)
-      .select('nome gamificacao.nivel_xp gamificacao.streak_atual cosmeticos.moedas cosmeticos.avatar_equipado cosmeticos.borda_equipada')
-      .lean();
+    const users = await User.find(leaderboardFilter, {
+      sort: metricSort(metric),
+      limit,
+    });
 
     const entries = users.map((user, index) =>
-      toEntry(user, index + 1, user._id.toString() === req.userId),
+      toEntry(user, index + 1, user._id === req.userId),
     );
 
     res.json(entries);
@@ -158,13 +137,14 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       await syncAbdoriaBalancesForLeaderboard();
     }
 
-    const user = await User.findById(req.userId).lean();
+    const user = await User.findById(req.userId!, { lean: true });
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
 
-    const above = await countUsersAbove(metric, user);
+    const allEligible = await User.find(leaderboardFilter, { sort: metricSort(metric) });
+    const above = countUsersAboveInList(allEligible, user, metric);
     res.json(toEntry(user, above + 1, true));
   } catch (error) {
     console.error('GET /api/leaderboard/me error:', error);

@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import {
@@ -31,10 +30,6 @@ export {
   streakXpBonus,
 } from '../types/index.js';
 
-function toUserObjectId(userId: string) {
-  return new mongoose.Types.ObjectId(userId);
-}
-
 function startOfDay(date: Date): Date {
   return startOfDaySaoPaulo(date);
 }
@@ -51,14 +46,14 @@ function getWeekStart(date: Date): Date {
 
 export async function countTotalExercises(userId: string): Promise<number> {
   const result = await WorkoutHistory.aggregate([
-    { $match: { usuario_id: toUserObjectId(userId) } },
+    { $match: { usuario_id: userId } },
     { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
   ]);
-  return result[0]?.total ?? 0;
+  return (result[0] as { total?: number })?.total ?? 0;
 }
 
 type HistorySummary = {
-  concluido_em: Date;
+  concluido_em: Date | string;
   exercicios: unknown[];
   musculos_estimulados: MusculoPrincipal[];
   treino_tipo?: string;
@@ -99,10 +94,10 @@ function computeStreakFromHistories(histories: HistorySummary[]): { atual: numbe
 }
 
 export async function computeStreak(userId: string): Promise<{ atual: number; maior: number }> {
-  const histories = await WorkoutHistory.find({ usuario_id: toUserObjectId(userId) })
-    .sort({ concluido_em: -1 })
-    .select('concluido_em')
-    .lean();
+  const histories = await WorkoutHistory.find(
+    { usuario_id: userId },
+    { sort: { concluido_em: -1 } },
+  );
 
   return computeStreakFromHistories(histories as HistorySummary[]);
 }
@@ -170,15 +165,16 @@ function weeklyTreinoTypes(histories: HistorySummary[], weekStart: Date): Set<st
 
 export async function getWeeklyMuscles(
   userId: string,
-  resetAt: Date | null,
+  resetAt: Date | string | null,
 ): Promise<Record<MusculoPrincipal, number>> {
   const weekStart = getWeekStart(new Date());
-  const since = resetAt ? new Date(Math.max(weekStart.getTime(), resetAt.getTime())) : weekStart;
+  const resetDate = resetAt ? new Date(resetAt) : null;
+  const since = resetDate ? new Date(Math.max(weekStart.getTime(), resetDate.getTime())) : weekStart;
 
   const histories = await WorkoutHistory.find({
-    usuario_id: toUserObjectId(userId),
-    concluido_em: { $gte: since },
-  }).lean();
+    usuario_id: userId,
+    concluido_em: { $gte: since.toISOString() },
+  });
 
   const counts: Record<MusculoPrincipal, number> = {
     superior: 0,
@@ -189,7 +185,7 @@ export async function getWeeklyMuscles(
   };
 
   for (const history of histories) {
-    for (const muscle of history.musculos_estimulados) {
+    for (const muscle of history.musculos_estimulados ?? []) {
       counts[muscle as MusculoPrincipal] += 1;
     }
   }
@@ -228,14 +224,15 @@ export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
 
 export async function evaluateAchievements(user: UserDocument): Promise<string[]> {
   const weekStart = getWeekStart(new Date());
-  const since = user.muscle_map_reset_at
-    ? new Date(Math.max(weekStart.getTime(), user.muscle_map_reset_at.getTime()))
+  const resetDate = user.muscle_map_reset_at ? new Date(user.muscle_map_reset_at) : null;
+  const since = resetDate
+    ? new Date(Math.max(weekStart.getTime(), resetDate.getTime()))
     : weekStart;
 
-  const histories = await WorkoutHistory.find({ usuario_id: user._id })
-    .sort({ concluido_em: -1 })
-    .select('concluido_em exercicios musculos_estimulados treino_tipo')
-    .lean();
+  const histories = await WorkoutHistory.find(
+    { usuario_id: user._id },
+    { sort: { concluido_em: -1 } },
+  );
 
   const summary = histories as HistorySummary[];
   const totalWorkouts = summary.length;
@@ -262,14 +259,11 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
   const ciclosSemana = weeklyTreinoTypes(summary, weekStart);
   const unlocked = new Set(user.gamificacao.conquistas);
 
-  // Fáceis
   if (totalWorkouts > 0) unlocked.add('primeiro_treino');
   if (streak.atual >= 2 || streak.maior >= 2) unlocked.add('streak_2');
   if (streak.atual >= 3 || streak.maior >= 3) unlocked.add('streak_3');
   if (totalWorkouts >= 5) unlocked.add('treinos_5');
   if (totalMinutes >= 60) unlocked.add('minutos_60');
-
-  // Médias
   if (streak.atual >= 7 || streak.maior >= 7) unlocked.add('streak_7');
   if (totalExercises >= 50) unlocked.add('exercicios_50');
   if (level >= 3) unlocked.add('nivel_3');
@@ -277,8 +271,6 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
   if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) >= 22)) unlocked.add('night_owl');
   if (hasWeekendWarrior(summary)) unlocked.add('fim_de_semana');
   if (ciclosSemana.has('A') && ciclosSemana.has('B')) unlocked.add('ciclo_ab');
-
-  // Difíceis
   if (streak.atual >= 14 || streak.maior >= 14) unlocked.add('streak_14');
   if (streak.atual >= 30 || streak.maior >= 30) unlocked.add('streak_30');
   if (totalExercises >= 100) unlocked.add('exercicios_100');
@@ -292,8 +284,6 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
   if (['A', 'B', 'C'].every((c) => ciclosSemana.has(c))) unlocked.add('ciclo_completo');
   if (totalMinutes >= 500) unlocked.add('minutos_500');
   if (totalWorkouts >= 25) unlocked.add('treinos_25');
-
-  // Lendárias
   if (streak.atual >= 60 || streak.maior >= 60) unlocked.add('streak_60');
   if (streak.atual >= 100 || streak.maior >= 100) unlocked.add('streak_100');
   if (totalExercises >= 500) unlocked.add('exercicios_500');
@@ -314,11 +304,11 @@ export async function syncUserGamification(userId: string): Promise<UserDocument
 
   const streak = await computeStreak(userId);
   const totalMinutes = await WorkoutHistory.aggregate([
-    { $match: { usuario_id: toUserObjectId(userId) } },
+    { $match: { usuario_id: userId } },
     { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
   ]);
 
-  user.gamificacao.total_minutos = Math.floor((totalMinutes[0]?.total ?? 0) / 60);
+  user.gamificacao.total_minutos = Math.floor(((totalMinutes[0] as { total?: number })?.total ?? 0) / 60);
   user.gamificacao.streak_atual = streak.atual;
   user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streak.maior);
   user.gamificacao.conquistas = await evaluateAchievements(user);
@@ -342,8 +332,7 @@ export function hasTrainedToday(userId: string): Promise<boolean> {
   const tomorrow = endOfDaySaoPaulo();
 
   return WorkoutHistory.exists({
-    usuario_id: toUserObjectId(userId),
-    concluido_em: { $gte: todayStart, $lt: tomorrow },
-  }).then(Boolean);
+    usuario_id: userId,
+    concluido_em: { $gte: todayStart.toISOString(), $lt: tomorrow.toISOString() },
+  });
 }
-

@@ -121,6 +121,12 @@ export interface UserPreferencias {
   arma_preferida?: ArmaPreferida | null;
   /** Não exibir aviso de teto diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
+  /** Slugs sempre incluídos nos treinos sugeridos. */
+  exercicios_fixos?: string[];
+  /** Slugs excluídos das recomendações. */
+  exercicios_nao_recomendar?: string[];
+  /** Controle de rodada por ciclo (A, B, C…). */
+  ciclos_completados_rodada?: Partial<Record<TreinoBase, boolean>>;
 }
 
 export type ArmaPreferida = 'arco' | 'espada';
@@ -384,6 +390,7 @@ export const CURRENCY_NAME = 'Abdoria coins';
 export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
 export const ENERGY_DRINK_BONUS_XP = 100;
 export const ENERGY_DRINK_SHOP_PRICE = 20;
+export const AFK_REWARD_INTERVAL_MINUTES = 30;
 export const AFK_MAX_MINUTES = 24 * 60;
 
 export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
@@ -659,6 +666,7 @@ export interface CompleteWorkoutResponse {
   xp_breakdown?: XpBreakdown;
   streak_celebration: StreakCelebration | null;
   level_up: LevelUpCelebration | null;
+  rodada_completa?: boolean;
 }
 
 export interface CompleteWorkoutPayload {
@@ -761,6 +769,7 @@ export interface ActiveWorkout {
   treino_tipo: TreinoTipo;
   queue: WorkoutQueueItem[];
   config: ActiveWorkoutConfig;
+  preset_id?: string;
 }
 
 export interface PresetExercise {
@@ -941,6 +950,9 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   tutorial_visto: false,
   arma_preferida: null,
   ocultar_aviso_xp_diario: false,
+  exercicios_fixos: [],
+  exercicios_nao_recomendar: [],
+  ciclos_completados_rodada: {},
 };
 
 export function calcImc(pesoKg: number, alturaCm: number): number {

@@ -1,7 +1,6 @@
 import cors from 'cors';
 import express from 'express';
-import mongoose from 'mongoose';
-import { connectDB } from './db.js';
+import { connectDB, probeDatabase } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { cosmeticsRouter } from './routes/cosmetics.js';
 import { shopRouter } from './routes/shop.js';
@@ -11,20 +10,6 @@ import { metaRouter } from './routes/meta.js';
 import { presetsRouter } from './routes/presets.js';
 import { usersRouter } from './routes/users.js';
 import { workoutsRouter } from './routes/workouts.js';
-
-async function probeDatabase(): Promise<'connected' | 'disconnected'> {
-  try {
-    await Promise.race([
-      connectDB(),
-      new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('timeout')), 4_000);
-      }),
-    ]);
-    return mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  } catch {
-    return 'disconnected';
-  }
-}
 
 export function createApp() {
   const app = express();
@@ -46,7 +31,7 @@ export function createApp() {
       await connectDB();
       next();
     } catch (error) {
-      console.error('MongoDB connection error:', error);
+      console.error('Supabase connection error:', error);
       res.status(503).json({ error: 'Banco de dados indisponível.' });
     }
   });

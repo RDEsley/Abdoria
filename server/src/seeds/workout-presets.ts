@@ -37,6 +37,7 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'toe-touches', series: 3, repeticoes: 12, descanso_seg: 40 },
       { slug: 'stability-ball-crunch', series: 2, repeticoes: 10, descanso_seg: 40 },
       { slug: 'reverse-crunch', series: 3, repeticoes: 10, descanso_seg: 35 },
+      { slug: 'incline-push-up', series: 2, repeticoes: 8, descanso_seg: 40 },
     ],
   }),
   preset({
@@ -217,6 +218,7 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'bicycle-crunch', series: 3, repeticoes: 12, descanso_seg: 40 },
       { slug: 'crunch', series: 3, repeticoes: 12, descanso_seg: 40 },
       { slug: 'plank', series: 2, modo: 'tempo', tempo_seg: 20, descanso_seg: 40 },
+      { slug: 'push-up', series: 2, repeticoes: 8, descanso_seg: 40 },
     ],
   }),
   preset({

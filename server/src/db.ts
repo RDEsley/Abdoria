@@ -1,36 +1,34 @@
-import mongoose from 'mongoose';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
+type Cached = { client: SupabaseClient | null };
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __abdoriaMongoose: MongooseCache | undefined;
-}
+const cached: Cached = { client: null };
 
-const cached: MongooseCache = global.__abdoriaMongoose ?? { conn: null, promise: null };
-global.__abdoriaMongoose = cached;
-
-export async function connectDB(): Promise<typeof mongoose> {
-  if (!MONGODB_URI) {
-    throw new Error('Defina MONGODB_URI nas variáveis de ambiente.');
+export function getSupabase(): SupabaseClient {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente.');
   }
-
-  if (cached.conn) {
-    return cached.conn;
-  }
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 10_000,
-      maxPoolSize: 5,
+  if (!cached.client) {
+    cached.client = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
     });
   }
+  return cached.client;
+}
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+export async function probeDatabase(): Promise<'connected' | 'disconnected'> {
+  try {
+    const sb = getSupabase();
+    const { error } = await sb.from('profiles').select('id').limit(1);
+    return error ? 'disconnected' : 'connected';
+  } catch {
+    return 'disconnected';
+  }
+}
+
+export async function connectDB(): Promise<SupabaseClient> {
+  return getSupabase();
 }

@@ -25,7 +25,7 @@ exercisesRouter.get('/', async (req, res) => {
       filter.prioridade = prioridade as Prioridade;
     }
 
-    const exercises = await Exercise.find(filter).sort({ prioridade: 1, nome: 1 }).lean();
+    const exercises = await Exercise.find(filter, { sort: { prioridade: 1, nome: 1 } });
     res.json(exercises);
   } catch (error) {
     console.error('GET /api/exercises error:', error);
@@ -35,7 +35,7 @@ exercisesRouter.get('/', async (req, res) => {
 
 exercisesRouter.get('/:slug', async (req, res) => {
   try {
-    const exercise = await Exercise.findOne({ slug: req.params.slug, ativo: true }).lean();
+    const exercise = await Exercise.findOne({ slug: req.params.slug, ativo: true });
 
     if (!exercise) {
       res.status(404).json({ error: 'Exercício não encontrado.' });

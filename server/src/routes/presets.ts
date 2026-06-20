@@ -11,7 +11,7 @@ presetsRouter.use(requireAuth);
 
 presetsRouter.get('/', async (_req, res) => {
   try {
-    const presets = await WorkoutPreset.find().sort({ ciclo_id: 1, nivel: 1 }).lean();
+    const presets = await WorkoutPreset.find({ sort: { ciclo_id: 1, nivel: 1 } });
     res.json(presets);
   } catch (error) {
     console.error('GET /api/presets error:', error);
@@ -21,7 +21,7 @@ presetsRouter.get('/', async (_req, res) => {
 
 presetsRouter.get('/recommend', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -46,7 +46,7 @@ presetsRouter.get('/recommend', async (req: AuthRequest, res) => {
 
 presetsRouter.get('/recommended', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -63,7 +63,7 @@ presetsRouter.get('/recommended', async (req: AuthRequest, res) => {
 
 presetsRouter.get('/:id', async (req, res) => {
   try {
-    const preset = await WorkoutPreset.findById(req.params.id).lean();
+    const preset = await WorkoutPreset.findById(req.params.id);
     if (!preset) {
       res.status(404).json({ error: 'Preset não encontrado.' });
       return;

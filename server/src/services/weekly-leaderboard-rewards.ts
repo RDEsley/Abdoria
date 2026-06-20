@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { User } from '../models/User.js';
+import { LeaderboardWeekPayout } from '../repositories/leaderboard-payout-repository.js';
+import { User, type UserMutable } from '../repositories/user-repository.js';
 import { getSaoPauloWeekday, getTodaySaoPaulo } from '../utils/timezone.js';
 import { grantAbdoria } from './economy.js';
 
@@ -7,21 +7,6 @@ const leaderboardFilter = {
   onboarding_completed: true,
   is_guest: { $ne: true },
 };
-
-interface WeekPayoutDoc {
-  _id: string;
-  paid_at: Date;
-}
-
-const WeekPayout =
-  mongoose.models.LeaderboardWeekPayout ??
-  mongoose.model(
-    'LeaderboardWeekPayout',
-    new mongoose.Schema({
-      _id: { type: String, required: true },
-      paid_at: { type: Date, default: Date.now },
-    }),
-  );
 
 /** Chave da semana que termina no domingo (início domingo em SP). */
 export function getSundayWeekKey(date = new Date()): string {
@@ -50,33 +35,38 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
   if (weekday !== 0) return 0;
 
   const currentWeek = getSundayWeekKey();
-  const existing = await WeekPayout.findById(currentWeek).lean<WeekPayoutDoc>();
+  const existing = await LeaderboardWeekPayout.findById(currentWeek);
   if (existing) return 0;
 
   const prev = new Date();
   prev.setDate(prev.getDate() - 7);
   const payoutWeek = getSundayWeekKey(prev);
 
-  const alreadyPaid = await WeekPayout.findById(payoutWeek).lean<WeekPayoutDoc>();
+  const alreadyPaid = await LeaderboardWeekPayout.findById(payoutWeek);
   if (alreadyPaid) {
-    await WeekPayout.findByIdAndUpdate(currentWeek, { paid_at: new Date() }, { upsert: true });
+    await LeaderboardWeekPayout.create({ _id: currentWeek });
     return 0;
   }
 
-  const top = await User.find(leaderboardFilter)
-    .sort({ 'gamificacao.nivel_xp': -1, nome: 1 })
-    .limit(25);
+  const topLean = await User.find(leaderboardFilter, {
+    sort: { 'gamificacao.nivel_xp': -1 },
+    limit: 25,
+  });
 
   let paidCount = 0;
-  for (let i = 0; i < top.length; i += 1) {
+  for (let i = 0; i < topLean.length; i += 1) {
     const prize = prizeForRank(i + 1);
     if (prize <= 0) continue;
-    grantAbdoria(top[i], prize);
-    await top[i].save();
+    const user = await User.findById(topLean[i]._id);
+    if (!user) continue;
+    grantAbdoria(user, prize);
+    await user.save();
     paidCount += 1;
   }
 
-  await WeekPayout.findByIdAndUpdate(payoutWeek, { paid_at: new Date() }, { upsert: true });
-  await WeekPayout.findByIdAndUpdate(currentWeek, { paid_at: new Date() }, { upsert: true });
+  await LeaderboardWeekPayout.create({ _id: payoutWeek });
+  await LeaderboardWeekPayout.create({ _id: currentWeek });
   return paidCount;
 }
+
+export type { UserMutable };
