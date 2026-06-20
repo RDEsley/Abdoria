@@ -15,8 +15,18 @@ export function GameHud() {
   const user = appUser ?? authUser;
   const [showCosmetics, setShowCosmetics] = useState(false);
   const [coinsEarnedPulse, setCoinsEarnedPulse] = useState<number | null>(null);
+  const [energyDrinkBurst, setEnergyDrinkBurst] = useState(false);
 
   const closeCosmetics = useCallback(() => setShowCosmetics(false), []);
+
+  useEffect(() => {
+    const onEnergyDrinkUsed = () => {
+      setEnergyDrinkBurst(true);
+      window.setTimeout(() => setEnergyDrinkBurst(false), 3200);
+    };
+    window.addEventListener('abdoria:energy-drink-used', onEnergyDrinkUsed);
+    return () => window.removeEventListener('abdoria:energy-drink-used', onEnergyDrinkUsed);
+  }, []);
 
   useEffect(() => {
     const onCoinsEarned = (event: Event) => {
@@ -38,11 +48,15 @@ export function GameHud() {
   const titleClass =
     cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
       ? 'game-hud__title cosmetic-title--dono-do-jogo'
-      : 'game-hud__title';
+      : cosmeticos.titulo_equipado === 'titulo_secreto'
+        ? 'game-hud__title cosmetic-title--secreto'
+        : 'game-hud__title';
   const dailyXpLimit = stats?.xp_diario_limite;
   const dailyXpTitle = dailyXpLimit
     ? `XP diário: ${stats?.xp_hoje ?? 0}/${dailyXpLimit} (+${XP_DAILY_CAP_PER_LEVEL}/nível)`
     : `XP diário · ${XP_DAILY_PER_EXERCISE} XP/exercício`;
+  const bonusXpActive = (stats?.xp_bonus_restante ?? 0) > 0;
+  const bonusXpTotal = stats?.xp_bonus_total ?? 0;
 
   return (
     <>
@@ -64,6 +78,15 @@ export function GameHud() {
             </span>
           </div>
           <XpBar value={xpInLevel} max={xpToNext} showValues={false} variant="xp" />
+          {bonusXpTotal > 0 && (
+            <XpBar
+              value={stats?.xp_bonus_restante ?? 0}
+              max={bonusXpTotal}
+              showValues={false}
+              variant="bonus"
+              glow={bonusXpActive || energyDrinkBurst}
+            />
+          )}
           <div className="game-hud__xp-meta">
             <span title="XP neste nível">{xpInLevel}/{xpToNext} XP</span>
             <span className="game-hud__xp-meta-sep">·</span>
@@ -80,6 +103,18 @@ export function GameHud() {
               {stats.xp_extra_hoje > 0 && (
                 <span className="game-hud__chip game-hud__chip--extra" title="XP extra (streak, conquistas, loja)">
                   +{stats.xp_extra_hoje} extra
+                </span>
+              )}
+              {bonusXpTotal > 0 && (
+                <span
+                  className={[
+                    'game-hud__chip game-hud__chip--bonus',
+                    bonusXpActive || energyDrinkBurst ? 'game-hud__chip--bonus-active' : '',
+                    energyDrinkBurst ? 'game-hud__chip--bonus-burst' : '',
+                  ].filter(Boolean).join(' ')}
+                  title="XP bônus Energy Drink"
+                >
+                  +{stats.xp_bonus_restante}/{bonusXpTotal} bônus
                 </span>
               )}
               <span className="game-hud__chip game-hud__chip--coins relative">

@@ -32,6 +32,8 @@ import type {
 import {
   ABDORIA_XP_STEP,
   CURRENCY_NAME,
+  ENERGY_DRINK_ITEM_ID,
+  ENERGY_DRINK_SHOP_PRICE,
   DEFAULT_COSMETICOS,
   DAILY_PAID_OFFER_LABELS,
   DAILY_RARITY_LABELS,
@@ -44,6 +46,7 @@ import {
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { giftCodeFormatError, isValidGiftCodeFormat, normalizeGiftCode } from '../utils/gift-code.js';
 import { awardAbdoriaFromXp, awardBonusXp, ensureAbdoriaWallet, grantAbdoria, projectedAbdoriaAfterXpSpend, readAbdoriaBalance, spendXpForShop } from './economy.js';
+import { addInventoryItem } from './inventory.js';
 
 export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
 
@@ -140,8 +143,17 @@ export function syncShopUnlocks(user: UserDoc): void {
   }
 }
 
-function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 'valor' | 'raridade' | 'oferta_nome' | 'bonus_xp' | 'bonus_abdoria'>): string {
+function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 'valor' | 'raridade' | 'oferta_nome' | 'bonus_xp' | 'bonus_abdoria' | 'item_id' | 'preco_abdoria'>): string {
   const rarity = DAILY_RARITY_LABELS[slot.raridade];
+
+  if (slot.recompensa_tipo === 'item' && slot.item_id === ENERGY_DRINK_ITEM_ID) {
+    const prefix = slot.kind === 'recompensa_diaria' ? 'Recompensa diária' : 'Oferta';
+    const price =
+      slot.kind === 'oferta' && slot.preco_abdoria
+        ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
+        : ' · grátis';
+    return `${prefix} · ${rarity} · Energy Drink ×${slot.valor}${price}`;
+  }
 
   if (slot.kind === 'recompensa_diaria') {
     const reward =
@@ -160,7 +172,7 @@ function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 
 
 function generateFreeDailySlot(date: string, slot: number): LojaDiariaSlot {
   const raridade = pickDailyRarity(date, slot);
-  const recompensa_tipo = pickFreeDailyRewardType(date, slot);
+  const recompensa_tipo = pickFreeDailyRewardType(date, slot) as 'xp' | 'abdoria';
   const valor = pickDailyValue(date, slot, recompensa_tipo, raridade, 'recompensa_diaria');
 
   const draft: LojaDiariaSlot = {
@@ -278,6 +290,38 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
     };
   }
 
+  if (hashDailySeed(`${today}:energy-free`) % 1000 < 25) {
+    slots[0] = {
+      slot: 0,
+      kind: 'recompensa_diaria',
+      recompensa_tipo: 'item',
+      item_id: ENERGY_DRINK_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: 0,
+      resgatado: false,
+      label: '',
+    };
+    slots[0].label = buildSlotLabel(slots[0]);
+  }
+
+  if (hashDailySeed(`${today}:energy-paid`) % 100 < 12) {
+    slots[1] = {
+      slot: 1,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: ENERGY_DRINK_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: ENERGY_DRINK_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: 'Energy Drink',
+      resgatado: false,
+      label: '',
+    };
+    slots[1].label = buildSlotLabel(slots[1]);
+  }
+
   loja.data_reset = today;
   loja.slots.splice(0, loja.slots.length, ...(slots as never[]));
 
@@ -325,7 +369,8 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
   const loja_diaria = syncDailyShop(user);
 
   const byKind = (kind: CosmeticKind) =>
-    COSMETICS.filter((item) => item.kind === kind).map((item) => toCatalogItem(item, user));
+    COSMETICS.filter((item) => item.kind === kind && item.id !== 'titulo_secreto')
+      .map((item) => toCatalogItem(item, user));
 
   return {
     abdoria: readAbdoriaBalance(user),
@@ -429,6 +474,11 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
 }
 
 function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot) {
+  if (slot.recompensa_tipo === 'item' && slot.item_id) {
+    addInventoryItem(user, slot.item_id, slot.valor || 1);
+    return;
+  }
+
   if (slot.recompensa_tipo === 'pacote') {
     if ((slot.bonus_xp ?? 0) > 0) {
       awardBonusXp(user, slot.bonus_xp ?? 0);
@@ -515,6 +565,8 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
       const unlocked = new Set(user.cosmeticos.desbloqueados);
       unlocked.add(cosmetic.id);
       user.cosmeticos.desbloqueados = [...unlocked];
+    } else if (slotDoc.item_id) {
+      addInventoryItem(user, slotDoc.item_id as typeof ENERGY_DRINK_ITEM_ID, slotDoc.valor || 1);
     } else {
       applyDailyReward(user, slotSnapshot);
     }

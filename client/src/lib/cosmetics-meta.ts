@@ -24,6 +24,7 @@ export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: st
   titulo_imparavel: { id: 'titulo_imparavel', nome: 'Imparável', icon: 'flame' },
   titulo_lenda: { id: 'titulo_lenda', nome: 'Lenda viva', icon: 'gem' },
   titulo_dono_do_jogo: { id: 'titulo_dono_do_jogo', nome: 'Dono do Jogo', icon: 'crown' },
+  titulo_secreto: { id: 'titulo_secreto', nome: 'Secret', icon: 'moon' },
   fundo_padrao: { id: 'fundo_padrao', nome: 'Padrão', icon: 'star' },
   fundo_aurora: { id: 'fundo_aurora', nome: 'Aurora', icon: 'star' },
   fundo_vulcao: { id: 'fundo_vulcao', nome: 'Vulcão', icon: 'flame' },

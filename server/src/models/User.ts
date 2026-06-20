@@ -37,7 +37,7 @@ const lojaDiariaSlotSchema = new Schema(
   {
     slot: { type: Number, required: true },
     kind: { type: String, enum: ['recompensa_diaria', 'oferta'], required: true },
-    recompensa_tipo: { type: String, enum: ['xp', 'abdoria', 'pacote'], required: true },
+    recompensa_tipo: { type: String, enum: ['xp', 'abdoria', 'pacote', 'item'], required: true },
     valor: { type: Number, required: true },
     raridade: { type: String, enum: ['comum', 'incomum', 'raro', 'epico'], required: true },
     preco_abdoria: { type: Number, default: 0 },
@@ -48,6 +48,7 @@ const lojaDiariaSlotSchema = new Schema(
     bonus_xp: { type: Number },
     bonus_abdoria: { type: Number },
     cosmetic_id: { type: String },
+    item_id: { type: String },
   },
   { _id: false },
 );
@@ -139,6 +140,8 @@ const preferenciasSchema = new Schema(
     reps_repeticoes_padrao: { type: Number, default: 12, min: 1, max: 50 },
     preset_favorito_id: { type: Schema.Types.ObjectId, ref: 'WorkoutPreset', default: null },
     tutorial_visto: { type: Boolean, default: false },
+    arma_preferida: { type: String, enum: ['arco', 'espada'], default: null },
+    ocultar_aviso_xp_diario: { type: Boolean, default: false },
   },
   { _id: false },
 );
@@ -148,6 +151,43 @@ const xpDiarioSchema = new Schema(
     ganho_hoje: { type: Number, default: 0, min: 0 },
     extra_hoje: { type: Number, default: 0, min: 0 },
     data_reset: { type: String, default: '' },
+    bonus_pool_restante: { type: Number, default: 0, min: 0 },
+    bonus_pool_total: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false },
+);
+
+const inventarioEntrySchema = new Schema(
+  {
+    item_id: { type: String, required: true },
+    quantidade: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false },
+);
+
+const inventarioSchema = new Schema(
+  {
+    itens: { type: [inventarioEntrySchema], default: [] },
+  },
+  { _id: false },
+);
+
+const afkPendingSchema = new Schema(
+  {
+    xp: { type: Number, default: 0, min: 0 },
+    abdoria: { type: Number, default: 0, min: 0 },
+    energy_drinks: { type: Number, default: 0, min: 0 },
+    cosmetic_ids: { type: [String], default: [] },
+    titulo_secreto: { type: Boolean, default: false },
+  },
+  { _id: false },
+);
+
+const afkSchema = new Schema(
+  {
+    last_seen_at: { type: Date, default: null },
+    minutos_acumulados: { type: Number, default: 0, min: 0 },
+    pending: { type: afkPendingSchema, default: () => ({}) },
   },
   { _id: false },
 );
@@ -182,7 +222,9 @@ const userSchema = new Schema(
     },
     preferencias: { type: preferenciasSchema, default: () => ({}) },
     dados_salvos: { type: dadosSalvosSchema, default: () => ({}) },
-    xp_diario: { type: xpDiarioSchema, default: () => ({ ganho_hoje: 0, extra_hoje: 0, data_reset: '' }) },
+    xp_diario: { type: xpDiarioSchema, default: () => ({ ganho_hoje: 0, extra_hoje: 0, data_reset: '', bonus_pool_restante: 0, bonus_pool_total: 0 }) },
+    inventario: { type: inventarioSchema, default: () => ({ itens: [] }) },
+    afk: { type: afkSchema, default: () => ({}) },
     onboarding_completed: { type: Boolean, default: false },
     terms_accepted_at: { type: Date, default: null },
     muscle_map_reset_at: { type: Date, default: null },

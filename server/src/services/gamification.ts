@@ -200,11 +200,28 @@ export async function getWeeklyMuscles(
 export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
   const today = getTodaySaoPaulo();
   if (!user.xp_diario || user.xp_diario.data_reset !== today) {
-    user.xp_diario = { ganho_hoje: 0, extra_hoje: 0, data_reset: today };
+    const bonus_pool_restante = user.xp_diario?.bonus_pool_restante ?? 0;
+    const bonus_pool_total = user.xp_diario?.bonus_pool_total ?? 0;
+    user.xp_diario = {
+      ganho_hoje: 0,
+      extra_hoje: 0,
+      data_reset: today,
+      bonus_pool_restante,
+      bonus_pool_total,
+    };
     return true;
   }
   if (typeof user.xp_diario.extra_hoje !== 'number') {
     user.xp_diario.extra_hoje = 0;
+  }
+  if (typeof user.xp_diario.bonus_pool_restante !== 'number') {
+    user.xp_diario.bonus_pool_restante = 0;
+  }
+  if (typeof user.xp_diario.bonus_pool_total !== 'number') {
+    user.xp_diario.bonus_pool_total = 0;
+  }
+  if (user.xp_diario.bonus_pool_restante <= 0) {
+    user.xp_diario.bonus_pool_total = 0;
   }
   return false;
 }

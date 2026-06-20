@@ -18,12 +18,13 @@ import {
   OBJETIVO_LABELS,
   normalizeCicloTreinos,
   suggestNivel,
+  type ArmaPreferida,
   type NivelUsuario,
   type Objetivo,
   type TreinoBase,
 } from '@/types';
 
-const STEPS = ['terms', 'body', 'level', 'objective', 'cycle', 'prefs', 'tutorial'] as const;
+const STEPS = ['terms', 'body', 'level', 'weapon', 'objective', 'cycle', 'prefs', 'tutorial'] as const;
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 const REP_SCHEMES = [
@@ -46,6 +47,7 @@ export function OnboardingPage() {
   const [peso, setPeso] = useState('');
   const [altura, setAltura] = useState('');
   const [nivel, setNivel] = useState<NivelUsuario | null>(null);
+  const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida>('arco');
   const [objetivo, setObjetivo] = useState<Objetivo | null>(null);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [descanso, setDescanso] = useState(30);
@@ -91,6 +93,7 @@ export function OnboardingPage() {
           som_habilitado: true,
           sfx_volume: 0.7,
           tutorial_visto: false,
+          arma_preferida: armaPreferida,
         },
       };
 
@@ -113,8 +116,8 @@ export function OnboardingPage() {
     if (step === 0 && !termsAccepted) return 'Aceite os termos para continuar.';
     if (step === 1) return bodyMetrics.error;
     if (step === 2 && !nivel) return 'Selecione seu nível de treino.';
-    if (step === 3 && !objetivo) return 'Selecione seu objetivo.';
-    if (step === 4 && ciclo.length < 2) return 'Escolha pelo menos 2 ciclos de treino.';
+    if (step === 4 && !objetivo) return 'Selecione seu objetivo.';
+    if (step === 5 && ciclo.length < 2) return 'Escolha pelo menos 2 ciclos de treino.';
     return null;
   };
 
@@ -280,6 +283,33 @@ export function OnboardingPage() {
 
             {step === 3 && (
               <>
+                <h2 className="text-2xl font-extrabold">Sua arma</h2>
+                <p className="mt-1 text-sm text-stone-500">
+                  Escolha o estilo de combate na patrulha AFK.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {([
+                    { id: 'arco' as const, label: 'Arco', hint: 'Ataque à distância' },
+                    { id: 'espada' as const, label: 'Espada', hint: 'Combate corpo a corpo' },
+                  ]).map((weapon) => (
+                    <button
+                      key={weapon.id}
+                      type="button"
+                      onClick={() => setArmaPreferida(weapon.id)}
+                      className={`cursor-pointer rounded-xl border-2 px-4 py-4 text-left font-bold ${
+                        armaPreferida === weapon.id ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-stone-200'
+                      }`}
+                    >
+                      {weapon.label}
+                      <span className="mt-1 block text-xs font-medium text-stone-500">{weapon.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {step === 4 && (
+              <>
                 <h2 className="text-2xl font-extrabold">Seu objetivo</h2>
                 <p className="mt-1 text-sm text-stone-500">O que você quer alcançar com os treinos?</p>
                 <div className="mt-4 flex flex-col gap-2">
@@ -302,7 +332,7 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <>
                 <h2 className="text-2xl font-extrabold">Seu ciclo de treinos</h2>
                 <p className="mt-1 text-sm text-stone-500">Escolha pelo menos 2 ciclos ativos (A–E). F e G chegam em breve.</p>
@@ -333,7 +363,7 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 5 && (
+            {step === 6 && (
               <>
                 <h2 className="text-2xl font-extrabold">Preferências</h2>
                 <label className="mt-4 block text-sm font-semibold">
@@ -383,10 +413,10 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 6 && (
+            {step === 7 && (
               <>
                 <h2 className="text-2xl font-extrabold">Bem-vindo ao Abdoria!</h2>
-                <p className="mt-2 text-sm font-semibold text-emerald-700">Sua jornada começa agora — passo 7/7</p>
+                <p className="mt-2 text-sm font-semibold text-emerald-700">Sua jornada começa agora — passo 8/8</p>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
                   <li><strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Teto = 100 + 1 por nível. Reseta à meia-noite (SP).</li>
                   <li><strong>Abdoria coins:</strong> 1 moeda a cada {ABDORIA_XP_STEP} XP ganhos — use na loja de cosméticos.</li>

@@ -53,6 +53,13 @@ export type {
   WorkoutExerciseEntry,
   WorkoutQueueItem,
   XpDiario,
+  Inventario,
+  InventoryEntry,
+  InventoryItemId,
+  AfkState,
+  AfkPendingReward,
+  ArmaPreferida,
+  CosmeticRarity,
 } from '../../../shared/types/index.js';
 
 export {
@@ -79,6 +86,13 @@ export {
   DAILY_RARITY_LABELS,
   DEFAULT_COSMETICOS,
   DEFAULT_PREFERENCIAS,
+  DEFAULT_INVENTARIO,
+  DEFAULT_AFK_STATE,
+  DEFAULT_XP_DIARIO,
+  ENERGY_DRINK_ITEM_ID,
+  ENERGY_DRINK_BONUS_XP,
+  ENERGY_DRINK_SHOP_PRICE,
+  AFK_MAX_MINUTES,
   streakXpBonus,
   DEFAULT_USER_DADOS_SALVOS,
   LEADERBOARD_DISPLAY_LIMIT,

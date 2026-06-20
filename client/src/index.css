@@ -1458,6 +1458,27 @@ input[type='range'] {
   background: repeating-linear-gradient(90deg, #c4b5fd 0, #c4b5fd 8px, #a78bfa 8px, #a78bfa 16px);
 }
 
+.game-xp-bar--bonus .game-xp-bar__fill {
+  background: repeating-linear-gradient(90deg, #67e8f9 0, #67e8f9 8px, #06b6d4 8px, #06b6d4 16px);
+}
+
+.game-xp-bar--bonus {
+  border-color: #0891b2;
+}
+
+.game-xp-bar--bonus.game-xp-bar--glow-active {
+  animation: game-xp-bonus-glow 2s ease-in-out infinite;
+}
+
+@keyframes game-xp-bonus-glow {
+  0%, 100% {
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.12), 0 0 6px rgba(6, 182, 212, 0.35);
+  }
+  50% {
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.12), 0 0 14px rgba(6, 182, 212, 0.75), 0 0 24px rgba(34, 211, 238, 0.35);
+  }
+}
+
 .game-xp-bar--capped {
   box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.12), 0 0 0 1px #f59e0b;
 }
@@ -5530,6 +5551,36 @@ input[type='range'] {
   color: #c2410c;
 }
 
+.game-hud__chip--bonus {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.game-hud__chip--bonus-active {
+  animation: game-xp-bonus-glow 2s ease-in-out infinite;
+  border: 1px solid #06b6d4;
+}
+
+.game-hud__chip--bonus-burst {
+  animation: game-energy-drink-burst 0.8s ease-out 3;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.65);
+}
+
+.game-xp-section--energy-burst {
+  animation: game-energy-drink-section-burst 1.2s ease-out 2;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.35), 0 8px 24px rgba(6, 182, 212, 0.15);
+}
+
+@keyframes game-energy-drink-burst {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes game-energy-drink-section-burst {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2); }
+  50% { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.55), 0 12px 32px rgba(6, 182, 212, 0.25); }
+}
+
 /* Calendário estilo grade */
 .workout-calendar__header {
   display: flex;
@@ -5885,4 +5936,479 @@ input[type='range'] {
   font-size: 0;
   line-height: 0;
   overflow: hidden;
+}
+
+/* —— AFK Patrulha —— */
+.game-afk-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 3px solid var(--game-ink);
+  border-radius: 999px;
+  background: linear-gradient(145deg, #ecfdf5, #a7f3d0);
+  color: #047857;
+  box-shadow: 4px 4px 0 var(--game-ink);
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .game-afk-fab {
+    bottom: 1.5rem;
+  }
+}
+
+.game-afk-fab__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 999px;
+  background: #ef4444;
+  animation: game-afk-badge-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes game-afk-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.game-afk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.game-afk-modal {
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.15rem;
+  background: #fff9e8;
+  border: 4px solid var(--game-ink);
+  box-shadow: 6px 6px 0 var(--game-ink);
+}
+
+.game-afk-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+  color: #047857;
+}
+
+.game-afk-scene {
+  position: relative;
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.35rem;
+}
+
+.game-afk-scene__lens {
+  position: absolute;
+  top: 0;
+  width: 46%;
+  height: 100%;
+  border: 3px solid #1c1917;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.55) 70%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.game-afk-scene__lens--left { left: 0; }
+.game-afk-scene__lens--right { right: 0; }
+
+.game-afk-scene__viewport {
+  position: relative;
+  height: 9rem;
+  margin: 0 12%;
+  overflow: hidden;
+  border: 3px solid #1c1917;
+  border-radius: 0.75rem;
+  background: #0f172a;
+}
+
+.game-afk-scene__sky {
+  position: absolute;
+  inset: 0 0 35%;
+  background: linear-gradient(180deg, #1e3a8a, #312e81);
+}
+
+.game-afk-scene__ground {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 35%;
+  background: linear-gradient(180deg, #166534, #14532d);
+}
+
+.game-afk-hero {
+  position: absolute;
+  bottom: 28%;
+  left: 22%;
+  z-index: 3;
+  width: 2rem;
+  height: 2.5rem;
+  transition: transform 0.15s ease;
+}
+
+.game-afk-hero--attack {
+  transform: translateX(4px) scale(1.05);
+}
+
+.game-afk-hero__body {
+  width: 1.25rem;
+  height: 1.5rem;
+  margin: 0 auto;
+  background: #fcd34d;
+  border: 2px solid #1c1917;
+  border-radius: 0.25rem;
+}
+
+.game-afk-hero__bow {
+  position: absolute;
+  top: 0.35rem;
+  right: -0.65rem;
+  width: 0.85rem;
+  height: 1.1rem;
+  border: 2px solid #fef3c7;
+  border-left: none;
+  border-radius: 0 999px 999px 0;
+}
+
+.game-afk-hero__sword {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.85rem;
+  color: #e2e8f0;
+}
+
+.game-afk-enemy {
+  position: absolute;
+  right: 18%;
+  bottom: 26%;
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.game-afk-enemy--hit {
+  transform: translateX(6px) scale(0.92);
+  opacity: 0.75;
+}
+
+.game-afk-enemy__sprite {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #1c1917;
+  border-radius: 0.35rem;
+}
+
+.game-afk-enemy--bat .game-afk-enemy__sprite {
+  background: #4c1d95;
+  border-radius: 999px 999px 0.35rem 0.35rem;
+}
+
+.game-afk-enemy--zombie .game-afk-enemy__sprite {
+  background: #3f6212;
+}
+
+.game-afk-enemy--skeleton .game-afk-enemy__sprite {
+  background: #e7e5e4;
+}
+
+.game-afk-arrow {
+  position: absolute;
+  top: 42%;
+  left: 38%;
+  width: 1.25rem;
+  height: 0.15rem;
+  background: #fef3c7;
+  animation: game-afk-arrow-fly 0.45s linear forwards;
+}
+
+@keyframes game-afk-arrow-fly {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(3.5rem); opacity: 0; }
+}
+
+.game-afk-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  background: #ecfdf5;
+  border: 2px solid rgba(28, 25, 23, 0.15);
+  border-radius: 0.65rem;
+}
+
+.game-afk-timer__label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #57534e;
+}
+
+.game-afk-timer__value {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  color: #047857;
+}
+
+.game-afk-rewards__title {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #57534e;
+}
+
+.game-afk-rewards__empty {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-afk-rewards__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.game-afk-reward {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.5rem;
+  background: #fff;
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.55rem;
+}
+
+.game-afk-reward--secret {
+  border-color: #1c1917;
+  background: #0a0a0a;
+}
+
+.game-afk-reward__icon {
+  display: flex;
+  shrink: 0;
+  color: #047857;
+}
+
+.game-afk-reward--secret .game-afk-reward__icon {
+  color: #fafafa;
+}
+
+.game-afk-reward__label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #44403c;
+}
+
+.game-afk-reward--secret .game-afk-reward__label {
+  color: #fafafa;
+}
+
+/* —— Inventário —— */
+.game-inventory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.game-inventory-modal {
+  max-width: 22rem;
+}
+
+.game-inventory-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(145deg, #fff, #ecfeff);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.75rem;
+}
+
+.game-inventory-item--compact {
+  margin-top: 0.75rem;
+}
+
+.game-inventory-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: #cffafe;
+  border: 2px solid #0891b2;
+  border-radius: 0.65rem;
+}
+
+.game-inventory-item__name {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0e7490;
+}
+
+.game-inventory-item__desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #57534e;
+}
+
+.game-inventory-item__count {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #44403c;
+}
+
+.game-inventory-use {
+  margin-top: 0.75rem;
+  padding: 0.65rem;
+  background: #f5f5f4;
+  border-radius: 0.65rem;
+}
+
+.game-inventory-use__label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #78716c;
+}
+
+.game-inventory-use__stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.game-inventory-use__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.45rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.game-inventory-use__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.game-inventory-use__value {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.game-inventory-use__hint {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #0e7490;
+}
+
+.game-inventory-dont-show {
+  user-select: none;
+}
+
+.game-inventory-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 1rem;
+  padding: 0 0.2rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  line-height: 1.1rem;
+  text-align: center;
+  color: #fff;
+  background: #0891b2;
+  border: 2px solid var(--game-ink);
+  border-radius: 999px;
+}
+
+.game-inventory-badge--inline {
+  position: static;
+  margin-left: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+.game-profile-hero .game-nav-item,
+header .game-nav-item {
+  position: relative;
+}
+
+/* Energy Drink icon */
+.game-energy-drink-icon {
+  display: inline-flex;
+  color: #0891b2;
+}
+
+.game-energy-drink-icon__cap {
+  fill: #164e63;
+}
+
+.game-energy-drink-icon__body {
+  fill: #06b6d4;
+}
+
+/* Título secreto shimmer */
+.cosmetic-title--secreto {
+  background: linear-gradient(90deg, #fafafa 0%, #737373 25%, #fafafa 50%, #737373 75%, #fafafa 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cosmetic-title-secreto-shimmer 2.5s linear infinite;
+}
+
+@keyframes cosmetic-title-secreto-shimmer {
+  to { background-position: 200% center; }
+}
+
+.game-daily-reward-card__icon--item {
+  background: linear-gradient(145deg, #ecfeff, #cffafe);
+  color: #0891b2;
 }

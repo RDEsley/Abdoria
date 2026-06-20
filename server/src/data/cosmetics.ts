@@ -352,6 +352,16 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
 
   {
+    id: 'titulo_secreto',
+    kind: 'titulo',
+    nome: 'Secret',
+    descricao: 'Um título que ninguém deveria encontrar.',
+    icon: 'moon',
+    raridade: 'lendario',
+    unlock: { tipo: 'gratis' },
+  },
+
+  {
     id: 'titulo_dono_do_jogo',
     kind: 'titulo',
     nome: 'Dono do Jogo',

@@ -117,14 +117,51 @@ export interface UserPreferencias {
   reps_repeticoes_padrao?: number;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
+  /** Estilo de combate na patrulha AFK. */
+  arma_preferida?: ArmaPreferida | null;
+  /** Não exibir aviso de teto diário de XP ao iniciar treino. */
+  ocultar_aviso_xp_diario?: boolean;
+}
+
+export type ArmaPreferida = 'arco' | 'espada';
+
+export type InventoryItemId = 'energy_drink';
+
+export interface InventoryEntry {
+  item_id: InventoryItemId;
+  quantidade: number;
+}
+
+export interface Inventario {
+  itens: InventoryEntry[];
+}
+
+export interface AfkPendingReward {
+  xp: number;
+  abdoria: number;
+  energy_drinks: number;
+  cosmetic_ids: string[];
+  titulo_secreto: boolean;
+}
+
+export interface AfkState {
+  last_seen_at: string | null;
+  minutos_acumulados: number;
+  pending: AfkPendingReward;
+  /** Presente na resposta de stats/meta quando há loot para coletar. */
+  has_rewards?: boolean;
 }
 
 export interface XpDiario {
-  /** XP de exercícios hoje (teto 100/dia). */
+  /** XP de exercícios hoje (teto padrão/dia). */
   ganho_hoje: number;
   /** XP bônus hoje (streak, conquistas, loja, habilidades — sem teto). */
   extra_hoje: number;
   data_reset: string;
+  /** XP restante do bônus Energy Drink (+100 por uso). */
+  bonus_pool_restante: number;
+  /** Capacidade total do bônus ativo (para barra de progresso). */
+  bonus_pool_total: number;
 }
 
 export interface Gamificacao {
@@ -143,7 +180,7 @@ export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario';
 
 export type DailyRewardRarity = 'comum' | 'incomum' | 'raro' | 'epico';
 
-export type DailyRewardType = 'xp' | 'abdoria' | 'pacote';
+export type DailyRewardType = 'xp' | 'abdoria' | 'pacote' | 'item';
 
 export type DailyShopPaidOfferKind = 'surto_xp' | 'bolsa_abdoria' | 'pacote_misto';
 
@@ -200,6 +237,8 @@ export interface LojaDiariaSlot {
   bonus_abdoria?: number;
   /** Oferta de cosmético na loja diária. */
   cosmetic_id?: string;
+  /** Item consumível (ex.: energy_drink). */
+  item_id?: InventoryItemId;
 }
 
 export interface LojaDiaria {
@@ -342,6 +381,27 @@ export const SHOP_ABDORIA_COST_PER_XP = 5;
 export const ABDORIA_XP_STEP = 10;
 export const CURRENCY_NAME = 'Abdoria coins';
 
+export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
+export const ENERGY_DRINK_BONUS_XP = 100;
+export const ENERGY_DRINK_SHOP_PRICE = 20;
+export const AFK_MAX_MINUTES = 24 * 60;
+
+export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
+
+export const DEFAULT_AFK_STATE: AfkState = {
+  last_seen_at: null,
+  minutos_acumulados: 0,
+  pending: { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false },
+};
+
+export const DEFAULT_XP_DIARIO: XpDiario = {
+  ganho_hoje: 0,
+  extra_hoje: 0,
+  data_reset: '',
+  bonus_pool_restante: 0,
+  bonus_pool_total: 0,
+};
+
 /** @deprecated Use SHOP_XP_COST_PER_ABDORIA */
 export const XP_TO_ABDORIA_RATE = SHOP_XP_COST_PER_ABDORIA;
 /** @deprecated Use SHOP_ABDORIA_COST_PER_XP */
@@ -462,7 +522,9 @@ export interface IUser {
   preferencias: UserPreferencias;
   dados_salvos?: UserDadosSalvos;
   xp_diario: XpDiario;
-    onboarding_completed: boolean;
+  inventario?: Inventario;
+  afk?: AfkState;
+  onboarding_completed: boolean;
     terms_accepted_at?: string | null;
     muscle_map_reset_at?: string | null;
     is_guest?: boolean;
@@ -557,7 +619,12 @@ export interface DashboardStats {
   xp_hoje: number;
   xp_extra_hoje: number;
   xp_diario_limite: number;
+  xp_bonus_restante: number;
+  xp_bonus_total: number;
   xp_data_reset: string;
+  inventario: Inventario;
+  afk: AfkState;
+  energy_drink_count: number;
   conquistas: Achievement[];
   musculos_semana: Record<MusculoPrincipal, number>;
   evolucao_mensal: { mes: string; minutos: number }[];
@@ -872,6 +939,8 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   reps_repeticoes_padrao: 12,
   preset_favorito_id: null,
   tutorial_visto: false,
+  arma_preferida: null,
+  ocultar_aviso_xp_diario: false,
 };
 
 export function calcImc(pesoKg: number, alturaCm: number): number {

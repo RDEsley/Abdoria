@@ -31,7 +31,17 @@ export function DashboardPage() {
   const { user, refreshUser } = useAuth();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const [streakCelebrate, setStreakCelebrate] = useState(false);
+  const [energyDrinkBurst, setEnergyDrinkBurst] = useState(false);
   const prevStreak = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onEnergyDrinkUsed = () => {
+      setEnergyDrinkBurst(true);
+      window.setTimeout(() => setEnergyDrinkBurst(false), 3200);
+    };
+    window.addEventListener('abdoria:energy-drink-used', onEnergyDrinkUsed);
+    return () => window.removeEventListener('abdoria:energy-drink-used', onEnergyDrinkUsed);
+  }, []);
 
   useSaoPauloMidnightRefresh(() => {
     void refresh();
@@ -148,7 +158,7 @@ export function DashboardPage() {
       <motion.section
         id={DASHBOARD_LEVEL_XP_SECTION_ID}
         variants={item}
-        className="glass-card scroll-mt-28 p-4 md:scroll-mt-24"
+        className={`glass-card scroll-mt-28 p-4 md:scroll-mt-24${energyDrinkBurst ? ' game-xp-section--energy-burst' : ''}`}
       >
         <h3 className="game-section-title flex items-center gap-2">
           <Zap size={14} className="text-amber-500" /> Nível & XP
@@ -178,6 +188,16 @@ export function DashboardPage() {
               variant="extra"
               valueOnly
             />
+            {stats.xp_bonus_total > 0 && (
+              <XpBar
+                value={stats.xp_bonus_restante}
+                max={stats.xp_bonus_total}
+                label="XP bônus (Energy Drink)"
+                hint="Não conta no teto diário de exercícios"
+                variant="bonus"
+                glow={stats.xp_bonus_restante > 0 || energyDrinkBurst}
+              />
+            )}
           </div>
         </div>
       </motion.section>
