@@ -5,17 +5,19 @@ import { ensureAbdoriaWallet } from './economy.js';
 
 const RETIRED_SLUGS = new Set(['pallof-press']);
 
-/** Recalcula moedas por blocos de XP, poda slugs inválidos e alinha desbloqueios ao catálogo ativo. */
 export async function syncAllUsersProgressData(): Promise<{ users: number; pruned: number; coinsAdjusted: number }> {
   const activeSlugs = new Set(
-    (await Exercise.find({ ativo: true }).select('slug').lean()).map((e) => e.slug),
+    (await Exercise.find({ ativo: true })).map((e) => e.slug),
   );
 
-  const users = await User.find({});
+  const usersLean = await User.find({});
   let pruned = 0;
   let coinsAdjusted = 0;
 
-  for (const user of users) {
+  for (const lean of usersLean) {
+    const user = await User.findById(lean._id);
+    if (!user) continue;
+
     let dirty = false;
 
     const unlocked = user.dados_salvos?.exercicios_desbloqueados ?? [];
@@ -43,5 +45,5 @@ export async function syncAllUsersProgressData(): Promise<{ users: number; prune
     if (dirty) await user.save();
   }
 
-  return { users: users.length, pruned, coinsAdjusted };
+  return { users: usersLean.length, pruned, coinsAdjusted };
 }

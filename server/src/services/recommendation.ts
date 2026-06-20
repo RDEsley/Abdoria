@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
 import { Exercise } from '../models/Exercise.js';
 import { WorkoutHistory } from '../models/WorkoutHistory.js';
 import { WorkoutPreset } from '../models/WorkoutPreset.js';
 import type { UserDocument } from '../models/User.js';
+import { UserMutable } from '../repositories/user-repository.js';
 import type { ModoExercicio, MusculoPrincipal, TreinoBase, TreinoSugerido } from '../types/index.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
@@ -24,7 +24,7 @@ export interface RecommendWorkoutOptions {
 }
 
 type PresetDoc = {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   ciclo_id: string;
   nome: string;
   descricao?: string;
@@ -40,6 +40,14 @@ type PresetDoc = {
   }>;
 };
 
+function blockedSlugs(user: UserDocument): Set<string> {
+  return new Set(user.preferencias?.exercicios_nao_recomendar ?? []);
+}
+
+function pinnedSlugs(user: UserDocument): string[] {
+  return user.preferencias?.exercicios_fixos ?? [];
+}
+
 function resolveNextCiclo(ciclo: TreinoBase[], lastTipo?: string | null): TreinoBase {
   if (!lastTipo || lastTipo === 'custom' || !ciclo.includes(lastTipo as TreinoBase)) {
     return ciclo[0];
@@ -48,26 +56,39 @@ function resolveNextCiclo(ciclo: TreinoBase[], lastTipo?: string | null): Treino
   return ciclo[(idx + 1) % ciclo.length];
 }
 
-async function recentExerciseSlugs(userId: mongoose.Types.ObjectId, limit = 5): Promise<Set<string>> {
-  const histories = await WorkoutHistory.find({ usuario_id: userId })
-    .sort({ concluido_em: -1 })
-    .limit(limit)
-    .select('exercicios.slug')
-    .lean();
+async function recentExerciseSlugs(userId: string, limit = 5): Promise<Set<string>> {
+  const histories = await WorkoutHistory.find(
+    { usuario_id: userId },
+    { sort: { concluido_em: -1 }, limit },
+  );
   const slugs = new Set<string>();
   for (const h of histories) {
     for (const ex of h.exercicios ?? []) {
-      if (ex.slug) slugs.add(ex.slug);
+      const slug = (ex as { slug?: string }).slug;
+      if (slug) slugs.add(slug);
     }
   }
   return slugs;
 }
 
+async function buildPinnedRows(user: UserDocument, blocked: Set<string>) {
+  const slugs = pinnedSlugs(user).filter((s) => !blocked.has(s));
+  if (slugs.length === 0) return [];
+
+  const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true });
+  return exercises.map((ex) => ({
+    slug: ex.slug,
+    series: 3,
+    modo: 'tempo' as ModoExercicio,
+    repeticoes: undefined,
+    tempo_seg: ex.tempo_recomendado ?? 30,
+    descanso_seg: 25,
+  }));
+}
+
 async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
   const slugs = preset.exercicios.map((e) => e.slug);
-  const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true })
-    .select('slug nome nome_pt musculo_principal')
-    .lean();
+  const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true });
   const nameBySlug = new Map(
     exercises.map((e) => [
       e.slug,
@@ -86,7 +107,7 @@ async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
   }));
 
   return {
-    preset_id: preset._id.toString(),
+    preset_id: preset._id,
     ciclo_id: preset.ciclo_id as TreinoBase,
     nome: preset.nome,
     descricao: preset.descricao ?? '',
@@ -96,7 +117,6 @@ async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
   };
 }
 
-/** Melhor preset recomendado para um ciclo (nível/objetivo do usuário com fallback). */
 async function pickBestPresetForCycle(user: UserDocument, cicloId: TreinoBase): Promise<PresetDoc | null> {
   const tiers: Array<{ nivel?: string; objetivo?: string }> = [
     { nivel: user.nivel, objetivo: user.objetivo },
@@ -108,14 +128,13 @@ async function pickBestPresetForCycle(user: UserDocument, cicloId: TreinoBase): 
     const filter: Record<string, unknown> = { recomendado: true, ciclo_id: cicloId };
     if (tier.nivel) filter.nivel = tier.nivel;
     if (tier.objetivo) filter.objetivo = tier.objetivo;
-    const found = await WorkoutPreset.findOne(filter).lean<PresetDoc>();
-    if (found) return found;
+    const found = await WorkoutPreset.findOne(filter);
+    if (found) return found as PresetDoc;
   }
 
-  return WorkoutPreset.findOne({ recomendado: true, ciclo_id: cicloId }).lean<PresetDoc>();
+  return WorkoutPreset.findOne({ recomendado: true, ciclo_id: cicloId }) as Promise<PresetDoc | null>;
 }
 
-/** Um preset por ciclo configurado nas preferências do usuário. */
 async function presetsForUserCycles(user: UserDocument, onlyCiclo?: TreinoBase): Promise<PresetDoc[]> {
   const ciclos = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
   const targetCiclos = onlyCiclo && ciclos.includes(onlyCiclo) ? [onlyCiclo] : ciclos;
@@ -132,19 +151,43 @@ async function findPresetCandidates(user: UserDocument, ciclo?: TreinoBase) {
   return presetsForUserCycles(user, ciclo);
 }
 
-/** Alertas de personal trainer para o dashboard. */
+/** Marca ciclo concluído e retorna true se completou todos os ciclos ativos. */
+export async function markCycleCompleted(
+  user: UserMutable,
+  treinoTipo?: string,
+): Promise<boolean> {
+  if (!treinoTipo || treinoTipo === 'custom') return false;
+
+  const ciclos = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
+  if (!ciclos.includes(treinoTipo as TreinoBase)) return false;
+
+  const rodada: Record<string, boolean> = { ...(user.preferencias.ciclos_completados_rodada ?? {}) };
+  rodada[treinoTipo] = true;
+  user.preferencias.ciclos_completados_rodada = rodada as UserDocument['preferencias']['ciclos_completados_rodada'];
+
+  const allDone = ciclos.every((c) => rodada[c]);
+  if (allDone) {
+    user.preferencias.ciclos_completados_rodada = {};
+    await user.save();
+    return true;
+  }
+
+  await user.save();
+  return false;
+}
+
+export function resetCycleRound(user: UserMutable): void {
+  user.preferencias.ciclos_completados_rodada = {};
+}
+
 export async function getRecommendationAlerts(user: UserDocument): Promise<RecommendationAlert[]> {
   const alerts: RecommendationAlert[] = [];
   const userId = user._id;
 
-  const samePresetHistory = await WorkoutHistory.find({
-    usuario_id: userId,
-    treino_tipo: { $nin: [null, '', 'custom'] },
-  })
-    .sort({ concluido_em: -1 })
-    .limit(14)
-    .select('treino_tipo concluido_em')
-    .lean();
+  const samePresetHistory = await WorkoutHistory.find(
+    { usuario_id: userId, treino_tipo: { $nin: [null, '', 'custom'] } },
+    { sort: { concluido_em: -1 }, limit: 14 },
+  );
 
   if (samePresetHistory.length >= 5) {
     const dominant = samePresetHistory[0]?.treino_tipo;
@@ -167,7 +210,7 @@ export async function getRecommendationAlerts(user: UserDocument): Promise<Recom
     }
   }
 
-  const weekly = await getWeeklyMuscles(userId.toString(), user.muscle_map_reset_at ?? null);
+  const weekly = await getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null);
   const zones = (['superior', 'inferior', 'obliquos', 'core'] as MusculoPrincipal[]).map((z) => ({
     z,
     n: weekly[z] ?? 0,
@@ -192,7 +235,6 @@ export async function getRecommendationAlerts(user: UserDocument): Promise<Recom
   return alerts;
 }
 
-/** Próximo treino sugerido com exercícios resolvidos para o dashboard e construtor. */
 export async function getSuggestedWorkout(
   user: UserDocument,
   options: RecommendWorkoutOptions = {},
@@ -200,18 +242,18 @@ export async function getSuggestedWorkout(
   return recommendWorkout(user, options);
 }
 
-/** Recomenda treino com anti-repetição, shuffle e exercícios extras. */
 export async function recommendWorkout(
   user: UserDocument,
   options: RecommendWorkoutOptions = {},
 ): Promise<TreinoSugerido | null> {
   const { allowRepeats = false, extraCount = 0, shuffle = false, excludePresetId = null } = options;
   const ciclo = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
+  const blocked = blockedSlugs(user);
 
-  const last = await WorkoutHistory.findOne({ usuario_id: user._id })
-    .sort({ concluido_em: -1 })
-    .select('treino_tipo')
-    .lean();
+  const last = await WorkoutHistory.findOne(
+    { usuario_id: user._id },
+    { sort: { concluido_em: -1 } },
+  );
 
   const nextCiclo = resolveNextCiclo(ciclo, last?.treino_tipo);
   let candidates = shuffle
@@ -219,17 +261,17 @@ export async function recommendWorkout(
     : await findPresetCandidates(user, nextCiclo);
 
   if (excludePresetId) {
-    const filtered = candidates.filter((p) => p._id.toString() !== excludePresetId);
+    const filtered = candidates.filter((p) => p._id !== excludePresetId);
     if (filtered.length > 0) candidates = filtered;
   }
 
   if (shuffle && candidates.length > 1) {
-    const seed = `${user._id.toString()}:${getTodaySaoPaulo()}:${excludePresetId ?? 'x'}`;
+    const seed = `${user._id}:${getTodaySaoPaulo()}:${excludePresetId ?? 'x'}`;
     let hash = 0;
     for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
     candidates = [...candidates].sort((a, b) => {
-      const ha = (hash + a._id.toString().charCodeAt(0)) % 1000;
-      const hb = (hash + b._id.toString().charCodeAt(0)) % 1000;
+      const ha = (hash + a._id.charCodeAt(0)) % 1000;
+      const hb = (hash + b._id.charCodeAt(0)) % 1000;
       return ha - hb;
     });
   }
@@ -241,26 +283,41 @@ export async function recommendWorkout(
   if (!preset) return null;
 
   const recentSlugs = allowRepeats ? new Set<string>() : await recentExerciseSlugs(user._id);
+  const pinned = await buildPinnedRows(user, blocked);
 
-  let exercicioRows = preset.exercicios.map((e) => ({
-    slug: e.slug,
-    series: e.series,
-    modo: e.modo as ModoExercicio,
-    repeticoes: e.repeticoes ?? undefined,
-    tempo_seg: e.tempo_seg ?? undefined,
-    descanso_seg: e.descanso_seg,
-  }));
+  let exercicioRows = preset.exercicios
+    .filter((e) => !blocked.has(e.slug))
+    .map((e) => ({
+      slug: e.slug,
+      series: e.series,
+      modo: e.modo as ModoExercicio,
+      repeticoes: e.repeticoes ?? undefined,
+      tempo_seg: e.tempo_seg ?? undefined,
+      descanso_seg: e.descanso_seg,
+    }));
+
+  for (const pin of pinned) {
+    if (!exercicioRows.some((e) => e.slug === pin.slug)) {
+      exercicioRows.unshift(pin);
+    }
+  }
+
   if (!allowRepeats) {
-    exercicioRows = exercicioRows.filter((e) => !recentSlugs.has(e.slug));
+    exercicioRows = exercicioRows.filter((e) => !recentSlugs.has(e.slug) || pinned.some((p) => p.slug === e.slug));
     if (exercicioRows.length < 3) {
-      exercicioRows = preset.exercicios.map((e) => ({
-        slug: e.slug,
-        series: e.series,
-        modo: e.modo as ModoExercicio,
-        repeticoes: e.repeticoes ?? undefined,
-        tempo_seg: e.tempo_seg ?? undefined,
-        descanso_seg: e.descanso_seg,
-      }));
+      exercicioRows = [
+        ...pinned,
+        ...preset.exercicios
+          .filter((e) => !blocked.has(e.slug) && !pinned.some((p) => p.slug === e.slug))
+          .map((e) => ({
+            slug: e.slug,
+            series: e.series,
+            modo: e.modo as ModoExercicio,
+            repeticoes: e.repeticoes ?? undefined,
+            tempo_seg: e.tempo_seg ?? undefined,
+            descanso_seg: e.descanso_seg,
+          })),
+      ];
     }
   }
 
@@ -268,10 +325,8 @@ export async function recommendWorkout(
     const used = new Set(exercicioRows.map((e) => e.slug));
     const extras = await Exercise.find({
       ativo: true,
-      slug: { $nin: [...used, ...(allowRepeats ? [] : [...recentSlugs])] },
-    })
-      .limit(extraCount * 3)
-      .lean();
+      slug: { $nin: [...used, ...blocked, ...(allowRepeats ? [] : [...recentSlugs])] },
+    });
 
     for (const ex of extras.slice(0, extraCount)) {
       exercicioRows.push({
@@ -295,7 +350,6 @@ export async function recommendWorkout(
   });
 }
 
-/** Lista de treinos sugeridos: 1 card por ciclo ativo nas configurações. */
 export async function getRecommendedPresetsList(user: UserDocument) {
   return presetsForUserCycles(user);
 }

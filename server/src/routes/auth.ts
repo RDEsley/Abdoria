@@ -36,7 +36,7 @@ authRouter.post('/register', async (req, res) => {
       passwordHash,
       nome: nome.trim(),
       preferencias: DEFAULT_PREFERENCIAS,
-      xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
+      xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today, bonus_pool_restante: 0, bonus_pool_total: 0 },
       onboarding_completed: false,
     });
 
@@ -57,7 +57,7 @@ authRouter.post('/login', async (req, res) => {
       return;
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
+    const user = await User.findOne({ email: email.toLowerCase().trim() }, { select: '+passwordHash' });
     if (!user?.passwordHash) {
       res.status(401).json({ error: 'Credenciais inválidas.' });
       return;
@@ -95,7 +95,7 @@ authRouter.post('/guest', async (_req, res) => {
       nome: `Visitante ${suffix.slice(0, 4).toUpperCase()}`,
       is_guest: true,
       preferencias: DEFAULT_PREFERENCIAS,
-      xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
+      xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today, bonus_pool_restante: 0, bonus_pool_total: 0 },
       onboarding_completed: false,
     });
 

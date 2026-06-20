@@ -1,4 +1,3 @@
-import type { HydratedDocument } from 'mongoose';
 import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import {
   PAID_OFFER_CONFIG,
@@ -19,6 +18,7 @@ import {
   DEFAULT_BORDA_ID,
 } from '../data/cosmetics.js';
 import { User, type UserDocument } from '../models/User.js';
+import type { UserMutable } from '../repositories/user-repository.js';
 import type {
   CosmeticDefinition,
   CosmeticKind,
@@ -50,7 +50,7 @@ import { addInventoryItem } from './inventory.js';
 
 export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
 
-type UserDoc = HydratedDocument<UserDocument>;
+type UserDoc = UserMutable;
 
 const DEFAULT_SOM_ID = 'som_classico';
 const DEFAULT_EFEITO_ID = 'efeito_padrao';
@@ -83,7 +83,6 @@ function ensureCosmeticos(user: UserDoc): void {
   }
 
   user.cosmeticos = resolved as typeof user.cosmeticos;
-  user.markModified('cosmeticos');
 }
 
 function ensureLojaDiaria(user: UserDoc): LojaDiaria & { slots: LojaDiariaSlot[] } {

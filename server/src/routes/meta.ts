@@ -12,14 +12,14 @@ metaRouter.use(requireAuth);
 
 metaRouter.get('/afk', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
     syncAfkRewards(user);
     await user.save();
-    const afk = user.afk as { minutos_acumulados: number; pending: unknown; last_seen_at?: Date };
+    const afk = user.afk;
     res.json({
       minutos_acumulados: afk.minutos_acumulados ?? 0,
       pending: afk.pending,
@@ -34,7 +34,7 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
 
 metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -56,7 +56,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
 
 metaRouter.post('/afk/ping', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -72,7 +72,7 @@ metaRouter.post('/afk/ping', async (req: AuthRequest, res) => {
 
 metaRouter.get('/inventory', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -86,7 +86,7 @@ metaRouter.get('/inventory', async (req: AuthRequest, res) => {
 
 metaRouter.post('/inventory/energy-drink', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -111,7 +111,7 @@ metaRouter.post('/inventory/energy-drink', async (req: AuthRequest, res) => {
 
 metaRouter.patch('/preferences', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;

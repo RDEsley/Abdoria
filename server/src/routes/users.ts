@@ -13,7 +13,7 @@ export const usersRouter = Router();
 usersRouter.use(requireAuth);
 
 async function loadCurrentUser(userId: string) {
-  return User.findById(userId).lean();
+  return User.findById(userId, { lean: true });
 }
 
 usersRouter.get('/me', async (req: AuthRequest, res) => {
@@ -69,7 +69,7 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
       }
     }
 
-    const user = await User.findByIdAndUpdate(req.userId, { $set: update }, { new: true, runValidators: true }).lean();
+    const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
 
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
@@ -85,7 +85,7 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
 
 usersRouter.patch('/me/dados', async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -109,7 +109,7 @@ usersRouter.patch('/me/dados', async (req: AuthRequest, res) => {
       await syncUserGamification(req.userId!);
     }
 
-    const refreshed = await User.findById(req.userId).lean();
+    const refreshed = await User.findById(req.userId!, { lean: true });
     if (!refreshed) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -165,7 +165,7 @@ usersRouter.patch('/me/onboarding', async (req: AuthRequest, res) => {
       update.onboarding_completed = true;
     }
 
-    const user = await User.findByIdAndUpdate(req.userId, { $set: update }, { new: true, runValidators: true }).lean();
+    const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
 
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });

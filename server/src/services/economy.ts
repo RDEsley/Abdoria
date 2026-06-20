@@ -138,11 +138,6 @@ export function awardBonusXp(user: UserDocument, amount: number): number {
   return amount;
 }
 
-/** @deprecated Use awardBonusXp para fontes extras ou awardDailyExerciseXp para exercícios. */
-export function awardXp(user: UserDocument, amount: number): number {
-  return awardBonusXp(user, amount);
-}
-
 export function calculateWorkoutXpBreakdown(
   exerciseCount: number,
   streakAtual: number,

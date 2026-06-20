@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
+import { connectDB } from '../db.js';
 import { Exercise } from '../models/Exercise.js';
 import { User } from '../models/User.js';
 import { WorkoutPreset } from '../models/WorkoutPreset.js';
@@ -9,31 +9,26 @@ import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
 import { workoutPresets } from '../seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
-import { syncAllUsersProgressData } from '../services/user-data-sync.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
-/** Exercícios removidos do catálogo — desativados no banco a cada seed. */
 const RETIRED_EXERCISE_SLUGS = ['pallof-press'];
 
-const mongoUri = process.env.MONGODB_URI;
-
-if (!mongoUri) {
-  console.error('Defina MONGODB_URI em server/.env');
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em server/.env');
   process.exit(1);
 }
 
-/** Popula exercícios, presets e usuário administrador (idempotente via upsert). */
 async function seed() {
-  await mongoose.connect(mongoUri!);
-  console.log('Conectado ao MongoDB.');
+  await connectDB();
+  console.log('Conectado ao Supabase.');
 
   for (const exercise of allExercises) {
     const result = await Exercise.findOneAndUpdate(
       { slug: exercise.slug },
       { $set: { ...exercise, nome_pt: EXERCISE_NOME_PT[exercise.slug] } },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true },
     );
-    console.log(`Exercício: ${result.nome} (${result.slug})`);
+    console.log(`Exercício: ${result?.nome} (${result?.slug})`);
   }
   console.log(`Total exercícios: ${allExercises.length}`);
 
@@ -47,18 +42,21 @@ async function seed() {
     }
   }
 
-  const sync = await syncAllUsersProgressData();
-  console.log(`Sync usuários: ${sync.users} contas · ${sync.pruned} slugs podados · +${sync.coinsAdjusted} Abdoria coins`);
-
   for (const preset of workoutPresets) {
     const result = await WorkoutPreset.findOneAndUpdate(
       { nome: preset.nome },
       { $set: preset },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true },
     );
-    console.log(`Preset: ${result.nome}`);
+    console.log(`Preset: ${result?.nome}`);
   }
   console.log(`Total presets: ${workoutPresets.length}`);
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Seed de usuários demo ignorado em produção.');
+    console.log('Seed concluído.');
+    return;
+  }
 
   const adminHash = await bcrypt.hash('admin123', 10);
   const gmailAdminHash = await bcrypt.hash('1234569', 10);
@@ -68,7 +66,6 @@ async function seed() {
     { email: 'admin@abdoria.local' },
     {
       $set: {
-        email: 'admin@abdoria.local',
         passwordHash: adminHash,
         nome: 'Admin Abdoria',
         idade: 30,
@@ -78,7 +75,7 @@ async function seed() {
         nivel: 'intermediario',
         objetivo: 'definicao',
         onboarding_completed: true,
-        terms_accepted_at: new Date(),
+        terms_accepted_at: new Date().toISOString(),
         gamificacao: {
           nivel_xp: 240,
           streak_atual: 4,
@@ -98,13 +95,13 @@ async function seed() {
         simulacao_definicao: { gordura_atual_pct: 18, gordura_meta_pct: 12 },
       },
     },
-    { upsert: true, new: true, runValidators: true },
+    { upsert: true },
   );
 
   await User.findOneAndUpdate(
     { email: 'admin@gmail.com' },
     { $set: buildAdminUserPayload(gmailAdminHash) },
-    { upsert: true, new: true, runValidators: true },
+    { upsert: true },
   );
 
   await seedDemoUsers();
@@ -112,7 +109,6 @@ async function seed() {
   console.log('Administrador: admin@abdoria.local / admin123');
   console.log('Admin completo: admin@gmail.com / 1234569');
   console.log('Seed concluído.');
-  await mongoose.disconnect();
 }
 
 seed().catch((error) => {

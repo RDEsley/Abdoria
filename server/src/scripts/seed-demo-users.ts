@@ -42,7 +42,7 @@ export async function seedDemoUsers(): Promise<void> {
           xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
         },
       },
-      { upsert: true, runValidators: true },
+      { upsert: true },
     );
     console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, ${moedas} moedas, streak ${demo.gamificacao.streak_atual}`);
   }
