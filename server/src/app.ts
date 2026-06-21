@@ -18,10 +18,10 @@ export function createApp() {
   app.use(express.json());
 
   app.get('/api/health', async (_req, res) => {
-    const database = await probeDatabase();
+    const probe = await probeDatabase();
     res.json({
       status: 'ok',
-      database,
+      database: probe.status,
       timestamp: new Date().toISOString(),
     });
   });
