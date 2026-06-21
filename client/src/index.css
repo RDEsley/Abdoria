@@ -1180,11 +1180,29 @@ input[type='range'] {
   padding-bottom: 0.35rem;
 }
 
-.game-hud-shell:not([class*='game-card-fundo--']) {
-  background: linear-gradient(180deg, rgba(255, 253, 247, 0.98) 72%, rgba(255, 253, 247, 0));
+.game-hud-shell--default {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 253, 247, 0.98) 0%,
+    rgba(255, 253, 247, 0.92) 72%,
+    rgba(255, 253, 247, 0) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.game-hud-shell[class*='game-card-fundo--'] {
+.game-hud-shell--default .game-hud {
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, #fffdf7 0%, #f5f2ea 100%);
+  box-shadow: 4px 4px 0 var(--game-ink);
+}
+
+.game-hud-shell--default .game-hud--interactive:hover {
+  border-color: var(--game-green-dark);
+  box-shadow: 5px 5px 0 var(--game-green-dark);
+}
+
+.game-hud-shell--skinned {
   position: relative;
   margin-left: 1rem;
   margin-right: 1rem;
@@ -1199,7 +1217,7 @@ input[type='range'] {
   -webkit-backdrop-filter: blur(10px);
 }
 
-.game-hud-shell[class*='game-card-fundo--']::before {
+.game-hud-shell--skinned::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1209,7 +1227,7 @@ input[type='range'] {
   z-index: 0;
 }
 
-.game-hud-shell[class*='game-card-fundo--']::after {
+.game-hud-shell--skinned::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1220,31 +1238,31 @@ input[type='range'] {
 }
 
 @media (min-width: 768px) {
-  .game-hud-shell[class*='game-card-fundo--'] {
+  .game-hud-shell--skinned {
     margin-left: 2rem;
     margin-right: 2rem;
     margin-top: 1.5rem;
   }
 }
 
-.game-hud-shell[class*='game-card-fundo--'] > * {
+.game-hud-shell--skinned > * {
   position: relative;
   z-index: 1;
 }
 
-.game-hud-shell[class*='game-card-fundo--'] .game-hud {
+.game-hud-shell--skinned .game-hud {
   background: transparent;
   border: none;
   border-radius: 0;
   box-shadow: none;
 }
 
-.game-hud-shell[class*='game-card-fundo--'] .game-hud--interactive:hover {
+.game-hud-shell--skinned .game-hud--interactive:hover {
   border-color: transparent;
   filter: brightness(1.03);
 }
 
-.game-hud-shell[class*='game-card-fundo--'] .game-hud--interactive:active {
+.game-hud-shell--skinned .game-hud--interactive:active {
   transform: none;
   box-shadow: none;
   filter: brightness(0.97);
@@ -1567,43 +1585,59 @@ input[type='range'] {
   inset-inline: 0;
   bottom: 0;
   z-index: 50;
-  background: var(--game-paper);
-  border-top: 4px solid var(--game-ink);
-  box-shadow: 0 -4px 0 rgba(28, 25, 23, 0.08);
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.96) 0%, #fffdf7 100%);
+  border-top: 3px solid var(--game-ink);
+  box-shadow: 0 -6px 24px rgba(28, 25, 23, 0.1);
   padding-bottom: env(safe-area-inset-bottom, 0);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .game-bottom-nav__inner {
   display: flex;
   justify-content: space-around;
+  gap: 0.15rem;
   max-width: 32rem;
   margin-inline: auto;
-  padding: 0.35rem 0.25rem 0.5rem;
+  padding: 0.45rem 0.5rem 0.35rem;
 }
 
 .game-bottom-nav__item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  min-width: 3rem;
-  padding: 0.25rem 0.35rem;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 3.1rem;
+  padding: 0.35rem 0.4rem;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.34rem;
   line-height: 1.3;
-  color: #a8a29e;
+  color: #78716c;
   text-decoration: none;
+  border: 2px solid transparent;
+  border-radius: 0.65rem;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.game-bottom-nav__item:hover {
+  color: var(--game-ink);
+  background: rgba(236, 253, 245, 0.85);
 }
 
 .game-bottom-nav__item--active {
-  color: var(--game-green-dark);
-  transform: translateY(-2px);
+  color: var(--game-ink);
+  background: #bbf7d0;
+  border-color: var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-ink);
+  transform: translateY(-3px);
 }
 
 .game-bottom-nav__grass {
-  height: 8px;
-  background: repeating-linear-gradient(90deg, #4ade80 0, #4ade80 6px, #22c55e 6px, #22c55e 12px);
+  height: 10px;
+  background: repeating-linear-gradient(90deg, #4ade80 0, #4ade80 6px, #22c55e 6px, #22c55e 12px, #16a34a 12px, #16a34a 18px);
   border-top: 2px solid var(--game-ink);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.18);
 }
 
 /* Cabeçalhos de página */
