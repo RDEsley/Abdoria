@@ -68,7 +68,11 @@ export function AppLayout() {
   };
 
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const hudFundoClass = `game-card-fundo--${cosmeticos.fundo_equipado.replace('fundo_', '')}`;
+  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const isDefaultFundo = cosmeticos.fundo_equipado === 'fundo_padrao';
+  const hudShellClass = isDefaultFundo
+    ? 'game-hud-shell--default'
+    : `game-hud-shell--skinned game-card-fundo--${fundoKey}`;
 
   return (
     <div className="game-app relative flex min-h-screen flex-col md:flex-row text-stone-800">
@@ -104,7 +108,7 @@ export function AppLayout() {
       </aside>
 
       <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
-        <div className={`game-hud-shell ${hudFundoClass} px-4 pt-4 md:px-8 md:pt-6`}>
+        <div className={`game-hud-shell ${hudShellClass} px-4 pt-4 md:px-8 md:pt-6`}>
           <GameHud />
         </div>
 
