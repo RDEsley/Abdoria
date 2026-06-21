@@ -22,7 +22,8 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
-    "serverless-http": "^3.2.0"
+    "serverless-http": "^3.2.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.3",
