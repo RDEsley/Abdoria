@@ -122,6 +122,8 @@ export interface UserPreferencias {
   tutorial_visto: boolean;
   /** Estilo de combate na patrulha AFK. */
   arma_preferida?: ArmaPreferida | null;
+  /** Arcos e espadas desbloqueados na loja da patrulha. */
+  patrol_armas?: import('../patrol/shop.js').PatrolArmasState;
   /** Não exibir aviso de teto diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
   /** Slugs sempre incluídos nos treinos sugeridos. */
@@ -169,9 +171,21 @@ export type {
   AfkEnemyTier,
 } from '../afk/combat.js';
 
+export type {
+  SlimeEyeStyle,
+  SlimeMouthStyle,
+  SlimeExtraAccessory,
+  SlimeAccessoryKind,
+  SlimeAppearance,
+} from '../afk/slime-appearance.js';
+
 export {
   AFK_BOSS_INTERVAL,
   AFK_ENEMIES,
+  AFK_CRIT_CHANCE,
+  AFK_CRIT_DAMAGE,
+  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_CHANCE,
   AFK_HERO_DAMAGE_ARCO,
   AFK_HERO_DAMAGE_ESPADA,
   AFK_KILLS_PER_MINUTE,
@@ -182,10 +196,18 @@ export {
   getEnemyMaxHp,
   hashCombatSeed,
   pickNextEnemy,
+  resolveNextSpawn,
   advanceKillsUntilBoss,
   shouldSpawnBoss,
   shouldSpawnElite,
+  shouldSpawnGoldenSlime,
 } from '../afk/combat.js';
+
+export {
+  resolveSlimeAppearance,
+  collectSlimeAccessories,
+  accessoryDropMotion,
+} from '../afk/slime-appearance.js';
 
 export interface XpDiario {
   /** XP de exercícios hoje (teto padrão/dia). */
@@ -325,6 +347,49 @@ export interface CosmeticsResponse extends ShopResponse {
   moedas_por_nivel: number;
 }
 
+export type {
+  PatrolWeaponKind,
+  PatrolWeaponRarity,
+  PatrolWeaponUnlock,
+  PatrolWeaponDefinition,
+  PatrolArmasState,
+} from '../patrol/shop.js';
+
+export {
+  DEFAULT_ARCO_ID,
+  DEFAULT_ESPADA_ID,
+  PATROL_WEAPONS,
+  PATROL_WEAPON_BY_ID,
+  PATROL_WEAPON_RARITY_LABELS,
+  patrolWeaponsByKind,
+  patrolHeroDamage,
+  resolvePatrolArmas,
+} from '../patrol/shop.js';
+
+export interface PatrolShopCatalogItem {
+  id: string;
+  kind: import('../patrol/shop.js').PatrolWeaponKind;
+  nome: string;
+  descricao: string;
+  raridade: import('../patrol/shop.js').PatrolWeaponRarity;
+  desbloqueada: boolean;
+  equipada: boolean;
+  pode_comprar: boolean;
+  futuro: boolean;
+  unlock_label: string;
+  unlock: import('../patrol/shop.js').PatrolWeaponUnlock;
+  dano_bonus: number;
+  dano_total: number;
+}
+
+export interface PatrolShopResponse {
+  abdoria: number;
+  armas: import('../patrol/shop.js').PatrolArmasState;
+  arma_preferida: ArmaPreferida;
+  arcos: PatrolShopCatalogItem[];
+  espadas: PatrolShopCatalogItem[];
+}
+
 export interface UpdateUserDadosResponse {
   user: IUserDocument;
   xp_ganho_habilidades: number;
@@ -424,10 +489,26 @@ export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
 export const PATROL_CACHE_HOURS = 6;
 export const PATROL_CACHE_SHOP_PRICE = 50;
 export const PATROL_CACHE_LABEL = 'Baú da Patrulha';
-/** @deprecated Loot não é mais por intervalo de tempo — use AFK_KILL_DROP_CHANCE. */
+/** @deprecated Loot não é mais por intervalo de tempo — use AFK_KILL_DROP_CHANCE_COMMON. */
 export const AFK_REWARD_INTERVAL_MINUTES = 15;
-export const AFK_KILL_DROP_CHANCE = 10;
+export const AFK_KILL_DROP_CHANCE_COMMON = 4;
+export const AFK_KILL_DROP_CHANCE_ELITE = 6;
+export const AFK_KILL_DROP_CHANCE_BOSS = 10;
+/** @deprecated use tier-specific constants */
+export const AFK_KILL_DROP_CHANCE = AFK_KILL_DROP_CHANCE_COMMON;
 export const AFK_MAX_MINUTES = 24 * 60;
+
+export interface AfkKillDropChances {
+  common: number;
+  elite: number;
+  boss: number;
+}
+
+export const AFK_KILL_DROP_CHANCES: AfkKillDropChances = {
+  common: AFK_KILL_DROP_CHANCE_COMMON,
+  elite: AFK_KILL_DROP_CHANCE_ELITE,
+  boss: AFK_KILL_DROP_CHANCE_BOSS,
+};
 
 export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 

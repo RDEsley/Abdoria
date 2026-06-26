@@ -11,7 +11,10 @@ import {
   shouldSpawnBoss,
 } from '../../shared/afk/combat.ts';
 import {
-  AFK_KILL_DROP_CHANCE,
+  AFK_KILL_DROP_CHANCE_BOSS,
+  AFK_KILL_DROP_CHANCE_COMMON,
+  AFK_KILL_DROP_CHANCE_ELITE,
+  AFK_KILL_DROP_CHANCES,
   AFK_MAX_MINUTES,
   PATROL_CACHE_HOURS,
 } from '../../shared/types/index.ts';
@@ -23,7 +26,7 @@ import {
 } from '../../shared/utils/afk.ts';
 import { grantPatrolCacheRewards, syncAfkRewards, claimAfkRewards } from '../../server/src/services/afk.ts';
 import { applyKill, ensureCombat, simulateOfflineKills } from '../../server/src/services/afk-combat.ts';
-import { rollKillDrop, rollLootTable } from '../../server/src/services/afk-rolls.ts';
+import { getKillDropChanceForTier, rollKillDrop, rollLootTable } from '../../server/src/services/afk-rolls.ts';
 import type { UserDocument } from '../../server/src/types/user-document.ts';
 import { EMPTY_AFK_PENDING } from '../../server/src/repositories/user-repository.ts';
 
@@ -64,9 +67,15 @@ function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}):
   };
 }
 
-assert.equal(AFK_KILL_DROP_CHANCE, 10);
+assert.equal(AFK_KILL_DROP_CHANCE_COMMON, 4);
+assert.equal(AFK_KILL_DROP_CHANCE_ELITE, 6);
+assert.equal(AFK_KILL_DROP_CHANCE_BOSS, 10);
+assert.equal(AFK_KILL_DROP_CHANCES.common, 4);
 assert.equal(AFK_LEGENDARY_ROLL_BOSS, 9991);
 assert.equal(AFK_LEGENDARY_ROLL_NORMAL, 9995);
+assert.equal(getKillDropChanceForTier('common'), 4);
+assert.equal(getKillDropChanceForTier('elite'), 6);
+assert.equal(getKillDropChanceForTier('boss'), 10);
 
 assert.equal(afkProgressToCap(0), 0);
 assert.equal(afkDisplayMinutes(1400, 100), AFK_MAX_MINUTES);
@@ -87,11 +96,11 @@ assert.ok(
 
 const uClaim = mockUser(25);
 claimAfkRewards(uClaim);
-assert.equal(uClaim.afk.minutos_acumulados, 25, 'claim keeps patrol minutes when not capped');
+assert.equal(uClaim.afk.minutos_acumulados, 0, 'claim resets patrol timer');
 
 const uCapped = mockUser(AFK_MAX_MINUTES);
 claimAfkRewards(uCapped);
-assert.equal(uCapped.afk.minutos_acumulados, 0, 'claim at cap resets patrol timer');
+assert.equal(uCapped.afk.minutos_acumulados, 0, 'claim at cap also resets patrol timer');
 
 const uBoss = mockUser(0);
 ensureCombat(uBoss);
@@ -111,12 +120,12 @@ assert.ok(
 let procMisses = 0;
 for (let i = 0; i < 50; i += 1) {
   const trial = { ...EMPTY_AFK_PENDING };
-  rollKillDrop(uBoss, 10_000 + i, trial);
+  rollKillDrop(uBoss, 10_000 + i, trial, { tier: 'common' });
   if (trial.xp === 0 && trial.abdoria === 0 && trial.energy_drinks === 0 && trial.cosmetic_ids.length === 0 && !trial.titulo_secreto) {
     procMisses += 1;
   }
 }
-assert.ok(procMisses > 0, 'kill drop respects proc chance');
+assert.ok(procMisses > 20, 'common kill drop respects 4% proc chance');
 
 const uOffline = mockUser(0);
 const kills = simulateOfflineKills(uOffline, 12);

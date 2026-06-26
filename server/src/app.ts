@@ -7,6 +7,7 @@ import { shopRouter } from './routes/shop.js';
 import { exercisesRouter } from './routes/exercises.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
 import { metaRouter } from './routes/meta.js';
+import { patrolShopRouter } from './routes/patrol-shop.js';
 import { presetsRouter } from './routes/presets.js';
 import { usersRouter } from './routes/users.js';
 import { workoutsRouter } from './routes/workouts.js';
@@ -45,6 +46,7 @@ export function createApp() {
   app.use('/api/presets', presetsRouter);
   app.use('/api/leaderboard', leaderboardRouter);
   app.use('/api/meta', metaRouter);
+  app.use('/api/patrol-shop', patrolShopRouter);
 
   return app;
 }

@@ -1,22 +1,57 @@
-import type { AfkCombatSnapshot, AfkEnemyId } from '@/types';
-import { AFK_ENEMIES } from '@/types';
+import { useMemo } from 'react';
+import type { AfkCombatSnapshot } from '@/types';
+import {
+  AFK_ENEMIES,
+  accessoryDropMotion,
+  collectSlimeAccessories,
+  hashCombatSeed,
+  resolveSlimeAppearance,
+} from '@/types';
+import { SlimeAccessoryLayer, SlimeAccessoryLoot } from '@/components/afk/SlimeAccessories';
 
 interface Props {
   combat: AfkCombatSnapshot;
+  userId: string;
+  spawnKillsTotal: number;
   hit: boolean;
   dying: boolean;
+  looting: boolean;
   hitKey: number;
 }
 
-export function AfkEnemySprite({ combat, hit, dying, hitKey }: Props) {
+export function AfkEnemySprite({
+  combat,
+  userId,
+  spawnKillsTotal,
+  hit,
+  dying,
+  looting,
+  hitKey,
+}: Props) {
   const enemyId = combat.enemy_id;
   const label = AFK_ENEMIES[enemyId]?.label ?? 'Inimigo';
+
+  const faceSeed = useMemo(
+    () => hashCombatSeed(`${userId}:${spawnKillsTotal}:face`),
+    [userId, spawnKillsTotal],
+  );
+
+  const appearance = useMemo(
+    () => resolveSlimeAppearance(faceSeed, enemyId, combat.is_boss, combat.elite),
+    [faceSeed, enemyId, combat.is_boss, combat.elite],
+  );
+
+  const accessories = useMemo(
+    () => collectSlimeAccessories(enemyId, combat.is_boss, combat.elite, appearance),
+    [enemyId, combat.is_boss, combat.elite, appearance],
+  );
 
   const className = [
     'game-afk-enemy',
     `game-afk-enemy--${enemyId}`,
     combat.is_boss ? 'game-afk-enemy--boss' : '',
     combat.elite ? 'game-afk-enemy--elite' : '',
+    enemyId === 'golden_slime' ? 'game-afk-enemy--golden' : '',
     hit ? 'game-afk-enemy--hit' : '',
     dying ? 'game-afk-enemy--dying' : '',
   ]
@@ -26,103 +61,77 @@ export function AfkEnemySprite({ combat, hit, dying, hitKey }: Props) {
   return (
     <div key={hit ? `hit-${hitKey}` : 'idle'} className={className} aria-label={label}>
       {combat.is_boss && <div className="game-afk-enemy__boss-aura" aria-hidden />}
+      {enemyId === 'golden_slime' && <div className="game-afk-enemy__golden-sparkle" aria-hidden />}
+
       <div className="game-afk-enemy__sprite">
-        <SlimeBody id={enemyId} isBoss={combat.is_boss} elite={combat.elite} />
+        <SlimeBody
+          enemyId={enemyId}
+          isBoss={combat.is_boss}
+          appearance={appearance}
+          accessories={accessories}
+          looting={looting}
+        />
       </div>
+
+      {looting && (
+        <div className="game-afk-enemy__loot-layer" aria-hidden>
+          {accessories.map((kind, index) => {
+            const motion = accessoryDropMotion(faceSeed, index);
+            return (
+              <SlimeAccessoryLoot
+                key={`${kind}-${index}`}
+                kind={kind}
+                driftX={motion.x}
+                rotation={motion.rot}
+                delayMs={index * 45}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 function SlimeBody({
-  id,
+  enemyId,
   isBoss,
-  elite,
+  appearance,
+  accessories,
+  looting,
 }: {
-  id: AfkEnemyId;
+  enemyId: string;
   isBoss: boolean;
-  elite: boolean;
+  appearance: ReturnType<typeof resolveSlimeAppearance>;
+  accessories: ReturnType<typeof collectSlimeAccessories>;
+  looting: boolean;
 }) {
+  const mouthClass = `game-afk-slime__mouth game-afk-slime__mouth--${appearance.mouth}${
+    isBoss ? ' game-afk-slime__mouth--boss' : ''
+  }`;
+
   return (
     <>
       <div className="game-afk-slime__blob" />
-      <div className="game-afk-slime__shine" />
-      <div className="game-afk-slime__shine game-afk-slime__shine--sm" />
+      <div className="game-afk-slime__shine" aria-hidden />
       <div
-        className={`game-afk-slime__face ${isBoss ? 'game-afk-slime__face--boss' : ''} ${
-          id === 'boss_lich' ? 'game-afk-slime__face--lich' : ''
-        }`}
+        className={`game-afk-slime__face game-afk-slime__face--eyes-${appearance.eyes} ${
+          isBoss ? 'game-afk-slime__face--boss' : ''
+        } ${enemyId === 'boss_lich' ? 'game-afk-slime__face--lich' : ''}`}
       >
         <span className="game-afk-slime__eye game-afk-slime__eye--l">
-          <span className="game-afk-slime__pupil" />
+          <span className="game-afk-slime__iris" />
+          <span className="game-afk-slime__eye-shine game-afk-slime__eye-shine--main" />
         </span>
         <span className="game-afk-slime__eye game-afk-slime__eye--r">
-          <span className="game-afk-slime__pupil" />
+          <span className="game-afk-slime__iris" />
+          <span className="game-afk-slime__eye-shine game-afk-slime__eye-shine--main" />
         </span>
-        <span className={`game-afk-slime__mouth ${isBoss ? 'game-afk-slime__mouth--boss' : ''}`} />
+        <span className={mouthClass} />
+        <span className="game-afk-slime__cheek game-afk-slime__cheek--l" aria-hidden />
+        <span className="game-afk-slime__cheek game-afk-slime__cheek--r" aria-hidden />
       </div>
-      <SlimeAccessory id={id} isBoss={isBoss} elite={elite} />
+      <SlimeAccessoryLayer accessories={accessories} looting={looting} />
     </>
   );
-}
-
-function SlimeAccessory({
-  id,
-  isBoss,
-  elite,
-}: {
-  id: AfkEnemyId;
-  isBoss: boolean;
-  elite: boolean;
-}) {
-  if (isBoss) {
-    switch (id) {
-      case 'boss_colossus':
-        return <span className="game-afk-slime__crown" aria-hidden />;
-      case 'boss_lich':
-        return (
-          <>
-            <span className="game-afk-slime__hood" aria-hidden />
-            <span className="game-afk-slime__staff" aria-hidden />
-          </>
-        );
-      case 'boss_hydra':
-        return (
-          <>
-            <span className="game-afk-slime__mini-head game-afk-slime__mini-head--l" aria-hidden />
-            <span className="game-afk-slime__mini-head game-afk-slime__mini-head--c" aria-hidden />
-            <span className="game-afk-slime__mini-head game-afk-slime__mini-head--r" aria-hidden />
-          </>
-        );
-      default:
-        return <span className="game-afk-slime__crown" aria-hidden />;
-    }
-  }
-
-  switch (id) {
-    case 'bat':
-    case 'demon_bat':
-      return (
-        <>
-          <span className="game-afk-slime__wing game-afk-slime__wing--l" aria-hidden />
-          <span className="game-afk-slime__wing game-afk-slime__wing--r" aria-hidden />
-          {id === 'demon_bat' && <span className="game-afk-slime__horn" aria-hidden />}
-        </>
-      );
-    case 'zombie':
-      return <span className="game-afk-slime__scar" aria-hidden />;
-    case 'skeleton':
-    case 'armored_skeleton':
-      return (
-        <>
-          <span className="game-afk-slime__bone game-afk-slime__bone--a" aria-hidden />
-          <span className="game-afk-slime__bone game-afk-slime__bone--b" aria-hidden />
-          {id === 'armored_skeleton' && <span className="game-afk-slime__helm" aria-hidden />}
-        </>
-      );
-    case 'slime_knight':
-      return <span className="game-afk-slime__helm" aria-hidden />;
-    default:
-      if (elite) return <span className="game-afk-slime__spike" aria-hidden />;
-      return null;
-  }
 }

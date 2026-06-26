@@ -21,6 +21,7 @@ import type {
   LeaderboardEntry,
   LeaderboardMetric,
   OnboardingPayload,
+  PatrolShopResponse,
   MusculoPrincipal,
   UpdateUserDadosResponse,
   UserDadosSalvos,
@@ -213,6 +214,7 @@ export interface AfkMetaResponse {
   has_rewards: boolean;
   arma_preferida: ArmaPreferida;
   kill_drop_chance: number;
+  kill_drop_chances?: { common: number; elite: number; boss: number };
   max_minutes: number;
   capped: boolean;
   combat: AfkCombatSnapshot;
@@ -237,6 +239,7 @@ export interface AfkPingResponse {
   pending: AfkPendingReward;
   has_rewards: boolean;
   kill_drop_chance: number;
+  kill_drop_chances?: { common: number; elite: number; boss: number };
   max_minutes: number;
   capped: boolean;
   combat: AfkCombatSnapshot;
@@ -274,6 +277,24 @@ export function updateMetaPreferences(data: {
   arma_preferida?: ArmaPreferida;
 }): Promise<IUserDocument> {
   return fetchJson('/meta/preferences', { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function getPatrolShop(): Promise<PatrolShopResponse> {
+  return fetchJson('/patrol-shop');
+}
+
+export function purchasePatrolWeapon(id: string): Promise<{
+  user: IUserDocument;
+  abdoria_gasta: number;
+}> {
+  return fetchJson('/patrol-shop/purchase', { method: 'POST', body: JSON.stringify({ id }) });
+}
+
+export function equipPatrolWeapon(
+  kind: 'arco' | 'espada',
+  id: string,
+): Promise<{ user: IUserDocument }> {
+  return fetchJson('/patrol-shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });
 }
 
 export type { MusculoPrincipal, ApiError };

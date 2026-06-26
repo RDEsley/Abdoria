@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Swords } from 'lucide-react';
 import { AfkPatrolModal } from '@/components/afk/AfkPatrolModal';
+import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { useApp } from '@/hooks/useApp';
 import type { AfkPendingReward } from '@/types';
 
@@ -41,7 +41,7 @@ export function AfkFab() {
         aria-label={hasRewards ? 'Patrulha de Abdoria — recompensas disponíveis' : 'Abrir patrulha de Abdoria'}
       >
         <span className="game-afk-fab__icon" aria-hidden>
-          <Swords size={18} strokeWidth={2.75} />
+          <AfkFabSwords />
         </span>
         <span className="game-afk-fab__label">Patrulha</span>
         {hasRewards && <span className="game-afk-fab__badge" aria-hidden />}

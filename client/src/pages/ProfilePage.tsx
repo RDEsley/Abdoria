@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Backpack, Save, Settings, User as UserIcon } from 'lucide-react';
+import { AfkWeaponToggle } from '@/components/afk/AfkWeaponToggle';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { InventoryModal } from '@/components/inventory/InventoryModal';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
@@ -13,7 +14,7 @@ import { updateMe } from '@/lib/api';
 import { playTabSwitch } from '@/lib/sounds';
 import { formatTrainingDuration } from '@/lib/utils';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal, type ArmaPreferida, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -24,10 +25,21 @@ export function ProfilePage() {
   const [tab, setTab] = useState<Tab>('dados');
   const [saving, setSaving] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida>('arco');
+
+  useEffect(() => {
+    setArmaPreferida(profile?.preferencias?.arma_preferida ?? 'arco');
+  }, [profile?.preferencias?.arma_preferida]);
 
   if (!profile) {
     return <PageLoader />;
   }
+
+  const handleWeaponChange = async (weapon: ArmaPreferida) => {
+    setArmaPreferida(weapon);
+    await refreshUser();
+    await refresh();
+  };
 
   const imc = profile.imc ?? (profile.peso_kg && profile.altura_cm ? calcImc(profile.peso_kg, profile.altura_cm) : null);
   const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
@@ -198,6 +210,13 @@ export function ProfilePage() {
             </select>
             <p className="text-xs font-medium text-stone-500">{OBJETIVO_HINTS[profile.objetivo]}</p>
           </label>
+          <div className="flex flex-col gap-1.5 text-sm font-bold text-stone-700">
+            Arma da patrulha
+            <AfkWeaponToggle value={armaPreferida} onChange={(w) => void handleWeaponChange(w)} />
+            <p className="text-xs font-medium text-stone-500">
+              Define o estilo de combate na Patrulha AFK (também escolhida no primeiro acesso).
+            </p>
+          </div>
           <div className="game-profile-form__actions">
             <GameButton
               type="submit"

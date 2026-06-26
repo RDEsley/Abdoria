@@ -56,14 +56,18 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **Teto diário** — **100 XP + 5 por nível** (sobe conforme você evolui)
 - **XP extra** — streak, conquistas, loja e habilidades desbloqueadas (sem limite diário)
 - **Patrulha AFK** — herói em combate automático enquanto você está fora (máx. **24h** de patrulha)
-  - **Loot por kill:** **10% de chance** a cada inimigo derrotado (mesma tabela de raridade de antes)
-  - Inimigos **slime**, elites, boss a cada **99 kills**
-  - Arma preferida: **arco** ou **espada** (dano e animação diferentes)
-  - Coletar recompensas **não zera** o tempo de patrulha (só zera ao atingir o teto de 24h)
+  - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
+  - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
+  - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Abdoria**
+  - **Rei Slime** (boss) a cada **99 kills**, com loot bônus
+  - **Loja da Patrulha** — compre e equipe arcos (espadas e magias em breve) com Abdoria
+  - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da patrulha ou no onboarding
+  - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a patrulha)
 - **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Abdoria)
 
 ### Personalizar e recompensar
-- **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais
+- **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
+- **Loja da Patrulha** — arcos com bônus de dano para o combate AFK (vendedor animado + abas Arcos / Espadas / Magias)
 - **Loja diária** — recompensa grátis + ofertas que renovam todo dia
 - **Código presente** — resgate em **Opções**
 - Perfil com nível, IMC, simulador de definição e estatísticas
@@ -85,15 +89,35 @@ Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
 ### Patrulha AFK — loot por kill
 
-| Etapa | Chance (quando o drop de 10% acerta) |
-|-------|--------------------------------------|
-| +1 XP | 85% |
-| +1 Abdoria | 11% |
-| +1 Energy Drink | 4% |
-| Cosmético lendário | ~0,05% (boss: ~0,09%) |
-| Título secreto | 0,01% |
+**Chance de dropar algo (por kill):**
+
+| Tier | Chance |
+|------|--------|
+| Comum | 4% |
+| Elite (~12% dos spawns) | 6% |
+| Boss (a cada 99 kills) | 10% |
+
+**Quando o drop acerta:**
+
+| Recompensa | % do drop | Comum (efetivo/kill) | Elite | Boss |
+|------------|-----------|----------------------|-------|------|
+| +1 XP | 85% | 3,40% | 5,10% | 8,50% |
+| +1 Abdoria | 11% | 0,44% | 0,66% | 1,10% |
+| +1 Energy Drink | 4% | 0,16% | 0,24% | 0,40% |
+| Cosmético lendário | 0,04% / 0,08% boss | ~0,0016% | ~0,0024% | ~0,008% |
+| Título secreto | 0,01% | ~0,0004% | ~0,0006% | ~0,001% |
 
 Offline: ~**8 kills/min** de patrulha. Boss a cada **99** inimigos com loot bônus.
+
+**Inimigos especiais:**
+
+| Inimigo | Como aparece | Recompensa |
+|---------|----------------|------------|
+| Elite | ~12% dos spawns | Loot com chance **6%** por kill |
+| **Golden Slime** | **1 em 1000** inimigos | **10 Abdoria** garantidos (sem rolagem normal de loot) |
+| **Rei Slime** (boss) | A cada **99** kills | Loot com chance **10%** por kill |
+
+**Loja da Patrulha** (`/api/patrol-shop`): arcos compráveis com Abdoria; equipar atualiza o dano no combate. Espadas e magias estão marcadas como *em breve*.
 
 ---
 
@@ -109,7 +133,8 @@ Abdoria/
 │   ├── routes/             → Endpoints REST
 │   └── services/           → Regras de negócio
 ├── shared/
-│   ├── afk/                → Combate AFK, inimigos, constantes de boss/loot
+│   ├── afk/                → Combate AFK, inimigos, slimes, boss/loot
+│   ├── patrol/             → Catálogo da Loja da Patrulha (arcos/espadas)
 │   ├── types/              → Contratos compartilhados (API, domínio)
 │   └── utils/              → Utilitários (timezone, user-dados, afk)
 ├── supabase/migrations/    → Schema Postgres
@@ -184,7 +209,7 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 | Script | Uso |
 |--------|-----|
 | `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
-| `npx tsx scripts/dev/verify-afk.ts` | Valida patrulha AFK, combate e drops por kill |
+| `npx tsx scripts/dev/verify-afk.ts` | Valida patrulha AFK, combate, Golden Slime e drops por kill |
 | `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
 | `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |

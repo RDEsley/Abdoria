@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
@@ -12,9 +12,23 @@ interface Props {
   onClose: () => void;
 }
 
+type ChestPhase = 'closed' | 'shaking' | 'opening' | 'open';
+
 export function AfkRewardCelebration({ claimed, onClose }: Props) {
   const { user } = useAuth();
   const effectId = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp).efeito_equipado;
+  const [phase, setPhase] = useState<ChestPhase>('closed');
+
+  useEffect(() => {
+    const shakeTimer = window.setTimeout(() => setPhase('shaking'), 220);
+    const openTimer = window.setTimeout(() => setPhase('opening'), 520);
+    const revealTimer = window.setTimeout(() => setPhase('open'), 1280);
+    return () => {
+      window.clearTimeout(shakeTimer);
+      window.clearTimeout(openTimer);
+      window.clearTimeout(revealTimer);
+    };
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -41,18 +55,21 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
         transition={{ type: 'spring', stiffness: 340, damping: 22 }}
         onClick={(event) => event.stopPropagation()}
       >
-        <p className="game-daily-reward-card__eyebrow">Patrulha de Abdoria</p>
-        <h2 id="afk-reward-title" className="game-daily-reward-card__title">
-          Baú da Patrulha!
+        <h2 id="afk-reward-title" className="sr-only">
+          Recompensas da patrulha coletadas
         </h2>
-        <p className="game-daily-reward-card__message">Seu herói voltou com o espólio da defesa do reino.</p>
 
-        <div className="mt-4">
-          <AfkRewardGrid pending={claimed} />
-        </div>
+        <AfkRewardGrid
+          pending={claimed}
+          withChest
+          chestCelebrate
+          chestShaking={phase === 'shaking'}
+          chestOpen={phase === 'open'}
+          chestOpening={phase === 'opening'}
+        />
 
-        <GameButton className="w-full mt-5" size="lg" onClick={onClose}>
-          Continuar aventura
+        <GameButton className="w-full mt-5" size="lg" onClick={onClose} disabled={phase !== 'open'}>
+          {phase === 'open' ? 'Continuar' : 'Abrindo baú...'}
         </GameButton>
       </motion.div>
     </div>,

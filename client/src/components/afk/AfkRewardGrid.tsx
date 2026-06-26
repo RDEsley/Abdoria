@@ -1,102 +1,91 @@
-import { Coins, Gift, Sparkles, Zap } from 'lucide-react';
-import { EnergyDrinkIcon } from '@/lib/daily-shop-display';
-import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { CURRENCY_NAME, type AfkPendingReward } from '@/types';
+import { Swords } from 'lucide-react';
+import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
+import { AfkRewardIcon, buildAfkRewardItems, type AfkRewardItem } from '@/lib/afk-rewards';
+import type { AfkPendingReward } from '@/types';
+
+export { countAfkRewardItems } from '@/lib/afk-rewards';
 
 interface Props {
   pending: AfkPendingReward | null | undefined;
+  withChest?: boolean;
+  chestOpen?: boolean;
+  chestOpening?: boolean;
+  chestCelebrate?: boolean;
+  chestShaking?: boolean;
 }
 
-export function AfkRewardGrid({ pending }: Props) {
-  if (!pending) {
-    return (
-      <>
-        <p className="game-afk-rewards__title">Baú da patrulha</p>
-        <p className="game-afk-rewards__empty">Derrote inimigos para encher o baú!</p>
-      </>
-    );
-  }
-
-  const items: {
-    key: string;
-    label: string;
-    icon: React.ReactNode;
-    secret?: boolean;
-    kind: string;
-  }[] = [];
-
-  if (pending.xp > 0) {
-    items.push({ key: 'xp', label: `+${pending.xp} XP`, icon: <Zap size={18} />, kind: 'xp' });
-  }
-  if (pending.abdoria > 0) {
-    items.push({
-      key: 'abdoria',
-      label: `+${pending.abdoria} ${CURRENCY_NAME}`,
-      icon: <Coins size={18} />,
-      kind: 'abdoria',
-    });
-  }
-  if (pending.energy_drinks > 0) {
-    items.push({
-      key: 'drink',
-      label: `+${pending.energy_drinks} Energy Drink`,
-      icon: <EnergyDrinkIcon size={18} />,
-      kind: 'drink',
-    });
-  }
-  (pending.cosmetic_ids ?? []).forEach((id) => {
-    items.push({
-      key: id,
-      label: COSMETIC_BY_ID[id]?.nome ?? id,
-      icon: <Gift size={18} />,
-      kind: 'cosmetic',
-    });
-  });
-  if (pending.titulo_secreto) {
-    items.push({
-      key: 'titulo_secreto',
-      label: COSMETIC_BY_ID.titulo_secreto?.nome ?? 'Título secreto',
-      icon: <Sparkles size={18} />,
-      secret: true,
-      kind: 'secret',
-    });
-  }
-
+function RewardIconGrid({ items, stock = false }: { items: AfkRewardItem[]; stock?: boolean }) {
   return (
-    <>
-      <p className="game-afk-rewards__title">
-        <Gift size={14} aria-hidden />
-        Baú da patrulha ({items.length})
-      </p>
-      {items.length === 0 ? (
-        <p className="game-afk-rewards__empty">Derrote inimigos para encher o baú!</p>
-      ) : (
-        <div className="game-afk-rewards__grid">
-          {items.map((reward, index) => (
-            <div
-              key={reward.key}
-              className={`game-afk-reward game-afk-reward--${reward.kind}${reward.secret ? ' game-afk-reward--secret' : ''}`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <span className="game-afk-reward__icon">{reward.icon}</span>
-              <span className={`game-afk-reward__label${reward.secret ? ' cosmetic-title--secreto' : ''}`}>
-                {reward.label}
-              </span>
-            </div>
-          ))}
+    <div
+      className={`game-afk-rewards__icon-grid${stock ? ' game-afk-rewards__icon-grid--stock' : ''}`}
+      role="list"
+      aria-label="Recompensas da patrulha"
+    >
+      {items.map((item, index) => (
+        <div
+          key={item.key}
+          role="listitem"
+          className={`game-afk-reward-chip game-afk-reward-chip--${item.kind}${item.secret ? ' game-afk-reward-chip--secret' : ''}${stock ? ' game-afk-reward-chip--stock' : ''}`}
+          style={stock ? undefined : { animationDelay: `${index * 0.07}s` }}
+          aria-label={item.ariaLabel}
+          title={item.ariaLabel}
+        >
+          <span className="game-afk-reward-chip__icon">
+            <AfkRewardIcon item={item} size={stock ? 16 : 24} />
+          </span>
+          {item.amount != null && item.amount > 0 && (
+            <span className="game-afk-reward-chip__badge tabular-nums">{item.amount}</span>
+          )}
         </div>
-      )}
-    </>
+      ))}
+    </div>
   );
 }
 
-export function countAfkRewardItems(pending: AfkPendingReward | null | undefined): number {
-  if (!pending) return 0;
-  let n = 0;
-  if (pending.xp > 0) n += 1;
-  if (pending.abdoria > 0) n += 1;
-  if (pending.energy_drinks > 0) n += 1;
-  n += (pending.cosmetic_ids ?? []).length;
-  if (pending.titulo_secreto) n += 1;
-  return n;
+export function AfkRewardGrid({
+  pending,
+  withChest = false,
+  chestOpen = false,
+  chestOpening = false,
+  chestCelebrate = false,
+  chestShaking = false,
+}: Props) {
+  const items = buildAfkRewardItems(pending);
+  const hasLoot = items.length > 0;
+
+  const iconGrid = hasLoot ? <RewardIconGrid items={items} /> : null;
+  const stockGrid = hasLoot ? <RewardIconGrid items={items} stock /> : null;
+
+  const emptyState = (
+    <div className="game-afk-rewards__empty-state">
+      <Swords size={20} aria-hidden />
+    </div>
+  );
+
+  if (withChest) {
+    const showStock = hasLoot && !chestOpen && !chestOpening && !chestCelebrate;
+
+    return (
+      <div className="game-afk-rewards-panel">
+        <AfkPatrolChest
+          open={chestOpen}
+          opening={chestOpening}
+          shaking={chestShaking}
+          ready={hasLoot && !chestOpen && !chestOpening && !chestCelebrate}
+          empty={!hasLoot}
+          celebrate={chestCelebrate}
+          size={chestOpen || chestOpening || chestShaking ? 'lg' : 'sm'}
+          stock={showStock ? stockGrid : null}
+        >
+          {chestOpen || chestOpening ? iconGrid ?? emptyState : null}
+        </AfkPatrolChest>
+      </div>
+    );
+  }
+
+  return (
+    <div className="game-afk-rewards-panel game-afk-rewards-panel--flat">
+      {iconGrid ?? emptyState}
+    </div>
+  );
 }
