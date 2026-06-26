@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { WorkoutPreset } from '../models/WorkoutPreset.js';
-import { User } from '../models/User.js';
+import { WorkoutPreset } from '../domain/WorkoutPreset.js';
+import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { recommendWorkout, getRecommendedPresetsList } from '../services/recommendation.js';

@@ -85,13 +85,20 @@ Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
 ```
 Abdoria/
-├── client/              → Interface (React + Vite + Tailwind)
-├── server/              → API e regras do jogo (Node + Express)
-├── supabase/migrations/ → Schema Postgres
-├── shared/types/        → Tipos compartilhados entre front e back
-├── api/                 → Entrada serverless na Vercel
-├── docs/                → Documentação amigável
-└── scripts/             → Setup, build e deploy
+├── client/                 → Interface (React + Vite + Tailwind)
+├── server/src/
+│   ├── domain/             → Facades de domínio (User, Exercise, …)
+│   ├── repositories/       → Acesso ao Postgres (Supabase)
+│   ├── db/seeds/           → Dados iniciais + `npm run seed`
+│   ├── routes/             → Endpoints REST
+│   └── services/           → Regras de negócio
+├── shared/
+│   ├── types/              → Contratos compartilhados (API, domínio)
+│   └── utils/              → Utilitários compartilhados (timezone, user-dados)
+├── supabase/migrations/    → Schema Postgres
+├── api/                    → Entrada serverless na Vercel
+├── docs/                   → Documentação amigável
+└── scripts/                → Setup, build e deploy (`scripts/dev/` = ferramentas locais)
 ```
 
 ---
@@ -104,6 +111,14 @@ Abdoria/
 
 - [Node.js](https://nodejs.org/) **20.x** (veja [`.nvmrc`](./.nvmrc))
 - Projeto no [Supabase](https://supabase.com/) com Postgres
+
+### Banco de dados (Supabase Postgres)
+
+O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`, aplique o schema:
+
+1. Crie um projeto em [supabase.com](https://supabase.com/)
+2. No **SQL Editor**, execute o arquivo [`supabase/migrations/20250620000000_initial_schema.sql`](./supabase/migrations/20250620000000_initial_schema.sql)  
+   (ou use `supabase db push` se tiver o [Supabase CLI](https://supabase.com/docs/guides/cli) linkado ao projeto)
 
 ### Passos
 
@@ -143,6 +158,14 @@ npm run dev
 
 Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 
+**Ferramentas de manutenção local** (não fazem parte do app; em [`scripts/dev/`](./scripts/dev/)):
+
+| Script | Uso |
+|--------|-----|
+| `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
+| `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
+| `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |
+
 ---
 
 ## Deploy na Vercel
@@ -163,7 +186,7 @@ O projeto está configurado para deploy contínuo a partir da branch `main`.
 
 Modelo completo em [`.env.example`](./.env.example).
 
-Remova `MONGODB_URI` se ainda existir no projeto Vercel — a v0.2.0 usa Supabase.
+Confirme que o schema Postgres está aplicado no Supabase (ver [Banco de dados](#banco-de-dados-supabase-postgres)) e que `/api/health` retorna `"database": "connected"`.
 
 ### Build
 

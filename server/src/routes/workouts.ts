@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { Exercise } from '../models/Exercise.js';
-import { User, sanitizeUser } from '../models/User.js';
-import { WorkoutHistory } from '../models/WorkoutHistory.js';
+import { Exercise } from '../domain/Exercise.js';
+import { User, sanitizeUser } from '../domain/User.js';
+import { WorkoutHistory } from '../domain/WorkoutHistory.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
@@ -73,7 +73,7 @@ workoutsRouter.get('/stats/recommendations', async (req: AuthRequest, res) => {
       return;
     }
 
-    const treinoHoje = await hasTrainedToday(user._id.toString());
+    const treinoHoje = await hasTrainedToday(user.id.toString());
     const [treinoSugerido, alertas] = await Promise.all([
       getSuggestedWorkout(user),
       getRecommendationAlerts(user),
@@ -107,7 +107,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     syncAfkRewards(user);
     await user.save();
 
-    const userId = user._id.toString();
+    const userId = user.id.toString();
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
@@ -117,7 +117,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       hasTrainedToday(userId),
       getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
       WorkoutHistory.aggregate([
-        { $match: { usuario_id: user._id, concluido_em: { $gte: sixMonthsAgo } } },
+        { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
         {
           $group: {
             _id: { $dateToString: { format: '%Y-%m', date: '$concluido_em' } },
@@ -127,11 +127,11 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
         { $sort: { _id: 1 } },
       ]),
       WorkoutHistory.aggregate([
-        { $match: { usuario_id: user._id } },
+        { $match: { usuario_id: user.id } },
         { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
       ]),
       WorkoutHistory.aggregate([
-        { $match: { usuario_id: user._id } },
+        { $match: { usuario_id: user.id } },
         { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
       ]),
     ]);
@@ -227,7 +227,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       const found = exerciseBySlug.get(e.slug);
 
       if (!exerciseId) {
-        exerciseId = found?._id?.toString();
+        exerciseId = found?.id?.toString();
       }
 
       musculosSet.add(e.musculo_principal);
@@ -238,7 +238,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       }
 
       return {
-        exercicio_id: exerciseId ?? found?._id ?? crypto.randomUUID(),
+        exercicio_id: exerciseId ?? found?.id ?? crypto.randomUUID(),
         slug: e.slug,
         nome: e.nome,
         duracao_segundos: e.duracao_segundos,
@@ -254,7 +254,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const streakBefore = user.gamificacao.streak_atual;
 
     const history = await WorkoutHistory.create({
-      usuario_id: user._id,
+      usuario_id: user.id,
       treino_nome,
       treino_tipo,
       exercicios: resolvedExercises,
@@ -266,8 +266,8 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
 
     const rodadaCompleta = await markCycleCompleted(user, treino_tipo);
 
-    await syncUserGamification(user._id.toString());
-    const updatedUser = await User.findById(user._id);
+    await syncUserGamification(user.id.toString());
+    const updatedUser = await User.findById(user.id);
     if (!updatedUser) {
       res.status(500).json({ error: 'Erro ao atualizar usuário.' });
       return;
@@ -294,7 +294,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const abdoriaGanha = awardAbdoriaFromXpProgress(updatedUser);
     syncShopUnlocks(updatedUser);
 
-    await WorkoutHistory.updateById(history._id, { xp_ganho: xpAwarded });
+    await WorkoutHistory.updateById(history.id, { xp_ganho: xpAwarded });
     await updatedUser.save();
 
     const streakAfter = updatedUser.gamificacao.streak_atual;

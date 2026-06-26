@@ -1,4 +1,4 @@
-import type { UserDocument } from '../models/User.js';
+import type { UserDocument } from '../domain/User.js';
 import type { XpBreakdown } from '../types/index.js';
 import {
   ABDORIA_XP_STEP,

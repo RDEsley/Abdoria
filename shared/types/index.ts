@@ -538,13 +538,13 @@ export interface IUser {
 }
 
 export interface IUserDocument extends IUser {
-  _id: string;
+  id: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface IExerciseDocument extends IExercise {
-  _id: string;
+  id: string;
 }
 
 export interface WorkoutExerciseEntry {
@@ -571,7 +571,7 @@ export interface IWorkoutHistory {
 }
 
 export interface IWorkoutHistoryDocument extends IWorkoutHistory {
-  _id: string;
+  id: string;
 }
 
 export interface Achievement extends AchievementDefinition {
@@ -792,7 +792,7 @@ export interface IWorkoutPreset {
 }
 
 export interface IWorkoutPresetDocument extends IWorkoutPreset {
-  _id: string;
+  id: string;
 }
 
 export interface LeaderboardEntry {

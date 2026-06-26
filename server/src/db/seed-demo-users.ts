@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
-import { User } from '../models/User.js';
+import { User } from '../domain/User.js';
 import { ABDORIA_XP_STEP } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
-import { DEMO_USERS } from '../seeds/demo-users.js';
+import { DEMO_USERS } from '../db/seeds/demo-users.js';
 import { buildNpcCosmeticos } from '../services/abdoria-leaderboard.js';
 
 /** Cria ou atualiza jogadores fictícios para ranking (idempotente). */

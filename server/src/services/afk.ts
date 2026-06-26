@@ -1,4 +1,4 @@
-import type { UserDocument } from '../models/User.js';
+import type { UserDocument } from '../domain/User.js';
 import { COSMETICS } from '../data/cosmetics.js';
 import {
   AFK_MAX_MINUTES,
@@ -48,16 +48,16 @@ function pickLegendaryCosmeticId(user: UserDocument): string | null {
   if (candidates.length === 0) {
     const anyLegendary = COSMETICS.filter((c) => (c.raridade as CosmeticRarity) === 'lendario' && !unlocked.has(c.id));
     if (anyLegendary.length === 0) return null;
-    const idx = hashIntervalSeed(String(user._id), Date.now()) % anyLegendary.length;
+    const idx = hashIntervalSeed(String(user.id), Date.now()) % anyLegendary.length;
     return anyLegendary[idx]?.id ?? null;
   }
-  const idx = hashIntervalSeed(String(user._id), Date.now()) % candidates.length;
+  const idx = hashIntervalSeed(String(user.id), Date.now()) % candidates.length;
   return candidates[idx]?.id ?? null;
 }
 
 /** Recompensa a cada 30 min — raridades mais difíceis. */
 function rollIntervalReward(user: UserDocument, intervalIndex: number, pending: AfkPendingReward): void {
-  const roll = hashIntervalSeed(String(user._id), intervalIndex) % 10000;
+  const roll = hashIntervalSeed(String(user.id), intervalIndex) % 10000;
 
   if (roll >= 9999) {
     pending.titulo_secreto = true;

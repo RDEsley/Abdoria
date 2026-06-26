@@ -71,7 +71,7 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
   };
 
   const user: UserDocument = {
-    _id: profile.id,
+    id: profile.id,
     email: profile.email,
     nome: profile.nome,
     idade: profile.idade ?? undefined,
@@ -179,7 +179,7 @@ function mapPatchToRow(patch: Record<string, unknown>): Record<string, unknown> 
 }
 
 export class UserMutable implements UserDocument {
-  _id!: string;
+  id!: string;
   email!: string;
   passwordHash?: string;
   nome!: string;
@@ -226,11 +226,11 @@ export class UserMutable implements UserDocument {
     const { error: profileError } = await sb
       .from('profiles')
       .update(profileUpdate)
-      .eq('id', this._id);
+      .eq('id', this.id);
 
     if (profileError) throw profileError;
 
-    await ensureAfkRow(this._id);
+    await ensureAfkRow(this.id);
     const { error: afkError } = await sb
       .from('user_afk_state')
       .update({
@@ -238,7 +238,7 @@ export class UserMutable implements UserDocument {
         minutos_acumulados: this.afk.minutos_acumulados ?? 0,
         pending: normalizePending(this.afk.pending),
       })
-      .eq('user_id', this._id);
+      .eq('user_id', this.id);
 
     if (afkError) throw afkError;
     return this;
@@ -312,7 +312,7 @@ export const User = {
 
   async countLeaderboardRank(
     user: {
-      _id: string;
+      id: string;
       nome: string;
       gamificacao: { nivel_xp: number; streak_atual: number };
       cosmeticos?: { moedas?: number | null } | null;
@@ -412,8 +412,8 @@ export const User = {
     if (existing) {
       const patch = mapPatchToRow(update.$set ?? {});
       const sb = getSupabase();
-      await sb.from('profiles').update(patch).eq('id', existing._id);
-      return User.findById(existing._id, { lean: true }) as Promise<UserLean | null>;
+      await sb.from('profiles').update(patch).eq('id', existing.id);
+      return User.findById(existing.id, { lean: true }) as Promise<UserLean | null>;
     }
 
     if (options?.upsert) {
@@ -428,7 +428,7 @@ export const User = {
         passwordHash: merged.password_hash as string | undefined,
         ...merged,
       } as Partial<UserDocument> & { email: string; nome: string });
-      return User.findById(created._id, { lean: true }) as Promise<UserLean | null>;
+      return User.findById(created.id, { lean: true }) as Promise<UserLean | null>;
     }
 
     return null;

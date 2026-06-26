@@ -7,9 +7,9 @@ import {
   streakXpBonus,
   xpLevelFromTotal,
 } from '../types/index.js';
-import { User, type UserDocument } from '../models/User.js';
+import { User, type UserDocument } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
-import { WorkoutHistory } from '../models/WorkoutHistory.js';
+import { WorkoutHistory } from '../domain/WorkoutHistory.js';
 import {
   getTodaySaoPaulo,
   getHourSaoPaulo,
@@ -226,7 +226,7 @@ export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
 
 export async function evaluateAchievements(user: UserDocument): Promise<string[]> {
   const histories = await WorkoutHistory.find(
-    { usuario_id: user._id },
+    { usuario_id: user.id },
     { sort: { concluido_em: -1 } },
   );
   return evaluateAchievementsFromHistories(user, histories as HistorySummary[]);

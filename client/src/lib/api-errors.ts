@@ -25,7 +25,7 @@ const TIMEOUT_MESSAGE = 'A conexão demorou demais. Tente novamente.';
 const GENERIC_MESSAGE = 'Algo deu errado. Tente novamente em instantes.';
 
 const TECHNICAL_PATTERN =
-  /npm run dev|localhost|127\.0\.0\.1|mongodb|\.env|atlas|api offline|erro http|failed to fetch|networkerror|syntaxerror|typeerror|uncaught|stack trace|\/api\//i;
+  /npm run dev|localhost|127\.0\.0\.1|supabase|postgres|\.env|api offline|erro http|failed to fetch|networkerror|syntaxerror|typeerror|uncaught|stack trace|\/api\//i;
 
 const SERVER_MESSAGE_MAP: Record<string, string> = {
   'Slot inválido (0, 1 ou 2).': 'Oferta inválida.',

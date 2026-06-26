@@ -17,7 +17,7 @@ import {
   DEFAULT_AVATAR_ID,
   DEFAULT_BORDA_ID,
 } from '../data/cosmetics.js';
-import { User, type UserDocument } from '../models/User.js';
+import { User, type UserDocument } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import type {
   CosmeticDefinition,

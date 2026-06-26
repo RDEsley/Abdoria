@@ -14,7 +14,7 @@ import type {
 } from './index.js';
 
 export interface UserDocument {
-  _id: string;
+  id: string;
   email: string;
   passwordHash?: string;
   nome: string;

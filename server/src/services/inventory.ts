@@ -1,4 +1,4 @@
-import type { UserDocument } from '../models/User.js';
+import type { UserDocument } from '../domain/User.js';
 import {
   DEFAULT_INVENTARIO,
   DEFAULT_XP_DIARIO,

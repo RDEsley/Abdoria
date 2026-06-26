@@ -1,6 +1,6 @@
 import type { SimulacaoDefinicao, UserPreferencias } from '../types/index.js';
 import { DEFAULT_PREFERENCIAS } from '../types/index.js';
-import { toObjectIdString } from './sanitize-user.js';
+import { toIdString } from './sanitize-user.js';
 
 type PreferenciasLike = Partial<UserPreferencias> | Record<string, unknown> | null | undefined;
 type SimulacaoLike = Partial<SimulacaoDefinicao> | Record<string, unknown> | null | undefined;
@@ -17,7 +17,7 @@ export function mergePreferencias(
 
   const fav = merged.preset_favorito_id;
   if (fav !== undefined && fav !== null) {
-    merged.preset_favorito_id = toObjectIdString(fav) ?? null;
+    merged.preset_favorito_id = toIdString(fav) ?? null;
   }
 
   return merged;

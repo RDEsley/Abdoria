@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { User } from '../models/User.js';
+import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { LeaderboardMetric } from '../types/index.js';
@@ -34,7 +34,7 @@ function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
 
 function toEntry(
   user: {
-    _id: string;
+    id: string;
     nome: string;
     gamificacao: { nivel_xp: number; streak_atual: number };
     cosmeticos?: {
@@ -48,7 +48,7 @@ function toEntry(
 ) {
   return {
     rank,
-    user_id: user._id,
+    user_id: user.id,
     nome: user.nome,
     nivel_xp: user.gamificacao.nivel_xp,
     level: levelFromXp(user.gamificacao.nivel_xp),
@@ -81,7 +81,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     });
 
     const entries = users.map((user, index) =>
-      toEntry(user, index + 1, user._id === req.userId),
+      toEntry(user, index + 1, user.id === req.userId),
     );
 
     res.json(entries);

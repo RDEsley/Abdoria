@@ -1,7 +1,7 @@
 import { getSupabase } from '../db.js';
 
 export interface ExerciseDocument {
-  _id: string;
+  id: string;
   slug: string;
   nome: string;
   nome_pt?: string;
@@ -27,7 +27,7 @@ export interface ExerciseDocument {
 
 function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
   return {
-    _id: String(row.id),
+    id: String(row.id),
     slug: String(row.slug),
     nome: String(row.nome),
     nome_pt: row.nome_pt ? String(row.nome_pt) : undefined,

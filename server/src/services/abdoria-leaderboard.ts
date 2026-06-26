@@ -1,4 +1,4 @@
-import { User } from '../models/User.js';
+import { User } from '../domain/User.js';
 import { ABDORIA_XP_STEP, DEFAULT_COSMETICOS } from '../types/index.js';
 import { awardAbdoriaFromXp, ensureAbdoriaWallet } from './economy.js';
 
@@ -15,7 +15,7 @@ export async function syncAbdoriaBalancesForLeaderboard(): Promise<void> {
   const users = await User.find(leaderboardFilter);
 
   for (const lean of users) {
-    const user = await User.findById(lean._id);
+    const user = await User.findById(lean.id);
     if (!user) continue;
 
     ensureAbdoriaWallet(user);

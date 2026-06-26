@@ -1,4 +1,4 @@
-import type { Prioridade } from '../types/index.js';
+import type { Prioridade } from '../../types/index.js';
 
 export interface ExerciseSeedBase {
   slug: string;
