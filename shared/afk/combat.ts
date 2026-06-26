@@ -7,6 +7,7 @@ export type AfkEnemyId =
   | 'armored_skeleton'
   | 'demon_bat'
   | 'slime_knight'
+  | 'golden_slime'
   | 'boss_colossus'
   | 'boss_lich'
   | 'boss_hydra';
@@ -42,22 +43,27 @@ export interface AfkCombatSnapshot {
 
 export const AFK_HERO_DAMAGE_ARCO = 14;
 export const AFK_HERO_DAMAGE_ESPADA = 22;
+export const AFK_CRIT_CHANCE = 5;
+export const AFK_CRIT_DAMAGE = 18;
 export const AFK_KILLS_PER_MINUTE = 8;
 export const AFK_BOSS_INTERVAL = 100;
 export const AFK_ELITE_CHANCE = 12;
+export const AFK_GOLDEN_SLIME_CHANCE = 1000;
+export const AFK_GOLDEN_SLIME_ABDORIA = 10;
 export const AFK_LEGENDARY_ROLL_NORMAL = 9995;
 export const AFK_LEGENDARY_ROLL_BOSS = 9991;
 
 export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
-  bat: { id: 'bat', tier: 'common', maxHp: 24, label: 'Slime Morcego' },
-  zombie: { id: 'zombie', tier: 'common', maxHp: 40, label: 'Slime Musgo' },
-  skeleton: { id: 'skeleton', tier: 'common', maxHp: 52, label: 'Slime Ósseo' },
-  armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 90, label: 'Slime Blindado' },
-  demon_bat: { id: 'demon_bat', tier: 'elite', maxHp: 110, label: 'Slime Demoníaco' },
-  slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 130, label: 'Slime Cavaleiro' },
-  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 280, label: 'Mega Slime Colosso' },
-  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 320, label: 'Slime Lich' },
-  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 360, label: 'Hidra Slime' },
+  bat: { id: 'bat', tier: 'common', maxHp: 42, label: 'Slime Morcego' },
+  zombie: { id: 'zombie', tier: 'common', maxHp: 70, label: 'Slime Musgo' },
+  skeleton: { id: 'skeleton', tier: 'common', maxHp: 90, label: 'Slime Ósseo' },
+  armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 155, label: 'Slime Blindado' },
+  demon_bat: { id: 'demon_bat', tier: 'elite', maxHp: 190, label: 'Slime Demoníaco' },
+  slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 225, label: 'Slime Cavaleiro' },
+  golden_slime: { id: 'golden_slime', tier: 'common', maxHp: 110, label: 'Golden Slime' },
+  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 490, label: 'Rei Slime' },
+  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 560, label: 'Slime Lich' },
+  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 630, label: 'Hidra Slime' },
 };
 
 const COMMON_ENEMIES: AfkEnemyId[] = ['bat', 'zombie', 'skeleton'];
@@ -86,26 +92,62 @@ export function getEnemyMaxHp(enemyId: AfkEnemyId): number {
   return AFK_ENEMIES[enemyId]?.maxHp ?? AFK_ENEMIES.bat.maxHp;
 }
 
+export interface AfkSpawnResult {
+  enemy_id: AfkEnemyId;
+  elite: boolean;
+  is_boss: boolean;
+}
+
+function pickFromPool(
+  pool: AfkEnemyId[],
+  seed: number,
+  previousEnemyId?: AfkEnemyId,
+): AfkEnemyId {
+  let idx = (seed >>> 8) % pool.length;
+  if (pool.length > 1 && previousEnemyId && pool[idx] === previousEnemyId) {
+    idx = (idx + 1 + ((seed >>> 16) % (pool.length - 1))) % pool.length;
+  }
+  return pool[idx] ?? pool[0]!;
+}
+
+export function shouldSpawnGoldenSlime(seed: number): boolean {
+  return seed % AFK_GOLDEN_SLIME_CHANCE === 0;
+}
+
 export function pickNextEnemy(
   seed: number,
-  opts: { isBoss: boolean; isElite: boolean },
-): { enemy_id: AfkEnemyId; elite: boolean; is_boss: boolean } {
+  opts: { isBoss: boolean; isElite: boolean; previousEnemyId?: AfkEnemyId },
+): AfkSpawnResult {
   if (opts.isBoss) {
-    const idx = seed % BOSS_ENEMIES.length;
-    const enemy_id = BOSS_ENEMIES[idx] ?? 'boss_colossus';
+    const enemy_id = pickFromPool(BOSS_ENEMIES, seed, opts.previousEnemyId);
     return { enemy_id, elite: false, is_boss: true };
   }
 
-  const elite = opts.isElite;
-  if (elite) {
-    const idx = seed % ELITE_ENEMIES.length;
-    const enemy_id = ELITE_ENEMIES[idx] ?? 'armored_skeleton';
+  if (opts.isElite) {
+    const enemy_id = pickFromPool(ELITE_ENEMIES, seed, opts.previousEnemyId);
     return { enemy_id, elite: true, is_boss: false };
   }
 
-  const idx = seed % COMMON_ENEMIES.length;
-  const enemy_id = COMMON_ENEMIES[idx] ?? 'bat';
+  const enemy_id = pickFromPool(COMMON_ENEMIES, seed, opts.previousEnemyId);
   return { enemy_id, elite: false, is_boss: false };
+}
+
+/** Spawn unificado (servidor + cliente) a partir do estado de combate. */
+export function resolveNextSpawn(
+  userId: string,
+  killsUntilBoss: number,
+  killsTotal: number,
+  previousEnemyId?: AfkEnemyId,
+): AfkSpawnResult {
+  const isBoss = shouldSpawnBoss(killsUntilBoss);
+  const seed = hashCombatSeed(`${userId}:${killsTotal}:spawn`);
+
+  if (!isBoss && shouldSpawnGoldenSlime(seed)) {
+    return { enemy_id: 'golden_slime', elite: false, is_boss: false };
+  }
+
+  const elite = !isBoss && shouldSpawnElite(seed);
+  return pickNextEnemy(seed, { isBoss, isElite: elite, previousEnemyId });
 }
 
 export function shouldSpawnBoss(killsUntilBoss: number): boolean {

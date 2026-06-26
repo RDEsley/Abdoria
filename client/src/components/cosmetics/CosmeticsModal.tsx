@@ -18,7 +18,7 @@ import { equipCosmetic, getShop, purchaseCosmetic } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { playEquip, playPurchase, setSfxPack } from '@/lib/sounds';
+import { playEquip, playPurchase, previewSfxPack, setSfxPack } from '@/lib/sounds';
 import type { CosmeticKind, ShopCatalogItem, ShopResponse } from '@/types';
 import {
   CURRENCY_NAME,
@@ -95,7 +95,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
       (preview.borda !== undefined && preview.borda !== cosmeticos.borda_equipada) ||
       (preview.titulo !== undefined && preview.titulo !== (cosmeticos.titulo_equipado ?? undefined)) ||
       (preview.fundo !== undefined && preview.fundo !== cosmeticos.fundo_equipado) ||
-      (preview.som !== undefined && preview.som !== cosmeticos.som_equipado) ||
       (preview.efeito !== undefined && preview.efeito !== cosmeticos.efeito_equipado)
     );
   }, [preview, cosmeticos]);
@@ -205,6 +204,10 @@ export function CosmeticsModal({ open, onClose }: Props) {
   };
 
   const handlePreview = (item: ShopCatalogItem) => {
+    if (item.kind === 'som') {
+      previewSfxPack(item.id);
+      return;
+    }
     setPreview((prev) => ({ ...prev, [item.kind]: item.id }));
   };
 

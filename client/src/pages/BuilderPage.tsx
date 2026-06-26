@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bookmark, Play, RefreshCw, Repeat, Settings2, Sparkles, ChevronDown } from 'lucide-react';
+import { Bookmark, Check, Play, RefreshCw, Repeat, Settings2, Sparkles, ChevronDown } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { LastWorkoutPanel, workoutHistoryToQueue } from '@/components/builder/LastWorkoutPanel';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
 import { DailyXpCapModal } from '@/components/player/DailyXpCapModal';
@@ -32,6 +33,7 @@ import { getRecommendWorkout, getRecommendedPresets } from '@/lib/api';
 import type {
   ActiveWorkout,
   IExerciseDocument,
+  IWorkoutHistoryDocument,
   IWorkoutPresetDocument,
   ModoExercicio,
   NivelUsuario,
@@ -121,6 +123,7 @@ export function BuilderPage() {
   const [showXpCapModal, setShowXpCapModal] = useState(false);
   const schemeApplyKeyRef = useRef('');
   const presetsCarouselRef = useRef<HTMLDivElement>(null);
+  const lastSyncedSuggestedRef = useRef<string | null>(null);
 
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
   const schemes = getRepSchemes(nivel);
@@ -128,16 +131,28 @@ export function BuilderPage() {
     user?.preferencias?.ciclo_treinos ?? authUser?.preferencias?.ciclo_treinos,
   );
   const cicloTreinosKey = cicloTreinos.join(',');
+  const suggestedPresetId = stats?.treino_sugerido?.preset_id ?? null;
+  const suggestedWorkout = stats?.treino_sugerido ?? null;
+  const rodadaDone =
+    user?.preferencias?.ciclos_completados_rodada ??
+    authUser?.preferencias?.ciclos_completados_rodada ??
+    {};
+
+  const scrollToPresetCard = useCallback((presetId: string) => {
+    window.requestAnimationFrame(() => {
+      presetsCarouselRef.current
+        ?.querySelector<HTMLElement>(`[data-preset-id="${presetId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    });
+  }, []);
 
   useEffect(() => {
     void ensureExercises();
   }, [ensureExercises]);
 
   useEffect(() => {
-    if (stats && !stats.treino_sugerido) {
-      void loadRecommendations();
-    }
-  }, [stats, loadRecommendations]);
+    void loadRecommendations({ force: true });
+  }, [loadRecommendations]);
 
   useEffect(() => {
     void getRecommendedPresets()
@@ -145,20 +160,22 @@ export function BuilderPage() {
         setPresets(list);
         if (presetFromUrl && list.some((p) => p.id === presetFromUrl)) {
           setSelectedPresetId(presetFromUrl);
-          return;
-        }
-        const suggestedId = stats?.treino_sugerido?.preset_id;
-        if (suggestedId && list.some((p) => p.id === suggestedId)) {
-          setSelectedPresetId(suggestedId);
-        } else if (list.length > 0 && (selectedPresetId === 'custom' || !list.some((p) => p.id === selectedPresetId))) {
-          if (!customWorkout.length && !isSavedPresetId(selectedPresetId)) {
-            setSelectedPresetId(list[0].id);
-          }
+          scrollToPresetCard(presetFromUrl);
         }
       })
       .catch(() => setPresets([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega quando ciclos/nível mudam
-  }, [presetFromUrl, stats?.treino_sugerido?.preset_id, cicloTreinosKey, nivel, user?.objetivo]);
+  }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo, scrollToPresetCard]);
+
+  useEffect(() => {
+    if (presetFromUrl) return;
+    if (!suggestedPresetId || !presets.some((p) => p.id === suggestedPresetId)) return;
+    if (lastSyncedSuggestedRef.current === suggestedPresetId) return;
+    lastSyncedSuggestedRef.current = suggestedPresetId;
+    setSelectedPresetId(suggestedPresetId);
+    setDraftQueue(null);
+    scrollToPresetCard(suggestedPresetId);
+  }, [suggestedPresetId, presets, presetFromUrl, scrollToPresetCard]);
 
   const handleRecommendAnother = useCallback(async () => {
     setRecommendBusy(true);
@@ -170,18 +187,15 @@ export function BuilderPage() {
         excludePresetId: selectedPresetId !== 'custom' ? selectedPresetId : null,
       });
       setDraftQueue(null);
+      lastSyncedSuggestedRef.current = treino.preset_id;
       setSelectedPresetId(treino.preset_id);
-      window.requestAnimationFrame(() => {
-        presetsCarouselRef.current
-          ?.querySelector<HTMLElement>(`[data-preset-id="${treino.preset_id}"]`)
-          ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      });
+      scrollToPresetCard(treino.preset_id);
     } catch {
       setSaveMessage('Não foi possível sugerir outro treino agora.');
     } finally {
       setRecommendBusy(false);
     }
-  }, [allowRepeats, selectedPresetId]);
+  }, [allowRepeats, selectedPresetId, scrollToPresetCard]);
 
   useEffect(() => {
     setSelectedSchemeId((current) => {
@@ -408,6 +422,18 @@ export function BuilderPage() {
     scrollToSection('builder-queue', 120);
   }, [presetFromUrl, scrollToSection]);
 
+  const handleRepeatLastWorkout = useCallback(
+    (workout: IWorkoutHistoryDocument) => {
+      const queue = workoutHistoryToQueue(workout.exercicios, exerciseMap, nivel);
+      if (queue.length === 0) return;
+      setDraftQueue(queue);
+      setSelectedPresetId('custom');
+      setSaveMessage(null);
+      scrollToSection('builder-queue', 80);
+    },
+    [exerciseMap, nivel, scrollToSection],
+  );
+
   const showPresetsSection = presets.length > 0 || savedWorkouts.length > 0;
   const canSaveWorkout = activeQueue.length > 0 && (selectedPresetId === 'custom' || selectedSavedWorkout);
   const saveWorkoutDefaultName = selectedSavedWorkout?.nome ?? 'Meu Treino';
@@ -416,6 +442,8 @@ export function BuilderPage() {
     <div className="flex flex-col gap-5">
       <GamePageHeader eyebrow="Escolha ou monte" title="Montar treino" />
 
+      <LastWorkoutPanel exerciseMap={exerciseMap} onRepeat={handleRepeatLastWorkout} />
+
       {showPresetsSection && (
         <section id="builder-presets">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -423,9 +451,29 @@ export function BuilderPage() {
               <Sparkles size={18} className="text-amber-500" />
               <div>
                 <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
-                <p className="mt-0.5 text-[0.65rem] font-semibold text-stone-500">
-                  {presets.length} treino{presets.length === 1 ? '' : 's'} · ciclos {cicloTreinos.join(', ')}
-                </p>
+                <div className="game-builder-cycle-progress mt-1">
+                  {cicloTreinos.map((c, i) => {
+                    const done = !!rodadaDone[c];
+                    const isNext = suggestedWorkout?.ciclo_id === c;
+                    return (
+                      <Fragment key={c}>
+                        {i > 0 && <span className="game-builder-cycle-progress__arrow" aria-hidden>→</span>}
+                        <span
+                          className={[
+                            'game-builder-cycle-chip',
+                            done ? 'game-builder-cycle-chip--done' : '',
+                            isNext ? 'game-builder-cycle-chip--next' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                        >
+                          {done && <Check size={10} strokeWidth={3} aria-hidden />}
+                          Ciclo {c}
+                        </span>
+                      </Fragment>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -450,6 +498,37 @@ export function BuilderPage() {
               </label>
             </div>
           </div>
+          {suggestedWorkout && suggestedPresetId && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`game-builder-next-banner ${
+                selectedPresetId === suggestedPresetId ? 'game-builder-next-banner--active' : ''
+              }`}
+            >
+              <span className="game-builder-next-banner__icon" aria-hidden>
+                <Play size={14} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="game-builder-next-banner__label">Próximo treino</p>
+                <p className="game-builder-next-banner__title">
+                  Ciclo {suggestedWorkout.ciclo_id} —{' '}
+                  {suggestedWorkout.nome.split('—')[1]?.trim() ?? suggestedWorkout.nome}
+                </p>
+              </div>
+              {selectedPresetId === suggestedPresetId ? (
+                <span className="game-builder-next-banner__status">Selecionado</span>
+              ) : (
+                <button
+                  type="button"
+                  className="game-builder-next-banner__action"
+                  onClick={() => selectPreset(suggestedPresetId)}
+                >
+                  Usar
+                </button>
+              )}
+            </motion.div>
+          )}
           {saveMessage && <p className="game-modal__success mb-2">{saveMessage}</p>}
           <SwipeScroll
             ref={presetsCarouselRef}
@@ -458,24 +537,56 @@ export function BuilderPage() {
             prevLabel="Anterior"
             nextLabel="Próximo"
           >
-            {presets.map((p) => (
+            {presets.map((p) => {
+              const isSuggested = p.id === suggestedPresetId;
+              const isSelected = selectedPresetId === p.id;
+              return (
               <motion.button
                 key={p.id}
                 data-preset-id={p.id}
                 whileTap={{ scale: 0.97 }}
                 type="button"
                 onClick={() => selectPreset(p.id)}
-                className={`game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left ${
-                  selectedPresetId === p.id ? 'game-quest-card' : 'glass-card'
-                }`}
+                className={[
+                  'game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left',
+                  isSelected ? 'game-builder-preset-card--selected game-quest-card' : 'glass-card',
+                  isSuggested ? 'game-builder-preset-card--next' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                aria-current={isSelected ? 'true' : undefined}
+                aria-label={
+                  isSuggested && isSelected
+                    ? `Próximo treino selecionado: Ciclo ${p.ciclo_id}, ${p.nome}`
+                    : isSuggested
+                      ? `Próximo treino: Ciclo ${p.ciclo_id}, ${p.nome}`
+                      : isSelected
+                        ? `Treino selecionado: Ciclo ${p.ciclo_id}, ${p.nome}`
+                        : `Ciclo ${p.ciclo_id}, ${p.nome}`
+                }
               >
+                {(isSuggested || isSelected) && (
+                  <div className="game-builder-preset-card__badges">
+                    {isSuggested && (
+                      <span className="game-builder-preset-card__badge game-builder-preset-card__badge--next">
+                        Próximo
+                      </span>
+                    )}
+                    {isSelected && !isSuggested && (
+                      <span className="game-builder-preset-card__badge game-builder-preset-card__badge--picked">
+                        Selecionado
+                      </span>
+                    )}
+                  </div>
+                )}
                 <span className="text-[0.6rem] font-bold text-emerald-600">Ciclo {p.ciclo_id}</span>
                 <p className="line-clamp-2 text-[0.7rem] font-bold leading-tight text-stone-900">
                   {p.nome.split('—')[1]?.trim() ?? p.nome}
                 </p>
                 <p className="mt-1 text-[0.58rem] font-bold text-stone-500">{presetSummary(p)}</p>
               </motion.button>
-            ))}
+            );
+            })}
             {savedWorkouts.map((saved) => {
               const savedId = toSavedPresetId(saved.id);
               return (
@@ -486,7 +597,9 @@ export function BuilderPage() {
                   type="button"
                   onClick={() => selectPreset(savedId)}
                   className={`game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left ${
-                    selectedPresetId === savedId ? 'game-quest-card' : 'glass-card'
+                    selectedPresetId === savedId
+                      ? 'game-builder-preset-card--selected game-quest-card'
+                      : 'glass-card'
                   }`}
                 >
                   <span className="text-[0.6rem] font-bold text-sky-600">Salvo</span>

@@ -13,6 +13,14 @@ const PACKS: Record<string, { click: number; success: number[]; complete: number
   som_pixel: { click: 640, success: [440, 554, 659], complete: 520, rest: 330, unlock: [440, 554, 659, 880] },
   som_metal: { click: 920, success: [330, 415, 494], complete: 440, rest: 280, unlock: [330, 415, 494, 587] },
   som_epico: { click: 980, success: [622, 740, 880], complete: 740, rest: 494, unlock: [622, 740, 880, 988] },
+  som_cristal: { click: 1318, success: [988, 1175, 1318, 1568], complete: 1175, rest: 784, unlock: [988, 1175, 1318, 1568, 1760] },
+  som_zen: { click: 440, success: [294, 349, 392, 440], complete: 392, rest: 262, unlock: [262, 294, 349, 392, 440] },
+  som_bolha: { click: 1100, success: [740, 880, 988, 1100], complete: 988, rest: 660, unlock: [660, 740, 880, 988, 1100] },
+  som_8bit: { click: 523, success: [262, 330, 392, 523], complete: 440, rest: 196, unlock: [262, 330, 392, 523, 659] },
+  som_treino: { click: 840, success: [440, 554, 659, 740, 880], complete: 740, rest: 494, unlock: [554, 659, 740, 880, 988] },
+  som_boss: { click: 220, success: [165, 196, 220, 262, 330], complete: 247, rest: 165, unlock: [165, 196, 220, 262, 330] },
+  som_noturno: { click: 370, success: [277, 311, 370, 415, 494], complete: 349, rest: 247, unlock: [277, 311, 370, 415, 494] },
+  som_vitoria: { click: 784, success: [523, 659, 784, 988, 1175], complete: 880, rest: 523, unlock: [659, 784, 988, 1175, 1319] },
 };
 
 export function setSoundSettings(on: boolean, vol: number) {

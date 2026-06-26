@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Shield, X } from 'lucide-react';
+import { AlertTriangle, Gift, Store, Swords, X } from 'lucide-react';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
 import { AfkRewardGrid, countAfkRewardItems } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
-import { AfkWeaponToggle } from '@/components/afk/AfkWeaponToggle';
+import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
 import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -20,39 +20,60 @@ interface Props {
 }
 
 export function AfkPatrolModal({ open, onClose }: Props) {
-  const { applyUser } = useAuth();
+  const { user, applyUser } = useAuth();
   const { refresh: refreshApp } = useApp();
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
-  const [weapon, setWeapon] = useState<ArmaPreferida>('arco');
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<AfkPendingReward | null>(null);
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
+  const [bossActive, setBossActive] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
   const loadedAtRef = useRef(0);
+  const syncedMinutosRef = useRef<number | null>(null);
 
-  const applyMeta = useCallback((data: AfkMetaResponse) => {
-    setMeta(data);
-    setWeapon(data.arma_preferida ?? 'arco');
-    loadedAtRef.current = Date.now();
-    setElapsedSinceSyncMin(0);
+  const reconcileTimerFromServer = useCallback((serverMinutos: number) => {
+    const prev = syncedMinutosRef.current;
+    if (prev === null || serverMinutos !== prev) {
+      syncedMinutosRef.current = serverMinutos;
+      loadedAtRef.current = Date.now();
+      setElapsedSinceSyncMin(0);
+    }
   }, []);
+
+  const weapon: ArmaPreferida =
+    meta?.arma_preferida ?? user?.preferencias?.arma_preferida ?? 'arco';
+  const userId = String(user?.id ?? 'guest');
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await getAfkMeta();
-      applyMeta(data);
+      setMeta((prev) => {
+        const serverAhead =
+          data.combat &&
+          (data.combat.kills_total > (prev?.combat?.kills_total ?? 0) || !prev?.combat);
+        return {
+          ...data,
+          combat: serverAhead ? data.combat : (prev?.combat ?? data.combat),
+        };
+      });
+      reconcileTimerFromServer(data.minutos_acumulados);
     } catch (err) {
       setError(getErrorMessage(err, 'Não foi possível carregar a patrulha.'));
     } finally {
       setLoading(false);
     }
-  }, [applyMeta]);
+  }, [reconcileTimerFromServer]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      syncedMinutosRef.current = null;
+      setShopOpen(false);
+      return;
+    }
     void load();
   }, [open, load]);
 
@@ -70,23 +91,28 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     const onAfkSync = (event: Event) => {
       const detail = (event as CustomEvent<AfkMetaResponse & { ok?: boolean }>).detail;
       if (!detail) return;
-      setMeta((prev) => ({
-        ...(prev ?? ({} as AfkMetaResponse)),
-        minutos_acumulados: detail.minutos_acumulados,
-        pending: detail.pending,
-        has_rewards: detail.has_rewards,
-        kill_drop_chance: detail.kill_drop_chance ?? prev?.kill_drop_chance ?? 10,
-        max_minutes: detail.max_minutes ?? prev?.max_minutes ?? 1440,
-        capped: detail.capped ?? prev?.capped ?? false,
-        arma_preferida: prev?.arma_preferida ?? weapon,
-        combat: detail.combat ?? prev?.combat,
-      }));
-      loadedAtRef.current = Date.now();
-      setElapsedSinceSyncMin(0);
+      setMeta((prev) => {
+        const serverAhead =
+          detail.combat &&
+          (detail.combat.kills_total > (prev?.combat?.kills_total ?? 0) || !prev?.combat);
+        return {
+          ...(prev ?? ({} as AfkMetaResponse)),
+          minutos_acumulados: detail.minutos_acumulados,
+          pending: detail.pending,
+          has_rewards: detail.has_rewards,
+          kill_drop_chance: detail.kill_drop_chance ?? prev?.kill_drop_chance ?? 4,
+          kill_drop_chances: detail.kill_drop_chances ?? prev?.kill_drop_chances,
+          max_minutes: detail.max_minutes ?? prev?.max_minutes ?? 1440,
+          capped: detail.capped ?? prev?.capped ?? false,
+          arma_preferida: prev?.arma_preferida ?? detail.arma_preferida ?? 'arco',
+          combat: serverAhead ? detail.combat : (prev?.combat ?? detail.combat),
+        };
+      });
+      reconcileTimerFromServer(detail.minutos_acumulados);
     };
     window.addEventListener('abdoria:afk-sync', onAfkSync);
     return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
-  }, [weapon]);
+  }, [reconcileTimerFromServer]);
 
   useEffect(() => {
     if (!open || meta?.capped) return undefined;
@@ -99,11 +125,16 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Escape') return;
+      if (shopOpen) {
+        setShopOpen(false);
+        return;
+      }
+      onClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, shopOpen]);
 
   const handleClaim = async () => {
     if (!meta?.has_rewards) return;
@@ -126,7 +157,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   const rewardCount = countAfkRewardItems(meta?.pending);
   const capped = meta?.capped ?? false;
-  const killDropChance = meta?.kill_drop_chance ?? 10;
 
   return createPortal(
     <>
@@ -142,20 +172,27 @@ export function AfkPatrolModal({ open, onClose }: Props) {
             <X size={18} />
           </button>
 
-          <div className="game-afk-modal__header">
-            <div className="game-afk-modal__title-wrap">
-              <p className="game-afk-modal__eyebrow">
-                <Shield size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
-                Modo offline
-              </p>
+          <div className="game-afk-modal__header game-afk-modal__header--compact">
+            <div className="game-afk-modal__header-main">
+              <div className="game-afk-modal__title-icon" aria-hidden>
+                <Swords size={22} strokeWidth={2.25} />
+              </div>
               <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                Patrulha de Abdoria
+                Patrulha
               </h2>
-              <p className="game-afk-modal__subtitle">
-                Seu herói defende o reino enquanto você descansa. {killDropChance}% de loot por inimigo derrotado.
-              </p>
             </div>
-            <AfkWeaponToggle value={weapon} onChange={setWeapon} />
+            <button
+              type="button"
+              className="game-afk-modal__shop-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShopOpen(true);
+              }}
+              aria-label="Abrir loja da patrulha"
+            >
+              <Store size={14} aria-hidden />
+              Loja da Patrulha
+            </button>
           </div>
 
           {capped && (
@@ -165,17 +202,19 @@ export function AfkPatrolModal({ open, onClose }: Props) {
             </div>
           )}
 
-          {meta?.combat?.is_boss && (
+          {bossActive && (
             <div className="game-afk-boss-banner" role="status">
               Boss em combate! Loot bônus ao derrotar.
             </div>
           )}
 
           <AfkCombatScene
+            userId={userId}
             weapon={weapon}
             combat={meta?.combat ?? null}
             hasLoot={meta?.has_rewards}
             capped={capped}
+            onBossChange={setBossActive}
           />
 
           <AfkTimerPanel
@@ -183,9 +222,10 @@ export function AfkPatrolModal({ open, onClose }: Props) {
             elapsedSinceSyncMin={elapsedSinceSyncMin}
             capped={capped}
             loading={loading}
+            dropChances={meta?.kill_drop_chances}
           />
 
-          <AfkRewardGrid pending={meta?.pending} />
+          <AfkRewardGrid pending={meta?.pending} withChest />
 
           <div className="game-afk-modal__footer">
             {error && <p className="game-afk-modal__error">{error}</p>}
@@ -195,18 +235,39 @@ export function AfkPatrolModal({ open, onClose }: Props) {
               size="lg"
               disabled={!meta?.has_rewards || claiming || loading}
               onClick={() => void handleClaim()}
+              aria-label={
+                claiming
+                  ? 'Coletando recompensas'
+                  : meta?.has_rewards
+                    ? `Coletar recompensas — ${rewardCount} tipo${rewardCount === 1 ? '' : 's'}`
+                    : 'Nenhuma recompensa para coletar'
+              }
             >
-              {claiming
-                ? 'Coletando...'
-                : meta?.has_rewards
-                  ? `Coletar ${rewardCount} recompensa${rewardCount === 1 ? '' : 's'}`
-                  : 'Nada para coletar'}
+              {claiming ? (
+                'Coletando...'
+              ) : (
+                <span className="game-afk-claim-btn__content">
+                  <Gift size={18} aria-hidden />
+                  <span>Coletar Recompensas</span>
+                  {meta?.has_rewards && rewardCount > 0 ? (
+                    <span className="game-afk-claim-btn__badge tabular-nums">{rewardCount}</span>
+                  ) : null}
+                </span>
+              )}
             </GameButton>
           </div>
         </motion.div>
       </div>
 
       {celebration && <AfkRewardCelebration claimed={celebration} onClose={() => setCelebration(null)} />}
+
+      <PatrolShopModal
+        open={shopOpen}
+        onClose={() => setShopOpen(false)}
+        onWeaponChange={() => {
+          void load();
+        }}
+      />
     </>,
     document.body,
   );

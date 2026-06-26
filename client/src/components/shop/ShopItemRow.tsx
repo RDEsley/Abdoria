@@ -1,4 +1,4 @@
-import { Check, Coins, Eye, Lock, Sparkles } from 'lucide-react';
+import { Check, Coins, Eye, Lock, Sparkles, Volume2 } from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { GameButton } from '@/components/ui/GameButton';
 import { COSMETIC_RARITY_LABELS, type ShopCatalogItem } from '@/types';
@@ -109,12 +109,20 @@ export function ShopItemRow({
         {canPreview && (
           <GameButton
             size="sm"
-            variant={isPreviewing ? 'primary' : 'secondary'}
+            variant={item.kind === 'som' ? 'secondary' : isPreviewing ? 'primary' : 'secondary'}
             className="game-shop-row__btn"
             disabled={busy}
             onClick={onPreview}
           >
-            <Eye size={14} /> {isPreviewing ? 'Na prévia' : 'Prévia'}
+            {item.kind === 'som' ? (
+              <>
+                <Volume2 size={14} /> Ouvir
+              </>
+            ) : (
+              <>
+                <Eye size={14} /> {isPreviewing ? 'Na prévia' : 'Prévia'}
+              </>
+            )}
           </GameButton>
         )}
 

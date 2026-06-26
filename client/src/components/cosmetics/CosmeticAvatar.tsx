@@ -1,4 +1,5 @@
 import { AvatarPortrait } from '@/components/cosmetics/AvatarPortrait';
+import { CosmeticAvatarBorderFx } from '@/components/cosmetics/CosmeticAvatarBorderFx';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import { resolveCosmeticos } from '@/types';
 import type { IUserDocument } from '@/types';
@@ -32,6 +33,7 @@ export function CosmeticAvatar({ user, size = 'md', className = '', avatarId, bo
       className={`game-cosmetic-avatar ${SIZE_CLASS[size]} ${borderClass} ${initialClass} ${className}`.trim()}
       title={avatarDef?.nome}
     >
+      {borderDef && <CosmeticAvatarBorderFx borderId={borderDef.id} />}
       <AvatarPortrait
         avatarId={resolvedAvatarId}
         letter={firstName}

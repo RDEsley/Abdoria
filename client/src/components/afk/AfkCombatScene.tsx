@@ -2,21 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
+  AFK_CRIT_CHANCE,
+  AFK_CRIT_DAMAGE,
   advanceKillsUntilBoss,
   getEnemyMaxHp,
-  pickNextEnemy,
-  shouldSpawnBoss,
+  resolveNextSpawn,
 } from '@/types';
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
 import { AfkEnemySprite } from '@/components/afk/AfkEnemySprite';
-import { AfkCombatHud, useDamageFloaters } from '@/components/afk/AfkCombatHud';
+import { AfkCombatHud, AfkBossProgressPanel, useDamageFloaters } from '@/components/afk/AfkCombatHud';
+import { AfkSkyCycle } from '@/components/afk/AfkSkyCycle';
 
 interface Props {
+  userId: string;
   weapon: ArmaPreferida;
   combat: AfkCombatSnapshot | null;
   hasLoot?: boolean;
   capped?: boolean;
+  onBossChange?: (isBoss: boolean) => void;
 }
 
 const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
@@ -24,26 +28,29 @@ const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
   kills_until_boss: 0,
   kills_to_next_boss: AFK_BOSS_INTERVAL,
   enemy_id: 'bat',
-  enemy_hp: 24,
-  enemy_max_hp: 24,
+  enemy_hp: 42,
+  enemy_max_hp: 42,
   is_boss: false,
   elite: false,
   hero_damage_arco: 14,
   hero_damage_espada: 22,
 };
 
-export function AfkCombatScene({ weapon, combat, hasLoot, capped }: Props) {
+export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBossChange }: Props) {
   const isMobile = useMobileViewport();
   const [attackSeq, setAttackSeq] = useState(0);
   const [phase, setPhase] = useState<'idle' | 'attack'>('idle');
   const [enemyHit, setEnemyHit] = useState(false);
-  const [displayHp, setDisplayHp] = useState(combat?.enemy_hp ?? 24);
+  const [displayHp, setDisplayHp] = useState(combat?.enemy_hp ?? 42);
   const [dying, setDying] = useState(false);
+  const [looting, setLooting] = useState(false);
+  const [spawnKillsTotal, setSpawnKillsTotal] = useState(combat?.kills_total ?? 0);
   const [localKillsUntilBoss, setLocalKillsUntilBoss] = useState(combat?.kills_until_boss ?? 0);
   const [localIsBoss, setLocalIsBoss] = useState(combat?.is_boss ?? false);
   const [localIsElite, setLocalIsElite] = useState(combat?.elite ?? false);
   const [localEnemyId, setLocalEnemyId] = useState<AfkEnemyId>(combat?.enemy_id ?? 'bat');
   const killsTotalRef = useRef(combat?.kills_total ?? 0);
+  const localEnemyIdRef = useRef(localEnemyId);
   const localIsBossRef = useRef(localIsBoss);
   const timersRef = useRef<number[]>([]);
   const { floaters, pushDamage } = useDamageFloaters();
@@ -71,36 +78,51 @@ export function AfkCombatScene({ weapon, combat, hasLoot, capped }: Props) {
 
   useEffect(() => {
     localIsBossRef.current = localIsBoss;
-  }, [localIsBoss]);
+    localEnemyIdRef.current = localEnemyId;
+  }, [localIsBoss, localEnemyId]);
+
+  useEffect(() => {
+    onBossChange?.(localIsBoss);
+  }, [localIsBoss, onBossChange]);
 
   useEffect(() => {
     if (!combat) return;
 
-    if (combat.kills_total !== killsTotalRef.current) {
-      killsTotalRef.current = combat.kills_total;
+    const serverKills = combat.kills_total;
+    const localKills = killsTotalRef.current;
+
+    if (serverKills > localKills) {
+      killsTotalRef.current = serverKills;
       setLocalKillsUntilBoss(combat.kills_until_boss);
       setLocalIsBoss(combat.is_boss);
       setLocalIsElite(combat.elite);
       setLocalEnemyId(combat.enemy_id);
+      setSpawnKillsTotal(combat.kills_total);
       localIsBossRef.current = combat.is_boss;
-      return;
+      localEnemyIdRef.current = combat.enemy_id;
+      setDisplayHp(combat.enemy_hp);
     }
-
-    setLocalKillsUntilBoss((prev) => Math.max(prev, combat.kills_until_boss));
   }, [combat]);
 
-  const respawnLocalEnemy = useCallback((killsUntilBoss: number, killsTotal: number) => {
-    const isBoss = shouldSpawnBoss(killsUntilBoss);
-    const seed = killsTotal + killsUntilBoss * 17;
-    const elite = !isBoss && seed % 100 < 12;
-    const picked = pickNextEnemy(seed, { isBoss, isElite: elite });
+  const respawnLocalEnemy = useCallback(
+    (killsUntilBoss: number, killsTotal: number) => {
+      const picked = resolveNextSpawn(
+        userId,
+        killsUntilBoss,
+        killsTotal,
+        localEnemyIdRef.current,
+      );
 
-    setLocalEnemyId(picked.enemy_id);
-    setLocalIsBoss(picked.is_boss);
-    setLocalIsElite(picked.elite);
-    localIsBossRef.current = picked.is_boss;
-    setDisplayHp(getEnemyMaxHp(picked.enemy_id));
-  }, []);
+      setLocalEnemyId(picked.enemy_id);
+      setLocalIsBoss(picked.is_boss);
+      setLocalIsElite(picked.elite);
+      setSpawnKillsTotal(killsTotal);
+      localIsBossRef.current = picked.is_boss;
+      localEnemyIdRef.current = picked.enemy_id;
+      setDisplayHp(getEnemyMaxHp(picked.enemy_id));
+    },
+    [userId],
+  );
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => window.clearTimeout(id));
@@ -113,11 +135,15 @@ export function AfkCombatScene({ weapon, combat, hasLoot, capped }: Props) {
   }, []);
 
   useEffect(() => {
-    setDisplayHp(serverSnapshot.enemy_hp);
-    setDying(false);
-    setEnemyHit(false);
-    setPhase('idle');
-  }, [serverSnapshot.enemy_id, serverSnapshot.kills_total]);
+    const serverKills = serverSnapshot.kills_total;
+    if (serverKills > killsTotalRef.current) {
+      setDisplayHp(serverSnapshot.enemy_hp);
+      setDying(false);
+      setLooting(false);
+      setEnemyHit(false);
+      setPhase('idle');
+    }
+  }, [serverSnapshot.enemy_id, serverSnapshot.kills_total, serverSnapshot.enemy_hp]);
 
   useEffect(() => {
     clearTimers();
@@ -128,22 +154,27 @@ export function AfkCombatScene({ weapon, combat, hasLoot, capped }: Props) {
       setEnemyHit(false);
       schedule(() => {
         setEnemyHit(true);
-        pushDamage(damage);
+        const isCrit = Math.random() < AFK_CRIT_CHANCE / 100;
+        const hitDamage = isCrit ? AFK_CRIT_DAMAGE : damage;
+        pushDamage(hitDamage, isCrit);
         setDisplayHp((hp) => {
-          const next = hp - damage;
+          const next = hp - hitDamage;
           if (next <= 0) {
             setDying(true);
+            schedule(() => setLooting(true), 120);
             schedule(() => {
               const wasBoss = localIsBossRef.current;
+              const nextKillsTotal = killsTotalRef.current + 1;
               setLocalKillsUntilBoss((prev) => {
                 const nextKills = advanceKillsUntilBoss(prev, wasBoss);
-                respawnLocalEnemy(nextKills, killsTotalRef.current + 1);
+                respawnLocalEnemy(nextKills, nextKillsTotal);
                 return nextKills;
               });
-              killsTotalRef.current += 1;
+              killsTotalRef.current = nextKillsTotal;
               setDying(false);
+              setLooting(false);
               setEnemyHit(false);
-            }, 480);
+            }, 720);
             return 0;
           }
           return next;
@@ -180,23 +211,13 @@ export function AfkCombatScene({ weapon, combat, hasLoot, capped }: Props) {
   return (
     <div className="game-afk-scene">
       <div className="game-afk-scene__viewport">
-        <div className="game-afk-scene__sky" aria-hidden />
-        {!isMobile && (
-          <>
-            <div className="game-afk-scene__cloud game-afk-scene__cloud--1" aria-hidden />
-            <div className="game-afk-scene__cloud game-afk-scene__cloud--2" aria-hidden />
-          </>
-        )}
-        <div className="game-afk-scene__mountains" aria-hidden />
-        <div className="game-afk-scene__ground" aria-hidden />
+        <AfkSkyCycle showClouds={!isMobile} showSparkles={showSparkles} />
 
-        {showSparkles && (
-          <>
-            <span className="game-afk-scene__sparkle game-afk-scene__sparkle--1" aria-hidden />
-            <span className="game-afk-scene__sparkle game-afk-scene__sparkle--2" aria-hidden />
-            <span className="game-afk-scene__sparkle game-afk-scene__sparkle--3" aria-hidden />
-          </>
-        )}
+        <AfkBossProgressPanel
+          killsUntilBoss={localKillsUntilBoss}
+          bossActive={localIsBoss}
+          overlay
+        />
 
         <AfkMascotHero weapon={weapon} attacking={attacking} attackSeq={attackSeq} />
 
@@ -204,27 +225,37 @@ export function AfkCombatScene({ weapon, combat, hasLoot, capped }: Props) {
           <span key={attackSeq} className="game-afk-slash game-afk-slash--scene" aria-hidden />
         )}
 
-        <AfkEnemySprite combat={snapshot} hit={enemyHit} dying={dying} hitKey={attackSeq} />
+        <AfkEnemySprite
+          combat={snapshot}
+          userId={userId}
+          spawnKillsTotal={spawnKillsTotal}
+          hit={enemyHit}
+          dying={dying}
+          looting={looting}
+          hitKey={attackSeq}
+        />
 
         <div className="game-afk-scene__damage-layer" aria-hidden>
           {floaters.map((f) => (
             <span
               key={f.id}
-              className={`game-afk-scene__damage ${snapshot.is_boss ? 'game-afk-scene__damage--boss' : ''}`}
+              className={[
+                'game-afk-scene__damage',
+                snapshot.is_boss && !f.crit ? 'game-afk-scene__damage--boss' : '',
+                f.crit ? 'game-afk-scene__damage--crit' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
               style={{ '--damage-drift': `${f.drift}px` } as CSSProperties}
             >
-              {f.value}
+              {f.crit && <span className="game-afk-scene__damage-tag">CRIT.</span>}
+              <span className="game-afk-scene__damage-value">{f.value}</span>
             </span>
           ))}
         </div>
       </div>
 
-      <AfkCombatHud
-        combat={snapshot}
-        displayHp={displayHp}
-        killsUntilBoss={localKillsUntilBoss}
-        bossActive={localIsBoss}
-      />
+      <AfkCombatHud combat={snapshot} displayHp={displayHp} />
     </div>
   );
 }

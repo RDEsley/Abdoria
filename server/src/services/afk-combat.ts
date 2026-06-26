@@ -1,17 +1,17 @@
 import type { UserDocument } from '../domain/User.js';
 import {
-  AFK_BOSS_INTERVAL,
   AFK_KILLS_PER_MINUTE,
+  AFK_GOLDEN_SLIME_ABDORIA,
   DEFAULT_AFK_COMBAT,
   type AfkCombatState,
+  type AfkEnemyTier,
   type AfkPendingReward,
   advanceKillsUntilBoss,
   buildCombatSnapshot,
   getEnemyMaxHp,
-  hashCombatSeed,
-  pickNextEnemy,
-  shouldSpawnBoss,
-  shouldSpawnElite,
+  patrolHeroDamage,
+  resolveNextSpawn,
+  resolvePatrolArmas,
 } from '../types/index.js';
 import { normalizeCombat } from '../repositories/user-repository.js';
 import { rollKillDrop } from './afk-rolls.js';
@@ -32,11 +32,20 @@ export function ensureCombat(user: UserDocument): AfkCombatState {
   return user.afk.combat;
 }
 
+function enemyTier(combat: AfkCombatState): AfkEnemyTier {
+  if (combat.is_boss) return 'boss';
+  if (combat.elite) return 'elite';
+  return 'common';
+}
+
 function respawnEnemy(user: UserDocument, combat: AfkCombatState): void {
-  const isBoss = shouldSpawnBoss(combat.kills_until_boss);
-  const seed = hashCombatSeed(`${user.id}:${combat.kills_total}:spawn`);
-  const elite = !isBoss && shouldSpawnElite(seed);
-  const picked = pickNextEnemy(seed, { isBoss, isElite: elite });
+  const previousEnemyId = combat.enemy_id;
+  const picked = resolveNextSpawn(
+    String(user.id),
+    combat.kills_until_boss,
+    combat.kills_total,
+    previousEnemyId,
+  );
 
   combat.enemy_id = picked.enemy_id;
   combat.enemy_hp = getEnemyMaxHp(picked.enemy_id);
@@ -46,11 +55,17 @@ function respawnEnemy(user: UserDocument, combat: AfkCombatState): void {
 
 function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: AfkPendingReward): void {
   const wasBoss = combat.is_boss;
+  const wasGolden = combat.enemy_id === 'golden_slime';
+  const tier = enemyTier(combat);
 
   combat.kills_total += 1;
   combat.kills_until_boss = advanceKillsUntilBoss(combat.kills_until_boss, wasBoss);
 
-  rollKillDrop(user, combat.kills_total, pending, wasBoss ? { bossBoost: true } : undefined);
+  if (wasGolden) {
+    pending.abdoria += AFK_GOLDEN_SLIME_ABDORIA;
+  } else {
+    rollKillDrop(user, combat.kills_total, pending, { bossBoost: wasBoss, tier });
+  }
 
   respawnEnemy(user, combat);
 }
@@ -99,5 +114,12 @@ export function simulateOfflineKills(user: UserDocument, newMinutes: number): nu
 
 export function combatSnapshot(user: UserDocument) {
   const combat = ensureCombat(user);
-  return buildCombatSnapshot(combat);
+  const snap = buildCombatSnapshot(combat);
+  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
+
+  return {
+    ...snap,
+    hero_damage_arco: patrolHeroDamage('arco', armas.arco_equipado),
+    hero_damage_espada: patrolHeroDamage('espada', armas.espada_equipada),
+  };
 }

@@ -1,10 +1,23 @@
 import { AFK_KILLS_PER_MINUTE } from '../afk/combat.js';
 import {
+  AFK_KILL_DROP_CHANCES,
   AFK_KILL_DROP_CHANCE,
+  AFK_KILL_DROP_CHANCE_BOSS,
+  AFK_KILL_DROP_CHANCE_COMMON,
+  AFK_KILL_DROP_CHANCE_ELITE,
   AFK_MAX_MINUTES,
+  type AfkKillDropChances,
 } from '../types/index.js';
 
-export { AFK_KILL_DROP_CHANCE, AFK_MAX_MINUTES };
+export {
+  AFK_KILL_DROP_CHANCES,
+  AFK_KILL_DROP_CHANCE,
+  AFK_KILL_DROP_CHANCE_BOSS,
+  AFK_KILL_DROP_CHANCE_COMMON,
+  AFK_KILL_DROP_CHANCE_ELITE,
+  AFK_MAX_MINUTES,
+};
+export type { AfkKillDropChances };
 
 export function afkCapReached(minutos: number): boolean {
   return minutos >= AFK_MAX_MINUTES;
@@ -38,7 +51,8 @@ export function afkKillsForHours(hours: number): number {
 
 export function buildAfkMetaFields(minutos: number) {
   return {
-    kill_drop_chance: AFK_KILL_DROP_CHANCE,
+    kill_drop_chance: AFK_KILL_DROP_CHANCE_COMMON,
+    kill_drop_chances: AFK_KILL_DROP_CHANCES,
     max_minutes: AFK_MAX_MINUTES,
     capped: afkCapReached(minutos),
   };

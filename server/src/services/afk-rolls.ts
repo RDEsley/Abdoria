@@ -1,7 +1,10 @@
 import type { UserDocument } from '../domain/User.js';
 import { COSMETICS } from '../data/cosmetics.js';
+import type { AfkEnemyTier } from '../types/index.js';
 import {
-  AFK_KILL_DROP_CHANCE,
+  AFK_KILL_DROP_CHANCE_BOSS,
+  AFK_KILL_DROP_CHANCE_COMMON,
+  AFK_KILL_DROP_CHANCE_ELITE,
   AFK_LEGENDARY_ROLL_BOSS,
   AFK_LEGENDARY_ROLL_NORMAL,
   type AfkPendingReward,
@@ -40,6 +43,13 @@ function pickLegendaryCosmeticId(user: UserDocument, killIndex: number): string 
 
 export interface RollLootOptions {
   bossBoost?: boolean;
+  tier?: AfkEnemyTier;
+}
+
+export function getKillDropChanceForTier(tier: AfkEnemyTier): number {
+  if (tier === 'boss') return AFK_KILL_DROP_CHANCE_BOSS;
+  if (tier === 'elite') return AFK_KILL_DROP_CHANCE_ELITE;
+  return AFK_KILL_DROP_CHANCE_COMMON;
 }
 
 /** Uma rolagem na tabela de loot da patrulha (distribuição de raridade). */
@@ -82,14 +92,16 @@ export function rollIntervalReward(
   rollLootTable(user, killIndex, pending, opts);
 }
 
-/** 10% de chance por kill; se dropar, usa a mesma tabela de raridade. */
+/** Chance de drop por kill conforme tier; se acertar, usa a tabela de raridade. */
 export function rollKillDrop(
   user: UserDocument,
   killIndex: number,
   pending: AfkPendingReward,
   opts?: RollLootOptions,
 ): void {
+  const tier = opts?.tier ?? 'common';
+  const threshold = getKillDropChanceForTier(tier);
   const proc = hashKillSeed(String(user.id), killIndex) % 100;
-  if (proc >= AFK_KILL_DROP_CHANCE) return;
+  if (proc >= threshold) return;
   rollLootTable(user, killIndex, pending, opts);
 }

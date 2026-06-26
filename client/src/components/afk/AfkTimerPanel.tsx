@@ -2,8 +2,9 @@ import {
   afkDisplayMinutes,
   afkProgressToCap,
   formatAfkTimer,
-  AFK_KILL_DROP_CHANCE,
+  AFK_KILL_DROP_CHANCES,
   AFK_MAX_MINUTES,
+  type AfkKillDropChances,
 } from '@shared/utils/afk';
 
 interface Props {
@@ -11,11 +12,13 @@ interface Props {
   elapsedSinceSyncMin: number;
   capped: boolean;
   loading?: boolean;
+  dropChances?: AfkKillDropChances;
 }
 
-export function AfkTimerPanel({ minutos, elapsedSinceSyncMin, capped, loading }: Props) {
+export function AfkTimerPanel({ minutos, elapsedSinceSyncMin, capped, loading, dropChances }: Props) {
   const display = afkDisplayMinutes(minutos, capped ? 0 : elapsedSinceSyncMin);
   const progress = capped ? 1 : afkProgressToCap(minutos, elapsedSinceSyncMin);
+  const chances = dropChances ?? AFK_KILL_DROP_CHANCES;
 
   return (
     <div className="game-afk-timer" aria-live="polite">
@@ -23,7 +26,7 @@ export function AfkTimerPanel({ minutos, elapsedSinceSyncMin, capped, loading }:
         <span className="game-afk-timer__label">Tempo acumulado</span>
         {!capped && !loading && (
           <span className="game-afk-timer__next">
-            Loot: {AFK_KILL_DROP_CHANCE}% por kill
+            Loot: {chances.common}% comum · {chances.elite}% elite · {chances.boss}% boss
           </span>
         )}
       </div>

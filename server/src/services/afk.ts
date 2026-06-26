@@ -11,7 +11,13 @@ import { grantAbdoria } from './economy.js';
 import { addInventoryItem } from './inventory.js';
 import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-repository.js';
 import { hashKillSeed, rollKillDrop } from './afk-rolls.js';
-import { combatSnapshot, simulateOfflineKills } from './afk-combat.js';
+import { combatSnapshot, ensureCombat, simulateOfflineKills } from './afk-combat.js';
+import {
+  advanceKillsUntilBoss,
+  getEnemyMaxHp,
+  resolveNextSpawn,
+  type AfkCombatState,
+} from '../types/index.js';
 
 const SECRET_TITLE_ID = 'titulo_secreto';
 
@@ -66,8 +72,24 @@ export function grantPatrolCacheRewards(
     Math.floor(Date.now() / 60_000) * 1000 + (hashKillSeed(String(user.id), Date.now()) % 1000);
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
 
+  const source = ensureCombat(user);
+  const combat: AfkCombatState = { ...source };
+
   for (let i = 0; i < kills; i += 1) {
-    rollKillDrop(user, baseIndex + i, pending);
+    const tier = combat.is_boss ? 'boss' : combat.elite ? 'elite' : 'common';
+    rollKillDrop(user, baseIndex + i, pending, { bossBoost: combat.is_boss, tier });
+    combat.kills_total += 1;
+    combat.kills_until_boss = advanceKillsUntilBoss(combat.kills_until_boss, combat.is_boss);
+    const spawn = resolveNextSpawn(
+      String(user.id),
+      combat.kills_until_boss,
+      combat.kills_total,
+      combat.enemy_id,
+    );
+    combat.enemy_id = spawn.enemy_id;
+    combat.is_boss = spawn.is_boss;
+    combat.elite = spawn.elite;
+    combat.enemy_hp = getEnemyMaxHp(spawn.enemy_id);
   }
 
   return applyAfkRewardBundle(user, pending);
@@ -119,9 +141,7 @@ export function claimAfkRewards(user: UserDocument): AfkPendingReward {
   const claimed = applyAfkRewardBundle(user, afk.pending);
 
   afk.pending = { ...EMPTY_AFK_PENDING };
-  if (afkCapReached(afk.minutos_acumulados ?? 0)) {
-    afk.minutos_acumulados = 0;
-  }
+  afk.minutos_acumulados = 0;
   afk.last_seen_at = new Date().toISOString();
 
   return claimed;

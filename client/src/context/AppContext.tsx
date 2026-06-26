@@ -235,8 +235,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [flushPersist]);
 
-  const loadRecommendations = useCallback(async () => {
-    if (recommendationsLoaded.current) return;
+  const loadRecommendations = useCallback(async (options?: { force?: boolean }) => {
+    if (recommendationsLoaded.current && !options?.force) return;
     recommendationsLoaded.current = true;
     try {
       const rec = await getDashboardRecommendations();
@@ -352,14 +352,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
         window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: result.level_up }));
       }
 
-      const [statsRes, historyRes] = await Promise.allSettled([
+      const [statsRes, recRes, historyRes] = await Promise.allSettled([
         getDashboardStats(),
+        getDashboardRecommendations(),
         getWorkoutHistory(),
       ]);
 
       if (statsRes.status === 'fulfilled') {
-        setStats(statsRes.value);
-        recommendationsLoaded.current = false;
+        const rec = recRes.status === 'fulfilled' ? recRes.value : null;
+        setStats({
+          ...statsRes.value,
+          ...(rec
+            ? {
+                treino_sugerido: rec.treino_sugerido,
+                alertas_recomendacao: rec.alertas_recomendacao,
+                proximo_treino: rec.proximo_treino,
+              }
+            : {}),
+        });
+        recommendationsLoaded.current = !!rec;
       }
       if (historyRes.status === 'fulfilled') {
         setHistory(historyRes.value);
