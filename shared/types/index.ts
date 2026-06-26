@@ -3,6 +3,9 @@
  * Mantém contratos de API, exercícios, usuário e gamificação alinhados.
  */
 
+import type { AfkCombatState } from '../afk/combat.js';
+import { DEFAULT_AFK_COMBAT } from '../afk/combat.js';
+
 export type NivelUsuario = 'iniciante' | 'intermediario' | 'avancado';
 
 export type Objetivo = 'definicao' | 'resistencia' | 'forca' | 'manutencao';
@@ -131,7 +134,7 @@ export interface UserPreferencias {
 
 export type ArmaPreferida = 'arco' | 'espada';
 
-export type InventoryItemId = 'energy_drink';
+export type InventoryItemId = 'energy_drink' | 'bau_patrulha';
 
 export interface InventoryEntry {
   item_id: InventoryItemId;
@@ -154,9 +157,35 @@ export interface AfkState {
   last_seen_at: string | null;
   minutos_acumulados: number;
   pending: AfkPendingReward;
+  combat?: AfkCombatState;
   /** Presente na resposta de stats/meta quando há loot para coletar. */
   has_rewards?: boolean;
 }
+
+export type {
+  AfkCombatState,
+  AfkCombatSnapshot,
+  AfkEnemyId,
+  AfkEnemyTier,
+} from '../afk/combat.js';
+
+export {
+  AFK_BOSS_INTERVAL,
+  AFK_ENEMIES,
+  AFK_HERO_DAMAGE_ARCO,
+  AFK_HERO_DAMAGE_ESPADA,
+  AFK_KILLS_PER_MINUTE,
+  AFK_LEGENDARY_ROLL_BOSS,
+  AFK_LEGENDARY_ROLL_NORMAL,
+  DEFAULT_AFK_COMBAT,
+  buildCombatSnapshot,
+  getEnemyMaxHp,
+  hashCombatSeed,
+  pickNextEnemy,
+  advanceKillsUntilBoss,
+  shouldSpawnBoss,
+  shouldSpawnElite,
+} from '../afk/combat.js';
 
 export interface XpDiario {
   /** XP de exercícios hoje (teto padrão/dia). */
@@ -390,7 +419,14 @@ export const CURRENCY_NAME = 'Abdoria coins';
 export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
 export const ENERGY_DRINK_BONUS_XP = 100;
 export const ENERGY_DRINK_SHOP_PRICE = 20;
-export const AFK_REWARD_INTERVAL_MINUTES = 30;
+export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
+/** Horas de patrulha AFK concedidas ao usar o baú. */
+export const PATROL_CACHE_HOURS = 6;
+export const PATROL_CACHE_SHOP_PRICE = 50;
+export const PATROL_CACHE_LABEL = 'Baú da Patrulha';
+/** @deprecated Loot não é mais por intervalo de tempo — use AFK_KILL_DROP_CHANCE. */
+export const AFK_REWARD_INTERVAL_MINUTES = 15;
+export const AFK_KILL_DROP_CHANCE = 10;
 export const AFK_MAX_MINUTES = 24 * 60;
 
 export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
@@ -399,6 +435,7 @@ export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
   pending: { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false },
+  combat: { ...DEFAULT_AFK_COMBAT },
 };
 
 export const DEFAULT_XP_DIARIO: XpDiario = {
@@ -632,6 +669,7 @@ export interface DashboardStats {
   inventario: Inventario;
   afk: AfkState;
   energy_drink_count: number;
+  patrol_cache_count: number;
   conquistas: Achievement[];
   musculos_semana: Record<MusculoPrincipal, number>;
   evolucao_mensal: { mes: string; minutos: number }[];

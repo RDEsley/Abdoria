@@ -3,8 +3,12 @@ import {
   DEFAULT_COSMETICOS,
   DEFAULT_USER_DADOS_SALVOS,
   DEFAULT_PREFERENCIAS,
+  DEFAULT_AFK_COMBAT,
+  type AfkCombatState,
+  type AfkEnemyId,
   type AfkPendingReward,
   type AfkState,
+  getEnemyMaxHp,
 } from '../types/index.js';
 import type { UserDocument, UserLean } from '../types/user-document.js';
 
@@ -49,7 +53,30 @@ type AfkRow = {
   last_seen_at?: string | null;
   minutos_acumulados: number;
   pending: Record<string, unknown>;
+  combat?: Record<string, unknown>;
 };
+
+const VALID_ENEMY_IDS = new Set<string>([
+  'bat', 'zombie', 'skeleton', 'armored_skeleton', 'demon_bat', 'slime_knight',
+  'boss_colossus', 'boss_lich', 'boss_hydra',
+]);
+
+function normalizeCombat(raw: unknown): AfkCombatState {
+  const c = (raw && typeof raw === 'object' ? raw : {}) as Partial<AfkCombatState>;
+  const enemy_id = VALID_ENEMY_IDS.has(String(c.enemy_id ?? ''))
+    ? (c.enemy_id as AfkEnemyId)
+    : DEFAULT_AFK_COMBAT.enemy_id;
+  const maxHp = getEnemyMaxHp(enemy_id);
+  const enemy_hp = Math.max(1, Math.min(maxHp, Number(c.enemy_hp ?? maxHp)));
+  return {
+    kills_total: Math.max(0, Number(c.kills_total ?? 0)),
+    kills_until_boss: Math.max(0, Math.min(99, Number(c.kills_until_boss ?? 0))),
+    enemy_id,
+    enemy_hp,
+    is_boss: Boolean(c.is_boss),
+    elite: Boolean(c.elite),
+  };
+}
 
 function normalizePending(raw: unknown): AfkPendingReward {
   const p = (raw && typeof raw === 'object' ? raw : {}) as Partial<AfkPendingReward>;
@@ -68,6 +95,7 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     last_seen_at: afk?.last_seen_at ?? null,
     minutos_acumulados: afk?.minutos_acumulados ?? 0,
     pending,
+    combat: normalizeCombat(afk?.combat),
   };
 
   const user: UserDocument = {
@@ -165,6 +193,7 @@ async function ensureAfkRow(userId: string): Promise<void> {
     await sb.from('user_afk_state').insert({
       user_id: userId,
       pending: EMPTY_AFK_PENDING,
+      combat: DEFAULT_AFK_COMBAT,
     });
   }
 }
@@ -211,6 +240,7 @@ export class UserMutable implements UserDocument {
     this.afk = {
       ...data.afk,
       pending: normalizePending(data.afk?.pending),
+      combat: normalizeCombat(data.afk?.combat),
     };
   }
 
@@ -231,14 +261,25 @@ export class UserMutable implements UserDocument {
     if (profileError) throw profileError;
 
     await ensureAfkRow(this.id);
-    const { error: afkError } = await sb
+    const afkPayload = {
+      last_seen_at: this.afk.last_seen_at,
+      minutos_acumulados: this.afk.minutos_acumulados ?? 0,
+      pending: normalizePending(this.afk.pending),
+      combat: normalizeCombat(this.afk.combat),
+    };
+
+    let { error: afkError } = await sb
       .from('user_afk_state')
-      .update({
-        last_seen_at: this.afk.last_seen_at,
-        minutos_acumulados: this.afk.minutos_acumulados ?? 0,
-        pending: normalizePending(this.afk.pending),
-      })
+      .update(afkPayload)
       .eq('user_id', this.id);
+
+    if (afkError?.code === 'PGRST204' && String(afkError.message ?? '').includes('combat')) {
+      const { combat: _combat, ...legacyPayload } = afkPayload;
+      ({ error: afkError } = await sb
+        .from('user_afk_state')
+        .update(legacyPayload)
+        .eq('user_id', this.id));
+    }
 
     if (afkError) throw afkError;
     return this;
@@ -384,6 +425,7 @@ export const User = {
     await sb.from('user_afk_state').insert({
       user_id: profile.id,
       pending: EMPTY_AFK_PENDING,
+      combat: DEFAULT_AFK_COMBAT,
     });
 
     const afk = await fetchAfk(profile.id);
@@ -435,4 +477,4 @@ export const User = {
   },
 };
 
-export { normalizePending, EMPTY_AFK_PENDING };
+export { normalizePending, normalizeCombat, EMPTY_AFK_PENDING };

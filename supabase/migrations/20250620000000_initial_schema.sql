@@ -34,6 +34,7 @@ CREATE TABLE user_afk_state (
   last_seen_at TIMESTAMPTZ,
   minutos_acumulados INT NOT NULL DEFAULT 0,
   pending JSONB NOT NULL DEFAULT '{"xp":0,"abdoria":0,"energy_drinks":0,"cosmetic_ids":[],"titulo_secreto":false}'::jsonb,
+  combat JSONB NOT NULL DEFAULT '{"kills_total":0,"kills_until_boss":0,"enemy_id":"bat","enemy_hp":24,"is_boss":false,"elite":false}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

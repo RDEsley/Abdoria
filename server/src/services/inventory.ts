@@ -4,9 +4,12 @@ import {
   DEFAULT_XP_DIARIO,
   ENERGY_DRINK_BONUS_XP,
   ENERGY_DRINK_ITEM_ID,
+  PATROL_CACHE_ITEM_ID,
   type Inventario,
   type InventoryItemId,
+  type AfkPendingReward,
 } from '../types/index.js';
+import { grantPatrolCacheRewards } from './afk.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
 
 export function ensureInventario(user: UserDocument): Inventario {
@@ -78,10 +81,28 @@ export function useEnergyDrink(user: UserDocument, quantity = 1): { ok: true; bo
   return { ok: true, bonus_added: bonusAdded };
 }
 
+/** Usa Baú da Patrulha: recompensas equivalentes a 6h de patrulha AFK. */
+export function usePatrolCache(
+  user: UserDocument,
+): { ok: true; claimed: AfkPendingReward } | { ok: false; error: string } {
+  const available = getItemCount(user, PATROL_CACHE_ITEM_ID);
+  if (available < 1) {
+    return { ok: false, error: 'Você não tem Baú da Patrulha.' };
+  }
+
+  if (!consumeInventoryItem(user, PATROL_CACHE_ITEM_ID, 1)) {
+    return { ok: false, error: 'Não foi possível consumir o item.' };
+  }
+
+  const claimed = grantPatrolCacheRewards(user);
+  return { ok: true, claimed };
+}
+
 export function readInventarioSummary(user: UserDocument) {
   ensureInventario(user);
   return {
     energy_drink: getItemCount(user, ENERGY_DRINK_ITEM_ID),
+    bau_patrulha: getItemCount(user, PATROL_CACHE_ITEM_ID),
     itens: [...user.inventario!.itens],
   };
 }

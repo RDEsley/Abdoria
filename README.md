@@ -55,7 +55,11 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
 - **Teto diário** — **100 XP + 5 por nível** (sobe conforme você evolui)
 - **XP extra** — streak, conquistas, loja e habilidades desbloqueadas (sem limite diário)
-- **Patrulha AFK** — seu herói acumula recompensas a cada **30 minutos** enquanto você está fora
+- **Patrulha AFK** — herói em combate automático enquanto você está fora (máx. **24h** de patrulha)
+  - **Loot por kill:** **10% de chance** a cada inimigo derrotado (mesma tabela de raridade de antes)
+  - Inimigos **slime**, elites, boss a cada **99 kills**
+  - Arma preferida: **arco** ou **espada** (dano e animação diferentes)
+  - Coletar recompensas **não zera** o tempo de patrulha (só zera ao atingir o teto de 24h)
 - **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Abdoria)
 
 ### Personalizar e recompensar
@@ -79,6 +83,18 @@ A moeda **Abdoria** você usa na loja de cosméticos e na loja diária. Você ga
 
 Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
+### Patrulha AFK — loot por kill
+
+| Etapa | Chance (quando o drop de 10% acerta) |
+|-------|--------------------------------------|
+| +1 XP | 85% |
+| +1 Abdoria | 11% |
+| +1 Energy Drink | 4% |
+| Cosmético lendário | ~0,05% (boss: ~0,09%) |
+| Título secreto | 0,01% |
+
+Offline: ~**8 kills/min** de patrulha. Boss a cada **99** inimigos com loot bônus.
+
 ---
 
 ## Estrutura do projeto
@@ -93,8 +109,9 @@ Abdoria/
 │   ├── routes/             → Endpoints REST
 │   └── services/           → Regras de negócio
 ├── shared/
+│   ├── afk/                → Combate AFK, inimigos, constantes de boss/loot
 │   ├── types/              → Contratos compartilhados (API, domínio)
-│   └── utils/              → Utilitários compartilhados (timezone, user-dados)
+│   └── utils/              → Utilitários (timezone, user-dados, afk)
 ├── supabase/migrations/    → Schema Postgres
 ├── api/                    → Entrada serverless na Vercel
 ├── docs/                   → Documentação amigável
@@ -117,7 +134,9 @@ Abdoria/
 O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`, aplique o schema:
 
 1. Crie um projeto em [supabase.com](https://supabase.com/)
-2. No **SQL Editor**, execute o arquivo [`supabase/migrations/20250620000000_initial_schema.sql`](./supabase/migrations/20250620000000_initial_schema.sql)  
+2. No **SQL Editor**, execute os arquivos em [`supabase/migrations/`](./supabase/migrations/) na ordem:
+   - `20250620000000_initial_schema.sql`
+   - `20250620120000_afk_combat.sql` (coluna `combat` na patrulha AFK)  
    (ou use `supabase db push` se tiver o [Supabase CLI](https://supabase.com/docs/guides/cli) linkado ao projeto)
 
 ### Passos
@@ -146,6 +165,8 @@ npm run dev
 
 > Em produção o seed **não** cria usuários demo. Nunca use senhas fracas em deploy real.
 
+**Cadastro:** ao criar conta, você é redirecionado para o **login** (sessão só inicia após entrar). Use **Lembrar de mim** para manter o token no dispositivo e pré-preencher o email.
+
 ### Scripts úteis
 
 | Comando | O que faz |
@@ -163,6 +184,8 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 | Script | Uso |
 |--------|-----|
 | `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
+| `npx tsx scripts/dev/verify-afk.ts` | Valida patrulha AFK, combate e drops por kill |
+| `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
 | `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |
 
