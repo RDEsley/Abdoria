@@ -34,6 +34,9 @@ import {
   CURRENCY_NAME,
   ENERGY_DRINK_ITEM_ID,
   ENERGY_DRINK_SHOP_PRICE,
+  PATROL_CACHE_ITEM_ID,
+  PATROL_CACHE_LABEL,
+  PATROL_CACHE_SHOP_PRICE,
   DEFAULT_COSMETICOS,
   DAILY_PAID_OFFER_LABELS,
   DAILY_RARITY_LABELS,
@@ -152,6 +155,15 @@ function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 
         ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
         : ' · grátis';
     return `${prefix} · ${rarity} · Energy Drink ×${slot.valor}${price}`;
+  }
+
+  if (slot.recompensa_tipo === 'item' && slot.item_id === PATROL_CACHE_ITEM_ID) {
+    const prefix = slot.kind === 'recompensa_diaria' ? 'Recompensa diária' : 'Oferta';
+    const price =
+      slot.kind === 'oferta' && slot.preco_abdoria
+        ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
+        : ' · grátis';
+    return `${prefix} · ${rarity} · ${PATROL_CACHE_LABEL} ×${slot.valor}${price}`;
   }
 
   if (slot.kind === 'recompensa_diaria') {
@@ -319,6 +331,23 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
       label: '',
     };
     slots[1].label = buildSlotLabel(slots[1]);
+  }
+
+  if (hashDailySeed(`${today}:bau-patrol`) % 1000 < 12) {
+    slots[2] = {
+      slot: 2,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: PATROL_CACHE_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: PATROL_CACHE_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: PATROL_CACHE_LABEL,
+      resgatado: false,
+      label: '',
+    };
+    slots[2].label = buildSlotLabel(slots[2]);
   }
 
   loja.data_reset = today;
@@ -565,7 +594,7 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
       unlocked.add(cosmetic.id);
       user.cosmeticos.desbloqueados = [...unlocked];
     } else if (slotDoc.item_id) {
-      addInventoryItem(user, slotDoc.item_id as typeof ENERGY_DRINK_ITEM_ID, slotDoc.valor || 1);
+      addInventoryItem(user, slotDoc.item_id, slotDoc.valor || 1);
     } else {
       applyDailyReward(user, slotSnapshot);
     }

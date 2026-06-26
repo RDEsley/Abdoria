@@ -3,8 +3,8 @@ import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { awardAbdoriaFromXp } from '../services/economy.js';
-import { claimAfkRewards, hasAfkRewardsToClaim, syncAfkRewards, touchAfkPresence } from '../services/afk.js';
-import { readInventarioSummary, useEnergyDrink } from '../services/inventory.js';
+import { claimAfkRewards, afkResponsePayload, hasAfkRewardsToClaim, syncAfkRewards, touchAfkPresence } from '../services/afk.js';
+import { readInventarioSummary, useEnergyDrink, usePatrolCache } from '../services/inventory.js';
 
 export const metaRouter = Router();
 
@@ -19,13 +19,9 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
     }
     syncAfkRewards(user);
     await user.save();
-    const afk = user.afk;
-    res.json({
-      minutos_acumulados: afk.minutos_acumulados ?? 0,
-      pending: afk.pending,
-      has_rewards: hasAfkRewardsToClaim(user.afk as Parameters<typeof hasAfkRewardsToClaim>[0]),
+    res.json(afkResponsePayload(user, {
       arma_preferida: user.preferencias?.arma_preferida ?? 'arco',
-    });
+    }));
   } catch (error) {
     console.error('GET /api/meta/afk error:', error);
     res.status(500).json({ error: 'Erro ao sincronizar patrulha AFK.' });
@@ -40,7 +36,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       return;
     }
     syncAfkRewards(user);
-    if (!hasAfkRewardsToClaim(user.afk as Parameters<typeof hasAfkRewardsToClaim>[0])) {
+    if (!hasAfkRewardsToClaim(user.afk)) {
       res.status(400).json({ error: 'Nenhuma recompensa AFK para coletar.' });
       return;
     }
@@ -63,13 +59,7 @@ metaRouter.post('/afk/ping', async (req: AuthRequest, res) => {
     }
     touchAfkPresence(user);
     await user.save();
-    const afk = user.afk;
-    res.json({
-      ok: true,
-      minutos_acumulados: afk.minutos_acumulados ?? 0,
-      pending: afk.pending,
-      has_rewards: hasAfkRewardsToClaim(user.afk as Parameters<typeof hasAfkRewardsToClaim>[0]),
-    });
+    res.json({ ok: true, ...afkResponsePayload(user) });
   } catch (error) {
     console.error('POST /api/meta/afk/ping error:', error);
     res.status(500).json({ error: 'Erro ao registrar presença.' });
@@ -112,6 +102,31 @@ metaRouter.post('/inventory/energy-drink', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/meta/inventory/energy-drink error:', error);
     res.status(500).json({ error: 'Erro ao usar Energy Drink.' });
+  }
+});
+
+metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const result = usePatrolCache(user);
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    awardAbdoriaFromXp(user);
+    await user.save();
+    res.json({
+      user: sanitizeUser(user),
+      claimed: result.claimed,
+      inventario: readInventarioSummary(user),
+    });
+  } catch (error) {
+    console.error('POST /api/meta/inventory/bau-patrulha error:', error);
+    res.status(500).json({ error: 'Erro ao usar Baú da Patrulha.' });
   }
 });
 

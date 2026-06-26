@@ -10,7 +10,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
   loginAsGuest: () => Promise<void>;
-  register: (email: string, password: string, nome: string, remember?: boolean) => Promise<void>;
+  register: (email: string, password: string, nome: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   applyUser: (user: IUserDocument) => void;
@@ -88,11 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSoundSettings(res.user.preferencias?.som_habilitado ?? true, res.user.preferencias?.sfx_volume ?? 0.7);
   }, []);
 
-  const register = useCallback(async (email: string, password: string, nome: string, remember = true) => {
-    const res = await apiRegister(email, password, nome);
-    setToken(res.token, remember);
-    setSavedEmail(remember ? email : null);
-    setUser(res.user);
+  const register = useCallback(async (email: string, password: string, nome: string) => {
+    await apiRegister(email, password, nome);
   }, []);
 
   const logout = useCallback(async () => {

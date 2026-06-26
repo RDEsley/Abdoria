@@ -18,8 +18,16 @@ export function clearToken(): void {
   sessionStorage.removeItem(TOKEN_KEY);
 }
 
+/** Último login manteve sessão persistente (localStorage). */
 export function isRememberMeEnabled(): boolean {
   return localStorage.getItem(REMEMBER_KEY) === '1';
+}
+
+/** Preferência do checkbox na tela de login (padrão: marcado na 1ª visita). */
+export function getRememberMePreference(): boolean {
+  const stored = localStorage.getItem(REMEMBER_KEY);
+  if (stored === '0') return false;
+  return true;
 }
 
 export function getSavedEmail(): string | null {

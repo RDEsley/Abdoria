@@ -9,6 +9,7 @@ import {
   validatePassword,
   validateRegisterForm,
   validateRegisterNome,
+  validateConfirmPassword,
   type AuthFieldErrors,
 } from '@/lib/auth-validation';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +20,7 @@ export function RegisterPage() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,14 +38,14 @@ export function RegisterPage() {
     e.preventDefault();
     setSubmitError('');
 
-    const errors = validateRegisterForm(nome, email, password);
+    const errors = validateRegisterForm(nome, email, password, confirmPassword);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
     try {
-      await register(email, password, nome.trim(), rememberMe);
-      navigate('/onboarding');
+      await register(email, password, nome.trim());
+      navigate('/login', { state: { accountCreated: true, email } });
     } catch (err) {
       setSubmitError(getErrorMessage(err));
     } finally {
@@ -108,6 +109,7 @@ export function RegisterPage() {
             onChange={(e) => {
               setPassword(e.target.value);
               clearFieldError('password');
+              if (confirmPassword) clearFieldError('confirmPassword');
               setSubmitError('');
             }}
             onBlur={() => {
@@ -119,15 +121,26 @@ export function RegisterPage() {
             placeholder="Crie uma senha segura"
             autoComplete="new-password"
           />
-
-          <label className="game-check game-check--solo">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            Lembrar de mim neste dispositivo
-          </label>
+          <AuthField
+            label="Confirmar senha"
+            name="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              clearFieldError('confirmPassword');
+              setSubmitError('');
+            }}
+            onBlur={() => {
+              const err = validateConfirmPassword(password, confirmPassword);
+              setFieldErrors((prev) =>
+                err ? { ...prev, confirmPassword: err } : { ...prev, confirmPassword: undefined },
+              );
+            }}
+            error={fieldErrors.confirmPassword}
+            placeholder="Repita a senha"
+            autoComplete="new-password"
+          />
 
           {submitError && (
             <AuthAlert variant="error" title="Não foi possível criar a conta" message={submitError} live />

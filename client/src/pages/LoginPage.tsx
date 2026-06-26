@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthAlert } from '@/components/auth/AuthAlert';
 import { AuthField } from '@/components/auth/AuthField';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
 import { getHealth } from '@/lib/api';
 import { DATABASE_BANNER, getErrorMessage, OFFLINE_BANNER } from '@/lib/api-errors';
-import { getSavedEmail, isRememberMeEnabled } from '@/lib/auth-storage';
+import { getSavedEmail, getRememberMePreference } from '@/lib/auth-storage';
 import { validateEmail, validateLoginForm, validatePassword, type AuthFieldErrors } from '@/lib/auth-validation';
 import { useAuth } from '@/context/AuthContext';
 
 export function LoginPage() {
   const { login, loginAsGuest } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const location = useLocation();
+  const registerState = location.state as { accountCreated?: boolean; email?: string } | null;
+  const [email, setEmail] = useState(() => registerState?.email ?? getSavedEmail() ?? '');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(() => getRememberMePreference());
   const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,10 +27,14 @@ export function LoginPage() {
   const [dbOnline, setDbOnline] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const saved = getSavedEmail();
-    if (saved) setEmail(saved);
-    setRememberMe(isRememberMeEnabled());
-  }, []);
+    if (registerState?.email) {
+      setEmail(registerState.email);
+    } else {
+      const saved = getSavedEmail();
+      if (saved) setEmail(saved);
+    }
+    setRememberMe(getRememberMePreference());
+  }, [registerState?.email]);
 
   useEffect(() => {
     void getHealth()
@@ -96,6 +102,14 @@ export function LoginPage() {
           </Link>
         }
       >
+        {registerState?.accountCreated && (
+          <AuthAlert
+            variant="success"
+            title="Conta criada!"
+            message="Faça login com seu email e senha para começar a aventura."
+          />
+        )}
+
         {showSystemAlert && (
           <div className="game-auth-alerts">
             {apiOnline === false && (

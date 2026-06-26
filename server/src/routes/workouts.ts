@@ -147,6 +147,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
 
     const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
     const pending = normalizePending(user.afk?.pending);
+    const inventario = readInventarioSummary(user);
 
     res.json({
       treino_hoje: treinoHoje,
@@ -164,7 +165,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       xp_bonus_restante: user.xp_diario?.bonus_pool_restante ?? 0,
       xp_bonus_total: user.xp_diario?.bonus_pool_total ?? 0,
       xp_data_reset: user.xp_diario?.data_reset ?? getTodaySaoPaulo(),
-      inventario: readInventarioSummary(user),
+      inventario,
       afk: {
         minutos_acumulados: user.afk?.minutos_acumulados ?? 0,
         pending,
@@ -176,7 +177,8 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
           || pending.titulo_secreto,
         ),
       },
-      energy_drink_count: readInventarioSummary(user).energy_drink,
+      energy_drink_count: inventario.energy_drink,
+      patrol_cache_count: inventario.bau_patrulha,
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({ mes: m._id, minutos: Math.round(m.minutos) })),

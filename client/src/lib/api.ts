@@ -1,5 +1,6 @@
 import type {
   AfkPendingReward,
+  AfkCombatSnapshot,
   ArmaPreferida,
   AuthResponse,
   CompleteWorkoutPayload,
@@ -211,10 +212,15 @@ export interface AfkMetaResponse {
   pending: AfkPendingReward;
   has_rewards: boolean;
   arma_preferida: ArmaPreferida;
+  kill_drop_chance: number;
+  max_minutes: number;
+  capped: boolean;
+  combat: AfkCombatSnapshot;
 }
 
 export interface InventarioSummary extends Inventario {
   energy_drink: number;
+  bau_patrulha: number;
 }
 
 export function getAfkMeta(): Promise<AfkMetaResponse> {
@@ -230,6 +236,10 @@ export interface AfkPingResponse {
   minutos_acumulados: number;
   pending: AfkPendingReward;
   has_rewards: boolean;
+  kill_drop_chance: number;
+  max_minutes: number;
+  capped: boolean;
+  combat: AfkCombatSnapshot;
 }
 
 export function pingAfk(): Promise<AfkPingResponse> {
@@ -249,6 +259,14 @@ export function useEnergyDrink(quantity = 1): Promise<{
     method: 'POST',
     body: JSON.stringify({ quantity }),
   });
+}
+
+export function usePatrolCache(): Promise<{
+  user: IUserDocument;
+  claimed: AfkPendingReward;
+  inventario: InventarioSummary;
+}> {
+  return fetchJson('/meta/inventory/bau-patrulha', { method: 'POST' });
 }
 
 export function updateMetaPreferences(data: {

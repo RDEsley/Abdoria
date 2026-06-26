@@ -1,4 +1,4 @@
-export type AuthFieldKey = 'nome' | 'email' | 'password';
+export type AuthFieldKey = 'nome' | 'email' | 'password' | 'confirmPassword';
 
 export type AuthFieldErrors = Partial<Record<AuthFieldKey, string>>;
 
@@ -25,15 +25,28 @@ export function validateRegisterNome(value: string): string | undefined {
   return undefined;
 }
 
-export function validateRegisterForm(nome: string, email: string, password: string): AuthFieldErrors {
+export function validateConfirmPassword(password: string, confirmPassword: string): string | undefined {
+  if (!confirmPassword) return 'Confirme sua senha.';
+  if (password !== confirmPassword) return 'As senhas não coincidem.';
+  return undefined;
+}
+
+export function validateRegisterForm(
+  nome: string,
+  email: string,
+  password: string,
+  confirmPassword: string,
+): AuthFieldErrors {
   const errors: AuthFieldErrors = {};
   const nomeError = validateRegisterNome(nome);
   const emailError = validateEmail(email);
   const passwordError = validatePassword(password);
+  const confirmError = validateConfirmPassword(password, confirmPassword);
 
   if (nomeError) errors.nome = nomeError;
   if (emailError) errors.email = emailError;
   if (passwordError) errors.password = passwordError;
+  if (confirmError) errors.confirmPassword = confirmError;
 
   return errors;
 }

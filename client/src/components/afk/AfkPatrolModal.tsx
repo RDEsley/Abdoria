@@ -1,71 +1,55 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Binoculars, Coins, Gift, Sparkles, Sword, X, Zap } from 'lucide-react';
+import { AlertTriangle, Shield, X } from 'lucide-react';
+import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
+import { AfkRewardGrid, countAfkRewardItems } from '@/components/afk/AfkRewardGrid';
+import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
+import { AfkWeaponToggle } from '@/components/afk/AfkWeaponToggle';
 import { GameButton } from '@/components/ui/GameButton';
-import { EnergyDrinkIcon } from '@/lib/daily-shop-display';
 import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
-import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { CURRENCY_NAME, type AfkPendingReward } from '@/types';
+import type { AfkPendingReward, ArmaPreferida } from '@/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-const ENEMIES = ['bat', 'zombie', 'skeleton'] as const;
-
-function formatAfkTimer(minutos: number): string {
-  const totalSec = Math.floor(minutos * 60);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
-}
-
-function shuffleEnemies(): typeof ENEMIES[number][] {
-  const list = [...ENEMIES];
-  for (let i = list.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [list[i], list[j]] = [list[j], list[i]];
-  }
-  return list;
-}
-
 export function AfkPatrolModal({ open, onClose }: Props) {
   const { applyUser } = useAuth();
   const { refresh: refreshApp } = useApp();
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
+  const [weapon, setWeapon] = useState<ArmaPreferida>('arco');
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<AfkPendingReward | null>(null);
-  const [displayMinutes, setDisplayMinutes] = useState(0);
-  const baseMinutesRef = useRef(0);
-  const loadedAtRef = useRef(Date.now());
-  const [enemyOrder] = useState(() => shuffleEnemies());
-  const [enemyIndex, setEnemyIndex] = useState(0);
-  const [attackTick, setAttackTick] = useState(0);
+  const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
+  const loadedAtRef = useRef(0);
+
+  const applyMeta = useCallback((data: AfkMetaResponse) => {
+    setMeta(data);
+    setWeapon(data.arma_preferida ?? 'arco');
+    loadedAtRef.current = Date.now();
+    setElapsedSinceSyncMin(0);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await getAfkMeta();
-      setMeta(data);
-      baseMinutesRef.current = data.minutos_acumulados;
-      loadedAtRef.current = Date.now();
-      setDisplayMinutes(data.minutos_acumulados);
+      applyMeta(data);
     } catch (err) {
       setError(getErrorMessage(err, 'Não foi possível carregar a patrulha.'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyMeta]);
 
   useEffect(() => {
     if (!open) return;
@@ -73,40 +57,44 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   }, [open, load]);
 
   useEffect(() => {
+    if (!open) return undefined;
+
+    const combatPoll = window.setInterval(() => {
+      void load();
+    }, 15_000);
+
+    return () => window.clearInterval(combatPoll);
+  }, [open, load]);
+
+  useEffect(() => {
     const onAfkSync = (event: Event) => {
-      const detail = (event as CustomEvent<{ minutos_acumulados: number; pending: AfkPendingReward; has_rewards: boolean }>).detail;
+      const detail = (event as CustomEvent<AfkMetaResponse & { ok?: boolean }>).detail;
       if (!detail) return;
-      baseMinutesRef.current = detail.minutos_acumulados;
+      setMeta((prev) => ({
+        ...(prev ?? ({} as AfkMetaResponse)),
+        minutos_acumulados: detail.minutos_acumulados,
+        pending: detail.pending,
+        has_rewards: detail.has_rewards,
+        kill_drop_chance: detail.kill_drop_chance ?? prev?.kill_drop_chance ?? 10,
+        max_minutes: detail.max_minutes ?? prev?.max_minutes ?? 1440,
+        capped: detail.capped ?? prev?.capped ?? false,
+        arma_preferida: prev?.arma_preferida ?? weapon,
+        combat: detail.combat ?? prev?.combat,
+      }));
       loadedAtRef.current = Date.now();
-      setDisplayMinutes(detail.minutos_acumulados);
-      setMeta((prev) => (prev ? { ...prev, ...detail } : prev));
+      setElapsedSinceSyncMin(0);
     };
     window.addEventListener('abdoria:afk-sync', onAfkSync);
     return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
-  }, []);
+  }, [weapon]);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || meta?.capped) return undefined;
     const timer = window.setInterval(() => {
-      const elapsedMin = (Date.now() - loadedAtRef.current) / 60_000;
-      setDisplayMinutes(baseMinutesRef.current + elapsedMin);
+      setElapsedSinceSyncMin((Date.now() - loadedAtRef.current) / 60_000);
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const enemyTimer = window.setInterval(() => {
-      setEnemyIndex((i) => (i + 1) % enemyOrder.length);
-    }, 2800);
-    const attackTimer = window.setInterval(() => {
-      setAttackTick((t) => t + 1);
-    }, 600);
-    return () => {
-      window.clearInterval(enemyTimer);
-      window.clearInterval(attackTimer);
-    };
-  }, [open, enemyOrder.length]);
+  }, [open, meta?.capped]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -116,38 +104,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
-
-  const rewards = useMemo(() => {
-    if (!meta?.pending) return [];
-    const p = meta.pending;
-    const cosmeticIds = p.cosmetic_ids ?? [];
-    const items: { key: string; label: string; icon: React.ReactNode; secret?: boolean }[] = [];
-    if (p.xp > 0) items.push({ key: 'xp', label: `+${p.xp} XP`, icon: <Zap size={18} /> });
-    if (p.abdoria > 0) items.push({ key: 'abdoria', label: `+${p.abdoria} ${CURRENCY_NAME}`, icon: <Coins size={18} /> });
-    if (p.energy_drinks > 0) {
-      items.push({
-        key: 'drink',
-        label: `+${p.energy_drinks} Energy Drink`,
-        icon: <EnergyDrinkIcon size={18} />,
-      });
-    }
-    cosmeticIds.forEach((id) => {
-      items.push({
-        key: id,
-        label: COSMETIC_BY_ID[id]?.nome ?? id,
-        icon: <Gift size={18} />,
-      });
-    });
-    if (p.titulo_secreto) {
-      items.push({
-        key: 'titulo_secreto',
-        label: COSMETIC_BY_ID.titulo_secreto?.nome ?? 'Título secreto',
-        icon: <Sparkles size={18} />,
-        secret: true,
-      });
-    }
-    return items;
-  }, [meta?.pending]);
 
   const handleClaim = async () => {
     if (!meta?.has_rewards) return;
@@ -168,9 +124,9 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const weapon = meta?.arma_preferida ?? 'arco';
-  const currentEnemy = enemyOrder[enemyIndex];
-  const attacking = attackTick % 2 === 0;
+  const rewardCount = countAfkRewardItems(meta?.pending);
+  const capped = meta?.capped ?? false;
+  const killDropChance = meta?.kill_drop_chance ?? 10;
 
   return createPortal(
     <>
@@ -187,88 +143,66 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           </button>
 
           <div className="game-afk-modal__header">
-            <Binoculars size={16} aria-hidden />
-            <h2 id="afk-patrol-title" className="game-modal__title !mb-0">
-              Patrulha AFK
-            </h2>
-          </div>
-          <p className="game-modal__text">Seu herói defende Abdoria enquanto você está fora. Recompensas a cada 30 min.</p>
-
-          <div className="game-afk-scene">
-            <div className="game-afk-scene__viewport">
-              <div className="game-afk-scene__sky" aria-hidden />
-              <div className="game-afk-scene__ground" aria-hidden />
-
-              <div className={`game-afk-hero game-afk-hero--${weapon}${attacking ? ' game-afk-hero--attack' : ''}`} aria-hidden>
-                <div className="game-afk-hero__body" />
-                {weapon === 'arco' ? (
-                  <svg className="game-afk-bow" viewBox="0 0 64 40" aria-hidden>
-                    <path d="M4 20 Q32 2 60 20" fill="none" stroke="#78350f" strokeWidth="2.5" strokeLinecap="round" />
-                    <line x1="4" y1="20" x2="60" y2="20" stroke="#a16207" strokeWidth="1.5" />
-                    {attacking && (
-                      <motion.line
-                        x1="8"
-                        y1="20"
-                        x2="58"
-                        y2="20"
-                        stroke="#57534e"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 0.35 }}
-                      />
-                    )}
-                  </svg>
-                ) : (
-                  <Sword className="game-afk-hero__sword" size={20} />
-                )}
-              </div>
-
-              <div className={`game-afk-enemy game-afk-enemy--${currentEnemy}${attacking ? ' game-afk-enemy--hit' : ''}`} aria-hidden>
-                <div className="game-afk-enemy__sprite" />
-              </div>
+            <div className="game-afk-modal__title-wrap">
+              <p className="game-afk-modal__eyebrow">
+                <Shield size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} aria-hidden />
+                Modo offline
+              </p>
+              <h2 id="afk-patrol-title" className="game-afk-modal__title">
+                Patrulha de Abdoria
+              </h2>
+              <p className="game-afk-modal__subtitle">
+                Seu herói defende o reino enquanto você descansa. {killDropChance}% de loot por inimigo derrotado.
+              </p>
             </div>
+            <AfkWeaponToggle value={weapon} onChange={setWeapon} />
           </div>
 
-          <div className="game-afk-timer" aria-live="polite">
-            <span className="game-afk-timer__label">Tempo acumulado</span>
-            <span className="game-afk-timer__value tabular-nums">
-              {loading ? '--:--:--' : formatAfkTimer(displayMinutes)}
-            </span>
+          {capped && (
+            <div className="game-afk-cap-banner" role="status">
+              <AlertTriangle size={16} aria-hidden />
+              Limite de 24h atingido — colete as recompensas para continuar patrulhando.
+            </div>
+          )}
+
+          {meta?.combat?.is_boss && (
+            <div className="game-afk-boss-banner" role="status">
+              Boss em combate! Loot bônus ao derrotar.
+            </div>
+          )}
+
+          <AfkCombatScene
+            weapon={weapon}
+            combat={meta?.combat ?? null}
+            hasLoot={meta?.has_rewards}
+            capped={capped}
+          />
+
+          <AfkTimerPanel
+            minutos={meta?.minutos_acumulados ?? 0}
+            elapsedSinceSyncMin={elapsedSinceSyncMin}
+            capped={capped}
+            loading={loading}
+          />
+
+          <AfkRewardGrid pending={meta?.pending} />
+
+          <div className="game-afk-modal__footer">
+            {error && <p className="game-afk-modal__error">{error}</p>}
+
+            <GameButton
+              className={`game-afk-claim-btn${meta?.has_rewards ? ' game-afk-claim-btn--ready' : ''}`}
+              size="lg"
+              disabled={!meta?.has_rewards || claiming || loading}
+              onClick={() => void handleClaim()}
+            >
+              {claiming
+                ? 'Coletando...'
+                : meta?.has_rewards
+                  ? `Coletar ${rewardCount} recompensa${rewardCount === 1 ? '' : 's'}`
+                  : 'Nada para coletar'}
+            </GameButton>
           </div>
-
-          <div className="game-afk-rewards">
-            <p className="game-afk-rewards__title">Recompensas pendentes</p>
-            {rewards.length === 0 ? (
-              <p className="game-afk-rewards__empty">Patrulhe mais para acumular loot!</p>
-            ) : (
-              <div className="game-afk-rewards__grid">
-                {rewards.map((reward) => (
-                  <div
-                    key={reward.key}
-                    className={`game-afk-reward${reward.secret ? ' game-afk-reward--secret' : ''}`}
-                  >
-                    <span className="game-afk-reward__icon">{reward.icon}</span>
-                    <span className={`game-afk-reward__label${reward.secret ? ' cosmetic-title--secreto' : ''}`}>
-                      {reward.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {error && <p className="game-login__error mt-2">{error}</p>}
-
-          <GameButton
-            className="w-full mt-3"
-            size="lg"
-            disabled={!meta?.has_rewards || claiming || loading}
-            onClick={() => void handleClaim()}
-          >
-            {claiming ? 'Coletando...' : meta?.has_rewards ? 'Coletar recompensas' : 'Nada para coletar'}
-          </GameButton>
         </motion.div>
       </div>
 

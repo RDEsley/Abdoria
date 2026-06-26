@@ -1,6 +1,6 @@
 import { Coins, Package, Zap } from 'lucide-react';
 import type { LojaDiariaSlot } from '@/types';
-import { CURRENCY_NAME } from '@/types';
+import { CURRENCY_NAME, PATROL_CACHE_HOURS, PATROL_CACHE_ITEM_ID, PATROL_CACHE_LABEL } from '@/types';
 
 export function EnergyDrinkIcon({ size = 16, className }: { size?: number; className?: string }) {
   return (
@@ -14,9 +14,24 @@ export function EnergyDrinkIcon({ size = 16, className }: { size?: number; class
   );
 }
 
+export function PatrolCacheIcon({ size = 16, className }: { size?: number; className?: string }) {
+  return (
+    <span className={`game-patrol-cache-icon${className ? ` ${className}` : ''}`} aria-hidden>
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
+        <rect x="4" y="9" width="16" height="10" rx="1.5" className="game-patrol-cache-icon__body" />
+        <path d="M4 12h16" className="game-patrol-cache-icon__lid" strokeWidth="2" />
+        <rect x="9" y="6" width="6" height="4" rx="1" className="game-patrol-cache-icon__lock" />
+        <circle cx="12" cy="14" r="1.5" className="game-patrol-cache-icon__gem" />
+      </svg>
+    </span>
+  );
+}
+
 export function formatDailyReward(slot: LojaDiariaSlot): string {
   if (slot.recompensa_tipo === 'item') {
-    return slot.item_id === 'energy_drink' ? `+${slot.valor} Energy Drink` : `+${slot.valor} item`;
+    if (slot.item_id === 'energy_drink') return `+${slot.valor} Energy Drink`;
+    if (slot.item_id === PATROL_CACHE_ITEM_ID) return `+${slot.valor} ${PATROL_CACHE_LABEL}`;
+    return `+${slot.valor} item`;
   }
   if (slot.recompensa_tipo === 'pacote') {
     return `+${slot.bonus_xp ?? 0} XP · +${slot.bonus_abdoria ?? 0} ${CURRENCY_NAME}`;
@@ -25,7 +40,10 @@ export function formatDailyReward(slot: LojaDiariaSlot): string {
 }
 
 export function dailyRewardIcon(slot: LojaDiariaSlot, size = 16) {
-  if (slot.recompensa_tipo === 'item') return <EnergyDrinkIcon size={size} />;
+  if (slot.recompensa_tipo === 'item') {
+    if (slot.item_id === PATROL_CACHE_ITEM_ID) return <PatrolCacheIcon size={size} />;
+    return <EnergyDrinkIcon size={size} />;
+  }
   if (slot.recompensa_tipo === 'pacote') return <Package size={size} aria-hidden />;
   return slot.recompensa_tipo === 'xp' ? <Zap size={size} aria-hidden /> : <Coins size={size} aria-hidden />;
 }
@@ -44,4 +62,8 @@ export function dailyOfferTitle(slot: LojaDiariaSlot): string {
 
 export function isLuckyFreeDailyReward(slot: LojaDiariaSlot): boolean {
   return slot.kind === 'recompensa_diaria' && (slot.raridade === 'raro' || slot.raridade === 'epico');
+}
+
+export function formatPatrolCacheDescription(): string {
+  return `Recompensas de ${PATROL_CACHE_HOURS}h de patrulha AFK ao usar.`;
 }

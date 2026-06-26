@@ -39,7 +39,12 @@
   .game-bird__wing--l,
   .game-bird__wing--r,
   .game-login__logo,
+  .game-afk-fab--loot,
   .game-afk-fab__badge,
+  .game-afk-scene__cloud,
+  .game-afk-scene__sparkle,
+  .game-afk-mascot__cape,
+  .game-afk-enemy__boss-aura,
   .game-xp-bar-wrap--full {
     animation: none !important;
   }
