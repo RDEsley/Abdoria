@@ -9,5 +9,5 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "../shared/types"]
+  "include": ["src", "../shared/types", "../shared/utils"]
 }

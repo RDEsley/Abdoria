@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { User, sanitizeUser } from '../models/User.js';
+import { User, sanitizeUser } from '../domain/User.js';
 import { signToken } from '../middleware/auth.js';
 import { calcImc, DEFAULT_PREFERENCIAS } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
@@ -40,7 +40,7 @@ authRouter.post('/register', async (req, res) => {
       onboarding_completed: false,
     });
 
-    const token = signToken(user._id.toString());
+    const token = signToken(user.id.toString());
     res.status(201).json({ token, user: sanitizeUser(user) });
   } catch (error) {
     console.error('POST /auth/register error:', error);
@@ -69,7 +69,7 @@ authRouter.post('/login', async (req, res) => {
       return;
     }
 
-    const token = signToken(user._id.toString());
+    const token = signToken(user.id.toString());
     res.json({ token, user: sanitizeUser(user) });
   } catch (error) {
     console.error('POST /auth/login error:', error);
@@ -99,7 +99,7 @@ authRouter.post('/guest', async (_req, res) => {
       onboarding_completed: false,
     });
 
-    const token = signToken(user._id.toString());
+    const token = signToken(user.id.toString());
     res.status(201).json({ token, user: sanitizeUser(user) });
   } catch (error) {
     console.error('POST /auth/guest error:', error);

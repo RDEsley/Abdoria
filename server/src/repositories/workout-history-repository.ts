@@ -1,7 +1,7 @@
 import { getSupabase } from '../db.js';
 
 export interface WorkoutHistoryDocument {
-  _id: string;
+  id: string;
   usuario_id: string;
   treino_nome: string;
   treino_tipo?: string;
@@ -14,7 +14,7 @@ export interface WorkoutHistoryDocument {
 
 function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
   return {
-    _id: String(row.id),
+    id: String(row.id),
     usuario_id: String(row.usuario_id),
     treino_nome: String(row.treino_nome),
     treino_tipo: row.treino_tipo ? String(row.treino_tipo) : undefined,
@@ -74,7 +74,7 @@ export const WorkoutHistory = {
     return rowToHistory(data as Record<string, unknown>);
   },
 
-  async create(data: Omit<WorkoutHistoryDocument, '_id'>): Promise<WorkoutHistoryDocument> {
+  async create(data: Omit<WorkoutHistoryDocument, 'id'>): Promise<WorkoutHistoryDocument> {
     const sb = getSupabase();
     const row = {
       usuario_id: data.usuario_id,

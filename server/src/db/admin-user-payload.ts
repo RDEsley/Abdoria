@@ -1,7 +1,7 @@
 import type { CosmeticDefinition } from '../types/index.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import { COSMETICS } from '../data/cosmetics.js';
-import { allExercises } from '../seeds/all-exercises.js';
+import { allExercises } from '../db/seeds/all-exercises.js';
 import { ABDORIA_XP_STEP } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 

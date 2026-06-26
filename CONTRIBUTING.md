@@ -10,10 +10,11 @@ Obrigado por considerar contribuir. Este projeto é mantido em português (Brasi
 
 ## Padrões de código
 
-- **TypeScript** em client, server e `shared/types`.
+- **TypeScript** em client, server, `shared/types` e `shared/utils`.
 - Siga o estilo existente: nomes em português no domínio (rotas, UI), inglês ok em infra.
+- Identificadores de entidade usam `id` (UUID Postgres), não `_id`.
 - Mudanças **pequenas e focadas** — um assunto por PR.
-- Não commite `.env`, secrets, `.cursor`, `.cursorignore` ou `.vercel`.
+- Não commite `.env`, `.env.vercel.*`, secrets, `.cursor/`, `.cursorignore` ou `.vercel/`.
 
 ## Fluxo
 

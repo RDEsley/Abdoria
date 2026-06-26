@@ -1,4 +1,4 @@
-import type { NivelUsuario, Objetivo } from '../types/index.js';
+import type { NivelUsuario, Objetivo } from '../../types/index.js';
 
 export interface DemoUserSeed {
   email: string;

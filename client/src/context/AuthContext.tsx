@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const userId = user?._id;
+    const userId = user?.id;
     try {
       await logoutApi();
     } finally {
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearToken();
       setUser(null);
     }
-  }, [user?._id]);
+  }, [user?.id]);
 
   const value = useMemo(
     () => ({

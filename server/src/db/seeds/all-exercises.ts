@@ -1,4 +1,4 @@
-import { withCustomParams, withLevelParams } from '../utils/exercise-params.js';
+import { withCustomParams, withLevelParams } from '../../utils/exercise-params.js';
 import { prioritySExercises } from './priority-s-exercises.js';
 
 const priorityBase = prioritySExercises.map((e) =>

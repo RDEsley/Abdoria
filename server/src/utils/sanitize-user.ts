@@ -7,8 +7,13 @@ export function sanitizeUser(user: UserDocument | Record<string, unknown>) {
   const raw = { ...user } as Record<string, unknown>;
   delete raw.passwordHash;
 
-  if (raw._id) {
-    raw._id = String(raw._id);
+  if (raw._id && !raw.id) {
+    raw.id = String(raw._id);
+    delete raw._id;
+  }
+
+  if (raw.id) {
+    raw.id = String(raw.id);
   }
 
   raw.preferencias = {
@@ -46,7 +51,7 @@ export function sanitizeUser(user: UserDocument | Record<string, unknown>) {
   return raw;
 }
 
-export function toObjectIdString(value: unknown): string | undefined {
+export function toIdString(value: unknown): string | undefined {
   if (!value) return undefined;
   if (typeof value === 'string') return value;
   return String(value);

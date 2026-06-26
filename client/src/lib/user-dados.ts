@@ -119,8 +119,8 @@ export function buildMigrationPatch(
   user: IUserDocument,
   current: UserDadosSalvos,
 ): Partial<UserDadosSalvos> | null {
-  if (!hasLegacyLocalData(user._id)) return null;
-  const legacy = collectLegacyLocalData(user._id);
+  if (!hasLegacyLocalData(user.id)) return null;
+  const legacy = collectLegacyLocalData(user.id);
   if (Object.keys(legacy).length === 0) return null;
 
   if (isEmptyDadosSalvos(current)) {

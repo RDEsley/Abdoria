@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sanitizeUser } from '../models/User.js';
+import { sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {

@@ -66,7 +66,7 @@ function presetToQueue(
         slug: ex.slug,
         nome: ex.nome,
         nome_pt: ex.nome_pt,
-        exercicio_id: ex._id,
+        exercicio_id: ex.id,
         musculo_principal: ex.musculo_principal,
         tempo_recomendado: params.tempo_seg || ex.tempo_recomendado || 30,
         modo: pe.modo ?? params.modo,
@@ -143,16 +143,16 @@ export function BuilderPage() {
     void getRecommendedPresets()
       .then((list) => {
         setPresets(list);
-        if (presetFromUrl && list.some((p) => p._id === presetFromUrl)) {
+        if (presetFromUrl && list.some((p) => p.id === presetFromUrl)) {
           setSelectedPresetId(presetFromUrl);
           return;
         }
         const suggestedId = stats?.treino_sugerido?.preset_id;
-        if (suggestedId && list.some((p) => p._id === suggestedId)) {
+        if (suggestedId && list.some((p) => p.id === suggestedId)) {
           setSelectedPresetId(suggestedId);
-        } else if (list.length > 0 && (selectedPresetId === 'custom' || !list.some((p) => p._id === selectedPresetId))) {
+        } else if (list.length > 0 && (selectedPresetId === 'custom' || !list.some((p) => p.id === selectedPresetId))) {
           if (!customWorkout.length && !isSavedPresetId(selectedPresetId)) {
-            setSelectedPresetId(list[0]._id);
+            setSelectedPresetId(list[0].id);
           }
         }
       })
@@ -195,7 +195,7 @@ export function BuilderPage() {
     [exercises],
   );
 
-  const selectedPreset = presets.find((p) => p._id === selectedPresetId);
+  const selectedPreset = presets.find((p) => p.id === selectedPresetId);
   const selectedSavedWorkout = isSavedPresetId(selectedPresetId)
     ? savedWorkouts.find((entry) => entry.id === fromSavedPresetId(selectedPresetId))
     : undefined;
@@ -316,7 +316,7 @@ export function BuilderPage() {
       slug: ex.slug,
       nome: ex.nome,
       nome_pt: ex.nome_pt,
-      exercicio_id: ex._id,
+      exercicio_id: ex.id,
       musculo_principal: ex.musculo_principal,
       tempo_recomendado: params.tempo_seg || ex.tempo_recomendado,
       modo: params.modo,
@@ -460,13 +460,13 @@ export function BuilderPage() {
           >
             {presets.map((p) => (
               <motion.button
-                key={p._id}
-                data-preset-id={p._id}
+                key={p.id}
+                data-preset-id={p.id}
                 whileTap={{ scale: 0.97 }}
                 type="button"
-                onClick={() => selectPreset(p._id)}
+                onClick={() => selectPreset(p.id)}
                 className={`game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left ${
-                  selectedPresetId === p._id ? 'game-quest-card' : 'glass-card'
+                  selectedPresetId === p.id ? 'game-quest-card' : 'glass-card'
                 }`}
               >
                 <span className="text-[0.6rem] font-bold text-emerald-600">Ciclo {p.ciclo_id}</span>

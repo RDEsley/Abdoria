@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { connectDB } from '../db.js';
-import { Exercise } from '../models/Exercise.js';
-import { User } from '../models/User.js';
-import { WorkoutPreset } from '../models/WorkoutPreset.js';
-import { allExercises } from '../seeds/all-exercises.js';
+import { Exercise } from '../domain/Exercise.js';
+import { User } from '../domain/User.js';
+import { WorkoutPreset } from '../domain/WorkoutPreset.js';
+import { allExercises } from '../db/seeds/all-exercises.js';
 import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
-import { workoutPresets } from '../seeds/workout-presets.js';
+import { workoutPresets } from '../db/seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';

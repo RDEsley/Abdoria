@@ -1,7 +1,7 @@
 import { getSupabase } from '../db.js';
 
 export interface WorkoutPresetDocument {
-  _id: string;
+  id: string;
   nome: string;
   nivel: string;
   objetivo: string;
@@ -20,7 +20,7 @@ export interface WorkoutPresetDocument {
 
 function rowToPreset(row: Record<string, unknown>): WorkoutPresetDocument {
   return {
-    _id: String(row.id),
+    id: String(row.id),
     nome: String(row.nome),
     nivel: String(row.nivel),
     objetivo: String(row.objetivo),
@@ -77,7 +77,7 @@ export const WorkoutPreset = {
       const { data, error } = await sb
         .from('workout_presets')
         .update(patch)
-        .eq('id', existing._id)
+        .eq('id', existing.id)
         .select('*')
         .single();
       if (error) throw error;

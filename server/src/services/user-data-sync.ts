@@ -1,5 +1,5 @@
-import { Exercise } from '../models/Exercise.js';
-import { User } from '../models/User.js';
+import { Exercise } from '../domain/Exercise.js';
+import { User } from '../domain/User.js';
 import { ABDORIA_XP_STEP } from '../types/index.js';
 import { ensureAbdoriaWallet } from './economy.js';
 
@@ -15,7 +15,7 @@ export async function syncAllUsersProgressData(): Promise<{ users: number; prune
   let coinsAdjusted = 0;
 
   for (const lean of usersLean) {
-    const user = await User.findById(lean._id);
+    const user = await User.findById(lean.id);
     if (!user) continue;
 
     let dirty = false;

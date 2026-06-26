@@ -1,4 +1,4 @@
-import type { IWorkoutPreset } from '../types/index.js';
+import type { IWorkoutPreset } from '../../types/index.js';
 
 function preset(
   p: Omit<IWorkoutPreset, 'exercicios'> & {

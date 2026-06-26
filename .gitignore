@@ -9,12 +9,15 @@ server/node_modules/
 !.env.example
 .env.local
 .env.*.local
+.env.vercel.*
 server/.env
 client/.env
 *.pem
 *.key
 *.p12
 *.pfx
+
+*.local
 
 # Bundle da API (gerado no deploy / build:vercel)
 /lib/
@@ -66,10 +69,9 @@ $RECYCLE.BIN/
 *.sln
 
 # Cursor / AI (config local — não versionar)
-.cursor
 .cursor/
 .cursorignore
-.cursorignore/
+.cursor/plans/
 
 # Vercel (link local do CLI)
 .vercel/
@@ -81,13 +83,9 @@ temp/
 *.bak
 *.orig
 
-# Optional local MongoDB dumps
+# Optional local database dumps
 *.dump
 dump/
 
 # Supabase CLI temp
 supabase/.temp/
-
-# Scripts de diagnóstico local (não fazem parte do app)
-server/src/scripts/check-*.ts
-.vercel

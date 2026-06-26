@@ -1,7 +1,7 @@
-import { Exercise } from '../models/Exercise.js';
-import { WorkoutHistory } from '../models/WorkoutHistory.js';
-import { WorkoutPreset } from '../models/WorkoutPreset.js';
-import type { UserDocument } from '../models/User.js';
+import { Exercise } from '../domain/Exercise.js';
+import { WorkoutHistory } from '../domain/WorkoutHistory.js';
+import { WorkoutPreset } from '../domain/WorkoutPreset.js';
+import type { UserDocument } from '../domain/User.js';
 import { UserMutable } from '../repositories/user-repository.js';
 import type { ModoExercicio, MusculoPrincipal, TreinoBase, TreinoSugerido } from '../types/index.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
@@ -24,7 +24,7 @@ export interface RecommendWorkoutOptions {
 }
 
 type PresetDoc = {
-  _id: string;
+  id: string;
   ciclo_id: string;
   nome: string;
   descricao?: string;
@@ -107,7 +107,7 @@ async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
   }));
 
   return {
-    preset_id: preset._id,
+    preset_id: preset.id,
     ciclo_id: preset.ciclo_id as TreinoBase,
     nome: preset.nome,
     descricao: preset.descricao ?? '',
@@ -182,7 +182,7 @@ export function resetCycleRound(user: UserMutable): void {
 
 export async function getRecommendationAlerts(user: UserDocument): Promise<RecommendationAlert[]> {
   const alerts: RecommendationAlert[] = [];
-  const userId = user._id;
+  const userId = user.id;
 
   const samePresetHistory = await WorkoutHistory.find(
     { usuario_id: userId, treino_tipo: { $nin: [null, '', 'custom'] } },
@@ -251,7 +251,7 @@ export async function recommendWorkout(
   const blocked = blockedSlugs(user);
 
   const last = await WorkoutHistory.findOne(
-    { usuario_id: user._id },
+    { usuario_id: user.id },
     { sort: { concluido_em: -1 } },
   );
 
@@ -261,17 +261,17 @@ export async function recommendWorkout(
     : await findPresetCandidates(user, nextCiclo);
 
   if (excludePresetId) {
-    const filtered = candidates.filter((p) => p._id !== excludePresetId);
+    const filtered = candidates.filter((p) => p.id !== excludePresetId);
     if (filtered.length > 0) candidates = filtered;
   }
 
   if (shuffle && candidates.length > 1) {
-    const seed = `${user._id}:${getTodaySaoPaulo()}:${excludePresetId ?? 'x'}`;
+    const seed = `${user.id}:${getTodaySaoPaulo()}:${excludePresetId ?? 'x'}`;
     let hash = 0;
     for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
     candidates = [...candidates].sort((a, b) => {
-      const ha = (hash + a._id.charCodeAt(0)) % 1000;
-      const hb = (hash + b._id.charCodeAt(0)) % 1000;
+      const ha = (hash + a.id.charCodeAt(0)) % 1000;
+      const hb = (hash + b.id.charCodeAt(0)) % 1000;
       return ha - hb;
     });
   }
@@ -282,7 +282,7 @@ export async function recommendWorkout(
   }
   if (!preset) return null;
 
-  const recentSlugs = allowRepeats ? new Set<string>() : await recentExerciseSlugs(user._id);
+  const recentSlugs = allowRepeats ? new Set<string>() : await recentExerciseSlugs(user.id);
   const pinned = await buildPinnedRows(user, blocked);
 
   let exercicioRows = preset.exercicios
@@ -342,7 +342,7 @@ export async function recommendWorkout(
   }
 
   return presetToSugerido({
-    _id: preset._id,
+    id: preset.id,
     ciclo_id: preset.ciclo_id,
     nome: preset.nome,
     descricao: preset.descricao,

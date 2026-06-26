@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Exercise } from '../models/Exercise.js';
+import { Exercise } from '../domain/Exercise.js';
 import type { MusculoPrincipal, Prioridade } from '../types/index.js';
 
 export const exercisesRouter = Router();

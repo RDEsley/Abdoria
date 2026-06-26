@@ -57,7 +57,7 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
   for (let i = 0; i < topLean.length; i += 1) {
     const prize = prizeForRank(i + 1);
     if (prize <= 0) continue;
-    const user = await User.findById(topLean[i]._id);
+    const user = await User.findById(topLean[i].id);
     if (!user) continue;
     grantAbdoria(user, prize);
     await user.save();

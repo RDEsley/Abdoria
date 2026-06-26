@@ -125,17 +125,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (accountUser: IUserDocument) => {
       let dados = hydrateUserDadosFromAccount(accountUser);
 
-      if (migrationDoneFor.current !== accountUser._id) {
-        migrationDoneFor.current = accountUser._id;
+      if (migrationDoneFor.current !== accountUser.id) {
+        migrationDoneFor.current = accountUser.id;
         const migrationPatch = buildMigrationPatch(accountUser, dados);
 
         if (migrationPatch) {
           try {
             const result = await updateUserDados(migrationPatch);
-            clearLegacyLocalData(accountUser._id);
+            clearLegacyLocalData(accountUser.id);
             dados = hydrateUserDadosFromAccount(result.user);
             applyUserDados(dados, result.user);
-            dadosHydratedFor.current = accountUser._id;
+            dadosHydratedFor.current = accountUser.id;
             return;
           } catch {
             dados = mergeUserDadosSalvos(dados, migrationPatch);
@@ -144,7 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       applyUserDados(dados);
-      dadosHydratedFor.current = accountUser._id;
+      dadosHydratedFor.current = accountUser.id;
     },
     [applyUserDados],
   );
