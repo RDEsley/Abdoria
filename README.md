@@ -2,6 +2,8 @@
 
 # Abdoria · Core Quest
 
+<img src="https://cdn-icons-png.flaticon.com/512/3105/3105807.png" width="88" alt="Abdoria" />
+
 **Seu treino de abdômen virou uma aventura.**
 
 Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas, personalizar o perfil e disputar o ranking — tudo de um jeito simples e motivador.
@@ -12,7 +14,7 @@ Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase_Postgres-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 
-[App ao vivo](https://abdoria-project.vercel.app) · [Guia para quem vai usar o app](./docs/GUIA-DO-USUARIO.md) · [Instalação para desenvolvedores](#-instalação-rápida)
+[App ao vivo](https://abdoria-project.vercel.app) · [Guia para quem vai usar o app](./docs/GUIA-DO-USUARIO.md) · [Instalação para desenvolvedores](#-instalação-rápida) · [Desenvolvedor](#desenvolvedor)
 
 </div>
 
@@ -268,10 +270,30 @@ React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion · Express 5 · 
 
 ---
 
+<a id="desenvolvedor"></a>
+
+## Desenvolvedor
+
+<div align="center">
+
+<img src="https://github.com/RDEsley.png" width="100" alt="Richard Esley" />
+
+**Richard Esley**
+
+*Desenvolvedor Full Stack · UI/UX*
+
+[![Portfólio](https://img.shields.io/badge/Portfólio-richardesley--dev.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://richardesley-dev.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/RDEsley)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/richardesley/)
+
+</div>
+
+---
+
 <div align="center">
 
 **Feito para transformar consistência em diversão.**
 
-[Abrir um issue](https://github.com/RDEsley/Abdoria/issues) · [Ver app ao vivo](https://abdoria-project.vercel.app) · [Guia do usuário](./docs/GUIA-DO-USUARIO.md)
+[Abrir um issue](https://github.com/RDEsley/Abdoria/issues) · [Ver app ao vivo](https://abdoria-project.vercel.app) · [Guia do usuário](./docs/GUIA-DO-USUARIO.md) · [Desenvolvedor](#desenvolvedor)
 
 </div>
