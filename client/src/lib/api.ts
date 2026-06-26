@@ -115,6 +115,12 @@ export function getDashboardStats(): Promise<DashboardStats> {
   return fetchJson('/workouts/stats');
 }
 
+export function getDashboardRecommendations(): Promise<
+  Pick<DashboardStats, 'treino_sugerido' | 'alertas_recomendacao' | 'proximo_treino'>
+> {
+  return fetchJson('/workouts/stats/recommendations');
+}
+
 export function getWorkoutHistory(): Promise<IWorkoutHistoryDocument[]> {
   return fetchJson('/workouts/history');
 }

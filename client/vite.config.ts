@@ -11,8 +11,6 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules/framer-motion')) return 'motion';
           if (id.includes('node_modules/@dnd-kit')) return 'dnd';
-          if (id.includes('react-activity-calendar') || id.includes('date-fns')) return 'calendar';
-          if (id.includes('react-circular-progressbar')) return 'progress';
         },
       },
     },

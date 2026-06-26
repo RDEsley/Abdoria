@@ -65,16 +65,40 @@ workoutsRouter.get('/achievements', async (req: AuthRequest, res) => {
   }
 });
 
-workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
+workoutsRouter.get('/stats/recommendations', async (req: AuthRequest, res) => {
   try {
-    let user = await User.findById(req.userId!);
+    const user = await User.findById(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
 
-    await syncUserGamification(user._id.toString());
-    user = (await User.findById(req.userId!))!;
+    const treinoHoje = await hasTrainedToday(user._id.toString());
+    const [treinoSugerido, alertas] = await Promise.all([
+      getSuggestedWorkout(user),
+      getRecommendationAlerts(user),
+    ]);
+
+    res.json({
+      treino_sugerido: treinoSugerido,
+      alertas_recomendacao: alertas,
+      proximo_treino: treinoHoje
+        ? 'Descanso ativo'
+        : treinoSugerido?.nome ?? 'Treino do dia',
+    });
+  } catch (error) {
+    console.error('GET /api/workouts/stats/recommendations error:', error);
+    res.status(500).json({ error: 'Erro ao buscar recomendações.' });
+  }
+});
+
+workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
+  try {
+    let user = await syncUserGamification(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
 
     if (resetXpDiarioIfNeeded(user)) {
       await user.save();
@@ -89,7 +113,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
 
-    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg, treinoSugerido, alertas] = await Promise.all([
+    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg] = await Promise.all([
       hasTrainedToday(userId),
       getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
       WorkoutHistory.aggregate([
@@ -110,8 +134,6 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
         { $match: { usuario_id: user._id } },
         { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
       ]),
-      getSuggestedWorkout(user),
-      getRecommendationAlerts(user),
     ]);
 
     const muscles = Object.entries(weeklyMuscles) as [MusculoPrincipal, number][];
@@ -128,11 +150,9 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
 
     res.json({
       treino_hoje: treinoHoje,
-      proximo_treino: treinoHoje
-        ? 'Descanso ativo'
-        : treinoSugerido?.nome ?? 'Treino do dia',
-      treino_sugerido: treinoSugerido,
-      alertas_recomendacao: alertas,
+      proximo_treino: treinoHoje ? 'Descanso ativo' : 'Treino do dia',
+      treino_sugerido: null,
+      alertas_recomendacao: [],
       total_segundos: totalSegundos,
       total_minutos: Math.floor(totalSegundos / 60),
       streak_atual: user.gamificacao.streak_atual,

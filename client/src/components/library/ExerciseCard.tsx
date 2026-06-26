@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { Ban, Lock, Pin, Play } from 'lucide-react';
 import { UnlockCelebration } from '@/components/effects/UnlockCelebration';
 import { ExerciseVideoModal } from '@/components/library/ExerciseVideoModal';
@@ -20,7 +20,7 @@ interface Props {
   onToggleBlock?: (slug: string) => void;
 }
 
-export function ExerciseCard({
+export const ExerciseCard = memo(function ExerciseCard({
   exercise,
   compact,
   unlocked,
@@ -146,4 +146,4 @@ export function ExerciseCard({
       {showVideo && <ExerciseVideoModal exercise={exercise} onClose={() => setShowVideo(false)} />}
     </>
   );
-}
+});

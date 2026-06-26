@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -40,7 +40,7 @@ export function LibraryPage() {
   const fixedSlugs = user?.preferencias?.exercicios_fixos ?? [];
   const blockedSlugs = user?.preferencias?.exercicios_nao_recomendar ?? [];
 
-  const patchPreferences = async (patch: {
+  const patchPreferences = useCallback(async (patch: {
     exercicios_fixos?: string[];
     exercicios_nao_recomendar?: string[];
   }) => {
@@ -52,23 +52,23 @@ export function LibraryPage() {
       },
     });
     await refreshUser();
-  };
+  }, [user, refreshUser]);
 
-  const togglePin = (slug: string) => {
+  const togglePin = useCallback((slug: string) => {
     const nextFixed = fixedSlugs.includes(slug)
       ? fixedSlugs.filter((s) => s !== slug)
       : [...fixedSlugs, slug];
     const nextBlocked = blockedSlugs.filter((s) => s !== slug);
     void patchPreferences({ exercicios_fixos: nextFixed, exercicios_nao_recomendar: nextBlocked });
-  };
+  }, [blockedSlugs, fixedSlugs, patchPreferences]);
 
-  const toggleBlock = (slug: string) => {
+  const toggleBlock = useCallback((slug: string) => {
     const nextBlocked = blockedSlugs.includes(slug)
       ? blockedSlugs.filter((s) => s !== slug)
       : [...blockedSlugs, slug];
     const nextFixed = fixedSlugs.filter((s) => s !== slug);
     void patchPreferences({ exercicios_nao_recomendar: nextBlocked, exercicios_fixos: nextFixed });
-  };
+  }, [blockedSlugs, fixedSlugs, patchPreferences]);
 
   return (
     <div className="flex flex-col gap-5">

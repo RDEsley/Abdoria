@@ -5,9 +5,13 @@ import { AppDataProvider } from '@/components/auth/AppDataProvider';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { LoginPage } from '@/pages/LoginPage';
-import { RegisterPage } from '@/pages/RegisterPage';
 
+const LoginPage = lazy(() =>
+  import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })),
+);
+const RegisterPage = lazy(() =>
+  import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+);
 const OnboardingPage = lazy(() =>
   import('@/pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
 );
@@ -46,8 +50,22 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route element={<PublicOnlyRoute />}>
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
+            <Route
+              path="login"
+              element={
+                <LazyPage>
+                  <LoginPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="register"
+              element={
+                <LazyPage>
+                  <RegisterPage />
+                </LazyPage>
+              }
+            />
           </Route>
 
           <Route element={<ProtectedRoute />}>
