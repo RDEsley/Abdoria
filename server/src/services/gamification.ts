@@ -8,6 +8,7 @@ import {
   xpLevelFromTotal,
 } from '../types/index.js';
 import { User, type UserDocument } from '../models/User.js';
+import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../models/WorkoutHistory.js';
 import {
   getTodaySaoPaulo,
@@ -57,6 +58,7 @@ type HistorySummary = {
   exercicios: unknown[];
   musculos_estimulados: MusculoPrincipal[];
   treino_tipo?: string;
+  duracao_total_segundos?: number;
 };
 
 function computeStreakFromHistories(histories: HistorySummary[]): { atual: number; maior: number } {
@@ -223,18 +225,24 @@ export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
 }
 
 export async function evaluateAchievements(user: UserDocument): Promise<string[]> {
+  const histories = await WorkoutHistory.find(
+    { usuario_id: user._id },
+    { sort: { concluido_em: -1 } },
+  );
+  return evaluateAchievementsFromHistories(user, histories as HistorySummary[]);
+}
+
+export function evaluateAchievementsFromHistories(
+  user: UserDocument,
+  histories: HistorySummary[],
+): string[] {
   const weekStart = getWeekStart(new Date());
   const resetDate = user.muscle_map_reset_at ? new Date(user.muscle_map_reset_at) : null;
   const since = resetDate
     ? new Date(Math.max(weekStart.getTime(), resetDate.getTime()))
     : weekStart;
 
-  const histories = await WorkoutHistory.find(
-    { usuario_id: user._id },
-    { sort: { concluido_em: -1 } },
-  );
-
-  const summary = histories as HistorySummary[];
+  const summary = histories;
   const totalWorkouts = summary.length;
   const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
   const totalMinutes = user.gamificacao.total_minutos;
@@ -296,22 +304,24 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
   return [...unlocked];
 }
 
-export async function syncUserGamification(userId: string): Promise<UserDocument | null> {
+export async function syncUserGamification(userId: string): Promise<UserMutable | null> {
   const user = await User.findById(userId);
   if (!user) return null;
 
   resetXpDiarioIfNeeded(user);
 
-  const streak = await computeStreak(userId);
-  const totalMinutes = await WorkoutHistory.aggregate([
-    { $match: { usuario_id: userId } },
-    { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
-  ]);
+  const histories = (await WorkoutHistory.find(
+    { usuario_id: userId },
+    { sort: { concluido_em: -1 } },
+  )) as HistorySummary[];
 
-  user.gamificacao.total_minutos = Math.floor(((totalMinutes[0] as { total?: number })?.total ?? 0) / 60);
+  const streak = computeStreakFromHistories(histories);
+  const totalSeconds = histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
+
+  user.gamificacao.total_minutos = Math.floor(totalSeconds / 60);
   user.gamificacao.streak_atual = streak.atual;
   user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streak.maior);
-  user.gamificacao.conquistas = await evaluateAchievements(user);
+  user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
 
   await user.save();
   return user;

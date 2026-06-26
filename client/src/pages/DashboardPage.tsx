@@ -7,7 +7,6 @@ import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { DailyShopPanel } from '@/components/shop/DailyShopPanel';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
-import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -27,26 +26,31 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } 
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 export function DashboardPage() {
-  const { stats, loading, error, refresh } = useApp();
-  const { user, refreshUser } = useAuth();
+  const { stats, loading, error, loadRecommendations } = useApp();
+  const { user } = useAuth();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const [streakCelebrate, setStreakCelebrate] = useState(false);
   const [energyDrinkBurst, setEnergyDrinkBurst] = useState(false);
   const prevStreak = useRef<number | null>(null);
 
   useEffect(() => {
-    const onEnergyDrinkUsed = () => {
+    let timeoutId: number | undefined;
+    const handler = () => {
       setEnergyDrinkBurst(true);
-      window.setTimeout(() => setEnergyDrinkBurst(false), 3200);
+      timeoutId = window.setTimeout(() => setEnergyDrinkBurst(false), 3200);
     };
-    window.addEventListener('abdoria:energy-drink-used', onEnergyDrinkUsed);
-    return () => window.removeEventListener('abdoria:energy-drink-used', onEnergyDrinkUsed);
+    window.addEventListener('abdoria:energy-drink-used', handler);
+    return () => {
+      window.removeEventListener('abdoria:energy-drink-used', handler);
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    };
   }, []);
 
-  useSaoPauloMidnightRefresh(() => {
-    void refresh();
-    void refreshUser();
-  });
+  useEffect(() => {
+    if (!loading && stats) {
+      void loadRecommendations();
+    }
+  }, [loading, stats, loadRecommendations]);
 
   useEffect(() => {
     if (!stats) return;

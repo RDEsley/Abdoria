@@ -8,7 +8,7 @@ import { GameHud } from '@/components/layout/GameHud';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
+import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import { resolveCosmeticos } from '@/types';
@@ -35,7 +35,7 @@ export function AppLayout() {
     void refreshUser();
   }, [refreshApp, refreshUser]);
 
-  useSaoPauloMidnightRefresh(handleMidnightRefresh);
+  useMidnightRefresh(handleMidnightRefresh);
 
   useAfkBackgroundSync(Boolean(user));
 
@@ -75,6 +75,7 @@ export function AppLayout() {
     : `game-hud-shell--skinned game-card-fundo--${fundoKey}`;
 
   return (
+    <MidnightRefreshProvider>
     <div className="game-app relative flex min-h-screen flex-col md:flex-row text-stone-800">
       <AnimatedBackground variant="app" />
 
@@ -142,5 +143,6 @@ export function AppLayout() {
 
       <AfkFab />
     </div>
+    </MidnightRefreshProvider>
   );
 }

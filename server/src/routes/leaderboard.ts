@@ -32,18 +32,6 @@ function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
   return { 'gamificacao.nivel_xp': -1 };
 }
 
-function metricValue(
-  user: {
-    gamificacao: { nivel_xp: number; streak_atual: number };
-    cosmeticos?: { moedas?: number | null } | null;
-  },
-  metric: LeaderboardMetric,
-): number {
-  if (metric === 'streak') return user.gamificacao.streak_atual;
-  if (metric === 'moedas') return readAbdoriaBalance(user);
-  return user.gamificacao.nivel_xp;
-}
-
 function toEntry(
   user: {
     _id: string;
@@ -76,32 +64,6 @@ const leaderboardFilter = {
   onboarding_completed: true,
   is_guest: { $ne: true },
 };
-
-function countUsersAboveInList(
-  users: Array<{
-    _id: string;
-    nome: string;
-    gamificacao: { nivel_xp: number; streak_atual: number };
-    cosmeticos?: { moedas?: number | null } | null;
-  }>,
-  user: {
-    _id: string;
-    nome: string;
-    gamificacao: { nivel_xp: number; streak_atual: number };
-    cosmeticos?: { moedas?: number | null } | null;
-  },
-  metric: LeaderboardMetric,
-): number {
-  const value = metricValue(user, metric);
-  return users.filter((other) => {
-    if (other._id === user._id) return false;
-    const otherValue = metricValue(other, metric);
-    if (otherValue > value) return true;
-    if (otherValue < value) return false;
-    if (metric === 'xp') return other.nome < user.nome;
-    return other.gamificacao.nivel_xp > user.gamificacao.nivel_xp;
-  }).length;
-}
 
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   try {
@@ -143,9 +105,8 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
-    const allEligible = await User.find(leaderboardFilter, { sort: metricSort(metric) });
-    const above = countUsersAboveInList(allEligible, user, metric);
-    res.json(toEntry(user, above + 1, true));
+    const rank = await User.countLeaderboardRank(user, metric);
+    res.json(toEntry(user, rank, true));
   } catch (error) {
     console.error('GET /api/leaderboard/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar posição.' });

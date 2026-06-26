@@ -1,4 +1,5 @@
 import { motion, useReducedMotion, type TargetAndTransition, type Transition } from 'framer-motion';
+import { useMobileViewport } from '@/hooks/useMobileViewport';
 
 type BackgroundVariant = 'app' | 'auth' | 'player';
 
@@ -59,8 +60,10 @@ const baseGradients: Record<BackgroundVariant, string> = {
 
 export function AnimatedBackground({ variant = 'app' }: AnimatedBackgroundProps) {
   const reduceMotion = useReducedMotion();
+  const isMobile = useMobileViewport();
   const orbs = orbSets[variant];
   const showGrid = variant === 'app';
+  const showOrbs = !isMobile && !reduceMotion;
 
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
@@ -70,20 +73,18 @@ export function AnimatedBackground({ variant = 'app' }: AnimatedBackgroundProps)
 
       <div className="bg-radial-vignette absolute inset-0" />
 
-      {reduceMotion
+      {showOrbs
         ? orbs.map((orb, index) => (
-            <div key={index} className={`absolute rounded-full blur-3xl ${orb.className}`} />
-          ))
-        : orbs.map((orb, index) => (
             <motion.div
               key={index}
               className={`absolute rounded-full blur-3xl ${orb.className}`}
               animate={orb.animate}
               transition={orb.transition}
             />
-          ))}
+          ))
+        : null}
 
-      {variant === 'app' && (
+      {variant === 'app' && !isMobile && (
         <div className="bg-noise absolute inset-0 opacity-[0.18] mix-blend-soft-light" />
       )}
     </div>

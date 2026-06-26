@@ -91,6 +91,7 @@ export function BuilderPage() {
     customWorkout,
     savedWorkouts,
     stats,
+    loadRecommendations,
     setCustomWorkout,
     saveWorkoutPreset,
     getRepSchemes,
@@ -131,6 +132,12 @@ export function BuilderPage() {
   useEffect(() => {
     void ensureExercises();
   }, [ensureExercises]);
+
+  useEffect(() => {
+    if (stats && !stats.treino_sugerido) {
+      void loadRecommendations();
+    }
+  }, [stats, loadRecommendations]);
 
   useEffect(() => {
     void getRecommendedPresets()

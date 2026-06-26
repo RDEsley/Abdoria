@@ -13,7 +13,7 @@ import {
 } from '@/lib/daily-shop-display';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
+import { useMidnightRefresh, useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { formatCountdown } from '@/lib/timezone';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
 import type { LojaDiariaSlot, ShopResponse } from '@/types';
@@ -97,9 +97,11 @@ export function DailyShopPanel() {
     void load();
   }, [load]);
 
-  const resetSecondsLeft = useSaoPauloMidnightRefresh(() => {
+  useMidnightRefresh(() => {
     void load();
   });
+
+  const resetSecondsLeft = useMidnightSecondsLeft();
 
   const handleClaim = async (slot: LojaDiariaSlot) => {
     setBusySlot(slot.slot);

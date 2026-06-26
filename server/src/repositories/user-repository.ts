@@ -146,6 +146,18 @@ async function fetchAfk(userId: string): Promise<AfkRow | null> {
   return data as AfkRow | null;
 }
 
+async function fetchAfkBatch(userIds: string[]): Promise<Map<string, AfkRow>> {
+  const map = new Map<string, AfkRow>();
+  if (userIds.length === 0) return map;
+
+  const sb = getSupabase();
+  const { data } = await sb.from('user_afk_state').select('*').in('user_id', userIds);
+  for (const row of (data ?? []) as AfkRow[]) {
+    map.set(row.user_id, row);
+  }
+  return map;
+}
+
 async function ensureAfkRow(userId: string): Promise<void> {
   const sb = getSupabase();
   const { data } = await sb.from('user_afk_state').select('user_id').eq('user_id', userId).maybeSingle();
@@ -293,12 +305,46 @@ export const User = {
     const { data, error } = await query;
     if (error || !data) return [];
 
-    return Promise.all(
-      (data as ProfileRow[]).map(async (p) => {
-        const afk = await fetchAfk(p.id);
-        return rowToUser(p, afk);
-      }),
-    );
+    const profiles = data as ProfileRow[];
+    const afkMap = await fetchAfkBatch(profiles.map((p) => p.id));
+    return profiles.map((p) => rowToUser(p, afkMap.get(p.id) ?? null));
+  },
+
+  async countLeaderboardRank(
+    user: {
+      _id: string;
+      nome: string;
+      gamificacao: { nivel_xp: number; streak_atual: number };
+      cosmeticos?: { moedas?: number | null } | null;
+    },
+    metric: 'xp' | 'streak' | 'moedas',
+  ): Promise<number> {
+    const sb = getSupabase();
+    const base = () =>
+      sb
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('onboarding_completed', true)
+        .eq('is_guest', false);
+
+    if (metric === 'xp') {
+      const value = user.gamificacao.nivel_xp;
+      const [{ count: higher }, { count: tiedName }] = await Promise.all([
+        base().gt('gamificacao->nivel_xp', value),
+        base().eq('gamificacao->nivel_xp', value).lt('nome', user.nome),
+      ]);
+      return (higher ?? 0) + (tiedName ?? 0) + 1;
+    }
+
+    if (metric === 'streak') {
+      const value = user.gamificacao.streak_atual;
+      const { count } = await base().gt('gamificacao->streak_atual', value);
+      return (count ?? 0) + 1;
+    }
+
+    const value = user.cosmeticos?.moedas ?? 0;
+    const { count } = await base().gt('cosmeticos->moedas', value);
+    return (count ?? 0) + 1;
   },
 
   async countDocuments(filter: Record<string, unknown>): Promise<number> {

@@ -8,6 +8,7 @@ import {
 } from 'react';
 import {
   completeWorkout,
+  getDashboardRecommendations,
   getDashboardStats,
   getExercises,
   getMe,
@@ -58,6 +59,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const persistTimer = useRef<number | null>(null);
   const pendingPersist = useRef<Partial<UserDadosSalvos> | null>(null);
   const userDadosRef = useRef(userDados);
+  const recommendationsLoaded = useRef(false);
 
   useEffect(() => {
     userDadosRef.current = userDados;
@@ -72,16 +74,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const flushPersist = useCallback(async () => {
-    const patch = pendingPersist.current;
-    pendingPersist.current = null;
-    if (!patch) return;
+    const snapshot = pendingPersist.current;
+    if (!snapshot) return;
 
     try {
-      const result = await updateUserDados(patch);
+      const result = await updateUserDados(snapshot);
+      if (pendingPersist.current === snapshot) {
+        pendingPersist.current = null;
+      }
       applyUserDados(hydrateUserDadosFromAccount(result.user), result.user);
       if (result.xp_ganho_habilidades > 0) {
         const statsRes = await getDashboardStats();
         setStats(statsRes);
+        recommendationsLoaded.current = false;
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar dados da conta');
@@ -146,6 +151,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const errors: string[] = [];
+    recommendationsLoaded.current = false;
 
     const [userRes, statsRes] = await Promise.allSettled([getMe(), getDashboardStats()]);
 
@@ -224,7 +230,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (persistTimer.current !== null) {
       window.clearTimeout(persistTimer.current);
     }
+    if (pendingPersist.current) {
+      void flushPersist();
+    }
+  }, [flushPersist]);
+
+  const loadRecommendations = useCallback(async () => {
+    if (recommendationsLoaded.current) return;
+    recommendationsLoaded.current = true;
+    try {
+      const rec = await getDashboardRecommendations();
+      setStats((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          treino_sugerido: rec.treino_sugerido,
+          alertas_recomendacao: rec.alertas_recomendacao,
+          proximo_treino: rec.proximo_treino,
+        };
+      });
+    } catch {
+      recommendationsLoaded.current = false;
+    }
   }, []);
+
+  const unlockedSlugsKey = userDados.exercicios_desbloqueados.join('\0');
+  const unlockedExercises = useMemo(
+    () => new Set(userDados.exercicios_desbloqueados),
+    [unlockedSlugsKey],
+  );
 
   const setCustomWorkout = useCallback(
     (items: WorkoutQueueItem[]) => {
@@ -323,7 +357,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getWorkoutHistory(),
       ]);
 
-      if (statsRes.status === 'fulfilled') setStats(statsRes.value);
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value);
+        recommendationsLoaded.current = false;
+      }
       if (historyRes.status === 'fulfilled') {
         setHistory(historyRes.value);
         historyLoaded.current = true;
@@ -349,7 +386,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       history,
       customWorkout: userDados.treino_personalizado,
       savedWorkouts: userDados.treinos_salvos,
-      unlockedExercises: new Set(userDados.exercicios_desbloqueados),
+      unlockedExercises,
       loading,
       exercisesLoading,
       historyLoading,
@@ -357,6 +394,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       muscleFilter,
       setMuscleFilter,
       refresh,
+      loadRecommendations,
       ensureExercises,
       ensureHistory,
       setCustomWorkout,
@@ -374,12 +412,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       stats,
       history,
       userDados,
+      unlockedExercises,
       loading,
       exercisesLoading,
       historyLoading,
       error,
       muscleFilter,
       refresh,
+      loadRecommendations,
       ensureExercises,
       ensureHistory,
       setCustomWorkout,

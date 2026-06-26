@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { getTodaySaoPaulo, secondsUntilSaoPauloMidnight } from '@/lib/timezone';
 
-/** Dispara callback ao cruzar meia-noite em America/Sao_Paulo. */
+/**
+ * @deprecated Prefer MidnightRefreshProvider + useMidnightRefresh / useMidnightSecondsLeft.
+ * Mantido para compatibilidade fora do AppLayout.
+ */
 export function useSaoPauloMidnightRefresh(onReset?: () => void) {
   const [secondsLeft, setSecondsLeft] = useState(() => secondsUntilSaoPauloMidnight());
   const lastResetDay = useRef(getTodaySaoPaulo());
