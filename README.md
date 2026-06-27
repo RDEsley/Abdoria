@@ -9,6 +9,7 @@
 Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas, personalizar o perfil e disputar o ranking — tudo de um jeito simples e motivador.
 
 [![Demo](https://img.shields.io/badge/Demo-abdoria--project.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://abdoria-project.vercel.app)
+[![Release](https://img.shields.io/badge/release-v1.3.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases/tag/v1.3.0)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -46,10 +47,15 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 ### Treinar de verdade
 - Biblioteca com dezenas de exercícios de core (superior, inferior, oblíquos, flexões, etc.)
 - Nomes em inglês com **tradução em português** entre parênteses
-- Treinos prontos por ciclo (**A, B, C…**) ou **monte o seu** arrastando exercícios
+- **Construtor em duas abas** — **Treinar Agora** (ciclos e sugestões) e **Criar/Personalizar** (monte o seu)
+- Treinos prontos por ciclo (**A, B, C…**) com **tags de músculo** e duração estimada na barra fixa inferior
+- **Treinos similares** — encontre opções com o mesmo foco muscular (presets e treinos salvos)
+- **Seletor de exercícios** e lista **arrastável** para montar a fila do treino
 - **Exercícios fixos** — marque na biblioteca o que sempre deve entrar na sugestão
 - **Bloqueio de recomendação** — oculte exercícios que não quer ver nos treinos sugeridos
+- **Treinos fixos / bloqueados** — priorize ou exclua treinos inteiros nas recomendações
 - **Rodada de ciclos** — ao completar todos os ciclos ativos, escolha manter ou sortear um novo set
+- **Banner de teto de XP** — aviso quando o limite diário já foi atingido (o treino continua liberado)
 - **Player interativo**: séries por tempo ou repetições, descanso configurável, botões na barra inferior
 - Salve treinos favoritos na sua conta
 
@@ -66,12 +72,15 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
   - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da patrulha ou no onboarding
   - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a patrulha)
 - **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Abdoria)
+  - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
 
 ### Personalizar e recompensar
 - **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
 - **Loja da Patrulha** — arcos com bônus de dano para o combate AFK (vendedor animado + abas Arcos / Espadas / Magias)
+- **Inventário** — Energy Drinks, cosméticos desbloqueados e itens da patrulha em um painel unificado
 - **Loja diária** — recompensa grátis + ofertas que renovam todo dia
 - **Código presente** — resgate em **Opções**
+- **Toasts de feedback** — confirmação visual ao fixar, bloquear ou equipar itens
 - Perfil com nível, IMC, simulador de definição e estatísticas
 
 ---
