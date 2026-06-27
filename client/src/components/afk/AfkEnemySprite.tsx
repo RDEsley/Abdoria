@@ -82,8 +82,9 @@ export function AfkEnemySprite({
                 key={`${kind}-${index}`}
                 kind={kind}
                 driftX={motion.x}
+                driftY={motion.y}
                 rotation={motion.rot}
-                delayMs={index * 45}
+                delayMs={index * 55}
               />
             );
           })}
@@ -109,8 +110,11 @@ function SlimeBody({
   const mouthClass = `game-afk-slime__mouth game-afk-slime__mouth--${appearance.mouth}${
     isBoss ? ' game-afk-slime__mouth--boss' : ''
   }`;
-  const showCheeks = appearance.eyes === 'round' && (appearance.mouth === 'smile' || appearance.mouth === 'grin');
+  const showCheeks =
+    (appearance.eyes === 'round' || appearance.eyes === 'anime') &&
+    (appearance.mouth === 'smile' || appearance.mouth === 'grin');
   const hasGlasses = accessories.includes('glasses');
+  const hasPatch = accessories.includes('patch');
 
   return (
     <>
@@ -135,6 +139,7 @@ function SlimeBody({
           </>
         )}
         {hasGlasses && !looting && <SlimeAccessoryPart kind="glasses" />}
+        {hasPatch && !looting && <SlimeAccessoryPart kind="patch" />}
       </div>
       <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="front" />
     </>

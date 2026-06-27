@@ -875,86 +875,27 @@
 
 @keyframes game-afk-mascot-sword-shadow {
   0%, 100% { transform: scaleX(1); opacity: 1; }
-  46% { transform: scaleX(1.35) scaleY(0.85); opacity: 0.75; }
+  38% { transform: scaleX(1.18) scaleY(0.9); opacity: 0.8; }
 }
 
-.game-afk-mascot__sword-whoosh {
+.game-afk-mascot__sword-release {
   position: absolute;
-  top: 22%;
-  right: -8%;
-  width: 2.8rem;
-  height: 0.55rem;
+  left: 52%;
+  top: 32%;
+  z-index: 7;
+  width: 1rem;
+  height: 1rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 25%, rgba(254, 243, 199, 0.75) 55%, transparent 100%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(254, 240, 138, 0.55) 38%, transparent 72%);
   opacity: 0;
-  transform: rotate(-18deg);
-  animation: game-afk-mascot-sword-whoosh 0.5s ease-out forwards;
+  animation: game-afk-sword-release-flash 0.38s ease-out 0.28s forwards;
   pointer-events: none;
 }
 
-@keyframes game-afk-mascot-sword-whoosh {
-  0% { opacity: 0; transform: rotate(-18deg) translateX(-12px) scaleX(0.4); }
-  38% { opacity: 0.9; transform: rotate(-14deg) translateX(8px) scaleX(1.1); }
-  100% { opacity: 0; transform: rotate(-10deg) translateX(28px) scaleX(0.7); }
-}
-
-.game-afk-mascot__sword-arc {
-  position: absolute;
-  top: 18%;
-  right: -2%;
-  width: 2.4rem;
-  height: 2.4rem;
-  border: 3px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.95);
-  border-right-color: rgba(251, 191, 36, 0.55);
-  border-radius: 50%;
-  opacity: 0;
-  animation: game-afk-mascot-sword-arc 0.48s ease-out 0.08s forwards;
-  pointer-events: none;
-}
-
-@keyframes game-afk-mascot-sword-arc {
-  0% { opacity: 0; transform: rotate(-55deg) scale(0.35); }
-  35% { opacity: 1; transform: rotate(-5deg) scale(1.05); }
-  100% { opacity: 0; transform: rotate(35deg) scale(0.85); }
-}
-
-.game-afk-mascot__sword-spark {
-  position: absolute;
-  width: 0.28rem;
-  height: 0.28rem;
-  border-radius: 999px;
-  background: #fef08a;
-  box-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
-  opacity: 0;
-  animation: game-afk-mascot-sword-spark 0.45s ease-out forwards;
-  pointer-events: none;
-}
-
-.game-afk-mascot__sword-spark--1 {
-  top: 30%;
-  right: 6%;
-  animation-delay: 0.2s;
-}
-
-.game-afk-mascot__sword-spark--2 {
-  top: 42%;
-  right: -4%;
-  animation-delay: 0.26s;
-}
-
-.game-afk-mascot__sword-spark--3 {
-  top: 24%;
-  right: 14%;
-  width: 0.2rem;
-  height: 0.2rem;
-  animation-delay: 0.32s;
-}
-
-@keyframes game-afk-mascot-sword-spark {
-  0% { opacity: 0; transform: scale(0.2) translate(0, 0); }
-  30% { opacity: 1; transform: scale(1.4); }
-  100% { opacity: 0; transform: scale(0.6) translate(14px, -8px); }
+@keyframes game-afk-sword-release-flash {
+  0% { opacity: 0; transform: scale(0.3); }
+  35% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5); }
 }
 
 @keyframes game-afk-mascot-lunge-fig {
@@ -2060,6 +2001,50 @@
   display: none;
 }
 
+/* Anime eyes — vertical ovals, large highlights, symmetric placement */
+.game-afk-slime__face--eyes-anime .game-afk-slime__eye {
+  width: 0.72rem;
+  height: 0.96rem;
+  border-radius: 46% 46% 40% 40%;
+  background: #fff;
+}
+
+.game-afk-slime__face--eyes-anime .game-afk-slime__eye--l {
+  transform: rotate(-4deg);
+}
+
+.game-afk-slime__face--eyes-anime .game-afk-slime__eye--r {
+  transform: rotate(4deg);
+}
+
+.game-afk-slime__face--eyes-anime .game-afk-slime__iris {
+  bottom: 0.14rem;
+  width: 0.46rem;
+  height: 0.58rem;
+  margin-left: -0.23rem;
+  background: radial-gradient(circle at 42% 38%, #a5f3fc 0%, #22d3ee 35%, #0891b2 72%, #164e63 100%);
+}
+
+.game-afk-slime__face--eyes-anime .game-afk-slime__iris::after {
+  bottom: 0.08rem;
+  width: 0.18rem;
+  height: 0.2rem;
+  margin-left: -0.09rem;
+}
+
+.game-afk-slime__face--eyes-anime .game-afk-slime__iris::before {
+  display: block;
+  position: absolute;
+  top: 0.1rem;
+  left: 0.08rem;
+  width: 0.14rem;
+  height: 0.16rem;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 0.06rem 0.1rem 0 0.04rem #fff;
+  opacity: 0.95;
+}
+
 .game-afk-slime__face--boss .game-afk-slime__eye {
   width: 0.82rem;
   height: 0.92rem;
@@ -2192,6 +2177,96 @@
   margin-left: -0.17rem;
 }
 
+/* Symmetric smile — single centered arc */
+.game-afk-slime__mouth--smile::before,
+.game-afk-slime__mouth--smile::after {
+  width: 0.52rem;
+  height: 0.26rem;
+  border: none;
+  border-bottom: 2.5px solid var(--afk-ink);
+  border-radius: 0 0 999px 999px;
+  transform: none;
+}
+
+.game-afk-slime__mouth--smile::before {
+  left: 50%;
+  margin-left: -0.26rem;
+}
+
+.game-afk-slime__mouth--smile::after {
+  display: none;
+}
+
+/* Grin — wider symmetric arc */
+.game-afk-slime__mouth--grin::before,
+.game-afk-slime__mouth--grin::after {
+  width: 0.58rem;
+  height: 0.3rem;
+  border: none;
+  border-bottom: 3px solid var(--afk-ink);
+  border-radius: 0 0 999px 999px;
+  transform: none;
+}
+
+.game-afk-slime__mouth--grin::before {
+  left: 50%;
+  margin-left: -0.29rem;
+}
+
+.game-afk-slime__mouth--grin::after {
+  display: none;
+}
+
+/* Cat mouth — symmetric W shape */
+.game-afk-slime__mouth--cat::before,
+.game-afk-slime__mouth--cat::after {
+  width: 0.22rem;
+  height: 0.2rem;
+  border-bottom-width: 2.5px;
+}
+
+.game-afk-slime__mouth--cat::before {
+  left: 0.04rem;
+  transform: rotate(-8deg);
+}
+
+.game-afk-slime__mouth--cat::after {
+  right: 0.04rem;
+  transform: scaleX(-1) rotate(-8deg);
+}
+
+/* Vampire fangs — dark mouth with symmetric teeth */
+.game-afk-slime__mouth--vampire {
+  width: 0.48rem;
+  height: 0.28rem;
+  margin-left: -0.24rem;
+  background: rgba(28, 25, 23, 0.18);
+  border: 2.5px solid var(--afk-ink);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+.game-afk-slime__mouth--vampire::before,
+.game-afk-slime__mouth--vampire::after {
+  bottom: -0.02rem;
+  width: 0.1rem;
+  height: 0.16rem;
+  border: none;
+  background: #fafaf9;
+  border: 1.5px solid var(--afk-ink);
+  border-radius: 0 0 3px 3px;
+  transform: none;
+}
+
+.game-afk-slime__mouth--vampire::before {
+  left: 0.1rem;
+}
+
+.game-afk-slime__mouth--vampire::after {
+  right: 0.1rem;
+  display: block;
+}
+
 .game-afk-slime__wing {
   position: absolute;
   top: 34%;
@@ -2224,14 +2299,14 @@
 }
 
 .game-afk-slime__wing--l {
-  left: -0.38rem;
+  left: -0.42rem;
   transform-origin: right center;
   transform: rotate(-10deg);
   animation-delay: 0s;
 }
 
 .game-afk-slime__wing--r {
-  right: -0.56rem;
+  right: -0.42rem;
   transform-origin: left center;
   transform: scaleX(-1) rotate(-10deg);
   animation-delay: 0.15s;
@@ -2668,6 +2743,153 @@
   background: radial-gradient(circle, #fde047 0%, transparent 62%);
   border-radius: 999px;
   z-index: -1;
+}
+
+/* Halo — floating golden ring behind head */
+.game-afk-slime__halo {
+  position: absolute;
+  top: -4%;
+  left: 50%;
+  width: 68%;
+  height: 0.24rem;
+  margin-left: -34%;
+  border: 2.5px solid #fde047;
+  border-radius: 999px;
+  box-shadow:
+    0 0 8px rgba(253, 224, 71, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  z-index: 0;
+  animation: game-afk-halo-float 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes game-afk-halo-float {
+  0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.92; }
+  50% { transform: translateY(-0.06rem) scaleX(1.04); opacity: 1; }
+}
+
+/* Bow — hair ribbon on top */
+.game-afk-slime__bow {
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  width: 0.44rem;
+  height: 0.32rem;
+  margin-left: -0.22rem;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.game-afk-slime__bow::before,
+.game-afk-slime__bow::after {
+  content: '';
+  position: absolute;
+  top: 0.06rem;
+  width: 0.2rem;
+  height: 0.22rem;
+  background: linear-gradient(145deg, #fda4af, #e11d48);
+  border: 2px solid var(--afk-ink);
+  border-radius: 0.12rem 0.12rem 0.04rem 0.5rem;
+}
+
+.game-afk-slime__bow::before {
+  left: 0;
+  transform: rotate(-18deg);
+}
+
+.game-afk-slime__bow::after {
+  right: 0;
+  transform: scaleX(-1) rotate(-18deg);
+}
+
+.game-afk-slime__bow {
+  background: radial-gradient(circle, #fb7185 30%, #be123c 100%);
+  border: 2px solid var(--afk-ink);
+  border-radius: 999px;
+  width: 0.14rem;
+  height: 0.14rem;
+  margin-left: -0.07rem;
+  top: 0.14rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Eye patch — on face layer */
+.game-afk-slime__patch {
+  position: absolute;
+  top: 0.06rem;
+  left: 0.12rem;
+  width: 0.46rem;
+  height: 0.38rem;
+  background: #1c1917;
+  border: 2px solid var(--afk-ink);
+  border-radius: 0.14rem;
+  z-index: 8;
+  transform: rotate(-6deg);
+  pointer-events: none;
+}
+
+.game-afk-slime__patch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -0.36rem;
+  width: 0.38rem;
+  height: 2px;
+  background: var(--afk-ink);
+  transform: rotate(-10deg);
+}
+
+.game-afk-slime__patch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -0.36rem;
+  width: 0.38rem;
+  height: 2px;
+  background: var(--afk-ink);
+  transform: rotate(10deg);
+}
+
+/* Sparkle — twinkling accent */
+.game-afk-slime__sparkle {
+  position: absolute;
+  top: 8%;
+  right: 18%;
+  width: 0.22rem;
+  height: 0.22rem;
+  z-index: 2;
+  pointer-events: none;
+  animation: game-afk-sparkle-twinkle 1.6s ease-in-out infinite;
+}
+
+.game-afk-slime__sparkle::before,
+.game-afk-slime__sparkle::after {
+  content: '';
+  position: absolute;
+  background: #fde047;
+  border: 1px solid rgba(28, 25, 23, 0.35);
+  border-radius: 1px;
+}
+
+.game-afk-slime__sparkle::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  margin-top: -1px;
+}
+
+.game-afk-slime__sparkle::after {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  margin-left: -1px;
+}
+
+@keyframes game-afk-sparkle-twinkle {
+  0%, 100% { transform: scale(0.85) rotate(0deg); opacity: 0.65; }
+  50% { transform: scale(1.15) rotate(22deg); opacity: 1; }
 }
 
 .game-afk-enemy__loot-layer {
