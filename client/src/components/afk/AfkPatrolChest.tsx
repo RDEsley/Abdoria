@@ -1,5 +1,3 @@
-import { Gift } from 'lucide-react';
-
 interface Props {
   open?: boolean;
   opening?: boolean;
@@ -55,9 +53,8 @@ export function AfkPatrolChest({
         </>
       )}
       {itemCount > 0 && !open && !opening && (
-        <span className="game-afk-chest__count-badge" aria-label={`${itemCount} tipos de recompensa`}>
-          <Gift size={11} aria-hidden />
-          <span className="tabular-nums">{itemCount}</span>
+        <span className="game-afk-chest__count-badge tabular-nums" aria-label={`${itemCount} drop${itemCount === 1 ? '' : 's'} de inimigos`}>
+          {itemCount}
         </span>
       )}
       <div className="game-afk-chest__lid-wrap">

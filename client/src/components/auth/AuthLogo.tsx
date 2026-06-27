@@ -1,3 +1,5 @@
+import { BRAND_MARK_SRC } from '@/lib/brand';
+
 interface Props {
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
@@ -16,7 +18,7 @@ export function AuthLogo({ size = 'md', showLabel = true, className = '' }: Prop
   return (
     <div className={`flex flex-col items-center text-center ${className}`}>
       <img
-        src="/brand/logo.png"
+        src={BRAND_MARK_SRC}
         alt="Abdoria"
         className={`${dim} object-contain game-logo-pixel`}
         width={img}

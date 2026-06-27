@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BRAND_MARK_SRC } from '@/lib/brand';
 
 function GameBird({ className }: { className: string }) {
   return (
@@ -64,7 +65,7 @@ export function GameAuthPanel({ title, children, footer, className }: GameAuthPa
   return (
     <main className={`game-login__panel${className ? ` ${className}` : ''}`}>
       <img
-        src="/brand/logo.png"
+        src={BRAND_MARK_SRC}
         alt="Abdoria"
         className="game-login__logo"
         width={112}
