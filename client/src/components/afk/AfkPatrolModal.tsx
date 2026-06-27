@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Gift, Store, X } from 'lucide-react';
+import { Store, X } from 'lucide-react';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
-import { AfkRewardGrid, countAfkRewardItems } from '@/components/afk/AfkRewardGrid';
+import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
 import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
@@ -154,7 +154,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const rewardCount = countAfkRewardItems(meta?.pending);
   const capped = meta?.capped ?? false;
 
   return createPortal(
@@ -222,21 +221,11 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 claiming
                   ? 'Coletando recompensas'
                   : meta?.has_rewards
-                    ? `Coletar recompensas — ${rewardCount} tipo${rewardCount === 1 ? '' : 's'}`
+                    ? 'Coletar recompensas da patrulha'
                     : 'Nenhuma recompensa para coletar'
               }
             >
-              {claiming ? (
-                'Coletando...'
-              ) : (
-                <span className="game-afk-claim-btn__content">
-                  <Gift size={18} aria-hidden />
-                  <span>Coletar</span>
-                  {meta?.has_rewards && rewardCount > 0 ? (
-                    <span className="game-afk-claim-btn__badge tabular-nums">{rewardCount}</span>
-                  ) : null}
-                </span>
-              )}
+              {claiming ? 'Coletando...' : 'Coletar'}
             </GameButton>
           </div>
         </motion.div>

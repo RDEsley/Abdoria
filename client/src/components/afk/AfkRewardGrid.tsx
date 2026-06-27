@@ -1,9 +1,9 @@
 import { Gift } from 'lucide-react';
 import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
-import { AfkRewardIcon, buildAfkRewardItems, type AfkRewardItem } from '@/lib/afk-rewards';
+import { AfkRewardIcon, buildAfkRewardItems, countAfkDropEvents, type AfkRewardItem } from '@/lib/afk-rewards';
 import type { AfkPendingReward } from '@/types';
 
-export { countAfkRewardItems } from '@/lib/afk-rewards';
+export { countAfkRewardItems, countAfkDropEvents } from '@/lib/afk-rewards';
 
 interface Props {
   pending: AfkPendingReward | null | undefined;
@@ -48,7 +48,7 @@ export function AfkRewardGrid({
 }: Props) {
   const items = buildAfkRewardItems(pending);
   const hasLoot = items.length > 0;
-  const itemTypeCount = items.length;
+  const dropCount = countAfkDropEvents(pending);
 
   const iconGrid = hasLoot ? <RewardIconGrid items={items} /> : null;
 
@@ -80,7 +80,7 @@ export function AfkRewardGrid({
           ready={hasLoot && !chestOpen && !chestOpening && !chestCelebrate}
           empty={!hasLoot}
           celebrate={chestCelebrate}
-          itemCount={hasLoot && !showLoot ? itemTypeCount : 0}
+          itemCount={hasLoot && !showLoot ? dropCount : 0}
           size={chestOpen || chestOpening || chestShaking ? 'lg' : 'sm'}
         />
       </div>

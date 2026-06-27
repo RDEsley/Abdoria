@@ -103,5 +103,6 @@ export function rollKillDrop(
   const threshold = getKillDropChanceForTier(tier);
   const proc = hashKillSeed(String(user.id), killIndex) % 100;
   if (proc >= threshold) return;
+  pending.drop_count = (pending.drop_count ?? 0) + 1;
   rollLootTable(user, killIndex, pending, opts);
 }

@@ -7,6 +7,7 @@ import {
   AFK_KILL_DROP_CHANCE_ELITE,
   AFK_MAX_MINUTES,
   type AfkKillDropChances,
+  type AfkPendingReward,
 } from '../types/index.js';
 
 export {
@@ -56,4 +57,30 @@ export function buildAfkMetaFields(minutos: number) {
     max_minutes: AFK_MAX_MINUTES,
     capped: afkCapReached(minutos),
   };
+}
+
+function hasAfkPendingLoot(pending: AfkPendingReward): boolean {
+  return (
+    pending.xp > 0
+    || pending.abdoria > 0
+    || pending.energy_drinks > 0
+    || pending.cosmetic_ids.length > 0
+    || pending.titulo_secreto
+  );
+}
+
+/** Quantidade de eventos de drop (cada kill que gerou loot conta 1). */
+export function countAfkDropEvents(pending: AfkPendingReward | null | undefined): number {
+  if (!pending || !hasAfkPendingLoot(pending)) return 0;
+
+  const tracked = pending.drop_count ?? 0;
+  if (tracked > 0) return tracked;
+
+  return (
+    pending.xp
+    + pending.energy_drinks
+    + pending.cosmetic_ids.length
+    + (pending.titulo_secreto ? 1 : 0)
+    + pending.abdoria
+  );
 }

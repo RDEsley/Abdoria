@@ -23,6 +23,7 @@ import {
   afkDisplayMinutes,
   afkKillsForHours,
   afkProgressToCap,
+  countAfkDropEvents,
 } from '../../shared/utils/afk.ts';
 import { grantPatrolCacheRewards, syncAfkRewards, claimAfkRewards } from '../../server/src/services/afk.ts';
 import { applyKill, ensureCombat, simulateOfflineKills } from '../../server/src/services/afk-combat.ts';
@@ -118,14 +119,37 @@ assert.ok(
 );
 
 let procMisses = 0;
+let procHits = 0;
 for (let i = 0; i < 50; i += 1) {
   const trial = { ...EMPTY_AFK_PENDING };
   rollKillDrop(uBoss, 10_000 + i, trial, { tier: 'common' });
   if (trial.xp === 0 && trial.abdoria === 0 && trial.energy_drinks === 0 && trial.cosmetic_ids.length === 0 && !trial.titulo_secreto) {
     procMisses += 1;
+  } else {
+    procHits += 1;
+    assert.equal(trial.drop_count, 1, 'successful kill drop increments drop_count once');
   }
 }
 assert.ok(procMisses > 20, 'common kill drop respects 4% proc chance');
+assert.ok(procHits > 0, 'some kill drops succeed in trial batch');
+
+const uGolden = mockUser(0);
+ensureCombat(uGolden);
+uGolden.afk!.combat!.enemy_id = 'golden_slime';
+applyKill(uGolden);
+assert.equal(uGolden.afk!.pending.drop_count, 1, 'golden slime counts as one drop event');
+assert.equal(uGolden.afk!.pending.abdoria, 10, 'golden slime grants bonus abdoria');
+
+assert.equal(
+  countAfkDropEvents({ ...EMPTY_AFK_PENDING, xp: 5, abdoria: 3, drop_count: 8 }),
+  8,
+  'countAfkDropEvents prefers tracked drop_count',
+);
+assert.equal(
+  countAfkDropEvents({ ...EMPTY_AFK_PENDING, xp: 3, abdoria: 2, energy_drinks: 1 }),
+  6,
+  'countAfkDropEvents estimates legacy pending loot',
+);
 
 const uOffline = mockUser(0);
 const kills = simulateOfflineKills(uOffline, 12);

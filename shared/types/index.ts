@@ -157,6 +157,8 @@ export interface AfkPendingReward {
   energy_drinks: number;
   cosmetic_ids: string[];
   titulo_secreto: boolean;
+  /** Quantidade de vezes que um inimigo dropou loot na patrulha. */
+  drop_count: number;
 }
 
 export interface AfkState {
@@ -519,7 +521,7 @@ export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
-  pending: { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false },
+  pending: { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 },
   combat: { ...DEFAULT_AFK_COMBAT },
 };
 

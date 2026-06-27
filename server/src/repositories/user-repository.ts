@@ -18,6 +18,7 @@ const EMPTY_AFK_PENDING: AfkPendingReward = {
   energy_drinks: 0,
   cosmetic_ids: [],
   titulo_secreto: false,
+  drop_count: 0,
 };
 
 type ProfileRow = {
@@ -86,6 +87,7 @@ function normalizePending(raw: unknown): AfkPendingReward {
     energy_drinks: Number(p.energy_drinks ?? 0),
     cosmetic_ids: Array.isArray(p.cosmetic_ids) ? [...p.cosmetic_ids] : [],
     titulo_secreto: Boolean(p.titulo_secreto),
+    drop_count: Math.max(0, Number(p.drop_count ?? 0)),
   };
 }
 

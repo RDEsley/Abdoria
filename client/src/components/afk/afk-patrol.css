@@ -1563,14 +1563,15 @@
 
 .game-afk-slash-wave {
   position: absolute;
-  left: 15%;
-  top: 36%;
+  left: 18%;
+  top: 37%;
   z-index: 7;
   width: 2.6rem;
   height: 2.6rem;
   pointer-events: none;
   opacity: 0;
-  animation: game-afk-slash-wave-flight 0.42s cubic-bezier(0.12, 0.82, 0.28, 1) forwards;
+  transform: rotate(-10deg);
+  animation: game-afk-slash-wave-flight 0.42s linear forwards;
 }
 
 .game-afk-slash-wave::before {
@@ -1597,7 +1598,7 @@
 
 .game-afk-slash-streak {
   position: absolute;
-  left: 14%;
+  left: 17%;
   top: 38%;
   z-index: 6;
   width: 2.8rem;
@@ -1605,44 +1606,44 @@
   border-radius: 999px;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(254, 243, 199, 0.5) 55%, transparent 100%);
   opacity: 0;
-  transform: rotate(-18deg);
+  transform: rotate(-8deg);
   pointer-events: none;
-  animation: game-afk-slash-streak-flight 0.4s ease-out 0.06s forwards;
+  animation: game-afk-slash-streak-flight 0.4s linear 0.04s forwards;
 }
 
 @keyframes game-afk-slash-wave-flight {
   0% {
     opacity: 0;
-    transform: translate(0, 0) rotate(-48deg) scale(0.3);
+    transform: translate(0, 0) rotate(-10deg) scale(0.35);
   }
-  10% {
+  8% {
+    opacity: 0.95;
+    transform: translate(0.75rem, 0) rotate(-10deg) scale(0.82);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(2.8rem, 0) rotate(-10deg) scale(1);
+  }
+  52% {
+    opacity: 1;
+    transform: translate(10.2rem, 0) rotate(-10deg) scale(1.08);
+  }
+  68% {
     opacity: 0.9;
-    transform: translate(0.4rem, -0.1rem) rotate(-38deg) scale(0.75);
-  }
-  24% {
-    opacity: 1;
-    transform: translate(1.4rem, -0.28rem) rotate(-28deg) scale(0.95);
-  }
-  48% {
-    opacity: 1;
-    transform: translate(9.8rem, -0.5rem) rotate(-12deg) scale(1.1);
-  }
-  58% {
-    opacity: 0.85;
-    transform: translate(11.2rem, -0.42rem) rotate(-8deg) scale(1);
+    transform: translate(12.2rem, 0) rotate(-10deg) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(12.5rem, -0.2rem) rotate(-4deg) scale(0.55);
+    transform: translate(13.2rem, 0) rotate(-10deg) scale(0.5);
     visibility: hidden;
   }
 }
 
 @keyframes game-afk-slash-streak-flight {
-  0% { opacity: 0; transform: rotate(-18deg) translateX(-0.4rem) scaleX(0.3); }
-  22% { opacity: 0.8; transform: rotate(-14deg) translateX(0.8rem) scaleX(1); }
-  48% { opacity: 0.55; transform: rotate(-10deg) translateX(8.5rem) scaleX(1.1); }
-  100% { opacity: 0; transform: rotate(-6deg) translateX(11rem) scaleX(0.5); }
+  0% { opacity: 0; transform: rotate(-8deg) translate(0, 0) scaleX(0.3); }
+  18% { opacity: 0.85; transform: rotate(-8deg) translate(1.4rem, 0) scaleX(1); }
+  52% { opacity: 0.6; transform: rotate(-8deg) translate(9.8rem, 0) scaleX(1.12); }
+  100% { opacity: 0; transform: rotate(-8deg) translate(12.8rem, 0) scaleX(0.45); }
 }
 
 .game-afk-sword-impact {
@@ -2144,19 +2145,6 @@
 .game-afk-slime__mouth--o::before,
 .game-afk-slime__mouth--o::after {
   display: none;
-}
-
-.game-afk-slime__mouth--cat::before,
-.game-afk-slime__mouth--cat::after {
-  width: 0.2rem;
-  height: 0.18rem;
-  border-bottom-width: 2.5px;
-}
-
-.game-afk-slime__mouth--grin::before,
-.game-afk-slime__mouth--grin::after {
-  height: 0.28rem;
-  border-bottom-width: 3px;
 }
 
 .game-afk-slime__mouth--flat::before,
@@ -2771,46 +2759,40 @@
 /* Bow — hair ribbon on top */
 .game-afk-slime__bow {
   position: absolute;
-  top: 3%;
+  top: 4%;
   left: 50%;
-  width: 0.44rem;
-  height: 0.32rem;
-  margin-left: -0.22rem;
+  width: 0.14rem;
+  height: 0.14rem;
+  margin-left: -0.07rem;
+  background: radial-gradient(circle, #fb7185 30%, #be123c 100%);
+  border: 2px solid var(--afk-ink);
+  border-radius: 999px;
   z-index: 7;
   pointer-events: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
 }
 
 .game-afk-slime__bow::before,
 .game-afk-slime__bow::after {
   content: '';
   position: absolute;
-  top: 0.06rem;
+  top: -0.02rem;
   width: 0.2rem;
   height: 0.22rem;
   background: linear-gradient(145deg, #fda4af, #e11d48);
   border: 2px solid var(--afk-ink);
-  border-radius: 0.12rem 0.12rem 0.04rem 0.5rem;
+  border-radius: 0.14rem 0.14rem 0.04rem 0.55rem;
 }
 
 .game-afk-slime__bow::before {
-  left: 0;
-  transform: rotate(-18deg);
+  left: -0.18rem;
+  transform: rotate(-16deg);
 }
 
 .game-afk-slime__bow::after {
-  right: 0;
-  transform: scaleX(-1) rotate(-18deg);
-}
-
-.game-afk-slime__bow {
-  background: radial-gradient(circle, #fb7185 30%, #be123c 100%);
-  border: 2px solid var(--afk-ink);
-  border-radius: 999px;
-  width: 0.14rem;
-  height: 0.14rem;
-  margin-left: -0.07rem;
-  top: 0.14rem;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+  left: auto;
+  right: -0.18rem;
+  transform: scaleX(-1) rotate(-16deg);
 }
 
 /* Eye patch — on face layer */
@@ -2902,23 +2884,38 @@
 
 .game-afk-slime__loot-piece {
   position: absolute;
-  animation: game-afk-loot-drop 0.62s ease-in forwards;
+  top: 50%;
+  left: 50%;
+  animation: game-afk-loot-drop 0.88s cubic-bezier(0.22, 0.85, 0.32, 1) forwards;
   animation-delay: var(--loot-delay, 0ms);
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes game-afk-loot-drop {
   0% {
     opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
+    transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1);
   }
-  18% {
+  12% {
     opacity: 1;
-    transform: translate(calc(var(--loot-drift, 0px) * 0.35), -14px) rotate(calc(var(--loot-rot, 0deg) * 0.3)) scale(1.05);
+    transform: translate(-50%, -50%) translate(calc(var(--loot-drift, 0px) * 0.15), var(--loot-pop, -12px)) rotate(calc(var(--loot-rot, 0deg) * 0.15)) scale(1.12);
+  }
+  38% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(calc(var(--loot-drift, 0px) * 0.55), calc(var(--loot-pop, -12px) * 0.35 + 8px)) rotate(calc(var(--loot-rot, 0deg) * 0.5)) scale(1);
+  }
+  62% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) translate(calc(var(--loot-drift, 0px) * 0.82), 28px) rotate(calc(var(--loot-rot, 0deg) * 0.78)) scale(0.94);
+  }
+  82% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 46px) rotate(calc(var(--loot-rot, 0deg) * 0.92)) scale(0.88);
   }
   100% {
     opacity: 0;
-    transform: translate(var(--loot-drift, 0px), 32px) rotate(var(--loot-rot, 20deg)) scale(0.85);
+    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 58px) rotate(var(--loot-rot, 20deg)) scale(0.78);
   }
 }
 
@@ -3617,14 +3614,16 @@
   z-index: 8;
   display: inline-flex;
   align-items: center;
-  gap: 0.12rem;
-  min-width: 1.35rem;
-  padding: 0.12rem 0.28rem;
+  justify-content: center;
+  min-width: 1.2rem;
+  min-height: 1.2rem;
+  padding: 0.1rem 0.3rem;
   border: 2px solid #1c1917;
   border-radius: 999px;
   background: linear-gradient(180deg, #fde68a, #f59e0b);
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-weight: 900;
+  line-height: 1;
   color: #78350f;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
   animation: game-afk-chest-badge-pulse 1.4s ease-in-out infinite;

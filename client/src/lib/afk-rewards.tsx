@@ -3,6 +3,7 @@ import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { EnergyDrinkIcon } from '@/lib/daily-shop-display';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import { CURRENCY_NAME, type AfkPendingReward, type CosmeticAvatarIcon } from '@/types';
+import { countAfkDropEvents } from '@shared/utils/afk';
 
 export type AfkRewardKind = 'xp' | 'abdoria' | 'drink' | 'cosmetic' | 'secret';
 
@@ -73,6 +74,8 @@ export function buildAfkRewardItems(pending: AfkPendingReward | null | undefined
 export function countAfkRewardItems(pending: AfkPendingReward | null | undefined): number {
   return buildAfkRewardItems(pending).length;
 }
+
+export { countAfkDropEvents };
 
 export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?: number }) {
   if (item.kind === 'xp') return <Zap size={size} aria-hidden />;
