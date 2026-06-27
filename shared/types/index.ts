@@ -735,6 +735,39 @@ export const COSMETIC_RARITY_LABELS: Record<CosmeticRarity, string> = {
   secreto: 'Secret',
 };
 
+export const COSMETIC_RARITY_ORDER: Record<CosmeticRarity, number> = {
+  comum: 0,
+  raro: 1,
+  epico: 2,
+  lendario: 3,
+  secreto: 4,
+};
+
+export function sortCosmeticCatalogItems<T extends { raridade: CosmeticRarity; nome: string }>(
+  items: T[],
+): T[] {
+  return [...items].sort((a, b) => {
+    const rarityDiff = COSMETIC_RARITY_ORDER[a.raridade] - COSMETIC_RARITY_ORDER[b.raridade];
+    if (rarityDiff !== 0) return rarityDiff;
+    return a.nome.localeCompare(b.nome, 'pt-BR');
+  });
+}
+
+export function groupCosmeticCatalogByRarity<T extends { raridade: CosmeticRarity; nome: string }>(
+  items: T[],
+): { raridade: CosmeticRarity; items: T[] }[] {
+  const groups: { raridade: CosmeticRarity; items: T[] }[] = [];
+  for (const item of sortCosmeticCatalogItems(items)) {
+    const tail = groups[groups.length - 1];
+    if (tail && tail.raridade === item.raridade) {
+      tail.items.push(item);
+    } else {
+      groups.push({ raridade: item.raridade, items: [item] });
+    }
+  }
+  return groups;
+}
+
 export function resolveCosmeticos(
   cosmeticos?: Partial<Cosmeticos> | null,
   nivelXp = 0,

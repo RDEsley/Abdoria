@@ -22,7 +22,9 @@ import { useApp } from '@/hooks/useApp';
 import { playEquip, playPurchase, previewSfxPack, setSfxPack } from '@/lib/sounds';
 import type { CosmeticKind, ShopCatalogItem, ShopResponse } from '@/types';
 import {
+  COSMETIC_RARITY_LABELS,
   CURRENCY_NAME,
+  groupCosmeticCatalogByRarity,
   resolveCosmeticos,
 } from '@/types';
 
@@ -315,18 +317,38 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
                     <div className="game-shop-list">
                       {catalog &&
-                        catalogByKind(catalog, kind).map((item) => (
-                          <ShopItemRow
-                            key={item.id}
-                            item={item}
-                            letter={firstName}
-                            busy={busyId === item.id}
-                            isPreviewing={isPreviewingItem(item)}
-                            onPreview={() => handlePreview(item)}
-                            onEquip={() => void handleEquip(item)}
-                            onPurchase={() => void handlePurchase(item)}
-                          />
-                        ))}
+                        (() => {
+                          const items = catalogByKind(catalog, kind);
+                          const groups = groupCosmeticCatalogByRarity(items);
+                          const showRarityLabels = groups.length > 1;
+
+                          return groups.flatMap(({ raridade, items: groupItems }) => {
+                            const nodes = groupItems.map((item) => (
+                              <ShopItemRow
+                                key={item.id}
+                                item={item}
+                                letter={firstName}
+                                busy={busyId === item.id}
+                                isPreviewing={isPreviewingItem(item)}
+                                onPreview={() => handlePreview(item)}
+                                onEquip={() => void handleEquip(item)}
+                                onPurchase={() => void handlePurchase(item)}
+                              />
+                            ));
+
+                            if (!showRarityLabels) return nodes;
+
+                            return [
+                              <p
+                                key={`rarity-${kind}-${raridade}`}
+                                className={`game-shop-rarity-label game-shop-rarity-label--${raridade}`}
+                              >
+                                {COSMETIC_RARITY_LABELS[raridade]}
+                              </p>,
+                              ...nodes,
+                            ];
+                          });
+                        })()}
                     </div>
                   </section>
                 ))

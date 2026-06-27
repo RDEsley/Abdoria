@@ -6317,6 +6317,25 @@ input[type='range'] {
   gap: 0.65rem;
 }
 
+.game-shop-rarity-label {
+  margin: 0.35rem 0 0;
+  padding: 0.15rem 0 0.1rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #78716c;
+}
+
+.game-shop-rarity-label:first-child {
+  margin-top: 0;
+}
+
+.game-shop-rarity-label--raro { color: #2563eb; }
+.game-shop-rarity-label--epico { color: #9333ea; }
+.game-shop-rarity-label--lendario { color: #b45309; }
+.game-shop-rarity-label--secreto { color: #be185d; }
+
 .game-shop-row {
   position: relative;
   display: grid;
@@ -6690,12 +6709,24 @@ input[type='range'] {
 
 .game-card-fundo--dojo {
   background:
-    linear-gradient(180deg, rgba(254, 243, 199, 0.22) 0%, transparent 26%),
-    radial-gradient(ellipse 80% 18% at 50% 0%, rgba(251, 191, 36, 0.12), transparent 70%),
-    repeating-linear-gradient(90deg, rgba(120, 53, 15, 0.24) 0 16px, rgba(92, 38, 10, 0.32) 16px 32px),
-    repeating-linear-gradient(0deg, rgba(68, 64, 60, 0.35) 0 48px, rgba(41, 37, 36, 0.45) 48px 96px),
-    linear-gradient(180deg, #44403c 0%, #292524 28%, #1c1917 55%, #0c0a09 100%);
-  color: #fef3c7;
+    radial-gradient(ellipse 88% 46% at 50% -6%, rgba(254, 243, 199, 0.52), transparent 58%),
+    radial-gradient(ellipse 42% 24% at 50% 4%, rgba(251, 191, 36, 0.22), transparent 68%),
+    linear-gradient(
+      90deg,
+      rgba(28, 25, 23, 0.94) 0%,
+      rgba(68, 64, 60, 0.45) 10%,
+      rgba(254, 249, 195, 0.16) 20%,
+      rgba(254, 249, 195, 0.24) 50%,
+      rgba(254, 249, 195, 0.16) 80%,
+      rgba(68, 64, 60, 0.45) 90%,
+      rgba(28, 25, 23, 0.94) 100%
+    ),
+    linear-gradient(180deg, transparent 46%, rgba(63, 63, 70, 0.28) 46%, rgba(39, 39, 42, 0.42) 52%, rgba(22, 101, 52, 0.18) 52%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 42px),
+    repeating-linear-gradient(0deg, rgba(190, 242, 100, 0.06) 0 1px, transparent 1px 22px),
+    radial-gradient(ellipse 110% 70% at 50% 28%, rgba(87, 83, 78, 0.35), transparent 58%),
+    linear-gradient(180deg, #44403c 0%, #292524 40%, #1c1917 46%, #365314 46%, #4d7c0f 74%, #3f6212 100%);
+  color: #fef9c3;
 }
 
 .game-card-fundo--floresta {
@@ -6724,12 +6755,23 @@ input[type='range'] {
 
 .game-card-fundo--templo {
   background:
-    radial-gradient(ellipse 55% 38% at 50% 0%, rgba(251, 191, 36, 0.28), transparent 72%),
-    radial-gradient(ellipse 30% 22% at 50% 8%, rgba(254, 243, 199, 0.15), transparent 65%),
-    linear-gradient(180deg, transparent 58%, rgba(28, 25, 23, 0.62) 58%, rgba(12, 10, 9, 0.85) 100%),
-    repeating-linear-gradient(90deg, rgba(120, 113, 108, 0.2) 0 12px, rgba(68, 64, 60, 0.12) 12px 24px),
-    repeating-linear-gradient(0deg, rgba(251, 191, 36, 0.06) 0 48px, transparent 48px 96px),
-    linear-gradient(160deg, #1e1b4b, #312e81 38%, #1e293b 68%, #0f172a 100%);
+    radial-gradient(circle at 81% 10%, rgba(255, 255, 255, 0.92) 0%, rgba(254, 249, 195, 0.45) 5%, rgba(250, 204, 21, 0.1) 16%, transparent 30%),
+    radial-gradient(circle at 81% 10%, rgba(254, 243, 199, 0.22) 0%, transparent 38%),
+    radial-gradient(circle at 14% 14%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 34% 9%, rgba(255, 255, 255, 0.45) 0 1px, transparent 2px),
+    radial-gradient(circle at 58% 16%, rgba(255, 255, 255, 0.55) 0 1px, transparent 2px),
+    radial-gradient(circle at 24% 28%, rgba(255, 255, 255, 0.35) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 24%, rgba(255, 255, 255, 0.4) 0 1px, transparent 2px),
+    radial-gradient(ellipse 85% 55% at 50% 68%, rgba(129, 140, 248, 0.32), transparent 62%),
+    radial-gradient(ellipse 50% 35% at 22% 42%, rgba(167, 139, 250, 0.18), transparent 58%),
+    radial-gradient(ellipse 4.5% 36% at 17% 74%, rgba(2, 6, 23, 0.88), transparent 100%),
+    radial-gradient(ellipse 4.5% 36% at 36% 74%, rgba(2, 6, 23, 0.82), transparent 100%),
+    radial-gradient(ellipse 5.5% 40% at 50% 72%, rgba(2, 6, 23, 0.92), transparent 100%),
+    radial-gradient(ellipse 4.5% 36% at 64% 74%, rgba(2, 6, 23, 0.82), transparent 100%),
+    radial-gradient(ellipse 4.5% 36% at 83% 74%, rgba(2, 6, 23, 0.88), transparent 100%),
+    linear-gradient(180deg, transparent 48%, rgba(15, 23, 42, 0.55) 48%, rgba(2, 6, 23, 0.82) 100%),
+    linear-gradient(180deg, transparent 76%, rgba(148, 163, 184, 0.14) 76%, rgba(100, 116, 139, 0.22) 100%),
+    linear-gradient(165deg, #0a0818 0%, #1e1b4b 30%, #3730a3 52%, #1e293b 76%, #0f172a 100%);
   color: #e0e7ff;
 }
 
@@ -7645,13 +7687,14 @@ input[type='range'] {
   align-items: center;
   gap: 0.65rem;
   width: 100%;
-  margin-top: 0.65rem;
-  padding: 0.55rem 0.65rem;
+  box-sizing: border-box;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
   text-align: left;
-  border: 2px solid rgba(28, 25, 23, 0.14);
-  border-radius: 0.8rem;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(250, 250, 249, 0.78));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  border: 3px solid var(--game-ink, #1c1917);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #fff, #fafaf9);
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18);
   cursor: pointer;
   transition:
     border-color 0.2s ease,
@@ -7661,8 +7704,9 @@ input[type='range'] {
 }
 
 .game-daily-autoclaim:hover:not(:disabled) {
-  border-color: #a8a29e;
-  transform: translateY(-1px);
+  border-color: var(--game-ink, #1c1917);
+  transform: translateY(-2px);
+  box-shadow: 4px 5px 0 rgba(28, 25, 23, 0.22);
 }
 
 .game-daily-autoclaim:focus-visible {
@@ -7671,11 +7715,14 @@ input[type='range'] {
 }
 
 .game-daily-autoclaim--on {
-  border-color: #34d399;
-  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 55%, #a7f3d0 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 0 0 2px rgba(52, 211, 153, 0.18);
+  border-color: #059669;
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.28);
+}
+
+.game-daily-autoclaim--on:hover:not(:disabled) {
+  border-color: #047857;
+  box-shadow: 4px 5px 0 rgba(5, 150, 105, 0.32);
 }
 
 .game-daily-autoclaim--busy {

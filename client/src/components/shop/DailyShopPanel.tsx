@@ -220,11 +220,6 @@ export function DailyShopPanel() {
             <p className="mt-1 text-[0.65rem] font-bold leading-relaxed text-stone-500">
               1ª opção grátis · {xpPerAbdoria} XP = 1 {CURRENCY_NAME} · {abdoriaPerXp} {CURRENCY_NAME} = 1 XP
             </p>
-            <DailyShopAutoCollectToggle
-              checked={autoCollect}
-              disabled={savingAutoCollect}
-              onToggle={() => void handleToggleAutoCollect()}
-            />
             {shopMeta && (
               <p className="mt-1 text-[0.65rem] font-bold text-emerald-700">
                 {CURRENCY_NAME}: <strong>{shopMeta.abdoria}</strong> ·{' '}
@@ -241,6 +236,12 @@ export function DailyShopPanel() {
           </div>
           <Sparkles size={18} className="text-amber-500" aria-hidden />
         </div>
+
+        <DailyShopAutoCollectToggle
+          checked={autoCollect}
+          disabled={savingAutoCollect}
+          onToggle={() => void handleToggleAutoCollect()}
+        />
 
         {loading ? (
           <p className="game-loader mt-4">Carregando ofertas...</p>
