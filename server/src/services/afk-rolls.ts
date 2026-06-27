@@ -52,7 +52,7 @@ export function getKillDropChanceForTier(tier: AfkEnemyTier): number {
   return AFK_KILL_DROP_CHANCE_COMMON;
 }
 
-/** Uma rolagem na tabela de loot da patrulha (distribuição de raridade). */
+/** Uma rolagem na tabela de loot da exploração (distribuição de raridade). */
 export function rollLootTable(
   user: UserDocument,
   killIndex: number,

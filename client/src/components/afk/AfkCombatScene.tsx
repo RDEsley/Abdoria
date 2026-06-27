@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
-  AFK_CRIT_CHANCE,
-  AFK_CRIT_DAMAGE,
+  patrolCritChance,
+  patrolCritDamage,
   advanceKillsUntilBoss,
   getEnemyMaxHp,
   resolveNextSpawn,
@@ -39,6 +39,7 @@ const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
 export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBossChange }: Props) {
   const isMobile = useMobileViewport();
   const [attackSeq, setAttackSeq] = useState(0);
+  const [attackIsCrit, setAttackIsCrit] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'attack'>('idle');
   const [enemyHit, setEnemyHit] = useState(false);
   const [displayHp, setDisplayHp] = useState(combat?.enemy_hp ?? 42);
@@ -142,6 +143,7 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
       setLooting(false);
       setEnemyHit(false);
       setPhase('idle');
+      setAttackIsCrit(false);
     }
   }, [serverSnapshot.enemy_id, serverSnapshot.kills_total, serverSnapshot.enemy_hp]);
 
@@ -149,13 +151,15 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
     clearTimers();
 
     const runAttack = () => {
+      const critKind = weapon === 'arco' ? 'arco' : 'espada';
+      const isCrit = Math.random() < patrolCritChance(critKind) / 100;
+      setAttackIsCrit(isCrit);
       setAttackSeq((n) => n + 1);
       setPhase('attack');
       setEnemyHit(false);
       schedule(() => {
         setEnemyHit(true);
-        const isCrit = Math.random() < AFK_CRIT_CHANCE / 100;
-        const hitDamage = isCrit ? AFK_CRIT_DAMAGE : damage;
+        const hitDamage = isCrit ? patrolCritDamage(damage, critKind) : damage;
         pushDamage(hitDamage, isCrit);
         setDisplayHp((hp) => {
           const next = hp - hitDamage;
@@ -213,7 +217,9 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
       <div
         className={[
           'game-afk-scene__viewport',
-          weapon === 'espada' && attacking ? 'game-afk-scene__viewport--sword-hit' : '',
+          weapon === 'espada' && attacking && attackIsCrit ? 'game-afk-scene__viewport--sword-crit-hit' : '',
+          weapon === 'espada' && attacking && !attackIsCrit ? 'game-afk-scene__viewport--sword-hit' : '',
+          weapon === 'arco' && attacking && attackIsCrit ? 'game-afk-scene__viewport--arrow-crit-hit' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -232,17 +238,89 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
           </div>
         )}
 
-        <AfkMascotHero weapon={weapon} attacking={attacking} attackSeq={attackSeq} />
+        <AfkMascotHero weapon={weapon} attacking={attacking} attackSeq={attackSeq} isCrit={attackIsCrit} />
+
+        {weapon === 'arco' && attacking && (
+          <>
+            <span
+              key={`arrow-trail-${attackSeq}`}
+              className={`game-afk-scene-arrow-trail${attackIsCrit ? ' game-afk-scene-arrow-trail--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`arrow-sonic-a-${attackSeq}`}
+              className={`game-afk-scene-arrow-sonic game-afk-scene-arrow-sonic--a${attackIsCrit ? ' game-afk-scene-arrow-sonic--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`arrow-sonic-b-${attackSeq}`}
+              className={`game-afk-scene-arrow-sonic game-afk-scene-arrow-sonic--b${attackIsCrit ? ' game-afk-scene-arrow-sonic--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`arrow-${attackSeq}`}
+              className={`game-afk-scene-arrow${attackIsCrit ? ' game-afk-scene-arrow--crit' : ''}`}
+              aria-hidden
+            />
+            {attackIsCrit && (
+              <span key={`arrow-crit-nova-${attackSeq}`} className="game-afk-scene-arrow-crit-nova" aria-hidden />
+            )}
+            <span
+              key={`arrow-impact-${attackSeq}`}
+              className={`game-afk-arrow-impact${attackIsCrit ? ' game-afk-arrow-impact--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`arrow-impact-ring-${attackSeq}`}
+              className={`game-afk-arrow-impact-ring${attackIsCrit ? ' game-afk-arrow-impact-ring--crit' : ''}`}
+              aria-hidden
+            />
+          </>
+        )}
 
         {weapon === 'espada' && attacking && (
           <>
-            <span key={`slash-streak-${attackSeq}`} className="game-afk-slash-streak" aria-hidden />
-            <span key={`slash-wave-${attackSeq}`} className="game-afk-slash-wave" aria-hidden />
-            <span key={`impact-burst-${attackSeq}`} className="game-afk-sword-impact" aria-hidden />
-            <span key={`impact-cut-a-${attackSeq}`} className="game-afk-sword-impact-cut game-afk-sword-impact-cut--a" aria-hidden />
-            <span key={`impact-cut-b-${attackSeq}`} className="game-afk-sword-impact-cut game-afk-sword-impact-cut--b" aria-hidden />
-            <span key={`impact-sp1-${attackSeq}`} className="game-afk-sword-impact-spark game-afk-sword-impact-spark--1" aria-hidden />
-            <span key={`impact-sp2-${attackSeq}`} className="game-afk-sword-impact-spark game-afk-sword-impact-spark--2" aria-hidden />
+            <span
+              key={`slash-streak-${attackSeq}`}
+              className={`game-afk-slash-streak${attackIsCrit ? ' game-afk-slash-streak--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`slash-wave-${attackSeq}`}
+              className={`game-afk-slash-wave${attackIsCrit ? ' game-afk-slash-wave--crit' : ''}`}
+              aria-hidden
+            />
+            {attackIsCrit && (
+              <>
+                <span key={`slash-crit-wave-${attackSeq}`} className="game-afk-slash-crit-wave" aria-hidden />
+                <span key={`slash-crit-x-${attackSeq}`} className="game-afk-sword-crit-cross" aria-hidden />
+              </>
+            )}
+            <span
+              key={`impact-burst-${attackSeq}`}
+              className={`game-afk-sword-impact${attackIsCrit ? ' game-afk-sword-impact--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`impact-cut-a-${attackSeq}`}
+              className={`game-afk-sword-impact-cut game-afk-sword-impact-cut--a${attackIsCrit ? ' game-afk-sword-impact-cut--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`impact-cut-b-${attackSeq}`}
+              className={`game-afk-sword-impact-cut game-afk-sword-impact-cut--b${attackIsCrit ? ' game-afk-sword-impact-cut--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`impact-sp1-${attackSeq}`}
+              className={`game-afk-sword-impact-spark game-afk-sword-impact-spark--1${attackIsCrit ? ' game-afk-sword-impact-spark--crit' : ''}`}
+              aria-hidden
+            />
+            <span
+              key={`impact-sp2-${attackSeq}`}
+              className={`game-afk-sword-impact-spark game-afk-sword-impact-spark--2${attackIsCrit ? ' game-afk-sword-impact-spark--crit' : ''}`}
+              aria-hidden
+            />
           </>
         )}
 
@@ -251,6 +329,7 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
           userId={userId}
           spawnKillsTotal={spawnKillsTotal}
           hit={enemyHit}
+          critHit={enemyHit && attackIsCrit}
           dying={dying}
           looting={looting}
           hitKey={attackSeq}

@@ -11,7 +11,7 @@ import { updateMe } from '@/lib/api';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
-import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, normalizeCicloTreinos, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE } from '@/types';
+import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, CURRENCY_NAME, normalizeCicloTreinos, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE } from '@/types';
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
@@ -127,7 +127,7 @@ export function SettingsPage() {
         <h3 className="game-section-title mb-2">Regras de XP</h3>
         <p className="text-sm font-medium leading-relaxed text-stone-600">
           {XP_DAILY_PER_EXERCISE} XP por exercício · mínimo {XP_DAILY_MIN_EXERCISES} no treino · teto diário = 100 + {XP_DAILY_CAP_PER_LEVEL} por nível.
-          Bônus de streak, conquistas e loja não contam no teto. Abdoria coins: 1 a cada {ABDORIA_XP_STEP} XP ganhos.
+          Bônus de streak, conquistas e loja não contam no teto. {CURRENCY_NAME}: 1 a cada {ABDORIA_XP_STEP} XP ganhos.
         </p>
       </section>
 

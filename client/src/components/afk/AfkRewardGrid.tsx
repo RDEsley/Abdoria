@@ -14,10 +14,14 @@ interface Props {
   chestShaking?: boolean;
 }
 
-function RewardIconGrid({ items }: { items: AfkRewardItem[] }) {
+function RewardIconGrid({ items, amountPrefixPlus = false }: { items: AfkRewardItem[]; amountPrefixPlus?: boolean }) {
   return (
-    <div className="game-afk-rewards__icon-grid" role="list" aria-label="Recompensas da patrulha">
-      {items.map((item, index) => (
+    <div className="game-afk-rewards__icon-grid" role="list" aria-label="Recompensas da exploração">
+      {items.map((item, index) => {
+        const showPlusPrefix =
+          amountPrefixPlus && (item.kind === 'xp' || item.kind === 'abdoria') && item.amount != null && item.amount > 0;
+
+        return (
         <div
           key={item.key}
           role="listitem"
@@ -30,10 +34,14 @@ function RewardIconGrid({ items }: { items: AfkRewardItem[] }) {
             <AfkRewardIcon item={item} size={24} />
           </span>
           {item.amount != null && item.amount > 0 && (
-            <span className="game-afk-reward-chip__badge tabular-nums">{item.amount}</span>
+            <span className="game-afk-reward-chip__badge tabular-nums">
+              {showPlusPrefix ? <span className="game-afk-reward-chip__badge-sign" aria-hidden>+</span> : null}
+              <span>{item.amount}</span>
+            </span>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -49,8 +57,11 @@ export function AfkRewardGrid({
   const items = buildAfkRewardItems(pending);
   const hasLoot = items.length > 0;
   const dropCount = countAfkDropEvents(pending);
+  const showLootFromChest = withChest && (chestOpen || chestOpening);
 
-  const iconGrid = hasLoot ? <RewardIconGrid items={items} /> : null;
+  const iconGrid = hasLoot ? (
+    <RewardIconGrid items={items} amountPrefixPlus={showLootFromChest} />
+  ) : null;
 
   const emptyState = (
     <div className="game-afk-rewards__empty-state">

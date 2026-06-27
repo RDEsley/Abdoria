@@ -14,6 +14,7 @@ import {
   calcImc,
   CICLO_LABELS,
   CICLOS_OPCIONAIS,
+  CURRENCY_NAME,
   NIVEL_LABELS,
   OBJETIVO_HINTS,
   OBJETIVO_LABELS,
@@ -281,7 +282,7 @@ export function OnboardingPage() {
               <>
                 <h2 className="text-2xl font-extrabold">Sua arma</h2>
                 <p className="mt-1 text-sm text-stone-500">
-                  Escolha o estilo de combate na patrulha AFK.
+                  Escolha o estilo de combate na Exploração AFK.
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   {([
@@ -415,9 +416,9 @@ export function OnboardingPage() {
                 <p className="mt-2 text-sm font-semibold text-emerald-700">Sua jornada começa agora — passo 8/8</p>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
                   <li><strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Teto = 100 + 1 por nível. Reseta à meia-noite (SP).</li>
-                  <li><strong>Abdoria coins:</strong> 1 moeda a cada {ABDORIA_XP_STEP} XP ganhos — use na loja de cosméticos.</li>
+                  <li><strong>{CURRENCY_NAME}:</strong> 1 a cada {ABDORIA_XP_STEP} XP ganhos — use na loja de cosméticos.</li>
                   <li><strong>Treinos:</strong> Monte ou escolha sugestões no Construtor. Ciclos A–E alternam foco muscular.</li>
-                  <li><strong>Ranking semanal:</strong> Top 25 ganham Abdoria coins todo domingo.</li>
+                  <li><strong>Ranking semanal:</strong> Top 25 ganham {CURRENCY_NAME} todo domingo.</li>
                   <li><strong>Streak & conquistas:</strong> XP extra fora do teto diário.</li>
                 </ul>
               </>

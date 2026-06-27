@@ -95,20 +95,37 @@ function ensureLojaDiaria(user: UserDoc): LojaDiaria & { slots: LojaDiariaSlot[]
   return user.loja_diaria as LojaDiaria & { slots: LojaDiariaSlot[] };
 }
 
+function moedasUnlockLabel(item: CosmeticDefinition): string {
+  const price = item.unlock.preco_moedas ?? 0;
+  const base = `${price} ${CURRENCY_NAME}`;
+  const extras: string[] = [];
+
+  if (item.id === 'titulo_dono_do_jogo') {
+    extras.push('código presente', 'oferta na loja diária');
+  } else if (item.id === 'fundo_galaxia') {
+    extras.push('oferta na loja diária');
+  } else if (item.raridade === 'lendario') {
+    extras.push('drop raro na Exploração AFK');
+  }
+
+  if (extras.length === 0) return base;
+  return `${base} — ou ${extras.join(', ')}`;
+}
+
 export function buildUnlockLabel(item: CosmeticDefinition): string {
   switch (item.unlock.tipo) {
     case 'gratis':
-      return 'Padrão';
+      return 'Grátis para todos';
     case 'nivel':
-      return `Nível ${item.unlock.nivel_min ?? '?'}`;
+      return `Alcance o nível ${item.unlock.nivel_min ?? '?'}`;
     case 'conquista': {
       const ach = item.unlock.conquista_id ? ACHIEVEMENT_BY_ID[item.unlock.conquista_id] : undefined;
-      return ach ? `Conquista: ${ach.titulo}` : 'Conquista especial';
+      return ach ? `Conquista: ${ach.titulo}` : 'Complete uma conquista especial';
     }
     case 'moedas':
-      return `${item.unlock.preco_moedas ?? 0} ${CURRENCY_NAME}`;
+      return moedasUnlockLabel(item);
     case 'codigo':
-      return 'Código presente';
+      return 'Resgate um código presente em Opções';
     default:
       return 'Desbloqueio especial';
   }
@@ -281,7 +298,7 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
       cosmetic_id: 'fundo_galaxia',
       oferta_nome: 'Fundo Galáxia',
       resgatado: false,
-      label: 'Cosmético · Fundo Galáxia · 743 Abdoria',
+      label: `Cosmético · Fundo Galáxia · 743 ${CURRENCY_NAME}`,
     };
   }
 
@@ -297,7 +314,7 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
       cosmetic_id: 'titulo_dono_do_jogo',
       oferta_nome: 'Dono do Jogo',
       resgatado: false,
-      label: 'Título lendário · Dono do Jogo · 999 Abdoria',
+      label: `Título lendário · Dono do Jogo · 999 ${CURRENCY_NAME}`,
     };
   }
 
@@ -454,7 +471,7 @@ export async function purchaseShopItem(userId: string, itemId: string) {
   if (unlocked.has(item.id)) return { error: 'Você já possui este item.', status: 400 as const };
   ensureAbdoriaWallet(user);
   const balance = readAbdoriaBalance(user);
-  if (balance < price) return { error: `${CURRENCY_NAME} insuficiente.`, status: 400 as const };
+  if (balance < price) return { error: `${CURRENCY_NAME} insuficientes.`, status: 400 as const };
 
   user.cosmeticos.moedas = balance - price;
   unlocked.add(item.id);
@@ -573,7 +590,7 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
 
     const abdoriaAfterXp = projectedAbdoriaAfterXpSpend(user, xpCost);
     if (abdoriaCost > 0 && abdoriaAfterXp < abdoriaCost) {
-      return { error: `${CURRENCY_NAME} insuficiente.`, status: 400 as const };
+      return { error: `${CURRENCY_NAME} insuficientes.`, status: 400 as const };
     }
 
     if (xpCost > 0) {

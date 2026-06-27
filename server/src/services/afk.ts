@@ -10,14 +10,7 @@ import { afkCapReached, afkKillsForHours, buildAfkMetaFields } from '../../../sh
 import { grantAbdoria } from './economy.js';
 import { addInventoryItem } from './inventory.js';
 import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-repository.js';
-import { hashKillSeed, rollKillDrop } from './afk-rolls.js';
-import { combatSnapshot, ensureCombat, simulateOfflineKills } from './afk-combat.js';
-import {
-  advanceKillsUntilBoss,
-  getEnemyMaxHp,
-  resolveNextSpawn,
-  type AfkCombatState,
-} from '../types/index.js';
+import { combatSnapshot, ensureCombat, simulateOfflineKills, defeatCurrentEnemy } from './afk-combat.js';
 
 const SECRET_TITLE_ID = 'titulo_secreto';
 
@@ -62,34 +55,18 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): Afk
   return claimed;
 }
 
-/** Concede recompensas equivalentes a N horas de patrulha AFK (simula kills + drops). */
+/** Concede recompensas equivalentes a N horas de Exploração AFK (simula kills + drops). */
 export function grantPatrolCacheRewards(
   user: UserDocument,
   hours = PATROL_CACHE_HOURS,
 ): AfkPendingReward {
   const kills = afkKillsForHours(hours);
-  const baseIndex =
-    Math.floor(Date.now() / 60_000) * 1000 + (hashKillSeed(String(user.id), Date.now()) % 1000);
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
 
-  const source = ensureCombat(user);
-  const combat: AfkCombatState = { ...source };
+  ensureCombat(user);
 
   for (let i = 0; i < kills; i += 1) {
-    const tier = combat.is_boss ? 'boss' : combat.elite ? 'elite' : 'common';
-    rollKillDrop(user, baseIndex + i, pending, { bossBoost: combat.is_boss, tier });
-    combat.kills_total += 1;
-    combat.kills_until_boss = advanceKillsUntilBoss(combat.kills_until_boss, combat.is_boss);
-    const spawn = resolveNextSpawn(
-      String(user.id),
-      combat.kills_until_boss,
-      combat.kills_total,
-      combat.enemy_id,
-    );
-    combat.enemy_id = spawn.enemy_id;
-    combat.is_boss = spawn.is_boss;
-    combat.elite = spawn.elite;
-    combat.enemy_hp = getEnemyMaxHp(spawn.enemy_id);
+    defeatCurrentEnemy(user, pending);
   }
 
   return applyAfkRewardBundle(user, pending);
@@ -166,4 +143,4 @@ export function afkResponsePayload(
   };
 }
 
-export { SECRET_TITLE_ID, rollKillDrop };
+export { SECRET_TITLE_ID };

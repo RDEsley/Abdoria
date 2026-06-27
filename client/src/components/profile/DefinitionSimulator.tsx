@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Sparkles, Target, TrendingDown } from 'lucide-react';
+import { Flame, Lightbulb, Save, Sparkles, Target, TrendingDown } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { updateMe } from '@/lib/api';
@@ -126,21 +126,21 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
   };
 
   return (
-    <section className="definicao-sim glass-card p-4">
-      <div className="mb-4 flex items-start gap-3">
-        <div className="game-level-badge !h-11 !w-11 shrink-0">
+    <section className="definicao-sim glass-card rounded-2xl p-4">
+      <header className="definicao-sim__header">
+        <div className="game-level-badge definicao-sim__header-icon">
           <Target size={20} className="mx-auto text-amber-600" />
         </div>
         <div>
-          <h3 className="font-extrabold text-stone-900">Simulação de definição</h3>
-          <p className="mt-1 text-xs font-bold leading-relaxed text-stone-500">
+          <h3 className="game-section-title !mb-1">Simulação de definição</h3>
+          <p className="definicao-sim__intro">
             Projeção educativa com base em % de gordura, perfil e constância nos treinos. Não substitui
             avaliação profissional.
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className="mb-4 flex gap-2">
+      <div className="definicao-sim__sexo-row">
         {(['masculino', 'feminino'] as SexoBiologico[]).map((s) => (
           <button
             key={s}
@@ -153,7 +153,7 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
         ))}
       </div>
 
-      <div className="definicao-sim__visual mb-4">
+      <div className="definicao-sim__visual">
         <div className="definicao-sim__silhouette" aria-hidden>
           <motion.div
             className="definicao-sim__abs-glow"
@@ -170,61 +170,82 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
             ))}
           </div>
         </div>
-        {faixa && (
+        {faixa ? (
           <p className="definicao-sim__faixa-label">
             Faixa atual: <strong>{faixa.label}</strong>
           </p>
+        ) : (
+          <p className="definicao-sim__faixa-label">Informe sua gordura estimada</p>
         )}
-        <p className="definicao-sim__faixa-hint">{faixa?.descricao ?? 'Informe sua gordura estimada para ver a faixa.'}</p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-bold text-stone-700">
-          Gordura corporal atual (%)
-          <input
-            type="text"
-            inputMode="decimal"
-            value={gorduraAtual}
-            onChange={(e) => setGorduraAtual(e.target.value.replace(/[^\d.,]/g, ''))}
-            placeholder={sexo === 'masculino' ? 'Ex.: 18' : 'Ex.: 26'}
-            className="rounded-xl border border-stone-300 bg-white px-3 py-2 font-medium"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-bold text-stone-700">
-          Meta de definição ({gorduraMeta}%)
-          <input
-            type="range"
-            min={sexo === 'masculino' ? 8 : 14}
-            max={sexo === 'masculino' ? 18 : 24}
-            step={0.5}
-            value={gorduraMeta}
-            onChange={(e) => setGorduraMeta(Number(e.target.value))}
-            className="mt-2 w-full cursor-pointer"
-          />
-          <span className="text-xs font-bold text-emerald-700">
-            Referência: {getDefinicaoMetaPadrao(sexo)}% ({sexo === 'masculino' ? 'homens' : 'mulheres'})
-          </span>
-        </label>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={handleEstimateFromImc} className="game-scheme-chip !min-w-0 flex-1">
-          <span className="game-scheme-chip__label">Estimar por IMC</span>
-          <span className="game-scheme-chip__hint">Usa peso, altura e idade</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setGorduraMeta(getDefinicaoMetaPadrao(sexo))}
-          className="game-scheme-chip !min-w-0 flex-1"
-        >
-          <span className="game-scheme-chip__label">Meta padrão</span>
-          <span className="game-scheme-chip__hint">{getDefinicaoMetaPadrao(sexo)}%</span>
-        </button>
+        <p className="definicao-sim__faixa-hint">{faixa?.descricao ?? 'Use o campo abaixo ou estime pelo IMC na aba Dados.'}</p>
       </div>
 
       {gorduraAtualNum != null && (
-        <div className="mt-4 space-y-3">
-          <div>
+        <div className="definicao-sim__compare">
+          <div className="definicao-sim__compare-card">
+            <span className="definicao-sim__compare-label">Atual</span>
+            <span className="definicao-sim__compare-value">{gorduraAtualNum}%</span>
+          </div>
+          <div className="definicao-sim__compare-arrow" aria-hidden>→</div>
+          <div className="definicao-sim__compare-card definicao-sim__compare-card--meta">
+            <span className="definicao-sim__compare-label">Meta</span>
+            <span className="definicao-sim__compare-value">{gorduraMeta}%</span>
+          </div>
+        </div>
+      )}
+
+      <section className="definicao-sim__section">
+        <h4 className="definicao-sim__section-title">Seus números</h4>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="definicao-sim__field">
+            Gordura corporal atual (%)
+            <input
+              type="text"
+              inputMode="decimal"
+              value={gorduraAtual}
+              onChange={(e) => setGorduraAtual(e.target.value.replace(/[^\d.,]/g, ''))}
+              placeholder={sexo === 'masculino' ? 'Ex.: 18' : 'Ex.: 26'}
+              className="definicao-sim__input"
+            />
+          </label>
+          <label className="definicao-sim__field">
+            Meta de definição ({gorduraMeta}%)
+            <input
+              type="range"
+              min={sexo === 'masculino' ? 8 : 14}
+              max={sexo === 'masculino' ? 18 : 24}
+              step={0.5}
+              value={gorduraMeta}
+              onChange={(e) => setGorduraMeta(Number(e.target.value))}
+              className="definicao-sim__range"
+            />
+            <span className="definicao-sim__range-hint">
+              Referência: {getDefinicaoMetaPadrao(sexo)}% ({sexo === 'masculino' ? 'homens' : 'mulheres'})
+            </span>
+          </label>
+        </div>
+
+        <div className="definicao-sim__quick-actions">
+          <button type="button" onClick={handleEstimateFromImc} className="game-scheme-chip !min-w-0 flex-1">
+            <span className="game-scheme-chip__label">Estimar por IMC</span>
+            <span className="game-scheme-chip__hint">Usa peso, altura e idade</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setGorduraMeta(getDefinicaoMetaPadrao(sexo))}
+            className="game-scheme-chip !min-w-0 flex-1"
+          >
+            <span className="game-scheme-chip__label">Meta padrão</span>
+            <span className="game-scheme-chip__hint">{getDefinicaoMetaPadrao(sexo)}%</span>
+          </button>
+        </div>
+      </section>
+
+      {gorduraAtualNum != null && (
+        <section className="definicao-sim__section">
+          <h4 className="definicao-sim__section-title">Resultados</h4>
+
+          <div className="definicao-sim__progress-block">
             <div className="mb-1 flex justify-between text-xs font-bold">
               <span className="text-stone-600">Progresso até a meta</span>
               <span className="text-emerald-700">{progresso}%</span>
@@ -261,37 +282,39 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
           </div>
 
           {projecao && diff! > 0 && (
-            <div className="rounded-xl border-2 border-amber-200 bg-amber-50/80 p-3">
-              <p className="flex items-center gap-1 text-xs font-extrabold text-amber-900">
+            <div className="definicao-sim__projection">
+              <p className="definicao-sim__projection-title">
                 <Sparkles size={14} /> Projeção com seu ritmo atual
               </p>
-              <p className="mt-2 text-sm font-bold text-stone-700">
-                {projecao.realista}–{projecao.conservador} semanas (otimista: {projecao.otimista} sem.)
+              <p className="definicao-sim__projection-value">
+                {projecao.realista}–{projecao.conservador} semanas
+                <span className="definicao-sim__projection-optimistic"> (otimista: {projecao.otimista} sem.)</span>
               </p>
-              <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
+              <p className="definicao-sim__projection-hint">
                 Baseado em {treinosSemana} estímulo(s) muscular(es) esta semana · streak {stats?.streak_atual ?? 0}d
               </p>
             </div>
           )}
 
           {diff != null && diff <= 0 && (
-            <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-extrabold text-emerald-800">
+            <p className="definicao-sim__goal-hit">
               Você atingiu (ou superou) a meta de definição simulada!
             </p>
           )}
 
-          <ul className="space-y-1.5">
-            {dicas.map((dica) => (
-              <li key={dica} className="text-[0.65rem] font-bold leading-relaxed text-stone-600">
-                · {dica}
-              </li>
-            ))}
-          </ul>
+          <div className="definicao-sim__dicas">
+            <p className="definicao-sim__dicas-title">
+              <Lightbulb size={14} /> Dicas para sua faixa
+            </p>
+            <ul className="definicao-sim__dicas-list">
+              {dicas.map((dica) => (
+                <li key={dica}>{dica}</li>
+              ))}
+            </ul>
+          </div>
 
           <div className="definicao-sim__faixas">
-            <p className="mb-2 text-[0.62rem] font-extrabold uppercase tracking-wide text-stone-500">
-              Faixas de referência
-            </p>
+            <p className="definicao-sim__faixas-title">Faixas de referência</p>
             <div className="flex flex-wrap gap-1">
               {faixas.map((f) => (
                 <span
@@ -304,12 +327,20 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
               ))}
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      <GameButton size="lg" className="mt-4 w-full" onClick={() => void handleSave()} disabled={saving}>
-        {saving ? 'Salvando...' : 'Salvar simulação'}
-      </GameButton>
+      <div className="definicao-sim__actions game-profile-form__actions">
+        <GameButton
+          size="lg"
+          className="game-profile-save-btn"
+          onClick={() => void handleSave()}
+          disabled={saving}
+        >
+          <Save size={18} strokeWidth={2.5} aria-hidden />
+          {saving ? 'Salvando...' : 'Salvar simulação'}
+        </GameButton>
+      </div>
     </section>
   );
 }

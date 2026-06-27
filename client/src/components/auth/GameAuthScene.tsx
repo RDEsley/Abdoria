@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { BRAND_MARK_SRC } from '@/lib/brand';
+import { BrandMark } from '@/components/brand/BrandMark';
 
 function GameBird({ className }: { className: string }) {
   return (
@@ -64,13 +64,7 @@ interface GameAuthPanelProps {
 export function GameAuthPanel({ title, children, footer, className }: GameAuthPanelProps) {
   return (
     <main className={`game-login__panel${className ? ` ${className}` : ''}`}>
-      <img
-        src={BRAND_MARK_SRC}
-        alt="Abdoria"
-        className="game-login__logo"
-        width={112}
-        height={112}
-      />
+      <BrandMark size={112} alt="Abdoria" className="game-login__logo" />
       <h1 className="game-login__title">{title}</h1>
       {children}
       {footer}

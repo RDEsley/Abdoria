@@ -24,7 +24,7 @@ patrolShopRouter.get('/', async (req: AuthRequest, res) => {
     res.json(buildPatrolShopResponse(user));
   } catch (error) {
     console.error('GET /api/patrol-shop error:', error);
-    res.status(500).json({ error: 'Erro ao carregar loja da patrulha.' });
+    res.status(500).json({ error: 'Erro ao carregar loja da exploração.' });
   }
 });
 

@@ -164,5 +164,12 @@ export {
   PATROL_WEAPON_RARITY_LABELS,
   patrolWeaponsByKind,
   patrolHeroDamage,
+  patrolCritChance,
+  patrolCritBonus,
+  patrolCritDamage,
+  formatPatrolCritChancePercent,
+  AFK_CRIT_CHANCE_ESPADA,
+  AFK_CRIT_BONUS_ESPADA,
+  AFK_CRIT_BONUS_ARCO,
   resolvePatrolArmas,
 } from '../../../shared/types/index.js';

@@ -36,7 +36,8 @@ export function EffectPreview({ effectId, active = true }: Props) {
       effectId={effectId}
       active={active}
       mode="burst"
-      className="game-completion-effect"
+      preview
+      className="game-completion-effect game-completion-effect--shop-live"
     />
   );
 }

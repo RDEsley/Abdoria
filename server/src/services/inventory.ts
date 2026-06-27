@@ -81,13 +81,13 @@ export function useEnergyDrink(user: UserDocument, quantity = 1): { ok: true; bo
   return { ok: true, bonus_added: bonusAdded };
 }
 
-/** Usa Baú da Patrulha: recompensas equivalentes a 6h de patrulha AFK. */
+/** Usa Baú da Exploração: recompensas equivalentes a 6h de Exploração AFK. */
 export function usePatrolCache(
   user: UserDocument,
 ): { ok: true; claimed: AfkPendingReward } | { ok: false; error: string } {
   const available = getItemCount(user, PATROL_CACHE_ITEM_ID);
   if (available < 1) {
-    return { ok: false, error: 'Você não tem Baú da Patrulha.' };
+    return { ok: false, error: 'Você não tem Baú da Exploração.' };
   }
 
   if (!consumeInventoryItem(user, PATROL_CACHE_ITEM_ID, 1)) {

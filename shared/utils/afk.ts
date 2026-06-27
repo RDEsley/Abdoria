@@ -31,7 +31,7 @@ export function afkDisplayMinutes(minutos: number, elapsedSinceSyncMin = 0): num
   return Math.min(raw, AFK_MAX_MINUTES);
 }
 
-/** Progresso 0–1 até o teto de 24h de patrulha. */
+/** Progresso 0–1 até o teto de 24h de exploração. */
 export function afkProgressToCap(minutos: number, elapsedSinceSyncMin = 0): number {
   const display = afkDisplayMinutes(minutos, elapsedSinceSyncMin);
   return Math.min(1, display / AFK_MAX_MINUTES);
