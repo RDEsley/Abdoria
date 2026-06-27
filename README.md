@@ -2,7 +2,7 @@
 
 # Abdoria · Core Quest
 
-<img src="https://cdn-icons-png.flaticon.com/512/3105/3105807.png" width="88" alt="Abdoria" />
+<img src="./docs/assets/abdoria-logo.png" width="220" alt="Abdoria · Core Quest" />
 
 **Seu treino de abdômen virou uma aventura.**
 

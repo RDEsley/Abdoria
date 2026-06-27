@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { GameButton } from '@/components/ui/GameButton';
+import { showGameToast } from '@/components/ui/GameToast';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
@@ -54,7 +55,6 @@ export function OnboardingPage() {
   const [modo, setModo] = useState<'tempo' | 'reps'>('tempo');
   const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
   const [saving, setSaving] = useState(false);
-  const [fieldError, setFieldError] = useState<string | null>(null);
 
   const bodyMetrics = useMemo(() => validateBodyMetrics(idade, peso, altura), [idade, peso, altura]);
   const imc =
@@ -77,7 +77,6 @@ export function OnboardingPage() {
 
   const saveAndFinish = async (skip = false) => {
     setSaving(true);
-    setFieldError(null);
     try {
       const scheme = REP_SCHEMES.find((s) => s.id === repSchemeId) ?? REP_SCHEMES[0];
       const payload: Parameters<typeof completeOnboarding>[0] = {
@@ -124,22 +123,19 @@ export function OnboardingPage() {
   const next = () => {
     const error = validateCurrentStep();
     if (error) {
-      setFieldError(error);
+      showGameToast(error, { variant: 'warn' });
       return;
     }
-    setFieldError(null);
     if (step < STEPS.length - 1) setStep((s) => s + 1);
     else void saveAndFinish(false);
   };
 
   const skipStep = () => {
-    setFieldError(null);
     if (step < STEPS.length - 1) setStep((s) => s + 1);
     else void saveAndFinish(true);
   };
 
   const prev = () => {
-    setFieldError(null);
     if (step > 0) setStep((s) => s - 1);
   };
 
@@ -425,10 +421,6 @@ export function OnboardingPage() {
                   <li><strong>Streak & conquistas:</strong> XP extra fora do teto diário.</li>
                 </ul>
               </>
-            )}
-
-            {fieldError && (
-              <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{fieldError}</p>
             )}
 
             <div className="mt-6 flex gap-3">

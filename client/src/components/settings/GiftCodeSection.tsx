@@ -4,6 +4,7 @@ import { GiftCodeRewardReveal } from '@/components/settings/GiftCodeRewardReveal
 import { GameButton } from '@/components/ui/GameButton';
 import { redeemGiftCode } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
@@ -33,7 +34,6 @@ export function GiftCodeSection() {
   const { refresh: refreshApp } = useApp();
   const [giftCode, setGiftCode] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [rewardReveal, setRewardReveal] = useState<RedeemCodeResponse | null>(null);
 
   const cosmeticos = useMemo(
@@ -45,12 +45,11 @@ export function GiftCodeSection() {
     const normalized = normalizeGiftCodeInput(giftCode);
     const validationError = validateGiftCodeInput(normalized);
     if (validationError) {
-      setError(validationError);
+      showGameToast(validationError, { variant: 'warn' });
       return;
     }
 
     setBusy(true);
-    setError(null);
 
     try {
       const res = await redeemGiftCode(normalized);
@@ -60,7 +59,7 @@ export function GiftCodeSection() {
       setGiftCode('');
       setRewardReveal(res);
     } catch (err) {
-      setError(getErrorMessage(err, 'Código inválido ou já usado nesta conta.'));
+      showGameToast(getErrorMessage(err, 'Código inválido ou já usado nesta conta.'), { variant: 'error' });
     } finally {
       setBusy(false);
     }
@@ -83,7 +82,6 @@ export function GiftCodeSection() {
             value={giftCode}
             onChange={(e) => {
               setGiftCode(e.target.value);
-              if (error) setError(null);
             }}
             placeholder="Ex.: abdoria"
             autoComplete="off"
@@ -104,8 +102,6 @@ export function GiftCodeSection() {
             <strong>Dono do Jogo</strong> — válido <strong>1 vez por conta</strong>.
           </p>
         </div>
-
-        {error && <p className="game-login__error mt-3">{error}</p>}
       </section>
 
       {rewardReveal && (

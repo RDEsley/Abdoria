@@ -2310,9 +2310,17 @@ input[type='range'] {
   box-shadow: 0 0 0 var(--game-green-dark);
 }
 
-.game-item-card__action-icon--pin.game-item-card__action-icon--active {
+.game-item-card__action-icon--pin.game-item-card__action-icon--active,
+.game-item-card__action-icon--pin.game-item-card__action-icon--pin-active {
+  color: #fff;
   background: #15803d;
-  box-shadow: 2px 2px 0 #14532d;
+  box-shadow:
+    2px 2px 0 #14532d,
+    inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
+.game-item-card__action-icon--pin.game-item-card__action-icon--pin-active svg {
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.2));
 }
 
 .game-item-card__action-icon--block {
@@ -2329,37 +2337,79 @@ input[type='range'] {
   box-shadow: 2px 2px 0 #991b1b;
 }
 
-.game-pref-feedback {
+.game-item-card__action-icon--swap {
+  background: #0284c7;
+  box-shadow: 2px 2px 0 #0369a1;
+}
+
+.game-item-card__action-icon--swap:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.game-item-card__action-icon--swap:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #0369a1;
+}
+
+.game-item-card__action-icon--swap:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.game-toast {
   position: fixed;
   inset-inline: 1rem;
   bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   z-index: 120;
   max-width: 22rem;
   margin-inline: auto;
-  padding: 0.65rem 0.85rem;
+  padding: 0.7rem 0.9rem;
   font-size: 0.72rem;
   font-weight: 800;
   line-height: 1.35;
   color: #fff;
   text-align: center;
   pointer-events: none;
-  background: rgba(28, 25, 23, 0.92);
+  background: rgba(28, 25, 23, 0.94);
   border: 2px solid var(--game-ink);
   border-radius: 0.65rem;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.25);
-  animation: game-pref-feedback-in 0.22s ease-out;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.28);
+  animation: game-toast-in 0.12s ease-out;
+}
+
+.game-toast--success {
+  border-color: #10b981;
+  box-shadow: 3px 3px 0 rgba(4, 120, 87, 0.35);
+}
+
+.game-toast--error {
+  background: rgba(69, 10, 10, 0.96);
+  border-color: #f87171;
+  box-shadow: 3px 3px 0 rgba(127, 29, 29, 0.45);
+}
+
+.game-toast--warn {
+  background: rgba(69, 45, 10, 0.96);
+  border-color: #fbbf24;
+  box-shadow: 3px 3px 0 rgba(120, 53, 15, 0.4);
+}
+
+.game-toast--info {
+  background: rgba(12, 45, 72, 0.96);
+  border-color: #38bdf8;
+  box-shadow: 3px 3px 0 rgba(7, 58, 102, 0.4);
 }
 
 @media (min-width: 768px) {
-  .game-pref-feedback {
+  .game-toast {
     bottom: 1.5rem;
   }
 }
 
-@keyframes game-pref-feedback-in {
+@keyframes game-toast-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -3512,6 +3562,7 @@ input[type='range'] {
 }
 
 .game-wheel-picker__item {
+  width: 100%;
   height: 36px;
   display: flex;
   align-items: center;
@@ -3521,6 +3572,21 @@ input[type='range'] {
   font-weight: 700;
   color: #a8a29e;
   user-select: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.12s, background 0.12s;
+}
+
+.game-wheel-picker__item:not(.game-wheel-picker__item--spacer):hover {
+  color: var(--game-ink);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.game-wheel-picker__item:not(.game-wheel-picker__item--spacer):active {
+  background: rgba(16, 185, 129, 0.14);
 }
 
 .game-wheel-picker__item--spacer {
@@ -6415,28 +6481,6 @@ input[type='range'] {
   border-radius: 999px;
   background: currentColor;
 }
-
-.workout-calendar__legend {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.65rem;
-  font-size: 0.58rem;
-  color: #78716c;
-}
-
-.workout-calendar__legend-swatch {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 2px;
-  border: 1px solid rgba(0,0,0,0.08);
-}
-
-.workout-calendar__legend-swatch--l0 { background: #fafaf9; }
-.workout-calendar__legend-swatch--l1 { background: #ecfdf5; }
-.workout-calendar__legend-swatch--l2 { background: #bbf7d0; }
-.workout-calendar__legend-swatch--l3 { background: #86efac; }
-.workout-calendar__legend-swatch--l4 { background: #34d399; }
 
 .workout-calendar__detail {
   margin-top: 0.75rem;

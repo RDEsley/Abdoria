@@ -210,7 +210,14 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
 
   return (
     <div className="game-afk-scene">
-      <div className="game-afk-scene__viewport">
+      <div
+        className={[
+          'game-afk-scene__viewport',
+          weapon === 'espada' && attacking ? 'game-afk-scene__viewport--sword-hit' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
         <AfkSkyCycle showClouds={!isMobile} showSparkles={showSparkles} />
 
         <AfkBossProgressPanel
@@ -228,7 +235,15 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
         <AfkMascotHero weapon={weapon} attacking={attacking} attackSeq={attackSeq} />
 
         {weapon === 'espada' && attacking && (
-          <span key={attackSeq} className="game-afk-slash game-afk-slash--scene" aria-hidden />
+          <>
+            <span key={`slash-streak-${attackSeq}`} className="game-afk-slash-streak" aria-hidden />
+            <span key={`slash-wave-${attackSeq}`} className="game-afk-slash-wave" aria-hidden />
+            <span key={`impact-burst-${attackSeq}`} className="game-afk-sword-impact" aria-hidden />
+            <span key={`impact-cut-a-${attackSeq}`} className="game-afk-sword-impact-cut game-afk-sword-impact-cut--a" aria-hidden />
+            <span key={`impact-cut-b-${attackSeq}`} className="game-afk-sword-impact-cut game-afk-sword-impact-cut--b" aria-hidden />
+            <span key={`impact-sp1-${attackSeq}`} className="game-afk-sword-impact-spark game-afk-sword-impact-spark--1" aria-hidden />
+            <span key={`impact-sp2-${attackSeq}`} className="game-afk-sword-impact-spark game-afk-sword-impact-spark--2" aria-hidden />
+          </>
         )}
 
         <AfkEnemySprite

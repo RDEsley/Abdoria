@@ -20,6 +20,7 @@ import {
   setSoundSettings,
 } from '@/lib/sounds';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { getRecommendWorkout, updateMe } from '@/lib/api';
 import { formatTime } from '@/lib/utils';
 import {
@@ -63,7 +64,6 @@ export function PlayerPage() {
   const [restTotalSec, setRestTotalSec] = useState(0);
   const [paused, setPaused] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const [abdoriaGained, setAbdoriaGained] = useState(0);
@@ -268,7 +268,6 @@ export function PlayerPage() {
   const handleFinish = async () => {
     if (!workout || saving) return;
     setSaving(true);
-    setSaveError(null);
     try {
       const duration = computeWorkoutElapsedSeconds({
         workout,
@@ -310,7 +309,7 @@ export function PlayerPage() {
         setTimeout(() => navigate('/'), 2500);
       }
     } catch (err) {
-      setSaveError(getErrorMessage(err, 'Não foi possível salvar seu treino. Tente novamente.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível salvar seu treino. Tente novamente.'), { variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -394,7 +393,6 @@ export function PlayerPage() {
               )}
             </div>
           )}
-          {saveError && <p className="mt-4 game-login__error">{saveError}</p>}
           <GameButton onClick={handleFinish} size="lg" className="mt-6 w-full" disabled={saving}>
             {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar ao início' : 'Salvar e voltar'}
           </GameButton>

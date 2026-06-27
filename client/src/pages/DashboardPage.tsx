@@ -11,7 +11,6 @@ import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { XpBar } from '@/components/ui/XpBar';
-import { getErrorMessage } from '@/lib/api-errors';
 import { formatTrainingDuration } from '@/lib/utils';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
@@ -26,7 +25,7 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } 
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 export function DashboardPage() {
-  const { stats, loading, error, loadRecommendations } = useApp();
+  const { stats, loading, refresh, loadRecommendations } = useApp();
   const { user } = useAuth();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const [streakCelebrate, setStreakCelebrate] = useState(false);
@@ -68,9 +67,10 @@ export function DashboardPage() {
 
   if (!stats) {
     return (
-      <p className="game-login__error">
-        {getErrorMessage(error, 'Não foi possível carregar sua tela inicial.')}
-      </p>
+      <div className="flex flex-col items-center gap-4 py-16 text-center">
+        <p className="text-sm font-bold text-stone-500">Não foi possível carregar sua tela inicial.</p>
+        <GameButton onClick={() => void refresh()}>Tentar novamente</GameButton>
+      </div>
     );
   }
 
@@ -88,7 +88,6 @@ export function DashboardPage() {
       )}
       <motion.div variants={item}>
         <GamePageHeader eyebrow={`Bem-vindo, ${firstName}`} title="Seu painel de treinos" />
-        {error && <p className="mt-2 game-login__error game-login__error--warn">{error}</p>}
       </motion.div>
 
       <motion.div

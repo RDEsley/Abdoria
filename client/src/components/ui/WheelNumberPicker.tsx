@@ -56,6 +56,23 @@ function WheelPickerCore({ value, min, max, step = 1, suffix = '', onChange }: W
 
   useEffect(() => () => clearTimeout(scrollEndTimer.current), []);
 
+  const selectIndex = useCallback(
+    (index: number) => {
+      const next = options[index];
+      if (next === undefined) return;
+
+      clearTimeout(scrollEndTimer.current);
+      scrollingRef.current = true;
+      scrollToIndex(index, 'smooth');
+      if (next !== value) onChange(next);
+
+      scrollEndTimer.current = setTimeout(() => {
+        scrollingRef.current = false;
+      }, 280);
+    },
+    [onChange, options, scrollToIndex, value],
+  );
+
   const syncFromScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -86,16 +103,18 @@ function WheelPickerCore({ value, min, max, step = 1, suffix = '', onChange }: W
         {Array.from({ length: PAD_COUNT }).map((_, i) => (
           <div key={`pad-top-${i}`} className="game-wheel-picker__item game-wheel-picker__item--spacer" aria-hidden />
         ))}
-        {options.map((n) => (
-          <div
+        {options.map((n, index) => (
+          <button
             key={n}
+            type="button"
             role="option"
             aria-selected={n === value}
             className={`game-wheel-picker__item ${n === value ? 'game-wheel-picker__item--active' : ''}`}
+            onClick={() => selectIndex(index)}
           >
             {n}
             {suffix}
-          </div>
+          </button>
         ))}
         {Array.from({ length: PAD_COUNT }).map((_, i) => (
           <div key={`pad-bot-${i}`} className="game-wheel-picker__item game-wheel-picker__item--spacer" aria-hidden />

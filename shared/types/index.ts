@@ -827,15 +827,19 @@ export interface SavedWorkoutPreset {
 
 export interface UserDadosSalvos {
   treino_personalizado: WorkoutQueueItem[];
+  treino_personalizado_nome: string;
   treinos_salvos: SavedWorkoutPreset[];
   esquemas_reps: Partial<Record<NivelUsuario, StoredRepScheme[]>>;
+  esquema_reps_selecionado: Partial<Record<NivelUsuario, string>>;
   exercicios_desbloqueados: string[];
 }
 
 export const DEFAULT_USER_DADOS_SALVOS: UserDadosSalvos = {
   treino_personalizado: [],
+  treino_personalizado_nome: '',
   treinos_salvos: [],
   esquemas_reps: {},
+  esquema_reps_selecionado: {},
   exercicios_desbloqueados: [],
 };
 
@@ -843,8 +847,10 @@ export function resolveUserDadosSalvos(dados?: Partial<UserDadosSalvos> | null):
   const esquemas = dados?.esquemas_reps;
   return {
     treino_personalizado: dados?.treino_personalizado ?? [],
+    treino_personalizado_nome: dados?.treino_personalizado_nome ?? '',
     treinos_salvos: dados?.treinos_salvos ?? [],
     esquemas_reps: esquemas ? { ...esquemas } : {},
+    esquema_reps_selecionado: dados?.esquema_reps_selecionado ? { ...dados.esquema_reps_selecionado } : {},
     exercicios_desbloqueados: dados?.exercicios_desbloqueados ?? [],
   };
 }
@@ -855,10 +861,14 @@ export function mergeUserDadosSalvos(
 ): UserDadosSalvos {
   return {
     treino_personalizado: patch.treino_personalizado ?? current.treino_personalizado,
+    treino_personalizado_nome: patch.treino_personalizado_nome ?? current.treino_personalizado_nome,
     treinos_salvos: patch.treinos_salvos ?? current.treinos_salvos,
     esquemas_reps: patch.esquemas_reps
       ? { ...current.esquemas_reps, ...patch.esquemas_reps }
       : current.esquemas_reps,
+    esquema_reps_selecionado: patch.esquema_reps_selecionado
+      ? { ...current.esquema_reps_selecionado, ...patch.esquema_reps_selecionado }
+      : current.esquema_reps_selecionado,
     exercicios_desbloqueados: patch.exercicios_desbloqueados ?? current.exercicios_desbloqueados,
   };
 }

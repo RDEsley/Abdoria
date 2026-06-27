@@ -16,6 +16,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { equipCosmetic, getShop, purchaseCosmetic } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { playEquip, playPurchase, previewSfxPack, setSfxPack } from '@/lib/sounds';
@@ -80,8 +81,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const [catalog, setCatalog] = useState<ShopResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [coinsGuideOpen, setCoinsGuideOpen] = useState(false);
 
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
@@ -99,12 +98,11 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await getShop();
       setCatalog(data);
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível abrir a loja.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -127,12 +125,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
       document.body.style.overflow = prevOverflow;
     };
   }, [open, loadCatalog]);
-
-  useEffect(() => {
-    if (!success) return;
-    const timer = window.setTimeout(() => setSuccess(null), 2000);
-    return () => window.clearTimeout(timer);
-  }, [success]);
 
   useEffect(() => {
     if (!open || !scrollRef.current) return;
@@ -213,15 +205,13 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
   const handlePurchase = async (item: ShopCatalogItem) => {
     setBusyId(item.id);
-    setError(null);
-    setSuccess(null);
     try {
       const res = await purchaseCosmetic(item.id);
       await syncUser(res.user);
       playPurchase();
-      setSuccess(`${item.nome} comprado!`);
+      showGameToast(`${item.nome} comprado!`, { variant: 'success' });
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível comprar este item.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), { variant: 'error' });
     } finally {
       setBusyId(null);
     }
@@ -229,8 +219,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
   const handleEquip = async (item: ShopCatalogItem) => {
     setBusyId(item.id);
-    setError(null);
-    setSuccess(null);
     try {
       const res = await equipCosmetic(item.kind, item.id);
       await syncUser(res.user);
@@ -240,9 +228,9 @@ export function CosmeticsModal({ open, onClose }: Props) {
         delete next[item.kind];
         return next;
       });
-      setSuccess(`${item.nome} equipado!`);
+      showGameToast(`${item.nome} equipado!`, { variant: 'success' });
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível equipar este item.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), { variant: 'error' });
     } finally {
       setBusyId(null);
     }
@@ -287,9 +275,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
             hasPreviewOverrides={hasPreviewOverrides}
             onResetPreview={resetPreview}
           />
-
-          {error && <p className="game-login__error mt-3">{error}</p>}
-          {success && <p className="game-modal__success mt-3">{success}</p>}
 
           <div className="game-shop-body">
             <SwipeScroll

@@ -11,6 +11,7 @@ import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
 import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import type { AfkPendingReward, ArmaPreferida } from '@/types';
@@ -26,7 +27,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<AfkPendingReward | null>(null);
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
   const [shopOpen, setShopOpen] = useState(false);
@@ -48,7 +48,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await getAfkMeta();
       setMeta((prev) => {
@@ -62,7 +61,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       });
       reconcileTimerFromServer(data.minutos_acumulados);
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível carregar a patrulha.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar a patrulha.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -139,15 +138,15 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const handleClaim = async () => {
     if (!meta?.has_rewards) return;
     setClaiming(true);
-    setError(null);
     try {
       const res = await claimAfkRewards();
       applyUser(res.user);
       await refreshApp();
       setCelebration(res.claimed);
+      showGameToast('Recompensas da patrulha coletadas!', { variant: 'success' });
       await load();
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível coletar recompensas.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), { variant: 'error' });
     } finally {
       setClaiming(false);
     }
@@ -214,8 +213,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           <AfkRewardGrid pending={meta?.pending} withChest />
 
           <div className="game-afk-modal__footer">
-            {error && <p className="game-afk-modal__error">{error}</p>}
-
             <GameButton
               className={`game-afk-claim-btn${meta?.has_rewards ? ' game-afk-claim-btn--ready' : ''}`}
               size="lg"

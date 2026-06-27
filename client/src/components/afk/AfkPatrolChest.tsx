@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Gift } from 'lucide-react';
 
 interface Props {
@@ -10,7 +9,6 @@ interface Props {
   celebrate?: boolean;
   size?: 'sm' | 'lg';
   itemCount?: number;
-  children?: ReactNode;
 }
 
 export function AfkPatrolChest({
@@ -22,7 +20,6 @@ export function AfkPatrolChest({
   celebrate = false,
   size = 'sm',
   itemCount = 0,
-  children,
 }: Props) {
   const stateClass = open
     ? 'game-afk-chest--open'
@@ -45,7 +42,7 @@ export function AfkPatrolChest({
       ]
         .filter(Boolean)
         .join(' ')}
-      aria-hidden={children ? undefined : true}
+      aria-hidden
     >
       {(opening || open) && (
         <>
@@ -71,7 +68,6 @@ export function AfkPatrolChest({
         <div className="game-afk-chest__band" />
         <div className="game-afk-chest__lock" />
       </div>
-      {children ? <div className="game-afk-chest__loot">{children}</div> : null}
     </div>
   );
 }

@@ -22,10 +22,16 @@ const KIND_CLASS: Record<SlimeAccessoryKind, string> = {
   leaf: 'game-afk-slime__leaf',
   beanie: 'game-afk-slime__beanie',
   flower: 'game-afk-slime__flower',
+  halo: 'game-afk-slime__halo',
+  bow: 'game-afk-slime__bow',
+  patch: 'game-afk-slime__patch',
+  sparkle: 'game-afk-slime__sparkle',
 };
 
 const BACK_LAYER: ReadonlySet<SlimeAccessoryKind> = new Set([
   'aura',
+  'halo',
+  'sparkle',
   'wing-l',
   'wing-r',
   'bone-a',
@@ -39,7 +45,7 @@ export function isBackSlimeAccessory(kind: SlimeAccessoryKind): boolean {
 }
 
 export function isFaceSlimeAccessory(kind: SlimeAccessoryKind): boolean {
-  return kind === 'glasses';
+  return kind === 'glasses' || kind === 'patch';
 }
 
 interface AccessoryProps {
@@ -59,17 +65,19 @@ export function SlimeAccessoryPart({ kind, hidden }: AccessoryProps) {
 interface LootDropProps {
   kind: SlimeAccessoryKind;
   driftX: number;
+  driftY: number;
   rotation: number;
   delayMs: number;
 }
 
-export function SlimeAccessoryLoot({ kind, driftX, rotation, delayMs }: LootDropProps) {
+export function SlimeAccessoryLoot({ kind, driftX, driftY, rotation, delayMs }: LootDropProps) {
   return (
     <span
       className={`game-afk-slime__loot-piece ${KIND_CLASS[kind]}`}
       style={
         {
           '--loot-drift': `${driftX}px`,
+          '--loot-pop': `${driftY}px`,
           '--loot-rot': `${rotation}deg`,
           '--loot-delay': `${delayMs}ms`,
         } as CSSProperties
