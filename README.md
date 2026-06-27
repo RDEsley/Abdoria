@@ -68,7 +68,8 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
   - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
   - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Abdoria**
   - **Rei Slime** (boss) a cada **99 kills**, com loot bônus
-  - **Loja da Patrulha** — compre e equipe arcos (espadas e magias em breve) com Abdoria
+  - **Loja da Patrulha** — compre arcos e equipe **arco ou espada** no combate (espada básica grátis; upgrades em breve)
+  - Herói mascote com **sprites animados** por arma (arco, espada; magia em breve)
   - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da patrulha ou no onboarding
   - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a patrulha)
 - **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Abdoria)
@@ -76,11 +77,11 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
 ### Personalizar e recompensar
 - **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
-- **Loja da Patrulha** — arcos com bônus de dano para o combate AFK (vendedor animado + abas Arcos / Espadas / Magias)
+- **Loja da Patrulha** — arcos compráveis com Abdoria; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
 - **Inventário** — Energy Drinks, cosméticos desbloqueados e itens da patrulha em um painel unificado
 - **Loja diária** — recompensa grátis + ofertas que renovam todo dia
 - **Código presente** — resgate em **Opções**
-- **Toasts de feedback** — confirmação visual ao fixar, bloquear ou equipar itens
+- **Toasts de feedback** — notificações globais ao fixar/bloquear exercícios ou treinos, salvar treino, comprar itens, resgatar códigos e equipar cosméticos
 - Perfil com nível, IMC, simulador de definição e estatísticas
 
 ---
@@ -128,7 +129,9 @@ Offline: ~**8 kills/min** de patrulha. Boss a cada **99** inimigos com loot bôn
 | **Golden Slime** | **1 em 1000** inimigos | **10 Abdoria** garantidos (sem rolagem normal de loot) |
 | **Rei Slime** (boss) | A cada **99** kills | Loot com chance **10%** por kill |
 
-**Loja da Patrulha** (`/api/patrol-shop`): arcos compráveis com Abdoria; equipar atualiza o dano no combate. Espadas e magias estão marcadas como *em breve*.
+**Loja da Patrulha** (`/api/patrol-shop`): arcos compráveis com Abdoria; **espada de treino** grátis com alternância arco/espada no combate. Upgrades de espada e magias estão marcados como *em breve*.
+
+**Combate por arma:** arco dispara mais rápido; espada causa mais dano por golpe. O bônus da arma equipada na loja soma ao dano base.
 
 ---
 
@@ -222,6 +225,7 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 | `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
 | `npx tsx scripts/dev/verify-afk.ts` | Valida patrulha AFK, combate, Golden Slime e drops por kill |
 | `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
+| `node client/scripts/validate-similar-presets.mjs` | Valida pontuação de treinos similares por músculo |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
 | `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |
 
