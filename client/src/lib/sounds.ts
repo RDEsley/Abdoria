@@ -970,6 +970,42 @@ export function playUnlock() {
   playSequence(getPack().unlock, 'square');
 }
 
+/** Som de conquista — pack épico por padrão; usa o som equipado nas configurações. */
+export function playAchievementUnlock(customSoundUrl?: string) {
+  if (!enabled) return;
+
+  const playEpicDefault = () => {
+    playSequence(PACKS.som_epico.levelUp, 'triangle');
+    setTimeout(() => playSequence(PACKS.som_epico.unlock.slice(0, 4), 'square'), 380);
+  };
+
+  const playUserPack = () => {
+    playSequence(getPack().levelUp, 'triangle');
+    setTimeout(() => playSequence(getPack().unlock.slice(-2), 'triangle'), 420);
+  };
+
+  if (customSoundUrl) {
+    void playSafeHtmlAudio(customSoundUrl, playEpicDefault);
+    return;
+  }
+
+  if (sfxPack !== 'som_classico') {
+    playUserPack();
+  } else {
+    playEpicDefault();
+  }
+}
+
+async function playSafeHtmlAudio(url: string, fallback: () => void) {
+  try {
+    const audio = new Audio(url);
+    audio.volume = volume;
+    await audio.play();
+  } catch {
+    fallback();
+  }
+}
+
 export function previewSfxPack(pack: string) {
   const previous = sfxPack;
   if (PACKS[pack]) sfxPack = pack;

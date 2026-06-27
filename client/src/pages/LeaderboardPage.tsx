@@ -6,7 +6,6 @@ import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserA
 import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
-import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { CURRENCY_NAME, weeklyLeaderboardReward, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
@@ -104,13 +103,7 @@ export function LeaderboardPage() {
 
       <LeaderboardResetCountdown />
 
-      <SwipeScroll
-        className="game-swipe-scroll--snap flex gap-2 pb-1"
-        role="tablist"
-        aria-label="Critério de classificação"
-        prevLabel="Ver critérios anteriores"
-        nextLabel="Ver mais critérios"
-      >
+      <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
         {METRICS.map(({ id, label }) => (
           <button
             key={id}
@@ -118,19 +111,19 @@ export function LeaderboardPage() {
             role="tab"
             aria-selected={metric === id}
             onClick={() => setMetric(id)}
-            className={`game-tab game-tab--scroll shrink-0${metric === id ? ' game-tab--active' : ''}`}
+            className={`game-tab${metric === id ? ' game-tab--active' : ''}`}
           >
             {id === 'moedas' ? (
-              <span className="inline-flex items-center gap-1">
+              <span className="game-rank-tabs__label">
                 <Coins size={14} aria-hidden />
                 {label}
               </span>
             ) : (
-              label
+              <span className="game-rank-tabs__label">{label}</span>
             )}
           </button>
         ))}
-      </SwipeScroll>
+      </div>
 
       {loading ? (
         <PageLoader />

@@ -4,7 +4,7 @@ interface Props {
   energyDrinkCount?: number;
 }
 
-/** Banner sutil quando o teto diário de XP já foi atingido — não bloqueia o início do treino. */
+/** Banner sutil quando o máx. diário de XP já foi atingido — não bloqueia o início do treino. */
 export function DailyXpCapBanner({ energyDrinkCount = 0 }: Props) {
   return (
     <div
@@ -14,7 +14,7 @@ export function DailyXpCapBanner({ energyDrinkCount = 0 }: Props) {
     >
       <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
       <div className="min-w-0 text-xs leading-snug">
-        <p className="font-extrabold">Teto diário de XP atingido</p>
+        <p className="font-extrabold">Máx. diário de XP atingido</p>
         <p className="mt-0.5 font-semibold text-amber-800/90">
           Esta sessão não renderá XP de exercícios, mas você pode treinar normalmente.
           {energyDrinkCount > 0 && (

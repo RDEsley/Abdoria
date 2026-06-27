@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
+import { AchievementProvider } from '@/context/AchievementContext';
 import { AppDataProvider } from '@/components/auth/AppDataProvider';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -48,7 +49,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <AchievementProvider>
+          <Routes>
           <Route element={<PublicOnlyRoute />}>
             <Route
               path="login"
@@ -149,6 +151,7 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </AchievementProvider>
       </AuthProvider>
     </BrowserRouter>
   );

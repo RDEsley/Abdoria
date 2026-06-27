@@ -59,17 +59,30 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
 
       <div className="game-patrol-shop-row__content">
         <div className="game-patrol-shop-row__head">
-          <h4>{item.nome}</h4>
+          <h4>
+            Nv. {item.nivel} · {item.nome}
+          </h4>
           <span className="game-patrol-shop-row__rarity">{PATROL_WEAPON_RARITY_LABELS[item.raridade]}</span>
         </div>
         <p className="game-patrol-shop-row__desc">{item.descricao}</p>
         <p className="game-patrol-shop-row__stats">
-          <Swords size={12} aria-hidden /> Dano: <strong>{item.dano_total}</strong>
-          {item.dano_bonus > 0 && <span className="game-patrol-shop-row__bonus">+{item.dano_bonus}</span>}
+          <Swords size={12} aria-hidden />{' '}
+          {item.nivel === 10 ? (
+            <>
+              Dano: <strong>Hit Kill</strong> <span className="game-patrol-shop-row__bonus">(comuns)</span>
+            </>
+          ) : (
+            <>
+              Dano: <strong>{item.dano_total}</strong>
+            </>
+          )}
         </p>
         {(item.kind === 'arco' || item.kind === 'espada') && (
           <p className="game-patrol-shop-row__crit">
             Crítico: <strong>{formatPatrolCritChancePercent(item.chance_critico)}</strong> chance
+            {item.kind === 'arco' && (
+              <span className="game-patrol-shop-row__bonus"> · +4 combo (críticos seguidos)</span>
+            )}
           </p>
         )}
         <p className="game-patrol-shop-row__unlock">

@@ -415,11 +415,11 @@ export function OnboardingPage() {
                 <h2 className="text-2xl font-extrabold">Bem-vindo ao Abdoria!</h2>
                 <p className="mt-2 text-sm font-semibold text-emerald-700">Sua jornada começa agora — passo 8/8</p>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
-                  <li><strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Teto = 100 + 1 por nível. Reseta à meia-noite (SP).</li>
+                  <li><strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Máx. = 100 + 1 por nível. Reseta à meia-noite (SP).</li>
                   <li><strong>{CURRENCY_NAME}:</strong> 1 a cada {ABDORIA_XP_STEP} XP ganhos — use na loja de cosméticos.</li>
                   <li><strong>Treinos:</strong> Monte ou escolha sugestões no Construtor. Ciclos A–E alternam foco muscular.</li>
                   <li><strong>Ranking semanal:</strong> Top 25 ganham {CURRENCY_NAME} todo domingo.</li>
-                  <li><strong>Streak & conquistas:</strong> XP extra fora do teto diário.</li>
+                  <li><strong>Streak & conquistas:</strong> XP extra fora do máx. diário.</li>
                 </ul>
               </>
             )}

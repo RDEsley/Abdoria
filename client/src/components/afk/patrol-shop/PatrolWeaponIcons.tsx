@@ -9,6 +9,11 @@ interface IconProps {
 
 const INK = '#1c1917';
 
+function weaponLevel(variant?: string): number {
+  const match = variant?.match(/_(\d+)$/);
+  return match ? Number(match[1]) : 1;
+}
+
 type BowPalette = {
   limbA: string;
   limbB: string;
@@ -34,102 +39,178 @@ type SwordPalette = {
 };
 
 function bowPalette(variant?: string): BowPalette {
-  switch (variant) {
-    case 'arco_caca':
-      return {
-        limbA: '#92400e',
-        limbB: '#78350f',
-        grip: '#44403c',
-        string: '#e7e5e4',
-        arrow: '#78716c',
-        fletch: '#57534e',
-        tip: '#a8a29e',
-      };
-    case 'arco_elfico':
-      return {
-        limbA: '#34d399',
-        limbB: '#059669',
-        grip: '#fde68a',
-        string: '#ecfdf5',
-        arrow: '#6ee7b7',
-        fletch: '#047857',
-        tip: '#fcd34d',
-        glow: 'rgba(52, 211, 153, 0.45)',
-      };
-    case 'arco_vulcao':
-      return {
-        limbA: '#fb923c',
-        limbB: '#dc2626',
-        grip: '#292524',
-        string: '#fef3c7',
-        arrow: '#fbbf24',
-        fletch: '#b91c1c',
-        tip: '#fde047',
-        glow: 'rgba(251, 146, 60, 0.55)',
-      };
-    default:
-      return {
-        limbA: '#a16207',
-        limbB: '#713f12',
-        grip: '#78716c',
-        string: '#fafaf9',
-        arrow: '#57534e',
-        fletch: '#854d0e',
-        tip: '#d6d3d1',
-      };
+  const level = weaponLevel(variant);
+  if (level >= 10) {
+    return {
+      limbA: '#c084fc',
+      limbB: '#6d28d9',
+      grip: '#1e1b4b',
+      string: '#f5d0fe',
+      arrow: '#e9d5ff',
+      fletch: '#a855f7',
+      tip: '#fde047',
+      glow: 'rgba(168, 85, 247, 0.55)',
+    };
   }
+  if (level >= 8) {
+    return {
+      limbA: '#1e293b',
+      limbB: '#0f172a',
+      grip: '#334155',
+      string: '#94a3b8',
+      arrow: '#64748b',
+      fletch: '#475569',
+      tip: '#cbd5e1',
+      glow: 'rgba(100, 116, 139, 0.35)',
+    };
+  }
+  if (level >= 6) {
+    return {
+      limbA: '#fb923c',
+      limbB: '#dc2626',
+      grip: '#292524',
+      string: '#fef3c7',
+      arrow: '#fbbf24',
+      fletch: '#b91c1c',
+      tip: '#fde047',
+      glow: 'rgba(251, 146, 60, 0.55)',
+    };
+  }
+  if (level >= 4) {
+    return {
+      limbA: '#38bdf8',
+      limbB: '#0284c7',
+      grip: '#0c4a6e',
+      string: '#e0f2fe',
+      arrow: '#7dd3fc',
+      fletch: '#0369a1',
+      tip: '#bae6fd',
+      glow: 'rgba(56, 189, 248, 0.35)',
+    };
+  }
+  if (level >= 3) {
+    return {
+      limbA: '#34d399',
+      limbB: '#059669',
+      grip: '#fde68a',
+      string: '#ecfdf5',
+      arrow: '#6ee7b7',
+      fletch: '#047857',
+      tip: '#fcd34d',
+      glow: 'rgba(52, 211, 153, 0.45)',
+    };
+  }
+  if (level >= 2) {
+    return {
+      limbA: '#92400e',
+      limbB: '#78350f',
+      grip: '#44403c',
+      string: '#e7e5e4',
+      arrow: '#78716c',
+      fletch: '#57534e',
+      tip: '#a8a29e',
+    };
+  }
+  return {
+    limbA: '#a16207',
+    limbB: '#713f12',
+    grip: '#78716c',
+    string: '#fafaf9',
+    arrow: '#57534e',
+    fletch: '#854d0e',
+    tip: '#d6d3d1',
+  };
 }
 
 function swordPalette(variant?: string): SwordPalette {
-  switch (variant) {
-    case 'espada_ferro':
-      return {
-        bladeA: '#94a3b8',
-        bladeB: '#64748b',
-        edge: '#e2e8f0',
-        guard: '#475569',
-        guardB: '#334155',
-        grip: '#44403c',
-        gripWrap: '#292524',
-        pommel: '#57534e',
-      };
-    case 'espada_runica':
-      return {
-        bladeA: '#93c5fd',
-        bladeB: '#3b82f6',
-        edge: '#eff6ff',
-        guard: '#6366f1',
-        guardB: '#4338ca',
-        grip: '#312e81',
-        gripWrap: '#1e1b4b',
-        pommel: '#818cf8',
-        rune: '#c7d2fe',
-        glow: 'rgba(99, 102, 241, 0.4)',
-      };
-    case 'espada_dragao':
-      return {
-        bladeA: '#fde047',
-        bladeB: '#f97316',
-        edge: '#fffbeb',
-        guard: '#b91c1c',
-        guardB: '#7f1d1d',
-        grip: '#451a03',
-        gripWrap: '#78350f',
-        pommel: '#ef4444',
-        glow: 'rgba(249, 115, 22, 0.5)',
-      };
-    default:
-      return {
-        bladeA: '#e2e8f0',
-        bladeB: '#94a3b8',
-        edge: '#f8fafc',
-        guard: '#ca8a04',
-        guardB: '#a16207',
-        grip: '#78350f',
-        gripWrap: '#57534e',
-        pommel: '#d97706',
-      };
+  const level = weaponLevel(variant);
+  if (level >= 10) {
+    return {
+      bladeA: '#f5d0fe',
+      bladeB: '#7e22ce',
+      edge: '#faf5ff',
+      guard: '#4c1d95',
+      guardB: '#312e81',
+      grip: '#1e1b4b',
+      gripWrap: '#6b21a8',
+      pommel: '#c084fc',
+      glow: 'rgba(168, 85, 247, 0.5)',
+    };
   }
+  if (level >= 9) {
+    return {
+      bladeA: '#fde047',
+      bladeB: '#f97316',
+      edge: '#fffbeb',
+      guard: '#b91c1c',
+      guardB: '#7f1d1d',
+      grip: '#451a03',
+      gripWrap: '#78350f',
+      pommel: '#ef4444',
+      glow: 'rgba(249, 115, 22, 0.5)',
+    };
+  }
+  if (level >= 7) {
+    return {
+      bladeA: '#fcd34d',
+      bladeB: '#d97706',
+      edge: '#fffbeb',
+      guard: '#b45309',
+      guardB: '#92400e',
+      grip: '#451a03',
+      gripWrap: '#78350f',
+      pommel: '#f59e0b',
+      glow: 'rgba(245, 158, 11, 0.35)',
+    };
+  }
+  if (level >= 5) {
+    return {
+      bladeA: '#94a3b8',
+      bladeB: '#334155',
+      edge: '#f8fafc',
+      guard: '#1e293b',
+      guardB: '#0f172a',
+      grip: '#292524',
+      gripWrap: '#44403c',
+      pommel: '#64748b',
+    };
+  }
+  if (level >= 3) {
+    return {
+      bladeA: '#93c5fd',
+      bladeB: '#3b82f6',
+      edge: '#eff6ff',
+      guard: '#6366f1',
+      guardB: '#4338ca',
+      grip: '#312e81',
+      gripWrap: '#1e1b4b',
+      pommel: '#818cf8',
+      rune: '#c7d2fe',
+      glow: 'rgba(99, 102, 241, 0.4)',
+    };
+  }
+  if (level >= 2) {
+    return {
+      bladeA: '#94a3b8',
+      bladeB: '#64748b',
+      edge: '#e2e8f0',
+      guard: '#475569',
+      guardB: '#334155',
+      grip: '#44403c',
+      gripWrap: '#292524',
+      pommel: '#57534e',
+    };
+  }
+  return {
+    bladeA: '#e2e8f0',
+    bladeB: '#94a3b8',
+    edge: '#f8fafc',
+    guard: '#ca8a04',
+    guardB: '#a16207',
+    grip: '#78350f',
+    gripWrap: '#57534e',
+    pommel: '#d97706',
+  };
 }
 
 /** Arco recurvo estilizado — variantes por tier de arma. */
@@ -227,13 +308,13 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
       <path d="M16 33 L12 31 L14 36 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
       <path d="M18 35 L14 34 L17 38 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
 
-      {variant === 'arco_vulcao' && (
+      {weaponLevel(variant) >= 6 && (
         <>
           <circle cx="42" cy="16" r="2" fill="#fde047" opacity="0.85" />
           <circle cx="36" cy="22" r="1.2" fill="#fb923c" opacity="0.7" />
         </>
       )}
-      {variant === 'arco_elfico' && (
+      {weaponLevel(variant) >= 3 && weaponLevel(variant) < 6 && (
         <circle cx="32" cy="20" r="1.5" fill="#ecfdf5" opacity="0.9" />
       )}
     </svg>
@@ -326,7 +407,7 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
       <circle cx="24" cy="57.5" r="3.2" fill={p.pommel} stroke={INK} strokeWidth="1.5" />
       <circle cx="23" cy="56.5" r="0.9" fill="#fff" opacity="0.35" />
 
-      {variant === 'espada_dragao' && (
+      {weaponLevel(variant) >= 9 && (
         <path d="M20 43 L24 47 L28 43" fill="none" stroke="#fde047" strokeWidth="0.8" opacity="0.6" />
       )}
     </svg>
@@ -335,25 +416,29 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
 
 /** Ícone compacto para abas e placas — delega ao arco/espada padrão da categoria. */
 export function PatrolBowTabIcon({ className }: { className?: string }) {
-  return <PatrolBowIcon className={className} variant="arco_elfico" />;
+  return <PatrolBowIcon className={className} variant="arco_03" />;
 }
 
 export function PatrolSwordTabIcon({ className }: { className?: string }) {
-  return <PatrolSwordIcon className={className} variant="espada_runica" />;
+  return <PatrolSwordIcon className={className} variant="espada_03" />;
 }
 
 export function patrolWeaponIconStyle(kind: 'arco' | 'espada', variant?: string): CSSProperties | undefined {
-  if (kind === 'arco' && variant === 'arco_vulcao') {
+  const level = weaponLevel(variant);
+  if (kind === 'arco' && level >= 6) {
     return { filter: 'drop-shadow(0 0 4px rgba(251, 146, 60, 0.35))' };
   }
-  if (kind === 'arco' && variant === 'arco_elfico') {
+  if (kind === 'arco' && level >= 3) {
     return { filter: 'drop-shadow(0 0 4px rgba(52, 211, 153, 0.3))' };
   }
-  if (kind === 'espada' && variant === 'espada_dragao') {
+  if (kind === 'espada' && level >= 9) {
     return { filter: 'drop-shadow(0 0 5px rgba(249, 115, 22, 0.4))' };
   }
-  if (kind === 'espada' && variant === 'espada_runica') {
+  if (kind === 'espada' && level >= 3) {
     return { filter: 'drop-shadow(0 0 4px rgba(99, 102, 241, 0.35))' };
+  }
+  if (level >= 10) {
+    return { filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.45))' };
   }
   return undefined;
 }

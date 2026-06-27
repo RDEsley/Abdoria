@@ -54,6 +54,32 @@ function GameBush({ className }: { className: string }) {
   );
 }
 
+function LoginSlime({ className }: { className: string }) {
+  return (
+    <div className={`game-login-slime ${className}`} aria-hidden>
+      <span className="game-login-slime__shadow" />
+      <div className="game-login-slime__body">
+        <span className="game-login-slime__shine" />
+        <div className="game-login-slime__face">
+          <span className="game-login-slime__eye game-login-slime__eye--l">
+            <span className="game-login-slime__iris">
+              <span className="game-login-slime__pupil" />
+            </span>
+          </span>
+          <span className="game-login-slime__eye game-login-slime__eye--r">
+            <span className="game-login-slime__iris">
+              <span className="game-login-slime__pupil" />
+            </span>
+          </span>
+          <span className="game-login-slime__mouth" />
+          <span className="game-login-slime__cheek game-login-slime__cheek--l" />
+          <span className="game-login-slime__cheek game-login-slime__cheek--r" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface GameAuthPanelProps {
   title: string;
   children: ReactNode;
@@ -113,6 +139,11 @@ export function GameAuthScene({ children }: { children: ReactNode }) {
         </div>
         <div className="game-login__dirt" />
         <div className="game-login__grass" />
+        <div className="game-login__slimes">
+          <LoginSlime className="game-login-slime--1" />
+          <LoginSlime className="game-login-slime--2" />
+          <LoginSlime className="game-login-slime--3" />
+        </div>
       </div>
     </div>
   );

@@ -24,9 +24,12 @@ export type SlimeAccessoryKind =
   | 'wing-l'
   | 'wing-r'
   | 'horn'
+  | 'horn-l'
+  | 'horn-r'
   | 'scar'
   | 'bone-a'
   | 'bone-b'
+  | 'skull'
   | 'helm'
   | 'helm-knight'
   | 'cap'
@@ -83,8 +86,20 @@ export function resolveSlimeAppearance(
   if (isBoss && enemyId === 'boss_colossus') {
     return { eyes: 'wide', mouth: 'grin', extra: 'none' };
   }
+  if (isBoss && enemyId === 'boss_lich') {
+    return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+  }
+  if (isBoss && enemyId === 'boss_hydra') {
+    return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+  }
   if (enemyId === 'golden_slime') {
     return { eyes: 'star', mouth: 'o', extra: 'aura' };
+  }
+  if (enemyId === 'skeleton') {
+    return { eyes: 'round', mouth: 'flat', extra: 'none' };
+  }
+  if (enemyId === 'armored_skeleton') {
+    return { eyes: 'round', mouth: 'flat', extra: 'none' };
   }
 
   let eyes = EYE_STYLES[s % EYE_STYLES.length]!;
@@ -106,6 +121,33 @@ export function resolveSlimeAppearance(
   return { eyes, mouth, extra };
 }
 
+export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance {
+  switch (enemyId) {
+    case 'bat':
+      return { eyes: 'round', mouth: 'smile', extra: 'none' };
+    case 'zombie':
+      return { eyes: 'sleepy', mouth: 'vampire', extra: 'none' };
+    case 'skeleton':
+      return { eyes: 'round', mouth: 'flat', extra: 'none' };
+    case 'armored_skeleton':
+      return { eyes: 'round', mouth: 'flat', extra: 'none' };
+    case 'demon_bat':
+      return { eyes: 'anime', mouth: 'grin', extra: 'none' };
+    case 'slime_knight':
+      return { eyes: 'round', mouth: 'smile', extra: 'none' };
+    case 'golden_slime':
+      return { eyes: 'star', mouth: 'o', extra: 'aura' };
+    case 'boss_colossus':
+      return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+    case 'boss_lich':
+      return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+    case 'boss_hydra':
+      return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+    default:
+      return { eyes: 'round', mouth: 'smile', extra: 'none' };
+  }
+}
+
 export function collectSlimeAccessories(
   enemyId: AfkEnemyId,
   isBoss: boolean,
@@ -117,13 +159,12 @@ export function collectSlimeAccessories(
   if (isBoss) {
     switch (enemyId) {
       case 'boss_colossus':
-        items.push('crown');
+        items.push('crown', 'horn-l', 'horn-r');
         break;
       case 'boss_lich':
         items.push('hood', 'staff');
         break;
       case 'boss_hydra':
-        items.push('mini-l', 'mini-c', 'mini-r');
         break;
       default:
         items.push('crown');
@@ -146,9 +187,10 @@ export function collectSlimeAccessories(
       items.push('scar');
       break;
     case 'skeleton':
-    case 'armored_skeleton':
       items.push('bone-a', 'bone-b');
-      if (enemyId === 'armored_skeleton') items.push('helm');
+      break;
+    case 'armored_skeleton':
+      items.push('bone-a', 'bone-b', 'helm');
       break;
     case 'slime_knight':
       items.push('helm-knight');

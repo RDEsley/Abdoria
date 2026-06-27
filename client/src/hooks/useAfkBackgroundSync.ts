@@ -4,6 +4,7 @@ import { pingAfk, type AfkPingResponse } from '@/lib/api';
 const AFK_PING_INTERVAL_MS = 60_000;
 
 function dispatchAfkSync(detail: AfkPingResponse) {
+  // `detail.bestiario_novos` alimenta o AchievementProvider (notificações de bestiário).
   window.dispatchEvent(new CustomEvent('abdoria:afk-sync', { detail }));
 }
 

@@ -1113,6 +1113,233 @@ input[type='range'] {
   );
 }
 
+/* Slimes fofinhos na grama do login */
+.game-login__slimes {
+  position: absolute;
+  right: 0;
+  bottom: 28px;
+  left: 0;
+  z-index: 3;
+  height: 52px;
+  pointer-events: none;
+}
+
+.game-login-slime {
+  position: absolute;
+  bottom: 4px;
+  width: 2.35rem;
+  height: 2.15rem;
+  animation: game-login-slime-patrol var(--slime-duration, 8s) ease-in-out infinite;
+  animation-delay: var(--slime-delay, 0s);
+  will-change: transform;
+}
+
+.game-login-slime--1 {
+  left: 10%;
+  --slime-travel: min(16vw, 130px);
+  --slime-duration: 7.2s;
+  --slime-delay: 0s;
+}
+
+.game-login-slime--2 {
+  left: 42%;
+  width: 1.9rem;
+  height: 1.72rem;
+  --slime-travel: min(13vw, 105px);
+  --slime-duration: 9.8s;
+  --slime-delay: -2.4s;
+  animation-name: game-login-slime-patrol-rev;
+}
+
+.game-login-slime--3 {
+  left: 68%;
+  width: 2.55rem;
+  height: 2.32rem;
+  --slime-travel: min(15vw, 120px);
+  --slime-duration: 8.4s;
+  --slime-delay: -4.6s;
+}
+
+.game-login-slime__shadow {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 70%;
+  height: 0.28rem;
+  margin-left: -35%;
+  background: rgba(28, 25, 23, 0.18);
+  border-radius: 999px;
+  animation: game-login-slime-shadow var(--slime-duration, 8s) ease-in-out infinite;
+  animation-delay: var(--slime-delay, 0s);
+}
+
+.game-login-slime__body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 34% 26%, #dcfce7 0%, #86efac 32%, #4ade80 58%, #22c55e 82%, #15803d 100%);
+  border: 2.5px solid #1c1917;
+  border-radius: 52% 52% 44% 44% / 58% 58% 38% 38%;
+  box-shadow:
+    inset 0 -5px 0 rgba(21, 128, 61, 0.22),
+    inset 0 8px 12px rgba(255, 255, 255, 0.35),
+    2px 3px 0 rgba(28, 25, 23, 0.18);
+  animation: game-login-slime-hop 0.55s ease-in-out infinite;
+}
+
+.game-login-slime__shine {
+  position: absolute;
+  top: 14%;
+  left: 18%;
+  width: 28%;
+  height: 22%;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  transform: rotate(-18deg);
+}
+
+.game-login-slime__face {
+  position: absolute;
+  top: 32%;
+  left: 50%;
+  width: 62%;
+  height: 46%;
+  transform: translateX(-50%);
+}
+
+.game-login-slime__eye {
+  position: absolute;
+  top: 2%;
+  width: 0.46rem;
+  height: 0.5rem;
+  background: #fff;
+  border: 2px solid #1c1917;
+  border-radius: 50% 50% 46% 46%;
+  overflow: hidden;
+}
+
+.game-login-slime__eye--l {
+  left: 10%;
+  transform: rotate(-4deg);
+}
+
+.game-login-slime__eye--r {
+  right: 10%;
+  transform: rotate(4deg);
+}
+
+.game-login-slime__iris {
+  position: absolute;
+  bottom: 0.08rem;
+  left: 50%;
+  width: 0.28rem;
+  height: 0.3rem;
+  margin-left: -0.14rem;
+  background: radial-gradient(circle at 42% 34%, #86efac 0%, #22c55e 50%, #15803d 100%);
+  border-radius: 999px;
+}
+
+.game-login-slime__iris::before {
+  content: '';
+  position: absolute;
+  top: 0.05rem;
+  left: 0.05rem;
+  width: 0.1rem;
+  height: 0.1rem;
+  background: #fff;
+  border-radius: 999px;
+  opacity: 0.9;
+}
+
+.game-login-slime__pupil {
+  position: absolute;
+  bottom: 0.04rem;
+  left: 50%;
+  width: 0.12rem;
+  height: 0.13rem;
+  margin-left: -0.06rem;
+  background: #1c1917;
+  border-radius: 999px;
+}
+
+.game-login-slime__mouth {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0.48rem;
+  height: 0.24rem;
+  margin-left: -0.24rem;
+  border: none;
+  border-bottom: 2.5px solid #1c1917;
+  border-radius: 0 0 999px 999px;
+}
+
+.game-login-slime__cheek {
+  position: absolute;
+  bottom: 22%;
+  width: 0.24rem;
+  height: 0.13rem;
+  background: rgba(251, 113, 133, 0.42);
+  border-radius: 999px;
+}
+
+.game-login-slime__cheek--l {
+  left: 0;
+}
+
+.game-login-slime__cheek--r {
+  right: 0;
+}
+
+.game-login-slime--2 .game-login-slime__body {
+  background: radial-gradient(circle at 36% 28%, #ecfccb 0%, #a3e635 38%, #84cc16 68%, #65a30d 100%);
+}
+
+.game-login-slime--2 .game-login-slime__iris {
+  background: radial-gradient(circle at 42% 34%, #d9f99d 0%, #84cc16 50%, #4d7c0f 100%);
+}
+
+.game-login-slime--3 .game-login-slime__eye {
+  height: 0.54rem;
+}
+
+.game-login-slime--3 .game-login-slime__mouth {
+  width: 0.38rem;
+  height: 0.32rem;
+  margin-left: -0.19rem;
+  background: rgba(28, 25, 23, 0.08);
+  border: 2px solid #1c1917;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  border-bottom-width: 2.5px;
+}
+
+@keyframes game-login-slime-patrol {
+  0% { transform: translateX(0) scaleX(1); }
+  42% { transform: translateX(var(--slime-travel)) scaleX(1); }
+  43% { transform: translateX(var(--slime-travel)) scaleX(-1); }
+  84% { transform: translateX(0) scaleX(-1); }
+  85%, 100% { transform: translateX(0) scaleX(1); }
+}
+
+@keyframes game-login-slime-patrol-rev {
+  0% { transform: translateX(0) scaleX(-1); }
+  42% { transform: translateX(calc(var(--slime-travel) * -1)) scaleX(-1); }
+  43% { transform: translateX(calc(var(--slime-travel) * -1)) scaleX(1); }
+  84% { transform: translateX(0) scaleX(1); }
+  85%, 100% { transform: translateX(0) scaleX(-1); }
+}
+
+@keyframes game-login-slime-hop {
+  0%, 100% { transform: translateY(0) scaleX(1) scaleY(1); }
+  50% { transform: translateY(-4px) scaleX(1.05) scaleY(0.94); }
+}
+
+@keyframes game-login-slime-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.22; }
+  50% { transform: scaleX(0.82); opacity: 0.12; }
+}
+
 /* ─── App principal — tema jogo RPG 2D ─── */
 .game-app {
   --game-paper: #fff9e8;
@@ -2625,6 +2852,9 @@ input[type='range'] {
 }
 
 .game-profile-form__actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   margin-top: 0.25rem;
   padding-top: 1rem;
   border-top: 2px dashed rgba(28, 25, 23, 0.14);
@@ -2636,7 +2866,9 @@ input[type='range'] {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  align-self: stretch;
   width: 100%;
+  max-width: none;
   letter-spacing: 0.02em;
 }
 
@@ -2649,7 +2881,7 @@ input[type='range'] {
   letter-spacing: 0.02em;
 }
 
-.game-btn:not(.game-login .game-btn) {
+.game-btn:not(.game-login .game-btn):not(.game-profile-save-btn) {
   width: auto;
 }
 
@@ -3317,6 +3549,33 @@ input[type='range'] {
 }
 
 /* Arena / ranking */
+.game-rank-tabs {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.game-rank-tabs .game-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.35rem;
+  text-align: center;
+}
+
+.game-rank-tabs__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
 .game-podium {
   display: flex;
   align-items: flex-end;
@@ -7185,6 +7444,13 @@ input[type='range'] {
   font-size: 0.55rem;
   font-weight: 800;
   color: #78716c;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.game-builder-cycle-chip:hover {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: #f0fdf4;
 }
 
 .game-builder-cycle-chip--done {
@@ -7198,6 +7464,13 @@ input[type='range'] {
   background: linear-gradient(135deg, #d1fae5, #a7f3d0);
   color: #065f46;
   box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.game-builder-cycle-chip--active {
+  border-color: #059669;
+  background: linear-gradient(135deg, #6ee7b7, #34d399);
+  color: #064e3b;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
 }
 
 .game-builder-next-banner {
@@ -7364,6 +7637,151 @@ input[type='range'] {
   font-size: 0.62rem;
   font-weight: 700;
   color: #b45309;
+}
+
+/* Toggle — coleta automática da loja diária */
+.game-daily-autoclaim {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  border: 2px solid rgba(28, 25, 23, 0.14);
+  border-radius: 0.8rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(250, 250, 249, 0.78));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.game-daily-autoclaim:hover:not(:disabled) {
+  border-color: #a8a29e;
+  transform: translateY(-1px);
+}
+
+.game-daily-autoclaim:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.game-daily-autoclaim--on {
+  border-color: #34d399;
+  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 55%, #a7f3d0 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 2px rgba(52, 211, 153, 0.18);
+}
+
+.game-daily-autoclaim--busy {
+  opacity: 0.72;
+  cursor: wait;
+  transform: none;
+}
+
+.game-daily-autoclaim__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 0.55rem;
+  border: 2px solid #1c1917;
+  background: linear-gradient(180deg, #fde68a 0%, #fbbf24 55%, #f59e0b 100%);
+  color: #78350f;
+  flex-shrink: 0;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.22);
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__icon {
+  background: linear-gradient(180deg, #6ee7b7 0%, #34d399 55%, #10b981 100%);
+  color: #064e3b;
+  box-shadow:
+    2px 2px 0 rgba(28, 25, 23, 0.18),
+    0 0 10px rgba(52, 211, 153, 0.45);
+}
+
+.game-daily-autoclaim__spark {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.22rem;
+  color: #047857;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8));
+  animation: game-daily-autoclaim-spark 1.8s ease-in-out infinite;
+}
+
+.game-daily-autoclaim__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-daily-autoclaim__title {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #1c1917;
+  line-height: 1.25;
+}
+
+.game-daily-autoclaim__hint {
+  display: block;
+  margin-top: 0.14rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #78716c;
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__title {
+  color: #065f46;
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__hint {
+  color: #047857;
+}
+
+.game-daily-autoclaim__track {
+  position: relative;
+  width: 2.65rem;
+  height: 1.48rem;
+  border-radius: 999px;
+  border: 2px solid #1c1917;
+  background: #d6d3d1;
+  flex-shrink: 0;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.14);
+  transition: background 0.22s ease;
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__track {
+  background: linear-gradient(180deg, #34d399, #10b981);
+}
+
+.game-daily-autoclaim__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0.1rem;
+  width: 0.98rem;
+  height: 0.98rem;
+  margin-top: -0.49rem;
+  border-radius: 999px;
+  border: 2px solid #1c1917;
+  background: linear-gradient(180deg, #fff, #f5f5f4);
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.16);
+  transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__thumb {
+  transform: translateX(1.08rem);
+}
+
+@keyframes game-daily-autoclaim-spark {
+  0%, 100% { opacity: 0.65; transform: scale(1) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(12deg); }
 }
 
 /* Evolução mensal */
@@ -7870,6 +8288,35 @@ header .game-nav-item {
   to { background-position: 200% center; }
 }
 
+.cosmetic-title--golden {
+  background: linear-gradient(90deg, #fff7c2 0%, #ffd700 20%, #fff8dc 40%, #b8860b 60%, #ffd700 80%, #fff7c2 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cosmetic-title-secreto-shimmer 2s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.45));
+}
+
+.game-doria-bag-icon {
+  display: inline-flex;
+  color: #ca8a04;
+}
+
+.game-doria-bag-icon__body,
+.game-doria-bag-icon__tie {
+  stroke: currentColor;
+}
+
+.game-doria-bag-icon__coin {
+  fill: #fbbf24;
+}
+
+.game-exp-instant-icon {
+  display: inline-flex;
+  color: #2563eb;
+}
+
 .game-daily-reward-card__icon--item {
   background: linear-gradient(145deg, #ecfeff, #cffafe);
   color: #0891b2;
@@ -7912,8 +8359,8 @@ header .game-nav-item {
 }
 
 .game-bestiary-modal {
-  width: min(100%, 28rem);
-  max-height: min(88vh, 40rem);
+  width: min(100%, 22rem);
+  max-height: min(88vh, 42rem);
   display: flex;
   flex-direction: column;
 }
@@ -7928,11 +8375,21 @@ header .game-nav-item {
 }
 
 .game-bestiary-section + .game-bestiary-section {
-  margin-top: 1rem;
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 2px dashed rgba(28, 25, 23, 0.1);
+}
+
+.game-bestiary-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
 }
 
 .game-bestiary-section__title {
-  margin: 0 0 0.5rem;
+  margin: 0;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -7940,80 +8397,353 @@ header .game-nav-item {
   color: #57534e;
 }
 
-.game-bestiary-grid {
+.game-bestiary-section__counter {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #a8a29e;
+}
+
+.game-bestiary-carousel {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: 2rem 1fr 2rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.game-bestiary-carousel__nav {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(28, 25, 23, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #44403c;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.game-bestiary-carousel__nav:hover {
+  background: #fff;
+  transform: scale(1.04);
 }
 
 .game-bestiary-card {
-  display: grid;
-  grid-template-columns: 3.2rem 1fr;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 0.55rem;
+  gap: 0.65rem;
+  padding: 0.75rem 0.55rem 0.65rem;
   border: 2px solid rgba(28, 25, 23, 0.12);
-  border-radius: 0.85rem;
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: 0.95rem;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92), rgba(250, 250, 249, 0.78));
+  min-height: 13.5rem;
 }
 
 .game-bestiary-card--locked {
-  opacity: 0.88;
+  opacity: 0.92;
+}
+
+.game-bestiary-card__portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 7.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, rgba(231, 229, 228, 0.55), rgba(250, 250, 249, 0.35));
+  overflow: visible;
+}
+
+.game-bestiary-card__portrait:has(.game-afk-portrait--boss_hydra),
+.game-bestiary-card__portrait:has(.game-afk-portrait--boss_colossus),
+.game-bestiary-card__portrait:has(.game-afk-portrait--boss_lich) {
+  min-height: 8.25rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0.45rem;
+}
+
+.game-bestiary-card__meta {
+  width: 100%;
+  text-align: center;
+}
+
+.game-bestiary-card__tier {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.game-bestiary-card__tier--common {
+  background: #e7e5e4;
+  color: #57534e;
+}
+
+.game-bestiary-card__tier--elite {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.game-bestiary-card__tier--boss {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .game-bestiary-card__meta h4 {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.88rem;
   font-weight: 800;
   color: #1c1917;
 }
 
 .game-bestiary-card__meta p {
-  margin: 0.2rem 0 0;
-  font-size: 0.62rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.64rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.4;
   color: #78716c;
 }
 
-.game-bestiary-thumb {
-  position: relative;
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 0.75rem;
-  overflow: hidden;
+.game-bestiary-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
 }
 
-.game-bestiary-thumb--locked {
+.game-bestiary-dots__dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  padding: 0;
+  border: 2px solid #d6d3d1;
+  border-radius: 999px;
+  background: #fafaf9;
+  cursor: pointer;
+}
+
+.game-bestiary-dots__dot--active {
+  background: #78716c;
+  border-color: #57534e;
+  transform: scale(1.12);
+}
+
+.game-bestiary-dots__dot--locked {
+  background: #e7e5e4;
+}
+
+.game-afk-portrait {
+  position: relative;
+  width: 5.2rem;
+  height: 5.4rem;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.game-afk-portrait.game-afk-enemy {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.game-afk-portrait.game-afk-enemy--boss {
+  width: 5.6rem;
+  height: 6rem;
+  right: auto;
+  bottom: auto;
+}
+
+.game-afk-portrait--boss_hydra {
+  width: 6rem;
+  height: 6.75rem;
+}
+
+.game-afk-portrait .game-afk-enemy__sprite {
+  position: relative;
+  left: auto;
+  right: auto;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.game-afk-portrait__sprite {
+  animation: none !important;
+  transform: none !important;
+}
+
+.game-afk-portrait .game-afk-enemy__boss-aura {
+  inset: -0.35rem;
+  transform-origin: center center;
+}
+
+.game-afk-portrait--boss_lich .game-afk-slime__staff {
+  right: -0.12rem;
+}
+
+.game-afk-portrait--boss_lich .game-afk-slime__lich-orbs::before {
+  left: 4%;
+}
+
+.game-afk-portrait--boss_lich .game-afk-slime__lich-orbs::after {
+  right: 4%;
+}
+
+.game-afk-portrait--boss_colossus .game-afk-slime__colossus-spikes::before {
+  left: 8%;
+}
+
+.game-afk-portrait--boss_colossus .game-afk-slime__colossus-spikes::after {
+  right: 8%;
+}
+
+.game-afk-portrait--boss_hydra .game-afk-slime__hydra-neck--l {
+  left: 20%;
+}
+
+.game-afk-portrait--boss_hydra .game-afk-slime__hydra-neck--r {
+  right: 20%;
+}
+
+.game-afk-portrait--locked {
   display: grid;
   place-items: center;
+  width: 5.2rem;
+  height: 5.4rem;
+  border-radius: 0.75rem;
   background: linear-gradient(160deg, #d6d3d1, #a8a29e);
 }
 
-.game-bestiary-thumb__silhouette {
-  width: 2rem;
-  height: 1.6rem;
+.game-afk-portrait__silhouette {
+  width: 3.2rem;
+  height: 2.6rem;
   border-radius: 45% 45% 35% 35%;
   background: #57534e;
   opacity: 0.55;
 }
 
-.game-bestiary-thumb__lock {
+.game-afk-portrait__lock {
   position: absolute;
-  bottom: 0.2rem;
-  right: 0.2rem;
+  bottom: 0.35rem;
+  right: 0.35rem;
   color: #fafaf9;
 }
 
-.game-bestiary-thumb--unlocked {
-  transform: scale(0.42);
+/* —— Achievement toast stack (Steam-style) —— */
+.achievement-toast-stack {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 0.65rem;
+  width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.achievement-toast {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  overflow: hidden;
+  color: #f8fafc;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 27, 75, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.85rem;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(99, 102, 241, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.achievement-toast__glow {
+  position: absolute;
+  inset: -40% auto auto -20%;
+  width: 60%;
+  height: 140%;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.achievement-toast--enemy {
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(239, 68, 68, 0.25);
+}
+
+.achievement-toast--enemy .achievement-toast__glow {
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.32), transparent 70%);
+}
+
+.achievement-toast__icon-wrap {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.08);
+}
+
+.achievement-toast__icon-wrap .game-afk-portrait {
+  transform: scale(0.58);
   transform-origin: center;
 }
 
-.game-bestiary-thumb__blob {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 45% 45% 35% 35%;
-  background: currentColor;
+.achievement-toast__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.achievement-toast__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #c7d2fe;
+}
+
+.achievement-toast--enemy .achievement-toast__title {
+  color: #fecaca;
+}
+
+.achievement-toast__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #f8fafc;
+}
+
+@media (max-width: 480px) {
+  .achievement-toast-stack {
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    align-items: stretch;
+  }
 }

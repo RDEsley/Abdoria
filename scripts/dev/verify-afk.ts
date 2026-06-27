@@ -139,7 +139,7 @@ ensureCombat(uGolden);
 uGolden.afk!.combat!.enemy_id = 'golden_slime';
 applyKill(uGolden);
 assert.equal(uGolden.afk!.pending.drop_count, 1, 'golden slime counts as one drop event');
-assert.equal(uGolden.afk!.pending.abdoria, 10, 'golden slime grants bonus abdoria');
+assert.equal(uGolden.afk!.pending.abdoria, 99, 'golden slime grants 99 Dorias');
 
 const uGoldenDefeat = mockUser(0);
 ensureCombat(uGoldenDefeat);

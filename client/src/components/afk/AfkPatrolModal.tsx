@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { Store, X } from 'lucide-react';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
-import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
+import { buildRewardPresentationFromAfk } from '@/lib/reward-presentation';
+import { useRewardPresentation } from '@/context/RewardPresentationContext';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
 import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
@@ -16,8 +17,8 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import type { AfkPendingReward, ArmaPreferida } from '@/types';
-import { ROUTE_DRINK_LABEL } from '@/types';
+import type { ArmaPreferida } from '@/types';
+import { resolvePatrolArmas, ROUTE_DRINK_LABEL } from '@/types';
 
 interface Props {
   open: boolean;
@@ -31,7 +32,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [usingRouteDrink, setUsingRouteDrink] = useState(false);
-  const [celebration, setCelebration] = useState<AfkPendingReward | null>(null);
+  const { presentRewards } = useRewardPresentation();
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
   const [shopOpen, setShopOpen] = useState(false);
   const loadedAtRef = useRef(0);
@@ -48,6 +49,8 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   const weapon: ArmaPreferida =
     meta?.arma_preferida ?? user?.preferencias?.arma_preferida ?? 'arco';
+  const patrolArmas = resolvePatrolArmas(user?.preferencias?.patrol_armas);
+  const weaponId = weapon === 'arco' ? patrolArmas.arco_equipado : patrolArmas.espada_equipada;
   const userId = String(user?.id ?? 'guest');
   const routeDrinkCount = meta?.route_drink_count ?? stats?.route_drink_count ?? 0;
   const canUseRouteDrink = routeDrinkCount > 0 && !meta?.has_rewards;
@@ -139,7 +142,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       const res = await claimAfkRewards();
       applyUser(res.user);
       await refreshApp();
-      setCelebration(res.claimed);
+      presentRewards(buildRewardPresentationFromAfk(res.claimed));
       showGameToast('Recompensas da exploração coletadas!', { variant: 'success' });
       const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
       if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
@@ -222,6 +225,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           <AfkCombatScene
             userId={userId}
             weapon={weapon}
+            weaponId={weaponId}
             combat={meta?.combat ?? null}
             hasLoot={meta?.has_rewards}
             capped={capped}
@@ -267,8 +271,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           </div>
         </motion.div>
       </div>
-
-      {celebration && <AfkRewardCelebration claimed={celebration} onClose={() => setCelebration(null)} />}
 
       <PatrolShopModal
         open={shopOpen}

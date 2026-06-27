@@ -78,7 +78,7 @@ export function DashboardPage() {
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
   const xpDisponivelTrocas = spendableXpForShop(stats.nivel_xp);
   const sugerido = stats.treino_sugerido;
-  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · teto ${stats.xp_diario_limite} XP/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios enchem o teto`;
+  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · máx. ${stats.xp_diario_limite} XP/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
   return (
@@ -196,7 +196,7 @@ export function DashboardPage() {
                 value={stats.xp_bonus_restante}
                 max={stats.xp_bonus_total}
                 label="XP bônus (Energy Drink)"
-                hint="Não conta no teto diário de exercícios"
+                hint="Não conta no máx. diário de exercícios"
                 variant="bonus"
                 glow={stats.xp_bonus_restante > 0 || energyDrinkBurst}
               />

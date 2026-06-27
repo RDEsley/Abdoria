@@ -213,7 +213,7 @@ export function ProfilePage() {
               type="submit"
               size="lg"
               disabled={saving}
-              className="game-profile-save-btn w-full"
+              className="game-profile-save-btn w-full flex items-center justify-center gap-2"
             >
               <Save size={18} strokeWidth={2.5} aria-hidden />
               {saving ? 'Salvando...' : 'Salvar perfil'}

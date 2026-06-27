@@ -7,7 +7,8 @@ import {
   hashCombatSeed,
   resolveSlimeAppearance,
 } from '@/types';
-import { SlimeAccessoryLayer, SlimeAccessoryLoot, SlimeAccessoryPart } from '@/components/afk/SlimeAccessories';
+import { SlimeAccessoryLoot } from '@/components/afk/SlimeAccessories';
+import { SlimeBody } from '@/components/afk/SlimeBody';
 
 interface Props {
   combat: AfkCombatSnapshot;
@@ -94,57 +95,5 @@ export function AfkEnemySprite({
         </div>
       )}
     </div>
-  );
-}
-
-function SlimeBody({
-  enemyId,
-  isBoss,
-  appearance,
-  accessories,
-  looting,
-}: {
-  enemyId: string;
-  isBoss: boolean;
-  appearance: ReturnType<typeof resolveSlimeAppearance>;
-  accessories: ReturnType<typeof collectSlimeAccessories>;
-  looting: boolean;
-}) {
-  const mouthClass = `game-afk-slime__mouth game-afk-slime__mouth--${appearance.mouth}${
-    isBoss ? ' game-afk-slime__mouth--boss' : ''
-  }`;
-  const showCheeks =
-    (appearance.eyes === 'round' || appearance.eyes === 'anime') &&
-    (appearance.mouth === 'smile' || appearance.mouth === 'grin');
-  const hasGlasses = accessories.includes('glasses');
-  const hasPatch = accessories.includes('patch');
-
-  return (
-    <>
-      <div className="game-afk-slime__blob" />
-      <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="back" />
-      <div
-        className={`game-afk-slime__face game-afk-slime__face--eyes-${appearance.eyes} ${
-          isBoss ? 'game-afk-slime__face--boss' : ''
-        } ${enemyId === 'boss_lich' ? 'game-afk-slime__face--lich' : ''}${hasPatch ? ' game-afk-slime__face--patched' : ''}`}
-      >
-        <span className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}>
-          <span className="game-afk-slime__iris" />
-        </span>
-        <span className="game-afk-slime__eye game-afk-slime__eye--r">
-          <span className="game-afk-slime__iris" />
-        </span>
-        <span className={mouthClass} />
-        {showCheeks && (
-          <>
-            <span className="game-afk-slime__cheek game-afk-slime__cheek--l" aria-hidden />
-            <span className="game-afk-slime__cheek game-afk-slime__cheek--r" aria-hidden />
-          </>
-        )}
-        {hasGlasses && !looting && <SlimeAccessoryPart kind="glasses" />}
-        {hasPatch && !looting && <SlimeAccessoryPart kind="patch" />}
-      </div>
-      <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="front" />
-    </>
   );
 }

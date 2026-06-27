@@ -1,6 +1,7 @@
 import type {
-  AfkPendingReward,
   AfkCombatSnapshot,
+  AfkEnemyId,
+  AfkPendingReward,
   ArmaPreferida,
   AuthResponse,
   CompleteWorkoutPayload,
@@ -11,6 +12,7 @@ import type {
   EquipCosmeticResponse,
   Inventario,
   LojaDiaria,
+  LojaDiariaSlot,
   RedeemCodeResponse,
   ShopResponse,
   ExerciseFilters,
@@ -144,14 +146,42 @@ export function getRecommendWorkout(options?: {
   shuffle?: boolean;
   extra?: number;
   excludePresetId?: string | null;
+  ciclo?: import('@/types').TreinoBase;
 }): Promise<import('@/types').TreinoSugerido> {
   const params = new URLSearchParams();
   if (options?.allowRepeats) params.set('allowRepeats', 'true');
   if (options?.shuffle === false) params.set('shuffle', 'false');
   if (options?.extra) params.set('extra', String(options.extra));
   if (options?.excludePresetId) params.set('excludePresetId', options.excludePresetId);
+  if (options?.ciclo) params.set('ciclo', options.ciclo);
   const q = params.toString();
   return fetchJson(`/presets/recommend${q ? `?${q}` : ''}`);
+}
+
+export interface SimilarExercisesResponse {
+  reference: {
+    slug: string;
+    musculo_principal: string;
+    modo: string;
+    prioridade?: string;
+  } | null;
+  similares: Array<{
+    slug: string;
+    nome: string;
+    musculo_principal: string;
+    modo: string;
+    prioridade?: string;
+    score: number;
+  }>;
+}
+
+export function getSimilarExercises(
+  slug: string,
+  queueSlugs: string[] = [],
+): Promise<SimilarExercisesResponse> {
+  const params = new URLSearchParams({ slug });
+  if (queueSlugs.length > 0) params.set('queueSlugs', queueSlugs.join(','));
+  return fetchJson(`/exercises/similar?${params.toString()}`);
 }
 
 export function getPreset(id: string): Promise<IWorkoutPresetDocument> {
@@ -198,6 +228,15 @@ export function claimDailyShopSlot(slot: number): Promise<{
   return fetchJson('/shop/daily/claim', { method: 'POST', body: JSON.stringify({ slot }) });
 }
 
+export function claimFreeDailyShopRewards(): Promise<{
+  user: IUserDocument;
+  claimed: LojaDiariaSlot[];
+  loja_diaria: LojaDiaria;
+  overflow_to_dorias?: number;
+}> {
+  return fetchJson('/shop/daily/claim-free', { method: 'POST', body: '{}' });
+}
+
 export function redeemGiftCode(code: string): Promise<RedeemCodeResponse> {
   return fetchJson('/shop/redeem-code', { method: 'POST', body: JSON.stringify({ code }) });
 }
@@ -223,12 +262,15 @@ export interface AfkMetaResponse {
   capped: boolean;
   combat: AfkCombatSnapshot;
   route_drink_count?: number;
+  bestiario_novos?: AfkEnemyId[];
 }
 
 export interface InventarioSummary extends Inventario {
   energy_drink: number;
   route_drink: number;
   bau_patrulha: number;
+  exp_instant: number;
+  doria_bag: number;
   stack_cap: number;
 }
 
@@ -254,6 +296,7 @@ export interface AfkPingResponse {
   max_minutes: number;
   capped: boolean;
   combat: AfkCombatSnapshot;
+  bestiario_novos?: AfkEnemyId[];
 }
 
 export function pingAfk(): Promise<AfkPingResponse> {
@@ -291,6 +334,31 @@ export function useRouteDrink(): Promise<AfkMetaResponse & {
   return fetchJson('/meta/inventory/route-drink', { method: 'POST' });
 }
 
+export function useExpInstant(useAll = false): Promise<{
+  user: IUserDocument;
+  xp_ganho: number;
+  quantity_used: number;
+  inventario: InventarioSummary;
+}> {
+  return fetchJson('/meta/inventory/exp-instant', {
+    method: 'POST',
+    body: JSON.stringify(useAll ? { use_all: true } : {}),
+  });
+}
+
+export function useDoriaBag(quantity = 1): Promise<{
+  user: IUserDocument;
+  abdoria_ganha: number;
+  rolls: number[];
+  quantity_used: number;
+  inventario: InventarioSummary;
+}> {
+  return fetchJson('/meta/inventory/doria-bag', {
+    method: 'POST',
+    body: JSON.stringify({ quantity }),
+  });
+}
+
 export interface BestiaryEntry {
   id: string;
   label: string;
@@ -318,6 +386,7 @@ export function getBestiary(): Promise<BestiaryResponse> {
 
 export function updateMetaPreferences(data: {
   ocultar_aviso_xp_diario?: boolean;
+  coletar_loja_diaria_automatico?: boolean;
   arma_preferida?: ArmaPreferida;
 }): Promise<IUserDocument> {
   return fetchJson('/meta/preferences', { method: 'PATCH', body: JSON.stringify(data) });

@@ -24,6 +24,8 @@ export interface RecommendWorkoutOptions {
   extraCount?: number;
   shuffle?: boolean;
   excludePresetId?: string | null;
+  /** Força um ciclo específico (A–G) em vez de avançar pela sequência automática. */
+  forceCiclo?: TreinoBase;
 }
 
 type PresetDoc = {
@@ -271,7 +273,7 @@ export async function recommendWorkout(
   user: UserDocument,
   options: RecommendWorkoutOptions = {},
 ): Promise<TreinoSugerido | null> {
-  const { allowRepeats = false, extraCount = 0, shuffle = false, excludePresetId = null } = options;
+  const { allowRepeats = false, extraCount = 0, shuffle = false, excludePresetId = null, forceCiclo } = options;
   const ciclo = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
   const blocked = blockedSlugs(user);
   const blockedPresets = blockedPresetIds(user);
@@ -286,7 +288,10 @@ export async function recommendWorkout(
     { sort: { concluido_em: -1 } },
   );
 
-  const nextCiclo = resolveNextCiclo(ciclo, last?.treino_tipo);
+  const nextCiclo =
+    forceCiclo && ciclo.includes(forceCiclo)
+      ? forceCiclo
+      : resolveNextCiclo(ciclo, last?.treino_tipo);
   let candidates = shuffle
     ? await presetsForUserCycles(user)
     : await findPresetCandidates(user, nextCiclo);

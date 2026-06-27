@@ -129,6 +129,8 @@ export interface UserPreferencias {
   patrol_armas?: import('../patrol/shop.js').PatrolArmasState;
   /** Não exibir aviso de teto diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
+  /** Resgatar recompensas grátis da loja diária ao abrir o app. */
+  coletar_loja_diaria_automatico?: boolean;
   /** Slugs sempre incluídos nos treinos sugeridos. */
   exercicios_fixos?: string[];
   /** Slugs excluídos das recomendações. */
@@ -145,7 +147,12 @@ export interface UserPreferencias {
 
 export type ArmaPreferida = 'arco' | 'espada';
 
-export type InventoryItemId = 'energy_drink' | 'route_drink' | 'bau_patrulha';
+export type InventoryItemId =
+  | 'energy_drink'
+  | 'route_drink'
+  | 'bau_patrulha'
+  | 'exp_instant'
+  | 'doria_bag';
 
 export interface InventoryEntry {
   item_id: InventoryItemId;
@@ -162,6 +169,12 @@ export interface AfkPendingReward {
   energy_drinks: number;
   route_drinks: number;
   cosmetic_ids: string[];
+  /** Armas da loja da exploração desbloqueadas via drop de boss. */
+  weapon_ids: string[];
+  /** EXP Instantâneo acumulado no baú AFK. */
+  exp_instant: number;
+  /** Bolsas de Dorias acumuladas no baú AFK. */
+  doria_bags: number;
   titulo_secreto: boolean;
   /** Quantidade de vezes que um inimigo dropou loot na exploração. */
   drop_count: number;
@@ -209,6 +222,8 @@ export {
   AFK_CRIT_CHANCE_ARCO_MULTIPLIER,
   AFK_CRIT_BONUS_ESPADA,
   AFK_CRIT_BONUS_ARCO,
+  AFK_CRIT_STREAK_STEP_ARCO,
+  AFK_BOSS_LEGENDARY_WEAPON_ROLL,
   patrolCritChance,
   patrolCritBonus,
   patrolCritDamage,
@@ -234,6 +249,7 @@ export {
 
 export {
   resolveSlimeAppearance,
+  resolvePortraitAppearance,
   collectSlimeAccessories,
   accessoryDropMotion,
 } from '../afk/slime-appearance.js';
@@ -262,9 +278,16 @@ export interface Gamificacao {
 
 export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'fundo';
 
-export type CosmeticUnlockType = 'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo';
+export type CosmeticUnlockType =
+  | 'gratis'
+  | 'nivel'
+  | 'conquista'
+  | 'moedas'
+  | 'codigo'
+  | 'afk_secreto'
+  | 'golden_slime';
 
-export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario';
+export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'secreto';
 
 export type DailyRewardRarity = 'comum' | 'incomum' | 'raro' | 'epico';
 
@@ -392,14 +415,30 @@ export {
   PATROL_WEAPONS,
   PATROL_WEAPON_BY_ID,
   PATROL_WEAPON_RARITY_LABELS,
+  PATROL_LEGENDARY_WEAPON_IDS,
   patrolWeaponsByKind,
   patrolHeroDamage,
   resolvePatrolArmas,
 } from '../patrol/shop.js';
 
+export {
+  AFK_LEVEL10_BOW_DAMAGE_SPECIAL,
+  AFK_LEVEL10_SWORD_DAMAGE_SPECIAL,
+  AFK_LEVEL10_BOW_CRIT_CHANCE,
+  AFK_LEVEL10_SWORD_CRIT_CHANCE,
+  isPatrolHitKillTarget,
+  isPatrolSpecialTarget,
+  isPatrolLevel10Weapon,
+  resolvePatrolCritChancePercent,
+  resolvePatrolBaseDamage,
+  resolvePatrolAttackDamage,
+} from '../patrol/damage.js';
+export type { PatrolAttackResult } from '../patrol/damage.js';
+
 export interface PatrolShopCatalogItem {
   id: string;
   kind: import('../patrol/shop.js').PatrolWeaponKind;
+  nivel: number;
   nome: string;
   descricao: string;
   raridade: import('../patrol/shop.js').PatrolWeaponRarity;
@@ -409,7 +448,9 @@ export interface PatrolShopCatalogItem {
   futuro: boolean;
   unlock_label: string;
   unlock: import('../patrol/shop.js').PatrolWeaponUnlock;
+  /** @deprecated Use {@link dano_base}. */
   dano_bonus: number;
+  dano_base: number;
   dano_total: number;
   crit_bonus: number;
   dano_critico: number;
@@ -524,17 +565,63 @@ export const ABDORIA_XP_STEP = 10;
 export const CURRENCY_NAME = 'Dorias';
 
 export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
+export const ENERGY_DRINK_LABEL = 'Energy Drink';
 export const ENERGY_DRINK_BONUS_XP = 100;
 export const ENERGY_DRINK_SHOP_PRICE = 20;
+
+/** Texto do inventário — interpolar XP com {@link formatEnergyDrinkDescription}. */
+export function formatEnergyDrinkDescription(bonusXp = ENERGY_DRINK_BONUS_XP): string {
+  return (
+    `Recarga para treinar além do limite diário. Cada unidade adiciona +${bonusXp} XP bônus ao seu pool ` +
+    'de treino: você ganha esse XP ao completar exercícios, depois de esgotar o máx. diário normal — sem contar nele.'
+  );
+}
 export const ROUTE_DRINK_ITEM_ID: InventoryItemId = 'route_drink';
 export const ROUTE_DRINK_HOURS = 1;
 export const ROUTE_DRINK_LABEL = 'Route Drink';
 export const ROUTE_DRINK_SHOP_PRICE = 40;
 export const AFK_ROUTE_DRINK_DROP_CHANCE = 1;
+
+export const EXP_INSTANT_ITEM_ID: InventoryItemId = 'exp_instant';
+export const EXP_INSTANT_LABEL = 'EXP Instantâneo';
+export const EXP_INSTANT_XP = 10;
+export const EXP_INSTANT_SHOP_PRICE = 12;
+
+export const DORIA_BAG_ITEM_ID: InventoryItemId = 'doria_bag';
+export const DORIA_BAG_LABEL = 'Bolsa de Dorias';
+export const DORIA_BAG_MIN = 4;
+export const DORIA_BAG_MAX = 21;
+export const DORIA_BAG_SHOP_PRICE = 18;
+
+/** Rolagem exata (0,01%) para drops secretos na exploração AFK. */
+export const AFK_SECRET_ROLL_EXACT = 9999;
+
+/** Cosméticos exclusivos do Golden Slime — ocultos da loja. */
+export const GOLDEN_SLIME_SECRET_COSMETIC_IDS = [
+  'borda_aurum_slime',
+  'fundo_ouro_liquido',
+  'titulo_toque_dourado',
+] as const;
+
+/** Itens que nunca aparecem na Loja Abdoria nem no catálogo bloqueado. */
+export const SHOP_HIDDEN_COSMETIC_IDS = [
+  'titulo_secreto',
+  ...GOLDEN_SLIME_SECRET_COSMETIC_IDS,
+] as const;
+
+export function isGoldenSlimeSecretCosmetic(id: string): boolean {
+  return (GOLDEN_SLIME_SECRET_COSMETIC_IDS as readonly string[]).includes(id);
+}
+
+export function isShopHiddenCosmetic(id: string): boolean {
+  return (SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(id);
+}
+
 export const INVENTORY_STACK_CAP = 24;
 export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [
   ENERGY_DRINK_ITEM_ID,
   ROUTE_DRINK_ITEM_ID,
+  EXP_INSTANT_ITEM_ID,
 ];
 export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
 /** Horas de Exploração AFK concedidas ao usar o baú. */
@@ -567,7 +654,7 @@ export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
-  pending: { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 },
+  pending: { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], exp_instant: 0, doria_bags: 0, titulo_secreto: false, drop_count: 0 },
   combat: { ...DEFAULT_AFK_COMBAT },
 };
 
@@ -645,6 +732,7 @@ export const COSMETIC_RARITY_LABELS: Record<CosmeticRarity, string> = {
   raro: 'Raro',
   epico: 'Épico',
   lendario: 'Lendário',
+  secreto: 'Secret',
 };
 
 export function resolveCosmeticos(
@@ -804,6 +892,8 @@ export interface DashboardStats {
   energy_drink_count: number;
   route_drink_count: number;
   patrol_cache_count: number;
+  exp_instant_count: number;
+  doria_bag_count: number;
   bestiario_desbloqueados: AfkEnemyId[];
   bestiario_bonus_cap: number;
   conquistas: Achievement[];
@@ -830,6 +920,13 @@ export interface LevelUpCelebration {
   level_novo: number;
 }
 
+export interface UnlockedAchievementNotice {
+  id: string;
+  titulo: string;
+  descricao: string;
+  icon: AchievementIcon;
+}
+
 export interface CompleteWorkoutResponse {
   history: IWorkoutHistoryDocument;
   user: IUserDocument;
@@ -841,6 +938,7 @@ export interface CompleteWorkoutResponse {
   streak_celebration: StreakCelebration | null;
   level_up: LevelUpCelebration | null;
   rodada_completa?: boolean;
+  new_achievements?: UnlockedAchievementNotice[];
 }
 
 export interface CompleteWorkoutPayload {
@@ -951,6 +1049,8 @@ export interface ActiveWorkoutConfig {
 export interface ActiveWorkout {
   treino_nome: string;
   treino_tipo: TreinoTipo;
+  /** Ciclo efetivamente escolhido (A–G) quando diferente de custom. */
+  ciclo_selecionado?: TreinoBase;
   queue: WorkoutQueueItem[];
   config: ActiveWorkoutConfig;
   preset_id?: string;
@@ -1134,6 +1234,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   tutorial_visto: false,
   arma_preferida: null,
   ocultar_aviso_xp_diario: false,
+  coletar_loja_diaria_automatico: false,
   exercicios_fixos: [],
   exercicios_nao_recomendar: [],
   treinos_fixos: [],

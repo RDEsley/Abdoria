@@ -9,7 +9,7 @@
 Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas, personalizar o perfil e disputar o ranking — tudo de um jeito simples e motivador.
 
 [![Demo](https://img.shields.io/badge/Demo-abdoria--project.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://abdoria-project.vercel.app)
-[![Release](https://img.shields.io/badge/release-v1.3.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases/tag/v1.3.0)
+[![Release](https://img.shields.io/badge/release-v1.4.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -46,6 +46,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
 ### Treinar de verdade
 - Biblioteca com dezenas de exercícios de core (superior, inferior, oblíquos, flexões, etc.)
+- **Equipamentos opcionais** — marque na biblioteca **prancha de flexão**, **barra fixa** ou **roda abdominal** para liberar exercícios extras
 - Nomes em inglês com **tradução em português** entre parênteses
 - **Construtor em duas abas** — **Treinar Agora** (ciclos e sugestões) e **Criar/Personalizar** (monte o seu)
 - Treinos prontos por ciclo (**A, B, C…**) com **tags de músculo** e duração estimada na barra fixa inferior
@@ -61,28 +62,32 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
 ### Evoluir e se motivar
 - **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
-- **Teto diário** — **100 XP + 5 por nível** (sobe conforme você evolui)
+- **Teto diário** — **100 XP + 1 por nível** (+ **1 XP** por inimigo único no bestiário)
 - **XP extra** — streak, conquistas, loja e habilidades desbloqueadas (sem limite diário)
 - **Exploração AFK** — herói em combate automático enquanto você está fora (máx. **24h** de exploração)
   - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
   - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
+  - **Bestiário** — derrote inimigos para desbloquear entradas e aumentar o teto diário de XP
   - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Dorias**
   - **Rei Slime** (boss) a cada **99 kills**, com loot bônus
+  - Baú com contagem de **drops por kill** (cada loot de inimigo conta separado)
   - **Loja da Exploração** — compre arcos e equipe **arco ou espada** no combate (espada básica grátis; upgrades em breve)
   - Herói mascote com **sprites animados** por arma (arco, espada; magia em breve)
   - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da exploração ou no onboarding
   - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a exploração)
 - **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Dorias)
+  - Abas de critério em **largura total** com **recompensas semanais** em Dorias para o top 10
   - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
 
 ### Personalizar e recompensar
 - **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
 - **Loja da Exploração** — arcos compráveis com Dorias; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
-- **Inventário** — Energy Drinks, cosméticos desbloqueados e itens da exploração em um painel unificado
+- **Inventário** — Energy Drinks, cosméticos, itens da exploração e gestão de **overflow** (itens além do limite)
 - **Loja diária** — recompensa grátis + ofertas que renovam todo dia
 - **Código presente** — resgate em **Opções**
 - **Toasts de feedback** — notificações globais ao fixar/bloquear exercícios ou treinos, salvar treino, comprar itens, resgatar códigos e equipar cosméticos
-- Perfil com nível, IMC, simulador de definição e estatísticas
+- **Perfil do herói** — abas **Dados**, **Progresso** (estatísticas e zonas musculares) e **Definição** (simulador educativo)
+- **Bestiário** — galeria de inimigos da exploração desbloqueados na ficha do herói
 
 ---
 
@@ -92,7 +97,7 @@ Pense em **dois tipos de pontos**:
 
 | Tipo | O que é | Limite |
 |------|---------|--------|
-| **XP diário** | Pontos dos exercícios do treino | Teto = **100 + 5 × nível** |
+| **XP diário** | Pontos dos exercícios do treino | Teto = **100 + 1 × nível** (+ **1** por inimigo no bestiário) |
 | **XP extra** | Bônus de streak, conquistas, loja, habilidades (+1 XP por habilidade nova) | Sem teto diário |
 
 A moeda **Dorias** você usa na loja de cosméticos e na loja diária. Você ganha **1 Doria a cada 10 XP** totais acumulados (conversão passiva ao longo do progresso).
@@ -131,7 +136,7 @@ Offline: ~**8 kills/min** de exploração. Boss a cada **99** inimigos com loot 
 
 **Loja da Exploração** (`/api/patrol-shop`): arcos compráveis com Dorias; **espada de treino** grátis com alternância arco/espada no combate. Upgrades de espada e magias estão marcados como *em breve*.
 
-**Combate por arma:** arco dispara mais rápido; espada causa mais dano por golpe. O bônus da arma equipada na loja soma ao dano base.
+**Combate por arma:** arco dispara mais rápido com maior chance de crítico (~**18%**, streak crescente); espada causa mais dano por golpe com crítico ~**6%** (+4). O bônus da arma equipada na loja soma ao dano base.
 
 ---
 
@@ -139,6 +144,7 @@ Offline: ~**8 kills/min** de exploração. Boss a cada **99** inimigos com loot 
 
 ```
 Abdoria/
+├── .github/workflows/      → CI (ex.: keep-supabase-alive)
 ├── client/                 → Interface (React + Vite + Tailwind)
 ├── server/src/
 │   ├── domain/             → Facades de domínio (User, Exercise, …)
@@ -147,7 +153,8 @@ Abdoria/
 │   ├── routes/             → Endpoints REST
 │   └── services/           → Regras de negócio
 ├── shared/
-│   ├── afk/                → Combate AFK, inimigos, slimes, boss/loot
+│   ├── afk/                → Combate AFK, bestiário, slimes, boss/loot
+│   ├── equipment/          → Catálogo de equipamentos opcionais
 │   ├── patrol/             → Catálogo da Loja da Exploração (arcos/espadas)
 │   ├── types/              → Contratos compartilhados (API, domínio)
 │   └── utils/              → Utilitários (timezone, user-dados, afk)
@@ -175,7 +182,8 @@ O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`,
 1. Crie um projeto em [supabase.com](https://supabase.com/)
 2. No **SQL Editor**, execute os arquivos em [`supabase/migrations/`](./supabase/migrations/) na ordem:
    - `20250620000000_initial_schema.sql`
-   - `20250620120000_afk_combat.sql` (coluna `combat` na exploração AFK)  
+   - `20250620120000_afk_combat.sql` (coluna `combat` na exploração AFK)
+   - `20250627120000_exercise_equipment.sql` (coluna `equipamento` nos exercícios)  
    (ou use `supabase db push` se tiver o [Supabase CLI](https://supabase.com/docs/guides/cli) linkado ao projeto)
 
 ### Passos
@@ -204,7 +212,7 @@ npm run dev
 
 > Em produção o seed **não** cria usuários demo. Nunca use senhas fracas em deploy real.
 
-**Cadastro:** ao criar conta, você é redirecionado para o **login** (sessão só inicia após entrar). Use **Lembrar de mim** para manter o token no dispositivo e pré-preencher o email.
+**Cadastro:** ao criar conta, você é redirecionado para o **login** (sessão só inicia após entrar). Use **Lembrar de mim** para manter o token no dispositivo e pré-preencher o email. Erros de email/senha incorretos aparecem **inline** no formulário.
 
 ### Scripts úteis
 
@@ -224,8 +232,12 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 |--------|-----|
 | `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
 | `npx tsx scripts/dev/verify-afk.ts` | Valida exploração AFK, combate, Golden Slime e drops por kill |
+| `npx tsx scripts/dev/verify-patrol-weapons.ts` | Valida catálogo e dano das armas da exploração |
+| `npx tsx scripts/dev/validate-equipment.ts` | Valida catálogo de equipamentos e slugs liberados |
+| `npx tsx scripts/dev/verify-inventory-bestiario.ts` | Valida inventário, overflow e bestiário |
 | `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
 | `node client/scripts/validate-similar-presets.mjs` | Valida pontuação de treinos similares por músculo |
+| `node client/scripts/validate-slime-appearance.mjs` | Valida aparência procedural dos slimes |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
 | `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |
 
@@ -259,6 +271,18 @@ Confirme que o schema Postgres está aplicado no Supabase (ver [Banco de dados](
 - **Node:** `20.x`
 
 Após o primeiro deploy com Supabase configurado, rode `npm run seed` uma vez (local ou CI) para popular exercícios e presets.
+
+### Manter o Supabase ativo (free tier)
+
+O workflow [`.github/workflows/keep-supabase-alive.yml`](./.github/workflows/keep-supabase-alive.yml) faz ping diário às **00:00 (Brasília)** para evitar pausa por inatividade. Configure estes **GitHub Secrets** no repositório:
+
+| Secret | Uso |
+|--------|-----|
+| `SUPABASE_URL` | URL do projeto |
+| `SUPABASE_ANON_KEY` | Ping em `auth/v1/health` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Query leve em `rest/v1/profiles` |
+
+Dispare manualmente em **Actions → Keep Supabase Alive → Run workflow** para testar.
 
 ---
 

@@ -1,8 +1,13 @@
 import type { UserDocument } from '../domain/User.js';
 import {
   DEFAULT_XP_DIARIO,
+  DORIA_BAG_ITEM_ID,
+  DORIA_BAG_MAX,
+  DORIA_BAG_MIN,
   ENERGY_DRINK_BONUS_XP,
   ENERGY_DRINK_ITEM_ID,
+  EXP_INSTANT_ITEM_ID,
+  EXP_INSTANT_XP,
   INVENTORY_STACK_CAP,
   INVENTORY_STACK_CAPPED_ITEM_IDS,
   PATROL_CACHE_ITEM_ID,
@@ -15,6 +20,7 @@ import {
 import { grantPatrolCacheRewards, grantRouteDrinkRewardsToPending, hasAfkRewardsToClaim } from './afk.js';
 import { grantAbdoria } from './economy.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
+import { hashKillSeed } from './afk-rolls.js';
 
 export interface AddInventoryResult {
   added: number;
@@ -155,12 +161,68 @@ export function useRouteDrinkInExploration(
   return { ok: true, hours: ROUTE_DRINK_HOURS };
 }
 
+function rollDoriaBagAmount(user: UserDocument, salt: number): number {
+  const span = DORIA_BAG_MAX - DORIA_BAG_MIN + 1;
+  const roll = hashKillSeed(String(user.id), salt) % span;
+  return DORIA_BAG_MIN + roll;
+}
+
+/** EXP Instantâneo: +10 XP por unidade (ou toda a stack). */
+export function useExpInstant(
+  user: UserDocument,
+  quantity?: number,
+): { ok: true; xp_ganho: number; quantity_used: number } | { ok: false; error: string } {
+  const available = getItemCount(user, EXP_INSTANT_ITEM_ID);
+  if (available < 1) {
+    return { ok: false, error: 'Você não tem EXP Instantâneo.' };
+  }
+
+  const useQty = quantity == null ? available : Math.max(1, Math.min(quantity, available));
+  if (!consumeInventoryItem(user, EXP_INSTANT_ITEM_ID, useQty)) {
+    return { ok: false, error: 'Não foi possível consumir o item.' };
+  }
+
+  const xpGanho = EXP_INSTANT_XP * useQty;
+  user.gamificacao.nivel_xp += xpGanho;
+  return { ok: true, xp_ganho: xpGanho, quantity_used: useQty };
+}
+
+/** Bolsa de Dorias: 4–21 Dorias aleatórias por unidade. */
+export function useDoriaBag(
+  user: UserDocument,
+  quantity = 1,
+): { ok: true; abdoria_ganha: number; rolls: number[]; quantity_used: number } | { ok: false; error: string } {
+  if (quantity < 1) return { ok: false, error: 'Quantidade inválida.' };
+
+  const available = getItemCount(user, DORIA_BAG_ITEM_ID);
+  if (available < quantity) {
+    return { ok: false, error: 'Você não tem Bolsa de Dorias suficiente.' };
+  }
+
+  if (!consumeInventoryItem(user, DORIA_BAG_ITEM_ID, quantity)) {
+    return { ok: false, error: 'Não foi possível consumir o item.' };
+  }
+
+  const rolls: number[] = [];
+  let total = 0;
+  const baseSalt = Date.now() % 1_000_000;
+  for (let i = 0; i < quantity; i += 1) {
+    const amount = rollDoriaBagAmount(user, baseSalt + i + 1);
+    rolls.push(amount);
+    total += amount;
+  }
+  grantAbdoria(user, total);
+  return { ok: true, abdoria_ganha: total, rolls, quantity_used: quantity };
+}
+
 export function readInventarioSummary(user: UserDocument) {
   ensureInventario(user);
   return {
     energy_drink: getItemCount(user, ENERGY_DRINK_ITEM_ID),
     route_drink: getItemCount(user, ROUTE_DRINK_ITEM_ID),
     bau_patrulha: getItemCount(user, PATROL_CACHE_ITEM_ID),
+    exp_instant: getItemCount(user, EXP_INSTANT_ITEM_ID),
+    doria_bag: getItemCount(user, DORIA_BAG_ITEM_ID),
     stack_cap: INVENTORY_STACK_CAP,
     itens: [...user.inventario!.itens],
   };

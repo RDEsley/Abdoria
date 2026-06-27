@@ -65,6 +65,8 @@ function hasAfkPendingLoot(pending: AfkPendingReward): boolean {
     || pending.abdoria > 0
     || pending.energy_drinks > 0
     || pending.route_drinks > 0
+    || pending.exp_instant > 0
+    || pending.doria_bags > 0
     || pending.cosmetic_ids.length > 0
     || pending.titulo_secreto
   );

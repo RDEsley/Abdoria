@@ -4,6 +4,8 @@ import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { recommendWorkout, getRecommendedPresetsList } from '../services/recommendation.js';
+import type { TreinoBase } from '../types/index.js';
+import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 
 export const presetsRouter = Router();
 
@@ -31,8 +33,18 @@ presetsRouter.get('/recommend', async (req: AuthRequest, res) => {
     const shuffle = req.query.shuffle !== 'false';
     const extra = Math.min(6, Math.max(0, Number(req.query.extra) || 0));
     const excludePresetId = typeof req.query.excludePresetId === 'string' ? req.query.excludePresetId : null;
+    const cicloParam = typeof req.query.ciclo === 'string' ? req.query.ciclo : null;
+    const ciclos = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
+    const forceCiclo =
+      cicloParam && ciclos.includes(cicloParam as TreinoBase) ? (cicloParam as TreinoBase) : undefined;
 
-    const treino = await recommendWorkout(user, { allowRepeats, shuffle, extraCount: extra, excludePresetId });
+    const treino = await recommendWorkout(user, {
+      allowRepeats,
+      shuffle,
+      extraCount: extra,
+      excludePresetId,
+      forceCiclo,
+    });
     if (!treino) {
       res.status(404).json({ error: 'Nenhum treino recomendado encontrado.' });
       return;

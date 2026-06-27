@@ -22,6 +22,7 @@ import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
 import { RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
 import { SortableExerciseItem } from '@/components/builder/SortableExerciseItem';
 import { SimilarWorkoutModal } from '@/components/builder/SimilarWorkoutModal';
+import { SimilarExerciseModal } from '@/components/builder/SimilarExerciseModal';
 import { ExercisePicker } from '@/components/builder/ExercisePicker';
 import { BuilderTabs, type BuilderTab } from '@/components/builder/BuilderTabs';
 import { BuilderStickyBar } from '@/components/builder/BuilderStickyBar';
@@ -35,6 +36,7 @@ import {
   getMuscleProfileFromQueue,
   listSimilarWorkoutChoices,
 } from '@/components/builder/similar-presets';
+import { filterSimilarExercises, pickPresetForCycle } from '@/components/builder/similar-exercises';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -51,6 +53,7 @@ import type {
   IWorkoutPresetDocument,
   ModoExercicio,
   NivelUsuario,
+  Objetivo,
   RepSchemeRecommendation,
   SavedWorkoutPreset,
   StoredRepScheme,
@@ -58,6 +61,7 @@ import type {
   WorkoutQueueItem,
 } from '@/types';
 import {
+  CICLO_LABELS,
   NIVEL_LABELS,
   formatExerciseName,
   formatExercisePrescription,
@@ -132,6 +136,7 @@ export function BuilderPage() {
   const [draftQueue, setDraftQueue] = useState<WorkoutQueueItem[] | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [showSimilarWorkout, setShowSimilarWorkout] = useState(false);
+  const [swapExerciseIndex, setSwapExerciseIndex] = useState<number | null>(null);
   const [globalDescanso, setGlobalDescanso] = useState<number>(authUser?.preferencias?.descanso_padrao_seg ?? 30);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [showCreateScheme, setShowCreateScheme] = useState(false);
@@ -156,6 +161,7 @@ export function BuilderPage() {
   } = useUserPreferences(refreshRecommendations);
 
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
+  const objetivo: Objetivo = user?.objetivo ?? authUser?.objetivo ?? 'definicao';
   const schemes = getRepSchemes(nivel);
   const cicloTreinos = normalizeCicloTreinos(
     user?.preferencias?.ciclo_treinos ?? authUser?.preferencias?.ciclo_treinos,
@@ -358,6 +364,82 @@ export function BuilderPage() {
     scrollToSection('builder-queue-preview');
   };
 
+  const handleSelectCiclo = useCallback(
+    (ciclo: TreinoBase) => {
+      const preset = pickPresetForCycle(allPresets, ciclo, nivel, objetivo);
+      if (!preset) {
+        showGameToast(`Nenhum treino disponível para o ciclo ${ciclo}.`, { variant: 'warn' });
+        return;
+      }
+      selectPreset(preset.id);
+      showGameToast(`Ciclo ${ciclo} — ${CICLO_LABELS[ciclo]}`, { variant: 'info' });
+    },
+    [allPresets, nivel, objetivo],
+  );
+
+  const swapSourceItem = swapExerciseIndex != null ? activeQueue[swapExerciseIndex] : null;
+
+  const similarExerciseOptions = useMemo(() => {
+    if (!swapSourceItem) return [];
+    const ref = exerciseMap.get(swapSourceItem.slug);
+    if (!ref) return [];
+
+    const catalog = exercises.filter((ex) => ex.ativo !== false && !blockedExerciseSlugs.includes(ex.slug));
+    const ranked = filterSimilarExercises(
+      {
+        slug: ref.slug,
+        musculo_principal: ref.musculo_principal,
+        modo: ref.modo === 'reps' ? 'reps' : 'tempo',
+        prioridade: ref.prioridade,
+      },
+      catalog.map((ex) => ({
+        slug: ex.slug,
+        musculo_principal: ex.musculo_principal,
+        modo: ex.modo === 'reps' ? 'reps' : 'tempo',
+        prioridade: ex.prioridade,
+        nome: ex.nome,
+        nome_pt: ex.nome_pt,
+      })),
+      { queueSlugs: activeQueue.map((q) => q.slug) },
+    );
+
+    return ranked;
+  }, [swapSourceItem, exerciseMap, exercises, blockedExerciseSlugs, activeQueue]);
+
+  const confirmSwapExercise = useCallback(
+    (newSlug: string) => {
+      if (swapExerciseIndex == null) return;
+      const ex = exerciseMap.get(newSlug);
+      const current = activeQueue[swapExerciseIndex];
+      if (!ex || !current) return;
+
+      const params = getExerciseParamsForNivel(ex, nivel);
+      const useReps = current.modo === 'reps' && ex.modo === 'reps';
+
+      const replacement: WorkoutQueueItem = {
+        slug: ex.slug,
+        nome: ex.nome,
+        nome_pt: ex.nome_pt,
+        exercicio_id: ex.id,
+        musculo_principal: ex.musculo_principal,
+        tempo_recomendado: params.tempo_seg || ex.tempo_recomendado || 30,
+        modo: useReps ? 'reps' : params.modo,
+        series: current.series,
+        repeticoes: useReps ? current.repeticoes ?? params.repeticoes : params.repeticoes,
+        tempo_seg: useReps ? undefined : current.tempo_seg ?? params.tempo_seg,
+        descanso_seg: current.descanso_seg ?? globalDescanso,
+      };
+
+      const next = activeQueue.map((item, i) => (i === swapExerciseIndex ? replacement : item));
+      setDraftQueue(next);
+      persistDraftIfCustom(next);
+      setCustomizedIndices((prev) => new Set(prev).add(swapExerciseIndex));
+      setSwapExerciseIndex(null);
+      showGameToast(`Trocado por ${formatExerciseName(replacement)}.`, { variant: 'success' });
+    },
+    [swapExerciseIndex, exerciseMap, activeQueue, nivel, globalDescanso, persistDraftIfCustom],
+  );
+
   const handleTabChange = (tab: BuilderTab) => {
     setActiveTab(tab);
     if (tab === 'customize' && selectedPresetId !== 'custom') {
@@ -476,6 +558,7 @@ export function BuilderPage() {
     const payload: ActiveWorkout = {
       treino_nome: treinoNome,
       treino_tipo: treinoTipo,
+      ciclo_selecionado: selectedPreset?.ciclo_id,
       queue: activeQueue.map((q) => ({ ...q, descanso_seg: q.descanso_seg ?? globalDescanso })),
       config: { descanso_padrao_seg: globalDescanso },
       preset_id: selectedPresetId !== 'custom' ? selectedPresetId : undefined,
@@ -595,25 +678,32 @@ export function BuilderPage() {
               <Sparkles size={18} className="text-amber-500" />
               <div>
                 <h3 className="game-section-title !mb-0">Treino do dia</h3>
-                <div className="game-builder-cycle-progress mt-1">
+                <div className="game-builder-cycle-progress mt-1" role="tablist" aria-label="Ciclos de treino">
                   {cicloTreinos.map((c, i) => {
                     const done = !!rodadaDone[c];
-                    const isNext = suggestedWorkout?.ciclo_id === c;
+                    const isSuggested = suggestedWorkout?.ciclo_id === c;
+                    const isActive = selectedPreset?.ciclo_id === c;
                     return (
                       <Fragment key={c}>
                         {i > 0 && <span className="game-builder-cycle-progress__arrow" aria-hidden>→</span>}
-                        <span
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={isActive}
                           className={[
                             'game-builder-cycle-chip',
                             done ? 'game-builder-cycle-chip--done' : '',
-                            isNext ? 'game-builder-cycle-chip--next' : '',
+                            isActive ? 'game-builder-cycle-chip--active' : '',
+                            !isActive && isSuggested ? 'game-builder-cycle-chip--next' : '',
                           ]
                             .filter(Boolean)
                             .join(' ')}
+                          onClick={() => handleSelectCiclo(c)}
+                          title={`Ciclo ${c} — ${CICLO_LABELS[c]}`}
                         >
                           {done && <Check size={10} strokeWidth={3} aria-hidden />}
                           Ciclo {c}
-                        </span>
+                        </button>
                       </Fragment>
                     );
                   })}
@@ -668,6 +758,14 @@ export function BuilderPage() {
                       blockAriaLabel="Não recomendar este treino"
                       feedbackKind="workout"
                     />
+                    <GameButton
+                      variant="secondary"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => void handleSwapWorkout()}
+                    >
+                      Trocar treino similar
+                    </GameButton>
                   </>
                 )}
                 {selectedSavedWorkout && (
@@ -718,8 +816,8 @@ export function BuilderPage() {
                         index={index}
                         exercise={exerciseMap.get(item.slug)}
                         showPreferences
-                        showSwapWorkout={index === 0}
-                        onSwapWorkout={() => void handleSwapWorkout()}
+                        showSwapExercise
+                        onSwapExercise={() => setSwapExerciseIndex(index)}
                         isPinned={fixedExerciseSlugs.includes(item.slug)}
                         isBlocked={blockedExerciseSlugs.includes(item.slug)}
                         onTogglePin={() => toggleExercisePin(item.slug)}
@@ -869,6 +967,8 @@ export function BuilderPage() {
                         index={index}
                         exercise={exerciseMap.get(item.slug)}
                         onRemove={() => removeExercise(index)}
+                        showSwapExercise
+                        onSwapExercise={() => setSwapExerciseIndex(index)}
                       />
                     ))}
                   </ul>
@@ -917,6 +1017,15 @@ export function BuilderPage() {
         onSelectSaved={handleSelectSimilarSaved}
         onToggleWorkoutPin={toggleWorkoutPin}
         onToggleWorkoutBlock={toggleWorkoutBlock}
+      />
+
+      <SimilarExerciseModal
+        open={swapExerciseIndex != null}
+        onClose={() => setSwapExerciseIndex(null)}
+        sourceName={swapSourceItem ? formatExerciseName(swapSourceItem) : ''}
+        options={similarExerciseOptions}
+        exerciseMap={exerciseMap}
+        onSelect={confirmSwapExercise}
       />
 
       <BuilderStickyBar
