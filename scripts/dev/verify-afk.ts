@@ -56,7 +56,7 @@ function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}):
     simulacao_definicao: { gordura_meta_pct: 12 },
     preferencias: {},
     dados_salvos: { treino_personalizado: [], treinos_salvos: [], esquemas_reps: {}, exercicios_desbloqueados: [] },
-    xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: '', bonus_pool_restante: 0, bonus_pool_total: 0 },
+    xp_diario: { ganho_hoje: 0, data_reset: '' },
     inventario: { itens: [] },
     afk: {
       last_seen_at: new Date().toISOString(),
@@ -115,7 +115,7 @@ const pendingBoss = { ...EMPTY_AFK_PENDING };
 rollLootTable(uBoss, 1, pendingBefore);
 rollLootTable(uBoss, 2, pendingBoss, { bossBoost: true });
 assert.ok(
-  pendingBoss.xp + pendingBoss.abdoria + pendingBoss.energy_drinks >= pendingBefore.xp + pendingBefore.abdoria + pendingBefore.energy_drinks - 1,
+  pendingBoss.xp + pendingBoss.abdoria + pendingBoss.frozen_streaks >= pendingBefore.xp + pendingBefore.abdoria + pendingBefore.frozen_streaks - 1,
   'boss loot table runs',
 );
 
@@ -124,7 +124,7 @@ let procHits = 0;
 for (let i = 0; i < 50; i += 1) {
   const trial = { ...EMPTY_AFK_PENDING };
   rollKillDrop(uBoss, 10_000 + i, trial, { tier: 'common' });
-  if (trial.xp === 0 && trial.abdoria === 0 && trial.energy_drinks === 0 && trial.cosmetic_ids.length === 0 && !trial.titulo_secreto) {
+  if (trial.xp === 0 && trial.abdoria === 0 && trial.frozen_streaks === 0 && trial.cosmetic_ids.length === 0 && !trial.titulo_secreto) {
     procMisses += 1;
   } else {
     procHits += 1;
@@ -155,7 +155,7 @@ assert.equal(
   'countAfkDropEvents prefers tracked drop_count',
 );
 assert.equal(
-  countAfkDropEvents({ ...EMPTY_AFK_PENDING, xp: 3, abdoria: 2, energy_drinks: 1 }),
+  countAfkDropEvents({ ...EMPTY_AFK_PENDING, xp: 3, abdoria: 2, frozen_streaks: 1 }),
   6,
   'countAfkDropEvents estimates legacy pending loot',
 );

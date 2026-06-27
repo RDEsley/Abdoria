@@ -29,6 +29,9 @@ export const DEFAULT_ESPADA_ID = 'espada_01';
 /** Armas lendárias (nível 9) dropáveis de bosses. */
 export const PATROL_LEGENDARY_WEAPON_IDS = ['arco_09', 'espada_09'] as const;
 
+/** Armas Secret (nível 10) dropáveis na Exploração — taxa menor que título Secret. */
+export const PATROL_SECRET_WEAPON_IDS = ['arco_10', 'espada_10'] as const;
+
 const LEGACY_WEAPON_ID_MAP: Record<string, string> = {
   arco_basico: 'arco_01',
   arco_caca: 'arco_02',
@@ -57,40 +60,40 @@ type WeaponSeed = {
 };
 
 const ARCO_SEEDS: WeaponSeed[] = [
-  { nivel: 1, preco: 335, dano: 10, nome: 'Arco de Madeira', descricao: 'Arco simples da exploração. Confiável para começar.' },
-  { nivel: 2, preco: 665, dano: 14, nome: 'Arco de Caçador', descricao: 'Mais tensão na corda — flechas mais certeiras.' },
-  { nivel: 3, preco: 1340, dano: 18, nome: 'Arco Silvestre', descricao: 'Madeira temperada das florestas do reino.' },
-  { nivel: 4, preco: 2340, dano: 20, nome: 'Arco do Vento', descricao: 'Corta o ar com precisão letal.' },
-  { nivel: 5, preco: 3950, dano: 24, nome: 'Arco de Cristal', descricao: 'Flechas refratam luz e perfuram armaduras leves.' },
-  { nivel: 6, preco: 5700, dano: 28, nome: 'Arco Flamejante', descricao: 'Flechas incandescentes forjadas na lava.' },
-  { nivel: 7, preco: 12300, dano: 32, nome: 'Arco Celestial', descricao: 'Abençoado pelas constelações da patrulha.' },
-  { nivel: 8, preco: 18940, dano: 36, nome: 'Arco do Abismo', descricao: 'Sussurra nas sombras antes de cada disparo.' },
-  { nivel: 9, preco: 55000, dano: 48, nome: 'Arco Dracônico', descricao: 'Lendário — escamas de dragão reforçam o arco.' },
+  { nivel: 1, preco: 335, dano: 10, nome: 'Arco de Madeira', descricao: 'O primeiro companheiro de todo explorador — leve, firme e sempre pronto.' },
+  { nivel: 2, preco: 665, dano: 14, nome: 'Arco de Caçador', descricao: 'Corda reforçada e mira estável para patrulhas mais longas nas rotas.' },
+  { nivel: 3, preco: 1340, dano: 18, nome: 'Arco Silvestre', descricao: 'Entalhes das florestas antigas guiam cada flecha com precisão natural.' },
+  { nivel: 4, preco: 2340, dano: 20, nome: 'Arco do Vento', descricao: 'Disparos silenciosos que cortam o ar antes do inimigo perceber.' },
+  { nivel: 5, preco: 3950, dano: 24, nome: 'Arco de Cristal', descricao: 'Lâmina de luz refinada perfura armaduras leves com elegância letal.' },
+  { nivel: 6, preco: 5700, dano: 28, nome: 'Arco Flamejante', descricao: 'Forjado nas caldeiras do vulcão; cada tiro deixa um rastro ardente.' },
+  { nivel: 7, preco: 12300, dano: 32, nome: 'Arco Celestial', descricao: 'Abençoado pelas constelações que vigiam a patrulha noturna.' },
+  { nivel: 8, preco: 18940, dano: 36, nome: 'Arco do Abismo', descricao: 'Sussurra nas sombras e dispara quando a vítima menos espera.' },
+  { nivel: 9, preco: 55000, dano: 48, nome: 'Arco Dracônico', descricao: 'Escamas lendárias endurecem a madeira e multiplicam o impacto.' },
   {
     nivel: 10,
     preco: 99999,
     dano: 0,
     nome: 'Arco do Véu Eterno',
-    descricao: 'Secreto — Hit Kill em slimes comuns. Elite, boss e Golden: 52 de dano, 28% crítico com combo.',
+    descricao: 'Segredo da elite — um disparo basta nos slimes comuns da patrulha.',
   },
 ];
 
 const ESPADA_SEEDS: WeaponSeed[] = [
-  { nivel: 1, preco: 470, dano: 12, nome: 'Espada de Treino', descricao: 'Lâmina básica da guarda. Sempre à mão.' },
-  { nivel: 2, preco: 800, dano: 16, nome: 'Espada de Ferro', descricao: 'Aço temperado para patrulhas longas.' },
-  { nivel: 3, preco: 1475, dano: 20, nome: 'Espada Rúnica', descricao: 'Runas antigas amplificam cada golpe.' },
-  { nivel: 4, preco: 2475, dano: 26, nome: 'Espada do Guardião', descricao: 'Forjada para proteger os exploradores.' },
-  { nivel: 5, preco: 4085, dano: 30, nome: 'Espada de Aço Negro', descricao: 'Peso perfeito e fio implacável.' },
-  { nivel: 6, preco: 5835, dano: 36, nome: 'Espada Valente', descricao: 'Carregada por heróis das campanhas AFK.' },
-  { nivel: 7, preco: 12435, dano: 42, nome: 'Espada do Campeão', descricao: 'Troféu dos vencedores do ranking semanal.' },
-  { nivel: 8, preco: 19075, dano: 58, nome: 'Espada Imortal', descricao: 'Brilha mesmo após mil batalhas.' },
-  { nivel: 9, preco: 55135, dano: 70, nome: 'Lâmina do Dragão', descricao: 'Lendária — fogo dracônico na lâmina.' },
+  { nivel: 1, preco: 470, dano: 12, nome: 'Espada de Treino', descricao: 'Lâmina confiável da guarda, perfeita para aprender o ritmo da batalha.' },
+  { nivel: 2, preco: 800, dano: 16, nome: 'Espada de Ferro', descricao: 'Aço temperado que aguenta patrulhas intermináveis sem perder o fio.' },
+  { nivel: 3, preco: 1475, dano: 20, nome: 'Espada Rúnica', descricao: 'Runas ancestrais pulsam a cada golpe, amplificando sua força.' },
+  { nivel: 4, preco: 2475, dano: 26, nome: 'Espada do Guardião', descricao: 'Forjada para proteger exploradores nas rotas mais perigosas.' },
+  { nivel: 5, preco: 4085, dano: 30, nome: 'Espada de Aço Negro', descricao: 'Equilíbrio perfeito entre peso e fio — implacável em combate corpo a corpo.' },
+  { nivel: 6, preco: 5835, dano: 36, nome: 'Espada Valente', descricao: 'Carregada por heróis das campanhas AFK que nunca recuaram.' },
+  { nivel: 7, preco: 12435, dano: 42, nome: 'Espada do Campeão', descricao: 'Troféu reservado a quem domina o ranking semanal da exploração.' },
+  { nivel: 8, preco: 19075, dano: 58, nome: 'Espada Imortal', descricao: 'Brilho eterno mesmo após mil confrontos nas ruínas esquecidas.' },
+  { nivel: 9, preco: 55135, dano: 70, nome: 'Lâmina do Dragão', descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.' },
   {
     nivel: 10,
     preco: 99999,
     dano: 0,
     nome: 'Espada do Crepúsculo',
-    descricao: 'Secreta — Hit Kill em slimes comuns. Elite, boss e Golden: 60 de dano, 18% crítico.',
+    descricao: 'Segredo das sombras — abate slimes comuns num único golpe certeiro.',
   },
 ];
 

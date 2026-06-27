@@ -8,6 +8,17 @@ export function getTodaySaoPaulo(date = new Date()): string {
   }).format(date);
 }
 
+/** Soma dias civis em SP a partir de uma chave `YYYY-MM-DD`. */
+export function addDaysSaoPaulo(dayKey: string, delta: number): string {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const anchor = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  anchor.setUTCDate(anchor.getUTCDate() + delta);
+  const yy = anchor.getUTCFullYear();
+  const mm = String(anchor.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(anchor.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
 /** Hora local (0–23) em America/Sao_Paulo — usada na conquista Madrugador. */
 export function getHourSaoPaulo(date = new Date()): number {
   const parts = new Intl.DateTimeFormat('en-US', {

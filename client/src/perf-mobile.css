@@ -27,10 +27,6 @@
   .game-bird__wing--r {
     animation: none !important;
   }
-
-  .game-xp-bar--bonus.game-xp-bar--glow-active {
-    animation: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

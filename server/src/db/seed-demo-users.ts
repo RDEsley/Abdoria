@@ -39,7 +39,7 @@ export async function seedDemoUsers(): Promise<void> {
             modo_padrao: 'tempo',
             tutorial_visto: true,
           },
-          xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
+          xp_diario: { ganho_hoje: 0, data_reset: today },
         },
       },
       { upsert: true },

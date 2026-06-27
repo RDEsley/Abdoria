@@ -125,9 +125,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [flushPersist],
   );
 
+  const flushPendingUserDados = useCallback(async () => {
+    if (persistTimer.current !== null) {
+      window.clearTimeout(persistTimer.current);
+      persistTimer.current = null;
+    }
+    await flushPersist();
+  }, [flushPersist]);
+
   const hydrateAccountData = useCallback(
     async (accountUser: IUserDocument) => {
       let dados = hydrateUserDadosFromAccount(accountUser);
+
+      if (pendingPersist.current) {
+        dados = mergeUserDadosSalvos(dados, pendingPersist.current);
+      }
 
       if (migrationDoneFor.current !== accountUser.id) {
         migrationDoneFor.current = accountUser.id;
@@ -168,7 +180,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       applyUserDados(resolveUserDadosSalvos());
     }
 
-    if (statsRes.status === 'fulfilled') setStats(statsRes.value);
+    if (statsRes.status === 'fulfilled') {
+      setStats(statsRes.value);
+      if (statsRes.value.streak_frozen_notice) {
+        showGameToast('Você não treinou ontem, mas um Frozen Streak salvou sua ofensiva!', { variant: 'info' });
+      }
+    }
     else errors.push(statsRes.reason instanceof Error ? statsRes.reason.message : 'Erro ao carregar estatísticas');
 
     setError(errors.length > 0 ? errors.join(' · ') : null);
@@ -300,7 +317,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       const next = mergeUserDadosSalvos(userDadosRef.current, { esquema_reps_selecionado });
       applyUserDados(next);
-      schedulePersist({ esquema_reps_selecionado: { [nivel]: schemeId } });
+      schedulePersist({ esquema_reps_selecionado: { [nivel]: schemeId } }, true);
     },
     [applyUserDados, schedulePersist],
   );
@@ -440,6 +457,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       customWorkoutName: userDados.treino_personalizado_nome,
       savedWorkouts: userDados.treinos_salvos,
       selectedRepSchemeIds: userDados.esquema_reps_selecionado,
+      repSchemesByNivel: userDados.esquemas_reps,
       unlockedExercises,
       loading,
       exercisesLoading,
@@ -454,6 +472,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCustomWorkout,
       setCustomWorkoutName,
       setSelectedRepSchemeId,
+      flushPendingUserDados,
       saveWorkoutPreset,
       getRepSchemes,
       saveRepSchemes,
@@ -481,6 +500,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCustomWorkout,
       setCustomWorkoutName,
       setSelectedRepSchemeId,
+      flushPendingUserDados,
       saveWorkoutPreset,
       getRepSchemes,
       saveRepSchemes,

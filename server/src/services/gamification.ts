@@ -4,9 +4,15 @@ import {
   XP_ACHIEVEMENT_BONUS,
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
+  FROZEN_STREAK_ITEM_ID,
   streakXpBonus,
   xpLevelFromTotal,
 } from '../types/index.js';
+import {
+  computeStreakWithFrozenDays,
+  findStreakMissedDayForFreeze,
+} from '../../../shared/streak/protection.js';
+import { consumeInventoryItem, getItemCount } from './inventory.js';
 import { User, type UserDocument } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
@@ -61,38 +67,8 @@ type HistorySummary = {
   duracao_total_segundos?: number;
 };
 
-function computeStreakFromHistories(histories: HistorySummary[]): { atual: number; maior: number } {
-  if (histories.length === 0) return { atual: 0, maior: 0 };
-
-  const uniqueDays = [
-    ...new Set(histories.map((h) => startOfDay(new Date(h.concluido_em)).getTime())),
-  ]
-    .map((ts) => new Date(ts))
-    .sort((a, b) => b.getTime() - a.getTime());
-
-  const today = startOfDay(new Date());
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const mostRecent = uniqueDays[0];
-  if (!isSameDay(mostRecent, today) && !isSameDay(mostRecent, yesterday)) {
-    return { atual: 0, maior: userStreakMaior(uniqueDays) };
-  }
-
-  let atual = 0;
-  let cursor = isSameDay(mostRecent, today) ? today : yesterday;
-
-  for (const day of uniqueDays) {
-    if (isSameDay(day, cursor)) {
-      atual += 1;
-      cursor = new Date(cursor);
-      cursor.setDate(cursor.getDate() - 1);
-    } else if (day < cursor) {
-      break;
-    }
-  }
-
-  return { atual, maior: Math.max(atual, userStreakMaior(uniqueDays)) };
+function computeStreakFromHistories(histories: HistorySummary[], frozenDates: string[] = []): { atual: number; maior: number } {
+  return computeStreakWithFrozenDays(histories, frozenDates);
 }
 
 export async function computeStreak(userId: string): Promise<{ atual: number; maior: number }> {
@@ -104,25 +80,34 @@ export async function computeStreak(userId: string): Promise<{ atual: number; ma
   return computeStreakFromHistories(histories as HistorySummary[]);
 }
 
-function userStreakMaior(days: Date[]): number {
-  if (days.length === 0) return 0;
-  const sorted = [...days].sort((a, b) => a.getTime() - b.getTime());
-  let max = 1;
-  let current = 1;
-
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = sorted[i - 1];
-    const curr = sorted[i];
-    const diff = (startOfDay(curr).getTime() - startOfDay(prev).getTime()) / 86400000;
-    if (diff === 1) {
-      current += 1;
-      max = Math.max(max, current);
-    } else if (diff > 1) {
-      current = 1;
-    }
+/** Tenta consumir Frozen Streak para cobrir exatamente 1 dia perdido. */
+export function applyStreakFreezeProtection(
+  user: UserDocument,
+  histories: HistorySummary[],
+): boolean {
+  if (!user.gamificacao.streak_congelamentos) {
+    user.gamificacao.streak_congelamentos = [];
   }
 
-  return max;
+  const missedDay = findStreakMissedDayForFreeze(histories, user.gamificacao.streak_congelamentos);
+  if (!missedDay) return false;
+
+  const frozenDates = user.gamificacao.streak_congelamentos;
+  const streakWithoutFreeze = computeStreakWithFrozenDays(histories, frozenDates);
+  if (streakWithoutFreeze.atual > 0) return false;
+
+  const streakWithPendingFreeze = computeStreakWithFrozenDays(histories, [...frozenDates, missedDay]);
+  if (streakWithPendingFreeze.atual <= 0) return false;
+
+  if (getItemCount(user, FROZEN_STREAK_ITEM_ID) < 1) return false;
+  if (!consumeInventoryItem(user, FROZEN_STREAK_ITEM_ID, 1)) return false;
+
+  user.gamificacao.streak_congelamentos.push(missedDay);
+  user.gamificacao.streak_freeze_notice_pending = true;
+  user.gamificacao.streak_atual = streakWithPendingFreeze.atual;
+  user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streakWithPendingFreeze.maior);
+
+  return true;
 }
 
 function hasWeekendWarrior(histories: HistorySummary[]): boolean {
@@ -198,28 +183,14 @@ export async function getWeeklyMuscles(
 export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
   const today = getTodaySaoPaulo();
   if (!user.xp_diario || user.xp_diario.data_reset !== today) {
-    const bonus_pool_restante = user.xp_diario?.bonus_pool_restante ?? 0;
-    const bonus_pool_total = user.xp_diario?.bonus_pool_total ?? 0;
     user.xp_diario = {
       ganho_hoje: 0,
-      extra_hoje: 0,
       data_reset: today,
-      bonus_pool_restante,
-      bonus_pool_total,
     };
     return true;
   }
-  if (typeof user.xp_diario.extra_hoje !== 'number') {
-    user.xp_diario.extra_hoje = 0;
-  }
-  if (typeof user.xp_diario.bonus_pool_restante !== 'number') {
-    user.xp_diario.bonus_pool_restante = 0;
-  }
-  if (typeof user.xp_diario.bonus_pool_total !== 'number') {
-    user.xp_diario.bonus_pool_total = 0;
-  }
-  if (user.xp_diario.bonus_pool_restante <= 0) {
-    user.xp_diario.bonus_pool_total = 0;
+  if (typeof user.xp_diario.ganho_hoje !== 'number') {
+    user.xp_diario.ganho_hoje = 0;
   }
   return false;
 }
@@ -246,7 +217,7 @@ export function evaluateAchievementsFromHistories(
   const totalWorkouts = summary.length;
   const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
   const totalMinutes = user.gamificacao.total_minutos;
-  const streak = computeStreakFromHistories(summary);
+  const streak = computeStreakFromHistories(summary, user.gamificacao.streak_congelamentos ?? []);
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
 
   const weeklyHistories = summary.filter((h) => new Date(h.concluido_em) >= since);
@@ -315,12 +286,16 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     { sort: { concluido_em: -1 } },
   )) as HistorySummary[];
 
-  const streak = computeStreakFromHistories(histories);
   const totalSeconds = histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
 
+  applyStreakFreezeProtection(user, histories);
+
+  const frozenDates = user.gamificacao.streak_congelamentos ?? [];
+  const streakAfterFreeze = computeStreakFromHistories(histories, frozenDates);
+
   user.gamificacao.total_minutos = Math.floor(totalSeconds / 60);
-  user.gamificacao.streak_atual = streak.atual;
-  user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streak.maior);
+  user.gamificacao.streak_atual = streakAfterFreeze.atual;
+  user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streakAfterFreeze.maior);
   user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
 
   await user.save();

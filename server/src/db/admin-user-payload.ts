@@ -62,7 +62,7 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
       treino_personalizado: [],
       treinos_salvos: [],
     },
-    xp_diario: { ganho_hoje: 0, extra_hoje: 0, data_reset: today },
+    xp_diario: { ganho_hoje: 0, data_reset: today },
     simulacao_definicao: { gordura_atual_pct: 12, gordura_meta_pct: 10 },
   };
 }

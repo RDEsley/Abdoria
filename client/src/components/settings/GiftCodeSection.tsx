@@ -7,7 +7,7 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { type RedeemCodeResponse, CURRENCY_NAME, resolveCosmeticos } from '@/types';
+import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';
 
 const GIFT_CODE_PATTERN = /^[a-z0-9_-]+$/;
@@ -83,7 +83,7 @@ export function GiftCodeSection() {
             onChange={(e) => {
               setGiftCode(e.target.value);
             }}
-            placeholder="Ex.: abdoria"
+            placeholder="Seu código presente"
             autoComplete="off"
             autoCapitalize="off"
             spellCheck={false}
@@ -97,10 +97,6 @@ export function GiftCodeSection() {
               Resgatar código
             </GameButton>
           </div>
-          <p className="game-gift-code__hint">
-            Dica: use <strong>abdoria</strong> para ganhar <strong>999 {CURRENCY_NAME}</strong> e o título{' '}
-            <strong>Dono do Jogo</strong> — válido <strong>1 vez por conta</strong>.
-          </p>
         </div>
       </section>
 

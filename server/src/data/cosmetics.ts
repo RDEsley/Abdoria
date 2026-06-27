@@ -549,7 +549,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Título lendário raríssimo — brilha em cores fortes.',
     icon: 'crown',
     raridade: 'lendario',
-    unlock: { tipo: 'moedas', preco_moedas: 999 },
+    unlock: { tipo: 'codigo' },
   },
 
   {

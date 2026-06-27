@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { awardAbdoriaFromXp } from '../services/economy.js';
 import { claimAfkRewards, afkResponsePayload, hasAfkRewardsToClaim, syncAfkRewards, touchAfkPresence } from '../services/afk.js';
 import { readBestiaryResponse } from '../services/bestiario.js';
-import { readInventarioSummary, useEnergyDrink, usePatrolCache, useRouteDrinkInExploration, useExpInstant, useDoriaBag } from '../services/inventory.js';
+import { readInventarioSummary, usePatrolCache, useRouteDrinkInExploration, useExpInstant, useDoriaBag } from '../services/inventory.js';
 import { getItemCount } from '../services/inventory.js';
 import { CURRENCY_NAME, ROUTE_DRINK_ITEM_ID } from '../types/index.js';
 
@@ -89,30 +89,6 @@ metaRouter.get('/inventory', async (req: AuthRequest, res) => {
   }
 });
 
-metaRouter.post('/inventory/energy-drink', async (req: AuthRequest, res) => {
-  try {
-    const user = await User.findById(req.userId!);
-    if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado.' });
-      return;
-    }
-    const quantity = Math.max(1, Math.min(10, Number(req.body?.quantity) || 1));
-    const result = useEnergyDrink(user, quantity);
-    if (!result.ok) {
-      res.status(400).json({ error: result.error });
-      return;
-    }
-    await user.save();
-    res.json({
-      user: sanitizeUser(user),
-      bonus_added: result.bonus_added,
-      inventario: readInventarioSummary(user),
-    });
-  } catch (error) {
-    console.error('POST /api/meta/inventory/energy-drink error:', error);
-    res.status(500).json({ error: 'Erro ao usar Energy Drink.' });
-  }
-});
 
 metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
   try {
@@ -146,16 +122,19 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
-    syncAfkRewards(user);
+    // Não sincronizar antes: syncAfkRewards adicionaria loot offline ao baú.
     const result = useRouteDrinkInExploration(user);
     if (!result.ok) {
       res.status(400).json({ error: result.error });
       return;
     }
+    awardAbdoriaFromXp(user);
     await user.save();
     res.json({
       user: sanitizeUser(user),
       hours: result.hours,
+      claimed: result.claimed,
+      overflow_to_dorias: result.overflow_to_dorias,
       inventario: readInventarioSummary(user),
       ...afkResponsePayload(user, {
         arma_preferida: user.preferencias?.arma_preferida ?? 'arco',

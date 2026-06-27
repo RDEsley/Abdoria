@@ -13,7 +13,6 @@ import { useAuth } from '@/context/AuthContext';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
-import { resolveCosmeticos } from '@/types';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
 
 const navItems = [
@@ -69,12 +68,6 @@ export function AppLayout() {
     }
   };
 
-  const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
-  const isLightFundo = cosmeticos.fundo_equipado === 'fundo_padrao' || cosmeticos.fundo_equipado === 'fundo_praia';
-  const hudShellClass = isLightFundo
-    ? 'game-hud-shell--default'
-    : `game-hud-shell--skinned game-card-fundo--${fundoKey}`;
   const isHomePage = location.pathname === '/';
 
   return (
@@ -112,11 +105,9 @@ export function AppLayout() {
       </aside>
 
       <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
-        <div className={`game-hud-shell ${hudShellClass} px-4 pt-4 md:px-8 md:pt-6`}>
-          <GameHud />
-        </div>
+        <GameHud />
 
-        <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8">
+        <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]">
           <Outlet />
         </main>
 

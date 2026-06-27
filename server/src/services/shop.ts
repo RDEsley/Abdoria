@@ -34,8 +34,9 @@ import type {
 import {
   ABDORIA_XP_STEP,
   CURRENCY_NAME,
-  ENERGY_DRINK_ITEM_ID,
-  ENERGY_DRINK_SHOP_PRICE,
+  FROZEN_STREAK_ITEM_ID,
+  FROZEN_STREAK_LABEL,
+  FROZEN_STREAK_SHOP_PRICE,
   EXP_INSTANT_ITEM_ID,
   EXP_INSTANT_LABEL,
   EXP_INSTANT_SHOP_PRICE,
@@ -61,7 +62,7 @@ import {
 } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { giftCodeFormatError, isValidGiftCodeFormat, normalizeGiftCode } from '../utils/gift-code.js';
-import { awardAbdoriaFromXp, awardBonusXp, ensureAbdoriaWallet, grantAbdoria, projectedAbdoriaAfterXpSpend, readAbdoriaBalance, spendXpForShop } from './economy.js';
+import { awardAbdoriaFromXp, awardDailyXp, ensureAbdoriaWallet, grantAbdoria, projectedAbdoriaAfterXpSpend, readAbdoriaBalance, spendXpForShop } from './economy.js';
 import { addInventoryItem } from './inventory.js';
 
 export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
@@ -113,11 +114,9 @@ function moedasUnlockLabel(item: CosmeticDefinition): string {
   const base = `${price} ${CURRENCY_NAME}`;
   const extras: string[] = [];
 
-  if (item.id === 'titulo_dono_do_jogo') {
-    extras.push('código presente', 'oferta na loja diária');
-  } else if (item.id === 'fundo_galaxia') {
+  if (item.id === 'fundo_galaxia') {
     extras.push('oferta na loja diária');
-  } else if (item.raridade === 'lendario') {
+  } else if (item.raridade === 'lendario' || item.raridade === 'epico') {
     extras.push('drop raro na Exploração AFK');
   }
 
@@ -180,13 +179,13 @@ export function syncShopUnlocks(user: UserDoc): void {
 function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 'valor' | 'raridade' | 'oferta_nome' | 'bonus_xp' | 'bonus_abdoria' | 'item_id' | 'preco_abdoria'>): string {
   const rarity = DAILY_RARITY_LABELS[slot.raridade];
 
-  if (slot.recompensa_tipo === 'item' && slot.item_id === ENERGY_DRINK_ITEM_ID) {
+  if (slot.recompensa_tipo === 'item' && slot.item_id === FROZEN_STREAK_ITEM_ID) {
     const prefix = slot.kind === 'recompensa_diaria' ? 'Recompensa diária' : 'Oferta';
     const price =
       slot.kind === 'oferta' && slot.preco_abdoria
         ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
         : ' · grátis';
-    return `${prefix} · ${rarity} · Energy Drink ×${slot.valor}${price}`;
+    return `${prefix} · ${rarity} · ${FROZEN_STREAK_LABEL} ×${slot.valor}${price}`;
   }
 
   if (slot.recompensa_tipo === 'item' && slot.item_id === ROUTE_DRINK_ITEM_ID) {
@@ -357,28 +356,12 @@ function regenerateDailyShop(
     };
   }
 
-  if (hashDailySeed(`${today}:dono`) % 1000 < 3) {
-    slots[2] = {
-      slot: 2,
-      kind: 'oferta',
-      recompensa_tipo: 'abdoria',
-      valor: 0,
-      raridade: 'epico',
-      preco_abdoria: 999,
-      preco_xp: 0,
-      cosmetic_id: 'titulo_dono_do_jogo',
-      oferta_nome: 'Dono do Jogo',
-      resgatado: false,
-      label: `Título lendário · Dono do Jogo · 999 ${CURRENCY_NAME}`,
-    };
-  }
-
-  if (hashDailySeed(`${today}:energy-free`) % 1000 < 25) {
+  if (hashDailySeed(`${today}:frozen-free`) % 1000 < 25) {
     slots[0] = {
       slot: 0,
       kind: 'recompensa_diaria',
       recompensa_tipo: 'item',
-      item_id: ENERGY_DRINK_ITEM_ID,
+      item_id: FROZEN_STREAK_ITEM_ID,
       valor: 1,
       raridade: 'raro',
       preco_abdoria: 0,
@@ -388,17 +371,17 @@ function regenerateDailyShop(
     slots[0].label = buildSlotLabel(slots[0]);
   }
 
-  if (hashDailySeed(`${today}:energy-paid`) % 100 < 12) {
+  if (hashDailySeed(`${today}:frozen-paid`) % 100 < 12) {
     slots[1] = {
       slot: 1,
       kind: 'oferta',
       recompensa_tipo: 'item',
-      item_id: ENERGY_DRINK_ITEM_ID,
+      item_id: FROZEN_STREAK_ITEM_ID,
       valor: 1,
       raridade: 'raro',
-      preco_abdoria: ENERGY_DRINK_SHOP_PRICE,
+      preco_abdoria: FROZEN_STREAK_SHOP_PRICE,
       preco_xp: 0,
-      oferta_nome: 'Energy Drink',
+      oferta_nome: FROZEN_STREAK_LABEL,
       resgatado: false,
       label: '',
     };
@@ -729,7 +712,7 @@ function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot): number {
 
   if (slot.recompensa_tipo === 'pacote') {
     if ((slot.bonus_xp ?? 0) > 0) {
-      awardBonusXp(user, slot.bonus_xp ?? 0);
+      awardDailyXp(user, slot.bonus_xp ?? 0);
     }
     if ((slot.bonus_abdoria ?? 0) > 0) {
       grantAbdoria(user, slot.bonus_abdoria ?? 0);
@@ -739,7 +722,7 @@ function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot): number {
   }
 
   if (slot.recompensa_tipo === 'xp') {
-    awardBonusXp(user, slot.valor);
+    awardDailyXp(user, slot.valor);
     awardAbdoriaFromXp(user);
     return 0;
   }
@@ -940,7 +923,7 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
   redeemed.add(code);
   user.cosmeticos.codigos_resgatados = [...redeemed];
 
-  const xp_ganho = awardBonusXp(user, definition.xp);
+  const xp_ganho = awardDailyXp(user, definition.xp);
   grantAbdoria(user, definition.abdoria);
   syncGiftCodeAbdoriaBlocks(user);
 

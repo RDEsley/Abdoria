@@ -1,16 +1,13 @@
-import { Link } from 'react-router-dom';
-import { Dumbbell, Flame, Timer, Trophy, Zap } from 'lucide-react';
+import { Dumbbell, Flame, Timer, Trophy } from 'lucide-react';
+import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
-import { XpBar } from '@/components/ui/XpBar';
 import { formatTrainingDuration } from '@/lib/utils';
 import {
   MUSCULO_LABELS,
-  XP_DAILY_CAP_PER_LEVEL,
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
   dailyFullExercisesForCap,
-  spendableXpForShop,
   xpProgressFromTotal,
   type DashboardStats,
   type IUserDocument,
@@ -47,9 +44,8 @@ function StatCard({
 export function ProfileProgressPanel({ profile, stats }: Props) {
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(stats.nivel_xp);
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
-  const xpDisponivelTrocas = spendableXpForShop(stats.nivel_xp);
   const unlockedAchievements = stats.conquistas.filter((c) => c.desbloqueada).length;
-  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP/exercício · mín. ${XP_DAILY_MIN_EXERCISES} · máx. ${stats.xp_diario_limite}/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
+  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP/exercício · mín. ${XP_DAILY_MIN_EXERCISES} · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
 
   return (
     <div className="game-profile-progress flex flex-col gap-4">
@@ -68,8 +64,6 @@ export function ProfileProgressPanel({ profile, stats }: Props) {
         </div>
         <p className="mt-3 text-[0.65rem] font-bold leading-relaxed text-stone-500">
           Faltam <strong className="text-emerald-700">{xpParaLevelUp} XP</strong> para o nível {level + 1}.
-          {' '}
-          <span className="text-amber-700">{xpDisponivelTrocas} XP</span> disponíveis para trocas hoje.
         </p>
       </section>
 
@@ -100,36 +94,15 @@ export function ProfileProgressPanel({ profile, stats }: Props) {
         />
       </div>
 
-      <section className="glass-card rounded-2xl p-4">
-        <h3 className="game-section-title flex items-center gap-2">
-          <Zap size={14} className="text-amber-500" /> Nível & XP
-        </h3>
-        <div className="mt-3 flex flex-col gap-3">
-          <XpBar value={xpInLevel} max={xpToNext} label="Progresso do nível" />
-          <XpBar
-            value={stats.xp_hoje}
-            max={stats.xp_diario_limite}
-            label="XP diário (exercícios)"
-            hint={dailyXpHint}
-            variant="daily"
-            pulseWhenFull
-          />
-          <XpBar
-            value={stats.xp_extra_hoje}
-            max={Math.max(stats.xp_extra_hoje, 1)}
-            label="XP extra hoje"
-            hint="Streak, conquistas, loja e habilidades — não conta no máx. diário"
-            variant="extra"
-            valueOnly
-          />
-        </div>
-        <p className="mt-3 text-[0.62rem] font-bold leading-relaxed text-stone-500">
-          Bônus de streak, conquistas e loja não entram no máx. diário de exercícios.{' '}
-          <Link to="/configuracoes#regras-xp" className="text-emerald-700 underline">
-            Ver regras de XP
-          </Link>
-        </p>
-      </section>
+      <LevelXpSection
+        stats={stats}
+        level={level}
+        xpInLevel={xpInLevel}
+        xpToNext={xpToNext}
+        xpParaLevelUp={xpParaLevelUp}
+        dailyXpHint={dailyXpHint}
+        showRulesLink
+      />
 
       <section className="glass-card rounded-2xl p-4">
         <h3 className="game-section-title">Zonas da semana</h3>
@@ -148,7 +121,7 @@ export function ProfileProgressPanel({ profile, stats }: Props) {
             )}
           </div>
         )}
-        <MuscleBarChart muscles={stats.musculos_semana} monthly={stats.evolucao_mensal} />
+        <MuscleBarChart muscles={stats.musculos_semana} />
       </section>
     </div>
   );

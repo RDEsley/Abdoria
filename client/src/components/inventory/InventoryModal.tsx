@@ -1,23 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Minus, Plus, X, Zap } from 'lucide-react';
+import { X } from 'lucide-react';
+import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
+import { RouteDrinkSuggestModal } from '@/components/afk/RouteDrinkSuggestModal';
 import { GameButton } from '@/components/ui/GameButton';
-import { EnergyDrinkIcon, PatrolCacheIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/daily-shop-display';
-import { getInventory, useEnergyDrink, useExpInstant, useDoriaBag } from '@/lib/api';
+import { FrozenStreakIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/daily-shop-display';
+import { getInventory, useExpInstant, useDoriaBag, useRouteDrink } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { overflowToastMessage } from '@/lib/inventory-overflow';
+import { buildRewardPresentationFromAfk, partitionRewardPresentation } from '@/lib/reward-presentation';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
+import { useRewardPresentation } from '@/context/RewardPresentationContext';
+import type { AfkPendingReward } from '@/types';
 import {
-  ENERGY_DRINK_BONUS_XP,
-  ENERGY_DRINK_LABEL,
+  FROZEN_STREAK_LABEL,
+  formatFrozenStreakDescription,
   DORIA_BAG_LABEL,
+  DORIA_BAG_MAX,
+  DORIA_BAG_MIN,
   EXP_INSTANT_LABEL,
   EXP_INSTANT_XP,
-  formatEnergyDrinkDescription,
   INVENTORY_STACK_CAP,
-  PATROL_CACHE_LABEL,
   ROUTE_DRINK_HOURS,
   ROUTE_DRINK_LABEL,
 } from '@/types';
@@ -26,43 +32,43 @@ import '@/components/rewards/reward-presentation.css';
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Sobrepõe modais da exploração (z-index maior). */
+  layer?: 'default' | 'modal';
 }
 
-type SelectedItem = 'energy_drink' | 'route_drink' | 'bau_patrulha' | 'exp_instant' | 'doria_bag' | null;
+type SelectedItem = 'frozen_streak' | 'route_drink' | 'exp_instant' | 'doria_bag' | null;
 
-export function InventoryModal({ open, onClose }: Props) {
+export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const { applyUser } = useAuth();
   const { refresh: refreshApp, stats } = useApp();
-  const [energyCount, setEnergyCount] = useState(0);
+  const { presentRewards } = useRewardPresentation();
+  const [frozenStreakCount, setFrozenStreakCount] = useState(0);
   const [routeCount, setRouteCount] = useState(0);
-  const [bauCount, setBauCount] = useState(0);
   const [expInstantCount, setExpInstantCount] = useState(0);
   const [doriaBagCount, setDoriaBagCount] = useState(0);
   const [stackCap, setStackCap] = useState(INVENTORY_STACK_CAP);
-  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [usingEnergy, setUsingEnergy] = useState(false);
   const [usingExpInstant, setUsingExpInstant] = useState(false);
   const [usingDoriaBag, setUsingDoriaBag] = useState(false);
+  const [usingRouteDrink, setUsingRouteDrink] = useState(false);
+  const [routeDrinkConfirmOpen, setRouteDrinkConfirmOpen] = useState(false);
+  const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
   const [bagShake, setBagShake] = useState(false);
   const [coinPops, setCoinPops] = useState<number[]>([]);
   const [selected, setSelected] = useState<SelectedItem>(null);
 
   const applyCounts = useCallback((data: {
-    energy_drink: number;
+    frozen_streak: number;
     route_drink: number;
-    bau_patrulha: number;
     exp_instant?: number;
     doria_bag?: number;
     stack_cap?: number;
   }) => {
-    setEnergyCount(data.energy_drink);
+    setFrozenStreakCount(data.frozen_streak);
     setRouteCount(data.route_drink);
-    setBauCount(data.bau_patrulha);
     setExpInstantCount(data.exp_instant ?? 0);
     setDoriaBagCount(data.doria_bag ?? 0);
     setStackCap(data.stack_cap ?? INVENTORY_STACK_CAP);
-    setQuantity((q) => Math.min(q, Math.max(1, data.energy_drink)));
   }, []);
 
   const load = useCallback(async () => {
@@ -78,14 +84,17 @@ export function InventoryModal({ open, onClose }: Props) {
   }, [applyCounts]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setSelected(null);
+      setRouteDrinkConfirmOpen(false);
+      setCelebrationClaimed(null);
+      return;
+    }
     setSelected(null);
-    setQuantity(1);
     if (stats) {
       applyCounts({
-        energy_drink: stats.energy_drink_count ?? 0,
+        frozen_streak: stats.frozen_streak_count ?? 0,
         route_drink: stats.route_drink_count ?? 0,
-        bau_patrulha: stats.patrol_cache_count ?? 0,
         exp_instant: stats.exp_instant_count ?? 0,
         doria_bag: stats.doria_bag_count ?? 0,
         stack_cap: INVENTORY_STACK_CAP,
@@ -106,26 +115,6 @@ export function InventoryModal({ open, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose, selected]);
 
-  const handleUseEnergy = async () => {
-    if (quantity < 1 || quantity > energyCount) return;
-    setUsingEnergy(true);
-    try {
-      const res = await useEnergyDrink(quantity);
-      applyUser(res.user);
-      await refreshApp();
-      applyCounts(res.inventario);
-      showGameToast(`+${res.bonus_added} XP bônus ativado!`, { variant: 'success' });
-      setSelected(null);
-      window.dispatchEvent(
-        new CustomEvent('abdoria:energy-drink-used', { detail: { bonus_added: res.bonus_added } }),
-      );
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível usar Energy Drink.'), { variant: 'error' });
-    } finally {
-      setUsingEnergy(false);
-    }
-  };
-
   const handleUseExpInstantAll = async () => {
     if (expInstantCount < 1) return;
     setUsingExpInstant(true);
@@ -143,18 +132,22 @@ export function InventoryModal({ open, onClose }: Props) {
     }
   };
 
-  const handleUseDoriaBag = async () => {
-    if (doriaBagCount < 1) return;
+  const handleUseDoriaBag = async (bagQuantity = 1) => {
+    if (doriaBagCount < 1 || bagQuantity < 1) return;
     setUsingDoriaBag(true);
     setBagShake(true);
     try {
-      const res = await useDoriaBag(1);
+      const res = await useDoriaBag(bagQuantity);
       applyUser(res.user);
       await refreshApp();
       applyCounts(res.inventario);
-      setCoinPops(res.rolls);
+      setCoinPops(res.rolls.slice(0, 8));
       window.setTimeout(() => setCoinPops([]), 800);
-      showGameToast(`+${res.abdoria_ganha} Dorias da bolsa!`, { variant: 'success' });
+      const label =
+        res.quantity_used > 1
+          ? `${res.quantity_used} bolsas abertas · +${res.abdoria_ganha} Dorias!`
+          : `+${res.abdoria_ganha} Dorias da bolsa!`;
+      showGameToast(label, { variant: 'success' });
       setSelected(null);
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível usar Bolsa de Dorias.'), { variant: 'error' });
@@ -164,18 +157,51 @@ export function InventoryModal({ open, onClose }: Props) {
     }
   };
 
-  const openExploration = () => {
-    onClose();
-    window.dispatchEvent(new Event('abdoria:open-afk'));
+  const showClaimedCelebration = useCallback((claimed: AfkPendingReward, overflowToDorias = 0) => {
+    setCelebrationClaimed(claimed);
+    const overflowMsg = overflowToastMessage(overflowToDorias);
+    if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
+  }, []);
+
+  const handleCelebrationClose = useCallback(() => {
+    setCelebrationClaimed((claimed) => {
+      if (claimed) {
+        const { secrets } = partitionRewardPresentation(buildRewardPresentationFromAfk(claimed));
+        if (secrets.length > 0) {
+          presentRewards(secrets);
+        }
+      }
+      return null;
+    });
+  }, [presentRewards]);
+
+  const handleUseRouteDrink = async () => {
+    if (routeCount < 1) return;
+    setUsingRouteDrink(true);
+    try {
+      const res = await useRouteDrink();
+      applyUser(res.user);
+      await refreshApp();
+      applyCounts(res.inventario);
+      setRouteDrinkConfirmOpen(false);
+      setSelected(null);
+      window.dispatchEvent(new CustomEvent('abdoria:afk-sync', { detail: res }));
+      showClaimedCelebration(res.claimed, res.overflow_to_dorias ?? 0);
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível usar o Route Drink.'), { variant: 'error' });
+    } finally {
+      setUsingRouteDrink(false);
+    }
   };
 
-  const totalItems = energyCount + routeCount + bauCount + expInstantCount + doriaBagCount;
+  const totalItems = frozenStreakCount + routeCount + expInstantCount + doriaBagCount;
 
   if (!open) return null;
 
   return createPortal(
+    <>
     <div
-      className="game-inventory-overlay"
+      className={`game-inventory-overlay${layer === 'modal' ? ' game-inventory-overlay--modal' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="inventory-title"
@@ -195,24 +221,23 @@ export function InventoryModal({ open, onClose }: Props) {
           Inventário
         </h2>
         <p className="game-modal__text">
-          Energy Drink, Route Drink e EXP Instantâneo acumulam até {stackCap} unidades. Excedentes viram Dorias.
+          Frozen Streak, Route Drink e EXP Instantâneo acumulam até {stackCap} unidades. Excedentes viram Dorias.
         </p>
 
         <div className="game-inventory-grid">
           <button
             type="button"
-            className={`game-inventory-slot${energyCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'energy_drink' ? ' game-inventory-slot--active' : ''}`}
+            className={`game-inventory-slot${frozenStreakCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'frozen_streak' ? ' game-inventory-slot--active' : ''}`}
             disabled={loading}
-            onClick={() => {
-              setSelected('energy_drink');
-              setQuantity(Math.min(1, energyCount) || 1);
-            }}
-            aria-label={`Energy Drink, ${energyCount} em estoque`}
+            onClick={() => setSelected('frozen_streak')}
+            aria-label={`${FROZEN_STREAK_LABEL}, ${frozenStreakCount} em estoque`}
           >
             <span className="game-inventory-slot__icon">
-              <EnergyDrinkIcon size={36} />
+              <FrozenStreakIcon size={36} />
             </span>
-            {energyCount > 0 && <span className="game-inventory-slot__qty tabular-nums">{energyCount}</span>}
+            {frozenStreakCount > 0 && (
+              <span className="game-inventory-slot__qty tabular-nums">{frozenStreakCount}</span>
+            )}
           </button>
 
           <button
@@ -226,19 +251,6 @@ export function InventoryModal({ open, onClose }: Props) {
               <RouteDrinkIcon size={36} />
             </span>
             {routeCount > 0 && <span className="game-inventory-slot__qty tabular-nums">{routeCount}</span>}
-          </button>
-
-          <button
-            type="button"
-            className={`game-inventory-slot${bauCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'bau_patrulha' ? ' game-inventory-slot--active' : ''}`}
-            disabled={loading}
-            onClick={() => setSelected('bau_patrulha')}
-            aria-label={`${PATROL_CACHE_LABEL}, ${bauCount} em estoque`}
-          >
-            <span className="game-inventory-slot__icon">
-              <PatrolCacheIcon size={36} />
-            </span>
-            {bauCount > 0 && <span className="game-inventory-slot__qty tabular-nums">{bauCount}</span>}
           </button>
 
           <button
@@ -282,52 +294,22 @@ export function InventoryModal({ open, onClose }: Props) {
         )}
 
         <AnimatePresence>
-          {selected === 'energy_drink' && energyCount > 0 && (
+          {selected === 'frozen_streak' && frozenStreakCount > 0 && (
             <motion.div
               className="game-inventory-detail"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
             >
-              <h3 className="game-inventory-detail__title">{ENERGY_DRINK_LABEL}</h3>
-              <p className="game-inventory-detail__desc">
-                {formatEnergyDrinkDescription(ENERGY_DRINK_BONUS_XP)}
+              <h3 className="game-inventory-detail__title">{FROZEN_STREAK_LABEL}</h3>
+              <p className="game-inventory-detail__desc">{formatFrozenStreakDescription()}</p>
+              <p className="game-inventory-detail__desc game-inventory-detail__desc--muted">
+                Consumido automaticamente se você perder um dia de treino. Você tem {frozenStreakCount} em estoque
+                (máx. {stackCap}).
               </p>
-
-              <div className="game-inventory-use">
-                <span className="game-inventory-use__label">Quantidade</span>
-                <div className="game-inventory-use__stepper">
-                  <button
-                    type="button"
-                    className="game-inventory-use__btn"
-                    disabled={quantity <= 1 || usingEnergy}
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    aria-label="Diminuir quantidade"
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <span className="game-inventory-use__value tabular-nums">{quantity}</span>
-                  <button
-                    type="button"
-                    className="game-inventory-use__btn"
-                    disabled={quantity >= energyCount || usingEnergy}
-                    onClick={() => setQuantity((q) => Math.min(energyCount, q + 1))}
-                    aria-label="Aumentar quantidade"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-                <p className="game-inventory-use__hint">
-                  <Zap size={12} aria-hidden /> Total: +{quantity * ENERGY_DRINK_BONUS_XP} XP bônus
-                </p>
-              </div>
-
               <div className="game-inventory-detail__actions">
-                <GameButton variant="secondary" onClick={() => setSelected(null)} disabled={usingEnergy}>
-                  Cancelar
-                </GameButton>
-                <GameButton onClick={() => void handleUseEnergy()} disabled={usingEnergy}>
-                  {usingEnergy ? 'Usando...' : 'Usar'}
+                <GameButton variant="secondary" onClick={() => setSelected(null)}>
+                  Voltar
                 </GameButton>
               </div>
             </motion.div>
@@ -342,15 +324,15 @@ export function InventoryModal({ open, onClose }: Props) {
             >
               <h3 className="game-inventory-detail__title">{ROUTE_DRINK_LABEL}</h3>
               <p className="game-inventory-detail__desc">
-                Enche o baú com recompensas de {ROUTE_DRINK_HOURS}h de Exploração AFK. Só pode ser usado na exploração
-                com o baú vazio.
+                Aplica na hora o loot de {ROUTE_DRINK_HOURS}h de Exploração AFK, com animação de baú e recompensas.
+                Você tem {routeCount} em estoque (máx. {stackCap}).
               </p>
               <div className="game-inventory-detail__actions">
-                <GameButton variant="secondary" onClick={() => setSelected(null)}>
+                <GameButton variant="secondary" onClick={() => setSelected(null)} disabled={usingRouteDrink}>
                   Voltar
                 </GameButton>
-                <GameButton onClick={openExploration}>
-                  <Compass size={16} aria-hidden /> Usar na Exploração
+                <GameButton onClick={() => setRouteDrinkConfirmOpen(true)} disabled={usingRouteDrink}>
+                  {usingRouteDrink ? 'Usando...' : 'Usar Todos'}
                 </GameButton>
               </div>
             </motion.div>
@@ -388,43 +370,62 @@ export function InventoryModal({ open, onClose }: Props) {
             >
               <h3 className="game-inventory-detail__title">{DORIA_BAG_LABEL}</h3>
               <p className="game-inventory-detail__desc">
-                Abre uma bolsa misteriosa com 4 a 21 Dorias. Você tem {doriaBagCount} em estoque.
+                Cada bolsa concede entre {DORIA_BAG_MIN} e {DORIA_BAG_MAX} Dorias aleatórias. Você tem{' '}
+                {doriaBagCount} em estoque.
+                {doriaBagCount > 1 && (
+                  <>
+                    {' '}
+                    Abrir todas pode render de {doriaBagCount * DORIA_BAG_MIN} a {doriaBagCount * DORIA_BAG_MAX}{' '}
+                    Dorias.
+                  </>
+                )}
               </p>
               <div className="game-inventory-detail__actions">
                 <GameButton variant="secondary" onClick={() => setSelected(null)} disabled={usingDoriaBag}>
                   Voltar
                 </GameButton>
-                <GameButton onClick={() => void handleUseDoriaBag()} disabled={usingDoriaBag}>
-                  {usingDoriaBag ? 'Abrindo...' : 'Usar bolsa'}
-                </GameButton>
+                {doriaBagCount > 1 ? (
+                  <>
+                    <GameButton
+                      variant="secondary"
+                      onClick={() => void handleUseDoriaBag(1)}
+                      disabled={usingDoriaBag}
+                    >
+                      {usingDoriaBag ? 'Abrindo...' : 'Usar 1 bolsa'}
+                    </GameButton>
+                    <GameButton onClick={() => void handleUseDoriaBag(doriaBagCount)} disabled={usingDoriaBag}>
+                      {usingDoriaBag
+                        ? 'Abrindo...'
+                        : `Utilizar todas (${doriaBagCount})`}
+                    </GameButton>
+                  </>
+                ) : (
+                  <GameButton onClick={() => void handleUseDoriaBag(1)} disabled={usingDoriaBag}>
+                    {usingDoriaBag ? 'Abrindo...' : 'Usar bolsa'}
+                  </GameButton>
+                )}
               </div>
             </motion.div>
           )}
 
-          {selected === 'bau_patrulha' && bauCount > 0 && (
-            <motion.div
-              className="game-inventory-detail"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-            >
-              <h3 className="game-inventory-detail__title">{PATROL_CACHE_LABEL}</h3>
-              <p className="game-inventory-detail__desc">
-                Aplica instantaneamente as recompensas de 6h de exploração. Use pela tela de Exploração ou aqui em breve.
-              </p>
-              <div className="game-inventory-detail__actions">
-                <GameButton variant="secondary" onClick={() => setSelected(null)}>
-                  Voltar
-                </GameButton>
-                <GameButton onClick={openExploration}>
-                  <Compass size={16} aria-hidden /> Usar na Exploração
-                </GameButton>
-              </div>
-            </motion.div>
-          )}
         </AnimatePresence>
       </motion.div>
-    </div>,
+    </div>
+
+    <RouteDrinkSuggestModal
+      open={routeDrinkConfirmOpen}
+      routeDrinkCount={routeCount}
+      using={usingRouteDrink}
+      canUse={routeCount > 0}
+      layer={layer}
+      onConfirm={() => void handleUseRouteDrink()}
+      onCancel={() => setRouteDrinkConfirmOpen(false)}
+    />
+
+    {celebrationClaimed && (
+      <AfkRewardCelebration claimed={celebrationClaimed} onClose={handleCelebrationClose} />
+    )}
+    </>,
     document.body,
   );
 }

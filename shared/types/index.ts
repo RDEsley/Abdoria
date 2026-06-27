@@ -23,11 +23,11 @@ export type Prioridade = 'S' | 'A' | 'B' | 'C' | 'dinamico' | 'isometrico';
 export type TreinoBase = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 
 export const CICLO_LABELS: Record<TreinoBase, string> = {
-  A: 'Superior',
+  A: 'Abdômen superior',
   B: 'Oblíquos',
-  C: 'Inferior',
-  D: 'Core',
-  E: 'Completo',
+  C: 'Abdômen inferior',
+  D: 'Estabilidade',
+  E: 'Corpo inteiro',
   F: 'HIIT',
   G: 'Mobilidade',
 };
@@ -148,7 +148,7 @@ export interface UserPreferencias {
 export type ArmaPreferida = 'arco' | 'espada';
 
 export type InventoryItemId =
-  | 'energy_drink'
+  | 'frozen_streak'
   | 'route_drink'
   | 'bau_patrulha'
   | 'exp_instant'
@@ -166,7 +166,7 @@ export interface Inventario {
 export interface AfkPendingReward {
   xp: number;
   abdoria: number;
-  energy_drinks: number;
+  frozen_streaks: number;
   route_drinks: number;
   cosmetic_ids: string[];
   /** Armas da loja da exploração desbloqueadas via drop de boss. */
@@ -212,6 +212,14 @@ export {
   isBestiaryEnemyId,
 } from '../afk/bestiary.js';
 export type { BestiaryCategory, BestiaryCategoryId } from '../afk/bestiary.js';
+export {
+  bestiaryDropsForEnemy,
+  buildBestiaryDropCatalog,
+  inferBestiaryDropsFromKill,
+  mergeBestiaryDropDiscoveries,
+  snapshotBestiaryPending,
+} from '../afk/bestiary-drops.js';
+export type { BestiaryDropId, BestiaryDropDiscoveryMap, BestiaryPendingSnapshot } from '../afk/bestiary-drops.js';
 
 export {
   AFK_BOSS_INTERVAL,
@@ -255,25 +263,25 @@ export {
 } from '../afk/slime-appearance.js';
 
 export interface XpDiario {
-  /** XP de exercícios hoje (teto padrão/dia). */
+  /** XP ganho hoje (exercícios, streak, conquistas, loja — teto unificado). */
   ganho_hoje: number;
-  /** XP bônus hoje (streak, conquistas, loja, habilidades — sem teto). */
-  extra_hoje: number;
   data_reset: string;
-  /** XP restante do bônus Energy Drink (+100 por uso). */
-  bonus_pool_restante: number;
-  /** Capacidade total do bônus ativo (para barra de progresso). */
-  bonus_pool_total: number;
 }
 
 export interface Gamificacao {
   nivel_xp: number;
   streak_atual: number;
   streak_maior: number;
+  /** Datas (YYYY-MM-DD, SP) em que um Frozen Streak manteve a ofensiva. */
+  streak_congelamentos?: string[];
+  /** Aviso único para exibir toast de proteção de streak no próximo acesso. */
+  streak_freeze_notice_pending?: boolean;
   total_minutos: number;
   conquistas: string[];
   /** Inimigos derrotados pela primeira vez no Bestiário. */
   bestiario_desbloqueados?: AfkEnemyId[];
+  /** Drops já obtidos de cada inimigo (para revelar loot no bestiário). */
+  bestiario_drops_descobertos?: Partial<Record<AfkEnemyId, import('../afk/bestiary-drops.js').BestiaryDropId[]>>;
 }
 
 export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'fundo';
@@ -416,10 +424,19 @@ export {
   PATROL_WEAPON_BY_ID,
   PATROL_WEAPON_RARITY_LABELS,
   PATROL_LEGENDARY_WEAPON_IDS,
+  PATROL_SECRET_WEAPON_IDS,
   patrolWeaponsByKind,
   patrolHeroDamage,
   resolvePatrolArmas,
 } from '../patrol/shop.js';
+
+export {
+  AFK_EXPLORATION_DROP_EXCLUDED_COSMETIC_IDS,
+  AFK_SECRET_WEAPON_ROLL_EXACT,
+  AFK_SECRET_WEAPON_GATE_MOD,
+  AFK_ROUTE_DRINK_DROP_THRESHOLD,
+  isExplorationLegendaryCosmeticDrop,
+} from '../afk/exploration-drops.js';
 
 export {
   AFK_LEVEL10_BOW_DAMAGE_SPECIAL,
@@ -533,8 +550,37 @@ export function dailyXpCapForLevel(level: number): number {
 }
 
 export function dailyXpCapForUser(level: number, bestiaryUnlockedCount = 0): number {
+  return dailyXpCapBreakdown(level, bestiaryUnlockedCount).total;
+}
+
+export interface DailyXpCapBreakdown {
+  base: number;
+  bonus_nivel: number;
+  bonus_bestiario: number;
+  total: number;
+}
+
+/** Componentes permanentes do teto diário de XP. */
+export function dailyXpCapBreakdown(level: number, bestiaryUnlockedCount = 0): DailyXpCapBreakdown {
+  const safeLevel = Math.max(1, Math.floor(level));
   const safeCount = Math.max(0, Math.floor(bestiaryUnlockedCount));
-  return dailyXpCapForLevel(level) + safeCount * XP_DAILY_CAP_PER_BESTIARY;
+  const base = XP_DAILY_CAP_BASE;
+  const bonus_nivel = safeLevel * XP_DAILY_CAP_PER_LEVEL;
+  const bonus_bestiario = safeCount * XP_DAILY_CAP_PER_BESTIARY;
+  return {
+    base,
+    bonus_nivel,
+    bonus_bestiario,
+    total: base + bonus_nivel + bonus_bestiario,
+  };
+}
+
+export function formatDailyXpCapBreakdown(breakdown: DailyXpCapBreakdown): string {
+  const parts = [`${breakdown.base} base`, `+${breakdown.bonus_nivel} nível`];
+  if (breakdown.bonus_bestiario > 0) {
+    parts.push(`+${breakdown.bonus_bestiario} bestiário`);
+  }
+  return `${parts.join(' · ')} = ${breakdown.total} máx.`;
 }
 
 /** @deprecated Conquistas não aumentam mais o teto diário. */
@@ -564,23 +610,26 @@ export const SHOP_ABDORIA_COST_PER_XP = 5;
 export const ABDORIA_XP_STEP = 10;
 export const CURRENCY_NAME = 'Dorias';
 
-export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
-export const ENERGY_DRINK_LABEL = 'Energy Drink';
-export const ENERGY_DRINK_BONUS_XP = 100;
-export const ENERGY_DRINK_SHOP_PRICE = 20;
+export const FROZEN_STREAK_ITEM_ID: InventoryItemId = 'frozen_streak';
+export const FROZEN_STREAK_LABEL = 'Frozen Streak';
+export const FROZEN_STREAK_SHOP_PRICE = 25;
 
-/** Texto do inventário — interpolar XP com {@link formatEnergyDrinkDescription}. */
-export function formatEnergyDrinkDescription(bonusXp = ENERGY_DRINK_BONUS_XP): string {
-  return (
-    `Recarga para treinar além do limite diário. Cada unidade adiciona +${bonusXp} XP bônus ao seu pool ` +
-    'de treino: você ganha esse XP ao completar exercícios, depois de esgotar o máx. diário normal — sem contar nele.'
-  );
+export function formatFrozenStreakDescription(): string {
+  return 'Impede que sua ofensiva seja resetada caso você perca um dia de treino. Consumido automaticamente quando necessário.';
 }
+
+/** @deprecated Renomeado para {@link FROZEN_STREAK_ITEM_ID} */
+export const ENERGY_DRINK_ITEM_ID = FROZEN_STREAK_ITEM_ID;
+/** @deprecated */
+export const ENERGY_DRINK_LABEL = FROZEN_STREAK_LABEL;
+/** @deprecated */
+export const ENERGY_DRINK_SHOP_PRICE = FROZEN_STREAK_SHOP_PRICE;
 export const ROUTE_DRINK_ITEM_ID: InventoryItemId = 'route_drink';
 export const ROUTE_DRINK_HOURS = 1;
 export const ROUTE_DRINK_LABEL = 'Route Drink';
 export const ROUTE_DRINK_SHOP_PRICE = 40;
-export const AFK_ROUTE_DRINK_DROP_CHANCE = 1;
+/** @deprecated Use {@link AFK_ROUTE_DRINK_DROP_THRESHOLD} from shared/afk/exploration-drops.js */
+export const AFK_ROUTE_DRINK_DROP_CHANCE = 4;
 
 export const EXP_INSTANT_ITEM_ID: InventoryItemId = 'exp_instant';
 export const EXP_INSTANT_LABEL = 'EXP Instantâneo';
@@ -589,11 +638,11 @@ export const EXP_INSTANT_SHOP_PRICE = 12;
 
 export const DORIA_BAG_ITEM_ID: InventoryItemId = 'doria_bag';
 export const DORIA_BAG_LABEL = 'Bolsa de Dorias';
-export const DORIA_BAG_MIN = 4;
-export const DORIA_BAG_MAX = 21;
+export const DORIA_BAG_MIN = 1;
+export const DORIA_BAG_MAX = 10;
 export const DORIA_BAG_SHOP_PRICE = 18;
 
-/** Rolagem exata (0,01%) para drops secretos na exploração AFK. */
+/** @deprecated Use {@link AFK_SECRET_ROLL_EXACT} from shared/afk/exploration-drops.js */
 export const AFK_SECRET_ROLL_EXACT = 9999;
 
 /** Cosméticos exclusivos do Golden Slime — ocultos da loja. */
@@ -606,6 +655,7 @@ export const GOLDEN_SLIME_SECRET_COSMETIC_IDS = [
 /** Itens que nunca aparecem na Loja Abdoria nem no catálogo bloqueado. */
 export const SHOP_HIDDEN_COSMETIC_IDS = [
   'titulo_secreto',
+  'titulo_dono_do_jogo',
   ...GOLDEN_SLIME_SECRET_COSMETIC_IDS,
 ] as const;
 
@@ -619,7 +669,7 @@ export function isShopHiddenCosmetic(id: string): boolean {
 
 export const INVENTORY_STACK_CAP = 24;
 export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [
-  ENERGY_DRINK_ITEM_ID,
+  FROZEN_STREAK_ITEM_ID,
   ROUTE_DRINK_ITEM_ID,
   EXP_INSTANT_ITEM_ID,
 ];
@@ -654,16 +704,13 @@ export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
-  pending: { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], exp_instant: 0, doria_bags: 0, titulo_secreto: false, drop_count: 0 },
+  pending: { xp: 0, abdoria: 0, frozen_streaks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], exp_instant: 0, doria_bags: 0, titulo_secreto: false, drop_count: 0 },
   combat: { ...DEFAULT_AFK_COMBAT },
 };
 
 export const DEFAULT_XP_DIARIO: XpDiario = {
   ganho_hoje: 0,
-  extra_hoje: 0,
   data_reset: '',
-  bonus_pool_restante: 0,
-  bonus_pool_total: 0,
 };
 
 /** @deprecated Use SHOP_XP_COST_PER_ABDORIA */
@@ -915,18 +962,20 @@ export interface DashboardStats {
   streak_maior: number;
   nivel_xp: number;
   xp_hoje: number;
-  xp_extra_hoje: number;
   xp_diario_limite: number;
-  xp_bonus_restante: number;
-  xp_bonus_total: number;
+  xp_diario_cap_base: number;
+  xp_diario_cap_bonus_nivel: number;
+  xp_diario_cap_bonus_bestiario: number;
   xp_data_reset: string;
   inventario: Inventario;
   afk: AfkState;
-  energy_drink_count: number;
+  frozen_streak_count: number;
   route_drink_count: number;
   patrol_cache_count: number;
   exp_instant_count: number;
   doria_bag_count: number;
+  /** Toast único: Frozen Streak salvou a ofensiva no último sync. */
+  streak_frozen_notice?: boolean;
   bestiario_desbloqueados: AfkEnemyId[];
   bestiario_bonus_cap: number;
   conquistas: Achievement[];
@@ -1152,8 +1201,17 @@ export interface OnboardingPayload {
 export const MUSCULO_LABELS: Record<MusculoPrincipal, string> = {
   superior: 'Abdômen superior',
   inferior: 'Abdômen inferior',
+  obliquos: 'Oblíquos (laterais)',
+  core: 'Estabilidade profunda',
+  completo: 'Corpo inteiro',
+};
+
+/** Rótulos curtos para tags em listas e filas — legíveis, sem siglas obscuras. */
+export const MUSCULO_TAG_LABELS: Record<MusculoPrincipal, string> = {
+  superior: 'Abd. superior',
+  inferior: 'Abd. inferior',
   obliquos: 'Oblíquos',
-  core: 'Core (estabilidade)',
+  core: 'Estabilidade',
   completo: 'Corpo inteiro',
 };
 
@@ -1161,7 +1219,7 @@ export const MUSCULO_HINTS: Record<MusculoPrincipal, string> = {
   superior: 'Parte alta do reto abdominal — crunch, sit-up. Não é peito.',
   inferior: 'Parte baixa do abdômen — elevações de pernas e reverse crunch.',
   obliquos: 'Laterais do tronco — rotações, bicicleta e prancha lateral.',
-  core: 'Estabilização profunda — prancha, dead bug e antebraço.',
+  core: 'Prancha, dead bug e antebraço — estabilização profunda do tronco.',
   completo: 'Circuitos que combinam várias zonas do abdômen e condicionamento.',
 };
 

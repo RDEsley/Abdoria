@@ -1,6 +1,10 @@
 import type { UserDocument } from '../domain/User.js';
 import { COSMETICS } from '../data/cosmetics.js';
-import { PATROL_LEGENDARY_WEAPON_IDS } from '../../../shared/patrol/shop.js';
+import {
+  PATROL_LEGENDARY_WEAPON_IDS,
+  PATROL_SECRET_WEAPON_IDS,
+  resolvePatrolArmas,
+} from '../../../shared/patrol/shop.js';
 import type { AfkEnemyTier } from '../types/index.js';
 import {
   AFK_KILL_DROP_CHANCE_BOSS,
@@ -8,11 +12,13 @@ import {
   AFK_KILL_DROP_CHANCE_ELITE,
   AFK_LEGENDARY_ROLL_BOSS,
   AFK_LEGENDARY_ROLL_NORMAL,
-  AFK_ROUTE_DRINK_DROP_CHANCE,
+  AFK_ROUTE_DRINK_DROP_THRESHOLD,
   AFK_SECRET_ROLL_EXACT,
+  AFK_SECRET_WEAPON_GATE_MOD,
+  AFK_SECRET_WEAPON_ROLL_EXACT,
   GOLDEN_SLIME_SECRET_COSMETIC_IDS,
+  isExplorationLegendaryCosmeticDrop,
   type AfkPendingReward,
-  type CosmeticRarity,
 } from '../types/index.js';
 
 export function hashKillSeed(userId: string, killIndex: number): number {
@@ -31,16 +37,9 @@ export const hashIntervalSeed = hashKillSeed;
 function pickLegendaryCosmeticId(user: UserDocument, killIndex: number): string | null {
   const unlocked = new Set(user.cosmeticos?.desbloqueados ?? []);
   const candidates = COSMETICS.filter(
-    (c) => c.raridade === 'lendario' && !unlocked.has(c.id) && c.unlock.tipo === 'moedas',
+    (c) => !unlocked.has(c.id) && isExplorationLegendaryCosmeticDrop(c),
   );
-  if (candidates.length === 0) {
-    const anyLegendary = COSMETICS.filter(
-      (c) => (c.raridade as CosmeticRarity) === 'lendario' && !unlocked.has(c.id),
-    );
-    if (anyLegendary.length === 0) return null;
-    const idx = hashKillSeed(String(user.id), killIndex) % anyLegendary.length;
-    return anyLegendary[idx]?.id ?? null;
-  }
+  if (candidates.length === 0) return null;
   const idx = hashKillSeed(String(user.id), killIndex) % candidates.length;
   return candidates[idx]?.id ?? null;
 }
@@ -80,6 +79,28 @@ export function rollBossLegendaryWeapon(
   pending.drop_count = (pending.drop_count ?? 0) + 1;
 }
 
+/** Arma Secret (nv. 10) — roll 9998 + portão 1/3 (~0,0033% na tabela vs 0,01% do título). */
+function rollSecretPatrolWeapon(
+  user: UserDocument,
+  killIndex: number,
+  pending: AfkPendingReward,
+  unlockedWeaponIds: Set<string>,
+): void {
+  const gate = hashKillSeed(String(user.id), killIndex + 8001) % AFK_SECRET_WEAPON_GATE_MOD;
+  if (gate !== 0) return;
+
+  const candidates = PATROL_SECRET_WEAPON_IDS.filter(
+    (id) => !unlockedWeaponIds.has(id) && !pending.weapon_ids.includes(id),
+  );
+  if (candidates.length === 0) return;
+
+  const idx = hashKillSeed(String(user.id), killIndex + 8002) % candidates.length;
+  const weaponId = candidates[idx];
+  if (!weaponId) return;
+
+  pending.weapon_ids.push(weaponId);
+}
+
 /** Uma rolagem na tabela de loot da exploração (distribuição de raridade). */
 export function rollLootTable(
   user: UserDocument,
@@ -89,18 +110,20 @@ export function rollLootTable(
 ): void {
   const roll = hashKillSeed(String(user.id), killIndex) % 10000;
   const legendaryThreshold = opts?.bossBoost ? AFK_LEGENDARY_ROLL_BOSS : AFK_LEGENDARY_ROLL_NORMAL;
+  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
+  const unlockedWeapons = new Set(armas.desbloqueados);
 
   if (roll >= AFK_SECRET_ROLL_EXACT) {
     pending.titulo_secreto = true;
     return;
   }
+  if (roll === AFK_SECRET_WEAPON_ROLL_EXACT) {
+    rollSecretPatrolWeapon(user, killIndex, pending, unlockedWeapons);
+    return;
+  }
   if (roll >= legendaryThreshold) {
     const cosmeticId = pickLegendaryCosmeticId(user, killIndex);
     if (cosmeticId) pending.cosmetic_ids.push(cosmeticId);
-    return;
-  }
-  if (roll >= 9700) {
-    pending.energy_drinks += 1;
     return;
   }
   if (roll >= 9500) {
@@ -152,14 +175,14 @@ export function rollIntervalReward(
   rollLootTable(user, killIndex, pending, opts);
 }
 
-/** Chance fixa de 1% por kill de obter Route Drink no baú. */
+/** ~5 Route Drinks em 24h: roll % 10.000 < {@link AFK_ROUTE_DRINK_DROP_THRESHOLD}. */
 export function rollRouteDrinkDrop(
   user: UserDocument,
   killIndex: number,
   pending: AfkPendingReward,
 ): void {
-  const proc = hashKillSeed(String(user.id), killIndex + 5041) % 100;
-  if (proc >= AFK_ROUTE_DRINK_DROP_CHANCE) return;
+  const proc = hashKillSeed(String(user.id), killIndex + 5041) % 10000;
+  if (proc >= AFK_ROUTE_DRINK_DROP_THRESHOLD) return;
   pending.route_drinks += 1;
   pending.drop_count = (pending.drop_count ?? 0) + 1;
 }

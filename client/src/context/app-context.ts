@@ -10,6 +10,7 @@ import type {
   RepSchemeRecommendation,
   SavedWorkoutPreset,
   StoredRepScheme,
+  UserDadosSalvos,
   LevelUpCelebration,
   StreakCelebration,
   WorkoutQueueItem,
@@ -25,6 +26,7 @@ export interface AppContextValue {
   customWorkoutName: string;
   savedWorkouts: SavedWorkoutPreset[];
   selectedRepSchemeIds: Partial<Record<NivelUsuario, string>>;
+  repSchemesByNivel: UserDadosSalvos['esquemas_reps'];
   unlockedExercises: Set<string>;
   loading: boolean;
   exercisesLoading: boolean;
@@ -39,6 +41,7 @@ export interface AppContextValue {
   setCustomWorkout: (items: WorkoutQueueItem[]) => void;
   setCustomWorkoutName: (nome: string) => void;
   setSelectedRepSchemeId: (nivel: NivelUsuario, schemeId: string) => void;
+  flushPendingUserDados: () => Promise<void>;
   saveWorkoutPreset: (preset: SavedWorkoutPreset) => SavedWorkoutPreset[];
   getRepSchemes: (nivel: NivelUsuario) => StoredRepScheme[];
   saveRepSchemes: (nivel: NivelUsuario, schemes: StoredRepScheme[]) => StoredRepScheme[];

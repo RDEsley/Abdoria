@@ -15,17 +15,16 @@ import {
 import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { awardAbdoriaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
 import {
-  awardBonusXp,
-  awardDailyExerciseXp,
+  applyWorkoutXpBreakdown,
   calculateWorkoutXpBreakdown,
+  getDailyXpCapBreakdownForUser,
 } from '../services/economy.js';
 import { getSuggestedWorkout, getRecommendationAlerts, markCycleCompleted } from '../services/recommendation.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
-import { getDailyXpCapForUser } from '../services/economy.js';
 import { readInventarioSummary } from '../services/inventory.js';
-import { syncAfkRewards } from '../services/afk.js';
+import { hasAfkRewardsToClaim, syncAfkRewards } from '../services/afk.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import type { TreinoBase, TreinoTipo } from '../types/index.js';
 import { normalizePending } from '../repositories/user-repository.js';
@@ -151,6 +150,13 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
     const pending = normalizePending(user.afk?.pending);
     const inventario = readInventarioSummary(user);
+    const streakFrozenNotice = Boolean(user.gamificacao.streak_freeze_notice_pending);
+    if (streakFrozenNotice) {
+      user.gamificacao.streak_freeze_notice_pending = false;
+      await user.save();
+    }
+
+    const xpCap = getDailyXpCapBreakdownForUser(user);
 
     res.json({
       treino_hoje: treinoHoje,
@@ -163,30 +169,23 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       streak_maior: user.gamificacao.streak_maior,
       nivel_xp: user.gamificacao.nivel_xp,
       xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
-      xp_extra_hoje: user.xp_diario?.extra_hoje ?? 0,
-      xp_diario_limite: getDailyXpCapForUser(user),
-      xp_bonus_restante: user.xp_diario?.bonus_pool_restante ?? 0,
-      xp_bonus_total: user.xp_diario?.bonus_pool_total ?? 0,
+      xp_diario_limite: xpCap.total,
+      xp_diario_cap_base: xpCap.base,
+      xp_diario_cap_bonus_nivel: xpCap.bonus_nivel,
+      xp_diario_cap_bonus_bestiario: xpCap.bonus_bestiario,
       xp_data_reset: user.xp_diario?.data_reset ?? getTodaySaoPaulo(),
       inventario,
       afk: {
         minutos_acumulados: user.afk?.minutos_acumulados ?? 0,
         pending,
-        has_rewards: Boolean(
-          pending.xp > 0
-          || pending.abdoria > 0
-          || pending.energy_drinks > 0
-          || pending.route_drinks > 0
-          || pending.cosmetic_ids.length > 0
-          || (pending.weapon_ids?.length ?? 0) > 0
-          || pending.titulo_secreto,
-        ),
+        has_rewards: hasAfkRewardsToClaim({ pending }),
       },
-      energy_drink_count: inventario.energy_drink,
+      frozen_streak_count: inventario.frozen_streak,
       route_drink_count: inventario.route_drink,
       patrol_cache_count: inventario.bau_patrulha,
       exp_instant_count: inventario.exp_instant,
       doria_bag_count: inventario.doria_bag,
+      streak_frozen_notice: streakFrozenNotice,
       bestiario_desbloqueados: user.gamificacao.bestiario_desbloqueados ?? [],
       bestiario_bonus_cap: (user.gamificacao.bestiario_desbloqueados ?? []).length,
       conquistas,
@@ -299,12 +298,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       newAchievements,
     );
     const levelBefore = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
-    const dailyAwarded = awardDailyExerciseXp(updatedUser, xpBreakdown.total_diario);
-    const extraAwarded = awardBonusXp(updatedUser, xpBreakdown.total_extra);
-    xpBreakdown.aplicado_diario = dailyAwarded;
-    xpBreakdown.aplicado_extra = extraAwarded;
-    xpBreakdown.aplicado = dailyAwarded + extraAwarded;
-    const xpAwarded = xpBreakdown.aplicado;
+    const xpAwarded = applyWorkoutXpBreakdown(updatedUser, xpBreakdown);
     const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
     const levelUp =
       levelAfter > levelBefore

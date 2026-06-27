@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Coins, Store, Wand2 } from 'lucide-react';
+import { PurchaseConfirmDialog, type PurchaseConfirmDetails } from '@/components/shop/PurchaseConfirmDialog';
 import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
@@ -36,6 +37,10 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [celebrating, setCelebrating] = useState(false);
+  const [purchaseConfirm, setPurchaseConfirm] = useState<{
+    item: PatrolShopCatalogItem;
+    details: PurchaseConfirmDetails;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,12 +81,26 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       if (item.kind === 'arco' || item.kind === 'espada') {
         onWeaponChange?.(item.kind);
       }
+      setPurchaseConfirm(null);
       await load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), { variant: 'error' });
     } finally {
       setBusyId(null);
     }
+  };
+
+  const requestPurchase = (item: PatrolShopCatalogItem) => {
+    if (item.unlock.tipo !== 'moedas') return;
+    setPurchaseConfirm({
+      item,
+      details: {
+        itemName: item.nome,
+        itemDescription: item.descricao,
+        priceLabel: `${item.unlock.preco_moedas} ${CURRENCY_NAME}`,
+        balanceHint: catalog ? `Saldo atual: ${catalog.abdoria} ${CURRENCY_NAME}` : undefined,
+      },
+    });
   };
 
   const handleEquip = async (item: PatrolShopCatalogItem) => {
@@ -168,7 +187,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
                     item={item}
                     busy={busyId === item.id}
                     onEquip={() => void handleEquip(item)}
-                    onPurchase={() => void handlePurchase(item)}
+                    onPurchase={() => requestPurchase(item)}
                   />
                 ))}
               </div>
@@ -182,6 +201,16 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
           </GameButton>
         </footer>
       </div>
+
+      <PurchaseConfirmDialog
+        open={!!purchaseConfirm}
+        details={purchaseConfirm?.details ?? null}
+        busy={!!purchaseConfirm && busyId === purchaseConfirm.item.id}
+        onConfirm={() => purchaseConfirm && void handlePurchase(purchaseConfirm.item)}
+        onCancel={() => {
+          if (!busyId) setPurchaseConfirm(null);
+        }}
+      />
     </div>,
     document.body,
   );

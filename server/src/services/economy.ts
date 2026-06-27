@@ -9,6 +9,7 @@ import {
   XP_PER_SKILL_UNLOCK,
   XP_STREAK_BONUS_MAX,
   XP_STREAK_BONUS_PER_DAY,
+  dailyXpCapBreakdown,
   dailyXpCapForLevel,
   dailyXpCapForUser,
   spendableXpForShop,
@@ -59,86 +60,49 @@ export function projectedAbdoriaAfterXpSpend(user: UserDocument, xpCost: number)
   );
 }
 
-export function getDailyXpCapForUser(user: UserDocument): number {
+export function getDailyXpCapBreakdownForUser(user: UserDocument) {
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
-  return dailyXpCapForUser(level, countBestiaryUnlocks(user));
+  return dailyXpCapBreakdown(level, countBestiaryUnlocks(user));
 }
 
-export function getDailyXpBonusRemaining(user: UserDocument): number {
-  resetXpDiarioIfNeeded(user);
-  return Math.max(0, user.xp_diario?.bonus_pool_restante ?? 0);
+export function getDailyXpCapForUser(user: UserDocument): number {
+  return getDailyXpCapBreakdownForUser(user).total;
 }
 
-export function isDailyXpStandardCapReached(user: UserDocument): boolean {
+export function isDailyXpCapReached(user: UserDocument): boolean {
   resetXpDiarioIfNeeded(user);
   return user.xp_diario.ganho_hoje >= getDailyXpCapForUser(user);
 }
 
-export function isDailyXpFullyCapped(user: UserDocument): boolean {
-  resetXpDiarioIfNeeded(user);
-  const bonusLeft = user.xp_diario?.bonus_pool_restante ?? 0;
-  return isDailyXpStandardCapReached(user) && bonusLeft <= 0;
-}
-
-function ensureExtraHoje(user: UserDocument): void {
-  if (typeof user.xp_diario.extra_hoje !== 'number') {
-    user.xp_diario.extra_hoje = 0;
-  }
-}
-
-function ensureBonusPoolFields(user: UserDocument): void {
-  if (typeof user.xp_diario.bonus_pool_restante !== 'number') {
-    user.xp_diario.bonus_pool_restante = 0;
-  }
-  if (typeof user.xp_diario.bonus_pool_total !== 'number') {
-    user.xp_diario.bonus_pool_total = 0;
-  }
-}
-
-/** XP de exercícios — preenche teto padrão primeiro, depois bônus Energy Drink. */
-export function awardDailyExerciseXp(user: UserDocument, amount: number): number {
+/** XP contabilizado no teto diário unificado (exercícios, streak, conquistas, loja, habilidades). */
+export function awardDailyXp(user: UserDocument, amount: number): number {
   if (amount <= 0) return 0;
   resetXpDiarioIfNeeded(user);
-  ensureExtraHoje(user);
-  ensureBonusPoolFields(user);
 
   const cap = getDailyXpCapForUser(user);
-  let remaining = amount;
-  let awarded = 0;
+  const remaining = Math.max(0, cap - user.xp_diario.ganho_hoje);
+  const awarded = Math.min(amount, remaining);
+  if (awarded <= 0) return 0;
 
-  const standardRemaining = cap - user.xp_diario.ganho_hoje;
-  if (standardRemaining > 0 && remaining > 0) {
-    const fromStandard = Math.min(remaining, standardRemaining);
-    user.xp_diario.ganho_hoje += fromStandard;
-    awarded += fromStandard;
-    remaining -= fromStandard;
-  }
-
-  if (remaining > 0 && user.xp_diario.bonus_pool_restante > 0) {
-    const fromBonus = Math.min(remaining, user.xp_diario.bonus_pool_restante);
-    user.xp_diario.bonus_pool_restante -= fromBonus;
-    awarded += fromBonus;
-    remaining -= fromBonus;
-    if (user.xp_diario.bonus_pool_restante <= 0) {
-      user.xp_diario.bonus_pool_total = 0;
-    }
-  }
-
-  if (awarded > 0) {
-    user.gamificacao.nivel_xp += awarded;
-  }
+  user.xp_diario.ganho_hoje += awarded;
+  user.gamificacao.nivel_xp += awarded;
   return awarded;
 }
 
-/** XP bônus (streak, conquistas, loja, habilidades) — sem teto diário. */
-export function awardBonusXp(user: UserDocument, amount: number): number {
-  if (amount <= 0) return 0;
-  resetXpDiarioIfNeeded(user);
-  ensureExtraHoje(user);
+export function applyWorkoutXpBreakdown(user: UserDocument, breakdown: XpBreakdown): number {
+  const awarded = awardDailyXp(user, breakdown.total_bruto);
+  breakdown.aplicado = awarded;
 
-  user.xp_diario.extra_hoje += amount;
-  user.gamificacao.nivel_xp += amount;
-  return amount;
+  let left = awarded;
+  const aplicadoExercicios = Math.min(breakdown.exercicios, left);
+  left -= aplicadoExercicios;
+  const aplicadoStreak = Math.min(breakdown.streak, left);
+  left -= aplicadoStreak;
+  const aplicadoConquistas = Math.min(breakdown.conquistas, left);
+
+  breakdown.aplicado_diario = aplicadoExercicios;
+  breakdown.aplicado_extra = aplicadoStreak + aplicadoConquistas;
+  return awarded;
 }
 
 export function calculateWorkoutXpBreakdown(
@@ -221,7 +185,7 @@ export function spendXpForShop(
 
 export function awardSkillUnlockXp(user: UserDocument, newUnlockCount: number): number {
   if (newUnlockCount <= 0) return 0;
-  return awardBonusXp(user, newUnlockCount * XP_PER_SKILL_UNLOCK);
+  return awardDailyXp(user, newUnlockCount * XP_PER_SKILL_UNLOCK);
 }
 
 export function countNewSkillUnlocks(previous: string[], next: string[]): number {
@@ -231,6 +195,7 @@ export function countNewSkillUnlocks(previous: string[], next: string[]): number
 
 export {
   dailyXpCapForLevel,
+  dailyXpCapBreakdown,
   ABDORIA_XP_STEP,
   streakXpBonus,
   XP_PER_SKILL_UNLOCK,

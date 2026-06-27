@@ -7,6 +7,7 @@ import {
   isGoldenSlimeSecretCosmetic,
   PATROL_WEAPON_BY_ID,
   ROUTE_DRINK_LABEL,
+  FROZEN_STREAK_LABEL,
 } from '@/types';
 import { COSMETIC_DISPLAY } from '@/lib/cosmetics-meta';
 import type { RewardPresentationItem } from '@shared/rewards/presentation';
@@ -32,13 +33,13 @@ export function buildRewardPresentationFromAfk(pending: AfkPendingReward): Rewar
       amount: pending.abdoria,
     });
   }
-  if (pending.energy_drinks > 0) {
+  if ((pending.frozen_streaks ?? 0) > 0) {
     items.push({
-      id: 'energy_drink',
-      kind: 'drink',
+      id: 'frozen_streak',
+      kind: 'frozen_streak',
       rarity: 'raro',
-      name: 'Energy Drink',
-      amount: pending.energy_drinks,
+      name: FROZEN_STREAK_LABEL,
+      amount: pending.frozen_streaks,
     });
   }
   if (pending.route_drinks > 0) {

@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Play, Timer, Zap } from 'lucide-react';
+import { Flame, Play, Timer } from 'lucide-react';
+import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { DailyShopPanel } from '@/components/shop/DailyShopPanel';
@@ -10,11 +11,10 @@ import { StreakFireCelebration } from '@/components/effects/StreakFireCelebratio
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { XpBar } from '@/components/ui/XpBar';
 import { formatTrainingDuration } from '@/lib/utils';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { MUSCULO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, formatExerciseName, spendableXpForShop, xpProgressFromTotal } from '@/types';
+import { MUSCULO_LABELS, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, dailyFullExercisesForCap, formatExerciseName, xpProgressFromTotal } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 
 const ActivityCalendar = lazy(() =>
@@ -29,21 +29,7 @@ export function DashboardPage() {
   const { user } = useAuth();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const [streakCelebrate, setStreakCelebrate] = useState(false);
-  const [energyDrinkBurst, setEnergyDrinkBurst] = useState(false);
   const prevStreak = useRef<number | null>(null);
-
-  useEffect(() => {
-    let timeoutId: number | undefined;
-    const handler = () => {
-      setEnergyDrinkBurst(true);
-      timeoutId = window.setTimeout(() => setEnergyDrinkBurst(false), 3200);
-    };
-    window.addEventListener('abdoria:energy-drink-used', handler);
-    return () => {
-      window.removeEventListener('abdoria:energy-drink-used', handler);
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-    };
-  }, []);
 
   useEffect(() => {
     if (!loading && stats) {
@@ -76,9 +62,9 @@ export function DashboardPage() {
 
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(stats.nivel_xp);
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
-  const xpDisponivelTrocas = spendableXpForShop(stats.nivel_xp);
   const sugerido = stats.treino_sugerido;
-  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · máx. ${stats.xp_diario_limite} XP/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
+
+  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
   return (
@@ -158,52 +144,17 @@ export function DashboardPage() {
         />
       </motion.div>
 
-      <motion.section
-        id={DASHBOARD_LEVEL_XP_SECTION_ID}
-        variants={item}
-        className={`glass-card scroll-mt-28 p-4 md:scroll-mt-24${energyDrinkBurst ? ' game-xp-section--energy-burst' : ''}`}
-      >
-        <h3 className="game-section-title flex items-center gap-2">
-          <Zap size={14} className="text-amber-500" /> Nível & XP
-        </h3>
-        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[0.65rem] font-bold text-stone-600">
-          <span>{stats.nivel_xp} XP total</span>
-          <span className="text-emerald-700">{xpDisponivelTrocas} XP para trocas hoje</span>
-          <span>Faltam {xpParaLevelUp} XP para o nível {level + 1}</span>
-        </div>
-        <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="game-level-badge shrink-0 self-center sm:self-start">{level}</div>
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <XpBar value={xpInLevel} max={xpToNext} label="Progresso do nível" />
-            <XpBar
-              value={stats.xp_hoje}
-              max={stats.xp_diario_limite}
-              label="XP diário"
-              hint={dailyXpHint}
-              variant="daily"
-              pulseWhenFull
-            />
-            <XpBar
-              value={stats.xp_extra_hoje}
-              max={Math.max(stats.xp_extra_hoje, 1)}
-              label="XP extra"
-              hint="Streak, conquistas, loja e habilidades"
-              variant="extra"
-              valueOnly
-            />
-            {stats.xp_bonus_total > 0 && (
-              <XpBar
-                value={stats.xp_bonus_restante}
-                max={stats.xp_bonus_total}
-                label="XP bônus (Energy Drink)"
-                hint="Não conta no máx. diário de exercícios"
-                variant="bonus"
-                glow={stats.xp_bonus_restante > 0 || energyDrinkBurst}
-              />
-            )}
-          </div>
-        </div>
-      </motion.section>
+      <motion.div variants={item}>
+        <LevelXpSection
+          id={DASHBOARD_LEVEL_XP_SECTION_ID}
+          stats={stats}
+          level={level}
+          xpInLevel={xpInLevel}
+          xpToNext={xpToNext}
+          xpParaLevelUp={xpParaLevelUp}
+          dailyXpHint={dailyXpHint}
+        />
+      </motion.div>
 
       <motion.div variants={item}>
         <AchievementsPreview
@@ -237,7 +188,7 @@ export function DashboardPage() {
             )}
           </div>
         )}
-        <MuscleBarChart muscles={stats.musculos_semana} monthly={stats.evolucao_mensal} />
+        <MuscleBarChart muscles={stats.musculos_semana} />
       </motion.section>
 
       <motion.div variants={item}>

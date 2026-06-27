@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Backpack, BookOpen, Save, Settings } from 'lucide-react';
-import { BestiaryModal } from '@/components/bestiary/BestiaryModal';
+import { Save, Settings } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
-import { InventoryModal } from '@/components/inventory/InventoryModal';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { GameButton } from '@/components/ui/GameButton';
@@ -14,7 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import { playTabSwitch } from '@/lib/sounds';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, resolveCosmeticos, xpProgressFromTotal, ALL_BESTIARY_ENEMY_IDS, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -24,9 +22,6 @@ export function ProfilePage() {
   const profile = user ?? appUser;
   const [tab, setTab] = useState<Tab>('dados');
   const [saving, setSaving] = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
-  const [showBestiary, setShowBestiary] = useState(false);
-
   if (!profile) {
     return <PageLoader />;
   }
@@ -40,7 +35,11 @@ export function ProfilePage() {
       : cosmeticos.titulo_equipado === 'titulo_secreto'
         ? 'game-profile-hero__title cosmetic-title--secreto'
         : 'game-profile-hero__title';
-  const fundoClass = `game-profile-hero game-card-fundo--${cosmeticos.fundo_equipado.replace('fundo_', '')}`;
+  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const isLightFundo = fundoKey === 'padrao' || fundoKey === 'praia';
+  const heroShellClass = isLightFundo
+    ? 'game-profile-hero-shell game-profile-hero-shell--default'
+    : `game-profile-hero-shell game-profile-hero-shell--skinned game-card-fundo--${fundoKey}`;
   const xpLevel = xpProgressFromTotal(profile.gamificacao.nivel_xp).level;
 
   const handleRefresh = async () => {
@@ -85,53 +84,22 @@ export function ProfilePage() {
     <div className="flex flex-col gap-5">
       <header className="flex items-start justify-between gap-3">
         <GamePageHeader eyebrow="Ficha do herói" title={profile.nome} />
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            className="game-nav-item !p-3"
-            onClick={() => setShowInventory(true)}
-            aria-label="Abrir inventário"
-          >
-            <Backpack size={20} />
-            {(stats?.energy_drink_count ?? 0) > 0 && (
-              <span className="game-inventory-badge">
-                {stats?.energy_drink_count ?? 0}
-              </span>
-            )}
-          </button>
-          <Link to="/configuracoes" className="game-nav-item !p-3">
-            <Settings size={20} />
-          </Link>
-        </div>
+        <Link to="/configuracoes" className="game-nav-item shrink-0 !p-3">
+          <Settings size={20} />
+        </Link>
       </header>
       <p className="-mt-3 text-xs font-bold text-stone-500">{profile.email}</p>
 
-      <div className={fundoClass}>
-        <CosmeticAvatar user={profile} size="lg" />
-        <div className="game-profile-hero__meta">
-          <p className="game-profile-hero__name">{profile.nome}</p>
-          {equippedTitle && <p className={titleClass}>{equippedTitle}</p>}
-          <p className="game-profile-hero__level">Nível {xpLevel}</p>
+      <div className={heroShellClass}>
+        <div className="game-profile-hero">
+          <CosmeticAvatar user={profile} size="lg" />
+          <div className="game-profile-hero__meta">
+            <p className="game-profile-hero__name">{profile.nome}</p>
+            {equippedTitle && <p className={titleClass}>{equippedTitle}</p>}
+            <p className="game-profile-hero__level">Nível {xpLevel}</p>
+          </div>
         </div>
       </div>
-
-      <GameButton variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={() => setShowBestiary(true)}>
-        <BookOpen size={18} />
-        Bestiário
-        <span className="game-inventory-badge game-inventory-badge--inline">
-          {stats?.bestiario_desbloqueados?.length ?? 0}/{ALL_BESTIARY_ENEMY_IDS.length}
-        </span>
-      </GameButton>
-
-      <GameButton variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={() => setShowInventory(true)}>
-        <Backpack size={18} />
-        Ver inventário
-        {(stats?.energy_drink_count ?? 0) > 0 && (
-          <span className="game-inventory-badge game-inventory-badge--inline">
-            {stats?.energy_drink_count ?? 0}
-          </span>
-        )}
-      </GameButton>
 
       <div className="flex gap-2">
         {tabs.map((t) => (
@@ -234,8 +202,6 @@ export function ProfilePage() {
         <DefinitionSimulator profile={profile} stats={stats} onSaved={handleRefresh} />
       )}
 
-      <InventoryModal open={showInventory} onClose={() => setShowInventory(false)} />
-      <BestiaryModal open={showBestiary} onClose={() => setShowBestiary(false)} />
     </div>
   );
 }
