@@ -17,16 +17,22 @@ function SwordGlyph() {
   );
 }
 
-export function AfkFabSwords() {
+interface Props {
+  variant?: 'fab' | 'header';
+}
+
+export function AfkFabSwords({ variant = 'fab' }: Props) {
   return (
-    <span className="game-afk-fab-swords" aria-hidden>
+    <span
+      className={`game-afk-fab-swords${variant === 'header' ? ' game-afk-fab-swords--header' : ''}`}
+      aria-hidden
+    >
       <span className="game-afk-fab-swords__sword game-afk-fab-swords__sword--left">
         <SwordGlyph />
       </span>
       <span className="game-afk-fab-swords__sword game-afk-fab-swords__sword--right">
         <SwordGlyph />
       </span>
-      <span className="game-afk-fab-swords__spark" />
     </span>
   );
 }

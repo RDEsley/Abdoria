@@ -121,3 +121,25 @@ export function formatCountdown(seconds: number): string {
 
   return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
+
+/** Partes do countdown até o próximo domingo 00:00 (America/Sao_Paulo) — reset semanal do ranking. */
+export function leaderboardResetCountdownParts(now = new Date()): {
+  days: number;
+  hours: number;
+  minutes: number;
+  totalSeconds: number;
+} {
+  const weekday = getSaoPauloWeekday(now);
+  let daysUntilSunday = (7 - weekday) % 7;
+  if (daysUntilSunday === 0) daysUntilSunday = 7;
+
+  const secondsToMidnight = secondsUntilSaoPauloMidnight(now);
+  const totalSeconds = (daysUntilSunday - 1) * 86_400 + secondsToMidnight;
+
+  return {
+    days: Math.floor(totalSeconds / 86_400),
+    hours: Math.floor((totalSeconds % 86_400) / 3_600),
+    minutes: Math.floor((totalSeconds % 3_600) / 60),
+    totalSeconds,
+  };
+}

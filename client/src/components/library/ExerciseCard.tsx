@@ -1,7 +1,8 @@
 import { memo, useCallback, useState } from 'react';
-import { Ban, Lock, Pin, Play } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { UnlockCelebration } from '@/components/effects/UnlockCelebration';
 import { ExerciseVideoModal } from '@/components/library/ExerciseVideoModal';
+import { ExerciseQuickActions } from '@/components/library/PreferenceToggleButtons';
 import { exerciseMediaUrl } from '@/lib/media';
 import { playUnlock } from '@/lib/sounds';
 import type { IExerciseDocument } from '@/types';
@@ -45,8 +46,7 @@ export const ExerciseCard = memo(function ExerciseCard({
     playUnlock();
   };
 
-  const handlePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePlay = () => {
     setShowVideo(true);
   };
 
@@ -114,30 +114,16 @@ export const ExerciseCard = memo(function ExerciseCard({
             {!compact && exercise.descricao && (
               <p className="mt-2 line-clamp-2 text-xs text-stone-500">{exercise.descricao}</p>
             )}
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button type="button" className="game-item-card__play" onClick={handlePlay}>
-                <Play size={14} fill="currentColor" /> Ver treino
-              </button>
-              {onTogglePin && (
-                <button
-                  type="button"
-                  className={`game-item-card__pref${isPinned ? ' game-item-card__pref--active' : ''}`}
-                  onClick={() => onTogglePin(exercise.slug)}
-                  aria-pressed={isPinned}
-                >
-                  <Pin size={13} aria-hidden /> {isPinned ? 'Sempre incluir ✓' : 'Sempre incluir'}
-                </button>
-              )}
-              {onToggleBlock && (
-                <button
-                  type="button"
-                  className={`game-item-card__pref game-item-card__pref--block${isBlocked ? ' game-item-card__pref--active' : ''}`}
-                  onClick={() => onToggleBlock(exercise.slug)}
-                  aria-pressed={isBlocked}
-                >
-                  <Ban size={13} aria-hidden /> {isBlocked ? 'Bloqueado ✓' : 'Não recomendar'}
-                </button>
-              )}
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <ExerciseQuickActions
+                showPlay
+                onPlay={handlePlay}
+                showPreferences={Boolean(onTogglePin && onToggleBlock)}
+                isPinned={isPinned}
+                isBlocked={isBlocked}
+                onTogglePin={onTogglePin ? () => onTogglePin(exercise.slug) : () => {}}
+                onToggleBlock={onToggleBlock ? () => onToggleBlock(exercise.slug) : () => {}}
+              />
             </div>
           </div>
         </div>

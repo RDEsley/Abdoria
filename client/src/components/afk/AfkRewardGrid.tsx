@@ -1,4 +1,4 @@
-import { Swords } from 'lucide-react';
+import { Gift } from 'lucide-react';
 import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
 import { AfkRewardIcon, buildAfkRewardItems, type AfkRewardItem } from '@/lib/afk-rewards';
 import type { AfkPendingReward } from '@/types';
@@ -14,24 +14,20 @@ interface Props {
   chestShaking?: boolean;
 }
 
-function RewardIconGrid({ items, stock = false }: { items: AfkRewardItem[]; stock?: boolean }) {
+function RewardIconGrid({ items }: { items: AfkRewardItem[] }) {
   return (
-    <div
-      className={`game-afk-rewards__icon-grid${stock ? ' game-afk-rewards__icon-grid--stock' : ''}`}
-      role="list"
-      aria-label="Recompensas da patrulha"
-    >
+    <div className="game-afk-rewards__icon-grid" role="list" aria-label="Recompensas da patrulha">
       {items.map((item, index) => (
         <div
           key={item.key}
           role="listitem"
-          className={`game-afk-reward-chip game-afk-reward-chip--${item.kind}${item.secret ? ' game-afk-reward-chip--secret' : ''}${stock ? ' game-afk-reward-chip--stock' : ''}`}
-          style={stock ? undefined : { animationDelay: `${index * 0.07}s` }}
+          className={`game-afk-reward-chip game-afk-reward-chip--${item.kind}${item.secret ? ' game-afk-reward-chip--secret' : ''}`}
+          style={{ animationDelay: `${index * 0.07}s` }}
           aria-label={item.ariaLabel}
           title={item.ariaLabel}
         >
           <span className="game-afk-reward-chip__icon">
-            <AfkRewardIcon item={item} size={stock ? 16 : 24} />
+            <AfkRewardIcon item={item} size={24} />
           </span>
           {item.amount != null && item.amount > 0 && (
             <span className="game-afk-reward-chip__badge tabular-nums">{item.amount}</span>
@@ -52,18 +48,18 @@ export function AfkRewardGrid({
 }: Props) {
   const items = buildAfkRewardItems(pending);
   const hasLoot = items.length > 0;
+  const itemTypeCount = items.length;
 
   const iconGrid = hasLoot ? <RewardIconGrid items={items} /> : null;
-  const stockGrid = hasLoot ? <RewardIconGrid items={items} stock /> : null;
 
   const emptyState = (
     <div className="game-afk-rewards__empty-state">
-      <Swords size={20} aria-hidden />
+      <Gift size={20} aria-hidden />
     </div>
   );
 
   if (withChest) {
-    const showStock = hasLoot && !chestOpen && !chestOpening && !chestCelebrate;
+    const showLootInside = chestOpen || chestOpening;
 
     return (
       <div className="game-afk-rewards-panel">
@@ -74,10 +70,10 @@ export function AfkRewardGrid({
           ready={hasLoot && !chestOpen && !chestOpening && !chestCelebrate}
           empty={!hasLoot}
           celebrate={chestCelebrate}
+          itemCount={hasLoot && !showLootInside ? itemTypeCount : 0}
           size={chestOpen || chestOpening || chestShaking ? 'lg' : 'sm'}
-          stock={showStock ? stockGrid : null}
         >
-          {chestOpen || chestOpening ? iconGrid ?? emptyState : null}
+          {showLootInside ? iconGrid ?? emptyState : null}
         </AfkPatrolChest>
       </div>
     );

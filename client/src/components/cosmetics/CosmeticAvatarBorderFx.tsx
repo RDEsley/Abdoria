@@ -2,10 +2,9 @@ interface Props {
   borderId: string;
 }
 
-const FLAME_COUNT = 8;
-const EMBER_COUNT = 6;
+const FLAME_COUNT = 4;
 
-/** Camadas animadas extras para bordas que precisam de mais do que ::before/::after. */
+/** Chamas discretas apenas na borda do avatar. */
 export function CosmeticAvatarBorderFx({ borderId }: Props) {
   const key = borderId.replace('borda_', '');
 
@@ -18,10 +17,6 @@ export function CosmeticAvatarBorderFx({ borderId }: Props) {
           <span className="game-avatar-border-fx__flame" />
         </span>
       ))}
-      {Array.from({ length: EMBER_COUNT }, (_, i) => (
-        <span key={`ember-${i}`} className="game-avatar-border-fx__ember" data-i={i} />
-      ))}
-      <span className="game-avatar-border-fx__heat" />
     </div>
   );
 }

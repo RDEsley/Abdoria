@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Gift } from 'lucide-react';
 
 interface Props {
   open?: boolean;
@@ -8,7 +9,7 @@ interface Props {
   empty?: boolean;
   celebrate?: boolean;
   size?: 'sm' | 'lg';
-  stock?: ReactNode;
+  itemCount?: number;
   children?: ReactNode;
 }
 
@@ -20,7 +21,7 @@ export function AfkPatrolChest({
   empty = false,
   celebrate = false,
   size = 'sm',
-  stock,
+  itemCount = 0,
   children,
 }: Props) {
   const stateClass = open
@@ -44,7 +45,7 @@ export function AfkPatrolChest({
       ]
         .filter(Boolean)
         .join(' ')}
-      aria-hidden={children || stock ? undefined : true}
+      aria-hidden={children ? undefined : true}
     >
       {(opening || open) && (
         <>
@@ -56,6 +57,12 @@ export function AfkPatrolChest({
           <span className="game-afk-chest__burst" aria-hidden />
         </>
       )}
+      {itemCount > 0 && !open && !opening && (
+        <span className="game-afk-chest__count-badge" aria-label={`${itemCount} tipos de recompensa`}>
+          <Gift size={11} aria-hidden />
+          <span className="tabular-nums">{itemCount}</span>
+        </span>
+      )}
       <div className="game-afk-chest__lid-wrap">
         <div className="game-afk-chest__lid" />
         <div className="game-afk-chest__lid-rim" />
@@ -63,7 +70,6 @@ export function AfkPatrolChest({
       <div className="game-afk-chest__body">
         <div className="game-afk-chest__band" />
         <div className="game-afk-chest__lock" />
-        {stock ? <div className="game-afk-chest__stock">{stock}</div> : null}
       </div>
       {children ? <div className="game-afk-chest__loot">{children}</div> : null}
     </div>

@@ -1,13 +1,56 @@
 /* Loja da Patrulha — acima do modal de patrulha (z-index 60) */
 .game-patrol-shop-overlay {
   z-index: 70;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: 0.75rem;
+  overflow: hidden;
 }
 
 .game-patrol-shop-modal {
+  position: relative;
+  isolation: isolate;
   width: min(100%, 26rem);
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
-  padding: 1rem 1rem 1.1rem;
+  height: 100%;
+  max-height: calc(100dvh - 1.5rem);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  padding: 1rem 1rem 0;
+}
+
+.game-patrol-shop-modal > .game-modal__close-btn {
+  display: none !important;
+}
+
+.game-patrol-shop-modal__content {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.game-patrol-shop-modal__footer {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  margin: 0 -1rem;
+  padding: 0.65rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(255, 249, 232, 0.96), #fff9e8 42%);
+  border-top: 2px solid rgba(28, 25, 23, 0.1);
+  box-shadow: 0 -8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.game-patrol-shop-modal .game-patrol-shop-modal__footer .game-btn.game-patrol-shop-modal__close {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+  justify-content: center;
 }
 
 .game-patrol-shop-header {
@@ -15,6 +58,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+  flex-shrink: 0;
   margin-bottom: 0.65rem;
 }
 
@@ -52,6 +96,7 @@
 /* Vendedor */
 .game-patrol-vendor {
   position: relative;
+  flex-shrink: 0;
   height: 9.5rem;
   margin-bottom: 0.7rem;
   border: 2px solid rgba(28, 25, 23, 0.12);
@@ -320,6 +365,7 @@
 /* Nav + list */
 .game-patrol-shop-nav {
   display: flex;
+  flex-shrink: 0;
   gap: 0.35rem;
   margin-bottom: 0.55rem;
 }
@@ -349,7 +395,11 @@
 }
 
 .game-patrol-shop-body {
-  min-height: 8rem;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .game-patrol-shop-weapon-bar {

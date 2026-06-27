@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Gift, Store, Swords, X } from 'lucide-react';
+import { Gift, Store, X } from 'lucide-react';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
+import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
 import { AfkRewardGrid, countAfkRewardItems } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
@@ -28,7 +29,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<AfkPendingReward | null>(null);
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
-  const [bossActive, setBossActive] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const loadedAtRef = useRef(0);
   const syncedMinutosRef = useRef<number | null>(null);
@@ -175,7 +175,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           <div className="game-afk-modal__header game-afk-modal__header--compact">
             <div className="game-afk-modal__header-main">
               <div className="game-afk-modal__title-icon" aria-hidden>
-                <Swords size={22} strokeWidth={2.25} />
+                <AfkFabSwords variant="header" />
               </div>
               <h2 id="afk-patrol-title" className="game-afk-modal__title">
                 Patrulha
@@ -195,26 +195,12 @@ export function AfkPatrolModal({ open, onClose }: Props) {
             </button>
           </div>
 
-          {capped && (
-            <div className="game-afk-cap-banner" role="status">
-              <AlertTriangle size={16} aria-hidden />
-              Limite de 24h atingido — colete as recompensas para continuar patrulhando.
-            </div>
-          )}
-
-          {bossActive && (
-            <div className="game-afk-boss-banner" role="status">
-              Boss em combate! Loot bônus ao derrotar.
-            </div>
-          )}
-
           <AfkCombatScene
             userId={userId}
             weapon={weapon}
             combat={meta?.combat ?? null}
             hasLoot={meta?.has_rewards}
             capped={capped}
-            onBossChange={setBossActive}
           />
 
           <AfkTimerPanel
@@ -248,7 +234,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
               ) : (
                 <span className="game-afk-claim-btn__content">
                   <Gift size={18} aria-hidden />
-                  <span>Coletar Recompensas</span>
+                  <span>Coletar</span>
                   {meta?.has_rewards && rewardCount > 0 ? (
                     <span className="game-afk-claim-btn__badge tabular-nums">{rewardCount}</span>
                   ) : null}

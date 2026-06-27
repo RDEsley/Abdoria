@@ -7,7 +7,7 @@ import {
   hashCombatSeed,
   resolveSlimeAppearance,
 } from '@/types';
-import { SlimeAccessoryLayer, SlimeAccessoryLoot } from '@/components/afk/SlimeAccessories';
+import { SlimeAccessoryLayer, SlimeAccessoryLoot, SlimeAccessoryPart } from '@/components/afk/SlimeAccessories';
 
 interface Props {
   combat: AfkCombatSnapshot;
@@ -109,11 +109,13 @@ function SlimeBody({
   const mouthClass = `game-afk-slime__mouth game-afk-slime__mouth--${appearance.mouth}${
     isBoss ? ' game-afk-slime__mouth--boss' : ''
   }`;
+  const showCheeks = appearance.eyes === 'round' && (appearance.mouth === 'smile' || appearance.mouth === 'grin');
+  const hasGlasses = accessories.includes('glasses');
 
   return (
     <>
       <div className="game-afk-slime__blob" />
-      <div className="game-afk-slime__shine" aria-hidden />
+      <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="back" />
       <div
         className={`game-afk-slime__face game-afk-slime__face--eyes-${appearance.eyes} ${
           isBoss ? 'game-afk-slime__face--boss' : ''
@@ -121,17 +123,20 @@ function SlimeBody({
       >
         <span className="game-afk-slime__eye game-afk-slime__eye--l">
           <span className="game-afk-slime__iris" />
-          <span className="game-afk-slime__eye-shine game-afk-slime__eye-shine--main" />
         </span>
         <span className="game-afk-slime__eye game-afk-slime__eye--r">
           <span className="game-afk-slime__iris" />
-          <span className="game-afk-slime__eye-shine game-afk-slime__eye-shine--main" />
         </span>
         <span className={mouthClass} />
-        <span className="game-afk-slime__cheek game-afk-slime__cheek--l" aria-hidden />
-        <span className="game-afk-slime__cheek game-afk-slime__cheek--r" aria-hidden />
+        {showCheeks && (
+          <>
+            <span className="game-afk-slime__cheek game-afk-slime__cheek--l" aria-hidden />
+            <span className="game-afk-slime__cheek game-afk-slime__cheek--r" aria-hidden />
+          </>
+        )}
+        {hasGlasses && !looting && <SlimeAccessoryPart kind="glasses" />}
       </div>
-      <SlimeAccessoryLayer accessories={accessories} looting={looting} />
+      <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="front" />
     </>
   );
 }

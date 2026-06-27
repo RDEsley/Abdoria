@@ -23,7 +23,6 @@ import type { CosmeticKind, ShopCatalogItem, ShopResponse } from '@/types';
 import {
   CURRENCY_NAME,
   resolveCosmeticos,
-  xpLevelFromTotal,
 } from '@/types';
 
 interface Props {
@@ -86,7 +85,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const [coinsGuideOpen, setCoinsGuideOpen] = useState(false);
 
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
-  const xpLevel = user ? xpLevelFromTotal(user.gamificacao.nivel_xp) : 1;
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
 
   const hasPreviewOverrides = useMemo(() => {
@@ -140,25 +138,25 @@ export function CosmeticsModal({ open, onClose }: Props) {
     if (!open || !scrollRef.current) return;
 
     const root = scrollRef.current;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (observerPausedRef.current) return;
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible?.target.id) {
-          setActiveSection(visible.target.id as ShopSectionId);
+
+    const updateActiveSection = () => {
+      if (observerPausedRef.current) return;
+      const marker = root.scrollTop + 20;
+      let next: ShopSectionId = SECTIONS[0].id;
+
+      for (const { id } of SECTIONS) {
+        const node = root.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
+        if (node && node.offsetTop <= marker) {
+          next = id;
         }
-      },
-      { root, rootMargin: '-8% 0px -52% 0px', threshold: [0.2, 0.4, 0.6] },
-    );
+      }
 
-    SECTIONS.forEach(({ id }) => {
-      const node = root.querySelector(`#${id}`);
-      if (node) observer.observe(node);
-    });
+      setActiveSection(next);
+    };
 
-    return () => observer.disconnect();
+    updateActiveSection();
+    root.addEventListener('scroll', updateActiveSection, { passive: true });
+    return () => root.removeEventListener('scroll', updateActiveSection);
   }, [open, loading, catalog]);
 
   const scrollToSection = useCallback((id: ShopSectionId) => {
@@ -255,110 +253,113 @@ export function CosmeticsModal({ open, onClose }: Props) {
   if (!open) return null;
 
   return createPortal(
-    <div className="game-modal-overlay game-shop-overlay" onClick={onClose} role="presentation">
-      <div
-        className="game-modal game-shop-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cosmetics-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header className="game-shop-header">
-          <div>
-            <h2 id="cosmetics-title" className="game-shop-header__title">
-              Loja Abdoria
-            </h2>
-            <p className="game-shop-header__subtitle">Personalize seu perfil · teste antes de equipar</p>
-          </div>
-          <button
-            type="button"
-            className="game-shop-header__coins"
-            onClick={() => setCoinsGuideOpen(true)}
-            aria-label={`${catalog?.abdoria ?? cosmeticos.moedas} ${CURRENCY_NAME}. Toque para ver como ganhar mais`}
-          >
-            <Coins size={16} aria-hidden /> {catalog?.abdoria ?? cosmeticos.moedas} {CURRENCY_NAME}
-          </button>
-        </header>
+    <>
+      <div className="game-modal-overlay game-shop-overlay" onClick={onClose} role="presentation">
+        <div
+          className="game-modal game-shop-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cosmetics-title"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="game-shop-modal__content">
+            <header className="game-shop-header">
+            <div>
+              <h2 id="cosmetics-title" className="game-shop-header__title">
+                Loja Abdoria
+              </h2>
+              <p className="game-shop-header__subtitle">Personalize seu perfil</p>
+            </div>
+            <button
+              type="button"
+              className="game-shop-header__coins"
+              onClick={() => setCoinsGuideOpen(true)}
+              aria-label={`${catalog?.abdoria ?? cosmeticos.moedas} ${CURRENCY_NAME}. Toque para ver como ganhar mais`}
+            >
+              <Coins size={16} aria-hidden /> {catalog?.abdoria ?? cosmeticos.moedas} {CURRENCY_NAME}
+            </button>
+            </header>
 
-        <ShopPreviewStage
-          user={user}
-          firstName={firstName}
-          xpLevel={xpLevel}
-          abdoria={catalog?.abdoria ?? cosmeticos.moedas}
-          currencyName={CURRENCY_NAME}
-          preview={preview}
-          hasPreviewOverrides={hasPreviewOverrides}
-          onResetPreview={resetPreview}
-        />
+            <ShopPreviewStage
+            user={user}
+            firstName={firstName}
+            preview={preview}
+            hasPreviewOverrides={hasPreviewOverrides}
+            onResetPreview={resetPreview}
+          />
 
-        {error && <p className="game-login__error mt-3">{error}</p>}
-        {success && <p className="game-modal__success mt-3">{success}</p>}
+          {error && <p className="game-login__error mt-3">{error}</p>}
+          {success && <p className="game-modal__success mt-3">{success}</p>}
 
-        <div className="game-shop-body">
-          <SwipeScroll
-            ref={navRef}
-            as="nav"
-            className="game-shop-nav"
-            aria-label="Filtrar seções da loja"
-            prevLabel="Ver seções anteriores"
-            nextLabel="Ver mais seções"
-          >
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                data-shop-section={id}
-                className={`game-shop-nav__btn ${activeSection === id ? 'game-shop-nav__btn--active' : ''}`}
-                onClick={() => scrollToSection(id)}
-              >
-                <Icon size={14} />
-                {label}
-              </button>
-            ))}
-          </SwipeScroll>
+          <div className="game-shop-body">
+            <SwipeScroll
+              ref={navRef}
+              as="nav"
+              className="game-shop-nav"
+              aria-label="Filtrar seções da loja"
+              prevLabel="Ver seções anteriores"
+              nextLabel="Ver mais seções"
+            >
+              {SECTIONS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  data-shop-section={id}
+                  className={`game-shop-nav__btn ${activeSection === id ? 'game-shop-nav__btn--active' : ''}`}
+                  onClick={() => scrollToSection(id)}
+                >
+                  <Icon size={14} />
+                  {label}
+                </button>
+              ))}
+            </SwipeScroll>
 
-          <div ref={scrollRef} className="game-shop-scroll">
-            {loading ? (
-              <p className="game-loader mt-6">Carregando catálogo...</p>
-            ) : (
-              SECTIONS.map(({ id, kind, label, icon: Icon }) => (
-                <section key={id} id={id} className="game-shop-section game-shop-section--anchored">
-                  <div className="game-shop-section__head">
-                    <div className="game-shop-section__ornament" aria-hidden />
-                    <h3 className="game-shop-section__title">
-                      <Icon size={16} /> {label}
-                    </h3>
-                    <div className="game-shop-section__ornament game-shop-section__ornament--mirror" aria-hidden />
-                  </div>
+            <div ref={scrollRef} className="game-shop-scroll">
+              {loading ? (
+                <p className="game-loader mt-6">Carregando catálogo...</p>
+              ) : (
+                SECTIONS.map(({ id, kind, label, icon: Icon }) => (
+                  <section key={id} id={id} className="game-shop-section game-shop-section--anchored">
+                    <div className="game-shop-section__head">
+                      <div className="game-shop-section__ornament" aria-hidden />
+                      <h3 className="game-shop-section__title">
+                        <Icon size={16} /> {label}
+                      </h3>
+                      <div className="game-shop-section__ornament game-shop-section__ornament--mirror" aria-hidden />
+                    </div>
 
-                  <div className="game-shop-list">
-                    {catalog &&
-                      catalogByKind(catalog, kind).map((item) => (
-                        <ShopItemRow
-                          key={item.id}
-                          item={item}
-                          letter={firstName}
-                          busy={busyId === item.id}
-                          isPreviewing={isPreviewingItem(item)}
-                          onPreview={() => handlePreview(item)}
-                          onEquip={() => void handleEquip(item)}
-                          onPurchase={() => void handlePurchase(item)}
-                        />
-                      ))}
-                  </div>
-                </section>
-              ))
-            )}
+                    <div className="game-shop-list">
+                      {catalog &&
+                        catalogByKind(catalog, kind).map((item) => (
+                          <ShopItemRow
+                            key={item.id}
+                            item={item}
+                            letter={firstName}
+                            busy={busyId === item.id}
+                            isPreviewing={isPreviewingItem(item)}
+                            onPreview={() => handlePreview(item)}
+                            onEquip={() => void handleEquip(item)}
+                            onPurchase={() => void handlePurchase(item)}
+                          />
+                        ))}
+                    </div>
+                  </section>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        <GameButton variant="secondary" className="game-modal__close" onClick={onClose}>
-          Fechar
-        </GameButton>
-
-        <AbdoriaCoinsGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
+          <footer className="game-shop-modal__footer">
+            <GameButton variant="secondary" className="game-shop-modal__close game-modal__close" onClick={onClose}>
+              Fechar
+            </GameButton>
+          </footer>
+        </div>
       </div>
-    </div>,
+
+      <AbdoriaCoinsGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
+    </>,
     document.body,
   );
 }

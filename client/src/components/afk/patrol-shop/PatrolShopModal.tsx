@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BowArrow, Coins, Store, Sword, Wand2, X } from 'lucide-react';
-import { AfkWeaponToggle } from '@/components/afk/AfkWeaponToggle';
+import { BowArrow, Coins, Store, Sword, Wand2 } from 'lucide-react';
+import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
 import { useAuth } from '@/context/AuthContext';
@@ -32,7 +32,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   const { refresh: refreshApp } = useApp();
   const [catalog, setCatalog] = useState<PatrolShopResponse | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('arco');
-  const [weapon, setWeapon] = useState<ArmaPreferida>('arco');
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +44,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     try {
       const data = await getPatrolShop();
       setCatalog(data);
-      setWeapon(data.arma_preferida);
     } catch (err) {
       setError(getErrorMessage(err, 'Não foi possível abrir a loja da patrulha.'));
     } finally {
@@ -79,6 +77,9 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       setCelebrating(true);
       window.setTimeout(() => setCelebrating(false), 1200);
       setSuccess(`${item.nome} comprado!`);
+      if (item.kind === 'arco' || item.kind === 'espada') {
+        onWeaponChange?.(item.kind);
+      }
       await load();
     } catch (err) {
       setError(getErrorMessage(err, 'Não foi possível comprar este item.'));
@@ -97,7 +98,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       applyUser(res.user);
       await refreshApp();
       playEquip();
-      setWeapon(item.kind);
       onWeaponChange?.(item.kind);
       setSuccess(`${item.nome} equipado!`);
       await load();
@@ -106,13 +106,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     } finally {
       setBusyId(null);
     }
-  };
-
-  const handleWeaponToggle = (next: ArmaPreferida) => {
-    setWeapon(next);
-    onWeaponChange?.(next);
-    if (next === 'arco') setActiveTab('arco');
-    if (next === 'espada') setActiveTab('espada');
   };
 
   if (!open) return null;
@@ -129,80 +122,77 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
         aria-labelledby="patrol-shop-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" className="game-modal__close-btn" onClick={onClose} aria-label="Fechar">
-          <X size={18} />
-        </button>
-
-        <header className="game-patrol-shop-header">
-          <div>
-            <h2 id="patrol-shop-title" className="game-patrol-shop-header__title">
-              <Store size={18} aria-hidden /> Loja da Patrulha
-            </h2>
-            <p className="game-patrol-shop-header__subtitle">Armas para sua patrulha automática</p>
-          </div>
-          <span className="game-patrol-shop-header__coins">
-            <Coins size={16} aria-hidden /> {catalog?.abdoria ?? '—'} {CURRENCY_NAME}
-          </span>
-        </header>
-
-        <PatrolShopVendor
-          activeTab={activeTab}
-          equippedArcoId={catalog?.armas.arco_equipado ?? 'arco_basico'}
-          equippedEspadaId={catalog?.armas.espada_equipada ?? 'espada_basica'}
-          celebrating={celebrating}
-        />
-
-        <nav className="game-patrol-shop-nav" aria-label="Categorias da loja">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              className={`game-patrol-shop-nav__btn${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
-              onClick={() => setActiveTab(id)}
-            >
-              <Icon size={14} aria-hidden />
-              {label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="game-patrol-shop-body">
-          {activeTab === 'espada' && (
-            <div className="game-patrol-shop-weapon-bar">
-              <span className="game-patrol-shop-weapon-bar__label">Arma em uso na patrulha</span>
-              <AfkWeaponToggle value={weapon} onChange={handleWeaponToggle} />
+        <div className="game-patrol-shop-modal__content">
+          <header className="game-patrol-shop-header">
+            <div>
+              <h2 id="patrol-shop-title" className="game-patrol-shop-header__title">
+                <Store size={18} aria-hidden /> Loja da Patrulha
+              </h2>
+              <p className="game-patrol-shop-header__subtitle">Armas para sua patrulha automática</p>
             </div>
-          )}
+            <span className="game-patrol-shop-header__coins">
+              <Coins size={16} aria-hidden /> {catalog?.abdoria ?? '—'} {CURRENCY_NAME}
+            </span>
+          </header>
 
-          {error && <p className="game-login__error">{error}</p>}
-          {success && <p className="game-modal__success">{success}</p>}
+          <PatrolShopVendor
+            activeTab={activeTab}
+            equippedArcoId={catalog?.armas.arco_equipado ?? 'arco_basico'}
+            equippedEspadaId={catalog?.armas.espada_equipada ?? 'espada_basica'}
+            celebrating={celebrating}
+          />
 
-          {loading ? (
-            <p className="game-loader">Carregando armas...</p>
-          ) : activeTab === 'magia' ? (
-            <div className="game-patrol-shop-future">
-              <div className="game-patrol-shop-future__icon" aria-hidden>
-                <Wand2 size={34} strokeWidth={2} />
+          <nav className="game-patrol-shop-nav" aria-label="Categorias da loja">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                className={`game-patrol-shop-nav__btn${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
+                onClick={() => setActiveTab(id)}
+              >
+                <Icon size={14} aria-hidden />
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="game-patrol-shop-body">
+            {error && <p className="game-login__error">{error}</p>}
+            {success && <p className="game-modal__success">{success}</p>}
+
+            {loading ? (
+              <p className="game-loader">Carregando armas...</p>
+            ) : activeTab === 'magia' ? (
+              <div className="game-patrol-shop-future">
+                <div className="game-patrol-shop-future__icon" aria-hidden>
+                  <Wand2 size={34} strokeWidth={2} />
+                </div>
+                <h3>Futuramente</h3>
+                <p>Magias e feitiços chegarão em uma atualização da patrulha. Fique de olho!</p>
               </div>
-              <h3>Futuramente</h3>
-              <p>Magias e feitiços chegarão em uma atualização da patrulha. Fique de olho!</p>
-            </div>
-          ) : items.length === 0 ? (
-            <p className="game-patrol-shop-empty">Nenhum item nesta categoria ainda.</p>
-          ) : (
-            <div className="game-patrol-shop-list">
-              {items.map((item) => (
-                <PatrolShopItemRow
-                  key={item.id}
-                  item={item}
-                  busy={busyId === item.id}
-                  onEquip={() => void handleEquip(item)}
-                  onPurchase={() => void handlePurchase(item)}
-                />
-              ))}
-            </div>
-          )}
+            ) : items.length === 0 ? (
+              <p className="game-patrol-shop-empty">Nenhum item nesta categoria ainda.</p>
+            ) : (
+              <div className="game-patrol-shop-list">
+                {items.map((item) => (
+                  <PatrolShopItemRow
+                    key={item.id}
+                    item={item}
+                    busy={busyId === item.id}
+                    onEquip={() => void handleEquip(item)}
+                    onPurchase={() => void handlePurchase(item)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
+        <footer className="game-patrol-shop-modal__footer">
+          <GameButton variant="secondary" className="game-patrol-shop-modal__close game-modal__close" onClick={onClose}>
+            Fechar
+          </GameButton>
+        </footer>
       </div>
     </div>,
     document.body,

@@ -1,3 +1,4 @@
+import type { LeaderboardMetric } from '../types/index.js';
 import { LeaderboardWeekPayout } from '../repositories/leaderboard-payout-repository.js';
 import { User, type UserMutable } from '../repositories/user-repository.js';
 import { getSaoPauloWeekday, getTodaySaoPaulo } from '../utils/timezone.js';
@@ -7,6 +8,8 @@ const leaderboardFilter = {
   onboarding_completed: true,
   is_guest: { $ne: true },
 };
+
+const WEEKLY_METRICS: LeaderboardMetric[] = ['xp', 'streak', 'moedas'];
 
 /** Chave da semana que termina no domingo (início domingo em SP). */
 export function getSundayWeekKey(date = new Date()): string {
@@ -29,43 +32,54 @@ function prizeForRank(rank: number): number {
   return 0;
 }
 
-/** Paga prêmios do top 25 na virada de semana (domingo SP). Idempotente por semana. */
+function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
+  if (metric === 'streak') return { 'gamificacao.streak_atual': -1 };
+  if (metric === 'moedas') return { 'cosmeticos.moedas': -1 };
+  return { 'gamificacao.nivel_xp': -1 };
+}
+
+function payoutKey(weekKey: string, metric: LeaderboardMetric): string {
+  return `${weekKey}:${metric}`;
+}
+
+/** Paga prêmios do top 25 na virada de semana (domingo SP). Idempotente por semana e métrica. */
 export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
   const weekday = getSaoPauloWeekday();
   if (weekday !== 0) return 0;
 
   const currentWeek = getSundayWeekKey();
-  const existing = await LeaderboardWeekPayout.findById(currentWeek);
-  if (existing) return 0;
+  const runKey = `${currentWeek}:__run__`;
+  if (await LeaderboardWeekPayout.findById(runKey)) return 0;
 
   const prev = new Date();
   prev.setDate(prev.getDate() - 7);
   const payoutWeek = getSundayWeekKey(prev);
 
-  const alreadyPaid = await LeaderboardWeekPayout.findById(payoutWeek);
-  if (alreadyPaid) {
-    await LeaderboardWeekPayout.create({ _id: currentWeek });
-    return 0;
-  }
-
-  const topLean = await User.find(leaderboardFilter, {
-    sort: { 'gamificacao.nivel_xp': -1 },
-    limit: 25,
-  });
-
   let paidCount = 0;
-  for (let i = 0; i < topLean.length; i += 1) {
-    const prize = prizeForRank(i + 1);
-    if (prize <= 0) continue;
-    const user = await User.findById(topLean[i].id);
-    if (!user) continue;
-    grantAbdoria(user, prize);
-    await user.save();
-    paidCount += 1;
+
+  for (const metric of WEEKLY_METRICS) {
+    const key = payoutKey(payoutWeek, metric);
+    if (await LeaderboardWeekPayout.findById(key)) continue;
+
+    const topLean = await User.find(leaderboardFilter, {
+      sort: metricSort(metric),
+      limit: 25,
+    });
+
+    for (let i = 0; i < topLean.length; i += 1) {
+      const prize = prizeForRank(i + 1);
+      if (prize <= 0) continue;
+      const user = await User.findById(topLean[i].id);
+      if (!user) continue;
+      grantAbdoria(user, prize);
+      await user.save();
+      paidCount += 1;
+    }
+
+    await LeaderboardWeekPayout.create({ _id: key });
   }
 
-  await LeaderboardWeekPayout.create({ _id: payoutWeek });
-  await LeaderboardWeekPayout.create({ _id: currentWeek });
+  await LeaderboardWeekPayout.create({ _id: runKey });
   return paidCount;
 }
 

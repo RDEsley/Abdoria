@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Coins, Trophy } from 'lucide-react';
+import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -34,7 +35,7 @@ function WeeklyRewardBadge({ rank }: { rank: number }) {
   return (
     <span className="game-rank-reward">
       <Coins size={11} aria-hidden />
-      +{reward} dom.
+      +{reward}
     </span>
   );
 }
@@ -63,7 +64,7 @@ function RankRow({
       <LeaderboardUserAvatar entry={entry} size="sm" />
       <div className="game-rank-row__main">
         <span className="game-rank-row__name">{label ?? entry.nome}</span>
-        {metric === 'xp' && <WeeklyRewardBadge rank={entry.rank} />}
+        <WeeklyRewardBadge rank={entry.rank} />
       </div>
       <RankValue entry={entry} metric={metric} />
     </li>
@@ -102,11 +103,7 @@ export function LeaderboardPage() {
     <div className="flex flex-col gap-5">
       <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
 
-      {metric === 'xp' && (
-        <p className="text-center text-xs font-semibold leading-relaxed text-stone-500">
-          O top 25 em XP recebe {CURRENCY_NAME} automaticamente todo domingo.
-        </p>
-      )}
+      <LeaderboardResetCountdown />
 
       <SwipeScroll
         className="game-swipe-scroll--snap flex gap-2 pb-1"
@@ -164,7 +161,7 @@ export function LeaderboardPage() {
                     <p className="game-podium__name">{entry.nome}</p>
                     <div className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}>
                       <span className="game-podium__rank">#{entry.rank}</span>
-                      {metric === 'xp' && weeklyLeaderboardReward(entry.rank) && (
+                      {weeklyLeaderboardReward(entry.rank) && (
                         <span className="game-podium__reward">
                           <Coins size={10} aria-hidden />
                           +{weeklyLeaderboardReward(entry.rank)}
