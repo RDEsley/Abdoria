@@ -4,6 +4,7 @@ import { Clock, Gift, Sparkles } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { DailyShopRewardReveal } from '@/components/shop/DailyShopRewardReveal';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { claimDailyShopSlot, getShop } from '@/lib/api';
 import {
   dailyRewardIcon,
@@ -58,7 +59,6 @@ export function DailyShopPanel() {
   const [loading, setLoading] = useState(true);
   const [busySlot, setBusySlot] = useState<number | null>(null);
   const [rewardReveal, setRewardReveal] = useState<{ slot: LojaDiariaSlot; message: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const cosmeticos = useMemo(
     () => resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp),
@@ -75,7 +75,6 @@ export function DailyShopPanel() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await getShop();
       setLoja(data.loja_diaria);
@@ -87,7 +86,7 @@ export function DailyShopPanel() {
         efeito_equipado: data.efeito_equipado,
       });
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível carregar a loja diária.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar a loja diária.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -105,7 +104,6 @@ export function DailyShopPanel() {
 
   const handleClaim = async (slot: LojaDiariaSlot) => {
     setBusySlot(slot.slot);
-    setError(null);
 
     try {
       const res = await claimDailyShopSlot(slot.slot);
@@ -127,7 +125,7 @@ export function DailyShopPanel() {
       setRewardReveal({ slot: claimedSlot, message: successMessage });
       void load();
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível resgatar esta oferta.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível resgatar esta oferta.'), { variant: 'error' });
     } finally {
       setBusySlot(null);
     }
@@ -166,8 +164,6 @@ export function DailyShopPanel() {
           </div>
           <Sparkles size={18} className="text-amber-500" aria-hidden />
         </div>
-
-        {error && <p className="game-login__error mt-3">{error}</p>}
 
         {loading ? (
           <p className="game-loader mt-4">Carregando ofertas...</p>

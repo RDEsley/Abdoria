@@ -59,10 +59,20 @@ export function AfkRewardGrid({
   );
 
   if (withChest) {
-    const showLootInside = chestOpen || chestOpening;
+    const showLoot = chestOpen || chestOpening;
 
     return (
-      <div className="game-afk-rewards-panel">
+      <div
+        className={`game-afk-rewards-panel game-afk-rewards-panel--chest${chestCelebrate ? ' game-afk-rewards-panel--celebrate' : ''}`}
+      >
+        {showLoot && iconGrid ? (
+          <div
+            className={`game-afk-chest-loot-row${chestCelebrate ? ' game-afk-chest-loot-row--celebrate' : ' game-afk-chest-loot-row--visible'}`}
+            aria-live="polite"
+          >
+            {iconGrid}
+          </div>
+        ) : null}
         <AfkPatrolChest
           open={chestOpen}
           opening={chestOpening}
@@ -70,11 +80,9 @@ export function AfkRewardGrid({
           ready={hasLoot && !chestOpen && !chestOpening && !chestCelebrate}
           empty={!hasLoot}
           celebrate={chestCelebrate}
-          itemCount={hasLoot && !showLootInside ? itemTypeCount : 0}
+          itemCount={hasLoot && !showLoot ? itemTypeCount : 0}
           size={chestOpen || chestOpening || chestShaking ? 'lg' : 'sm'}
-        >
-          {showLootInside ? iconGrid ?? emptyState : null}
-        </AfkPatrolChest>
+        />
       </div>
     );
   }

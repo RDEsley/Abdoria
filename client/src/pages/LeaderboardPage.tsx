@@ -4,6 +4,7 @@ import { Coins, Trophy } from 'lucide-react';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
+import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -76,11 +77,9 @@ export function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
-    setError(null);
     void Promise.all([getLeaderboard(metric), getMyLeaderboardRank(metric)])
       .then(([list, myRank]) => {
         setEntries(list);
@@ -89,7 +88,7 @@ export function LeaderboardPage() {
       .catch((err: unknown) => {
         setEntries([]);
         setMe(null);
-        setError(getErrorMessage(err, 'Não foi possível carregar o ranking.'));
+        showGameToast(getErrorMessage(err, 'Não foi possível carregar o ranking.'), { variant: 'error' });
       })
       .finally(() => setLoading(false));
   }, [metric]);
@@ -132,12 +131,6 @@ export function LeaderboardPage() {
           </button>
         ))}
       </SwipeScroll>
-
-      {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700">
-          {error}
-        </p>
-      )}
 
       {loading ? (
         <PageLoader />

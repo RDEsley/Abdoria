@@ -19,6 +19,9 @@ interface Props {
   onTogglePin?: () => void;
   onToggleBlock?: () => void;
   showPreferences?: boolean;
+  showSwapWorkout?: boolean;
+  onSwapWorkout?: () => void;
+  swapWorkoutDisabled?: boolean;
 }
 
 export function SortableExerciseItem({
@@ -32,6 +35,9 @@ export function SortableExerciseItem({
   onTogglePin,
   onToggleBlock,
   showPreferences = false,
+  showSwapWorkout = false,
+  onSwapWorkout,
+  swapWorkoutDisabled = false,
 }: Props) {
   const [showVideo, setShowVideo] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -90,6 +96,9 @@ export function SortableExerciseItem({
           <ExerciseQuickActions
             showPlay={Boolean(exercise)}
             onPlay={exercise ? () => setShowVideo(true) : undefined}
+            showSwapWorkout={showSwapWorkout}
+            onSwapWorkout={onSwapWorkout}
+            swapWorkoutDisabled={swapWorkoutDisabled}
             showPreferences={showPreferences}
             isPinned={isPinned}
             isBlocked={isBlocked}

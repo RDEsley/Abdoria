@@ -1,8 +1,18 @@
 import type { AfkEnemyId } from './combat.js';
 
-export type SlimeEyeStyle = 'round' | 'happy' | 'sleepy' | 'wide' | 'star';
-export type SlimeMouthStyle = 'smile' | 'o' | 'cat' | 'grin' | 'flat';
-export type SlimeExtraAccessory = 'none' | 'aura' | 'glasses' | 'leaf' | 'beanie' | 'flower';
+export type SlimeEyeStyle = 'round' | 'happy' | 'sleepy' | 'wide' | 'star' | 'anime';
+export type SlimeMouthStyle = 'smile' | 'o' | 'cat' | 'grin' | 'flat' | 'vampire';
+export type SlimeExtraAccessory =
+  | 'none'
+  | 'aura'
+  | 'glasses'
+  | 'leaf'
+  | 'beanie'
+  | 'flower'
+  | 'halo'
+  | 'bow'
+  | 'patch'
+  | 'sparkle';
 
 export type SlimeAccessoryKind =
   | 'crown'
@@ -24,7 +34,11 @@ export type SlimeAccessoryKind =
   | 'glasses'
   | 'leaf'
   | 'beanie'
-  | 'flower';
+  | 'flower'
+  | 'halo'
+  | 'bow'
+  | 'patch'
+  | 'sparkle';
 
 export interface SlimeAppearance {
   eyes: SlimeEyeStyle;
@@ -32,9 +46,19 @@ export interface SlimeAppearance {
   extra: SlimeExtraAccessory;
 }
 
-const EYE_STYLES: SlimeEyeStyle[] = ['round', 'happy', 'sleepy', 'wide', 'star'];
-const MOUTH_STYLES: SlimeMouthStyle[] = ['smile', 'o', 'cat', 'grin', 'flat'];
-const EXTRA_POOL: SlimeExtraAccessory[] = ['aura', 'glasses', 'leaf', 'beanie', 'flower'];
+const EYE_STYLES: SlimeEyeStyle[] = ['round', 'happy', 'sleepy', 'wide', 'star', 'anime'];
+const MOUTH_STYLES: SlimeMouthStyle[] = ['smile', 'o', 'cat', 'grin', 'flat', 'vampire'];
+const EXTRA_POOL: SlimeExtraAccessory[] = [
+  'aura',
+  'glasses',
+  'leaf',
+  'beanie',
+  'flower',
+  'halo',
+  'bow',
+  'patch',
+  'sparkle',
+];
 
 const EXTRA_TO_KIND: Record<Exclude<SlimeExtraAccessory, 'none'>, SlimeAccessoryKind> = {
   aura: 'aura',
@@ -42,6 +66,10 @@ const EXTRA_TO_KIND: Record<Exclude<SlimeExtraAccessory, 'none'>, SlimeAccessory
   leaf: 'leaf',
   beanie: 'beanie',
   flower: 'flower',
+  halo: 'halo',
+  bow: 'bow',
+  patch: 'patch',
+  sparkle: 'sparkle',
 };
 
 export function resolveSlimeAppearance(
@@ -59,8 +87,15 @@ export function resolveSlimeAppearance(
     return { eyes: 'star', mouth: 'o', extra: 'aura' };
   }
 
-  const eyes = EYE_STYLES[s % EYE_STYLES.length]!;
-  const mouth = MOUTH_STYLES[(s >>> 8) % MOUTH_STYLES.length]!;
+  let eyes = EYE_STYLES[s % EYE_STYLES.length]!;
+  let mouth = MOUTH_STYLES[(s >>> 8) % MOUTH_STYLES.length]!;
+
+  if (enemyId === 'zombie' && (s >>> 10) % 3 === 0) {
+    mouth = 'vampire';
+  }
+  if (enemyId === 'demon_bat' && (s >>> 14) % 4 === 0) {
+    eyes = 'anime';
+  }
   const extraRoll = (s >>> 16) % 100;
 
   let extra: SlimeExtraAccessory = 'none';
@@ -131,9 +166,13 @@ export function collectSlimeAccessories(
   return items;
 }
 
-export function accessoryDropMotion(seed: number, index: number): { x: number; rot: number } {
+export function accessoryDropMotion(
+  seed: number,
+  index: number,
+): { x: number; y: number; rot: number } {
   const s = (seed >>> 0) + index * 97;
-  const x = ((s % 17) - 8) * 2;
-  const rot = ((s >>> 8) % 50) - 25;
-  return { x, rot };
+  const x = ((s % 19) - 9) * 3;
+  const y = -(((s >>> 5) % 11) + 10);
+  const rot = ((s >>> 8) % 72) - 36;
+  return { x, y, rot };
 }

@@ -123,14 +123,6 @@ export function ActivityCalendar() {
         })}
       </div>
 
-      <div className="workout-calendar__legend" aria-hidden>
-        <span>Menos</span>
-        {[0, 1, 2, 3, 4].map((level) => (
-          <span key={level} className={`workout-calendar__legend-swatch workout-calendar__legend-swatch--l${level}`} />
-        ))}
-        <span>Mais</span>
-      </div>
-
       {selectedMeta && selectedDay && (
         <div className="workout-calendar__detail">
           <p className="workout-calendar__detail-title">

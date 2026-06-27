@@ -22,7 +22,9 @@ export interface AppContextValue {
   stats: DashboardStats | null;
   history: IWorkoutHistoryDocument[];
   customWorkout: WorkoutQueueItem[];
+  customWorkoutName: string;
   savedWorkouts: SavedWorkoutPreset[];
+  selectedRepSchemeIds: Partial<Record<NivelUsuario, string>>;
   unlockedExercises: Set<string>;
   loading: boolean;
   exercisesLoading: boolean;
@@ -35,6 +37,8 @@ export interface AppContextValue {
   ensureExercises: () => Promise<void>;
   ensureHistory: () => Promise<void>;
   setCustomWorkout: (items: WorkoutQueueItem[]) => void;
+  setCustomWorkoutName: (nome: string) => void;
+  setSelectedRepSchemeId: (nivel: NivelUsuario, schemeId: string) => void;
   saveWorkoutPreset: (preset: SavedWorkoutPreset) => SavedWorkoutPreset[];
   getRepSchemes: (nivel: NivelUsuario) => StoredRepScheme[];
   saveRepSchemes: (nivel: NivelUsuario, schemes: StoredRepScheme[]) => StoredRepScheme[];

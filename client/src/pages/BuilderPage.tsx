@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bookmark, Check, Settings2, Sparkles, ChevronDown, Play, Shuffle } from 'lucide-react';
+import { Bookmark, Check, Settings2, Sparkles, ChevronDown, Play } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -33,15 +33,17 @@ import {
   filterSimilarSavedWorkouts,
   getMuscleProfileFromPreset,
   getMuscleProfileFromQueue,
+  listSimilarWorkoutChoices,
 } from '@/components/builder/similar-presets';
 import { GameButton } from '@/components/ui/GameButton';
+import { showGameToast } from '@/components/ui/GameToast';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
 import { WheelNumberPicker } from '@/components/ui/WheelNumberPicker';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { getPresets } from '@/lib/api';
+import { getPresets, getRecommendWorkout } from '@/lib/api';
 import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
 import type {
   ActiveWorkout,
@@ -103,14 +105,18 @@ export function BuilderPage() {
   const {
     exercises,
     customWorkout,
+    customWorkoutName,
     savedWorkouts,
     stats,
     loadRecommendations,
     setCustomWorkout,
+    setCustomWorkoutName,
     saveWorkoutPreset,
     getRepSchemes,
     addRepScheme,
     removeRepScheme,
+    selectedRepSchemeIds,
+    setSelectedRepSchemeId,
     exercisesLoading,
     ensureExercises,
     user,
@@ -130,7 +136,6 @@ export function BuilderPage() {
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
   const lastAppliedQueueKeyRef = useRef('');
   const lastSyncedSuggestedRef = useRef<string | null>(null);
@@ -215,11 +220,13 @@ export function BuilderPage() {
   }, [suggestedPresetId, allPresets, presetFromUrl, fixedWorkoutIds.length]);
 
   useEffect(() => {
+    const persisted = selectedRepSchemeIds[nivel];
     setSelectedSchemeId((current) => {
+      if (persisted && schemes.some((scheme) => scheme.id === persisted)) return persisted;
       if (current && schemes.some((scheme) => scheme.id === current)) return current;
       return schemes[0]?.id ?? null;
     });
-  }, [nivel, schemes]);
+  }, [nivel, schemes, selectedRepSchemeIds]);
 
   const exerciseMap = useMemo(
     () => new Map(exercises.map((e) => [e.slug, e])),
@@ -259,6 +266,7 @@ export function BuilderPage() {
       options?: { force?: boolean; sourceQueue?: WorkoutQueueItem[] },
     ) => {
       setSelectedSchemeId(scheme.id);
+      setSelectedRepSchemeId(nivel, scheme.id);
       const base = options?.sourceQueue ?? draftQueue ?? baseQueue;
       const force = options?.force ?? false;
 
@@ -283,7 +291,7 @@ export function BuilderPage() {
         setCustomizedIndices((prev) => new Set(prev).add(scope));
       }
     },
-    [draftQueue, baseQueue, selectedPresetId, setCustomWorkout, customizedIndices],
+    [draftQueue, baseQueue, selectedPresetId, setCustomWorkout, customizedIndices, nivel, setSelectedRepSchemeId],
   );
 
   useEffect(() => {
@@ -315,7 +323,9 @@ export function BuilderPage() {
     const next = removeRepScheme(nivel, schemeId);
     if (selectedSchemeId === schemeId) {
       lastAppliedQueueKeyRef.current = '';
-      setSelectedSchemeId(next[0]?.id ?? null);
+      const fallbackId = next[0]?.id ?? null;
+      setSelectedSchemeId(fallbackId);
+      if (fallbackId) setSelectedRepSchemeId(nivel, fallbackId);
     }
   };
 
@@ -336,7 +346,6 @@ export function BuilderPage() {
       setDraftQueue(null);
       setCustomizedIndices(new Set());
       lastAppliedQueueKeyRef.current = '';
-      setSaveMessage(null);
       scrollToSection(customWorkout.length > 0 ? 'builder-queue' : 'builder-add-exercise');
       return;
     }
@@ -346,7 +355,6 @@ export function BuilderPage() {
     setDraftQueue(null);
     setCustomizedIndices(new Set());
     lastAppliedQueueKeyRef.current = '';
-    setSaveMessage(null);
     scrollToSection('builder-queue-preview');
   };
 
@@ -449,16 +457,21 @@ export function BuilderPage() {
     };
 
     saveWorkoutPreset(preset);
+    setCustomWorkoutName(nome);
     setSelectedPresetId(toSavedPresetId(preset.id));
     setDraftQueue(null);
     setCustomizedIndices(new Set());
     setActiveTab('train');
-    setSaveMessage(existingId ? 'Treino atualizado em Treinos salvos.' : 'Treino salvo em Treinos salvos.');
+    showGameToast(
+      existingId ? 'Treino atualizado em Treinos salvos.' : 'Treino salvo em Treinos salvos.',
+      { variant: 'success' },
+    );
   };
 
   const proceedToWorkout = () => {
     if (activeQueue.length === 0) return;
-    const treinoNome = selectedPreset?.nome ?? selectedSavedWorkout?.nome ?? 'Meu Treino';
+    const customName = customWorkoutName.trim() || 'Meu Treino';
+    const treinoNome = selectedPreset?.nome ?? selectedSavedWorkout?.nome ?? customName;
     const treinoTipo: TreinoBase | 'custom' = selectedPreset?.ciclo_id ?? 'custom';
     const payload: ActiveWorkout = {
       treino_nome: treinoNome,
@@ -500,18 +513,61 @@ export function BuilderPage() {
     [savedWorkouts, muscleReferenceProfile, selectedSavedWorkout?.id],
   );
 
-  const handleSelectSimilarPreset = (presetId: string) => {
-    selectPreset(presetId);
+  const similarWorkoutChoices = useMemo(
+    () => listSimilarWorkoutChoices(similarPresets, similarSavedWorkouts),
+    [similarPresets, similarSavedWorkouts],
+  );
+
+  const applySimilarChoice = (choice: { kind: 'preset' | 'saved'; id: string }) => {
+    if (choice.kind === 'preset') {
+      selectPreset(choice.id);
+    } else {
+      selectPreset(toSavedPresetId(choice.id));
+    }
     setShowSimilarWorkout(false);
+    void loadRecommendations({ force: true });
+  };
+
+  const handleSelectSimilarPreset = (presetId: string) => {
+    applySimilarChoice({ kind: 'preset', id: presetId });
+    showGameToast('Treino similar selecionado.', { variant: 'success' });
   };
 
   const handleSelectSimilarSaved = (savedId: string) => {
-    selectPreset(toSavedPresetId(savedId));
-    setShowSimilarWorkout(false);
+    applySimilarChoice({ kind: 'saved', id: savedId });
+    showGameToast('Treino similar selecionado.', { variant: 'success' });
+  };
+
+  const handleSwapWorkout = async () => {
+    if (similarWorkoutChoices.length >= 2) {
+      setShowSimilarWorkout(true);
+      return;
+    }
+
+    if (similarWorkoutChoices.length === 1) {
+      applySimilarChoice(similarWorkoutChoices[0]!);
+      showGameToast('Treino trocado por opção similar.', { variant: 'success' });
+      return;
+    }
+
+    const excludePresetId = selectedPreset?.id ?? null;
+    if (!excludePresetId) {
+      setShowSimilarWorkout(true);
+      return;
+    }
+
+    try {
+      const treino = await getRecommendWorkout({ shuffle: true, excludePresetId });
+      selectPreset(treino.preset_id);
+      void loadRecommendations({ force: true });
+      showGameToast('Treino alternativo selecionado.', { variant: 'success' });
+    } catch {
+      showGameToast('Nenhum treino similar disponível.', { variant: 'warn' });
+    }
   };
 
   const canSaveWorkout = activeQueue.length > 0 && (selectedPresetId === 'custom' || selectedSavedWorkout);
-  const saveWorkoutDefaultName = selectedSavedWorkout?.nome ?? 'Meu Treino';
+  const saveWorkoutDefaultName = selectedSavedWorkout?.nome ?? (customWorkoutName.trim() || 'Meu Treino');
 
   const estimatedMinutes = useMemo(() => {
     if (activeQueue.length === 0) return null;
@@ -591,8 +647,6 @@ export function BuilderPage() {
               </motion.div>
             )}
 
-            {saveMessage && <p className="game-modal__success mb-2">{saveMessage}</p>}
-
             {(selectedPreset || selectedSavedWorkout) && (
               <div className="glass-card rounded-2xl p-4">
                 {selectedPreset && (
@@ -647,19 +701,7 @@ export function BuilderPage() {
           </section>
 
           <section id="builder-queue-preview" className="glass-card rounded-2xl p-4">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="game-section-title !mb-0">Fila do treino</h3>
-              {activeQueue.length > 0 && (
-                <button
-                  type="button"
-                  className="game-builder-action"
-                  onClick={() => setShowSimilarWorkout(true)}
-                >
-                  <Shuffle size={14} aria-hidden />
-                  Trocar treino
-                </button>
-              )}
-            </div>
+            <h3 className="game-section-title mb-3">Fila do treino</h3>
             {activeQueue.length === 0 ? (
               <p className="text-sm text-stone-500">
                 {exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'}
@@ -676,6 +718,8 @@ export function BuilderPage() {
                         index={index}
                         exercise={exerciseMap.get(item.slug)}
                         showPreferences
+                        showSwapWorkout={index === 0}
+                        onSwapWorkout={() => void handleSwapWorkout()}
                         isPinned={fixedExerciseSlugs.includes(item.slug)}
                         isBlocked={blockedExerciseSlugs.includes(item.slug)}
                         onTogglePin={() => toggleExercisePin(item.slug)}
@@ -702,6 +746,21 @@ export function BuilderPage() {
             <p className="text-xs font-semibold text-stone-500">
               Monte sua fila personalizada: busque exercícios, reordene e ajuste séries/repetições.
             </p>
+            <label
+              htmlFor="custom-workout-name"
+              className="mt-4 block text-xs font-extrabold uppercase tracking-wide text-stone-500"
+            >
+              Nome do treino
+            </label>
+            <input
+              id="custom-workout-name"
+              className="game-input mt-2 w-full"
+              value={customWorkoutName}
+              onChange={(e) => setCustomWorkoutName(e.target.value)}
+              placeholder="Ex.: Meu treino de abdômen"
+              autoComplete="off"
+              maxLength={64}
+            />
           </div>
 
           <ExercisePicker exercises={exercises} loading={exercisesLoading} onAdd={addExercise} />
@@ -721,9 +780,6 @@ export function BuilderPage() {
               <span className="game-disclosure__hint">
                 {showConfig ? 'Toque para recolher' : 'Toque para ajustar descanso, séries e repetições'}
               </span>
-            </span>
-            <span className={`game-disclosure__badge ${showConfig ? 'game-disclosure__badge--open' : ''}`}>
-              {showConfig ? 'Aberto' : 'Fechado'}
             </span>
             <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
           </button>

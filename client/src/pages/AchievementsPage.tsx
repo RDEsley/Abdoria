@@ -5,21 +5,29 @@ import {
   AchievementCard,
   sortAchievements,
 } from '@/components/gamification/AchievementCard';
+import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { useApp } from '@/hooks/useApp';
-import { getErrorMessage } from '@/lib/api-errors';
 import { ACHIEVEMENT_DIFFICULTY_LABELS, type AchievementDifficulty } from '@/types';
 
 const DIFFICULTY_ORDER: AchievementDifficulty[] = ['facil', 'media', 'dificil', 'lendaria'];
 
 export function AchievementsPage() {
-  const { stats, loading, error } = useApp();
+  const { stats, loading, refresh } = useApp();
 
   if (loading) return <PageLoader />;
 
   if (!stats) {
-    return <p className="game-login__error">{getErrorMessage(error, 'Não foi possível carregar suas conquistas.')}</p>;
+    return (
+      <div className="flex flex-col items-center gap-4 py-16 text-center">
+        <p className="text-sm font-bold text-stone-500">Não foi possível carregar suas conquistas.</p>
+        <GameButton onClick={() => void refresh()}>Tentar novamente</GameButton>
+        <Link to="/" className="text-xs font-bold text-emerald-700 hover:underline">
+          ← Voltar à Base
+        </Link>
+      </div>
+    );
   }
 
   const sorted = sortAchievements(stats.conquistas);

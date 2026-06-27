@@ -6,6 +6,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { EnergyDrinkIcon } from '@/lib/daily-shop-display';
 import { getInventory, useEnergyDrink } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { ENERGY_DRINK_BONUS_XP } from '@/types';
@@ -25,18 +26,15 @@ export function InventoryModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [usingEnergy, setUsingEnergy] = useState(false);
   const [selected, setSelected] = useState<SelectedItem>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await getInventory();
       setEnergyCount(data.energy_drink);
       setQuantity((q) => Math.min(q, Math.max(1, data.energy_drink)));
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível carregar o inventário.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar o inventário.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -44,7 +42,6 @@ export function InventoryModal({ open, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setSuccess(null);
     setSelected(null);
     setQuantity(1);
     if (stats?.energy_drink_count !== undefined) {
@@ -68,21 +65,19 @@ export function InventoryModal({ open, onClose }: Props) {
   const handleUseEnergy = async () => {
     if (quantity < 1 || quantity > energyCount) return;
     setUsingEnergy(true);
-    setError(null);
-    setSuccess(null);
     try {
       const res = await useEnergyDrink(quantity);
       applyUser(res.user);
       await refreshApp();
       setEnergyCount(res.inventario.energy_drink);
       setQuantity(Math.min(quantity, Math.max(1, res.inventario.energy_drink)));
-      setSuccess(`+${res.bonus_added} XP bônus ativado!`);
+      showGameToast(`+${res.bonus_added} XP bônus ativado!`, { variant: 'success' });
       setSelected(null);
       window.dispatchEvent(
         new CustomEvent('abdoria:energy-drink-used', { detail: { bonus_added: res.bonus_added } }),
       );
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível usar Energy Drink.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível usar Energy Drink.'), { variant: 'error' });
     } finally {
       setUsingEnergy(false);
     }
@@ -121,8 +116,6 @@ export function InventoryModal({ open, onClose }: Props) {
             onClick={() => {
               setSelected('energy_drink');
               setQuantity(Math.min(1, energyCount) || 1);
-              setError(null);
-              setSuccess(null);
             }}
             aria-label={`Energy Drink, ${energyCount} em estoque`}
           >
@@ -187,9 +180,6 @@ export function InventoryModal({ open, onClose }: Props) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {error && <p className="game-login__error mt-2">{error}</p>}
-        {success && <p className="game-modal__success mt-2">{success}</p>}
       </motion.div>
     </div>,
     document.body,

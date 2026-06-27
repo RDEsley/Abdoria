@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { showGameToast } from '@/components/ui/GameToast';
 import {
   completeWorkout,
   getDashboardRecommendations,
@@ -101,6 +102,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         esquemas_reps: patch.esquemas_reps
           ? { ...pendingPersist.current?.esquemas_reps, ...patch.esquemas_reps }
           : pendingPersist.current?.esquemas_reps,
+        esquema_reps_selecionado: patch.esquema_reps_selecionado
+          ? { ...pendingPersist.current?.esquema_reps_selecionado, ...patch.esquema_reps_selecionado }
+          : pendingPersist.current?.esquema_reps_selecionado,
       };
 
       if (persistTimer.current !== null) {
@@ -206,6 +210,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
+    if (!error) return;
+    showGameToast(error, { variant: 'error' });
+  }, [error]);
+
+  useEffect(() => {
     const onAfkSync = (event: Event) => {
       const detail = (event as CustomEvent<import('@/lib/api').AfkPingResponse>).detail;
       if (!detail) return;
@@ -265,6 +274,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const next = mergeUserDadosSalvos(userDadosRef.current, { treino_personalizado: items });
       applyUserDados(next);
       schedulePersist({ treino_personalizado: items });
+    },
+    [applyUserDados, schedulePersist],
+  );
+
+  const setCustomWorkoutName = useCallback(
+    (nome: string) => {
+      const next = mergeUserDadosSalvos(userDadosRef.current, { treino_personalizado_nome: nome });
+      applyUserDados(next);
+      schedulePersist({ treino_personalizado_nome: nome });
+    },
+    [applyUserDados, schedulePersist],
+  );
+
+  const setSelectedRepSchemeId = useCallback(
+    (nivel: NivelUsuario, schemeId: string) => {
+      const esquema_reps_selecionado = {
+        ...userDadosRef.current.esquema_reps_selecionado,
+        [nivel]: schemeId,
+      };
+      const next = mergeUserDadosSalvos(userDadosRef.current, { esquema_reps_selecionado });
+      applyUserDados(next);
+      schedulePersist({ esquema_reps_selecionado: { [nivel]: schemeId } });
     },
     [applyUserDados, schedulePersist],
   );
@@ -396,7 +427,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       stats,
       history,
       customWorkout: userDados.treino_personalizado,
+      customWorkoutName: userDados.treino_personalizado_nome,
       savedWorkouts: userDados.treinos_salvos,
+      selectedRepSchemeIds: userDados.esquema_reps_selecionado,
       unlockedExercises,
       loading,
       exercisesLoading,
@@ -409,6 +442,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ensureExercises,
       ensureHistory,
       setCustomWorkout,
+      setCustomWorkoutName,
+      setSelectedRepSchemeId,
       saveWorkoutPreset,
       getRepSchemes,
       saveRepSchemes,
@@ -434,6 +469,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ensureExercises,
       ensureHistory,
       setCustomWorkout,
+      setCustomWorkoutName,
+      setSelectedRepSchemeId,
       saveWorkoutPreset,
       getRepSchemes,
       saveRepSchemes,

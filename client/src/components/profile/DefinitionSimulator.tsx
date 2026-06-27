@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Sparkles, Target, TrendingDown } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
+import { showGameToast } from '@/components/ui/GameToast';
 import { updateMe } from '@/lib/api';
 import type { DashboardStats, IUserDocument, NivelUsuario, SexoBiologico } from '@/types';
 import {
@@ -43,7 +44,6 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
     saved?.gordura_meta_pct ?? getDefinicaoMetaPadrao(saved?.sexo ?? 'masculino'),
   );
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   const gorduraAtualNum = parsePctInput(gorduraAtual);
   const imc =
@@ -89,22 +89,21 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
 
   const handleEstimateFromImc = () => {
     if (!imc || !profile.idade) {
-      setMessage('Preencha peso, altura e idade na aba Dados para estimar.');
+      showGameToast('Preencha peso, altura e idade na aba Dados para estimar.', { variant: 'warn' });
       return;
     }
     const est = estimarGorduraCorporal(imc, profile.idade, sexo);
     setGorduraAtual(String(est));
-    setMessage(`Estimativa por IMC/idade: ~${est}% (referência educativa).`);
+    showGameToast(`Estimativa por IMC/idade: ~${est}% (referência educativa).`, { variant: 'info' });
   };
 
   const handleSave = async () => {
     const atual = parsePctInput(gorduraAtual);
     if (atual == null) {
-      setMessage('Informe sua gordura corporal estimada (8–55%).');
+      showGameToast('Informe sua gordura corporal estimada (8–55%).', { variant: 'warn' });
       return;
     }
     setSaving(true);
-    setMessage(null);
     try {
       const inicio =
         saved?.gordura_inicio_pct ??
@@ -120,7 +119,7 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
         },
       });
       await onSaved();
-      setMessage('Simulação atualizada.');
+      showGameToast('Simulação atualizada.', { variant: 'success' });
     } finally {
       setSaving(false);
     }
@@ -307,8 +306,6 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
           </div>
         </div>
       )}
-
-      {message && <p className="mt-3 text-xs font-bold text-stone-600">{message}</p>}
 
       <GameButton size="lg" className="mt-4 w-full" onClick={() => void handleSave()} disabled={saving}>
         {saving ? 'Salvando...' : 'Salvar simulação'}

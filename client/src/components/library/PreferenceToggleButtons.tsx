@@ -1,4 +1,4 @@
-import { Ban, Pin, Play } from 'lucide-react';
+import { Ban, Pin, Play, Shuffle } from 'lucide-react';
 import {
   EXERCISE_BLOCK_OFF,
   EXERCISE_BLOCK_ON,
@@ -8,12 +8,34 @@ import {
   WORKOUT_BLOCK_ON,
   WORKOUT_PIN_OFF,
   WORKOUT_PIN_ON,
-  showPreferenceFeedback,
-} from '@/components/library/PreferenceFeedback';
+  showGameToast,
+} from '@/components/ui/GameToast';
 
 interface PlayProps {
   onClick: () => void;
   className?: string;
+}
+
+interface SwapProps {
+  onClick: () => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+/** Ícone para trocar o treino selecionado por opção muscular similar. */
+export function SwapWorkoutButton({ onClick, disabled = false, className = '' }: SwapProps) {
+  return (
+    <button
+      type="button"
+      className={`game-item-card__action-icon game-item-card__action-icon--swap ${className}`.trim()}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label="Trocar treino"
+      title="Trocar treino"
+    >
+      <Shuffle size={13} aria-hidden />
+    </button>
+  );
 }
 
 /** Botão de ver demonstração — design original pixel verde. */
@@ -67,13 +89,13 @@ export function PreferenceToggleButtons({
 }: PrefProps) {
   const handlePin = () => {
     const next = !isPinned;
-    showPreferenceFeedback(pinFeedback(next, feedbackKind));
+    showGameToast(pinFeedback(next, feedbackKind), { variant: 'success' });
     onTogglePin();
   };
 
   const handleBlock = () => {
     const next = !isBlocked;
-    showPreferenceFeedback(blockFeedback(next, feedbackKind));
+    showGameToast(blockFeedback(next, feedbackKind), { variant: 'info' });
     onToggleBlock();
   };
 
@@ -83,7 +105,7 @@ export function PreferenceToggleButtons({
         type="button"
         className={[
           'game-item-card__action-icon game-item-card__action-icon--pin',
-          isPinned ? 'game-item-card__action-icon--active' : '',
+          isPinned ? 'game-item-card__action-icon--active game-item-card__action-icon--pin-active' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -92,7 +114,7 @@ export function PreferenceToggleButtons({
         aria-label={isPinned ? `${pinAriaLabel} (ativo)` : pinAriaLabel}
         title={pinAriaLabel}
       >
-        <Pin size={13} aria-hidden />
+        <Pin size={13} fill={isPinned ? 'currentColor' : 'none'} strokeWidth={isPinned ? 2.5 : 2} aria-hidden />
       </button>
       <button
         type="button"
@@ -115,11 +137,14 @@ export function PreferenceToggleButtons({
 
 interface QuickActionsProps {
   onPlay?: () => void;
+  onSwapWorkout?: () => void;
   isPinned?: boolean;
   isBlocked?: boolean;
   onTogglePin?: () => void;
   onToggleBlock?: () => void;
   showPlay?: boolean;
+  showSwapWorkout?: boolean;
+  swapWorkoutDisabled?: boolean;
   showPreferences?: boolean;
   pinAriaLabel?: string;
   blockAriaLabel?: string;
@@ -130,11 +155,14 @@ interface QuickActionsProps {
 /** Grupo padronizado: ver treino + preferências. */
 export function ExerciseQuickActions({
   onPlay,
+  onSwapWorkout,
   isPinned = false,
   isBlocked = false,
   onTogglePin,
   onToggleBlock,
   showPlay = false,
+  showSwapWorkout = false,
+  swapWorkoutDisabled = false,
   showPreferences = false,
   pinAriaLabel,
   blockAriaLabel,
@@ -144,6 +172,9 @@ export function ExerciseQuickActions({
   return (
     <div className={`game-exercise-actions ${className}`.trim()}>
       {showPlay && onPlay && <ExercisePlayButton onClick={onPlay} />}
+      {showSwapWorkout && onSwapWorkout && (
+        <SwapWorkoutButton onClick={onSwapWorkout} disabled={swapWorkoutDisabled} />
+      )}
       {showPreferences && onTogglePin && onToggleBlock && (
         <PreferenceToggleButtons
           isPinned={isPinned}

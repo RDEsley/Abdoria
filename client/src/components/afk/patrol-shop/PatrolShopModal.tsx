@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { equipPatrolWeapon, getPatrolShop, purchasePatrolWeapon } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/components/ui/GameToast';
 import { playEquip, playPurchase } from '@/lib/sounds';
 import type { ArmaPreferida, PatrolShopCatalogItem, PatrolShopResponse, PatrolWeaponKind } from '@/types';
 import { CURRENCY_NAME } from '@/types';
@@ -34,18 +35,15 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('arco');
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [celebrating, setCelebrating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await getPatrolShop();
       setCatalog(data);
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível abrir a loja da patrulha.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja da patrulha.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -67,8 +65,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
 
   const handlePurchase = async (item: PatrolShopCatalogItem) => {
     setBusyId(item.id);
-    setError(null);
-    setSuccess(null);
     try {
       const res = await purchasePatrolWeapon(item.id);
       applyUser(res.user);
@@ -76,13 +72,13 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       playPurchase();
       setCelebrating(true);
       window.setTimeout(() => setCelebrating(false), 1200);
-      setSuccess(`${item.nome} comprado!`);
+      showGameToast(`${item.nome} comprado!`, { variant: 'success' });
       if (item.kind === 'arco' || item.kind === 'espada') {
         onWeaponChange?.(item.kind);
       }
       await load();
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível comprar este item.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), { variant: 'error' });
     } finally {
       setBusyId(null);
     }
@@ -91,18 +87,16 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   const handleEquip = async (item: PatrolShopCatalogItem) => {
     if (item.kind !== 'arco' && item.kind !== 'espada') return;
     setBusyId(item.id);
-    setError(null);
-    setSuccess(null);
     try {
       const res = await equipPatrolWeapon(item.kind, item.id);
       applyUser(res.user);
       await refreshApp();
       playEquip();
       onWeaponChange?.(item.kind);
-      setSuccess(`${item.nome} equipado!`);
+      showGameToast(`${item.nome} equipado!`, { variant: 'success' });
       await load();
     } catch (err) {
-      setError(getErrorMessage(err, 'Não foi possível equipar este item.'));
+      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), { variant: 'error' });
     } finally {
       setBusyId(null);
     }
@@ -157,9 +151,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
           </nav>
 
           <div className="game-patrol-shop-body">
-            {error && <p className="game-login__error">{error}</p>}
-            {success && <p className="game-modal__success">{success}</p>}
-
             {loading ? (
               <p className="game-loader">Carregando armas...</p>
             ) : activeTab === 'magia' ? (

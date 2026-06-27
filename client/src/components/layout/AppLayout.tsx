@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
 import { AfkFab } from '@/components/afk/AfkFab';
-import { PreferenceFeedbackHost } from '@/components/library/PreferenceFeedback';
+import { GameToastHost } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
 import { GameHud } from '@/components/layout/GameHud';
@@ -145,7 +145,7 @@ export function AppLayout() {
 
       {isHomePage && <AfkFab />}
 
-      <PreferenceFeedbackHost />
+      <GameToastHost />
     </div>
     </MidnightRefreshProvider>
   );
