@@ -7,6 +7,8 @@ import {
   pickDailyValue,
   pickDistinctPaidOfferKinds,
   pickFreeDailyRewardType,
+  inferPaidOfferKind,
+  pickPaidOfferKind,
   isStaleDailyOffer,
   hashDailySeed,
 } from '../data/daily-shop-config.js';
@@ -53,6 +55,7 @@ import {
   SHOP_ABDORIA_COST_PER_XP,
   SHOP_XP_COST_PER_ABDORIA,
   resolveCosmeticos,
+  sortCosmeticCatalogItems,
   spendableXpForShop,
   xpLevelFromTotal,
 } from '../types/index.js';
@@ -306,18 +309,31 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
   const today = getTodaySaoPaulo();
   const loja = ensureLojaDiaria(user);
 
-  const shouldRegenerate =
-    loja.data_reset !== today ||
-    loja.slots.length !== 3 ||
-    loja.slots.some((entry) => isLegacyDailyOffer(entry as LojaDiariaSlot));
-
-  if (!shouldRegenerate) {
-    return {
-      data_reset: loja.data_reset,
-      slots: [...loja.slots] as LojaDiariaSlot[],
-    };
+  if (loja.data_reset !== today || loja.slots.length !== 3) {
+    return regenerateDailyShop(loja, today);
   }
 
+  // Mesmo dia: corrige só ofertas pagas legadas, sem resetar a recompensa grátis.
+  for (let index = 0; index < loja.slots.length; index += 1) {
+    const entry = loja.slots[index] as LojaDiariaSlot;
+    if (!isLegacyDailyOffer(entry)) continue;
+
+    const offerKind = inferPaidOfferKind(entry) ?? pickPaidOfferKind(today, entry.slot);
+    const replacement = generatePaidDailySlot(today, entry.slot, offerKind);
+    replacement.resgatado = entry.resgatado;
+    loja.slots[index] = replacement as never;
+  }
+
+  return {
+    data_reset: loja.data_reset,
+    slots: [...loja.slots] as LojaDiariaSlot[],
+  };
+}
+
+function regenerateDailyShop(
+  loja: ReturnType<typeof ensureLojaDiaria>,
+  today: string,
+): LojaDiaria {
   const [offerKindSlot1, offerKindSlot2] = pickDistinctPaidOfferKinds(today);
   const slots = [
     generateFreeDailySlot(today, 0),
@@ -598,10 +614,11 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
   const loja_diaria = syncDailyShop(user);
 
   const byKind = (kind: CosmeticKind) =>
-    COSMETICS.filter(
-      (item) => item.kind === kind && !(SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id),
-    )
-      .map((item) => toCatalogItem(item, user));
+    sortCosmeticCatalogItems(
+      COSMETICS.filter(
+        (item) => item.kind === kind && !(SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id),
+      ).map((item) => toCatalogItem(item, user)),
+    );
 
   return {
     abdoria: readAbdoriaBalance(user),
@@ -782,6 +799,7 @@ export async function claimFreeDailyShopRewards(userId: string) {
 
   const claimed: LojaDiariaSlot[] = [];
   let overflow_to_dorias = 0;
+  let changed = false;
 
   for (const slotDoc of lojaDoc.slots) {
     if (slotDoc.kind !== 'recompensa_diaria' || slotDoc.resgatado) continue;
@@ -790,9 +808,10 @@ export async function claimFreeDailyShopRewards(userId: string) {
     overflow_to_dorias += applyDailyReward(user, slotSnapshot);
     slotDoc.resgatado = true;
     claimed.push({ ...slotSnapshot, resgatado: true });
+    changed = true;
   }
 
-  if (claimed.length > 0) {
+  if (changed) {
     await user.save();
   }
 

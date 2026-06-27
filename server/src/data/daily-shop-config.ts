@@ -106,6 +106,8 @@ export function expectedDailyOfferCosts(
 
 export function isStaleDailyOffer(slot: LojaDiariaSlot): boolean {
   if (slot.kind !== 'oferta') return false;
+  // Ofertas especiais (cosmético, item) têm preços próprios — não comparar com tabela padrão.
+  if (slot.cosmetic_id || slot.item_id) return false;
 
   const expected = expectedDailyOfferCosts(slot);
   const abdoriaCost = slot.preco_abdoria ?? 0;

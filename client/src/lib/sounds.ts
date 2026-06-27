@@ -26,6 +26,8 @@ type SfxPackDef = {
   equip: ToneStep[];
   timerDone: ToneStep[];
   restEnd: ToneStep[];
+  /** Demonstração curta na loja Abdoria — ritmo/melodia únicos por pack. */
+  shopPreview: ToneStep[];
 };
 
 const PACKS: Record<string, SfxPackDef> = {
@@ -73,6 +75,12 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 523, dur: 0.1, gap: 0 },
       { freq: 659, dur: 0.14, gap: 90 },
     ],
+    shopPreview: [
+      { freq: 523, type: 'triangle', dur: 0.1, gap: 0, harmonic: 2 },
+      { freq: 659, type: 'triangle', dur: 0.1, gap: 85 },
+      { freq: 784, type: 'triangle', dur: 0.12, gap: 85 },
+      { freq: 1047, type: 'triangle', dur: 0.18, gap: 100, harmonic: 2 },
+    ],
   },
   /* Flauta — notas longas e respiradas */
   som_suave: {
@@ -118,6 +126,12 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 392, dur: 0.18, gap: 0 },
       { freq: 494, dur: 0.24, gap: 110 },
     ],
+    shopPreview: [
+      { freq: 587, type: 'sine', dur: 0.35, gap: 0 },
+      { freq: 494, type: 'sine', dur: 0.35, gap: 200 },
+      { freq: 440, type: 'sine', dur: 0.4, gap: 220 },
+      { freq: 392, type: 'sine', dur: 0.5, gap: 240 },
+    ],
   },
   /* Sinos / carrilhão */
   som_chime: {
@@ -161,6 +175,12 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 784, dur: 0.22, gap: 0 },
       { freq: 988, dur: 0.3, gap: 120 },
+    ],
+    shopPreview: [
+      { freq: 1319, type: 'triangle', dur: 0.35, gap: 0, harmonic: 2 },
+      { freq: 1175, type: 'triangle', dur: 0.3, gap: 180, harmonic: 2 },
+      { freq: 988, type: 'triangle', dur: 0.28, gap: 160 },
+      { freq: 784, type: 'triangle', dur: 0.4, gap: 200, harmonic: 2 },
     ],
   },
   /* Ukulele / pop percussivo */
@@ -206,6 +226,13 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 659, type: 'square', dur: 0.06, gap: 0 },
       { freq: 784, type: 'square', dur: 0.09, gap: 65 },
+    ],
+    shopPreview: [
+      { freq: 1047, type: 'square', dur: 0.04, gap: 0 },
+      { freq: 880, type: 'square', dur: 0.04, gap: 45 },
+      { freq: 698, type: 'square', dur: 0.04, gap: 45 },
+      { freq: 880, type: 'square', dur: 0.05, gap: 55 },
+      { freq: 1047, type: 'square', dur: 0.08, gap: 55 },
     ],
   },
   /* Synth arcade — arpejos rápidos */
@@ -255,6 +282,16 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 988, type: 'square', dur: 0.07, gap: 55 },
       { freq: 1175, type: 'square', dur: 0.09, gap: 55 },
     ],
+    shopPreview: [
+      { freq: 659, type: 'square', dur: 0.035, gap: 0 },
+      { freq: 784, type: 'square', dur: 0.035, gap: 28 },
+      { freq: 988, type: 'square', dur: 0.035, gap: 28 },
+      { freq: 1175, type: 'square', dur: 0.035, gap: 28 },
+      { freq: 1319, type: 'square', dur: 0.05, gap: 28 },
+      { freq: 1175, type: 'square', dur: 0.035, gap: 35 },
+      { freq: 988, type: 'square', dur: 0.035, gap: 28 },
+      { freq: 784, type: 'square', dur: 0.05, gap: 28 },
+    ],
   },
   /* Órgão retro */
   som_retro: {
@@ -299,6 +336,13 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 554, type: 'sawtooth', dur: 0.09, gap: 0 },
       { freq: 659, type: 'sawtooth', dur: 0.12, gap: 70 },
+    ],
+    shopPreview: [
+      { freq: 440, type: 'sawtooth', dur: 0.12, gap: 0, harmonic: 2 },
+      { freq: 554, type: 'sawtooth', dur: 0.12, gap: 90 },
+      { freq: 659, type: 'sawtooth', dur: 0.14, gap: 80 },
+      { freq: 440, type: 'sawtooth', dur: 0.1, gap: 100 },
+      { freq: 880, type: 'sawtooth', dur: 0.18, gap: 70, harmonic: 2 },
     ],
   },
   /* Chip 8-bit compacto */
@@ -345,6 +389,13 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 523, type: 'square', dur: 0.035, gap: 0 },
       { freq: 659, type: 'square', dur: 0.045, gap: 35 },
     ],
+    shopPreview: [
+      { freq: 880, type: 'square', dur: 0.025, gap: 0 },
+      { freq: 659, type: 'square', dur: 0.025, gap: 22 },
+      { freq: 523, type: 'square', dur: 0.025, gap: 22 },
+      { freq: 659, type: 'square', dur: 0.025, gap: 22 },
+      { freq: 784, type: 'square', dur: 0.03, gap: 22 },
+    ],
   },
   /* Guitarra metal — graves distorcidos */
   som_metal: {
@@ -389,6 +440,12 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 175, type: 'sawtooth', dur: 0.12, gap: 0 },
       { freq: 220, type: 'sawtooth', dur: 0.16, gap: 80 },
+    ],
+    shopPreview: [
+      { freq: 165, type: 'sawtooth', dur: 0.14, gap: 0, harmonic: 2 },
+      { freq: 165, type: 'sawtooth', dur: 0.1, gap: 120 },
+      { freq: 196, type: 'sawtooth', dur: 0.14, gap: 80 },
+      { freq: 247, type: 'sawtooth', dur: 0.18, gap: 100, harmonic: 2 },
     ],
   },
   /* Fanfarra épica — metais */
@@ -439,6 +496,13 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 784, dur: 0.16, gap: 85 },
       { freq: 988, dur: 0.2, gap: 85 },
     ],
+    shopPreview: [
+      { freq: 523, type: 'triangle', dur: 0.12, gap: 0, harmonic: 2 },
+      { freq: 659, type: 'triangle', dur: 0.12, gap: 75 },
+      { freq: 784, type: 'triangle', dur: 0.12, gap: 75 },
+      { freq: 988, type: 'triangle', dur: 0.14, gap: 75 },
+      { freq: 1175, type: 'triangle', dur: 0.22, gap: 90, harmonic: 2 },
+    ],
   },
   /* Harpa de cristal */
   som_cristal: {
@@ -484,6 +548,12 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 988, dur: 0.22, gap: 0 },
       { freq: 1318, dur: 0.3, gap: 110 },
+    ],
+    shopPreview: [
+      { freq: 1568, type: 'sine', dur: 0.32, gap: 0, harmonic: 2.5 },
+      { freq: 1760, type: 'sine', dur: 0.28, gap: 200, harmonic: 2 },
+      { freq: 1318, type: 'sine', dur: 0.26, gap: 180, harmonic: 2 },
+      { freq: 1760, type: 'sine', dur: 0.36, gap: 220, harmonic: 2.5 },
     ],
   },
   /* Shakuhachi / zen — pentatônica lenta */
@@ -531,6 +601,12 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 294, dur: 0.28, gap: 0 },
       { freq: 392, dur: 0.36, gap: 120 },
+    ],
+    shopPreview: [
+      { freq: 220, type: 'sine', dur: 0.4, gap: 0 },
+      { freq: 262, type: 'sine', dur: 0.38, gap: 250 },
+      { freq: 330, type: 'sine', dur: 0.36, gap: 280 },
+      { freq: 392, type: 'sine', dur: 0.45, gap: 300 },
     ],
   },
   /* Marimba — saltitante */
@@ -580,6 +656,14 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 740, dur: 0.055, gap: 0 },
       { freq: 988, dur: 0.075, gap: 50 },
     ],
+    shopPreview: [
+      { freq: 660, type: 'sine', dur: 0.05, gap: 0 },
+      { freq: 880, type: 'sine', dur: 0.05, gap: 35 },
+      { freq: 1100, type: 'sine', dur: 0.055, gap: 35 },
+      { freq: 880, type: 'sine', dur: 0.05, gap: 35 },
+      { freq: 1245, type: 'sine', dur: 0.065, gap: 40 },
+      { freq: 988, type: 'sine', dur: 0.055, gap: 35 },
+    ],
   },
   /* NES 8-bit */
   som_8bit: {
@@ -627,6 +711,14 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 440, type: 'square', dur: 0.03, gap: 0 },
       { freq: 523, type: 'square', dur: 0.04, gap: 28 },
+    ],
+    shopPreview: [
+      { freq: 523, type: 'square', dur: 0.03, gap: 0 },
+      { freq: 659, type: 'square', dur: 0.03, gap: 18 },
+      { freq: 784, type: 'square', dur: 0.035, gap: 18 },
+      { freq: 1047, type: 'square', dur: 0.04, gap: 18 },
+      { freq: 784, type: 'square', dur: 0.03, gap: 22 },
+      { freq: 659, type: 'square', dur: 0.035, gap: 18 },
     ],
   },
   /* Apito de treino / corneta */
@@ -676,6 +768,13 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 659, dur: 0.09, gap: 0 },
       { freq: 880, dur: 0.13, gap: 70 },
     ],
+    shopPreview: [
+      { freq: 440, type: 'triangle', dur: 0.1, gap: 0, harmonic: 2 },
+      { freq: 554, type: 'triangle', dur: 0.1, gap: 55 },
+      { freq: 659, type: 'triangle', dur: 0.1, gap: 55 },
+      { freq: 880, type: 'triangle', dur: 0.14, gap: 60, harmonic: 2 },
+      { freq: 988, type: 'triangle', dur: 0.18, gap: 70, harmonic: 2 },
+    ],
   },
   /* Tímpanos / boss */
   som_boss: {
@@ -723,6 +822,13 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 98, type: 'sawtooth', dur: 0.16, gap: 0 },
       { freq: 147, type: 'sawtooth', dur: 0.22, gap: 90 },
     ],
+    shopPreview: [
+      { freq: 73, type: 'sawtooth', dur: 0.2, gap: 0 },
+      { freq: 73, type: 'sawtooth', dur: 0.15, gap: 140 },
+      { freq: 98, type: 'sawtooth', dur: 0.18, gap: 110 },
+      { freq: 147, type: 'sawtooth', dur: 0.22, gap: 100 },
+      { freq: 196, type: 'sawtooth', dur: 0.3, gap: 120 },
+    ],
   },
   /* Piano noturno — noir */
   som_noturno: {
@@ -769,6 +875,13 @@ const PACKS: Record<string, SfxPackDef> = {
     restEnd: [
       { freq: 277, dur: 0.2, gap: 0 },
       { freq: 370, dur: 0.28, gap: 95 },
+    ],
+    shopPreview: [
+      { freq: 370, type: 'triangle', dur: 0.28, gap: 0 },
+      { freq: 311, type: 'triangle', dur: 0.24, gap: 130 },
+      { freq: 277, type: 'triangle', dur: 0.22, gap: 120 },
+      { freq: 247, type: 'triangle', dur: 0.26, gap: 140 },
+      { freq: 220, type: 'triangle', dur: 0.32, gap: 160 },
     ],
   },
   /* Trompete de vitória */
@@ -819,6 +932,13 @@ const PACKS: Record<string, SfxPackDef> = {
       { freq: 659, dur: 0.1, gap: 0 },
       { freq: 784, dur: 0.14, gap: 75 },
       { freq: 988, dur: 0.18, gap: 75 },
+    ],
+    shopPreview: [
+      { freq: 659, type: 'triangle', dur: 0.1, gap: 0, harmonic: 2 },
+      { freq: 784, type: 'triangle', dur: 0.1, gap: 60 },
+      { freq: 988, type: 'triangle', dur: 0.12, gap: 60 },
+      { freq: 1175, type: 'triangle', dur: 0.14, gap: 65 },
+      { freq: 1319, type: 'triangle', dur: 0.24, gap: 80, harmonic: 2 },
     ],
   },
 };
@@ -1006,13 +1126,49 @@ async function playSafeHtmlAudio(url: string, fallback: () => void) {
   }
 }
 
+let previewRestoreTimer: ReturnType<typeof setTimeout> | null = null;
+
+function sequenceDurationMs(steps: ToneStep[]): number {
+  if (steps.length === 0) return 0;
+  const gapMs = steps.slice(0, -1).reduce((total, step) => total + (step.gap ?? 80), 0);
+  const last = steps[steps.length - 1];
+  return gapMs + (last.dur ?? 0.1) * 1000 + 80;
+}
+
+function playSequenceForPack(steps: ToneStep[], pack: string, fallbackType: OscillatorType = 'sine') {
+  if (!PACKS[pack]) return;
+  steps.forEach((step, index) => {
+    const delay = steps.slice(0, index).reduce((total, prev) => total + (prev.gap ?? 80), 0);
+    setTimeout(() => {
+      const prev = sfxPack;
+      sfxPack = pack;
+      playStep(step, step.type ?? fallbackType);
+      sfxPack = prev;
+    }, delay);
+  });
+}
+
 export function previewSfxPack(pack: string) {
+  if (!PACKS[pack]) return;
+
+  if (previewRestoreTimer) {
+    clearTimeout(previewRestoreTimer);
+    previewRestoreTimer = null;
+  }
+
   const previous = sfxPack;
-  if (PACKS[pack]) sfxPack = pack;
-  playClick();
-  setTimeout(() => playCompleteSet(), 120);
-  setTimeout(() => playLevelUp(), 280);
-  setTimeout(() => playPurchase(), 620);
-  setTimeout(() => playUnlock(), 880);
-  sfxPack = previous;
+  sfxPack = pack;
+
+  const def = PACKS[pack];
+  const fallbackType = def.click.type ?? 'triangle';
+  playStep(def.click, fallbackType);
+
+  const previewStartMs = 90;
+  setTimeout(() => playSequenceForPack(def.shopPreview, pack, fallbackType), previewStartMs);
+
+  const previewMs = previewStartMs + sequenceDurationMs(def.shopPreview);
+  previewRestoreTimer = setTimeout(() => {
+    sfxPack = previous;
+    previewRestoreTimer = null;
+  }, Math.max(previewMs + 120, 600));
 }
