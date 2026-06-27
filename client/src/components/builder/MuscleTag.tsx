@@ -1,5 +1,5 @@
 import type { MusculoPrincipal } from '@/types';
-import { MUSCULO_LABELS } from '@/types';
+import { MUSCULO_HINTS, MUSCULO_LABELS, MUSCULO_TAG_LABELS } from '@/types';
 
 const MUSCLE_COLORS: Record<MusculoPrincipal, string> = {
   superior: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -9,34 +9,29 @@ const MUSCLE_COLORS: Record<MusculoPrincipal, string> = {
   completo: 'bg-rose-100 text-rose-800 border-rose-200',
 };
 
-const MUSCLE_SHORT: Record<MusculoPrincipal, string> = {
-  superior: 'Sup.',
-  inferior: 'Inf.',
-  obliquos: 'Obl.',
-  core: 'Core',
-  completo: 'Full',
-};
-
 interface Props {
   muscle: MusculoPrincipal;
   compact?: boolean;
   className?: string;
 }
 
-/** Tag compacta de grupamento muscular — placeholder estruturado para futuras features. */
+/** Tag de zona abdominal — compacta usa rótulo curto legível; expandida usa nome completo. */
 export function MuscleTag({ muscle, compact = false, className = '' }: Props) {
+  const label = compact ? MUSCULO_TAG_LABELS[muscle] : MUSCULO_LABELS[muscle];
+
   return (
     <span
       className={[
-        'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[0.58rem] font-extrabold leading-none',
+        'inline-flex items-center rounded-md border px-1.5 py-0.5 font-extrabold leading-snug',
+        compact ? 'text-[0.62rem]' : 'text-[0.68rem]',
         MUSCLE_COLORS[muscle],
         className,
       ]
         .filter(Boolean)
         .join(' ')}
-      title={MUSCULO_LABELS[muscle]}
+      title={MUSCULO_HINTS[muscle]}
     >
-      {compact ? MUSCLE_SHORT[muscle] : MUSCULO_LABELS[muscle]}
+      {label}
     </span>
   );
 }
@@ -47,11 +42,11 @@ interface GroupProps {
   className?: string;
 }
 
-export function MuscleTagGroup({ muscles, compact = true, className = '' }: GroupProps) {
+export function MuscleTagGroup({ muscles, compact = false, className = '' }: GroupProps) {
   if (muscles.length === 0) return null;
 
   return (
-    <div className={`flex flex-wrap gap-1 ${className}`.trim()} aria-label="Grupamentos musculares">
+    <div className={`flex flex-wrap gap-1 ${className}`.trim()} aria-label="Zonas do abdômen">
       {muscles.map((muscle) => (
         <MuscleTag key={muscle} muscle={muscle} compact={compact} />
       ))}

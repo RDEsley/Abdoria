@@ -6,6 +6,8 @@ import {
   DORIA_BAG_LABEL,
   EXP_INSTANT_ITEM_ID,
   EXP_INSTANT_LABEL,
+  FROZEN_STREAK_ITEM_ID,
+  FROZEN_STREAK_LABEL,
   PATROL_CACHE_HOURS,
   PATROL_CACHE_ITEM_ID,
   PATROL_CACHE_LABEL,
@@ -13,17 +15,20 @@ import {
   ROUTE_DRINK_LABEL,
 } from '@/types';
 
-export function EnergyDrinkIcon({ size = 16, className }: { size?: number; className?: string }) {
+export function FrozenStreakIcon({ size = 16, className }: { size?: number; className?: string }) {
   return (
-    <span className={`game-energy-drink-icon${className ? ` ${className}` : ''}`} aria-hidden>
+    <span className={`game-frozen-streak-icon${className ? ` ${className}` : ''}`} aria-hidden>
       <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
-        <rect x="7" y="3" width="10" height="4" rx="1" className="game-energy-drink-icon__cap" />
-        <rect x="6" y="7" width="12" height="14" rx="2" className="game-energy-drink-icon__body" />
-        <path d="M9 11h6M9 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="5" y="5" width="14" height="14" rx="2.5" className="game-frozen-streak-icon__cube" />
+        <path d="M5 12h14M12 5v14" className="game-frozen-streak-icon__facet" strokeWidth="1.4" />
+        <path d="M8 8l8 8M16 8l-8 8" className="game-frozen-streak-icon__spark" strokeWidth="1.2" />
       </svg>
     </span>
   );
 }
+
+/** @deprecated Use {@link FrozenStreakIcon} */
+export const EnergyDrinkIcon = FrozenStreakIcon;
 
 export function RouteDrinkIcon({ size = 16, className }: { size?: number; className?: string }) {
   return (
@@ -84,7 +89,9 @@ export function DoriaBagIcon({ size = 16, className }: { size?: number; classNam
 
 export function formatDailyReward(slot: LojaDiariaSlot): string {
   if (slot.recompensa_tipo === 'item') {
-    if (slot.item_id === 'energy_drink') return `+${slot.valor} Energy Drink`;
+    if (slot.item_id === FROZEN_STREAK_ITEM_ID || (slot.item_id as string) === 'energy_drink') {
+      return `+${slot.valor} ${FROZEN_STREAK_LABEL}`;
+    }
     if (slot.item_id === ROUTE_DRINK_ITEM_ID) return `+${slot.valor} ${ROUTE_DRINK_LABEL}`;
     if (slot.item_id === PATROL_CACHE_ITEM_ID) return `+${slot.valor} ${PATROL_CACHE_LABEL}`;
     if (slot.item_id === EXP_INSTANT_ITEM_ID) return `+${slot.valor} ${EXP_INSTANT_LABEL}`;
@@ -103,7 +110,10 @@ export function dailyRewardIcon(slot: LojaDiariaSlot, size = 16) {
     if (slot.item_id === ROUTE_DRINK_ITEM_ID) return <RouteDrinkIcon size={size} />;
     if (slot.item_id === EXP_INSTANT_ITEM_ID) return <ExpInstantIcon size={size} />;
     if (slot.item_id === DORIA_BAG_ITEM_ID) return <DoriaBagIcon size={size} />;
-    return <EnergyDrinkIcon size={size} />;
+    if (slot.item_id === FROZEN_STREAK_ITEM_ID || (slot.item_id as string) === 'energy_drink') {
+      return <FrozenStreakIcon size={size} />;
+    }
+    return <FrozenStreakIcon size={size} />;
   }
   if (slot.recompensa_tipo === 'pacote') return <Package size={size} aria-hidden />;
   return slot.recompensa_tipo === 'xp' ? <Zap size={size} aria-hidden /> : <Coins size={size} aria-hidden />;

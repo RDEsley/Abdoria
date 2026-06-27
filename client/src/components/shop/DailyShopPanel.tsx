@@ -4,6 +4,7 @@ import { Clock, Gift, Sparkles } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { DailyShopRewardReveal } from '@/components/shop/DailyShopRewardReveal';
 import { DailyShopAutoCollectToggle } from '@/components/shop/DailyShopAutoCollectToggle';
+import { PurchaseConfirmDialog, type PurchaseConfirmDetails } from '@/components/shop/PurchaseConfirmDialog';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { claimDailyShopSlot, claimFreeDailyShopRewards, getShop, updateMetaPreferences } from '@/lib/api';
@@ -66,6 +67,10 @@ export function DailyShopPanel() {
     () => user?.preferencias?.coletar_loja_diaria_automatico ?? false,
   );
   const [savingAutoCollect, setSavingAutoCollect] = useState(false);
+  const [purchaseConfirm, setPurchaseConfirm] = useState<{
+    slot: LojaDiariaSlot;
+    details: PurchaseConfirmDetails;
+  } | null>(null);
 
   useEffect(() => {
     setAutoCollect(user?.preferencias?.coletar_loja_diaria_automatico ?? false);
@@ -192,6 +197,7 @@ export function DailyShopPanel() {
         successMessage = `${slot.oferta_nome ?? 'Oferta'} comprada com sucesso!`;
       }
 
+      setPurchaseConfirm(null);
       setRewardReveal({ slot: claimedSlot, message: successMessage });
       const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
       if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
@@ -201,6 +207,23 @@ export function DailyShopPanel() {
     } finally {
       setBusySlot(null);
     }
+  };
+
+  const requestClaim = (slot: LojaDiariaSlot) => {
+    if (slot.kind === 'recompensa_diaria') {
+      void handleClaim(slot);
+      return;
+    }
+
+    setPurchaseConfirm({
+      slot,
+      details: {
+        itemName: slot.oferta_nome ?? formatDailyReward(slot),
+        itemDescription: slot.label,
+        priceLabel: formatDailyPurchasePrice(slot),
+        balanceHint: `${CURRENCY_NAME}: ${abdoriaBalance} · XP disponível: ${spendableXp}`,
+      },
+    });
   };
 
   return (
@@ -296,7 +319,7 @@ export function DailyShopPanel() {
                         className="w-full mt-3"
                         variant={slot.kind === 'recompensa_diaria' ? 'primary' : 'secondary'}
                         disabled={busySlot === slot.slot || !affordable}
-                        onClick={() => void handleClaim(slot)}
+                        onClick={() => void requestClaim(slot)}
                       >
                         {slot.kind === 'recompensa_diaria'
                           ? 'Resgatar grátis'
@@ -318,6 +341,16 @@ export function DailyShopPanel() {
           onClose={() => setRewardReveal(null)}
         />
       )}
+
+      <PurchaseConfirmDialog
+        open={!!purchaseConfirm}
+        details={purchaseConfirm?.details ?? null}
+        busy={!!purchaseConfirm && busySlot === purchaseConfirm.slot.slot}
+        onConfirm={() => purchaseConfirm && void handleClaim(purchaseConfirm.slot)}
+        onCancel={() => {
+          if (busySlot === null) setPurchaseConfirm(null);
+        }}
+      />
     </>
   );
 }

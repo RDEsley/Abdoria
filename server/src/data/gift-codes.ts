@@ -18,9 +18,8 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     code: 'abdoria',
     xp: 0,
     abdoria: 999,
-    desbloqueia: ['titulo_dono_do_jogo'],
-    titulo_equipar: 'titulo_dono_do_jogo',
-    mensagem: `Código Abdoria resgatado! Você recebeu 999 ${CURRENCY_NAME} e o título Dono do Jogo.`,
+    desbloqueia: [],
+    mensagem: `Código Abdoria resgatado! Você recebeu 999 ${CURRENCY_NAME}.`,
     active: true,
   },
 ];

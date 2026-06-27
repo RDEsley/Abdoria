@@ -1,13 +1,11 @@
 import type { UserDocument } from '../domain/User.js';
 import {
-  DEFAULT_XP_DIARIO,
   DORIA_BAG_ITEM_ID,
   DORIA_BAG_MAX,
   DORIA_BAG_MIN,
-  ENERGY_DRINK_BONUS_XP,
-  ENERGY_DRINK_ITEM_ID,
   EXP_INSTANT_ITEM_ID,
   EXP_INSTANT_XP,
+  FROZEN_STREAK_ITEM_ID,
   INVENTORY_STACK_CAP,
   INVENTORY_STACK_CAPPED_ITEM_IDS,
   PATROL_CACHE_ITEM_ID,
@@ -17,10 +15,11 @@ import {
   type InventoryItemId,
   type AfkPendingReward,
 } from '../types/index.js';
-import { grantPatrolCacheRewards, grantRouteDrinkRewardsToPending, hasAfkRewardsToClaim } from './afk.js';
+import { grantPatrolCacheRewards, grantRouteDrinkRewards } from './afk.js';
 import { grantAbdoria } from './economy.js';
-import { resetXpDiarioIfNeeded } from './gamification.js';
 import { hashKillSeed } from './afk-rolls.js';
+
+const LEGACY_ENERGY_DRINK_ID = 'energy_drink';
 
 export interface AddInventoryResult {
   added: number;
@@ -31,19 +30,52 @@ export function isStackCappedItem(itemId: InventoryItemId): boolean {
   return INVENTORY_STACK_CAPPED_ITEM_IDS.includes(itemId);
 }
 
+function migrateLegacyInventoryItems(inv: Inventario): void {
+  const legacy = inv.itens.find((e) => (e.item_id as string) === LEGACY_ENERGY_DRINK_ID);
+  if (!legacy || legacy.quantidade <= 0) return;
+
+  const frozen = inv.itens.find((e) => e.item_id === FROZEN_STREAK_ITEM_ID);
+  if (frozen) {
+    frozen.quantidade += legacy.quantidade;
+  } else {
+    inv.itens.push({ item_id: FROZEN_STREAK_ITEM_ID, quantidade: legacy.quantidade });
+  }
+  inv.itens = inv.itens.filter((e) => (e.item_id as string) !== LEGACY_ENERGY_DRINK_ID);
+}
+
 export function ensureInventario(user: UserDocument): Inventario {
   if (!user.inventario || !Array.isArray(user.inventario.itens)) {
     user.inventario = { itens: [] } as unknown as UserDocument['inventario'];
   }
-  return user.inventario as unknown as Inventario;
+  const inv = user.inventario as unknown as Inventario;
+  migrateLegacyInventoryItems(inv);
+  return inv;
 }
 
 export function getItemCount(user: UserDocument, itemId: InventoryItemId): number {
   const inv = ensureInventario(user);
+  if (itemId === FROZEN_STREAK_ITEM_ID) {
+    const legacy = inv.itens.find((e) => (e.item_id as string) === LEGACY_ENERGY_DRINK_ID)?.quantidade ?? 0;
+    const current = inv.itens.find((e) => e.item_id === FROZEN_STREAK_ITEM_ID)?.quantidade ?? 0;
+    return current + legacy;
+  }
   return inv.itens.find((e) => e.item_id === itemId)?.quantidade ?? 0;
 }
 
+function resolveInventoryItemId(itemId: string): InventoryItemId {
+  if (itemId === LEGACY_ENERGY_DRINK_ID) return FROZEN_STREAK_ITEM_ID;
+  return itemId as InventoryItemId;
+}
+
 export function addInventoryItem(
+  user: UserDocument,
+  itemId: InventoryItemId | string,
+  amount: number,
+): AddInventoryResult {
+  return addInventoryItemInternal(user, resolveInventoryItemId(itemId), amount);
+}
+
+function addInventoryItemInternal(
   user: UserDocument,
   itemId: InventoryItemId,
   amount: number,
@@ -81,6 +113,7 @@ export function addInventoryItem(
 export function consumeInventoryItem(user: UserDocument, itemId: InventoryItemId, amount = 1): boolean {
   if (amount <= 0) return true;
   const inv = ensureInventario(user);
+  migrateLegacyInventoryItems(inv);
   const entry = inv.itens.find((e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId);
   if (!entry || entry.quantidade < amount) return false;
   entry.quantidade -= amount;
@@ -88,40 +121,6 @@ export function consumeInventoryItem(user: UserDocument, itemId: InventoryItemId
     inv.itens = inv.itens.filter((e: { item_id: InventoryItemId; quantidade: number }) => e.item_id !== itemId || e.quantidade > 0);
   }
   return true;
-}
-
-function ensureXpDiarioBonusFields(user: UserDocument): void {
-  if (!user.xp_diario) {
-    user.xp_diario = { ...DEFAULT_XP_DIARIO };
-  }
-  if (typeof user.xp_diario.bonus_pool_restante !== 'number') {
-    user.xp_diario.bonus_pool_restante = 0;
-  }
-  if (typeof user.xp_diario.bonus_pool_total !== 'number') {
-    user.xp_diario.bonus_pool_total = 0;
-  }
-}
-
-/** Usa Energy Drink: +100 XP diário extra até preencher o pool. */
-export function useEnergyDrink(user: UserDocument, quantity = 1): { ok: true; bonus_added: number } | { ok: false; error: string } {
-  if (quantity < 1) return { ok: false, error: 'Quantidade inválida.' };
-  resetXpDiarioIfNeeded(user);
-  ensureXpDiarioBonusFields(user);
-
-  const available = getItemCount(user, ENERGY_DRINK_ITEM_ID);
-  if (available < quantity) {
-    return { ok: false, error: 'Você não tem Energy Drink suficiente.' };
-  }
-
-  if (!consumeInventoryItem(user, ENERGY_DRINK_ITEM_ID, quantity)) {
-    return { ok: false, error: 'Não foi possível consumir o item.' };
-  }
-
-  const bonusAdded = ENERGY_DRINK_BONUS_XP * quantity;
-  user.xp_diario.bonus_pool_restante += bonusAdded;
-  user.xp_diario.bonus_pool_total += bonusAdded;
-
-  return { ok: true, bonus_added: bonusAdded };
 }
 
 /** Usa Baú da Exploração: recompensas equivalentes a 6h de Exploração AFK. */
@@ -141,14 +140,12 @@ export function usePatrolCache(
   return { ok: true, claimed };
 }
 
-/** Usa Route Drink na exploração: enche o baú com 1h de loot (baú precisa estar vazio). */
+/** Usa Route Drink: aplica 1h de loot direto na conta (animação no cliente). */
 export function useRouteDrinkInExploration(
   user: UserDocument,
-): { ok: true; hours: number } | { ok: false; error: string } {
-  if (hasAfkRewardsToClaim(user.afk)) {
-    return { ok: false, error: 'Esvazie o baú de exploração antes de usar o Route Drink.' };
-  }
-
+):
+  | { ok: true; hours: number; claimed: AfkPendingReward; overflow_to_dorias: number }
+  | { ok: false; error: string } {
   if (getItemCount(user, ROUTE_DRINK_ITEM_ID) < 1) {
     return { ok: false, error: 'Você não tem Route Drink.' };
   }
@@ -157,8 +154,8 @@ export function useRouteDrinkInExploration(
     return { ok: false, error: 'Não foi possível consumir o item.' };
   }
 
-  grantRouteDrinkRewardsToPending(user, ROUTE_DRINK_HOURS);
-  return { ok: true, hours: ROUTE_DRINK_HOURS };
+  const { claimed, overflow_to_dorias } = grantRouteDrinkRewards(user, ROUTE_DRINK_HOURS);
+  return { ok: true, hours: ROUTE_DRINK_HOURS, claimed, overflow_to_dorias };
 }
 
 function rollDoriaBagAmount(user: UserDocument, salt: number): number {
@@ -218,7 +215,7 @@ export function useDoriaBag(
 export function readInventarioSummary(user: UserDocument) {
   ensureInventario(user);
   return {
-    energy_drink: getItemCount(user, ENERGY_DRINK_ITEM_ID),
+    frozen_streak: getItemCount(user, FROZEN_STREAK_ITEM_ID),
     route_drink: getItemCount(user, ROUTE_DRINK_ITEM_ID),
     bau_patrulha: getItemCount(user, PATROL_CACHE_ITEM_ID),
     exp_instant: getItemCount(user, EXP_INSTANT_ITEM_ID),

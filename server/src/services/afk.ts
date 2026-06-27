@@ -3,13 +3,14 @@ import {
   AFK_KILLS_PER_MINUTE,
   AFK_MAX_MINUTES,
   DORIA_BAG_ITEM_ID,
-  ENERGY_DRINK_ITEM_ID,
   EXP_INSTANT_ITEM_ID,
+  FROZEN_STREAK_ITEM_ID,
   PATROL_CACHE_HOURS,
   ROUTE_DRINK_HOURS,
   ROUTE_DRINK_ITEM_ID,
   type AfkPendingReward,
 } from '../types/index.js';
+import { rollFrozenStreakForExplorationMinutes } from '../../../shared/afk/frozen-streak-drop.js';
 import { afkCapReached, afkKillsForHours, buildAfkMetaFields } from '../../../shared/utils/afk.js';
 import { grantAbdoria } from './economy.js';
 import { addInventoryItem } from './inventory.js';
@@ -50,8 +51,8 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): {
   if (claimed.abdoria > 0) {
     grantAbdoria(user, claimed.abdoria);
   }
-  if (claimed.energy_drinks > 0) {
-    const result = addInventoryItem(user, ENERGY_DRINK_ITEM_ID, claimed.energy_drinks);
+  if (claimed.frozen_streaks > 0) {
+    const result = addInventoryItem(user, FROZEN_STREAK_ITEM_ID, claimed.frozen_streaks);
     overflow_to_dorias += result.overflow_to_dorias;
   }
   if (claimed.route_drinks > 0) {
@@ -94,24 +95,29 @@ function simulateKillsIntoPending(user: UserDocument, pending: AfkPendingReward,
   }
 }
 
-/** Concede recompensas equivalentes a N horas de Exploração AFK (simula kills + drops). */
+/** Concede recompensas equivalentes a N horas de Exploração AFK (simula kills + aplica na conta). */
 export function grantPatrolCacheRewards(
   user: UserDocument,
   hours = PATROL_CACHE_HOURS,
 ): AfkPendingReward {
-  const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
-  simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
-  return applyAfkRewardBundle(user, pending).claimed;
+  return grantExplorationHourRewards(user, hours).claimed;
 }
 
-/** Enche o baú pendente com loot equivalente a N horas (sem aplicar na conta). */
-export function grantRouteDrinkRewardsToPending(
+/** Route Drink: 1h de loot aplicado direto na conta (sem passar pelo baú). */
+export function grantRouteDrinkRewards(
   user: UserDocument,
   hours = ROUTE_DRINK_HOURS,
-): AfkPendingReward {
-  const afk = ensureAfk(user);
-  simulateKillsIntoPending(user, afk.pending, afkKillsForHours(hours));
-  return normalizePending(afk.pending);
+): { claimed: AfkPendingReward; overflow_to_dorias: number } {
+  return grantExplorationHourRewards(user, hours);
+}
+
+function grantExplorationHourRewards(
+  user: UserDocument,
+  hours: number,
+): { claimed: AfkPendingReward; overflow_to_dorias: number } {
+  const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
+  simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
+  return applyAfkRewardBundle(user, pending);
 }
 
 export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId[] {
@@ -145,6 +151,7 @@ export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId
   const totalMinutes = already + newMinutes;
 
   simulateOfflineKills(user, newMinutes);
+  rollFrozenStreakForExplorationMinutes(String(user.id), already, totalMinutes, afk.pending);
 
   afk.minutos_acumulados = totalMinutes;
   afk.last_seen_at = now.toISOString();
@@ -160,7 +167,7 @@ export function hasAfkRewardsToClaim(afk: { pending?: AfkPendingReward | null } 
   return (
     p.xp > 0
     || p.abdoria > 0
-    || p.energy_drinks > 0
+    || p.frozen_streaks > 0
     || p.route_drinks > 0
     || p.exp_instant > 0
     || p.doria_bags > 0

@@ -11,7 +11,7 @@ import { updateMe } from '@/lib/api';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
-import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, CURRENCY_NAME, normalizeCicloTreinos, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE } from '@/types';
+import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, CURRENCY_NAME, formatFrozenStreakDescription, FROZEN_STREAK_LABEL, normalizeCicloTreinos, XP_ACHIEVEMENT_BONUS, XP_DAILY_CAP_BASE, XP_DAILY_CAP_PER_BESTIARY, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, XP_STREAK_BONUS_MAX, XP_STREAK_BONUS_PER_DAY } from '@/types';
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
@@ -56,6 +56,10 @@ export function SettingsPage() {
     if ('Notification' in window) {
       void Notification.requestPermission();
     }
+  };
+
+  const blockNotifications = () => {
+    console.log('Notificações bloqueadas');
   };
 
   const toggleCiclo = (c: TreinoBase) => {
@@ -124,11 +128,46 @@ export function SettingsPage() {
       </section>
 
       <section id="regras-xp" className="glass-card scroll-mt-28 p-4">
-        <h3 className="game-section-title mb-2">Regras de XP</h3>
-        <p className="text-sm font-medium leading-relaxed text-stone-600">
-          {XP_DAILY_PER_EXERCISE} XP por exercício · mínimo {XP_DAILY_MIN_EXERCISES} no treino · máx. diário = 100 + {XP_DAILY_CAP_PER_LEVEL} por nível.
-          Bônus de streak, conquistas e loja não contam no máx. diário. {CURRENCY_NAME}: 1 a cada {ABDORIA_XP_STEP} XP ganhos.
-        </p>
+        <h3 className="game-section-title mb-3">Regras de XP</h3>
+        <div className="game-xp-rules text-sm font-medium leading-relaxed text-stone-600">
+          <p className="mb-2 font-bold text-stone-700">Treino diário</p>
+          <ul className="mb-3 list-disc space-y-1 pl-5">
+            <li>
+              <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com mínimo de{' '}
+              <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
+            </li>
+            <li>
+              Teto diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
+              <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
+              <strong>{XP_DAILY_CAP_PER_BESTIARY}</strong> por inimigo descoberto no Bestiário.
+            </li>
+            <li>
+              Exercícios, streak e conquistas do treino contam no mesmo teto diário. EXP Instantâneo, AFK e códigos
+              presente vão direto ao total.
+            </li>
+            <li>Após atingir o teto, o restante do dia não rende mais XP de treino.</li>
+          </ul>
+          <p className="mb-2 font-bold text-stone-700">Bônus de treino</p>
+          <ul className="mb-3 list-disc space-y-1 pl-5">
+            <li>
+              Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+{XP_STREAK_BONUS_PER_DAY} por dia de sequência).
+            </li>
+            <li>
+              Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
+            </li>
+          </ul>
+          <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>
+          <ul className="mb-3 list-disc space-y-1 pl-5">
+            <li>{formatFrozenStreakDescription()}</li>
+          </ul>
+          <p className="mb-2 font-bold text-stone-700">{CURRENCY_NAME}</p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{ABDORIA_XP_STEP} XP</strong> totais ganhos (conversão
+              automática).
+            </li>
+          </ul>
+        </div>
       </section>
 
       <GiftCodeSection />
@@ -137,9 +176,14 @@ export function SettingsPage() {
         <h3 className="mb-4 flex items-center gap-2 font-bold">
           <Bell size={18} /> Permissões
         </h3>
-        <GameButton variant="secondary" onClick={requestNotifications}>
-          Solicitar notificações
-        </GameButton>
+        <div className="flex flex-col gap-2">
+          <GameButton variant="primary" onClick={requestNotifications}>
+            Aceitar notificações
+          </GameButton>
+          <GameButton variant="danger" onClick={blockNotifications}>
+            Bloquear notificações
+          </GameButton>
+        </div>
       </section>
 
       <div className="flex flex-col gap-2">

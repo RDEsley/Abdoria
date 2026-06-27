@@ -63,13 +63,24 @@ function hasAfkPendingLoot(pending: AfkPendingReward): boolean {
   return (
     pending.xp > 0
     || pending.abdoria > 0
-    || pending.energy_drinks > 0
+    || pending.frozen_streaks > 0
     || pending.route_drinks > 0
     || pending.exp_instant > 0
     || pending.doria_bags > 0
     || pending.cosmetic_ids.length > 0
+    || (pending.weapon_ids?.length ?? 0) > 0
     || pending.titulo_secreto
   );
+}
+
+/** Baú de exploração tem loot pendente para coletar. */
+export function hasAfkRewardsToClaim(
+  afk: { pending?: AfkPendingReward | null } | AfkPendingReward | null | undefined,
+): boolean {
+  if (!afk) return false;
+  const pending = 'pending' in afk ? afk.pending : afk;
+  if (!pending || typeof pending !== 'object' || !('xp' in pending)) return false;
+  return hasAfkPendingLoot(pending);
 }
 
 /** Quantidade de eventos de drop (cada kill que gerou loot conta 1). */
@@ -81,7 +92,7 @@ export function countAfkDropEvents(pending: AfkPendingReward | null | undefined)
 
   return (
     pending.xp
-    + pending.energy_drinks
+    + pending.frozen_streaks
     + pending.route_drinks
     + pending.cosmetic_ids.length
     + (pending.titulo_secreto ? 1 : 0)

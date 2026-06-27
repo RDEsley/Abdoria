@@ -28,7 +28,7 @@ const SLIDES = [
   {
     icon: Gift,
     title: 'Bônus extras',
-    body: `Conquistas e streaks dão XP extra — e esse XP também vira ${CURRENCY_NAME}. Fique de olho em códigos promocionais nas configurações.`,
+    body: `Conquistas e streaks rendem XP no treino, dentro do seu máx. diário. Esse XP também vira ${CURRENCY_NAME}. Fique de olho em códigos promocionais nas configurações.`,
   },
 ] as const;
 

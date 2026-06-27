@@ -6,12 +6,15 @@ import { getBestiary, type BestiaryResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { SlimePortrait } from '@/components/afk/SlimePortrait';
+import { BestiaryDropList } from '@/components/bestiary/BestiaryDropList';
 import type { AfkEnemyId } from '@/types';
 import { XP_DAILY_CAP_PER_BESTIARY } from '@/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Sobrepõe modais da exploração (z-index maior). */
+  layer?: 'default' | 'modal';
 }
 
 function tierLabel(tier: string) {
@@ -78,7 +81,10 @@ function BestiarySectionCarousel({
               </span>
               <h4>{entry.desbloqueado ? entry.label : '???'}</h4>
               {entry.desbloqueado ? (
-                <p>{entry.max_hp} HP · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário permanente</p>
+                <>
+                  <p>{entry.max_hp} HP · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário permanente</p>
+                  <BestiaryDropList drops={entry.drops} />
+                </>
               ) : (
                 <p>Derrote na Exploração AFK para revelar este inimigo.</p>
               )}
@@ -115,7 +121,7 @@ function BestiarySectionCarousel({
   );
 }
 
-export function BestiaryModal({ open, onClose }: Props) {
+export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
   const [data, setData] = useState<BestiaryResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -150,7 +156,11 @@ export function BestiaryModal({ open, onClose }: Props) {
   const total = data?.total_inimigos ?? 0;
 
   return createPortal(
-    <div className="game-modal-overlay" onClick={onClose} role="presentation">
+    <div
+      className={`game-modal-overlay game-bestiary-overlay${layer === 'modal' ? ' game-bestiary-overlay--modal' : ''}`}
+      onClick={onClose}
+      role="presentation"
+    >
       <motion.div
         className="game-modal game-bestiary-modal"
         role="dialog"

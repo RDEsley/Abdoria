@@ -377,17 +377,15 @@ export function PlayerPage() {
               )}
               {xpBreakdown && (
                 <ul className="game-victory__breakdown">
-                  {xpBreakdown.exercicios > 0 && (
-                    <li>Exercícios (diário) +{xpBreakdown.aplicado_diario}</li>
-                  )}
+                  {xpBreakdown.exercicios > 0 && <li>Exercícios +{xpBreakdown.exercicios}</li>}
                   {xpBreakdown.exercicios === 0 && xpBreakdown.total_diario === 0 && (
                     <li className="game-victory__breakdown-cap">Mín. 3 exercícios para XP diário</li>
                   )}
-                  {xpBreakdown.streak > 0 && <li>Streak (extra) +{xpBreakdown.streak}</li>}
-                  {xpBreakdown.conquistas > 0 && <li>Conquistas (extra) +{xpBreakdown.conquistas}</li>}
-                  {xpBreakdown.total_diario > xpBreakdown.aplicado_diario && (
+                  {xpBreakdown.streak > 0 && <li>Streak +{xpBreakdown.streak}</li>}
+                  {xpBreakdown.conquistas > 0 && <li>Conquistas +{xpBreakdown.conquistas}</li>}
+                  {xpBreakdown.total_bruto > xpBreakdown.aplicado && (
                     <li className="game-victory__breakdown-cap">
-                      Máx. diário · +{xpBreakdown.aplicado_diario}/{xpBreakdown.total_diario} de exercícios
+                      Máx. diário · +{xpBreakdown.aplicado}/{xpBreakdown.total_bruto} XP
                     </li>
                   )}
                 </ul>

@@ -266,7 +266,7 @@ export interface AfkMetaResponse {
 }
 
 export interface InventarioSummary extends Inventario {
-  energy_drink: number;
+  frozen_streak: number;
   route_drink: number;
   bau_patrulha: number;
   exp_instant: number;
@@ -307,17 +307,6 @@ export function getInventory(): Promise<InventarioSummary> {
   return fetchJson('/meta/inventory');
 }
 
-export function useEnergyDrink(quantity = 1): Promise<{
-  user: IUserDocument;
-  bonus_added: number;
-  inventario: InventarioSummary;
-}> {
-  return fetchJson('/meta/inventory/energy-drink', {
-    method: 'POST',
-    body: JSON.stringify({ quantity }),
-  });
-}
-
 export function usePatrolCache(): Promise<{
   user: IUserDocument;
   claimed: AfkPendingReward;
@@ -329,6 +318,8 @@ export function usePatrolCache(): Promise<{
 export function useRouteDrink(): Promise<AfkMetaResponse & {
   user: IUserDocument;
   hours: number;
+  claimed: AfkPendingReward;
+  overflow_to_dorias?: number;
   inventario: InventarioSummary;
 }> {
   return fetchJson('/meta/inventory/route-drink', { method: 'POST' });
@@ -359,12 +350,19 @@ export function useDoriaBag(quantity = 1): Promise<{
   });
 }
 
+export interface BestiaryDropEntry {
+  id: string;
+  label: string | null;
+  descoberto: boolean;
+}
+
 export interface BestiaryEntry {
   id: string;
   label: string;
   tier: 'common' | 'elite' | 'boss';
   max_hp: number;
   desbloqueado: boolean;
+  drops: BestiaryDropEntry[];
 }
 
 export interface BestiaryCategory {

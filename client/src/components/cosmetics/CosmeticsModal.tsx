@@ -12,6 +12,7 @@ import {
 import { ShopItemRow } from '@/components/shop/ShopItemRow';
 import { AbdoriaCoinsGuideOverlay } from '@/components/shop/AbdoriaCoinsGuideOverlay';
 import { ShopPreviewStage } from '@/components/shop/ShopPreviewStage';
+import { PurchaseConfirmDialog, type PurchaseConfirmDetails } from '@/components/shop/PurchaseConfirmDialog';
 import { GameButton } from '@/components/ui/GameButton';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import { equipCosmetic, getShop, purchaseCosmetic } from '@/lib/api';
@@ -84,6 +85,10 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [coinsGuideOpen, setCoinsGuideOpen] = useState(false);
+  const [purchaseConfirm, setPurchaseConfirm] = useState<{
+    item: ShopCatalogItem;
+    details: PurchaseConfirmDetails;
+  } | null>(null);
 
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
@@ -211,12 +216,26 @@ export function CosmeticsModal({ open, onClose }: Props) {
       const res = await purchaseCosmetic(item.id);
       await syncUser(res.user);
       playPurchase();
+      setPurchaseConfirm(null);
       showGameToast(`${item.nome} comprado!`, { variant: 'success' });
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), { variant: 'error' });
     } finally {
       setBusyId(null);
     }
+  };
+
+  const requestPurchase = (item: ShopCatalogItem) => {
+    if (item.unlock.tipo !== 'moedas') return;
+    setPurchaseConfirm({
+      item,
+      details: {
+        itemName: item.nome,
+        itemDescription: item.descricao,
+        priceLabel: `${item.unlock.preco_moedas} ${CURRENCY_NAME}`,
+        balanceHint: catalog ? `Saldo atual: ${catalog.abdoria} ${CURRENCY_NAME}` : undefined,
+      },
+    });
   };
 
   const handleEquip = async (item: ShopCatalogItem) => {
@@ -332,7 +351,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
                                 isPreviewing={isPreviewingItem(item)}
                                 onPreview={() => handlePreview(item)}
                                 onEquip={() => void handleEquip(item)}
-                                onPurchase={() => void handlePurchase(item)}
+                                onPurchase={() => requestPurchase(item)}
                               />
                             ));
 
@@ -366,6 +385,16 @@ export function CosmeticsModal({ open, onClose }: Props) {
       </div>
 
       <AbdoriaCoinsGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
+
+      <PurchaseConfirmDialog
+        open={!!purchaseConfirm}
+        details={purchaseConfirm?.details ?? null}
+        busy={!!purchaseConfirm && busyId === purchaseConfirm.item.id}
+        onConfirm={() => purchaseConfirm && void handlePurchase(purchaseConfirm.item)}
+        onCancel={() => {
+          if (!busyId) setPurchaseConfirm(null);
+        }}
+      />
     </>,
     document.body,
   );

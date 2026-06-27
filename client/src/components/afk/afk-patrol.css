@@ -301,6 +301,13 @@
   gap: 0.45rem;
 }
 
+.game-afk-modal__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
 .game-afk-modal__shop-btn {
   display: inline-flex;
   align-items: center;
@@ -326,6 +333,52 @@
 .game-afk-modal__shop-btn:active {
   transform: translateY(1px);
   box-shadow: 1px 1px 0 #92400e;
+}
+
+.game-afk-modal__shop-btn--inventory {
+  border-color: #047857;
+  background: linear-gradient(180deg, #a7f3d0, #34d399);
+  color: #065f46;
+  box-shadow: 2px 2px 0 #047857;
+}
+
+.game-afk-modal__shop-btn--inventory:hover {
+  transform: translateY(-1px);
+}
+
+.game-afk-modal__shop-btn--inventory:active {
+  box-shadow: 1px 1px 0 #047857;
+}
+
+.game-afk-modal__shop-btn--bestiary {
+  border-color: #4338ca;
+  background: linear-gradient(180deg, #c7d2fe, #818cf8);
+  color: #312e81;
+  box-shadow: 2px 2px 0 #4338ca;
+}
+
+.game-afk-modal__shop-btn--bestiary:hover {
+  transform: translateY(-1px);
+}
+
+.game-afk-modal__shop-btn--bestiary:active {
+  box-shadow: 1px 1px 0 #4338ca;
+}
+
+.game-afk-modal__inventory-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1rem;
+  padding: 0.05rem 0.28rem;
+  margin-left: 0.1rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #fff;
+  background: #047857;
+  border: 1.5px solid #065f46;
+  border-radius: 999px;
 }
 
 .game-afk-modal__title-icon {

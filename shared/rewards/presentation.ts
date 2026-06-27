@@ -3,7 +3,7 @@ import type { CosmeticRarity } from '../types/index.js';
 export type RewardPresentationKind =
   | 'xp'
   | 'abdoria'
-  | 'drink'
+  | 'frozen_streak'
   | 'route_drink'
   | 'exp_instant'
   | 'doria_bag'

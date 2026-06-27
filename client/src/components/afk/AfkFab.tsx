@@ -2,23 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { AfkPatrolModal } from '@/components/afk/AfkPatrolModal';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { useApp } from '@/hooks/useApp';
-import type { AfkPendingReward } from '@/types';
+import { hasAfkRewardsToClaim } from '@shared/utils/afk';
 
 const AFK_AUTO_OPEN_KEY = 'abdoria_afk_auto_opened';
-
-function hasAfkRewards(pending: AfkPendingReward): boolean {
-  const cosmeticIds = pending.cosmetic_ids ?? [];
-  const weaponIds = pending.weapon_ids ?? [];
-  return (
-    pending.xp > 0
-    || pending.abdoria > 0
-    || pending.energy_drinks > 0
-    || pending.route_drinks > 0
-    || cosmeticIds.length > 0
-    || weaponIds.length > 0
-    || pending.titulo_secreto
-  );
-}
 
 export function AfkFab() {
   const { stats } = useApp();
@@ -31,7 +17,8 @@ export function AfkFab() {
     return () => window.removeEventListener('abdoria:open-afk', onOpen);
   }, []);
 
-  const hasRewards = stats?.afk?.has_rewards ?? (stats?.afk ? hasAfkRewards(stats.afk.pending) : false);
+  const hasRewards = stats?.afk?.has_rewards
+    ?? (stats?.afk ? hasAfkRewardsToClaim(stats.afk) : false);
 
   useEffect(() => {
     if (!hasRewards || autoOpenedRef.current) return;

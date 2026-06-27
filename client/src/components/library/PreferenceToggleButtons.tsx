@@ -1,4 +1,5 @@
 import { Ban, Pin, Play, Shuffle } from 'lucide-react';
+import { GameButton } from '@/components/ui/GameButton';
 import {
   EXERCISE_BLOCK_OFF,
   EXERCISE_BLOCK_ON,
@@ -20,18 +21,24 @@ interface SwapProps {
   onClick: () => void;
   disabled?: boolean;
   className?: string;
+  ariaLabel?: string;
 }
 
 /** Ícone para trocar o treino selecionado por opção muscular similar. */
-export function SwapWorkoutButton({ onClick, disabled = false, className = '' }: SwapProps) {
+export function SwapWorkoutButton({
+  onClick,
+  disabled = false,
+  className = '',
+  ariaLabel = 'Trocar treino',
+}: SwapProps) {
   return (
     <button
       type="button"
       className={`game-item-card__action-icon game-item-card__action-icon--swap ${className}`.trim()}
       onClick={onClick}
       disabled={disabled}
-      aria-label="Trocar treino"
-      title="Trocar treino"
+      aria-label={ariaLabel}
+      title={ariaLabel}
     >
       <Shuffle size={13} aria-hidden />
     </button>
@@ -76,6 +83,9 @@ interface PrefProps {
   isBlocked: boolean;
   onTogglePin: () => void;
   onToggleBlock: () => void;
+  onSwapWorkout?: () => void;
+  swapWorkoutDisabled?: boolean;
+  swapAriaLabel?: string;
   pinAriaLabel?: string;
   blockAriaLabel?: string;
   feedbackKind?: FeedbackKind;
@@ -98,6 +108,9 @@ export function PreferenceToggleButtons({
   isBlocked,
   onTogglePin,
   onToggleBlock,
+  onSwapWorkout,
+  swapWorkoutDisabled = false,
+  swapAriaLabel = 'Trocar treino similar',
   pinAriaLabel = 'Sempre incluir',
   blockAriaLabel = 'Não recomendar',
   feedbackKind = 'exercise',
@@ -117,6 +130,17 @@ export function PreferenceToggleButtons({
 
   return (
     <div className={`game-exercise-actions ${className}`.trim()}>
+      {onSwapWorkout && (
+        <GameButton
+          variant="secondary"
+          size="sm"
+          className="game-exercise-actions__swap"
+          onClick={onSwapWorkout}
+          disabled={swapWorkoutDisabled}
+        >
+          {swapAriaLabel}
+        </GameButton>
+      )}
       <button
         type="button"
         className={[

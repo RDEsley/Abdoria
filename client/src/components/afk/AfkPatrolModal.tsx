@@ -1,24 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Store, X } from 'lucide-react';
+import { Backpack, BookOpen, Store, X } from 'lucide-react';
+import { BestiaryModal } from '@/components/bestiary/BestiaryModal';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
-import { buildRewardPresentationFromAfk } from '@/lib/reward-presentation';
+import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
+import { InventoryModal } from '@/components/inventory/InventoryModal';
+import { buildRewardPresentationFromAfk, partitionRewardPresentation } from '@/lib/reward-presentation';
 import { useRewardPresentation } from '@/context/RewardPresentationContext';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
 import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
-import { claimAfkRewards, getAfkMeta, useRouteDrink, type AfkMetaResponse } from '@/lib/api';
+import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
+import { DEV_REWARD_PREVIEW_EVENT } from '@/lib/dev-reward-preview';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import { mergeAfkCombatSnapshot } from '@/lib/afk-combat-merge';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import type { ArmaPreferida } from '@/types';
-import { resolvePatrolArmas, ROUTE_DRINK_LABEL } from '@/types';
+import type { AfkPendingReward, ArmaPreferida } from '@/types';
+import { ALL_BESTIARY_ENEMY_IDS, resolvePatrolArmas } from '@/types';
 
 interface Props {
   open: boolean;
@@ -31,10 +35,12 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
-  const [usingRouteDrink, setUsingRouteDrink] = useState(false);
   const { presentRewards } = useRewardPresentation();
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
   const [shopOpen, setShopOpen] = useState(false);
+  const [bestiaryOpen, setBestiaryOpen] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
   const loadedAtRef = useRef(0);
   const syncedMinutosRef = useRef<number | null>(null);
 
@@ -52,8 +58,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const patrolArmas = resolvePatrolArmas(user?.preferencias?.patrol_armas);
   const weaponId = weapon === 'arco' ? patrolArmas.arco_equipado : patrolArmas.espada_equipada;
   const userId = String(user?.id ?? 'guest');
-  const routeDrinkCount = meta?.route_drink_count ?? stats?.route_drink_count ?? 0;
-  const canUseRouteDrink = routeDrinkCount > 0 && !meta?.has_rewards;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,6 +80,9 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     if (!open) {
       syncedMinutosRef.current = null;
       setShopOpen(false);
+      setBestiaryOpen(false);
+      setInventoryOpen(false);
+      setCelebrationClaimed(null);
       return;
     }
     void load();
@@ -114,6 +121,22 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   }, [reconcileTimerFromServer]);
 
   useEffect(() => {
+    if (!import.meta.env.DEV) return undefined;
+    const onDevCelebration = (event: Event) => {
+      const claimed = (event as CustomEvent<AfkPendingReward>).detail;
+      if (claimed) setCelebrationClaimed(claimed);
+    };
+    window.addEventListener(DEV_REWARD_PREVIEW_EVENT, onDevCelebration);
+    return () => window.removeEventListener(DEV_REWARD_PREVIEW_EVENT, onDevCelebration);
+  }, []);
+
+  const showClaimedCelebration = useCallback((claimed: AfkPendingReward, overflowToDorias = 0) => {
+    setCelebrationClaimed(claimed);
+    const overflowMsg = overflowToastMessage(overflowToDorias);
+    if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
+  }, []);
+
+  useEffect(() => {
     if (!open || meta?.capped) return undefined;
     const timer = window.setInterval(() => {
       setElapsedSinceSyncMin((Date.now() - loadedAtRef.current) / 60_000);
@@ -129,11 +152,27 @@ export function AfkPatrolModal({ open, onClose }: Props) {
         setShopOpen(false);
         return;
       }
+      if (inventoryOpen) {
+        setInventoryOpen(false);
+        return;
+      }
       onClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, shopOpen]);
+  }, [open, onClose, shopOpen, inventoryOpen]);
+
+  const handleCelebrationClose = useCallback(() => {
+    setCelebrationClaimed((claimed) => {
+      if (claimed) {
+        const { secrets } = partitionRewardPresentation(buildRewardPresentationFromAfk(claimed));
+        if (secrets.length > 0) {
+          presentRewards(secrets);
+        }
+      }
+      return null;
+    });
+  }, [presentRewards]);
 
   const handleClaim = async () => {
     if (!meta?.has_rewards) return;
@@ -142,10 +181,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       const res = await claimAfkRewards();
       applyUser(res.user);
       await refreshApp();
-      presentRewards(buildRewardPresentationFromAfk(res.claimed));
-      showGameToast('Recompensas da exploração coletadas!', { variant: 'success' });
-      const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
-      if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
+      showClaimedCelebration(res.claimed, res.overflow_to_dorias);
       await load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), { variant: 'error' });
@@ -154,36 +190,19 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     }
   };
 
-  const handleUseRouteDrink = async () => {
-    if (!canUseRouteDrink) return;
-    setUsingRouteDrink(true);
-    try {
-      const res = await useRouteDrink();
-      applyUser(res.user);
-      await refreshApp();
-      setMeta({
-        minutos_acumulados: res.minutos_acumulados,
-        pending: res.pending,
-        has_rewards: res.has_rewards,
-        kill_drop_chance: res.kill_drop_chance,
-        kill_drop_chances: res.kill_drop_chances,
-        max_minutes: res.max_minutes,
-        capped: res.capped,
-        combat: res.combat,
-        arma_preferida: res.arma_preferida ?? weapon,
-        route_drink_count: res.route_drink_count,
-      });
-      showGameToast(`${ROUTE_DRINK_LABEL} usado! Baú preenchido com 1h de loot.`, { variant: 'success' });
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível usar o Route Drink.'), { variant: 'error' });
-    } finally {
-      setUsingRouteDrink(false);
-    }
-  };
-
   if (!open) return null;
 
   const capped = meta?.capped ?? false;
+  const inventoryItemCount =
+    (stats?.frozen_streak_count ?? 0)
+    + (stats?.route_drink_count ?? meta?.route_drink_count ?? 0)
+    + (stats?.exp_instant_count ?? 0)
+    + (stats?.doria_bag_count ?? 0);
+
+  const handleInventoryClose = () => {
+    setInventoryOpen(false);
+    void load();
+  };
 
   return createPortal(
     <>
@@ -208,18 +227,54 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 Exploração AFK
               </h2>
             </div>
-            <button
-              type="button"
-              className="game-afk-modal__shop-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShopOpen(true);
-              }}
-              aria-label="Abrir loja da exploração"
-            >
-              <Store size={14} aria-hidden />
-              Loja da Exploração
-            </button>
+            <div className="game-afk-modal__header-actions">
+              <button
+                type="button"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--inventory"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInventoryOpen(true);
+                }}
+                aria-label={
+                  inventoryItemCount > 0
+                    ? `Abrir inventário, ${inventoryItemCount} itens`
+                    : 'Abrir inventário'
+                }
+              >
+                <Backpack size={14} aria-hidden />
+                Inventário
+                {inventoryItemCount > 0 && (
+                  <span className="game-afk-modal__inventory-badge tabular-nums">{inventoryItemCount}</span>
+                )}
+              </button>
+              <button
+                type="button"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--bestiary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBestiaryOpen(true);
+                }}
+                aria-label="Abrir bestiário da exploração"
+              >
+                <BookOpen size={14} aria-hidden />
+                Bestiário
+                <span className="game-afk-modal__inventory-badge tabular-nums">
+                  {stats?.bestiario_desbloqueados?.length ?? 0}/{ALL_BESTIARY_ENEMY_IDS.length}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="game-afk-modal__shop-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShopOpen(true);
+                }}
+                aria-label="Abrir loja da exploração"
+              >
+                <Store size={14} aria-hidden />
+                Loja da Exploração
+              </button>
+            </div>
           </div>
 
           <AfkCombatScene
@@ -242,28 +297,17 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           <AfkRewardGrid pending={meta?.pending} withChest />
 
           <div className="game-afk-modal__footer">
-            {routeDrinkCount > 0 && (
-              <GameButton
-                variant="secondary"
-                className="game-afk-route-drink-btn"
-                size="lg"
-                disabled={!canUseRouteDrink || usingRouteDrink || loading || claiming}
-                onClick={() => void handleUseRouteDrink()}
-              >
-                {usingRouteDrink ? 'Usando...' : `Usar ${ROUTE_DRINK_LABEL}`}
-              </GameButton>
-            )}
             <GameButton
               className={`game-afk-claim-btn${meta?.has_rewards ? ' game-afk-claim-btn--ready' : ''}`}
               size="lg"
-              disabled={!meta?.has_rewards || claiming || loading}
+              disabled={claiming || loading}
               onClick={() => void handleClaim()}
               aria-label={
                 claiming
                   ? 'Coletando recompensas'
                   : meta?.has_rewards
                     ? 'Coletar recompensas da exploração'
-                    : 'Nenhuma recompensa para coletar'
+                    : 'Coletar'
               }
             >
               {claiming ? 'Coletando...' : 'Coletar'}
@@ -279,6 +323,13 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           void load();
         }}
       />
+
+      {celebrationClaimed && (
+        <AfkRewardCelebration claimed={celebrationClaimed} onClose={handleCelebrationClose} />
+      )}
+
+      <InventoryModal open={inventoryOpen} onClose={handleInventoryClose} layer="modal" />
+      <BestiaryModal open={bestiaryOpen} onClose={() => setBestiaryOpen(false)} layer="modal" />
     </>,
     document.body,
   );

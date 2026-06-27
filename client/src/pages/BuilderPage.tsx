@@ -46,6 +46,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { getPresets, getRecommendWorkout } from '@/lib/api';
+import { resolveSelectedRepSchemeId } from '@/lib/user-dados';
 import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
 import type {
   ActiveWorkout,
@@ -121,6 +122,8 @@ export function BuilderPage() {
     removeRepScheme,
     selectedRepSchemeIds,
     setSelectedRepSchemeId,
+    repSchemesByNivel,
+    flushPendingUserDados,
     exercisesLoading,
     ensureExercises,
     user,
@@ -162,7 +165,12 @@ export function BuilderPage() {
 
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
   const objetivo: Objetivo = user?.objetivo ?? authUser?.objetivo ?? 'definicao';
-  const schemes = getRepSchemes(nivel);
+  const storedSchemeKey = repSchemesByNivel[nivel]?.map((scheme) => scheme.id).join('|') ?? '';
+  const schemes = useMemo(
+    () => getRepSchemes(nivel),
+    [getRepSchemes, nivel, storedSchemeKey],
+  );
+  const persistedSchemeId = selectedRepSchemeIds[nivel];
   const cicloTreinos = normalizeCicloTreinos(
     user?.preferencias?.ciclo_treinos ?? authUser?.preferencias?.ciclo_treinos,
   );
@@ -176,9 +184,7 @@ export function BuilderPage() {
 
   const xpCapReached = useMemo(() => {
     if (!stats) return false;
-    const canStillEarnExerciseXp =
-      stats.xp_hoje < stats.xp_diario_limite || (stats.xp_bonus_restante ?? 0) > 0;
-    return !canStillEarnExerciseXp;
+    return stats.xp_hoje >= stats.xp_diario_limite;
   }, [stats]);
 
   useEffect(() => {
@@ -188,6 +194,12 @@ export function BuilderPage() {
   useEffect(() => {
     void loadRecommendations({ force: true });
   }, [loadRecommendations]);
+
+  useEffect(() => {
+    return () => {
+      void flushPendingUserDados();
+    };
+  }, [flushPendingUserDados]);
 
   useEffect(() => {
     void getPresets()
@@ -226,13 +238,8 @@ export function BuilderPage() {
   }, [suggestedPresetId, allPresets, presetFromUrl, fixedWorkoutIds.length]);
 
   useEffect(() => {
-    const persisted = selectedRepSchemeIds[nivel];
-    setSelectedSchemeId((current) => {
-      if (persisted && schemes.some((scheme) => scheme.id === persisted)) return persisted;
-      if (current && schemes.some((scheme) => scheme.id === current)) return current;
-      return schemes[0]?.id ?? null;
-    });
-  }, [nivel, schemes, selectedRepSchemeIds]);
+    setSelectedSchemeId(resolveSelectedRepSchemeId(persistedSchemeId, schemes));
+  }, [nivel, persistedSchemeId, schemes]);
 
   const exerciseMap = useMemo(
     () => new Map(exercises.map((e) => [e.slug, e])),
@@ -667,7 +674,7 @@ export function BuilderPage() {
     <div className="flex flex-col gap-5 pb-24 md:pb-28">
       <GamePageHeader eyebrow="Escolha ou monte" title="Montar treino" />
 
-      {xpCapReached && <DailyXpCapBanner energyDrinkCount={stats?.energy_drink_count ?? 0} />}
+      {xpCapReached && <DailyXpCapBanner />}
 
       <BuilderTabs active={activeTab} onChange={handleTabChange} />
 
@@ -750,6 +757,8 @@ export function BuilderPage() {
                     <p className="mt-1 text-[0.65rem] font-bold text-stone-500">{presetSummary(selectedPreset)}</p>
                     <PreferenceToggleButtons
                       className="mt-3"
+                      onSwapWorkout={() => void handleSwapWorkout()}
+                      swapAriaLabel="Trocar treino similar"
                       isPinned={fixedWorkoutIds.includes(selectedPreset.id)}
                       isBlocked={blockedWorkoutIds.includes(selectedPreset.id)}
                       onTogglePin={() => toggleWorkoutPin(selectedPreset.id)}
@@ -758,14 +767,6 @@ export function BuilderPage() {
                       blockAriaLabel="Não recomendar este treino"
                       feedbackKind="workout"
                     />
-                    <GameButton
-                      variant="secondary"
-                      size="sm"
-                      className="mt-3 w-full"
-                      onClick={() => void handleSwapWorkout()}
-                    >
-                      Trocar treino similar
-                    </GameButton>
                   </>
                 )}
                 {selectedSavedWorkout && (

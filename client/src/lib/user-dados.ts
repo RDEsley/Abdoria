@@ -12,15 +12,41 @@ const LEGACY_SAVED_WORKOUTS = 'abdoria_saved_workouts';
 const LEGACY_UNLOCKED_PREFIX = 'abdoria_unlocked_exercises';
 
 const NIVEIS: NivelUsuario[] = ['iniciante', 'intermediario', 'avancado'];
+const RECOMMENDED_SCHEME_CACHE: Partial<Record<NivelUsuario, StoredRepScheme[]>> = {};
 
 function repSchemeStorageKey(userId: string, nivel: NivelUsuario): string {
   return `abdoria_rep_schemes_${userId}_${nivel}`;
 }
 
-function defaultRepSeed(nivel: NivelUsuario): StoredRepScheme[] {
-  const first = REP_SCHEME_BY_NIVEL[nivel][0];
-  if (!first) return [];
-  return [{ ...first, id: `seed-${nivel}-${first.id}`, isCustom: true }];
+function recommendedSchemesForNivel(nivel: NivelUsuario): StoredRepScheme[] {
+  if (!RECOMMENDED_SCHEME_CACHE[nivel]) {
+    RECOMMENDED_SCHEME_CACHE[nivel] = REP_SCHEME_BY_NIVEL[nivel].map((scheme) => ({
+      ...scheme,
+      isCustom: false,
+    }));
+  }
+  return RECOMMENDED_SCHEME_CACHE[nivel]!;
+}
+
+export function resolveSelectedRepSchemeId(
+  persisted: string | undefined,
+  schemes: StoredRepScheme[],
+): string | null {
+  if (schemes.length === 0) return null;
+  if (persisted && schemes.some((scheme) => scheme.id === persisted)) return persisted;
+
+  const legacySeed = persisted?.match(/^seed-(?:iniciante|intermediario|avancado)-(.+)$/);
+  if (legacySeed && schemes.some((scheme) => scheme.id === legacySeed[1])) {
+    return legacySeed[1];
+  }
+
+  return schemes[0]?.id ?? null;
+}
+
+export function getRepSchemesForNivel(dados: UserDadosSalvos, nivel: NivelUsuario): StoredRepScheme[] {
+  const stored = dados.esquemas_reps[nivel];
+  if (stored && stored.length > 0) return stored;
+  return recommendedSchemesForNivel(nivel);
 }
 
 function readLegacyRepSchemes(userId: string): Partial<Record<NivelUsuario, StoredRepScheme[]>> {
@@ -103,12 +129,6 @@ export function clearLegacyLocalData(userId: string): void {
   for (const nivel of NIVEIS) {
     localStorage.removeItem(repSchemeStorageKey(userId, nivel));
   }
-}
-
-export function getRepSchemesForNivel(dados: UserDadosSalvos, nivel: NivelUsuario): StoredRepScheme[] {
-  const stored = dados.esquemas_reps[nivel];
-  if (stored && stored.length > 0) return stored;
-  return defaultRepSeed(nivel);
 }
 
 export function hydrateUserDadosFromAccount(user: IUserDocument): UserDadosSalvos {

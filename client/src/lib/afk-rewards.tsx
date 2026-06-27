@@ -1,12 +1,12 @@
 import { Coins, Sparkles, Zap } from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { PatrolBowIcon, PatrolSwordIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
-import { EnergyDrinkIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/daily-shop-display';
+import { FrozenStreakIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/daily-shop-display';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { CURRENCY_NAME, EXP_INSTANT_LABEL, DORIA_BAG_LABEL, PATROL_WEAPON_BY_ID, type AfkPendingReward, type CosmeticAvatarIcon } from '@/types';
+import { CURRENCY_NAME, EXP_INSTANT_LABEL, DORIA_BAG_LABEL, FROZEN_STREAK_LABEL, PATROL_WEAPON_BY_ID, type AfkPendingReward, type CosmeticAvatarIcon } from '@/types';
 import { countAfkDropEvents } from '@shared/utils/afk';
 
-export type AfkRewardKind = 'xp' | 'abdoria' | 'drink' | 'route_drink' | 'exp_instant' | 'doria_bag' | 'cosmetic' | 'secret' | 'weapon';
+export type AfkRewardKind = 'xp' | 'abdoria' | 'frozen_streak' | 'route_drink' | 'exp_instant' | 'doria_bag' | 'cosmetic' | 'secret' | 'weapon';
 
 export interface AfkRewardItem {
   key: string;
@@ -47,12 +47,12 @@ export function buildAfkRewardItems(pending: AfkPendingReward | null | undefined
       ariaLabel: `${pending.route_drinks} Route Drink${pending.route_drinks === 1 ? '' : 's'}`,
     });
   }
-  if (pending.energy_drinks > 0) {
+  if ((pending.frozen_streaks ?? 0) > 0) {
     items.push({
-      key: 'drink',
-      kind: 'drink',
-      amount: pending.energy_drinks,
-      ariaLabel: `${pending.energy_drinks} energy drink${pending.energy_drinks === 1 ? '' : 's'}`,
+      key: 'frozen_streak',
+      kind: 'frozen_streak',
+      amount: pending.frozen_streaks,
+      ariaLabel: `${pending.frozen_streaks} ${FROZEN_STREAK_LABEL}${pending.frozen_streaks === 1 ? '' : 's'}`,
     });
   }
   if ((pending.exp_instant ?? 0) > 0) {
@@ -114,7 +114,7 @@ export { countAfkDropEvents };
 export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?: number }) {
   if (item.kind === 'xp') return <Zap size={size} aria-hidden />;
   if (item.kind === 'abdoria') return <Coins size={size} aria-hidden />;
-  if (item.kind === 'drink') return <EnergyDrinkIcon size={size} />;
+  if (item.kind === 'frozen_streak') return <FrozenStreakIcon size={size} />;
   if (item.kind === 'route_drink') return <RouteDrinkIcon size={size} />;
   if (item.kind === 'exp_instant') return <ExpInstantIcon size={size} />;
   if (item.kind === 'doria_bag') return <DoriaBagIcon size={size} />;

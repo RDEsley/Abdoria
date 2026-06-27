@@ -1,6 +1,11 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { RewardPresentationItem } from '@shared/rewards/presentation';
 import { partitionRewardPresentation } from '@/lib/reward-presentation';
+import {
+  buildDevSecretPreviewItem,
+  dispatchDevRouteDrinkCelebration,
+  type DevSecretPreviewVariant,
+} from '@/lib/dev-reward-preview';
 
 type Phase = 'idle' | 'secret' | 'summary';
 
@@ -61,6 +66,22 @@ export function RewardPresentationProvider({ children }: { children: ReactNode }
   const dismiss = useCallback(() => {
     setState(IDLE_STATE);
   }, []);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return undefined;
+
+    window.__abdoriaPreviewSecret = (variant: DevSecretPreviewVariant = 'title') => {
+      presentRewards(buildDevSecretPreviewItem(variant));
+    };
+    window.__abdoriaPreviewRouteDrink = () => {
+      dispatchDevRouteDrinkCelebration();
+    };
+
+    return () => {
+      delete window.__abdoriaPreviewSecret;
+      delete window.__abdoriaPreviewRouteDrink;
+    };
+  }, [presentRewards]);
 
   const value = useMemo(
     () => ({
