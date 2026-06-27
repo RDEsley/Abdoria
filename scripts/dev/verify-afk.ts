@@ -1,10 +1,11 @@
 /**
- * Valida regras da patrulha AFK (drops por kill, cap 24h, combate/boss).
+ * Valida regras da Exploração AFK (drops por kill, cap 24h, combate/boss).
  * Rode: npx tsx scripts/dev/verify-afk.ts
  */
 import assert from 'node:assert/strict';
 import {
   AFK_KILLS_PER_MINUTE,
+  AFK_GOLDEN_SLIME_ABDORIA,
   AFK_LEGENDARY_ROLL_BOSS,
   AFK_LEGENDARY_ROLL_NORMAL,
   advanceKillsUntilBoss,
@@ -26,7 +27,7 @@ import {
   countAfkDropEvents,
 } from '../../shared/utils/afk.ts';
 import { grantPatrolCacheRewards, syncAfkRewards, claimAfkRewards } from '../../server/src/services/afk.ts';
-import { applyKill, ensureCombat, simulateOfflineKills } from '../../server/src/services/afk-combat.ts';
+import { applyKill, ensureCombat, simulateOfflineKills, defeatCurrentEnemy } from '../../server/src/services/afk-combat.ts';
 import { getKillDropChanceForTier, rollKillDrop, rollLootTable } from '../../server/src/services/afk-rolls.ts';
 import type { UserDocument } from '../../server/src/types/user-document.ts';
 import { EMPTY_AFK_PENDING } from '../../server/src/repositories/user-repository.ts';
@@ -139,6 +140,14 @@ uGolden.afk!.combat!.enemy_id = 'golden_slime';
 applyKill(uGolden);
 assert.equal(uGolden.afk!.pending.drop_count, 1, 'golden slime counts as one drop event');
 assert.equal(uGolden.afk!.pending.abdoria, 10, 'golden slime grants bonus abdoria');
+
+const uGoldenDefeat = mockUser(0);
+ensureCombat(uGoldenDefeat);
+uGoldenDefeat.afk!.combat!.enemy_id = 'golden_slime';
+const goldenPending = { ...EMPTY_AFK_PENDING };
+defeatCurrentEnemy(uGoldenDefeat, goldenPending);
+assert.equal(goldenPending.abdoria, AFK_GOLDEN_SLIME_ABDORIA, 'defeatCurrentEnemy golden slime bonus');
+assert.equal(goldenPending.drop_count, 1, 'defeatCurrentEnemy golden slime drop event');
 
 assert.equal(
   countAfkDropEvents({ ...EMPTY_AFK_PENDING, xp: 5, abdoria: 3, drop_count: 8 }),

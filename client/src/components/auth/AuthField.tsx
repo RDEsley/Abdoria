@@ -5,6 +5,8 @@ interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'cl
   label: string;
   error?: string;
   hint?: string;
+  /** Destaca o campo sem mensagem própria (ex.: credenciais inválidas no login). */
+  highlight?: boolean;
   type?: InputHTMLAttributes<HTMLInputElement>['type'];
   showPasswordToggle?: boolean;
 }
@@ -13,6 +15,7 @@ export function AuthField({
   label,
   error,
   hint,
+  highlight = false,
   id,
   type = 'text',
   showPasswordToggle = false,
@@ -22,11 +25,12 @@ export function AuthField({
   const fieldId = id ?? inputProps.name ?? label.toLowerCase().replace(/\s+/g, '-');
   const errorId = error ? `${fieldId}-error` : undefined;
   const hintId = hint ? `${fieldId}-hint` : undefined;
+  const isInvalid = Boolean(error) || highlight;
   const isPassword = type === 'password';
   const inputType = isPassword && showPasswordToggle && passwordVisible ? 'text' : type;
 
   return (
-    <div className={`game-auth-field${error ? ' game-auth-field--invalid' : ''}`}>
+    <div className={`game-auth-field${isInvalid ? ' game-auth-field--invalid' : ''}`}>
       <label htmlFor={fieldId} className="game-auth-field__label">
         {label}
       </label>
@@ -36,8 +40,8 @@ export function AuthField({
           id={fieldId}
           type={inputType}
           className="game-input game-auth-field__input"
-          aria-invalid={error ? true : undefined}
-          aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+          aria-invalid={isInvalid ? true : undefined}
+          aria-describedby={[hintId, errorId, inputProps['aria-describedby']].filter(Boolean).join(' ') || undefined}
         />
         {isPassword && showPasswordToggle && (
           <button

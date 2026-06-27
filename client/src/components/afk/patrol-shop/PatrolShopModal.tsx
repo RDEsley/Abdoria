@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BowArrow, Coins, Store, Sword, Wand2 } from 'lucide-react';
+import { Coins, Store, Wand2 } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
+import { PatrolBowTabIcon, PatrolSwordTabIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { equipPatrolWeapon, getPatrolShop, purchasePatrolWeapon } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { playEquip, playPurchase } from '@/lib/sounds';
-import type { ArmaPreferida, PatrolShopCatalogItem, PatrolShopResponse, PatrolWeaponKind } from '@/types';
-import { CURRENCY_NAME } from '@/types';
+import { CURRENCY_NAME, type ArmaPreferida, type PatrolShopCatalogItem, type PatrolShopResponse, type PatrolWeaponKind } from '@/types';
 import './patrol-shop.css';
 
 interface Props {
@@ -22,10 +22,10 @@ interface Props {
 
 type TabId = PatrolWeaponKind;
 
-const TABS: { id: TabId; label: string; icon: typeof BowArrow }[] = [
-  { id: 'arco', label: 'Arcos', icon: BowArrow },
-  { id: 'espada', label: 'Espadas', icon: Sword },
-  { id: 'magia', label: 'Magias', icon: Wand2 },
+const TABS: { id: TabId; label: string; kind: 'arco' | 'espada' | 'magia' }[] = [
+  { id: 'arco', label: 'Arcos', kind: 'arco' },
+  { id: 'espada', label: 'Espadas', kind: 'espada' },
+  { id: 'magia', label: 'Magias', kind: 'magia' },
 ];
 
 export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
@@ -43,7 +43,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       const data = await getPatrolShop();
       setCatalog(data);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja da patrulha.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja da exploração.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -120,31 +120,28 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
           <header className="game-patrol-shop-header">
             <div>
               <h2 id="patrol-shop-title" className="game-patrol-shop-header__title">
-                <Store size={18} aria-hidden /> Loja da Patrulha
+                <Store size={18} aria-hidden /> Loja da Exploração
               </h2>
-              <p className="game-patrol-shop-header__subtitle">Armas para sua patrulha automática</p>
+              <p className="game-patrol-shop-header__subtitle">Armas para sua exploração automática</p>
             </div>
             <span className="game-patrol-shop-header__coins">
               <Coins size={16} aria-hidden /> {catalog?.abdoria ?? '—'} {CURRENCY_NAME}
             </span>
           </header>
 
-          <PatrolShopVendor
-            activeTab={activeTab}
-            equippedArcoId={catalog?.armas.arco_equipado ?? 'arco_basico'}
-            equippedEspadaId={catalog?.armas.espada_equipada ?? 'espada_basica'}
-            celebrating={celebrating}
-          />
+          <PatrolShopVendor activeTab={activeTab} celebrating={celebrating} />
 
           <nav className="game-patrol-shop-nav" aria-label="Categorias da loja">
-            {TABS.map(({ id, label, icon: Icon }) => (
+            {TABS.map(({ id, label, kind }) => (
               <button
                 key={id}
                 type="button"
-                className={`game-patrol-shop-nav__btn${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
+                className={`game-patrol-shop-nav__btn game-patrol-shop-nav__btn--${kind}${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
                 onClick={() => setActiveTab(id)}
               >
-                <Icon size={14} aria-hidden />
+                {kind === 'arco' && <PatrolBowTabIcon className="game-patrol-shop-nav__icon" />}
+                {kind === 'espada' && <PatrolSwordTabIcon className="game-patrol-shop-nav__icon" />}
+                {kind === 'magia' && <Wand2 size={14} aria-hidden />}
                 {label}
               </button>
             ))}
@@ -159,7 +156,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
                   <Wand2 size={34} strokeWidth={2} />
                 </div>
                 <h3>Futuramente</h3>
-                <p>Magias e feitiços chegarão em uma atualização da patrulha. Fique de olho!</p>
+                <p>Magias e feitiços chegarão em uma atualização da exploração. Fique de olho!</p>
               </div>
             ) : items.length === 0 ? (
               <p className="game-patrol-shop-empty">Nenhum item nesta categoria ainda.</p>

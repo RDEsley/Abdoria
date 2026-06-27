@@ -24,7 +24,7 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
     }));
   } catch (error) {
     console.error('GET /api/meta/afk error:', error);
-    res.status(500).json({ error: 'Erro ao sincronizar patrulha AFK.' });
+    res.status(500).json({ error: 'Erro ao sincronizar Exploração AFK.' });
   }
 });
 
@@ -126,7 +126,7 @@ metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     console.error('POST /api/meta/inventory/bau-patrulha error:', error);
-    res.status(500).json({ error: 'Erro ao usar Baú da Patrulha.' });
+    res.status(500).json({ error: 'Erro ao usar Baú da Exploração.' });
   }
 });
 

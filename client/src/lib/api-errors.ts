@@ -99,6 +99,13 @@ export function mapHttpStatus(status: number, serverMessage?: string): ApiError 
 }
 
 /** Mensagem segura para exibir na interface — nunca mostra detalhes técnicos. */
+export function isLoginCredentialsError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return error.status === 401 || error.message === 'Email ou senha incorretos.';
+  }
+  return false;
+}
+
 export function getErrorMessage(error: unknown, fallback = GENERIC_MESSAGE): string {
   if (error instanceof ApiError) return error.message;
   if (typeof error === 'string') {

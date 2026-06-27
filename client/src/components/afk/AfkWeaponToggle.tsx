@@ -25,7 +25,7 @@ export function AfkWeaponToggle({ value, onChange }: Props) {
   };
 
   return (
-    <div className="game-afk-weapon-toggle" role="group" aria-label="Arma da patrulha">
+    <div className="game-afk-weapon-toggle" role="group" aria-label="Arma da exploração">
       <button
         type="button"
         className={`game-afk-weapon-toggle__btn${value === 'arco' ? ' game-afk-weapon-toggle__btn--active' : ''}`}

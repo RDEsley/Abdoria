@@ -14,6 +14,7 @@ interface Props {
   userId: string;
   spawnKillsTotal: number;
   hit: boolean;
+  critHit?: boolean;
   dying: boolean;
   looting: boolean;
   hitKey: number;
@@ -24,6 +25,7 @@ export function AfkEnemySprite({
   userId,
   spawnKillsTotal,
   hit,
+  critHit = false,
   dying,
   looting,
   hitKey,
@@ -52,7 +54,8 @@ export function AfkEnemySprite({
     combat.is_boss ? 'game-afk-enemy--boss' : '',
     combat.elite ? 'game-afk-enemy--elite' : '',
     enemyId === 'golden_slime' ? 'game-afk-enemy--golden' : '',
-    hit ? 'game-afk-enemy--hit' : '',
+    hit && !critHit ? 'game-afk-enemy--hit' : '',
+    hit && critHit ? 'game-afk-enemy--crit-hit' : '',
     dying ? 'game-afk-enemy--dying' : '',
   ]
     .filter(Boolean)
@@ -123,9 +126,9 @@ function SlimeBody({
       <div
         className={`game-afk-slime__face game-afk-slime__face--eyes-${appearance.eyes} ${
           isBoss ? 'game-afk-slime__face--boss' : ''
-        } ${enemyId === 'boss_lich' ? 'game-afk-slime__face--lich' : ''}`}
+        } ${enemyId === 'boss_lich' ? 'game-afk-slime__face--lich' : ''}${hasPatch ? ' game-afk-slime__face--patched' : ''}`}
       >
-        <span className="game-afk-slime__eye game-afk-slime__eye--l">
+        <span className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}>
           <span className="game-afk-slime__iris" />
         </span>
         <span className="game-afk-slime__eye game-afk-slime__eye--r">

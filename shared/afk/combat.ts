@@ -43,8 +43,34 @@ export interface AfkCombatSnapshot {
 
 export const AFK_HERO_DAMAGE_ARCO = 14;
 export const AFK_HERO_DAMAGE_ESPADA = 22;
-export const AFK_CRIT_CHANCE = 5;
-export const AFK_CRIT_DAMAGE = 18;
+export const AFK_CRIT_CHANCE_ESPADA = 5;
+export const AFK_CRIT_CHANCE_ARCO = 20;
+export const AFK_CRIT_BONUS_ESPADA = 4;
+export const AFK_CRIT_BONUS_ARCO = 10;
+/** @deprecated Arcos usam {@link AFK_CRIT_CHANCE_ARCO}. */
+export const AFK_CRIT_CHANCE_ARCO_MULTIPLIER = 1.15;
+
+/** @deprecated Use {@link AFK_CRIT_CHANCE_ESPADA}. */
+export const AFK_CRIT_CHANCE = AFK_CRIT_CHANCE_ESPADA;
+
+export type PatrolWeaponDamageKind = 'arco' | 'espada';
+
+export function patrolCritChance(kind: PatrolWeaponDamageKind): number {
+  return kind === 'arco' ? AFK_CRIT_CHANCE_ARCO : AFK_CRIT_CHANCE_ESPADA;
+}
+
+export function patrolCritBonus(kind: PatrolWeaponDamageKind): number {
+  return kind === 'arco' ? AFK_CRIT_BONUS_ARCO : AFK_CRIT_BONUS_ESPADA;
+}
+
+export function patrolCritDamage(baseDamage: number, kind: PatrolWeaponDamageKind): number {
+  return baseDamage + patrolCritBonus(kind);
+}
+
+export function formatPatrolCritChancePercent(chance: number): string {
+  const value = Math.round(chance * 10) / 10;
+  return Number.isInteger(value) ? `${value}%` : `${value.toFixed(1).replace(/\.0$/, '')}%`;
+}
 export const AFK_KILLS_PER_MINUTE = 8;
 export const AFK_BOSS_INTERVAL = 100;
 export const AFK_ELITE_CHANCE = 12;

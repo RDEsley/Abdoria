@@ -1,3 +1,5 @@
+import { CURRENCY_NAME } from '../types/index.js';
+
 export interface GiftCodeDefinition {
   code: string;
   xp: number;
@@ -18,7 +20,7 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     abdoria: 999,
     desbloqueia: ['titulo_dono_do_jogo'],
     titulo_equipar: 'titulo_dono_do_jogo',
-    mensagem: 'Código Abdoria resgatado! Você recebeu 999 Abdoria coins e o título Dono do Jogo.',
+    mensagem: `Código Abdoria resgatado! Você recebeu 999 ${CURRENCY_NAME} e o título Dono do Jogo.`,
     active: true,
   },
 ];

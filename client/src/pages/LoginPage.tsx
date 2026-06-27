@@ -5,7 +5,7 @@ import { AuthField } from '@/components/auth/AuthField';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
 import { getHealth } from '@/lib/api';
-import { DATABASE_BANNER, getErrorMessage, OFFLINE_BANNER } from '@/lib/api-errors';
+import { DATABASE_BANNER, getErrorMessage, isLoginCredentialsError, OFFLINE_BANNER } from '@/lib/api-errors';
 import { getSavedEmail, getRememberMePreference } from '@/lib/auth-storage';
 import { validateEmail, validateLoginForm, validatePassword, type AuthFieldErrors } from '@/lib/auth-validation';
 import { useAuth } from '@/context/AuthContext';
@@ -20,6 +20,7 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(() => getRememberMePreference());
   const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
   const [submitError, setSubmitError] = useState('');
+  const [credentialsInvalid, setCredentialsInvalid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -57,9 +58,14 @@ export function LoginPage() {
     });
   };
 
+  const clearSubmitFeedback = () => {
+    setSubmitError('');
+    setCredentialsInvalid(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError('');
+    clearSubmitFeedback();
 
     const errors = validateLoginForm(email, password);
     setFieldErrors(errors);
@@ -71,13 +77,14 @@ export function LoginPage() {
       navigate('/');
     } catch (err) {
       setSubmitError(getErrorMessage(err));
+      setCredentialsInvalid(isLoginCredentialsError(err));
     } finally {
       setLoading(false);
     }
   };
 
   const handleGuest = async () => {
-    setSubmitError('');
+    clearSubmitFeedback();
     setFieldErrors({});
     setGuestLoading(true);
     try {
@@ -135,10 +142,12 @@ export function LoginPage() {
             name="email"
             type="email"
             value={email}
+            highlight={credentialsInvalid}
+            aria-describedby={credentialsInvalid && submitError ? 'login-submit-error' : undefined}
             onChange={(e) => {
               setEmail(e.target.value);
               clearFieldError('email');
-              setSubmitError('');
+              clearSubmitFeedback();
             }}
             onBlur={() => {
               const err = validateEmail(email);
@@ -154,10 +163,12 @@ export function LoginPage() {
             type="password"
             showPasswordToggle
             value={password}
+            highlight={credentialsInvalid}
+            aria-describedby={credentialsInvalid && submitError ? 'login-submit-error' : undefined}
             onChange={(e) => {
               setPassword(e.target.value);
               clearFieldError('password');
-              setSubmitError('');
+              clearSubmitFeedback();
             }}
             onBlur={() => {
               const err = validatePassword(password, 1);
@@ -189,11 +200,17 @@ export function LoginPage() {
           <button type="submit" disabled={loading || guestLoading} className="game-btn game-btn--primary">
             {loading ? 'Entrando…' : 'Jogar'}
           </button>
-        </form>
 
-        {submitError && (
-          <AuthAlert variant="error" title="Não foi possível entrar" message={submitError} live />
-        )}
+          {submitError && (
+            <AuthAlert
+              id="login-submit-error"
+              variant="error"
+              title="Não foi possível entrar"
+              message={submitError}
+              live
+            />
+          )}
+        </form>
 
         <button
           type="button"

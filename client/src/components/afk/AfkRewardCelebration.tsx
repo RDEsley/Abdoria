@@ -56,7 +56,7 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="afk-reward-title" className="sr-only">
-          Recompensas da patrulha coletadas
+          Recompensas da exploração coletadas
         </h2>
 
         <AfkRewardGrid

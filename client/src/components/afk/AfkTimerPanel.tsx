@@ -39,7 +39,7 @@ export function AfkTimerPanel({ minutos, elapsedSinceSyncMin, capped, loading, d
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Progresso até o limite de 24h de patrulha"
+        aria-label="Progresso até o limite de 24h de exploração"
       >
         <div className="game-afk-timer__bar-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
       </div>

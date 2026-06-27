@@ -30,8 +30,8 @@ export const FREE_DAILY_REWARDS: Record<
 
 /**
  * Ofertas pagas — taxas da loja:
- * - Comprar XP: paga Abdoria (5 Abdoria = 1 XP)
- * - Comprar Abdoria: paga XP do progresso do nível (25 XP = 1 Abdoria)
+ * - Comprar XP: paga Dorias (5 Dorias = 1 XP)
+ * - Comprar Dorias: paga XP do progresso do nível (25 XP = 1 Doria)
  */
 export const PAID_OFFER_CONFIG: Record<
   DailyShopPaidOfferKind,

@@ -99,8 +99,14 @@ export function ShopItemRow({
             ) : (
               <span className="game-shop-row__status">Desbloqueado</span>
             )
+          ) : item.unlock.tipo === 'moedas' ? (
+            <span className="game-shop-row__unlock-hint">
+              <Coins size={12} aria-hidden /> {item.unlock_label}
+            </span>
           ) : (
-            item.unlock_label
+            <span className="game-shop-row__unlock-hint game-shop-row__unlock-hint--quest">
+              Como conseguir: {item.unlock_label}
+            </span>
           )}
         </p>
       </div>

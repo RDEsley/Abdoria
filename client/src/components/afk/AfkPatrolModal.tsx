@@ -10,6 +10,7 @@ import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
 import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
 import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
+import { mergeAfkCombatSnapshot } from '@/lib/afk-combat-merge';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
@@ -50,18 +51,13 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     setLoading(true);
     try {
       const data = await getAfkMeta();
-      setMeta((prev) => {
-        const serverAhead =
-          data.combat &&
-          (data.combat.kills_total > (prev?.combat?.kills_total ?? 0) || !prev?.combat);
-        return {
-          ...data,
-          combat: serverAhead ? data.combat : (prev?.combat ?? data.combat),
-        };
-      });
+      setMeta((prev) => ({
+        ...data,
+        combat: mergeAfkCombatSnapshot(prev?.combat, data.combat),
+      }));
       reconcileTimerFromServer(data.minutos_acumulados);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível carregar a patrulha.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar a exploração.'), { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -90,23 +86,18 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     const onAfkSync = (event: Event) => {
       const detail = (event as CustomEvent<AfkMetaResponse & { ok?: boolean }>).detail;
       if (!detail) return;
-      setMeta((prev) => {
-        const serverAhead =
-          detail.combat &&
-          (detail.combat.kills_total > (prev?.combat?.kills_total ?? 0) || !prev?.combat);
-        return {
-          ...(prev ?? ({} as AfkMetaResponse)),
-          minutos_acumulados: detail.minutos_acumulados,
-          pending: detail.pending,
-          has_rewards: detail.has_rewards,
-          kill_drop_chance: detail.kill_drop_chance ?? prev?.kill_drop_chance ?? 4,
-          kill_drop_chances: detail.kill_drop_chances ?? prev?.kill_drop_chances,
-          max_minutes: detail.max_minutes ?? prev?.max_minutes ?? 1440,
-          capped: detail.capped ?? prev?.capped ?? false,
-          arma_preferida: prev?.arma_preferida ?? detail.arma_preferida ?? 'arco',
-          combat: serverAhead ? detail.combat : (prev?.combat ?? detail.combat),
-        };
-      });
+      setMeta((prev) => ({
+        ...(prev ?? ({} as AfkMetaResponse)),
+        minutos_acumulados: detail.minutos_acumulados,
+        pending: detail.pending,
+        has_rewards: detail.has_rewards,
+        kill_drop_chance: detail.kill_drop_chance ?? prev?.kill_drop_chance ?? 4,
+        kill_drop_chances: detail.kill_drop_chances ?? prev?.kill_drop_chances,
+        max_minutes: detail.max_minutes ?? prev?.max_minutes ?? 1440,
+        capped: detail.capped ?? prev?.capped ?? false,
+        arma_preferida: detail.arma_preferida ?? prev?.arma_preferida ?? 'arco',
+        combat: mergeAfkCombatSnapshot(prev?.combat, detail.combat),
+      }));
       reconcileTimerFromServer(detail.minutos_acumulados);
     };
     window.addEventListener('abdoria:afk-sync', onAfkSync);
@@ -143,7 +134,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       applyUser(res.user);
       await refreshApp();
       setCelebration(res.claimed);
-      showGameToast('Recompensas da patrulha coletadas!', { variant: 'success' });
+      showGameToast('Recompensas da exploração coletadas!', { variant: 'success' });
       await load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), { variant: 'error' });
@@ -176,7 +167,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 <AfkFabSwords variant="header" />
               </div>
               <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                Patrulha
+                Exploração AFK
               </h2>
             </div>
             <button
@@ -186,10 +177,10 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 e.stopPropagation();
                 setShopOpen(true);
               }}
-              aria-label="Abrir loja da patrulha"
+              aria-label="Abrir loja da exploração"
             >
               <Store size={14} aria-hidden />
-              Loja da Patrulha
+              Loja da Exploração
             </button>
           </div>
 
@@ -221,7 +212,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 claiming
                   ? 'Coletando recompensas'
                   : meta?.has_rewards
-                    ? 'Coletar recompensas da patrulha'
+                    ? 'Coletar recompensas da exploração'
                     : 'Nenhuma recompensa para coletar'
               }
             >

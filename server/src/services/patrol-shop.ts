@@ -9,6 +9,9 @@ import {
   type PatrolWeaponKind,
   patrolWeaponsByKind,
   patrolHeroDamage,
+  patrolCritChance,
+  patrolCritBonus,
+  patrolCritDamage,
   PATROL_WEAPON_BY_ID,
   PATROL_WEAPON_RARITY_LABELS,
   resolveCosmeticos,
@@ -53,6 +56,8 @@ function toCatalogItem(
     def.unlock.tipo === 'moedas' &&
     abdoria >= def.unlock.preco_moedas;
   const base = def.kind === 'arco' ? AFK_HERO_DAMAGE_ARCO : AFK_HERO_DAMAGE_ESPADA;
+  const dano_total = base + def.dano_bonus;
+  const weaponKind = def.kind === 'arco' ? 'arco' : 'espada';
 
   return {
     id: def.id,
@@ -67,7 +72,10 @@ function toCatalogItem(
     unlock_label: unlockLabel(def, desbloqueada),
     unlock: def.unlock,
     dano_bonus: def.dano_bonus,
-    dano_total: base + def.dano_bonus,
+    dano_total,
+    crit_bonus: patrolCritBonus(weaponKind),
+    dano_critico: patrolCritDamage(dano_total, weaponKind),
+    chance_critico: patrolCritChance(weaponKind),
   };
 }
 
@@ -113,7 +121,7 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   const cosmeticos = resolveCosmeticos(user.cosmeticos, user.gamificacao.nivel_xp);
   const preco = def.unlock.preco_moedas;
   if (cosmeticos.moedas < preco) {
-    return { error: `Abdoria insuficiente. Faltam ${preco - cosmeticos.moedas} ${CURRENCY_NAME}.`, status: 400 as const };
+    return { error: `${CURRENCY_NAME} insuficientes. Faltam ${preco - cosmeticos.moedas} ${CURRENCY_NAME}.`, status: 400 as const };
   }
 
   cosmeticos.moedas -= preco;

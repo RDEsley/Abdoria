@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Backpack, Save, Settings, User as UserIcon } from 'lucide-react';
-import { AfkWeaponToggle } from '@/components/afk/AfkWeaponToggle';
+import { Backpack, Save, Settings } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { InventoryModal } from '@/components/inventory/InventoryModal';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
+import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -12,9 +12,8 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import { playTabSwitch } from '@/lib/sounds';
-import { formatTrainingDuration } from '@/lib/utils';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, resolveCosmeticos, xpProgressFromTotal, type ArmaPreferida, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -25,21 +24,10 @@ export function ProfilePage() {
   const [tab, setTab] = useState<Tab>('dados');
   const [saving, setSaving] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
-  const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida>('arco');
-
-  useEffect(() => {
-    setArmaPreferida(profile?.preferencias?.arma_preferida ?? 'arco');
-  }, [profile?.preferencias?.arma_preferida]);
 
   if (!profile) {
     return <PageLoader />;
   }
-
-  const handleWeaponChange = async (weapon: ArmaPreferida) => {
-    setArmaPreferida(weapon);
-    await refreshUser();
-    await refresh();
-  };
 
   const imc = profile.imc ?? (profile.peso_kg && profile.altura_cm ? calcImc(profile.peso_kg, profile.altura_cm) : null);
   const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
@@ -210,13 +198,6 @@ export function ProfilePage() {
             </select>
             <p className="text-xs font-medium text-stone-500">{OBJETIVO_HINTS[profile.objetivo]}</p>
           </label>
-          <div className="flex flex-col gap-1.5 text-sm font-bold text-stone-700">
-            Arma da patrulha
-            <AfkWeaponToggle value={armaPreferida} onChange={(w) => void handleWeaponChange(w)} />
-            <p className="text-xs font-medium text-stone-500">
-              Define o estilo de combate na Patrulha AFK (também escolhida no primeiro acesso).
-            </p>
-          </div>
           <div className="game-profile-form__actions">
             <GameButton
               type="submit"
@@ -231,32 +212,11 @@ export function ProfilePage() {
         </form>
       )}
 
-      {tab === 'progresso' && stats && (
-        <div className="glass-card rounded-2xl p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <UserIcon className="text-emerald-600" />
-            <div>
-              <p className="font-extrabold">Nível {xpProgressFromTotal(stats.nivel_xp).level}</p>
-              <p className="text-sm text-stone-500">
-                {stats.total_exercicios} exercícios ·{' '}
-                {formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
-              </p>
-            </div>
-          </div>
-          <p className="text-sm font-bold text-stone-600">
-            Dias seguidos treinando: {stats.streak_atual} (recorde: {stats.streak_maior})
-          </p>
-          <p className="mt-2 text-sm font-bold text-amber-600">
-            XP diário (exercícios): {stats.xp_hoje}/{stats.xp_diario_limite}
-            {stats.xp_extra_hoje > 0 ? ` · extra +${stats.xp_extra_hoje}` : ''}
-          </p>
-          <p className="mt-1 text-xs font-bold text-stone-500">
-            {XP_DAILY_PER_EXERCISE} XP/exercício · mín. {XP_DAILY_MIN_EXERCISES} no treino · teto{' '}
-            {stats.xp_diario_limite} XP/dia (+{XP_DAILY_CAP_PER_LEVEL}/nível). Bônus (streak, conquistas, loja) não contam no teto.{' '}
-            <Link to="/configuracoes#regras-xp" className="text-emerald-700 underline">
-              Editar regras de XP
-            </Link>
-          </p>
+      {tab === 'progresso' && stats && <ProfileProgressPanel profile={profile} stats={stats} />}
+
+      {tab === 'progresso' && !stats && (
+        <div className="glass-card rounded-2xl p-4 text-center text-sm font-bold text-stone-500">
+          Não foi possível carregar seu progresso. Tente recarregar a página.
         </div>
       )}
 

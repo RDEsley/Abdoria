@@ -120,9 +120,9 @@ export interface UserPreferencias {
   reps_repeticoes_padrao?: number;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
-  /** Estilo de combate na patrulha AFK. */
+  /** Estilo de combate na Exploração AFK. */
   arma_preferida?: ArmaPreferida | null;
-  /** Arcos e espadas desbloqueados na loja da patrulha. */
+  /** Arcos e espadas desbloqueados na loja da exploração. */
   patrol_armas?: import('../patrol/shop.js').PatrolArmasState;
   /** Não exibir aviso de teto diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
@@ -157,7 +157,7 @@ export interface AfkPendingReward {
   energy_drinks: number;
   cosmetic_ids: string[];
   titulo_secreto: boolean;
-  /** Quantidade de vezes que um inimigo dropou loot na patrulha. */
+  /** Quantidade de vezes que um inimigo dropou loot na exploração. */
   drop_count: number;
 }
 
@@ -189,7 +189,15 @@ export {
   AFK_BOSS_INTERVAL,
   AFK_ENEMIES,
   AFK_CRIT_CHANCE,
-  AFK_CRIT_DAMAGE,
+  AFK_CRIT_CHANCE_ESPADA,
+  AFK_CRIT_CHANCE_ARCO,
+  AFK_CRIT_CHANCE_ARCO_MULTIPLIER,
+  AFK_CRIT_BONUS_ESPADA,
+  AFK_CRIT_BONUS_ARCO,
+  patrolCritChance,
+  patrolCritBonus,
+  patrolCritDamage,
+  formatPatrolCritChancePercent,
   AFK_GOLDEN_SLIME_ABDORIA,
   AFK_GOLDEN_SLIME_CHANCE,
   AFK_HERO_DAMAGE_ARCO,
@@ -269,9 +277,9 @@ export interface CosmeticDefinition {
 }
 
 export interface Cosmeticos {
-  /** Saldo da moeda Abdoria. */
+  /** Saldo de Dorias. */
   moedas: number;
-  /** Blocos de XP já convertidos em Abdoria. */
+  /** Blocos de XP já convertidos em Dorias. */
   moedas_xp_blocos: number;
   avatar_equipado: string;
   borda_equipada: string;
@@ -290,7 +298,7 @@ export interface LojaDiariaSlot {
   valor: number;
   raridade: DailyRewardRarity;
   preco_abdoria: number;
-  /** Custo em XP (progresso do nível) para ofertas de Abdoria ou pacotes mistos. */
+  /** Custo em XP (progresso do nível) para ofertas de Dorias ou pacotes mistos. */
   preco_xp?: number;
   resgatado: boolean;
   label: string;
@@ -323,15 +331,15 @@ export interface ShopResponse {
   xp_level: number;
   nivel_xp: number;
   spendable_xp: number;
-  /** XP necessário para comprar 1 Abdoria na loja. */
+  /** XP necessário para comprar 1 Doria na loja. */
   shop_xp_cost_per_abdoria: number;
-  /** Abdoria necessária para comprar 1 XP na loja. */
+  /** Dorias necessárias para comprar 1 XP na loja. */
   shop_abdoria_cost_per_xp: number;
   /** @deprecated Use shop_xp_cost_per_abdoria */
   xp_to_abdoria_rate: number;
   /** @deprecated Use shop_abdoria_cost_per_xp */
   abdoria_to_xp_rate: number;
-  /** Abdoria passiva a cada N XP totais. */
+  /** Dorias passivas a cada N XP totais. */
   abdoria_por_xp: number;
   avatar_equipado: string;
   borda_equipada: string;
@@ -386,6 +394,9 @@ export interface PatrolShopCatalogItem {
   unlock: import('../patrol/shop.js').PatrolWeaponUnlock;
   dano_bonus: number;
   dano_total: number;
+  crit_bonus: number;
+  dano_critico: number;
+  chance_critico: number;
 }
 
 export interface PatrolShopResponse {
@@ -479,22 +490,22 @@ export const XP_WORKOUT_BASE = 0;
 /** @deprecated Use XP_DAILY_PER_EXERCISE for daily exercise XP. */
 export const XP_PER_EXERCISE = XP_DAILY_PER_EXERCISE;
 export const XP_PER_SKILL_UNLOCK = 1;
-/** Loja: comprar 1 Abdoria custa N XP (progresso do nível). */
+/** Loja: comprar 1 Doria custa N XP (progresso do nível). */
 export const SHOP_XP_COST_PER_ABDORIA = 25;
-/** Loja: comprar 1 XP custa N Abdoria. */
+/** Loja: comprar 1 XP custa N Dorias. */
 export const SHOP_ABDORIA_COST_PER_XP = 5;
-/** Abdoria passiva: 1 moeda a cada N XP totais ganhos. */
+/** Dorias passivas: 1 moeda a cada N XP totais ganhos. */
 export const ABDORIA_XP_STEP = 10;
-export const CURRENCY_NAME = 'Abdoria coins';
+export const CURRENCY_NAME = 'Dorias';
 
 export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
 export const ENERGY_DRINK_BONUS_XP = 100;
 export const ENERGY_DRINK_SHOP_PRICE = 20;
 export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
-/** Horas de patrulha AFK concedidas ao usar o baú. */
+/** Horas de Exploração AFK concedidas ao usar o baú. */
 export const PATROL_CACHE_HOURS = 6;
 export const PATROL_CACHE_SHOP_PRICE = 50;
-export const PATROL_CACHE_LABEL = 'Baú da Patrulha';
+export const PATROL_CACHE_LABEL = 'Baú da Exploração';
 /** @deprecated Loot não é mais por intervalo de tempo — use AFK_KILL_DROP_CHANCE_COMMON. */
 export const AFK_REWARD_INTERVAL_MINUTES = 15;
 export const AFK_KILL_DROP_CHANCE_COMMON = 4;
@@ -549,7 +560,7 @@ export function xpCostForAbdoriaReward(abdoriaAmount: number): number {
   return Math.max(1, Math.ceil(abdoriaAmount * SHOP_XP_COST_PER_ABDORIA));
 }
 
-/** Estima Abdoria restante após gastar XP na loja (conversão passiva por blocos). */
+/** Estima Dorias restantes após gastar XP na loja (conversão passiva por blocos). */
 export function projectedAbdoriaAfterXpSpend(
   nivelXp: number,
   moedas: number,
@@ -577,7 +588,7 @@ export const DAILY_LUCK_LABELS: Partial<Record<DailyRewardRarity, string>> = {
 
 export const DAILY_PAID_OFFER_LABELS: Record<DailyShopPaidOfferKind, string> = {
   surto_xp: 'Surto de XP',
-  bolsa_abdoria: 'Bolsa Abdoria',
+  bolsa_abdoria: 'Bolsa de Dorias',
   pacote_misto: 'Pacote misto',
 };
 

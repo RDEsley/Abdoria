@@ -1,6 +1,7 @@
 import { Check, Coins, Lock, Sparkles, Swords } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { PATROL_WEAPON_RARITY_LABELS, type PatrolShopCatalogItem } from '@/types';
+import { PatrolBowIcon, PatrolSwordIcon, patrolWeaponIconStyle } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
+import { PATROL_WEAPON_RARITY_LABELS, formatPatrolCritChancePercent, type PatrolShopCatalogItem } from '@/types';
 
 interface Props {
   item: PatrolShopCatalogItem;
@@ -26,15 +27,17 @@ function WeaponThumb({ item }: { item: PatrolShopCatalogItem }) {
   return (
     <div className={`game-patrol-shop-row__thumb game-patrol-shop-row__thumb--${item.kind} game-patrol-shop-row__thumb--${tier}`}>
       {item.kind === 'arco' ? (
-        <svg viewBox="0 0 40 28" className="game-patrol-shop-row__thumb-svg" aria-hidden>
-          <path d="M6 24 C6 8, 34 8, 34 24" fill="none" stroke="currentColor" strokeWidth="2.2" />
-          <line x1="6" y1="24" x2="34" y2="24" stroke="currentColor" strokeWidth="1.8" />
-        </svg>
+        <PatrolBowIcon
+          className="game-patrol-shop-row__thumb-svg"
+          variant={item.id}
+          style={patrolWeaponIconStyle('arco', item.id)}
+        />
       ) : (
-        <svg viewBox="0 0 28 36" className="game-patrol-shop-row__thumb-svg" aria-hidden>
-          <path d="M14 3 L14 26" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M8 24 L20 24 L14 32 Z" fill="currentColor" />
-        </svg>
+        <PatrolSwordIcon
+          className="game-patrol-shop-row__thumb-svg"
+          variant={item.id}
+          style={patrolWeaponIconStyle('espada', item.id)}
+        />
       )}
     </div>
   );
@@ -64,6 +67,11 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
           <Swords size={12} aria-hidden /> Dano: <strong>{item.dano_total}</strong>
           {item.dano_bonus > 0 && <span className="game-patrol-shop-row__bonus">+{item.dano_bonus}</span>}
         </p>
+        {(item.kind === 'arco' || item.kind === 'espada') && (
+          <p className="game-patrol-shop-row__crit">
+            Crítico: <strong>{formatPatrolCritChancePercent(item.chance_critico)}</strong> chance
+          </p>
+        )}
         <p className="game-patrol-shop-row__unlock">
           {item.desbloqueada ? (
             item.equipada ? (

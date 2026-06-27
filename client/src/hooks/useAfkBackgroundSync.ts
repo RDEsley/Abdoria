@@ -7,7 +7,7 @@ function dispatchAfkSync(detail: AfkPingResponse) {
   window.dispatchEvent(new CustomEvent('abdoria:afk-sync', { detail }));
 }
 
-/** Sincroniza patrulha AFK no servidor: ao voltar ao app, ao fechar aba e a cada minuto em foreground. */
+/** Sincroniza Exploração AFK no servidor: ao voltar ao app, ao fechar aba e a cada minuto em foreground. */
 export function useAfkBackgroundSync(enabled: boolean) {
   const sync = useCallback(async () => {
     try {

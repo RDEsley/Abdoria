@@ -71,6 +71,13 @@ function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: Af
   respawnEnemy(user, combat);
 }
 
+/** Derrota o inimigo atual e aplica drops (golden slime, boss, etc.). */
+export function defeatCurrentEnemy(user: UserDocument, pending: AfkPendingReward): void {
+  const combat = ensureCombat(user);
+  combat.enemy_hp = 0;
+  onEnemyDefeated(user, combat, pending);
+}
+
 /** Aplica dano até matar o inimigo atual (um kill). */
 export function applyKill(user: UserDocument): void {
   const combat = ensureCombat(user);
@@ -81,7 +88,7 @@ export function applyKill(user: UserDocument): void {
   onEnemyDefeated(user, combat, afk.pending);
 }
 
-/** Simula kills offline proporcionais aos minutos patrulhados. */
+/** Simula kills offline proporcionais aos minutos em exploração. */
 export function simulateOfflineKills(user: UserDocument, newMinutes: number): number {
   if (newMinutes <= 0) return 0;
 

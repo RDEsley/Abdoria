@@ -7,7 +7,7 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
+import { type RedeemCodeResponse, CURRENCY_NAME, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';
 
 const GIFT_CODE_PATTERN = /^[a-z0-9_-]+$/;
@@ -98,7 +98,7 @@ export function GiftCodeSection() {
             </GameButton>
           </div>
           <p className="game-gift-code__hint">
-            Dica: use <strong>abdoria</strong> para ganhar <strong>999 Abdoria coins</strong> e o título{' '}
+            Dica: use <strong>abdoria</strong> para ganhar <strong>999 {CURRENCY_NAME}</strong> e o título{' '}
             <strong>Dono do Jogo</strong> — válido <strong>1 vez por conta</strong>.
           </p>
         </div>

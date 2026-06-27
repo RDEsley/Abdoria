@@ -22,7 +22,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 | **Biblioteca** | Ver todos os exercícios e desbloquear novos |
 | **Player** | Executar o treino com timer e descanso |
 | **Conquistas** | Ver metas e o que já desbloqueou |
-| **Classificação** | Ranking por XP, dias seguidos ou Abdoria |
+| **Classificação** | Ranking por XP, dias seguidos ou Dorias |
 | **Perfil** | Seus dados, estatísticas e simulador |
 | **Opções** | Som, descanso, ciclo de treinos, **código presente** e sair |
 
@@ -66,13 +66,13 @@ No painel você vê **dois indicadores**: um amarelo (diário) e um roxo (extra)
 
 ---
 
-## Abdoria (moeda)
+## Dorias (moeda)
 
 - Moeda do jogo para a **Loja Abdoria** (visual do perfil).
-- Você também ganha Abdoria passivamente conforme sobe de XP total.
-- Na **loja diária** dá para trocar XP por Abdoria e vice-versa, com taxas fixas:
-  - **25 XP** → **1 Abdoria**
-  - **5 Abdoria** → **1 XP** (usa XP do progresso do nível, não o diário de exercícios)
+- Você também ganha Dorias passivamente conforme sobe de XP total.
+- Na **loja diária** dá para trocar XP por Dorias e vice-versa, com taxas fixas:
+  - **25 XP** → **1 Doria**
+  - **5 Dorias** → **1 XP** (usa XP do progresso do nível, não o diário de exercícios)
 
 ---
 
@@ -81,13 +81,13 @@ No painel você vê **dois indicadores**: um amarelo (diário) e um roxo (extra)
 ### Loja Abdoria
 Abra pelo seu **avatar** no topo. Lá você:
 - Testa avatares, bordas, títulos, sons e efeitos antes de comprar
-- Gasta **Abdoria** em itens premium
+- Gasta **Dorias** em itens premium
 - Desbloqueia itens por nível ou conquista
 
 ### Loja diária
 No painel, todo dia:
 1. **Recompensa grátis** (primeiro card)
-2. Duas **ofertas pagas** com XP ou Abdoria
+2. Duas **ofertas pagas** com XP ou Dorias
 
 ### Código presente
 Em **Opções → Código presente**, digite um código promocional (se tiver um).
@@ -99,7 +99,7 @@ Em **Opções → Código presente**, digite um código promocional (se tiver um
 Em **Classificação**, alterne entre:
 - **Pontos (XP)** — quem treinou mais no total
 - **Dias seguidos** — maior streak
-- **Abdoria** — quem tem mais moedas
+- **Dorias** — quem tem mais moedas
 
 Aparecem até **25** posições; se você estiver fora do top, sua linha aparece no final.
 
@@ -121,7 +121,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 | Não ganhei XP diário | Treino tinha menos de 3 exercícios? |
 | XP parou em 100 | Limite diário de exercícios — o resto vai para XP extra se for bônus |
 | Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta |
-| Item da loja bloqueado | Veja o requisito (nível, conquista ou Abdoria) |
+| Item da loja bloqueado | Veja o requisito (nível, conquista ou Dorias) |
 | Dados não salvaram | Confira conexão; treinos e progresso ficam na **conta logada** |
 
 ---

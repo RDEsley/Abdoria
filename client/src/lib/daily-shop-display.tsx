@@ -65,5 +65,5 @@ export function isLuckyFreeDailyReward(slot: LojaDiariaSlot): boolean {
 }
 
 export function formatPatrolCacheDescription(): string {
-  return `Recompensas de ${PATROL_CACHE_HOURS}h de patrulha AFK ao usar.`;
+  return `Recompensas de ${PATROL_CACHE_HOURS}h de Exploração AFK ao usar.`;
 }

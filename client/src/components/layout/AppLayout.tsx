@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameToastHost } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
@@ -83,7 +84,7 @@ export function AppLayout() {
 
       <aside className="game-sidebar hidden w-64 shrink-0 flex-col md:flex">
         <div className="game-sidebar__brand">
-          <img src="/brand/logo.png" alt="" className="game-sidebar__logo" width={48} height={48} />
+          <BrandMark size={48} alt="" className="game-sidebar__logo" />
           <div>
             <p className="game-sidebar__tag">Abdoria</p>
             <h1 className="game-sidebar__title">Core Quest</h1>

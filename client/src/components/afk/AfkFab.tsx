@@ -38,13 +38,19 @@ export function AfkFab() {
         type="button"
         className={`game-afk-fab${hasRewards ? ' game-afk-fab--loot' : ''}`}
         onClick={() => setOpen(true)}
-        aria-label={hasRewards ? 'Patrulha de Abdoria — recompensas disponíveis' : 'Abrir patrulha de Abdoria'}
+        aria-label={hasRewards ? 'Exploração de Abdoria — recompensas disponíveis' : 'Abrir exploração de Abdoria'}
       >
+        <span className="game-afk-fab__glow" aria-hidden />
+        <span className="game-afk-fab__shine" aria-hidden />
         <span className="game-afk-fab__icon" aria-hidden>
           <AfkFabSwords />
         </span>
-        <span className="game-afk-fab__label">Patrulha</span>
-        {hasRewards && <span className="game-afk-fab__badge" aria-hidden />}
+        <span className="game-afk-fab__label">Exploração</span>
+        {hasRewards && (
+          <span className="game-afk-fab__badge" aria-hidden>
+            <span className="game-afk-fab__badge-core" />
+          </span>
+        )}
       </button>
 
       <AfkPatrolModal open={open} onClose={() => setOpen(false)} />

@@ -38,7 +38,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 | **Iniciante** | Treinos sugeridos, exercícios explicados e progressão suave |
 | **Quem treina em casa** | Biblioteca de exercícios, montagem de treino e player guiado |
 | **Quem gosta de metas** | XP, streak, conquistas, loja diária e ranking |
-| **Quem quer constância** | Calendário de treinos, patrulha AFK e recompensas diárias |
+| **Quem quer constância** | Calendário de treinos, exploração AFK e recompensas diárias |
 
 ---
 
@@ -63,22 +63,22 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
 - **Teto diário** — **100 XP + 5 por nível** (sobe conforme você evolui)
 - **XP extra** — streak, conquistas, loja e habilidades desbloqueadas (sem limite diário)
-- **Patrulha AFK** — herói em combate automático enquanto você está fora (máx. **24h** de patrulha)
+- **Exploração AFK** — herói em combate automático enquanto você está fora (máx. **24h** de exploração)
   - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
   - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
-  - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Abdoria**
+  - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Dorias**
   - **Rei Slime** (boss) a cada **99 kills**, com loot bônus
-  - **Loja da Patrulha** — compre arcos e equipe **arco ou espada** no combate (espada básica grátis; upgrades em breve)
+  - **Loja da Exploração** — compre arcos e equipe **arco ou espada** no combate (espada básica grátis; upgrades em breve)
   - Herói mascote com **sprites animados** por arma (arco, espada; magia em breve)
-  - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da patrulha ou no onboarding
-  - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a patrulha)
-- **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Abdoria)
+  - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da exploração ou no onboarding
+  - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a exploração)
+- **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Dorias)
   - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
 
 ### Personalizar e recompensar
 - **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
-- **Loja da Patrulha** — arcos compráveis com Abdoria; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
-- **Inventário** — Energy Drinks, cosméticos desbloqueados e itens da patrulha em um painel unificado
+- **Loja da Exploração** — arcos compráveis com Dorias; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
+- **Inventário** — Energy Drinks, cosméticos desbloqueados e itens da exploração em um painel unificado
 - **Loja diária** — recompensa grátis + ofertas que renovam todo dia
 - **Código presente** — resgate em **Opções**
 - **Toasts de feedback** — notificações globais ao fixar/bloquear exercícios ou treinos, salvar treino, comprar itens, resgatar códigos e equipar cosméticos
@@ -95,11 +95,11 @@ Pense em **dois tipos de pontos**:
 | **XP diário** | Pontos dos exercícios do treino | Teto = **100 + 5 × nível** |
 | **XP extra** | Bônus de streak, conquistas, loja, habilidades (+1 XP por habilidade nova) | Sem teto diário |
 
-A moeda **Abdoria** você usa na loja de cosméticos e na loja diária. Você ganha **1 Abdoria a cada 10 XP** totais acumulados (conversão passiva ao longo do progresso).
+A moeda **Dorias** você usa na loja de cosméticos e na loja diária. Você ganha **1 Doria a cada 10 XP** totais acumulados (conversão passiva ao longo do progresso).
 
 Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
-### Patrulha AFK — loot por kill
+### Exploração AFK — loot por kill
 
 **Chance de dropar algo (por kill):**
 
@@ -114,22 +114,22 @@ Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 | Recompensa | % do drop | Comum (efetivo/kill) | Elite | Boss |
 |------------|-----------|----------------------|-------|------|
 | +1 XP | 85% | 3,40% | 5,10% | 8,50% |
-| +1 Abdoria | 11% | 0,44% | 0,66% | 1,10% |
+| +1 Dorias | 11% | 0,44% | 0,66% | 1,10% |
 | +1 Energy Drink | 4% | 0,16% | 0,24% | 0,40% |
 | Cosmético lendário | 0,04% / 0,08% boss | ~0,0016% | ~0,0024% | ~0,008% |
 | Título secreto | 0,01% | ~0,0004% | ~0,0006% | ~0,001% |
 
-Offline: ~**8 kills/min** de patrulha. Boss a cada **99** inimigos com loot bônus.
+Offline: ~**8 kills/min** de exploração. Boss a cada **99** inimigos com loot bônus.
 
 **Inimigos especiais:**
 
 | Inimigo | Como aparece | Recompensa |
 |---------|----------------|------------|
 | Elite | ~12% dos spawns | Loot com chance **6%** por kill |
-| **Golden Slime** | **1 em 1000** inimigos | **10 Abdoria** garantidos (sem rolagem normal de loot) |
+| **Golden Slime** | **1 em 1000** inimigos | **10 Dorias** garantidos (sem rolagem normal de loot) |
 | **Rei Slime** (boss) | A cada **99** kills | Loot com chance **10%** por kill |
 
-**Loja da Patrulha** (`/api/patrol-shop`): arcos compráveis com Abdoria; **espada de treino** grátis com alternância arco/espada no combate. Upgrades de espada e magias estão marcados como *em breve*.
+**Loja da Exploração** (`/api/patrol-shop`): arcos compráveis com Dorias; **espada de treino** grátis com alternância arco/espada no combate. Upgrades de espada e magias estão marcados como *em breve*.
 
 **Combate por arma:** arco dispara mais rápido; espada causa mais dano por golpe. O bônus da arma equipada na loja soma ao dano base.
 
@@ -148,7 +148,7 @@ Abdoria/
 │   └── services/           → Regras de negócio
 ├── shared/
 │   ├── afk/                → Combate AFK, inimigos, slimes, boss/loot
-│   ├── patrol/             → Catálogo da Loja da Patrulha (arcos/espadas)
+│   ├── patrol/             → Catálogo da Loja da Exploração (arcos/espadas)
 │   ├── types/              → Contratos compartilhados (API, domínio)
 │   └── utils/              → Utilitários (timezone, user-dados, afk)
 ├── supabase/migrations/    → Schema Postgres
@@ -175,7 +175,7 @@ O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`,
 1. Crie um projeto em [supabase.com](https://supabase.com/)
 2. No **SQL Editor**, execute os arquivos em [`supabase/migrations/`](./supabase/migrations/) na ordem:
    - `20250620000000_initial_schema.sql`
-   - `20250620120000_afk_combat.sql` (coluna `combat` na patrulha AFK)  
+   - `20250620120000_afk_combat.sql` (coluna `combat` na exploração AFK)  
    (ou use `supabase db push` se tiver o [Supabase CLI](https://supabase.com/docs/guides/cli) linkado ao projeto)
 
 ### Passos
@@ -223,7 +223,7 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 | Script | Uso |
 |--------|-----|
 | `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
-| `npx tsx scripts/dev/verify-afk.ts` | Valida patrulha AFK, combate, Golden Slime e drops por kill |
+| `npx tsx scripts/dev/verify-afk.ts` | Valida exploração AFK, combate, Golden Slime e drops por kill |
 | `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
 | `node client/scripts/validate-similar-presets.mjs` | Valida pontuação de treinos similares por músculo |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
