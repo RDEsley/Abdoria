@@ -23,6 +23,7 @@ export interface ExerciseDocument {
   descricao?: string;
   media: { gif: string; video?: string };
   ativo: boolean;
+  equipamento?: string | null;
 }
 
 function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
@@ -49,6 +50,7 @@ function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
     descricao: row.descricao ? String(row.descricao) : undefined,
     media: row.media as ExerciseDocument['media'],
     ativo: Boolean(row.ativo),
+    equipamento: row.equipamento ? String(row.equipamento) : undefined,
   };
 }
 
@@ -75,6 +77,7 @@ function exerciseToRow(ex: Partial<ExerciseDocument>): Record<string, unknown> {
     descricao: ex.descricao,
     media: ex.media,
     ativo: ex.ativo ?? true,
+    equipamento: ex.equipamento ?? null,
   };
 }
 
@@ -95,6 +98,13 @@ export const Exercise = {
       for (const slug of excluded) {
         query = query.neq('slug', slug);
       }
+    }
+    if (filter.ativo === false) query = query.eq('ativo', false);
+    if (filter.equipamento && typeof filter.equipamento === 'object' && '$in' in filter.equipamento) {
+      query = query.in('equipamento', filter.equipamento.$in as string[]);
+    }
+    if (typeof filter.equipamento === 'string') {
+      query = query.eq('equipamento', filter.equipamento);
     }
 
     if (options?.sort) {

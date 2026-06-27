@@ -34,6 +34,9 @@ import {
   CURRENCY_NAME,
   ENERGY_DRINK_ITEM_ID,
   ENERGY_DRINK_SHOP_PRICE,
+  ROUTE_DRINK_ITEM_ID,
+  ROUTE_DRINK_LABEL,
+  ROUTE_DRINK_SHOP_PRICE,
   PATROL_CACHE_ITEM_ID,
   PATROL_CACHE_LABEL,
   PATROL_CACHE_SHOP_PRICE,
@@ -172,6 +175,15 @@ function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 
         ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
         : ' · grátis';
     return `${prefix} · ${rarity} · Energy Drink ×${slot.valor}${price}`;
+  }
+
+  if (slot.recompensa_tipo === 'item' && slot.item_id === ROUTE_DRINK_ITEM_ID) {
+    const prefix = slot.kind === 'recompensa_diaria' ? 'Recompensa diária' : 'Oferta';
+    const price =
+      slot.kind === 'oferta' && slot.preco_abdoria
+        ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
+        : ' · grátis';
+    return `${prefix} · ${rarity} · ${ROUTE_DRINK_LABEL} ×${slot.valor}${price}`;
   }
 
   if (slot.recompensa_tipo === 'item' && slot.item_id === PATROL_CACHE_ITEM_ID) {
@@ -350,6 +362,23 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
     slots[1].label = buildSlotLabel(slots[1]);
   }
 
+  if (hashDailySeed(`${today}:route-paid`) % 100 < 8 && hashDailySeed(`${today}:bau-patrol`) % 1000 >= 12) {
+    slots[2] = {
+      slot: 2,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: ROUTE_DRINK_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: ROUTE_DRINK_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: ROUTE_DRINK_LABEL,
+      resgatado: false,
+      label: '',
+    };
+    slots[2].label = buildSlotLabel(slots[2]);
+  }
+
   if (hashDailySeed(`${today}:bau-patrol`) % 1000 < 12) {
     slots[2] = {
       slot: 2,
@@ -518,10 +547,10 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
   return { user, item: toCatalogItem(item, user) };
 }
 
-function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot) {
+function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot): number {
   if (slot.recompensa_tipo === 'item' && slot.item_id) {
-    addInventoryItem(user, slot.item_id, slot.valor || 1);
-    return;
+    const result = addInventoryItem(user, slot.item_id, slot.valor || 1);
+    return result.overflow_to_dorias;
   }
 
   if (slot.recompensa_tipo === 'pacote') {
@@ -532,16 +561,17 @@ function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot) {
       grantAbdoria(user, slot.bonus_abdoria ?? 0);
     }
     awardAbdoriaFromXp(user);
-    return;
+    return 0;
   }
 
   if (slot.recompensa_tipo === 'xp') {
     awardBonusXp(user, slot.valor);
     awardAbdoriaFromXp(user);
-    return;
+    return 0;
   }
 
   grantAbdoria(user, slot.valor);
+  return 0;
 }
 
 export async function claimDailyShopSlot(userId: string, slotIndex: number) {
@@ -569,8 +599,10 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
     bonus_abdoria: slotDoc.bonus_abdoria,
   };
 
+  let overflow_to_dorias = 0;
+
   if (slotDoc.kind === 'recompensa_diaria') {
-    applyDailyReward(user, slotSnapshot);
+    overflow_to_dorias = applyDailyReward(user, slotSnapshot);
     slotDoc.resgatado = true;
   } else {
     const abdoriaCost = slotDoc.preco_abdoria ?? 0;
@@ -611,9 +643,10 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
       unlocked.add(cosmetic.id);
       user.cosmeticos.desbloqueados = [...unlocked];
     } else if (slotDoc.item_id) {
-      addInventoryItem(user, slotDoc.item_id, slotDoc.valor || 1);
+      const result = addInventoryItem(user, slotDoc.item_id, slotDoc.valor || 1);
+      overflow_to_dorias = result.overflow_to_dorias;
     } else {
-      applyDailyReward(user, slotSnapshot);
+      overflow_to_dorias = applyDailyReward(user, slotSnapshot);
     }
     slotDoc.resgatado = true;
   }
@@ -623,6 +656,7 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
   return {
     user,
     slot: { ...slotSnapshot, resgatado: true },
+    overflow_to_dorias,
     loja_diaria: {
       data_reset: lojaDoc.data_reset,
       slots: lojaDoc.slots.map((entry) => ({
@@ -638,6 +672,8 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
         oferta_nome: entry.oferta_nome,
         bonus_xp: entry.bonus_xp,
         bonus_abdoria: entry.bonus_abdoria,
+        item_id: entry.item_id,
+        cosmetic_id: entry.cosmetic_id,
       })),
     },
   };

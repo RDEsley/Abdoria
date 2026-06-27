@@ -6,6 +6,7 @@ import { DailyShopRewardReveal } from '@/components/shop/DailyShopRewardReveal';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { claimDailyShopSlot, getShop } from '@/lib/api';
+import { overflowToastMessage } from '@/lib/inventory-overflow';
 import {
   dailyRewardIcon,
   formatDailyPurchasePrice,
@@ -123,6 +124,8 @@ export function DailyShopPanel() {
       }
 
       setRewardReveal({ slot: claimedSlot, message: successMessage });
+      const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
+      if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
       void load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível resgatar esta oferta.'), { variant: 'error' });

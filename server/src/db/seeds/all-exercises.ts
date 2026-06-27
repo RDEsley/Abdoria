@@ -1,5 +1,6 @@
 import { withCustomParams, withLevelParams } from '../../utils/exercise-params.js';
 import { prioritySExercises } from './priority-s-exercises.js';
+import { equipmentExercises } from './equipment-exercises.js';
 
 const priorityBase = prioritySExercises.map((e) =>
   withLevelParams({
@@ -284,14 +285,17 @@ export const additionalExercises = [
     {
       slug: 'ab-wheel',
       nome: 'Ab Wheel Rollout',
-      nivel: 4,
+      nome_pt: 'Rolinho abdominal',
+      nivel: 3,
       musculo_principal: 'core',
       musculos_secundarios: ['superior'],
       tempo_recomendado: 30,
       prioridade: 'B',
-      descricao: 'Rolinho abdominal para core avançado.',
+      descricao: 'Rolinho abdominal com amplitude média — requer roda abdominal.',
       media: { gif: 'ab-wheel.gif' },
-      ativo: true,
+      ativo: false,
+      equipamento: 'ab_wheel',
+      modo: 'reps',
     },
     { repeticoes_iniciante: 5, repeticoes_intermediario: 8, repeticoes_avancado: 12 },
   ),
@@ -350,4 +354,4 @@ export const additionalExercises = [
   },
 ];
 
-export const allExercises = [...priorityBase, ...additionalExercises];
+export const allExercises = [...priorityBase, ...additionalExercises, ...equipmentExercises];

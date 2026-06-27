@@ -7,6 +7,7 @@ import {
   AFK_KILL_DROP_CHANCE_ELITE,
   AFK_LEGENDARY_ROLL_BOSS,
   AFK_LEGENDARY_ROLL_NORMAL,
+  AFK_ROUTE_DRINK_DROP_CHANCE,
   type AfkPendingReward,
   type CosmeticRarity,
 } from '../types/index.js';
@@ -90,6 +91,18 @@ export function rollIntervalReward(
   opts?: RollLootOptions,
 ): void {
   rollLootTable(user, killIndex, pending, opts);
+}
+
+/** Chance fixa de 1% por kill de obter Route Drink no baú. */
+export function rollRouteDrinkDrop(
+  user: UserDocument,
+  killIndex: number,
+  pending: AfkPendingReward,
+): void {
+  const proc = hashKillSeed(String(user.id), killIndex + 5041) % 100;
+  if (proc >= AFK_ROUTE_DRINK_DROP_CHANCE) return;
+  pending.route_drinks += 1;
+  pending.drop_count = (pending.drop_count ?? 0) + 1;
 }
 
 /** Chance de drop por kill conforme tier; se acertar, usa a tabela de raridade. */

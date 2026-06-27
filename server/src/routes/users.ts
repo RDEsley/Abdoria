@@ -6,6 +6,7 @@ import { calcImc, suggestNivel } from '../types/index.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
 import { awardAbdoriaFromXp, awardSkillUnlockXp, countNewSkillUnlocks } from '../services/economy.js';
+import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
 
 export const usersRouter = Router();
@@ -49,7 +50,14 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
     }
 
     if (req.body.preferencias !== undefined) {
-      update.preferencias = mergePreferencias(current.preferencias, req.body.preferencias);
+      const mergedPrefs = mergePreferencias(current.preferencias, req.body.preferencias);
+      update.preferencias = mergedPrefs;
+
+      const mutable = await User.findById(req.userId!);
+      if (mutable) {
+        syncEquipmentExerciseUnlocks(mutable, mergedPrefs);
+        update.dados_salvos = mutable.dados_salvos;
+      }
     }
 
     if (req.body.simulacao_definicao !== undefined) {

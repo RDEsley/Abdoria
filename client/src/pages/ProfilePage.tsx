@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Backpack, Save, Settings } from 'lucide-react';
+import { Backpack, BookOpen, Save, Settings } from 'lucide-react';
+import { BestiaryModal } from '@/components/bestiary/BestiaryModal';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { InventoryModal } from '@/components/inventory/InventoryModal';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
@@ -13,7 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import { playTabSwitch } from '@/lib/sounds';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
+import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, resolveCosmeticos, xpProgressFromTotal, ALL_BESTIARY_ENEMY_IDS, type NivelUsuario, type Objetivo } from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -24,6 +25,7 @@ export function ProfilePage() {
   const [tab, setTab] = useState<Tab>('dados');
   const [saving, setSaving] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [showBestiary, setShowBestiary] = useState(false);
 
   if (!profile) {
     return <PageLoader />;
@@ -112,6 +114,14 @@ export function ProfilePage() {
           <p className="game-profile-hero__level">Nível {xpLevel}</p>
         </div>
       </div>
+
+      <GameButton variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={() => setShowBestiary(true)}>
+        <BookOpen size={18} />
+        Bestiário
+        <span className="game-inventory-badge game-inventory-badge--inline">
+          {stats?.bestiario_desbloqueados?.length ?? 0}/{ALL_BESTIARY_ENEMY_IDS.length}
+        </span>
+      </GameButton>
 
       <GameButton variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={() => setShowInventory(true)}>
         <Backpack size={18} />
@@ -225,6 +235,7 @@ export function ProfilePage() {
       )}
 
       <InventoryModal open={showInventory} onClose={() => setShowInventory(false)} />
+      <BestiaryModal open={showBestiary} onClose={() => setShowBestiary(false)} />
     </div>
   );
 }

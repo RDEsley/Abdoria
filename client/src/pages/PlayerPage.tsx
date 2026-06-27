@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Coins, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
+import { WorkoutExerciseTimer } from '@/components/player/WorkoutExerciseTimer';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { GameButton } from '@/components/ui/GameButton';
@@ -567,6 +568,15 @@ export function PlayerPage() {
           )}
         </div>
 
+        {phase === 'working' && current.modo === 'tempo' && (
+          <WorkoutExerciseTimer
+            secondsLeft={secondsLeft}
+            targetSeconds={targetSeconds}
+            paused={paused}
+            label={current.slug === 'dead-hang' ? 'Suspensão na barra' : 'Segure a posição'}
+          />
+        )}
+
         <div
           className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}
           aria-hidden
@@ -602,7 +612,7 @@ export function PlayerPage() {
           </GameButton>
         )}
 
-        {phase === 'working' && (
+        {phase === 'working' && current.modo === 'reps' && (
           <GameButton size="lg" className="w-full flex items-center justify-center gap-2" onClick={completeSeries}>
             <Check size={22} />
             Série concluída

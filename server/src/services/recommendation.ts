@@ -1,4 +1,3 @@
-import { Exercise } from '../domain/Exercise.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
 import { WorkoutPreset } from '../domain/WorkoutPreset.js';
 import type { UserDocument } from '../domain/User.js';
@@ -8,6 +7,10 @@ import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
+import {
+  filterRowsByAvailableSlugs,
+  findExercisesForUserDocument,
+} from './exercise-catalog.js';
 
 export interface RecommendationAlert {
   id: string;
@@ -83,20 +86,22 @@ async function buildPinnedRows(user: UserDocument, blocked: Set<string>) {
   const slugs = pinnedSlugs(user).filter((s) => !blocked.has(s));
   if (slugs.length === 0) return [];
 
-  const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true });
+  const catalog = await findExercisesForUserDocument(user);
+  const exercises = catalog.filter((ex) => slugs.includes(ex.slug));
   return exercises.map((ex) => ({
     slug: ex.slug,
     series: 3,
-    modo: 'tempo' as ModoExercicio,
-    repeticoes: undefined,
-    tempo_seg: ex.tempo_recomendado ?? 30,
-    descanso_seg: 25,
+    modo: (ex.modo === 'reps' ? 'reps' : 'tempo') as ModoExercicio,
+    repeticoes: ex.modo === 'reps' ? ex.repeticoes_intermediario || 12 : undefined,
+    tempo_seg: ex.modo === 'tempo' ? ex.tempo_seg_intermediario || ex.tempo_recomendado || 30 : undefined,
+    descanso_seg: ex.descanso_seg_intermediario ?? 25,
   }));
 }
 
-async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
+async function presetToSugerido(preset: PresetDoc, user: UserDocument): Promise<TreinoSugerido> {
   const slugs = preset.exercicios.map((e) => e.slug);
-  const exercises = await Exercise.find({ slug: { $in: slugs }, ativo: true });
+  const catalog = await findExercisesForUserDocument(user);
+  const exercises = catalog.filter((ex) => slugs.includes(ex.slug));
   const nameBySlug = new Map(
     exercises.map((e) => [
       e.slug,
@@ -104,7 +109,9 @@ async function presetToSugerido(preset: PresetDoc): Promise<TreinoSugerido> {
     ]),
   );
 
-  const exercicios = preset.exercicios.map((pe) => ({
+  const exercicios = preset.exercicios
+    .filter((pe) => nameBySlug.has(pe.slug))
+    .map((pe) => ({
     slug: pe.slug,
     nome: nameBySlug.get(pe.slug) ?? pe.slug,
     series: pe.series,
@@ -271,7 +278,7 @@ export async function recommendWorkout(
 
   const pinnedPreset = await resolvePinnedPreset(user, excludePresetId);
   if (pinnedPreset) {
-    return presetToSugerido(pinnedPreset);
+    return presetToSugerido(pinnedPreset, user);
   }
 
   const last = await WorkoutHistory.findOne(
@@ -309,19 +316,23 @@ export async function recommendWorkout(
   }
   if (!preset) return null;
 
+  const catalog = await findExercisesForUserDocument(user);
   const recentSlugs = allowRepeats ? new Set<string>() : await recentExerciseSlugs(user.id);
   const pinned = await buildPinnedRows(user, blocked);
 
-  let exercicioRows = preset.exercicios
-    .filter((e) => !blocked.has(e.slug))
-    .map((e) => ({
-      slug: e.slug,
-      series: e.series,
-      modo: e.modo as ModoExercicio,
-      repeticoes: e.repeticoes ?? undefined,
-      tempo_seg: e.tempo_seg ?? undefined,
-      descanso_seg: e.descanso_seg,
-    }));
+  let exercicioRows = filterRowsByAvailableSlugs(
+    preset.exercicios
+      .filter((e) => !blocked.has(e.slug))
+      .map((e) => ({
+        slug: e.slug,
+        series: e.series,
+        modo: e.modo as ModoExercicio,
+        repeticoes: e.repeticoes ?? undefined,
+        tempo_seg: e.tempo_seg ?? undefined,
+        descanso_seg: e.descanso_seg,
+      })),
+    catalog,
+  );
 
   for (const pin of pinned) {
     if (!exercicioRows.some((e) => e.slug === pin.slug)) {
@@ -332,37 +343,42 @@ export async function recommendWorkout(
   if (!allowRepeats) {
     exercicioRows = exercicioRows.filter((e) => !recentSlugs.has(e.slug) || pinned.some((p) => p.slug === e.slug));
     if (exercicioRows.length < 3) {
-      exercicioRows = [
-        ...pinned,
-        ...preset.exercicios
-          .filter((e) => !blocked.has(e.slug) && !pinned.some((p) => p.slug === e.slug))
-          .map((e) => ({
-            slug: e.slug,
-            series: e.series,
-            modo: e.modo as ModoExercicio,
-            repeticoes: e.repeticoes ?? undefined,
-            tempo_seg: e.tempo_seg ?? undefined,
-            descanso_seg: e.descanso_seg,
-          })),
-      ];
+      exercicioRows = filterRowsByAvailableSlugs(
+        [
+          ...pinned,
+          ...preset.exercicios
+            .filter((e) => !blocked.has(e.slug) && !pinned.some((p) => p.slug === e.slug))
+            .map((e) => ({
+              slug: e.slug,
+              series: e.series,
+              modo: e.modo as ModoExercicio,
+              repeticoes: e.repeticoes ?? undefined,
+              tempo_seg: e.tempo_seg ?? undefined,
+              descanso_seg: e.descanso_seg,
+            })),
+        ],
+        catalog,
+      );
     }
   }
 
   if (extraCount > 0) {
     const used = new Set(exercicioRows.map((e) => e.slug));
-    const extras = await Exercise.find({
-      ativo: true,
-      slug: { $nin: [...used, ...blocked, ...(allowRepeats ? [] : [...recentSlugs])] },
-    });
+    const extras = catalog.filter(
+      (ex) =>
+        !used.has(ex.slug) &&
+        !blocked.has(ex.slug) &&
+        (allowRepeats || !recentSlugs.has(ex.slug)),
+    );
 
     for (const ex of extras.slice(0, extraCount)) {
       exercicioRows.push({
         slug: ex.slug,
         series: 3,
-        modo: 'tempo' as ModoExercicio,
-        repeticoes: undefined,
-        tempo_seg: ex.tempo_recomendado ?? 30,
-        descanso_seg: 25,
+        modo: (ex.modo === 'reps' ? 'reps' : 'tempo') as ModoExercicio,
+        repeticoes: ex.modo === 'reps' ? ex.repeticoes_intermediario || 12 : undefined,
+        tempo_seg: ex.modo === 'tempo' ? ex.tempo_seg_intermediario || ex.tempo_recomendado || 30 : undefined,
+        descanso_seg: ex.descanso_seg_intermediario ?? 25,
       });
       used.add(ex.slug);
     }
@@ -374,7 +390,7 @@ export async function recommendWorkout(
     nome: preset.nome,
     descricao: preset.descricao,
     exercicios: exercicioRows,
-  });
+  }, user);
 }
 
 export async function getRecommendedPresetsList(user: UserDocument) {

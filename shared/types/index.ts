@@ -3,8 +3,9 @@
  * Mantém contratos de API, exercícios, usuário e gamificação alinhados.
  */
 
-import type { AfkCombatState } from '../afk/combat.js';
+import type { AfkCombatState, AfkEnemyId } from '../afk/combat.js';
 import { DEFAULT_AFK_COMBAT } from '../afk/combat.js';
+import type { EquipmentId } from '../equipment/index.js';
 
 export type NivelUsuario = 'iniciante' | 'intermediario' | 'avancado';
 
@@ -108,6 +109,8 @@ export interface IExercise extends ExerciseLevelParams {
   descricao?: string;
   media: ExerciseMedia;
   ativo: boolean;
+  /** Equipamento necessário — exercício só aparece se o usuário possuir o item. */
+  equipamento?: EquipmentId | null;
 }
 
 export interface UserPreferencias {
@@ -136,11 +139,13 @@ export interface UserPreferencias {
   treinos_nao_recomendar?: string[];
   /** Controle de rodada por ciclo (A, B, C…). */
   ciclos_completados_rodada?: Partial<Record<TreinoBase, boolean>>;
+  /** Equipamentos que o usuário possui — desbloqueia exercícios gated. */
+  equipamentos?: Partial<Record<EquipmentId, boolean>>;
 }
 
 export type ArmaPreferida = 'arco' | 'espada';
 
-export type InventoryItemId = 'energy_drink' | 'bau_patrulha';
+export type InventoryItemId = 'energy_drink' | 'route_drink' | 'bau_patrulha';
 
 export interface InventoryEntry {
   item_id: InventoryItemId;
@@ -155,6 +160,7 @@ export interface AfkPendingReward {
   xp: number;
   abdoria: number;
   energy_drinks: number;
+  route_drinks: number;
   cosmetic_ids: string[];
   titulo_secreto: boolean;
   /** Quantidade de vezes que um inimigo dropou loot na exploração. */
@@ -184,6 +190,15 @@ export type {
   SlimeAccessoryKind,
   SlimeAppearance,
 } from '../afk/slime-appearance.js';
+
+export {
+  BESTIARY_CATEGORIES,
+  ALL_BESTIARY_ENEMY_IDS,
+  bestiaryEnemyLabel,
+  bestiaryEnemyTier,
+  isBestiaryEnemyId,
+} from '../afk/bestiary.js';
+export type { BestiaryCategory, BestiaryCategoryId } from '../afk/bestiary.js';
 
 export {
   AFK_BOSS_INTERVAL,
@@ -241,6 +256,8 @@ export interface Gamificacao {
   streak_maior: number;
   total_minutos: number;
   conquistas: string[];
+  /** Inimigos derrotados pela primeira vez no Bestiário. */
+  bestiario_desbloqueados?: AfkEnemyId[];
 }
 
 export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'fundo';
@@ -458,8 +475,8 @@ export const XP_DAILY_CAP_BASE = 100;
 export const XP_DAILY_CAP_PER_LEVEL = 1;
 /** Limite diário no nível 1 (base + 1× bônus). */
 export const XP_DAILY_CAP = XP_DAILY_CAP_BASE + XP_DAILY_CAP_PER_LEVEL;
-/** @deprecated Conquistas não aumentam mais o teto diário. */
-export const XP_DAILY_CAP_PER_ACHIEVEMENT = 0;
+/** Bônus permanente de teto diário por inimigo único no Bestiário. */
+export const XP_DAILY_CAP_PER_BESTIARY = 1;
 /** XP diário por exercício concluído (treino com mín. 3 exercícios). */
 export const XP_DAILY_PER_EXERCISE = 20;
 /** Mínimo de exercícios no treino para contar XP diário. */
@@ -473,6 +490,14 @@ export function dailyXpCapForLevel(level: number): number {
   const safeLevel = Math.max(1, Math.floor(level));
   return XP_DAILY_CAP_BASE + safeLevel * XP_DAILY_CAP_PER_LEVEL;
 }
+
+export function dailyXpCapForUser(level: number, bestiaryUnlockedCount = 0): number {
+  const safeCount = Math.max(0, Math.floor(bestiaryUnlockedCount));
+  return dailyXpCapForLevel(level) + safeCount * XP_DAILY_CAP_PER_BESTIARY;
+}
+
+/** @deprecated Conquistas não aumentam mais o teto diário. */
+export const XP_DAILY_CAP_PER_ACHIEVEMENT = 0;
 
 export function dailyFullExercisesForCap(cap: number): number {
   return Math.ceil(Math.max(0, cap) / XP_DAILY_PER_EXERCISE);
@@ -501,6 +526,16 @@ export const CURRENCY_NAME = 'Dorias';
 export const ENERGY_DRINK_ITEM_ID: InventoryItemId = 'energy_drink';
 export const ENERGY_DRINK_BONUS_XP = 100;
 export const ENERGY_DRINK_SHOP_PRICE = 20;
+export const ROUTE_DRINK_ITEM_ID: InventoryItemId = 'route_drink';
+export const ROUTE_DRINK_HOURS = 1;
+export const ROUTE_DRINK_LABEL = 'Route Drink';
+export const ROUTE_DRINK_SHOP_PRICE = 40;
+export const AFK_ROUTE_DRINK_DROP_CHANCE = 1;
+export const INVENTORY_STACK_CAP = 24;
+export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [
+  ENERGY_DRINK_ITEM_ID,
+  ROUTE_DRINK_ITEM_ID,
+];
 export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
 /** Horas de Exploração AFK concedidas ao usar o baú. */
 export const PATROL_CACHE_HOURS = 6;
@@ -532,7 +567,7 @@ export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
-  pending: { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 },
+  pending: { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 },
   combat: { ...DEFAULT_AFK_COMBAT },
 };
 
@@ -767,7 +802,10 @@ export interface DashboardStats {
   inventario: Inventario;
   afk: AfkState;
   energy_drink_count: number;
+  route_drink_count: number;
   patrol_cache_count: number;
+  bestiario_desbloqueados: AfkEnemyId[];
+  bestiario_bonus_cap: number;
   conquistas: Achievement[];
   musculos_semana: Record<MusculoPrincipal, number>;
   evolucao_mensal: { mes: string; minutos: number }[];
@@ -1277,6 +1315,17 @@ export function getExerciseParamsForNivel(
 }
 
 export { EXERCISE_NOME_PT, formatExerciseName, resolveExerciseNomePt } from './exercise-display.js';
+export type { EquipmentId } from '../equipment/index.js';
+export {
+  EQUIPMENT_CATALOG,
+  EQUIPMENT_IDS,
+  getAllEquipmentExerciseSlugs,
+  getEnabledEquipmentIds,
+  getExerciseSlugsForEquipment,
+  isExerciseAvailableForUser,
+  resolveUserEquipment,
+  slugsUnlockedByEquipment,
+} from '../equipment/index.js';
 export {
   xpFloorForCurrentLevel,
   spendableXpForShop,

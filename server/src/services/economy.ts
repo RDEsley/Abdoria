@@ -10,6 +10,7 @@ import {
   XP_STREAK_BONUS_MAX,
   XP_STREAK_BONUS_PER_DAY,
   dailyXpCapForLevel,
+  dailyXpCapForUser,
   spendableXpForShop,
   streakXpBonus,
   projectedAbdoriaAfterXpSpend as projectedAbdoriaAfterXpSpendFromState,
@@ -17,6 +18,7 @@ import {
   xpLevelFromTotal,
 } from '../types/index.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
+import { countBestiaryUnlocks } from './bestiario.js';
 
 /** Garante carteira Abdoria numérica no documento do usuário. */
 export function ensureAbdoriaWallet(user: UserDocument): void {
@@ -58,7 +60,8 @@ export function projectedAbdoriaAfterXpSpend(user: UserDocument, xpCost: number)
 }
 
 export function getDailyXpCapForUser(user: UserDocument): number {
-  return dailyXpCapForLevel(xpLevelFromTotal(user.gamificacao.nivel_xp));
+  const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
+  return dailyXpCapForUser(level, countBestiaryUnlocks(user));
 }
 
 export function getDailyXpBonusRemaining(user: UserDocument): number {

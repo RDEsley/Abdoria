@@ -28,6 +28,15 @@ export const EXERCISE_NOME_PT: Record<string, string> = {
   'dragon-flag': 'Bandeira do dragão',
   'l-sit': 'Posição em L',
   'ab-wheel': 'Rolinho abdominal',
+  'ab-wheel-knees': 'Rolinho — joelhos',
+  'ab-wheel-standing': 'Rolinho — em pé',
+  'push-up-board-chest': 'Flexão prancha — peito',
+  'push-up-board-triceps': 'Flexão prancha — tríceps',
+  'push-up-board-shoulders': 'Flexão prancha — ombros',
+  'push-up-board-back': 'Flexão prancha — costas',
+  'pull-up': 'Barra fixa — pronada',
+  'chin-up': 'Barra fixa — supinada',
+  'dead-hang': 'Suspensão isométrica',
   'copenhagen-plank': 'Prancha de Copenhagen',
 };
 

@@ -173,12 +173,16 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
           pending.xp > 0
           || pending.abdoria > 0
           || pending.energy_drinks > 0
+          || pending.route_drinks > 0
           || pending.cosmetic_ids.length > 0
           || pending.titulo_secreto,
         ),
       },
       energy_drink_count: inventario.energy_drink,
+      route_drink_count: inventario.route_drink,
       patrol_cache_count: inventario.bau_patrulha,
+      bestiario_desbloqueados: user.gamificacao.bestiario_desbloqueados ?? [],
+      bestiario_bonus_cap: (user.gamificacao.bestiario_desbloqueados ?? []).length,
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({ mes: m._id, minutos: Math.round(m.minutos) })),

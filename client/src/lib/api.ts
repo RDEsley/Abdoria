@@ -190,7 +190,11 @@ export function equipCosmetic(kind: CosmeticKind, id: string): Promise<{ user: I
   return equipShopItem(kind, id);
 }
 
-export function claimDailyShopSlot(slot: number): Promise<{ user: IUserDocument; loja_diaria: LojaDiaria }> {
+export function claimDailyShopSlot(slot: number): Promise<{
+  user: IUserDocument;
+  loja_diaria: LojaDiaria;
+  overflow_to_dorias?: number;
+}> {
   return fetchJson('/shop/daily/claim', { method: 'POST', body: JSON.stringify({ slot }) });
 }
 
@@ -218,18 +222,25 @@ export interface AfkMetaResponse {
   max_minutes: number;
   capped: boolean;
   combat: AfkCombatSnapshot;
+  route_drink_count?: number;
 }
 
 export interface InventarioSummary extends Inventario {
   energy_drink: number;
+  route_drink: number;
   bau_patrulha: number;
+  stack_cap: number;
 }
 
 export function getAfkMeta(): Promise<AfkMetaResponse> {
   return fetchJson('/meta/afk');
 }
 
-export function claimAfkRewards(): Promise<{ user: IUserDocument; claimed: AfkPendingReward }> {
+export function claimAfkRewards(): Promise<{
+  user: IUserDocument;
+  claimed: AfkPendingReward;
+  overflow_to_dorias?: number;
+}> {
   return fetchJson('/meta/afk/claim', { method: 'POST' });
 }
 
@@ -270,6 +281,39 @@ export function usePatrolCache(): Promise<{
   inventario: InventarioSummary;
 }> {
   return fetchJson('/meta/inventory/bau-patrulha', { method: 'POST' });
+}
+
+export function useRouteDrink(): Promise<AfkMetaResponse & {
+  user: IUserDocument;
+  hours: number;
+  inventario: InventarioSummary;
+}> {
+  return fetchJson('/meta/inventory/route-drink', { method: 'POST' });
+}
+
+export interface BestiaryEntry {
+  id: string;
+  label: string;
+  tier: 'common' | 'elite' | 'boss';
+  max_hp: number;
+  desbloqueado: boolean;
+}
+
+export interface BestiaryCategory {
+  id: 'common' | 'elite' | 'boss';
+  label: string;
+  entries: BestiaryEntry[];
+}
+
+export interface BestiaryResponse {
+  categorias: BestiaryCategory[];
+  desbloqueados: string[];
+  bonus_cap_diario: number;
+  total_inimigos: number;
+}
+
+export function getBestiary(): Promise<BestiaryResponse> {
+  return fetchJson('/meta/bestiary');
 }
 
 export function updateMetaPreferences(data: {
