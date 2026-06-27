@@ -58,9 +58,7 @@ export function SettingsPage() {
     }
   };
 
-  const blockNotifications = () => {
-    console.log('Notificações bloqueadas');
-  };
+  const blockNotifications = () => {};
 
   const toggleCiclo = (c: TreinoBase) => {
     setCiclo((prev) => {
