@@ -1,0 +1,77 @@
+# Mantém o projeto Abdoria no Supabase ativo (free tier pausa após ~7 dias sem uso).
+# Configure em GitHub → Settings → Secrets and variables → Actions:
+#   SUPABASE_URL                  → https://<ref>.supabase.co
+#   SUPABASE_ANON_KEY             → chave anon (Settings → API no Supabase)
+#   SUPABASE_SERVICE_ROLE_KEY     → service role (acorda o Postgres com query leve)
+#
+# Horário: 00:00 America/Sao_Paulo (UTC-3) = 03:00 UTC
+
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keep-supabase-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping Abdoria (Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping Supabase (auth + Postgres)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          [ -z "${SUPABASE_URL:-}" ] && missing+=("SUPABASE_URL")
+          [ -z "${SUPABASE_ANON_KEY:-}" ] && missing+=("SUPABASE_ANON_KEY")
+          [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ] && missing+=("SUPABASE_SERVICE_ROLE_KEY")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Secrets ausentes: ${missing[*]}"
+            echo "Adicione em Settings → Secrets and variables → Actions do repositório."
+            exit 1
+          fi
+
+          BASE="${SUPABASE_URL%/}"
+
+          echo "Pinging ${BASE} at $(date -u +%Y-%m-%dT%H:%M:%SZ) UTC"
+
+          auth_status=$(curl -sS -o /tmp/supabase-auth-health.json -w "%{http_code}" \
+            "${BASE}/auth/v1/health" \
+            -H "apikey: ${SUPABASE_ANON_KEY}")
+
+          echo "auth/v1/health → HTTP ${auth_status}"
+          cat /tmp/supabase-auth-health.json || true
+          echo
+
+          if [ "${auth_status}" -lt 200 ] || [ "${auth_status}" -ge 300 ]; then
+            echo "::error::auth/v1/health falhou (HTTP ${auth_status})"
+            exit 1
+          fi
+
+          rest_status=$(curl -sS -o /tmp/supabase-rest-probe.json -w "%{http_code}" \
+            "${BASE}/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
+
+          echo "rest/v1/profiles → HTTP ${rest_status}"
+          cat /tmp/supabase-rest-probe.json || true
+          echo
+
+          if [ "${rest_status}" -lt 200 ] || [ "${rest_status}" -ge 300 ]; then
+            echo "::error::rest/v1/profiles falhou (HTTP ${rest_status})"
+            exit 1
+          fi
+
+          echo "✔ Abdoria Supabase ativo — próximo ping agendado para 00:00 (Brasília)"
