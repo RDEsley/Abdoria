@@ -14,14 +14,15 @@ import {
   resolvePatrolArmas,
 } from '../types/index.js';
 import { normalizeCombat } from '../repositories/user-repository.js';
-import { rollKillDrop } from './afk-rolls.js';
+import { rollKillDrop, rollRouteDrinkDrop } from './afk-rolls.js';
+import { unlockBestiaryEnemy } from './bestiario.js';
 
 export function ensureCombat(user: UserDocument): AfkCombatState {
   if (!user.afk) {
     user.afk = {
       last_seen_at: null,
       minutos_acumulados: 0,
-      pending: { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 },
+      pending: { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 },
       combat: { ...DEFAULT_AFK_COMBAT },
     };
   }
@@ -54,9 +55,12 @@ function respawnEnemy(user: UserDocument, combat: AfkCombatState): void {
 }
 
 function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: AfkPendingReward): void {
+  const defeatedEnemyId = combat.enemy_id;
   const wasBoss = combat.is_boss;
-  const wasGolden = combat.enemy_id === 'golden_slime';
+  const wasGolden = defeatedEnemyId === 'golden_slime';
   const tier = enemyTier(combat);
+
+  unlockBestiaryEnemy(user, defeatedEnemyId);
 
   combat.kills_total += 1;
   combat.kills_until_boss = advanceKillsUntilBoss(combat.kills_until_boss, wasBoss);
@@ -67,6 +71,8 @@ function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: Af
   } else {
     rollKillDrop(user, combat.kills_total, pending, { bossBoost: wasBoss, tier });
   }
+
+  rollRouteDrinkDrop(user, combat.kills_total, pending);
 
   respawnEnemy(user, combat);
 }
@@ -82,7 +88,7 @@ export function defeatCurrentEnemy(user: UserDocument, pending: AfkPendingReward
 export function applyKill(user: UserDocument): void {
   const combat = ensureCombat(user);
   const afk = user.afk!;
-  afk.pending = afk.pending ?? { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 };
+  afk.pending = afk.pending ?? { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 };
 
   combat.enemy_hp = 0;
   onEnemyDefeated(user, combat, afk.pending);
@@ -97,7 +103,7 @@ export function simulateOfflineKills(user: UserDocument, newMinutes: number): nu
 
   const combat = ensureCombat(user);
   const afk = user.afk!;
-  afk.pending = afk.pending ?? { xp: 0, abdoria: 0, energy_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 };
+  afk.pending = afk.pending ?? { xp: 0, abdoria: 0, energy_drinks: 0, route_drinks: 0, cosmetic_ids: [], titulo_secreto: false, drop_count: 0 };
 
   const avgDamage = 16;
   let applied = 0;

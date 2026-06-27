@@ -33,4 +33,21 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 }
 
+/** Injeta userId quando há token válido; segue sem autenticar se ausente/inválido. */
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) {
+    next();
+    return;
+  }
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { sub: string };
+    req.userId = payload.sub;
+  } catch {
+    /* convidado / token expirado — catálogo base */
+  }
+  next();
+}
+
 export { JWT_SECRET };

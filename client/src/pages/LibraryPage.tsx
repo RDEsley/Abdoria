@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { ExerciseCard } from '@/components/library/ExerciseCard';
+import { EquipmentPanel } from '@/components/library/EquipmentPanel';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
@@ -108,6 +109,8 @@ export function LibraryPage() {
       {muscleFilter && (
         <p className="muscle-zone-hint -mt-2">{MUSCULO_HINTS[muscleFilter]}</p>
       )}
+
+      <EquipmentPanel onEquipmentChange={refreshRecommendations} />
 
       <p className="text-xs font-bold text-stone-500">
         {exercisesLoading

@@ -64,6 +64,7 @@ function hasAfkPendingLoot(pending: AfkPendingReward): boolean {
     pending.xp > 0
     || pending.abdoria > 0
     || pending.energy_drinks > 0
+    || pending.route_drinks > 0
     || pending.cosmetic_ids.length > 0
     || pending.titulo_secreto
   );
@@ -79,6 +80,7 @@ export function countAfkDropEvents(pending: AfkPendingReward | null | undefined)
   return (
     pending.xp
     + pending.energy_drinks
+    + pending.route_drinks
     + pending.cosmetic_ids.length
     + (pending.titulo_secreto ? 1 : 0)
     + pending.abdoria

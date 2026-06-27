@@ -1,6 +1,13 @@
 import { Coins, Package, Zap } from 'lucide-react';
 import type { LojaDiariaSlot } from '@/types';
-import { CURRENCY_NAME, PATROL_CACHE_HOURS, PATROL_CACHE_ITEM_ID, PATROL_CACHE_LABEL } from '@/types';
+import {
+  CURRENCY_NAME,
+  PATROL_CACHE_HOURS,
+  PATROL_CACHE_ITEM_ID,
+  PATROL_CACHE_LABEL,
+  ROUTE_DRINK_ITEM_ID,
+  ROUTE_DRINK_LABEL,
+} from '@/types';
 
 export function EnergyDrinkIcon({ size = 16, className }: { size?: number; className?: string }) {
   return (
@@ -9,6 +16,25 @@ export function EnergyDrinkIcon({ size = 16, className }: { size?: number; class
         <rect x="7" y="3" width="10" height="4" rx="1" className="game-energy-drink-icon__cap" />
         <rect x="6" y="7" width="12" height="14" rx="2" className="game-energy-drink-icon__body" />
         <path d="M9 11h6M9 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    </span>
+  );
+}
+
+export function RouteDrinkIcon({ size = 16, className }: { size?: number; className?: string }) {
+  return (
+    <span className={`game-route-drink-icon${className ? ` ${className}` : ''}`} aria-hidden>
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
+        <rect x="7" y="3" width="10" height="4" rx="1" className="game-route-drink-icon__cap" />
+        <rect x="6" y="7" width="12" height="14" rx="2" className="game-route-drink-icon__body" />
+        <path
+          d="M12 9v2m0 0c-1.5 0-2.5 1-2.5 2.2 0 1.2 1 2 2.5 2s2.5-.8 2.5-2c0-1.2-1-2.2-2.5-2.2z"
+          className="game-route-drink-icon__tree"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M12 15v2" className="game-route-drink-icon__tree" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
     </span>
   );
@@ -30,6 +56,7 @@ export function PatrolCacheIcon({ size = 16, className }: { size?: number; class
 export function formatDailyReward(slot: LojaDiariaSlot): string {
   if (slot.recompensa_tipo === 'item') {
     if (slot.item_id === 'energy_drink') return `+${slot.valor} Energy Drink`;
+    if (slot.item_id === ROUTE_DRINK_ITEM_ID) return `+${slot.valor} ${ROUTE_DRINK_LABEL}`;
     if (slot.item_id === PATROL_CACHE_ITEM_ID) return `+${slot.valor} ${PATROL_CACHE_LABEL}`;
     return `+${slot.valor} item`;
   }
@@ -42,6 +69,7 @@ export function formatDailyReward(slot: LojaDiariaSlot): string {
 export function dailyRewardIcon(slot: LojaDiariaSlot, size = 16) {
   if (slot.recompensa_tipo === 'item') {
     if (slot.item_id === PATROL_CACHE_ITEM_ID) return <PatrolCacheIcon size={size} />;
+    if (slot.item_id === ROUTE_DRINK_ITEM_ID) return <RouteDrinkIcon size={size} />;
     return <EnergyDrinkIcon size={size} />;
   }
   if (slot.recompensa_tipo === 'pacote') return <Package size={size} aria-hidden />;

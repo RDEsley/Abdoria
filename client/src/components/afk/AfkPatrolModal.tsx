@@ -9,13 +9,15 @@ import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
 import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
-import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
+import { claimAfkRewards, getAfkMeta, useRouteDrink, type AfkMetaResponse } from '@/lib/api';
+import { overflowToastMessage } from '@/lib/inventory-overflow';
 import { mergeAfkCombatSnapshot } from '@/lib/afk-combat-merge';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import type { AfkPendingReward, ArmaPreferida } from '@/types';
+import { ROUTE_DRINK_LABEL } from '@/types';
 
 interface Props {
   open: boolean;
@@ -24,10 +26,11 @@ interface Props {
 
 export function AfkPatrolModal({ open, onClose }: Props) {
   const { user, applyUser } = useAuth();
-  const { refresh: refreshApp } = useApp();
+  const { refresh: refreshApp, stats } = useApp();
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [usingRouteDrink, setUsingRouteDrink] = useState(false);
   const [celebration, setCelebration] = useState<AfkPendingReward | null>(null);
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
   const [shopOpen, setShopOpen] = useState(false);
@@ -46,6 +49,8 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const weapon: ArmaPreferida =
     meta?.arma_preferida ?? user?.preferencias?.arma_preferida ?? 'arco';
   const userId = String(user?.id ?? 'guest');
+  const routeDrinkCount = meta?.route_drink_count ?? stats?.route_drink_count ?? 0;
+  const canUseRouteDrink = routeDrinkCount > 0 && !meta?.has_rewards;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,6 +59,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       setMeta((prev) => ({
         ...data,
         combat: mergeAfkCombatSnapshot(prev?.combat, data.combat),
+        route_drink_count: data.route_drink_count,
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
     } catch (err) {
@@ -135,11 +141,40 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       await refreshApp();
       setCelebration(res.claimed);
       showGameToast('Recompensas da exploração coletadas!', { variant: 'success' });
+      const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
+      if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
       await load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), { variant: 'error' });
     } finally {
       setClaiming(false);
+    }
+  };
+
+  const handleUseRouteDrink = async () => {
+    if (!canUseRouteDrink) return;
+    setUsingRouteDrink(true);
+    try {
+      const res = await useRouteDrink();
+      applyUser(res.user);
+      await refreshApp();
+      setMeta({
+        minutos_acumulados: res.minutos_acumulados,
+        pending: res.pending,
+        has_rewards: res.has_rewards,
+        kill_drop_chance: res.kill_drop_chance,
+        kill_drop_chances: res.kill_drop_chances,
+        max_minutes: res.max_minutes,
+        capped: res.capped,
+        combat: res.combat,
+        arma_preferida: res.arma_preferida ?? weapon,
+        route_drink_count: res.route_drink_count,
+      });
+      showGameToast(`${ROUTE_DRINK_LABEL} usado! Baú preenchido com 1h de loot.`, { variant: 'success' });
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível usar o Route Drink.'), { variant: 'error' });
+    } finally {
+      setUsingRouteDrink(false);
     }
   };
 
@@ -203,6 +238,17 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           <AfkRewardGrid pending={meta?.pending} withChest />
 
           <div className="game-afk-modal__footer">
+            {routeDrinkCount > 0 && (
+              <GameButton
+                variant="secondary"
+                className="game-afk-route-drink-btn"
+                size="lg"
+                disabled={!canUseRouteDrink || usingRouteDrink || loading || claiming}
+                onClick={() => void handleUseRouteDrink()}
+              >
+                {usingRouteDrink ? 'Usando...' : `Usar ${ROUTE_DRINK_LABEL}`}
+              </GameButton>
+            )}
             <GameButton
               className={`game-afk-claim-btn${meta?.has_rewards ? ' game-afk-claim-btn--ready' : ''}`}
               size="lg"

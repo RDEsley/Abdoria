@@ -4,7 +4,10 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { awardAbdoriaFromXp } from '../services/economy.js';
 import { claimAfkRewards, afkResponsePayload, hasAfkRewardsToClaim, syncAfkRewards, touchAfkPresence } from '../services/afk.js';
-import { readInventarioSummary, useEnergyDrink, usePatrolCache } from '../services/inventory.js';
+import { readBestiaryResponse } from '../services/bestiario.js';
+import { readInventarioSummary, useEnergyDrink, usePatrolCache, useRouteDrinkInExploration } from '../services/inventory.js';
+import { getItemCount } from '../services/inventory.js';
+import { CURRENCY_NAME, ROUTE_DRINK_ITEM_ID } from '../types/index.js';
 
 export const metaRouter = Router();
 
@@ -21,6 +24,7 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
     await user.save();
     res.json(afkResponsePayload(user, {
       arma_preferida: user.preferencias?.arma_preferida ?? 'arco',
+      route_drink_count: getItemCount(user, ROUTE_DRINK_ITEM_ID),
     }));
   } catch (error) {
     console.error('GET /api/meta/afk error:', error);
@@ -40,10 +44,10 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Nenhuma recompensa AFK para coletar.' });
       return;
     }
-    const claimed = claimAfkRewards(user);
+    const { claimed, overflow_to_dorias } = claimAfkRewards(user);
     awardAbdoriaFromXp(user);
     await user.save();
-    res.json({ user: sanitizeUser(user), claimed });
+    res.json({ user: sanitizeUser(user), claimed, overflow_to_dorias });
   } catch (error) {
     console.error('POST /api/meta/afk/claim error:', error);
     res.status(500).json({ error: 'Erro ao coletar recompensas AFK.' });
@@ -127,6 +131,49 @@ metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/meta/inventory/bau-patrulha error:', error);
     res.status(500).json({ error: 'Erro ao usar Baú da Exploração.' });
+  }
+});
+
+metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    syncAfkRewards(user);
+    const result = useRouteDrinkInExploration(user);
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    await user.save();
+    res.json({
+      user: sanitizeUser(user),
+      hours: result.hours,
+      inventario: readInventarioSummary(user),
+      ...afkResponsePayload(user, {
+        arma_preferida: user.preferencias?.arma_preferida ?? 'arco',
+        route_drink_count: getItemCount(user, ROUTE_DRINK_ITEM_ID),
+      }),
+    });
+  } catch (error) {
+    console.error('POST /api/meta/inventory/route-drink error:', error);
+    res.status(500).json({ error: 'Erro ao usar Route Drink.' });
+  }
+});
+
+metaRouter.get('/bestiary', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    res.json(readBestiaryResponse(user));
+  } catch (error) {
+    console.error('GET /api/meta/bestiary error:', error);
+    res.status(500).json({ error: 'Erro ao carregar bestiário.' });
   }
 });
 

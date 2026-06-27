@@ -4,6 +4,8 @@ import {
   AFK_MAX_MINUTES,
   ENERGY_DRINK_ITEM_ID,
   PATROL_CACHE_HOURS,
+  ROUTE_DRINK_HOURS,
+  ROUTE_DRINK_ITEM_ID,
   type AfkPendingReward,
 } from '../types/index.js';
 import { afkCapReached, afkKillsForHours, buildAfkMetaFields } from '../../../shared/utils/afk.js';
@@ -31,8 +33,12 @@ function ensureAfk(user: UserDocument): {
   return user.afk;
 }
 
-function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): AfkPendingReward {
+function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): {
+  claimed: AfkPendingReward;
+  overflow_to_dorias: number;
+} {
   const claimed = normalizePending(bundle);
+  let overflow_to_dorias = 0;
 
   if (claimed.xp > 0) {
     user.gamificacao.nivel_xp += claimed.xp;
@@ -41,7 +47,12 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): Afk
     grantAbdoria(user, claimed.abdoria);
   }
   if (claimed.energy_drinks > 0) {
-    addInventoryItem(user, ENERGY_DRINK_ITEM_ID, claimed.energy_drinks);
+    const result = addInventoryItem(user, ENERGY_DRINK_ITEM_ID, claimed.energy_drinks);
+    overflow_to_dorias += result.overflow_to_dorias;
+  }
+  if (claimed.route_drinks > 0) {
+    const result = addInventoryItem(user, ROUTE_DRINK_ITEM_ID, claimed.route_drinks);
+    overflow_to_dorias += result.overflow_to_dorias;
   }
   for (const cosmeticId of claimed.cosmetic_ids) {
     if (!user.cosmeticos.desbloqueados.includes(cosmeticId)) {
@@ -52,7 +63,14 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): Afk
     user.cosmeticos.desbloqueados.push(SECRET_TITLE_ID);
   }
 
-  return claimed;
+  return { claimed, overflow_to_dorias };
+}
+
+function simulateKillsIntoPending(user: UserDocument, pending: AfkPendingReward, kills: number): void {
+  ensureCombat(user);
+  for (let i = 0; i < kills; i += 1) {
+    defeatCurrentEnemy(user, pending);
+  }
 }
 
 /** Concede recompensas equivalentes a N horas de Exploração AFK (simula kills + drops). */
@@ -60,16 +78,19 @@ export function grantPatrolCacheRewards(
   user: UserDocument,
   hours = PATROL_CACHE_HOURS,
 ): AfkPendingReward {
-  const kills = afkKillsForHours(hours);
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
+  simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
+  return applyAfkRewardBundle(user, pending).claimed;
+}
 
-  ensureCombat(user);
-
-  for (let i = 0; i < kills; i += 1) {
-    defeatCurrentEnemy(user, pending);
-  }
-
-  return applyAfkRewardBundle(user, pending);
+/** Enche o baú pendente com loot equivalente a N horas (sem aplicar na conta). */
+export function grantRouteDrinkRewardsToPending(
+  user: UserDocument,
+  hours = ROUTE_DRINK_HOURS,
+): AfkPendingReward {
+  const afk = ensureAfk(user);
+  simulateKillsIntoPending(user, afk.pending, afkKillsForHours(hours));
+  return normalizePending(afk.pending);
 }
 
 export function syncAfkRewards(user: UserDocument, now = new Date()) {
@@ -110,18 +131,28 @@ export function syncAfkRewards(user: UserDocument, now = new Date()) {
 
 export function hasAfkRewardsToClaim(afk: { pending?: AfkPendingReward | null } | null | undefined): boolean {
   const p = normalizePending(afk?.pending);
-  return p.xp > 0 || p.abdoria > 0 || p.energy_drinks > 0 || p.cosmetic_ids.length > 0 || p.titulo_secreto;
+  return (
+    p.xp > 0
+    || p.abdoria > 0
+    || p.energy_drinks > 0
+    || p.route_drinks > 0
+    || p.cosmetic_ids.length > 0
+    || p.titulo_secreto
+  );
 }
 
-export function claimAfkRewards(user: UserDocument): AfkPendingReward {
+export function claimAfkRewards(user: UserDocument): {
+  claimed: AfkPendingReward;
+  overflow_to_dorias: number;
+} {
   const afk = ensureAfk(user);
-  const claimed = applyAfkRewardBundle(user, afk.pending);
+  const { claimed, overflow_to_dorias } = applyAfkRewardBundle(user, afk.pending);
 
   afk.pending = { ...EMPTY_AFK_PENDING };
   afk.minutos_acumulados = 0;
   afk.last_seen_at = new Date().toISOString();
 
-  return claimed;
+  return { claimed, overflow_to_dorias };
 }
 
 export function touchAfkPresence(user: UserDocument): void {
@@ -130,7 +161,7 @@ export function touchAfkPresence(user: UserDocument): void {
 
 export function afkResponsePayload(
   user: UserDocument,
-  extra?: { arma_preferida?: string },
+  extra?: { arma_preferida?: string; route_drink_count?: number },
 ) {
   const minutos = user.afk?.minutos_acumulados ?? 0;
   return {

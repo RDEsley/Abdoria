@@ -1,11 +1,11 @@
 import { Coins, Sparkles, Zap } from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
-import { EnergyDrinkIcon } from '@/lib/daily-shop-display';
+import { EnergyDrinkIcon, RouteDrinkIcon } from '@/lib/daily-shop-display';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import { CURRENCY_NAME, type AfkPendingReward, type CosmeticAvatarIcon } from '@/types';
 import { countAfkDropEvents } from '@shared/utils/afk';
 
-export type AfkRewardKind = 'xp' | 'abdoria' | 'drink' | 'cosmetic' | 'secret';
+export type AfkRewardKind = 'xp' | 'abdoria' | 'drink' | 'route_drink' | 'cosmetic' | 'secret';
 
 export interface AfkRewardItem {
   key: string;
@@ -36,6 +36,14 @@ export function buildAfkRewardItems(pending: AfkPendingReward | null | undefined
       kind: 'abdoria',
       amount: pending.abdoria,
       ariaLabel: `${pending.abdoria} ${CURRENCY_NAME}`,
+    });
+  }
+  if (pending.route_drinks > 0) {
+    items.push({
+      key: 'route_drink',
+      kind: 'route_drink',
+      amount: pending.route_drinks,
+      ariaLabel: `${pending.route_drinks} Route Drink${pending.route_drinks === 1 ? '' : 's'}`,
     });
   }
   if (pending.energy_drinks > 0) {
@@ -81,6 +89,7 @@ export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?:
   if (item.kind === 'xp') return <Zap size={size} aria-hidden />;
   if (item.kind === 'abdoria') return <Coins size={size} aria-hidden />;
   if (item.kind === 'drink') return <EnergyDrinkIcon size={size} />;
+  if (item.kind === 'route_drink') return <RouteDrinkIcon size={size} />;
   if (item.cosmeticIcon) {
     return (
       <CosmeticIcon

@@ -1,17 +1,26 @@
 import { Router } from 'express';
-import { Exercise } from '../domain/Exercise.js';
+import { User } from '../domain/User.js';
+import type { AuthRequest } from '../middleware/auth.js';
+import { optionalAuth } from '../middleware/auth.js';
+import { findExercisesForUser } from '../services/exercise-catalog.js';
 import type { MusculoPrincipal, Prioridade } from '../types/index.js';
 
 export const exercisesRouter = Router();
 
-exercisesRouter.get('/', async (req, res) => {
-  try {
-    const filter: Record<string, unknown> = { ativo: true };
+exercisesRouter.use(optionalAuth);
 
+exercisesRouter.get('/', async (req: AuthRequest, res) => {
+  try {
     const { musculo, nivel, prioridade } = req.query;
 
+    const filter: {
+      musculo?: MusculoPrincipal;
+      nivel?: number;
+      prioridade?: Prioridade;
+    } = {};
+
     if (typeof musculo === 'string' && musculo.length > 0) {
-      filter.musculo_principal = musculo as MusculoPrincipal;
+      filter.musculo = musculo as MusculoPrincipal;
     }
 
     if (typeof nivel === 'string' && nivel.length > 0) {
@@ -25,7 +34,13 @@ exercisesRouter.get('/', async (req, res) => {
       filter.prioridade = prioridade as Prioridade;
     }
 
-    const exercises = await Exercise.find(filter, { sort: { prioridade: 1, nome: 1 } });
+    let preferencias = null;
+    if (req.userId) {
+      const user = await User.findById(req.userId);
+      preferencias = user?.preferencias ?? null;
+    }
+
+    const exercises = await findExercisesForUser(preferencias, filter);
     res.json(exercises);
   } catch (error) {
     console.error('GET /api/exercises error:', error);
@@ -33,9 +48,16 @@ exercisesRouter.get('/', async (req, res) => {
   }
 });
 
-exercisesRouter.get('/:slug', async (req, res) => {
+exercisesRouter.get('/:slug', async (req: AuthRequest, res) => {
   try {
-    const exercise = await Exercise.findOne({ slug: req.params.slug, ativo: true });
+    let preferencias = null;
+    if (req.userId) {
+      const user = await User.findById(req.userId);
+      preferencias = user?.preferencias ?? null;
+    }
+
+    const exercises = await findExercisesForUser(preferencias);
+    const exercise = exercises.find((e) => e.slug === req.params.slug);
 
     if (!exercise) {
       res.status(404).json({ error: 'Exercício não encontrado.' });

@@ -12,6 +12,7 @@ function hasAfkRewards(pending: AfkPendingReward): boolean {
     pending.xp > 0
     || pending.abdoria > 0
     || pending.energy_drinks > 0
+    || pending.route_drinks > 0
     || cosmeticIds.length > 0
     || pending.titulo_secreto
   );
@@ -21,6 +22,12 @@ export function AfkFab() {
   const { stats } = useApp();
   const [open, setOpen] = useState(false);
   const autoOpenedRef = useRef(false);
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener('abdoria:open-afk', onOpen);
+    return () => window.removeEventListener('abdoria:open-afk', onOpen);
+  }, []);
 
   const hasRewards = stats?.afk?.has_rewards ?? (stats?.afk ? hasAfkRewards(stats.afk.pending) : false);
 
