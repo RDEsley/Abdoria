@@ -1,4 +1,6 @@
 /** Metadados locais espelhando o catálogo do servidor (ícones e bordas no HUD). */
+import type { CosmeticRarity } from '@/types';
+
 export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: string }> = {
   avatar_inicial: { id: 'avatar_inicial', nome: 'Inicial', icon: 'letter' },
   avatar_portal: { id: 'avatar_portal', nome: 'Portal', icon: 'star' },
@@ -66,4 +68,46 @@ export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: st
   efeito_fogo: { id: 'efeito_fogo', nome: 'Chamas', icon: 'flame' },
   efeito_agua: { id: 'efeito_agua', nome: 'Onda Azul', icon: 'star' },
   efeito_glitch: { id: 'efeito_glitch', nome: 'Quebra de Tela', icon: 'zap' },
+};
+
+export const COSMETIC_DISPLAY: Record<
+  string,
+  { nome: string; descricao: string; icon: string; raridade: CosmeticRarity }
+> = {
+  titulo_secreto: {
+    nome: 'Secret',
+    descricao: 'Um título que ninguém deveria encontrar.',
+    icon: 'moon',
+    raridade: 'secreto',
+  },
+  borda_aurum_slime: {
+    nome: 'Aurum do Slime',
+    descricao: 'Borda pulsante forjada no ouro líquido do Golden Slime.',
+    icon: 'crown',
+    raridade: 'secreto',
+  },
+  fundo_ouro_liquido: {
+    nome: 'Ouro Líquido',
+    descricao: 'Rio de ouro derretido — brilho eterno do Golden Slime.',
+    icon: 'gem',
+    raridade: 'secreto',
+  },
+  titulo_toque_dourado: {
+    nome: 'Toque Dourado',
+    descricao: 'Título animado reservado a quem derrota o Golden Slime.',
+    icon: 'crown',
+    raridade: 'secreto',
+  },
+  titulo_dono_do_jogo: {
+    nome: 'Dono do Jogo',
+    descricao: 'Título lendário raríssimo — brilha em cores fortes.',
+    icon: 'crown',
+    raridade: 'lendario',
+  },
+  fundo_galaxia: {
+    nome: 'Galáxia',
+    descricao: 'Cosmos profundo — oferta especial da loja diária.',
+    icon: 'moon',
+    raridade: 'lendario',
+  },
 };

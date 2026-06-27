@@ -49,7 +49,7 @@ export function ProfileProgressPanel({ profile, stats }: Props) {
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
   const xpDisponivelTrocas = spendableXpForShop(stats.nivel_xp);
   const unlockedAchievements = stats.conquistas.filter((c) => c.desbloqueada).length;
-  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP/exercício · mín. ${XP_DAILY_MIN_EXERCISES} · teto ${stats.xp_diario_limite}/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios enchem o teto`;
+  const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP/exercício · mín. ${XP_DAILY_MIN_EXERCISES} · máx. ${stats.xp_diario_limite}/dia (+${XP_DAILY_CAP_PER_LEVEL}/nível) · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
 
   return (
     <div className="game-profile-progress flex flex-col gap-4">
@@ -118,13 +118,13 @@ export function ProfileProgressPanel({ profile, stats }: Props) {
             value={stats.xp_extra_hoje}
             max={Math.max(stats.xp_extra_hoje, 1)}
             label="XP extra hoje"
-            hint="Streak, conquistas, loja e habilidades — não conta no teto diário"
+            hint="Streak, conquistas, loja e habilidades — não conta no máx. diário"
             variant="extra"
             valueOnly
           />
         </div>
         <p className="mt-3 text-[0.62rem] font-bold leading-relaxed text-stone-500">
-          Bônus de streak, conquistas e loja não entram no teto diário de exercícios.{' '}
+          Bônus de streak, conquistas e loja não entram no máx. diário de exercícios.{' '}
           <Link to="/configuracoes#regras-xp" className="text-emerald-700 underline">
             Ver regras de XP
           </Link>

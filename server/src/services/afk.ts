@@ -2,7 +2,9 @@ import type { UserDocument } from '../domain/User.js';
 import {
   AFK_KILLS_PER_MINUTE,
   AFK_MAX_MINUTES,
+  DORIA_BAG_ITEM_ID,
   ENERGY_DRINK_ITEM_ID,
+  EXP_INSTANT_ITEM_ID,
   PATROL_CACHE_HOURS,
   ROUTE_DRINK_HOURS,
   ROUTE_DRINK_ITEM_ID,
@@ -13,6 +15,8 @@ import { grantAbdoria } from './economy.js';
 import { addInventoryItem } from './inventory.js';
 import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-repository.js';
 import { combatSnapshot, ensureCombat, simulateOfflineKills, defeatCurrentEnemy } from './afk-combat.js';
+import { ensureBestiario } from './bestiario.js';
+import { resolvePatrolArmas, type AfkEnemyId } from '../types/index.js';
 
 const SECRET_TITLE_ID = 'titulo_secreto';
 
@@ -54,6 +58,14 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): {
     const result = addInventoryItem(user, ROUTE_DRINK_ITEM_ID, claimed.route_drinks);
     overflow_to_dorias += result.overflow_to_dorias;
   }
+  if (claimed.exp_instant > 0) {
+    const result = addInventoryItem(user, EXP_INSTANT_ITEM_ID, claimed.exp_instant);
+    overflow_to_dorias += result.overflow_to_dorias;
+  }
+  if (claimed.doria_bags > 0) {
+    const result = addInventoryItem(user, DORIA_BAG_ITEM_ID, claimed.doria_bags);
+    overflow_to_dorias += result.overflow_to_dorias;
+  }
   for (const cosmeticId of claimed.cosmetic_ids) {
     if (!user.cosmeticos.desbloqueados.includes(cosmeticId)) {
       user.cosmeticos.desbloqueados.push(cosmeticId);
@@ -61,6 +73,15 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): {
   }
   if (claimed.titulo_secreto && !user.cosmeticos.desbloqueados.includes(SECRET_TITLE_ID)) {
     user.cosmeticos.desbloqueados.push(SECRET_TITLE_ID);
+  }
+  if (claimed.weapon_ids.length > 0) {
+    const armas = resolvePatrolArmas(user.preferencias.patrol_armas);
+    for (const weaponId of claimed.weapon_ids) {
+      if (!armas.desbloqueados.includes(weaponId)) {
+        armas.desbloqueados.push(weaponId);
+      }
+    }
+    user.preferencias.patrol_armas = armas;
   }
 
   return { claimed, overflow_to_dorias };
@@ -93,13 +114,14 @@ export function grantRouteDrinkRewardsToPending(
   return normalizePending(afk.pending);
 }
 
-export function syncAfkRewards(user: UserDocument, now = new Date()) {
+export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId[] {
+  const before = new Set(ensureBestiario(user));
   const afk = ensureAfk(user);
   const lastSeen = afk.last_seen_at ? new Date(afk.last_seen_at) : now;
 
   if (!afk.last_seen_at) {
     afk.last_seen_at = now.toISOString();
-    return afk;
+    return collectNewBestiaryUnlocks(before, user);
   }
 
   const already = afk.minutos_acumulados ?? 0;
@@ -107,14 +129,14 @@ export function syncAfkRewards(user: UserDocument, now = new Date()) {
   if (already >= AFK_MAX_MINUTES) {
     afk.minutos_acumulados = AFK_MAX_MINUTES;
     afk.last_seen_at = now.toISOString();
-    return afk;
+    return collectNewBestiaryUnlocks(before, user);
   }
 
   const elapsedMs = Math.max(0, now.getTime() - lastSeen.getTime());
   let newMinutes = Math.floor(elapsedMs / 60_000);
   if (newMinutes <= 0) {
     afk.last_seen_at = now.toISOString();
-    return afk;
+    return collectNewBestiaryUnlocks(before, user);
   }
 
   const room = Math.max(0, AFK_MAX_MINUTES - already);
@@ -126,7 +148,11 @@ export function syncAfkRewards(user: UserDocument, now = new Date()) {
 
   afk.minutos_acumulados = totalMinutes;
   afk.last_seen_at = now.toISOString();
-  return afk;
+  return collectNewBestiaryUnlocks(before, user);
+}
+
+function collectNewBestiaryUnlocks(before: Set<AfkEnemyId>, user: UserDocument): AfkEnemyId[] {
+  return ensureBestiario(user).filter((id) => !before.has(id));
 }
 
 export function hasAfkRewardsToClaim(afk: { pending?: AfkPendingReward | null } | null | undefined): boolean {
@@ -136,7 +162,10 @@ export function hasAfkRewardsToClaim(afk: { pending?: AfkPendingReward | null } 
     || p.abdoria > 0
     || p.energy_drinks > 0
     || p.route_drinks > 0
+    || p.exp_instant > 0
+    || p.doria_bags > 0
     || p.cosmetic_ids.length > 0
+    || p.weapon_ids.length > 0
     || p.titulo_secreto
   );
 }
@@ -155,13 +184,14 @@ export function claimAfkRewards(user: UserDocument): {
   return { claimed, overflow_to_dorias };
 }
 
-export function touchAfkPresence(user: UserDocument): void {
-  syncAfkRewards(user);
+export function touchAfkPresence(user: UserDocument): AfkEnemyId[] {
+  return syncAfkRewards(user);
 }
 
 export function afkResponsePayload(
   user: UserDocument,
   extra?: { arma_preferida?: string; route_drink_count?: number },
+  bestiario_novos: AfkEnemyId[] = [],
 ) {
   const minutos = user.afk?.minutos_acumulados ?? 0;
   return {
@@ -169,6 +199,7 @@ export function afkResponsePayload(
     pending: user.afk?.pending ?? { ...EMPTY_AFK_PENDING },
     has_rewards: hasAfkRewardsToClaim(user.afk),
     combat: combatSnapshot(user),
+    bestiario_novos,
     ...buildAfkMetaFields(minutos),
     ...extra,
   };

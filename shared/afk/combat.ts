@@ -41,12 +41,14 @@ export interface AfkCombatSnapshot {
   hero_damage_espada: number;
 }
 
-export const AFK_HERO_DAMAGE_ARCO = 14;
-export const AFK_HERO_DAMAGE_ESPADA = 22;
-export const AFK_CRIT_CHANCE_ESPADA = 5;
-export const AFK_CRIT_CHANCE_ARCO = 20;
+export const AFK_HERO_DAMAGE_ARCO = 10;
+export const AFK_HERO_DAMAGE_ESPADA = 12;
+export const AFK_CRIT_CHANCE_ESPADA = 6;
+export const AFK_CRIT_CHANCE_ARCO = 18;
+export const AFK_CRIT_STREAK_STEP_ARCO = 4;
 export const AFK_CRIT_BONUS_ESPADA = 4;
-export const AFK_CRIT_BONUS_ARCO = 10;
+/** @deprecated Use {@link AFK_CRIT_STREAK_STEP_ARCO} — arcos acumulam +4 por crítico seguido. */
+export const AFK_CRIT_BONUS_ARCO = AFK_CRIT_STREAK_STEP_ARCO;
 /** @deprecated Arcos usam {@link AFK_CRIT_CHANCE_ARCO}. */
 export const AFK_CRIT_CHANCE_ARCO_MULTIPLIER = 1.15;
 
@@ -60,11 +62,18 @@ export function patrolCritChance(kind: PatrolWeaponDamageKind): number {
 }
 
 export function patrolCritBonus(kind: PatrolWeaponDamageKind): number {
-  return kind === 'arco' ? AFK_CRIT_BONUS_ARCO : AFK_CRIT_BONUS_ESPADA;
+  return kind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : AFK_CRIT_BONUS_ESPADA;
 }
 
-export function patrolCritDamage(baseDamage: number, kind: PatrolWeaponDamageKind): number {
-  return baseDamage + patrolCritBonus(kind);
+export function patrolCritDamage(
+  baseDamage: number,
+  kind: PatrolWeaponDamageKind,
+  critStreak = 0,
+): number {
+  if (kind === 'arco') {
+    return baseDamage + AFK_CRIT_STREAK_STEP_ARCO * (critStreak + 1);
+  }
+  return baseDamage + AFK_CRIT_BONUS_ESPADA;
 }
 
 export function formatPatrolCritChancePercent(chance: number): string {
@@ -74,10 +83,12 @@ export function formatPatrolCritChancePercent(chance: number): string {
 export const AFK_KILLS_PER_MINUTE = 8;
 export const AFK_BOSS_INTERVAL = 100;
 export const AFK_ELITE_CHANCE = 12;
-export const AFK_GOLDEN_SLIME_CHANCE = 1000;
-export const AFK_GOLDEN_SLIME_ABDORIA = 10;
+export const AFK_GOLDEN_SLIME_CHANCE = 5000;
+export const AFK_GOLDEN_SLIME_ABDORIA = 99;
 export const AFK_LEGENDARY_ROLL_NORMAL = 9995;
 export const AFK_LEGENDARY_ROLL_BOSS = 9991;
+/** 0,5% por kill de boss — rolagem em /10000 (9950–9999). */
+export const AFK_BOSS_LEGENDARY_WEAPON_ROLL = 9950;
 
 export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
   bat: { id: 'bat', tier: 'common', maxHp: 42, label: 'Slime Morcego' },

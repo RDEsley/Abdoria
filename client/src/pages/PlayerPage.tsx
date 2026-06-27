@@ -387,7 +387,7 @@ export function PlayerPage() {
                   {xpBreakdown.conquistas > 0 && <li>Conquistas (extra) +{xpBreakdown.conquistas}</li>}
                   {xpBreakdown.total_diario > xpBreakdown.aplicado_diario && (
                     <li className="game-victory__breakdown-cap">
-                      Teto diário · +{xpBreakdown.aplicado_diario}/{xpBreakdown.total_diario} de exercícios
+                      Máx. diário · +{xpBreakdown.aplicado_diario}/{xpBreakdown.total_diario} de exercícios
                     </li>
                   )}
                 </ul>

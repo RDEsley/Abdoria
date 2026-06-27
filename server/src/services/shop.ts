@@ -34,12 +34,19 @@ import {
   CURRENCY_NAME,
   ENERGY_DRINK_ITEM_ID,
   ENERGY_DRINK_SHOP_PRICE,
+  EXP_INSTANT_ITEM_ID,
+  EXP_INSTANT_LABEL,
+  EXP_INSTANT_SHOP_PRICE,
+  DORIA_BAG_ITEM_ID,
+  DORIA_BAG_LABEL,
+  DORIA_BAG_SHOP_PRICE,
   ROUTE_DRINK_ITEM_ID,
   ROUTE_DRINK_LABEL,
   ROUTE_DRINK_SHOP_PRICE,
   PATROL_CACHE_ITEM_ID,
   PATROL_CACHE_LABEL,
   PATROL_CACHE_SHOP_PRICE,
+  SHOP_HIDDEN_COSMETIC_IDS,
   DEFAULT_COSMETICOS,
   DAILY_PAID_OFFER_LABELS,
   DAILY_RARITY_LABELS,
@@ -150,6 +157,8 @@ export function syncShopUnlocks(user: UserDoc): void {
 
   for (const item of COSMETICS) {
     if (unlocked.has(item.id)) continue;
+    if ((SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id)) continue;
+    if (item.unlock.tipo === 'afk_secreto' || item.unlock.tipo === 'golden_slime') continue;
     if (isAutoUnlockEligible(item, level, conquistas)) unlocked.add(item.id);
   }
 
@@ -193,6 +202,24 @@ function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 
         ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
         : ' · grátis';
     return `${prefix} · ${rarity} · ${PATROL_CACHE_LABEL} ×${slot.valor}${price}`;
+  }
+
+  if (slot.recompensa_tipo === 'item' && slot.item_id === EXP_INSTANT_ITEM_ID) {
+    const prefix = slot.kind === 'recompensa_diaria' ? 'Recompensa diária' : 'Oferta';
+    const price =
+      slot.kind === 'oferta' && slot.preco_abdoria
+        ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
+        : ' · grátis';
+    return `${prefix} · ${rarity} · ${EXP_INSTANT_LABEL} ×${slot.valor}${price}`;
+  }
+
+  if (slot.recompensa_tipo === 'item' && slot.item_id === DORIA_BAG_ITEM_ID) {
+    const prefix = slot.kind === 'recompensa_diaria' ? 'Recompensa diária' : 'Oferta';
+    const price =
+      slot.kind === 'oferta' && slot.preco_abdoria
+        ? ` · ${slot.preco_abdoria} ${CURRENCY_NAME}`
+        : ' · grátis';
+    return `${prefix} · ${rarity} · ${DORIA_BAG_LABEL} ×${slot.valor}${price}`;
   }
 
   if (slot.kind === 'recompensa_diaria') {
@@ -396,6 +423,134 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
     slots[2].label = buildSlotLabel(slots[2]);
   }
 
+  if (hashDailySeed(`${today}:exp-instant-free`) % 1000 < 35) {
+    slots[0] = {
+      slot: 0,
+      kind: 'recompensa_diaria',
+      recompensa_tipo: 'item',
+      item_id: EXP_INSTANT_ITEM_ID,
+      valor: 1,
+      raridade: 'incomum',
+      preco_abdoria: 0,
+      resgatado: false,
+      label: '',
+    };
+    slots[0].label = buildSlotLabel(slots[0]);
+  }
+
+  if (hashDailySeed(`${today}:exp-instant-paid`) % 100 < 14) {
+    slots[1] = {
+      slot: 1,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: EXP_INSTANT_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: EXP_INSTANT_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: EXP_INSTANT_LABEL,
+      resgatado: false,
+      label: '',
+    };
+    slots[1].label = buildSlotLabel(slots[1]);
+  }
+
+  if (hashDailySeed(`${today}:doria-bag-free`) % 1000 < 28) {
+    slots[0] = {
+      slot: 0,
+      kind: 'recompensa_diaria',
+      recompensa_tipo: 'item',
+      item_id: DORIA_BAG_ITEM_ID,
+      valor: 1,
+      raridade: 'incomum',
+      preco_abdoria: 0,
+      resgatado: false,
+      label: '',
+    };
+    slots[0].label = buildSlotLabel(slots[0]);
+  }
+
+  if (hashDailySeed(`${today}:doria-bag-paid`) % 100 < 11) {
+    slots[2] = {
+      slot: 2,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: DORIA_BAG_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: DORIA_BAG_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: DORIA_BAG_LABEL,
+      resgatado: false,
+      label: '',
+    };
+    slots[2].label = buildSlotLabel(slots[2]);
+  }
+
+  if (hashDailySeed(`${today}:exp-instant-free`) % 1000 < 35) {
+    slots[0] = {
+      slot: 0,
+      kind: 'recompensa_diaria',
+      recompensa_tipo: 'item',
+      item_id: EXP_INSTANT_ITEM_ID,
+      valor: 1,
+      raridade: 'incomum',
+      preco_abdoria: 0,
+      resgatado: false,
+      label: '',
+    };
+    slots[0].label = buildSlotLabel(slots[0]);
+  }
+
+  if (hashDailySeed(`${today}:exp-instant-paid`) % 100 < 14) {
+    slots[1] = {
+      slot: 1,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: EXP_INSTANT_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: EXP_INSTANT_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: EXP_INSTANT_LABEL,
+      resgatado: false,
+      label: '',
+    };
+    slots[1].label = buildSlotLabel(slots[1]);
+  }
+
+  if (hashDailySeed(`${today}:doria-bag-free`) % 1000 < 28) {
+    slots[0] = {
+      slot: 0,
+      kind: 'recompensa_diaria',
+      recompensa_tipo: 'item',
+      item_id: DORIA_BAG_ITEM_ID,
+      valor: 1,
+      raridade: 'incomum',
+      preco_abdoria: 0,
+      resgatado: false,
+      label: '',
+    };
+    slots[0].label = buildSlotLabel(slots[0]);
+  }
+
+  if (hashDailySeed(`${today}:doria-bag-paid`) % 100 < 11) {
+    slots[2] = {
+      slot: 2,
+      kind: 'oferta',
+      recompensa_tipo: 'item',
+      item_id: DORIA_BAG_ITEM_ID,
+      valor: 1,
+      raridade: 'raro',
+      preco_abdoria: DORIA_BAG_SHOP_PRICE,
+      preco_xp: 0,
+      oferta_nome: DORIA_BAG_LABEL,
+      resgatado: false,
+      label: '',
+    };
+    slots[2].label = buildSlotLabel(slots[2]);
+  }
+
   loja.data_reset = today;
   loja.slots.splice(0, loja.slots.length, ...(slots as never[]));
 
@@ -443,7 +598,9 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
   const loja_diaria = syncDailyShop(user);
 
   const byKind = (kind: CosmeticKind) =>
-    COSMETICS.filter((item) => item.kind === kind && item.id !== 'titulo_secreto')
+    COSMETICS.filter(
+      (item) => item.kind === kind && !(SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id),
+    )
       .map((item) => toCatalogItem(item, user));
 
   return {
@@ -574,6 +731,79 @@ function applyDailyReward(user: UserDoc, slot: LojaDiariaSlot): number {
   return 0;
 }
 
+function mapLojaDiariaResponse(lojaDoc: ReturnType<typeof ensureLojaDiaria>): LojaDiaria {
+  return {
+    data_reset: lojaDoc.data_reset,
+    slots: lojaDoc.slots.map((entry) => ({
+      slot: entry.slot,
+      kind: entry.kind,
+      recompensa_tipo: entry.recompensa_tipo,
+      valor: entry.valor,
+      raridade: entry.raridade,
+      preco_abdoria: entry.preco_abdoria,
+      preco_xp: entry.preco_xp,
+      resgatado: entry.resgatado,
+      label: entry.label,
+      oferta_nome: entry.oferta_nome,
+      bonus_xp: entry.bonus_xp,
+      bonus_abdoria: entry.bonus_abdoria,
+      item_id: entry.item_id,
+      cosmetic_id: entry.cosmetic_id,
+    })),
+  };
+}
+
+function snapshotDailySlot(slotDoc: (ReturnType<typeof ensureLojaDiaria>['slots'][number])): LojaDiariaSlot {
+  return {
+    slot: slotDoc.slot,
+    kind: slotDoc.kind,
+    recompensa_tipo: slotDoc.recompensa_tipo,
+    valor: slotDoc.valor,
+    raridade: slotDoc.raridade,
+    preco_abdoria: slotDoc.preco_abdoria,
+    preco_xp: slotDoc.preco_xp,
+    resgatado: slotDoc.resgatado,
+    label: slotDoc.label,
+    oferta_nome: slotDoc.oferta_nome,
+    bonus_xp: slotDoc.bonus_xp,
+    bonus_abdoria: slotDoc.bonus_abdoria,
+    item_id: slotDoc.item_id,
+    cosmetic_id: slotDoc.cosmetic_id,
+  };
+}
+
+/** Resgata todas as recompensas grátis (kind recompensa_diaria) ainda não coletadas hoje. */
+export async function claimFreeDailyShopRewards(userId: string) {
+  const user = await loadUserForShop(userId);
+  if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
+
+  const lojaDoc = ensureLojaDiaria(user);
+  syncDailyShop(user);
+
+  const claimed: LojaDiariaSlot[] = [];
+  let overflow_to_dorias = 0;
+
+  for (const slotDoc of lojaDoc.slots) {
+    if (slotDoc.kind !== 'recompensa_diaria' || slotDoc.resgatado) continue;
+
+    const slotSnapshot = snapshotDailySlot(slotDoc);
+    overflow_to_dorias += applyDailyReward(user, slotSnapshot);
+    slotDoc.resgatado = true;
+    claimed.push({ ...slotSnapshot, resgatado: true });
+  }
+
+  if (claimed.length > 0) {
+    await user.save();
+  }
+
+  return {
+    user,
+    claimed,
+    overflow_to_dorias,
+    loja_diaria: mapLojaDiariaResponse(lojaDoc),
+  };
+}
+
 export async function claimDailyShopSlot(userId: string, slotIndex: number) {
   const user = await loadUserForShop(userId);
   if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
@@ -657,25 +887,7 @@ export async function claimDailyShopSlot(userId: string, slotIndex: number) {
     user,
     slot: { ...slotSnapshot, resgatado: true },
     overflow_to_dorias,
-    loja_diaria: {
-      data_reset: lojaDoc.data_reset,
-      slots: lojaDoc.slots.map((entry) => ({
-        slot: entry.slot,
-        kind: entry.kind,
-        recompensa_tipo: entry.recompensa_tipo,
-        valor: entry.valor,
-        raridade: entry.raridade,
-        preco_abdoria: entry.preco_abdoria,
-        preco_xp: entry.preco_xp,
-        resgatado: entry.resgatado,
-        label: entry.label,
-        oferta_nome: entry.oferta_nome,
-        bonus_xp: entry.bonus_xp,
-        bonus_abdoria: entry.bonus_abdoria,
-        item_id: entry.item_id,
-        cosmetic_id: entry.cosmetic_id,
-      })),
-    },
+    loja_diaria: mapLojaDiariaResponse(lojaDoc),
   };
 }
 

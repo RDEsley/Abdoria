@@ -51,14 +51,14 @@ export function DailyXpCapModal({ open, energyDrinkCount, onContinue, onCancel }
     <div className="game-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="xp-cap-title">
       <div className="game-modal game-modal--wide">
         <h2 id="xp-cap-title" className="game-modal__title flex items-center gap-2">
-          <AlertTriangle size={14} aria-hidden /> Teto diário de XP
+          <AlertTriangle size={14} aria-hidden /> Máx. diário de XP
         </h2>
 
         {hasDrink ? (
           <>
             <p className="game-modal__text">
-              Você já atingiu o teto de XP de exercícios hoje. Use um Energy Drink para ganhar{' '}
-              <strong>+{ENERGY_DRINK_BONUS_XP} XP bônus</strong> que não conta no teto!
+              Você já atingiu o máx. de XP de exercícios hoje. Use um Energy Drink para ganhar{' '}
+              <strong>+{ENERGY_DRINK_BONUS_XP} XP bônus</strong> que não conta no máx. diário!
             </p>
             <div className="game-inventory-item game-inventory-item--compact">
               <div className="game-inventory-item__icon">
@@ -85,7 +85,7 @@ export function DailyXpCapModal({ open, energyDrinkCount, onContinue, onCancel }
         ) : (
           <>
             <p className="game-modal__text">
-              Você já atingiu o teto diário de XP de exercícios. Treinar agora não dará XP de exercícios
+              Você já atingiu o máx. diário de XP de exercícios. Treinar agora não dará XP de exercícios
               (bônus de streak, conquistas e loja ainda funcionam).
             </p>
             <label className="game-inventory-dont-show mt-3 flex cursor-pointer items-center gap-2 text-xs font-bold text-stone-600">

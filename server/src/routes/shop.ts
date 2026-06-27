@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import {
   buildShopResponse,
   claimDailyShopSlot,
+  claimFreeDailyShopRewards,
   equipShopItem,
   loadUserForShop,
   purchaseShopItem,
@@ -105,10 +106,31 @@ shopRouter.post('/daily/claim', async (req: AuthRequest, res) => {
       user: sanitizeUser(result.user),
       slot: result.slot,
       loja_diaria: result.loja_diaria,
+      overflow_to_dorias: result.overflow_to_dorias,
     });
   } catch (error) {
     console.error('POST /api/shop/daily/claim error:', error);
     res.status(500).json({ error: 'Erro ao resgatar oferta diária.' });
+  }
+});
+
+shopRouter.post('/daily/claim-free', async (req: AuthRequest, res) => {
+  try {
+    const result = await claimFreeDailyShopRewards(req.userId!);
+    if ('error' in result) {
+      res.status(result.status ?? 400).json({ error: result.error });
+      return;
+    }
+
+    res.json({
+      user: sanitizeUser(result.user),
+      claimed: result.claimed,
+      loja_diaria: result.loja_diaria,
+      overflow_to_dorias: result.overflow_to_dorias,
+    });
+  } catch (error) {
+    console.error('POST /api/shop/daily/claim-free error:', error);
+    res.status(500).json({ error: 'Erro ao coletar recompensas diárias.' });
   }
 });
 

@@ -510,8 +510,36 @@ export const COSMETICS: CosmeticDefinition[] = [
     nome: 'Secret',
     descricao: 'Um título que ninguém deveria encontrar.',
     icon: 'moon',
-    raridade: 'lendario',
-    unlock: { tipo: 'gratis' },
+    raridade: 'secreto',
+    unlock: { tipo: 'afk_secreto' },
+  },
+
+  {
+    id: 'borda_aurum_slime',
+    kind: 'borda',
+    nome: 'Aurum do Slime',
+    descricao: 'Borda pulsante forjada no ouro líquido do Golden Slime.',
+    icon: 'crown',
+    raridade: 'secreto',
+    unlock: { tipo: 'golden_slime' },
+  },
+  {
+    id: 'fundo_ouro_liquido',
+    kind: 'fundo',
+    nome: 'Ouro Líquido',
+    descricao: 'Rio de ouro derretido — brilho eterno do Golden Slime.',
+    icon: 'gem',
+    raridade: 'secreto',
+    unlock: { tipo: 'golden_slime' },
+  },
+  {
+    id: 'titulo_toque_dourado',
+    kind: 'titulo',
+    nome: 'Toque Dourado',
+    descricao: 'Título animado reservado a quem derrota o Golden Slime.',
+    icon: 'crown',
+    raridade: 'secreto',
+    unlock: { tipo: 'golden_slime' },
   },
 
   {

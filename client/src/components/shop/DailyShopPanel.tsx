@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { Clock, Gift, Sparkles } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { DailyShopRewardReveal } from '@/components/shop/DailyShopRewardReveal';
+import { DailyShopAutoCollectToggle } from '@/components/shop/DailyShopAutoCollectToggle';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
-import { claimDailyShopSlot, getShop } from '@/lib/api';
+import { claimDailyShopSlot, claimFreeDailyShopRewards, getShop, updateMetaPreferences } from '@/lib/api';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import {
   dailyRewardIcon,
@@ -15,6 +16,7 @@ import {
 } from '@/lib/daily-shop-display';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
+import { dispatchDailyShopUpdated, sessionClaimKey } from '@/hooks/useDailyShopAutoClaim';
 import { useMidnightRefresh, useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { formatCountdown } from '@/lib/timezone';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
@@ -60,6 +62,23 @@ export function DailyShopPanel() {
   const [loading, setLoading] = useState(true);
   const [busySlot, setBusySlot] = useState<number | null>(null);
   const [rewardReveal, setRewardReveal] = useState<{ slot: LojaDiariaSlot; message: string } | null>(null);
+  const [autoCollect, setAutoCollect] = useState(
+    () => user?.preferencias?.coletar_loja_diaria_automatico ?? false,
+  );
+  const [savingAutoCollect, setSavingAutoCollect] = useState(false);
+
+  useEffect(() => {
+    setAutoCollect(user?.preferencias?.coletar_loja_diaria_automatico ?? false);
+  }, [user?.preferencias?.coletar_loja_diaria_automatico]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ loja_diaria: { data_reset: string; slots: LojaDiariaSlot[] } }>).detail;
+      if (detail?.loja_diaria) setLoja(detail.loja_diaria);
+    };
+    window.addEventListener('abdoria:daily-shop-updated', handler);
+    return () => window.removeEventListener('abdoria:daily-shop-updated', handler);
+  }, []);
 
   const cosmeticos = useMemo(
     () => resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp),
@@ -102,6 +121,56 @@ export function DailyShopPanel() {
   });
 
   const resetSecondsLeft = useMidnightSecondsLeft();
+
+  const applyFreeClaimResult = useCallback(
+    async (res: Awaited<ReturnType<typeof claimFreeDailyShopRewards>>, opts?: { showReveal?: boolean }) => {
+      applyUser(res.user);
+      setLoja(res.loja_diaria);
+      await refreshApp();
+
+      if (res.claimed.length === 0) return;
+
+      const slot = res.claimed[0]!;
+      const lucky = isLuckyFreeDailyReward(slot);
+      const successMessage = lucky
+        ? (DAILY_LUCK_LABELS[slot.raridade] ?? 'Sorte grande! Recompensa rara resgatada!')
+        : 'Recompensa diária resgatada!';
+
+      if (opts?.showReveal) {
+        setRewardReveal({ slot, message: successMessage });
+      } else {
+        const summary = res.claimed.map((entry) => formatDailyReward(entry)).join(' · ');
+        showGameToast(`Recompensa diária coletada: ${summary}`, { variant: 'success' });
+      }
+
+      const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
+      if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
+    },
+    [applyUser, refreshApp],
+  );
+
+  const handleToggleAutoCollect = async () => {
+    const next = !autoCollect;
+    setSavingAutoCollect(true);
+    try {
+      const updated = await updateMetaPreferences({ coletar_loja_diaria_automatico: next });
+      applyUser(updated);
+      setAutoCollect(next);
+
+      if (next && user?.id) {
+        sessionStorage.removeItem(sessionClaimKey(user.id));
+        const res = await claimFreeDailyShopRewards();
+        sessionStorage.setItem(sessionClaimKey(user.id), '1');
+        dispatchDailyShopUpdated(res);
+        await applyFreeClaimResult(res, { showReveal: true });
+        void load();
+      }
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível salvar a preferência.'), { variant: 'error' });
+    } finally {
+      setSavingAutoCollect(false);
+    }
+  };
 
   const handleClaim = async (slot: LojaDiariaSlot) => {
     setBusySlot(slot.slot);
@@ -151,6 +220,11 @@ export function DailyShopPanel() {
             <p className="mt-1 text-[0.65rem] font-bold leading-relaxed text-stone-500">
               1ª opção grátis · {xpPerAbdoria} XP = 1 {CURRENCY_NAME} · {abdoriaPerXp} {CURRENCY_NAME} = 1 XP
             </p>
+            <DailyShopAutoCollectToggle
+              checked={autoCollect}
+              disabled={savingAutoCollect}
+              onToggle={() => void handleToggleAutoCollect()}
+            />
             {shopMeta && (
               <p className="mt-1 text-[0.65rem] font-bold text-emerald-700">
                 {CURRENCY_NAME}: <strong>{shopMeta.abdoria}</strong> ·{' '}

@@ -38,6 +38,22 @@ export function SwapWorkoutButton({ onClick, disabled = false, className = '' }:
   );
 }
 
+/** Ícone para trocar um exercício da fila por opção similar. */
+export function SwapExerciseButton({ onClick, disabled = false, className = '' }: SwapProps) {
+  return (
+    <button
+      type="button"
+      className={`game-item-card__action-icon game-item-card__action-icon--swap ${className}`.trim()}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label="Trocar exercício"
+      title="Trocar exercício"
+    >
+      <Shuffle size={13} aria-hidden />
+    </button>
+  );
+}
+
 /** Botão de ver demonstração — design original pixel verde. */
 export function ExercisePlayButton({ onClick, className = '' }: PlayProps) {
   return (
@@ -138,13 +154,16 @@ export function PreferenceToggleButtons({
 interface QuickActionsProps {
   onPlay?: () => void;
   onSwapWorkout?: () => void;
+  onSwapExercise?: () => void;
   isPinned?: boolean;
   isBlocked?: boolean;
   onTogglePin?: () => void;
   onToggleBlock?: () => void;
   showPlay?: boolean;
   showSwapWorkout?: boolean;
+  showSwapExercise?: boolean;
   swapWorkoutDisabled?: boolean;
+  swapExerciseDisabled?: boolean;
   showPreferences?: boolean;
   pinAriaLabel?: string;
   blockAriaLabel?: string;
@@ -156,13 +175,16 @@ interface QuickActionsProps {
 export function ExerciseQuickActions({
   onPlay,
   onSwapWorkout,
+  onSwapExercise,
   isPinned = false,
   isBlocked = false,
   onTogglePin,
   onToggleBlock,
   showPlay = false,
   showSwapWorkout = false,
+  showSwapExercise = false,
   swapWorkoutDisabled = false,
+  swapExerciseDisabled = false,
   showPreferences = false,
   pinAriaLabel,
   blockAriaLabel,
@@ -172,6 +194,9 @@ export function ExerciseQuickActions({
   return (
     <div className={`game-exercise-actions ${className}`.trim()}>
       {showPlay && onPlay && <ExercisePlayButton onClick={onPlay} />}
+      {showSwapExercise && onSwapExercise && (
+        <SwapExerciseButton onClick={onSwapExercise} disabled={swapExerciseDisabled} />
+      )}
       {showSwapWorkout && onSwapWorkout && (
         <SwapWorkoutButton onClick={onSwapWorkout} disabled={swapWorkoutDisabled} />
       )}

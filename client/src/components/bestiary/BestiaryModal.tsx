@@ -1,35 +1,117 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
-import { Lock, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { getBestiary, type BestiaryResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
-import { AFK_ENEMIES, XP_DAILY_CAP_PER_BESTIARY } from '@/types';
+import { SlimePortrait } from '@/components/afk/SlimePortrait';
+import type { AfkEnemyId } from '@/types';
+import { XP_DAILY_CAP_PER_BESTIARY } from '@/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-function BestiaryThumb({ enemyId, unlocked }: { enemyId: string; unlocked: boolean }) {
-  if (!unlocked) {
-    return (
-      <div className="game-bestiary-thumb game-bestiary-thumb--locked" aria-hidden>
-        <span className="game-bestiary-thumb__silhouette" />
-        <Lock size={14} className="game-bestiary-thumb__lock" />
-      </div>
-    );
-  }
+function tierLabel(tier: string) {
+  if (tier === 'boss') return 'Chefe';
+  if (tier === 'elite') return 'Elite';
+  return 'Comum';
+}
 
-  const def = AFK_ENEMIES[enemyId as keyof typeof AFK_ENEMIES];
+function BestiarySectionCarousel({
+  category,
+}: {
+  category: BestiaryResponse['categorias'][number];
+}) {
+  const [index, setIndex] = useState(0);
+  const count = category.entries.length;
+  const entry = category.entries[index] ?? category.entries[0];
+
+  useEffect(() => {
+    setIndex(0);
+  }, [category.id]);
+
+  if (!entry) return null;
+
+  const goPrev = () => setIndex((i) => (i - 1 + count) % count);
+  const goNext = () => setIndex((i) => (i + 1) % count);
+
   return (
-    <div
-      className={`game-bestiary-thumb game-bestiary-thumb--unlocked game-afk-enemy game-afk-enemy--${enemyId}${def?.tier === 'boss' ? ' game-afk-enemy--boss' : ''}${def?.tier === 'elite' ? ' game-afk-enemy--elite' : ''}`}
-      aria-hidden
-    >
-      <span className="game-bestiary-thumb__blob" />
-    </div>
+    <section className="game-bestiary-section">
+      <div className="game-bestiary-section__head">
+        <h3 className="game-bestiary-section__title">{category.label}</h3>
+        <span className="game-bestiary-section__counter">
+          {index + 1}/{count}
+        </span>
+      </div>
+
+      <div className="game-bestiary-carousel">
+        <button
+          type="button"
+          className="game-bestiary-carousel__nav game-bestiary-carousel__nav--prev"
+          onClick={goPrev}
+          aria-label="Inimigo anterior"
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        <AnimatePresence mode="wait">
+          <motion.article
+            key={entry.id}
+            className={`game-bestiary-card${entry.desbloqueado ? ' game-bestiary-card--unlocked' : ' game-bestiary-card--locked'}`}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.18 }}
+          >
+            <div className="game-bestiary-card__portrait">
+              <SlimePortrait
+                enemyId={entry.id as AfkEnemyId}
+                locked={!entry.desbloqueado}
+              />
+            </div>
+            <div className="game-bestiary-card__meta">
+              <span className={`game-bestiary-card__tier game-bestiary-card__tier--${entry.tier}`}>
+                {entry.desbloqueado ? tierLabel(entry.tier) : 'Desconhecido'}
+              </span>
+              <h4>{entry.desbloqueado ? entry.label : '???'}</h4>
+              {entry.desbloqueado ? (
+                <p>{entry.max_hp} HP · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário permanente</p>
+              ) : (
+                <p>Derrote na Exploração AFK para revelar este inimigo.</p>
+              )}
+            </div>
+          </motion.article>
+        </AnimatePresence>
+
+        <button
+          type="button"
+          className="game-bestiary-carousel__nav game-bestiary-carousel__nav--next"
+          onClick={goNext}
+          aria-label="Próximo inimigo"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {count > 1 && (
+        <div className="game-bestiary-dots" role="tablist" aria-label={`${category.label} — navegação`}>
+          {category.entries.map((item, dotIndex) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={dotIndex === index}
+              aria-label={item.desbloqueado ? item.label : 'Inimigo bloqueado'}
+              className={`game-bestiary-dots__dot${dotIndex === index ? ' game-bestiary-dots__dot--active' : ''}${item.desbloqueado ? '' : ' game-bestiary-dots__dot--locked'}`}
+              onClick={() => setIndex(dotIndex)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -87,7 +169,7 @@ export function BestiaryModal({ open, onClose }: Props) {
             Bestiário
           </h2>
           <p className="game-modal__text">
-            {unlockedCount}/{total} descobertos · +{XP_DAILY_CAP_PER_BESTIARY} teto diário por inimigo novo
+            {unlockedCount}/{total} descobertos · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário por inimigo novo
             {data ? ` · bônus atual: +${data.bonus_cap_diario} XP/dia` : ''}
           </p>
         </header>
@@ -97,29 +179,7 @@ export function BestiaryModal({ open, onClose }: Props) {
         ) : (
           <div className="game-bestiary-scroll">
             {data?.categorias.map((category) => (
-              <section key={category.id} className="game-bestiary-section">
-                <h3 className="game-bestiary-section__title">{category.label}</h3>
-                <div className="game-bestiary-grid">
-                  {category.entries.map((entry) => (
-                    <article
-                      key={entry.id}
-                      className={`game-bestiary-card${entry.desbloqueado ? ' game-bestiary-card--unlocked' : ' game-bestiary-card--locked'}`}
-                    >
-                      <BestiaryThumb enemyId={entry.id} unlocked={entry.desbloqueado} />
-                      <div className="game-bestiary-card__meta">
-                        <h4>{entry.desbloqueado ? entry.label : '???'}</h4>
-                        {entry.desbloqueado ? (
-                          <p>
-                            {entry.tier === 'boss' ? 'Chefe' : entry.tier === 'elite' ? 'Elite' : 'Comum'} · {entry.max_hp} HP
-                          </p>
-                        ) : (
-                          <p>Derrote na Exploração AFK para revelar.</p>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              <BestiarySectionCarousel key={category.id} category={category} />
             ))}
           </div>
         )}

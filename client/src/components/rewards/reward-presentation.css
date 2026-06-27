@@ -1,0 +1,236 @@
+.reward-secret-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  border: 0;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+}
+
+.reward-secret-rays {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 12deg,
+    rgba(255, 255, 255, 0.14) 12deg 24deg,
+    transparent 24deg 36deg,
+    rgba(255, 255, 255, 0.1) 36deg 48deg,
+    transparent 48deg 360deg
+  );
+  animation: reward-rays-spin 14s linear infinite;
+  pointer-events: none;
+}
+
+.reward-secret-rays--golden {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 10deg,
+    rgba(255, 215, 64, 0.28) 10deg 22deg,
+    transparent 22deg 34deg,
+    rgba(255, 180, 0, 0.22) 34deg 46deg,
+    transparent 46deg 360deg
+  );
+}
+
+@keyframes reward-rays-spin {
+  to { transform: rotate(360deg); }
+}
+
+.reward-secret-card {
+  position: relative;
+  z-index: 1;
+  max-width: 20rem;
+  width: 100%;
+  text-align: center;
+  color: #fafaf9;
+  cursor: default;
+}
+
+.reward-secret-frame {
+  position: relative;
+  width: 9.5rem;
+  height: 9.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 1.25rem;
+  padding: 3px;
+  background: conic-gradient(from 0deg, #fff, #111, #fff, #111, #fff);
+  animation: reward-frame-spin 3s linear infinite;
+}
+
+.reward-secret-frame--golden {
+  background: conic-gradient(from 0deg, #fff7c2, #b8860b, #ffd700, #fff8dc, #c9a227, #fff7c2);
+}
+
+@keyframes reward-frame-spin {
+  to { transform: rotate(360deg); }
+}
+
+.reward-secret-frame__inner {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.1rem;
+  background: radial-gradient(circle at 50% 35%, #292524 0%, #0c0a09 70%);
+  box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+.reward-secret-card--golden .reward-secret-frame__inner {
+  background: radial-gradient(circle at 50% 35%, #422006 0%, #1c1208 70%);
+  box-shadow: inset 0 0 28px rgba(255, 215, 0, 0.2);
+}
+
+.reward-secret-frame__icon {
+  display: inline-flex;
+  color: #fef3c7;
+}
+
+.reward-secret-card__rarity {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fde68a;
+}
+
+.reward-secret-card__title {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.reward-secret-card__desc {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.reward-secret-card__hint {
+  margin-top: 1.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  animation: reward-hint-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes reward-hint-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.reward-summary-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11900;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.reward-summary-card {
+  width: min(100%, 24rem);
+  max-height: min(88vh, 32rem);
+  overflow: auto;
+  border-radius: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(165deg, #fffef9 0%, #f5f5f4 100%);
+  padding: 1.25rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.reward-summary-card__title {
+  font-size: 1rem;
+  font-weight: 900;
+  text-align: center;
+  color: #1c1917;
+}
+
+.reward-summary-grid {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.reward-summary-chip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.85rem;
+  border: 2px solid rgba(28, 25, 23, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.reward-summary-chip__icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.65rem;
+  background: #f5f5f4;
+}
+
+.reward-summary-chip__icon--rainbow {
+  padding: 2px;
+  background: conic-gradient(from 0deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
+  animation: reward-frame-spin 4s linear infinite;
+}
+
+.reward-summary-chip__icon--rainbow > * {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.reward-summary-chip__name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.reward-summary-chip__rarity {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.reward-doria-bag-shake {
+  animation: reward-bag-shake 0.55s ease-in-out;
+}
+
+@keyframes reward-bag-shake {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  20% { transform: rotate(-8deg) translateY(-2px); }
+  40% { transform: rotate(8deg) translateY(1px); }
+  60% { transform: rotate(-5deg) translateY(-1px); }
+  80% { transform: rotate(4deg) translateY(0); }
+}
+
+.reward-doria-coin-pop {
+  position: absolute;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #ca8a04;
+  animation: reward-coin-pop 0.7s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes reward-coin-pop {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-2.2rem) scale(1); }
+}

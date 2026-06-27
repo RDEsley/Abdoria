@@ -220,8 +220,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!detail) return;
       setStats((prev) => {
         if (!prev) return prev;
+        const novos = detail.bestiario_novos ?? [];
+        const mergedBestiary = novos.length
+          ? [...new Set([...(prev.bestiario_desbloqueados ?? []), ...novos])]
+          : prev.bestiario_desbloqueados;
         return {
           ...prev,
+          bestiario_desbloqueados: mergedBestiary,
           afk: {
             ...prev.afk,
             minutos_acumulados: detail.minutos_acumulados,
@@ -381,6 +386,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (result.level_up) {
         window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: result.level_up }));
+      }
+      if (result.new_achievements?.length) {
+        window.dispatchEvent(
+          new CustomEvent('abdoria:achievements-unlocked', { detail: result.new_achievements }),
+        );
       }
 
       const [statsRes, recRes, historyRes] = await Promise.allSettled([

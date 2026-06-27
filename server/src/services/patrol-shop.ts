@@ -1,17 +1,15 @@
 import {
-  AFK_HERO_DAMAGE_ARCO,
-  AFK_HERO_DAMAGE_ESPADA,
+  AFK_CRIT_STREAK_STEP_ARCO,
   CURRENCY_NAME,
   type PatrolArmasState,
   type PatrolShopCatalogItem,
   type PatrolShopResponse,
   type PatrolWeaponDefinition,
   type PatrolWeaponKind,
-  patrolWeaponsByKind,
-  patrolHeroDamage,
   patrolCritChance,
-  patrolCritBonus,
   patrolCritDamage,
+  patrolHeroDamage,
+  patrolWeaponsByKind,
   PATROL_WEAPON_BY_ID,
   PATROL_WEAPON_RARITY_LABELS,
   resolveCosmeticos,
@@ -55,13 +53,13 @@ function toCatalogItem(
     !futuro &&
     def.unlock.tipo === 'moedas' &&
     abdoria >= def.unlock.preco_moedas;
-  const base = def.kind === 'arco' ? AFK_HERO_DAMAGE_ARCO : AFK_HERO_DAMAGE_ESPADA;
-  const dano_total = base + def.dano_bonus;
   const weaponKind = def.kind === 'arco' ? 'arco' : 'espada';
+  const dano_total = patrolHeroDamage(weaponKind, def.id);
 
   return {
     id: def.id,
     kind: def.kind,
+    nivel: def.nivel,
     nome: def.nome,
     descricao: def.descricao,
     raridade: def.raridade,
@@ -71,10 +69,11 @@ function toCatalogItem(
     futuro,
     unlock_label: unlockLabel(def, desbloqueada),
     unlock: def.unlock,
-    dano_bonus: def.dano_bonus,
+    dano_bonus: def.dano_base,
+    dano_base: def.dano_base,
     dano_total,
-    crit_bonus: patrolCritBonus(weaponKind),
-    dano_critico: patrolCritDamage(dano_total, weaponKind),
+    crit_bonus: weaponKind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : 4,
+    dano_critico: patrolCritDamage(dano_total, weaponKind, 0),
     chance_critico: patrolCritChance(weaponKind),
   };
 }

@@ -12,6 +12,7 @@ import {
   resetXpDiarioIfNeeded,
   syncUserGamification,
 } from '../services/gamification.js';
+import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { awardAbdoriaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
 import {
   awardBonusXp,
@@ -25,6 +26,8 @@ import { xpLevelFromTotal } from '../types/index.js';
 import { getDailyXpCapForUser } from '../services/economy.js';
 import { readInventarioSummary } from '../services/inventory.js';
 import { syncAfkRewards } from '../services/afk.js';
+import { normalizeCicloTreinos } from '../../../shared/types/index.js';
+import type { TreinoBase, TreinoTipo } from '../types/index.js';
 import { normalizePending } from '../repositories/user-repository.js';
 
 export const workoutsRouter = Router();
@@ -175,12 +178,15 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
           || pending.energy_drinks > 0
           || pending.route_drinks > 0
           || pending.cosmetic_ids.length > 0
+          || (pending.weapon_ids?.length ?? 0) > 0
           || pending.titulo_secreto,
         ),
       },
       energy_drink_count: inventario.energy_drink,
       route_drink_count: inventario.route_drink,
       patrol_cache_count: inventario.bau_patrulha,
+      exp_instant_count: inventario.exp_instant,
+      doria_bag_count: inventario.doria_bag,
       bestiario_desbloqueados: user.gamificacao.bestiario_desbloqueados ?? [],
       bestiario_bonus_cap: (user.gamificacao.bestiario_desbloqueados ?? []).length,
       conquistas,
@@ -209,6 +215,13 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
 
     if (!treino_nome || !Array.isArray(exercicios) || exercicios.length === 0) {
       res.status(400).json({ error: 'Dados do treino inválidos.' });
+      return;
+    }
+
+    const ciclosAtivos = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
+    const tipoResolvido = (treino_tipo ?? 'custom') as TreinoTipo;
+    if (tipoResolvido !== 'custom' && !ciclosAtivos.includes(tipoResolvido as TreinoBase)) {
+      res.status(400).json({ error: 'Ciclo de treino inválido para este perfil.' });
       return;
     }
 
@@ -262,7 +275,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const history = await WorkoutHistory.create({
       usuario_id: user.id,
       treino_nome,
-      treino_tipo,
+      treino_tipo: tipoResolvido,
       exercicios: resolvedExercises,
       duracao_total_segundos: duracao_total_segundos ?? exercicios.length * 45,
       musculos_estimulados: musculos,
@@ -270,7 +283,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       xp_ganho: 0,
     });
 
-    const rodadaCompleta = await markCycleCompleted(user, treino_tipo);
+    const rodadaCompleta = await markCycleCompleted(user, tipoResolvido);
 
     await syncUserGamification(user.id.toString());
     const updatedUser = await User.findById(user.id);
@@ -318,6 +331,15 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
         : null,
       level_up: levelUp,
       rodada_completa: rodadaCompleta,
+      new_achievements: newAchievements
+        .map((id) => ACHIEVEMENT_BY_ID[id])
+        .filter(Boolean)
+        .map((a) => ({
+          id: a!.id,
+          titulo: a!.titulo,
+          descricao: a!.descricao,
+          icon: a!.icon,
+        })),
     });
   } catch (error) {
     console.error('POST /api/workouts/complete error:', error);

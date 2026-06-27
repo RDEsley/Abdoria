@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
-  patrolCritChance,
-  patrolCritDamage,
   advanceKillsUntilBoss,
   getEnemyMaxHp,
   resolveNextSpawn,
+  resolvePatrolAttackDamage,
+  resolvePatrolBaseDamage,
+  resolvePatrolCritChancePercent,
 } from '@/types';
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
@@ -17,6 +18,7 @@ import { AfkSkyCycle } from '@/components/afk/AfkSkyCycle';
 interface Props {
   userId: string;
   weapon: ArmaPreferida;
+  weaponId: string;
   combat: AfkCombatSnapshot | null;
   hasLoot?: boolean;
   capped?: boolean;
@@ -36,7 +38,7 @@ const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
   hero_damage_espada: 22,
 };
 
-export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBossChange }: Props) {
+export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capped, onBossChange }: Props) {
   const isMobile = useMobileViewport();
   const [attackSeq, setAttackSeq] = useState(0);
   const [attackIsCrit, setAttackIsCrit] = useState(false);
@@ -51,6 +53,7 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
   const [localIsElite, setLocalIsElite] = useState(combat?.elite ?? false);
   const [localEnemyId, setLocalEnemyId] = useState<AfkEnemyId>(combat?.enemy_id ?? 'bat');
   const killsTotalRef = useRef(combat?.kills_total ?? 0);
+  const critStreakRef = useRef(0);
   const localEnemyIdRef = useRef(localEnemyId);
   const localIsBossRef = useRef(localIsBoss);
   const timersRef = useRef<number[]>([]);
@@ -71,7 +74,8 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
     };
   }, [localEnemyId, localIsBoss, localIsElite, localKillsUntilBoss, serverSnapshot]);
 
-  const damage = weapon === 'arco' ? snapshot.hero_damage_arco : snapshot.hero_damage_espada;
+  const critKind = weapon === 'arco' ? 'arco' : 'espada';
+  const damage = resolvePatrolBaseDamage(critKind, weaponId, localEnemyId);
   const attackInterval = weapon === 'arco' ? 1500 : 1900;
   const impactDelay = weapon === 'arco' ? 380 : 200;
   const attacking = phase === 'attack';
@@ -151,19 +155,30 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
     clearTimers();
 
     const runAttack = () => {
-      const critKind = weapon === 'arco' ? 'arco' : 'espada';
-      const isCrit = Math.random() < patrolCritChance(critKind) / 100;
+      const enemyId = localEnemyIdRef.current;
+      const critChance = resolvePatrolCritChancePercent(critKind, weaponId, enemyId);
+      const isCrit = critChance > 0 && Math.random() < critChance / 100;
+      const attack = resolvePatrolAttackDamage({
+        kind: critKind,
+        weaponId,
+        enemyId,
+        critStreak: critStreakRef.current,
+        isCrit,
+      });
+      critStreakRef.current = attack.nextCritStreak;
+
       setAttackIsCrit(isCrit);
       setAttackSeq((n) => n + 1);
       setPhase('attack');
       setEnemyHit(false);
       schedule(() => {
         setEnemyHit(true);
-        const hitDamage = isCrit ? patrolCritDamage(damage, critKind) : damage;
+        const hitDamage = attack.damage;
         pushDamage(hitDamage, isCrit);
         setDisplayHp((hp) => {
-          const next = hp - hitDamage;
+          const next = attack.isHitKill ? 0 : hp - hitDamage;
           if (next <= 0) {
+            critStreakRef.current = 0;
             setDying(true);
             schedule(() => setLooting(true), 120);
             schedule(() => {
@@ -208,6 +223,8 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
     schedule,
     snapshot.enemy_max_hp,
     weapon,
+    weaponId,
+    critKind,
   ]);
 
   useEffect(() => () => clearTimers(), [clearTimers]);

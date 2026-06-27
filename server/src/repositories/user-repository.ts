@@ -18,6 +18,9 @@ const EMPTY_AFK_PENDING: AfkPendingReward = {
   energy_drinks: 0,
   route_drinks: 0,
   cosmetic_ids: [],
+  weapon_ids: [],
+  exp_instant: 0,
+  doria_bags: 0,
   titulo_secreto: false,
   drop_count: 0,
 };
@@ -88,6 +91,9 @@ function normalizePending(raw: unknown): AfkPendingReward {
     energy_drinks: Number(p.energy_drinks ?? 0),
     route_drinks: Number(p.route_drinks ?? 0),
     cosmetic_ids: Array.isArray(p.cosmetic_ids) ? [...p.cosmetic_ids] : [],
+    weapon_ids: Array.isArray(p.weapon_ids) ? [...p.weapon_ids] : [],
+    exp_instant: Math.max(0, Number(p.exp_instant ?? 0)),
+    doria_bags: Math.max(0, Number(p.doria_bags ?? 0)),
     titulo_secreto: Boolean(p.titulo_secreto),
     drop_count: Math.max(0, Number(p.drop_count ?? 0)),
   };
