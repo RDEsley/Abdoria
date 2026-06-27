@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
 import { AfkFab } from '@/components/afk/AfkFab';
+import { PreferenceFeedbackHost } from '@/components/library/PreferenceFeedback';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
 import { GameHud } from '@/components/layout/GameHud';
@@ -69,10 +70,11 @@ export function AppLayout() {
 
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
-  const isDefaultFundo = cosmeticos.fundo_equipado === 'fundo_padrao';
-  const hudShellClass = isDefaultFundo
+  const isLightFundo = cosmeticos.fundo_equipado === 'fundo_padrao' || cosmeticos.fundo_equipado === 'fundo_praia';
+  const hudShellClass = isLightFundo
     ? 'game-hud-shell--default'
     : `game-hud-shell--skinned game-card-fundo--${fundoKey}`;
+  const isHomePage = location.pathname === '/';
 
   return (
     <MidnightRefreshProvider>
@@ -141,7 +143,9 @@ export function AppLayout() {
         <LevelUpOverlay level={levelUpLevel} onDone={() => setLevelUpLevel(null)} />
       )}
 
-      <AfkFab />
+      {isHomePage && <AfkFab />}
+
+      <PreferenceFeedbackHost />
     </div>
     </MidnightRefreshProvider>
   );

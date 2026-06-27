@@ -152,6 +152,7 @@ export function LoginPage() {
             label="Senha"
             name="password"
             type="password"
+            showPasswordToggle
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);

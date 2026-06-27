@@ -48,6 +48,14 @@ function pinnedSlugs(user: UserDocument): string[] {
   return user.preferencias?.exercicios_fixos ?? [];
 }
 
+function pinnedPresetIds(user: UserDocument): string[] {
+  return user.preferencias?.treinos_fixos ?? [];
+}
+
+function blockedPresetIds(user: UserDocument): Set<string> {
+  return new Set(user.preferencias?.treinos_nao_recomendar ?? []);
+}
+
 function resolveNextCiclo(ciclo: TreinoBase[], lastTipo?: string | null): TreinoBase {
   if (!lastTipo || lastTipo === 'custom' || !ciclo.includes(lastTipo as TreinoBase)) {
     return ciclo[0];
@@ -242,6 +250,16 @@ export async function getSuggestedWorkout(
   return recommendWorkout(user, options);
 }
 
+async function resolvePinnedPreset(user: UserDocument, excludePresetId: string | null): Promise<PresetDoc | null> {
+  const blockedPresets = blockedPresetIds(user);
+  for (const presetId of pinnedPresetIds(user)) {
+    if (blockedPresets.has(presetId) || presetId === excludePresetId) continue;
+    const preset = (await WorkoutPreset.findById(presetId)) as PresetDoc | null;
+    if (preset) return preset;
+  }
+  return null;
+}
+
 export async function recommendWorkout(
   user: UserDocument,
   options: RecommendWorkoutOptions = {},
@@ -249,6 +267,12 @@ export async function recommendWorkout(
   const { allowRepeats = false, extraCount = 0, shuffle = false, excludePresetId = null } = options;
   const ciclo = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
   const blocked = blockedSlugs(user);
+  const blockedPresets = blockedPresetIds(user);
+
+  const pinnedPreset = await resolvePinnedPreset(user, excludePresetId);
+  if (pinnedPreset) {
+    return presetToSugerido(pinnedPreset);
+  }
 
   const last = await WorkoutHistory.findOne(
     { usuario_id: user.id },
@@ -259,6 +283,8 @@ export async function recommendWorkout(
   let candidates = shuffle
     ? await presetsForUserCycles(user)
     : await findPresetCandidates(user, nextCiclo);
+
+  candidates = candidates.filter((p) => !blockedPresets.has(p.id));
 
   if (excludePresetId) {
     const filtered = candidates.filter((p) => p.id !== excludePresetId);
@@ -278,7 +304,8 @@ export async function recommendWorkout(
 
   let preset: PresetDoc | null = candidates[0] ?? null;
   if (!preset) {
-    preset = await pickBestPresetForCycle(user, nextCiclo);
+    const fallback = await pickBestPresetForCycle(user, nextCiclo);
+    preset = fallback && !blockedPresets.has(fallback.id) ? fallback : null;
   }
   if (!preset) return null;
 

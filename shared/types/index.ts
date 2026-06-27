@@ -130,6 +130,10 @@ export interface UserPreferencias {
   exercicios_fixos?: string[];
   /** Slugs excluídos das recomendações. */
   exercicios_nao_recomendar?: string[];
+  /** IDs de presets sempre priorizados nas recomendações. */
+  treinos_fixos?: string[];
+  /** IDs de presets excluídos das recomendações. */
+  treinos_nao_recomendar?: string[];
   /** Controle de rodada por ciclo (A, B, C…). */
   ciclos_completados_rodada?: Partial<Record<TreinoBase, boolean>>;
 }
@@ -1071,6 +1075,8 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   ocultar_aviso_xp_diario: false,
   exercicios_fixos: [],
   exercicios_nao_recomendar: [],
+  treinos_fixos: [],
+  treinos_nao_recomendar: [],
   ciclos_completados_rodada: {},
 };
 

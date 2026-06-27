@@ -103,9 +103,9 @@ export function ProfilePage() {
             aria-label="Abrir inventário"
           >
             <Backpack size={20} />
-            {(stats?.energy_drink_count ?? 0) + (stats?.patrol_cache_count ?? 0) > 0 && (
+            {(stats?.energy_drink_count ?? 0) > 0 && (
               <span className="game-inventory-badge">
-                {(stats?.energy_drink_count ?? 0) + (stats?.patrol_cache_count ?? 0)}
+                {stats?.energy_drink_count ?? 0}
               </span>
             )}
           </button>
@@ -128,9 +128,9 @@ export function ProfilePage() {
       <GameButton variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={() => setShowInventory(true)}>
         <Backpack size={18} />
         Ver inventário
-        {(stats?.energy_drink_count ?? 0) + (stats?.patrol_cache_count ?? 0) > 0 && (
+        {(stats?.energy_drink_count ?? 0) > 0 && (
           <span className="game-inventory-badge game-inventory-badge--inline">
-            {(stats?.energy_drink_count ?? 0) + (stats?.patrol_cache_count ?? 0)}
+            {stats?.energy_drink_count ?? 0}
           </span>
         )}
       </GameButton>

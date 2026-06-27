@@ -25,10 +25,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.12rem;
-  min-width: 3.65rem;
-  height: 3.65rem;
-  padding: 0.35rem 0.5rem 0.3rem;
+  gap: 0.08rem;
+  min-width: 3.1rem;
+  height: 3.1rem;
+  padding: 0.28rem 0.42rem 0.24rem;
   border: 2px solid #78716c;
   border-radius: 0.85rem;
   background: linear-gradient(160deg, #f5f0e6 0%, #e8dcc8 55%, #d4c4a8 100%);
@@ -42,8 +42,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.65rem;
-  height: 1.65rem;
+  width: 1.35rem;
+  height: 1.35rem;
   background: rgba(120, 113, 108, 0.12);
   border: 1.5px solid rgba(120, 113, 108, 0.28);
   border-radius: 0.45rem;
@@ -51,12 +51,13 @@
   overflow: visible;
 }
 
-/* FAB — espadas cruzadas; choque a cada 3s */
+/* Espadas cruzadas — FAB e header (estático) */
 .game-afk-fab-swords {
   position: relative;
   display: block;
   width: 1.15rem;
   height: 1.15rem;
+  color: #57534e;
 }
 
 .game-afk-fab-swords__svg {
@@ -75,101 +76,25 @@
 }
 
 .game-afk-fab-swords__sword--left {
-  animation: game-afk-fab-sword-left 3s ease-in-out infinite;
+  transform: rotate(-50deg);
 }
 
 .game-afk-fab-swords__sword--right {
-  animation: game-afk-fab-sword-right 3s ease-in-out infinite;
+  transform: scaleX(-1) rotate(50deg);
 }
 
-@keyframes game-afk-fab-sword-left {
-  0%, 72%, 100% {
-    transform: rotate(-50deg) translate(0, 0);
-  }
-  74% {
-    transform: rotate(-62deg) translate(-0.6px, 0.4px);
-  }
-  77% {
-    transform: rotate(-18deg) translate(0.5px, -0.5px);
-  }
-  80% {
-    transform: rotate(-52deg) translate(0, 0);
-  }
-  83% {
-    transform: rotate(-48deg) translate(0, 0);
-  }
+.game-afk-fab-swords--header {
+  width: 100%;
+  height: 100%;
 }
 
-@keyframes game-afk-fab-sword-right {
-  0%, 72%, 100% {
-    transform: scaleX(-1) rotate(50deg) translate(0, 0);
-  }
-  74% {
-    transform: scaleX(-1) rotate(62deg) translate(-0.6px, 0.4px);
-  }
-  77% {
-    transform: scaleX(-1) rotate(18deg) translate(0.5px, -0.5px);
-  }
-  80% {
-    transform: scaleX(-1) rotate(52deg) translate(0, 0);
-  }
-  83% {
-    transform: scaleX(-1) rotate(48deg) translate(0, 0);
-  }
+.game-afk-fab-swords--header .game-afk-fab-swords__svg {
+  width: 0.92rem;
+  height: 0.92rem;
 }
 
-.game-afk-fab-swords__spark {
-  position: absolute;
-  top: 38%;
-  left: 50%;
-  z-index: 2;
-  width: 0.4rem;
-  height: 0.4rem;
-  margin: -0.2rem 0 0 -0.2rem;
-  border-radius: 999px;
-  background: radial-gradient(circle, #fef9c3 0%, #fbbf24 55%, transparent 70%);
-  opacity: 0;
-  pointer-events: none;
-  animation: game-afk-fab-sword-spark 3s ease-out infinite;
-}
-
-@keyframes game-afk-fab-sword-spark {
-  0%, 75%, 100% {
-    opacity: 0;
-    transform: scale(0.15);
-  }
-  78% {
-    opacity: 1;
-    transform: scale(1.7);
-  }
-  82% {
-    opacity: 0;
-    transform: scale(0.35);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .game-afk-fab-swords__sword--left,
-  .game-afk-fab-swords__sword--right,
-  .game-afk-fab-swords__spark {
-    animation: none !important;
-  }
-
-  .game-afk-fab-swords__sword--left {
-    transform: rotate(-50deg);
-  }
-
-  .game-afk-fab-swords__sword--right {
-    transform: scaleX(-1) rotate(50deg);
-  }
-}
-
-.game-afk-fab__label {
-  font-size: 0.46rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1;
+.game-afk-modal__title-icon .game-afk-fab-swords--header {
+  margin: 0 auto;
 }
 
 .game-afk-fab:hover {
@@ -190,6 +115,14 @@
   .game-afk-fab {
     bottom: 1.5rem;
   }
+}
+
+.game-afk-fab__label {
+  font-size: 0.46rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .game-afk-fab__badge {
@@ -829,21 +762,42 @@
 }
 
 .game-afk-boss-banner {
-  margin: 0.5rem 0 0;
-  padding: 0.45rem 0.65rem;
-  font-size: 0.62rem;
-  font-weight: 800;
-  text-align: center;
-  color: #fef3c7;
-  background: linear-gradient(90deg, #7c2d12, #b45309);
-  border: 2px solid #fbbf24;
-  border-radius: 0.5rem;
-  animation: game-afk-boss-banner-pulse 1.5s ease-in-out infinite;
+  display: none;
 }
 
-@keyframes game-afk-boss-banner-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
-  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.55); }
+.game-afk-scene__boss-callout {
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  z-index: 8;
+  max-width: calc(100% - 1.2rem);
+  padding: 0.32rem 0.65rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  color: #fff7ed;
+  text-shadow: 0 1px 0 rgba(124, 45, 18, 0.55);
+  background: linear-gradient(90deg, rgba(124, 45, 18, 0.92), rgba(180, 83, 9, 0.92));
+  border: 2px solid #fbbf24;
+  border-radius: 0.45rem;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22), 0 0 12px rgba(251, 191, 36, 0.35);
+  transform: translateX(-50%);
+  animation: game-afk-scene-boss-callout 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes game-afk-scene-boss-callout {
+  0%, 100% {
+    opacity: 0.92;
+    transform: translateX(-50%) translateY(0);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22), 0 0 10px rgba(251, 191, 36, 0.28);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-1px);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2), 0 0 16px rgba(251, 191, 36, 0.5);
+  }
 }
 
 /* Mascot hero */
@@ -859,7 +813,7 @@
 }
 
 .game-afk-mascot--idle {
-  animation: game-afk-mascot-breathe 2.2s ease-in-out infinite;
+  animation: game-afk-mascot-breathe 2.4s ease-in-out infinite;
 }
 
 .game-afk-mascot--attack {
@@ -876,7 +830,7 @@
 
 @keyframes game-afk-mascot-breathe {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
+  50% { transform: translateY(-3px); }
 }
 
 .game-afk-mascot__shadow {
@@ -1052,33 +1006,37 @@
 
 .game-afk-mascot__cap {
   position: absolute;
-  top: -0.14rem;
-  left: 0.02rem;
-  width: 1.42rem;
-  height: 0.64rem;
+  top: -0.08rem;
+  left: 50%;
+  width: 1.02rem;
+  height: 0.46rem;
+  margin-left: -0.51rem;
   background: linear-gradient(180deg, #134e4a, #0f766e);
   border: 2px solid var(--afk-ink);
-  border-radius: 0.4rem 0.65rem 0.18rem 0.18rem;
-  transform: rotate(-6deg);
+  border-radius: 0.32rem 0.48rem 0.12rem 0.12rem;
+  transform: rotate(-5deg);
+  transform-origin: center bottom;
 }
 
 .game-afk-mascot__cap::after {
   content: '';
   position: absolute;
-  bottom: -0.14rem;
-  left: -0.18rem;
-  width: 1.9rem;
-  height: 0.28rem;
+  bottom: -0.1rem;
+  left: 50%;
+  width: 1.18rem;
+  height: 0.2rem;
+  margin-left: -0.59rem;
   background: #0f766e;
   border: 2px solid var(--afk-ink);
-  border-radius: 0.14rem;
+  border-radius: 0.1rem;
 }
 
 .game-afk-mascot__cap-badge {
   position: absolute;
-  top: 0.14rem;
-  left: 0.55rem;
-  font-size: 0.48rem;
+  top: 0.1rem;
+  left: 50%;
+  margin-left: -0.1rem;
+  font-size: 0.34rem;
   font-weight: 900;
   color: #fef08a;
   transform: rotate(4deg);
@@ -1086,12 +1044,13 @@
 
 .game-afk-mascot__bow-rig {
   position: absolute;
-  bottom: 1.25rem;
-  right: -1.85rem;
+  bottom: 1.85rem;
+  right: -0.35rem;
   z-index: 4;
-  width: 3rem;
-  height: 2.35rem;
+  width: 1.45rem;
+  height: 1.15rem;
   transform-origin: 26% 50%;
+  opacity: 0.88;
 }
 
 .game-afk-mascot__bow-svg {
@@ -1186,6 +1145,24 @@
   64% { transform: translateX(6.75rem) scaleX(1); opacity: 1; }
   68% { transform: translateX(6.75rem) scaleX(0.55); opacity: 0; visibility: hidden; }
   100% { transform: translateX(6.75rem) scaleX(0.55); opacity: 0; visibility: hidden; }
+}
+
+.game-afk-mascot__sword-rig {
+  position: absolute;
+  bottom: 1.75rem;
+  right: 0.35rem;
+  z-index: 4;
+  transform: rotate(-12deg);
+}
+
+.game-afk-mascot--espada.game-afk-mascot--attack .game-afk-mascot__sword-rig {
+  animation: game-afk-sword-swing-rig 0.48s ease-out;
+}
+
+@keyframes game-afk-sword-swing-rig {
+  0% { transform: rotate(-12deg); }
+  45% { transform: rotate(38deg) translateX(3px); }
+  100% { transform: rotate(-12deg); }
 }
 
 .game-afk-mascot__sword {
@@ -1373,19 +1350,6 @@
 }
 
 .game-afk-slime__shine {
-  position: absolute;
-  top: 14%;
-  right: 20%;
-  left: auto;
-  width: 0.48rem;
-  height: 0.48rem;
-  background: rgba(255, 255, 255, 0.55);
-  border-radius: 999px;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.game-afk-slime__shine--sm {
   display: none;
 }
 
@@ -1394,10 +1358,12 @@
   top: 26%;
   left: 50%;
   z-index: 7;
+  width: 1.55rem;
+  height: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.48rem;
+  gap: 0.38rem;
   transform: translateX(-50%);
 }
 
@@ -1452,12 +1418,11 @@
 }
 
 .game-afk-slime__eye-shine--main {
-  top: 0.14rem;
-  right: 0.1rem;
-  width: 0.2rem;
-  height: 0.2rem;
-  box-shadow: none;
-  opacity: 0.95;
+  display: none;
+}
+
+.game-afk-slime__iris::before {
+  display: none;
 }
 
 /* Eye style variations */
@@ -1526,27 +1491,28 @@
 
 .game-afk-slime__cheek {
   position: absolute;
-  top: 0.68rem;
-  width: 0.46rem;
-  height: 0.28rem;
-  background: rgba(251, 113, 133, 0.5);
+  bottom: 0.06rem;
+  width: 0.3rem;
+  height: 0.16rem;
+  background: rgba(251, 113, 133, 0.42);
   border-radius: 999px;
   z-index: 1;
+  pointer-events: none;
 }
 
 .game-afk-slime__cheek--l {
-  left: -0.28rem;
+  left: 0.08rem;
 }
 
 .game-afk-slime__cheek--r {
-  right: -0.28rem;
+  right: 0.08rem;
 }
 
 .game-afk-slime__face--boss .game-afk-slime__cheek {
-  width: 0.38rem;
-  height: 0.22rem;
-  background: rgba(251, 113, 133, 0.35);
-  top: 0.72rem;
+  width: 0.26rem;
+  height: 0.14rem;
+  background: rgba(251, 113, 133, 0.3);
+  bottom: 0.04rem;
 }
 
 .game-afk-slime__mouth {
@@ -1644,17 +1610,62 @@
 
 .game-afk-slime__wing {
   position: absolute;
-  top: 18%;
-  width: 0.75rem;
-  height: 0.45rem;
-  background: rgba(255, 255, 255, 0.25);
-  border: 2px solid var(--afk-ink);
-  border-radius: 60% 15% 15% 60%;
+  top: 34%;
+  width: 0.62rem;
+  height: 0.4rem;
   z-index: 1;
+  animation: game-afk-wing-flap 2.2s ease-in-out infinite;
 }
 
-.game-afk-slime__wing--l { left: -0.35rem; transform: rotate(-14deg); }
-.game-afk-slime__wing--r { right: -0.35rem; transform: scaleX(-1) rotate(-14deg); }
+.game-afk-slime__wing::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(196, 181, 253, 0.85) 0%, rgba(139, 92, 246, 0.55) 100%);
+  border: 2px solid var(--afk-ink);
+  border-radius: 72% 18% 28% 58%;
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.game-afk-slime__wing::after {
+  content: '';
+  position: absolute;
+  top: 22%;
+  left: 18%;
+  width: 55%;
+  height: 2px;
+  background: rgba(76, 29, 149, 0.45);
+  border-radius: 999px;
+  transform: rotate(-8deg);
+}
+
+.game-afk-slime__wing--l {
+  left: -0.36rem;
+  transform-origin: right center;
+  transform: rotate(-10deg);
+  animation-delay: 0s;
+}
+
+.game-afk-slime__wing--r {
+  right: -0.36rem;
+  transform-origin: left center;
+  transform: scaleX(-1) rotate(-10deg);
+  animation-delay: 0.15s;
+}
+
+@keyframes game-afk-wing-flap {
+  0%, 100% { transform: rotate(-8deg) scaleY(1); }
+  50% { transform: rotate(-16deg) scaleY(0.9); }
+}
+
+.game-afk-slime__wing--r {
+  animation-name: game-afk-wing-flap-r;
+}
+
+@keyframes game-afk-wing-flap-r {
+  0%, 100% { transform: scaleX(-1) rotate(-8deg) scaleY(1); }
+  50% { transform: scaleX(-1) rotate(-16deg) scaleY(0.9); }
+}
 
 .game-afk-slime__horn {
   position: absolute;
@@ -1695,41 +1706,41 @@
 
 .game-afk-slime__helm {
   position: absolute;
-  top: -11%;
+  top: 4%;
   left: 50%;
-  width: 80%;
-  height: 1.05rem;
-  margin-left: -40%;
-  background: linear-gradient(180deg, #d6d3d1 0%, #a8a29e 45%, #78716c 100%);
-  border: 2.5px solid var(--afk-ink);
-  border-radius: 0.5rem 0.5rem 0 0;
+  width: 50%;
+  height: 0.58rem;
+  margin-left: -25%;
+  background: linear-gradient(180deg, #e7e5e4 0%, #a8a29e 50%, #78716c 100%);
+  border: 2px solid var(--afk-ink);
+  border-radius: 0.38rem 0.38rem 0 0;
   z-index: 5;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
 }
 
 .game-afk-slime__helm::before {
   content: '';
   position: absolute;
-  top: 0.28rem;
+  top: 0.22rem;
   left: 50%;
-  width: 42%;
-  height: 0.22rem;
-  margin-left: -21%;
+  width: 48%;
+  height: 0.18rem;
+  margin-left: -24%;
   background: #292524;
   border: 1.5px solid var(--afk-ink);
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 4px 4px;
 }
 
 .game-afk-slime__helm::after {
   content: '';
   position: absolute;
-  bottom: -0.22rem;
-  left: -6%;
-  right: -6%;
-  height: 0.32rem;
+  bottom: -0.16rem;
+  left: -4%;
+  right: -4%;
+  height: 0.22rem;
   background: #57534e;
-  border: 2.5px solid var(--afk-ink);
-  border-radius: 0.16rem;
+  border: 2px solid var(--afk-ink);
+  border-radius: 0.12rem;
 }
 
 .game-afk-slime__helm--knight::before {
@@ -1738,11 +1749,11 @@
 
 .game-afk-slime__cap {
   position: absolute;
-  top: -14%;
+  top: 2%;
   left: 50%;
-  width: 70%;
-  height: 1rem;
-  margin-left: -35%;
+  width: 46%;
+  height: 0.5rem;
+  margin-left: -23%;
   z-index: 5;
   pointer-events: none;
 }
@@ -1752,27 +1763,27 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: 0.72rem;
-  height: 0.72rem;
-  margin-left: -0.36rem;
-  background: linear-gradient(165deg, #f3e8ff 0%, #c084fc 45%, #7e22ce 100%);
+  width: 0.52rem;
+  height: 0.58rem;
+  margin-left: -0.26rem;
+  background: linear-gradient(165deg, #ede9fe 0%, #c084fc 42%, #6d28d9 100%);
   border: 2px solid var(--afk-ink);
-  border-radius: 0.15rem 0.15rem 0 0;
-  clip-path: polygon(8% 100%, 0 4%, 50% 0, 100% 4%, 92% 100%);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+  border-radius: 0.12rem 0.12rem 0 0;
+  clip-path: polygon(10% 100%, 2% 8%, 50% 0, 98% 8%, 90% 100%);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15);
 }
 
 .game-afk-slime__cap::after {
   content: '';
   position: absolute;
-  bottom: 0.04rem;
-  left: -8%;
-  right: -8%;
-  height: 0.24rem;
-  background: linear-gradient(180deg, #fde68a, #f59e0b);
+  bottom: 0.02rem;
+  left: -10%;
+  right: -10%;
+  height: 0.18rem;
+  background: linear-gradient(180deg, #fde68a, #d97706);
   border: 2px solid var(--afk-ink);
   border-radius: 999px;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
 .game-afk-slime__spike {
@@ -1791,11 +1802,11 @@
 
 .game-afk-slime__crown {
   position: absolute;
-  top: -16%;
+  top: 0;
   left: 50%;
-  width: 54%;
-  height: 0.72rem;
-  margin-left: -27%;
+  width: 44%;
+  height: 0.52rem;
+  margin-left: -22%;
   background: linear-gradient(180deg, #fef08a 0%, #fbbf24 40%, #d97706 100%);
   border: 2px solid var(--afk-ink);
   clip-path: polygon(
@@ -1806,10 +1817,10 @@
 }
 
 .game-afk-enemy--boss .game-afk-slime__crown {
-  top: -18%;
-  width: 52%;
-  height: 0.82rem;
-  margin-left: -26%;
+  top: -14%;
+  width: 46%;
+  height: 0.66rem;
+  margin-left: -23%;
 }
 
 .game-afk-slime__crown::after {
@@ -1827,11 +1838,11 @@
 
 .game-afk-slime__hood {
   position: absolute;
-  top: -10%;
+  top: 2%;
   left: 50%;
-  width: 72%;
-  height: 1.05rem;
-  margin-left: -36%;
+  width: 58%;
+  height: 0.72rem;
+  margin-left: -29%;
   background: linear-gradient(180deg, #7c3aed, #6d28d9 45%, #4c1d95);
   border: 2.5px solid var(--afk-ink);
   border-radius: 0.55rem 0.55rem 0 0;
@@ -1852,10 +1863,10 @@
 }
 
 .game-afk-enemy--boss .game-afk-slime__hood {
-  top: -9%;
-  width: 68%;
-  height: 1.12rem;
-  margin-left: -34%;
+  top: -7%;
+  width: 58%;
+  height: 0.9rem;
+  margin-left: -29%;
 }
 
 .game-afk-slime__staff {
@@ -1871,18 +1882,19 @@
 
 .game-afk-slime__mini-head {
   position: absolute;
-  top: -18%;
-  width: 0.55rem;
-  height: 0.5rem;
-  background: inherit;
+  top: 0;
+  width: 0.4rem;
+  height: 0.36rem;
+  background: linear-gradient(165deg, #86efac 0%, #22c55e 55%, #15803d 100%);
   border: 2px solid var(--afk-ink);
   border-radius: 45% 45% 35% 35%;
   z-index: 4;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
 }
 
-.game-afk-slime__mini-head--l { left: 12%; transform: rotate(-10deg); }
-.game-afk-slime__mini-head--c { left: 50%; margin-left: -0.28rem; }
-.game-afk-slime__mini-head--r { right: 12%; transform: rotate(10deg); }
+.game-afk-slime__mini-head--l { left: 10%; transform: rotate(-6deg); }
+.game-afk-slime__mini-head--c { left: 50%; margin-left: -0.2rem; }
+.game-afk-slime__mini-head--r { right: 10%; transform: rotate(6deg); }
 
 .game-afk-enemy--bat .game-afk-slime__blob {
   background: linear-gradient(165deg, #c4b5fd 0%, #a78bfa 40%, #6d28d9 70%, #4c1d95 100%);
@@ -1952,7 +1964,14 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 5;
+}
+
+.game-afk-slime__accessories--back {
+  z-index: 2;
+}
+
+.game-afk-slime__accessories--front {
+  z-index: 8;
 }
 
 .game-afk-slime__acc--hidden {
@@ -1962,10 +1981,14 @@
 
 .game-afk-slime__aura {
   position: absolute;
-  inset: -18%;
-  border: 2px solid rgba(167, 139, 250, 0.65);
-  border-radius: 999px;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.45);
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  height: 86%;
+  margin-left: -50%;
+  border: 2px solid rgba(167, 139, 250, 0.45);
+  border-radius: 56% 56% 48% 48% / 62% 62% 36% 36%;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.28);
   animation: game-afk-slime-aura 1.6s ease-in-out infinite;
   z-index: 0;
 }
@@ -1982,12 +2005,12 @@
 
 .game-afk-slime__glasses {
   position: absolute;
-  top: 30%;
+  top: 0.08rem;
   left: 50%;
-  width: 1.35rem;
-  height: 0.42rem;
-  margin-left: -0.68rem;
-  z-index: 8;
+  width: 1.28rem;
+  height: 0.36rem;
+  margin-left: -0.64rem;
+  z-index: 9;
 }
 
 .game-afk-slime__glasses::before,
@@ -2007,10 +2030,11 @@
 
 .game-afk-slime__leaf {
   position: absolute;
-  top: -6%;
-  left: 62%;
-  width: 0.55rem;
-  height: 0.38rem;
+  top: 8%;
+  left: 50%;
+  width: 0.4rem;
+  height: 0.28rem;
+  margin-left: 0.22rem;
   background: linear-gradient(135deg, #86efac, #16a34a);
   border: 2px solid var(--afk-ink);
   border-radius: 0 70% 0 70%;
@@ -2020,11 +2044,11 @@
 
 .game-afk-slime__beanie {
   position: absolute;
-  top: -12%;
+  top: 0;
   left: 50%;
-  width: 74%;
-  height: 0.55rem;
-  margin-left: -37%;
+  width: 52%;
+  height: 0.4rem;
+  margin-left: -26%;
   background: linear-gradient(180deg, #fca5a5, #ef4444);
   border: 2px solid var(--afk-ink);
   border-radius: 0.45rem 0.45rem 0 0;
@@ -2045,10 +2069,11 @@
 
 .game-afk-slime__flower {
   position: absolute;
-  top: -4%;
-  left: 18%;
-  width: 0.42rem;
-  height: 0.42rem;
+  top: 6%;
+  left: 50%;
+  width: 0.32rem;
+  height: 0.32rem;
+  margin-left: 0.34rem;
   background: radial-gradient(circle, #fda4af 30%, #fb7185 70%);
   border: 2px solid var(--afk-ink);
   border-radius: 999px;
@@ -2721,13 +2746,38 @@
   transition: opacity 0.25s ease, transform 0.35s ease;
 }
 
+.game-afk-chest__count-badge {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.2rem;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+  min-width: 1.35rem;
+  padding: 0.12rem 0.28rem;
+  border: 2px solid #1c1917;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fde68a, #f59e0b);
+  font-size: 0.58rem;
+  font-weight: 900;
+  color: #78350f;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  animation: game-afk-chest-badge-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes game-afk-chest-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
 .game-afk-chest__stock {
   position: absolute;
   z-index: 2;
   right: 0.18rem;
   bottom: 0.2rem;
   left: 0.18rem;
-  display: flex;
+  display: none;
   justify-content: center;
   pointer-events: none;
 }

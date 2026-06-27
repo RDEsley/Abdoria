@@ -36,14 +36,16 @@ function toCatalogItem(
   def: PatrolWeaponDefinition,
   armas: PatrolArmasState,
   abdoria: number,
+  armaPreferida: 'arco' | 'espada',
 ): PatrolShopCatalogItem {
   const desbloqueada = armas.desbloqueados.includes(def.id);
-  const equipada =
+  const slotEquipped =
     def.kind === 'arco'
       ? armas.arco_equipado === def.id
       : def.kind === 'espada'
         ? armas.espada_equipada === def.id
         : false;
+  const equipada = slotEquipped && def.kind === armaPreferida;
   const futuro = def.unlock.tipo === 'futuro';
   const pode_comprar =
     !desbloqueada &&
@@ -73,13 +75,14 @@ export function buildPatrolShopResponse(user: UserDocument): PatrolShopResponse 
   const cosmeticos = resolveCosmeticos(user.cosmeticos, user.gamificacao.nivel_xp);
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const abdoria = readAbdoriaBalance(user);
+  const armaPreferida = user.preferencias?.arma_preferida === 'espada' ? 'espada' : 'arco';
 
   return {
     abdoria,
     armas,
-    arma_preferida: user.preferencias?.arma_preferida === 'espada' ? 'espada' : 'arco',
-    arcos: patrolWeaponsByKind('arco').map((def) => toCatalogItem(def, armas, abdoria)),
-    espadas: patrolWeaponsByKind('espada').map((def) => toCatalogItem(def, armas, abdoria)),
+    arma_preferida: armaPreferida,
+    arcos: patrolWeaponsByKind('arco').map((def) => toCatalogItem(def, armas, abdoria, armaPreferida)),
+    espadas: patrolWeaponsByKind('espada').map((def) => toCatalogItem(def, armas, abdoria, armaPreferida)),
   };
 }
 
@@ -125,7 +128,7 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
 
   return {
     user,
-    item: toCatalogItem(def, armas, cosmeticos.moedas),
+    item: toCatalogItem(def, armas, cosmeticos.moedas, def.kind),
     abdoria_gasta: preco,
   };
 }

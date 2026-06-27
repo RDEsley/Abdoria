@@ -219,6 +219,12 @@ export function AfkCombatScene({ userId, weapon, combat, hasLoot, capped, onBoss
           overlay
         />
 
+        {localIsBoss && (
+          <div className="game-afk-scene__boss-callout" role="status">
+            Luta com Boss! Loot Bônus ao Derrotar!
+          </div>
+        )}
+
         <AfkMascotHero weapon={weapon} attacking={attacking} attackSeq={attackSeq} />
 
         {weapon === 'espada' && attacking && (

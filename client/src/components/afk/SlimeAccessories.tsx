@@ -24,6 +24,24 @@ const KIND_CLASS: Record<SlimeAccessoryKind, string> = {
   flower: 'game-afk-slime__flower',
 };
 
+const BACK_LAYER: ReadonlySet<SlimeAccessoryKind> = new Set([
+  'aura',
+  'wing-l',
+  'wing-r',
+  'bone-a',
+  'bone-b',
+  'scar',
+  'staff',
+]);
+
+export function isBackSlimeAccessory(kind: SlimeAccessoryKind): boolean {
+  return BACK_LAYER.has(kind);
+}
+
+export function isFaceSlimeAccessory(kind: SlimeAccessoryKind): boolean {
+  return kind === 'glasses';
+}
+
 interface AccessoryProps {
   kind: SlimeAccessoryKind;
   hidden?: boolean;
@@ -64,15 +82,22 @@ export function SlimeAccessoryLoot({ kind, driftX, rotation, delayMs }: LootDrop
 export function SlimeAccessoryLayer({
   accessories,
   looting,
+  layer,
 }: {
   accessories: SlimeAccessoryKind[];
   looting: boolean;
+  layer: 'back' | 'front';
 }) {
-  if (accessories.length === 0) return null;
+  const items = accessories.filter((kind) =>
+    layer === 'back' ? isBackSlimeAccessory(kind) : !isBackSlimeAccessory(kind) && !isFaceSlimeAccessory(kind),
+  );
+  if (items.length === 0) return null;
 
   return (
-    <div className={`game-afk-slime__accessories${looting ? ' game-afk-slime__accessories--looting' : ''}`}>
-      {accessories.map((kind) => (
+    <div
+      className={`game-afk-slime__accessories game-afk-slime__accessories--${layer}${looting ? ' game-afk-slime__accessories--looting' : ''}`}
+    >
+      {items.map((kind) => (
         <SlimeAccessoryPart key={kind} kind={kind} hidden={looting} />
       ))}
     </div>

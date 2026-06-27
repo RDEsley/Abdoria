@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bookmark, Check, Play, RefreshCw, Repeat, Settings2, Sparkles, ChevronDown } from 'lucide-react';
+import { Bookmark, Check, Settings2, Sparkles, ChevronDown, Play, Shuffle } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -17,23 +17,35 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { LastWorkoutPanel, workoutHistoryToQueue } from '@/components/builder/LastWorkoutPanel';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
-import { DailyXpCapModal } from '@/components/player/DailyXpCapModal';
 import { RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
 import { SortableExerciseItem } from '@/components/builder/SortableExerciseItem';
+import { SimilarWorkoutModal } from '@/components/builder/SimilarWorkoutModal';
+import { ExercisePicker } from '@/components/builder/ExercisePicker';
+import { BuilderTabs, type BuilderTab } from '@/components/builder/BuilderTabs';
+import { BuilderStickyBar } from '@/components/builder/BuilderStickyBar';
+import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
+import { MuscleTagGroup } from '@/components/builder/MuscleTag';
+import { getPresetPrimaryMuscles } from '@/components/builder/builder-muscles';
+import {
+  filterSimilarPresets,
+  filterSimilarSavedWorkouts,
+  getMuscleProfileFromPreset,
+  getMuscleProfileFromQueue,
+} from '@/components/builder/similar-presets';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
-import { SwipeScroll } from '@/components/ui/SwipeScroll';
+import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
 import { WheelNumberPicker } from '@/components/ui/WheelNumberPicker';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { getRecommendWorkout, getRecommendedPresets } from '@/lib/api';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { getPresets } from '@/lib/api';
+import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
 import type {
   ActiveWorkout,
   IExerciseDocument,
-  IWorkoutHistoryDocument,
   IWorkoutPresetDocument,
   ModoExercicio,
   NivelUsuario,
@@ -51,9 +63,9 @@ import {
   getExerciseParamsForNivel,
   isSavedPresetId,
   normalizeCicloTreinos,
-  savedWorkoutSummary,
   toSavedPresetId,
 } from '@/types';
+
 function presetToQueue(
   preset: IWorkoutPresetDocument,
   exerciseMap: Map<string, IExerciseDocument>,
@@ -108,22 +120,35 @@ export function BuilderPage() {
   const [searchParams] = useSearchParams();
   const presetFromUrl = searchParams.get('preset');
 
-  const [presets, setPresets] = useState<IWorkoutPresetDocument[]>([]);
+  const [activeTab, setActiveTab] = useState<BuilderTab>('train');
+  const [allPresets, setAllPresets] = useState<IWorkoutPresetDocument[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string | 'custom'>('custom');
   const [draftQueue, setDraftQueue] = useState<WorkoutQueueItem[] | null>(null);
-  const [addSlug, setAddSlug] = useState('');
   const [showConfig, setShowConfig] = useState(false);
+  const [showSimilarWorkout, setShowSimilarWorkout] = useState(false);
   const [globalDescanso, setGlobalDescanso] = useState<number>(authUser?.preferencias?.descanso_padrao_seg ?? 30);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [allowRepeats, setAllowRepeats] = useState(false);
-  const [recommendBusy, setRecommendBusy] = useState(false);
-  const [showXpCapModal, setShowXpCapModal] = useState(false);
-  const schemeApplyKeyRef = useRef('');
-  const presetsCarouselRef = useRef<HTMLDivElement>(null);
+  const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
+  const lastAppliedQueueKeyRef = useRef('');
   const lastSyncedSuggestedRef = useRef<string | null>(null);
+
+  const refreshRecommendations = useCallback(() => {
+    void loadRecommendations({ force: true });
+  }, [loadRecommendations]);
+
+  const {
+    fixedExerciseSlugs,
+    blockedExerciseSlugs,
+    fixedWorkoutIds,
+    blockedWorkoutIds,
+    toggleExercisePin,
+    toggleExerciseBlock,
+    toggleWorkoutPin,
+    toggleWorkoutBlock,
+  } = useUserPreferences(refreshRecommendations);
 
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
   const schemes = getRepSchemes(nivel);
@@ -138,13 +163,12 @@ export function BuilderPage() {
     authUser?.preferencias?.ciclos_completados_rodada ??
     {};
 
-  const scrollToPresetCard = useCallback((presetId: string) => {
-    window.requestAnimationFrame(() => {
-      presetsCarouselRef.current
-        ?.querySelector<HTMLElement>(`[data-preset-id="${presetId}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    });
-  }, []);
+  const xpCapReached = useMemo(() => {
+    if (!stats) return false;
+    const canStillEarnExerciseXp =
+      stats.xp_hoje < stats.xp_diario_limite || (stats.xp_bonus_restante ?? 0) > 0;
+    return !canStillEarnExerciseXp;
+  }, [stats]);
 
   useEffect(() => {
     void ensureExercises();
@@ -155,47 +179,40 @@ export function BuilderPage() {
   }, [loadRecommendations]);
 
   useEffect(() => {
-    void getRecommendedPresets()
+    void getPresets()
       .then((list) => {
-        setPresets(list);
+        setAllPresets(list);
         if (presetFromUrl && list.some((p) => p.id === presetFromUrl)) {
           setSelectedPresetId(presetFromUrl);
-          scrollToPresetCard(presetFromUrl);
+          setActiveTab('train');
         }
       })
-      .catch(() => setPresets([]));
+      .catch(() => setAllPresets([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega quando ciclos/nível mudam
-  }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo, scrollToPresetCard]);
+  }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo]);
 
   useEffect(() => {
     if (presetFromUrl) return;
-    if (!suggestedPresetId || !presets.some((p) => p.id === suggestedPresetId)) return;
+    const pinnedId = fixedWorkoutIds.find((id) => allPresets.some((p) => p.id === id));
+    if (!pinnedId) return;
+    if (selectedPresetId === pinnedId) return;
+    lastSyncedSuggestedRef.current = pinnedId;
+    setSelectedPresetId(pinnedId);
+    setDraftQueue(null);
+    setCustomizedIndices(new Set());
+  }, [fixedWorkoutIds, allPresets, presetFromUrl, selectedPresetId]);
+
+  useEffect(() => {
+    if (presetFromUrl) return;
+    if (fixedWorkoutIds.length > 0) return;
+    if (!suggestedPresetId || !allPresets.some((p) => p.id === suggestedPresetId)) return;
     if (lastSyncedSuggestedRef.current === suggestedPresetId) return;
     lastSyncedSuggestedRef.current = suggestedPresetId;
     setSelectedPresetId(suggestedPresetId);
     setDraftQueue(null);
-    scrollToPresetCard(suggestedPresetId);
-  }, [suggestedPresetId, presets, presetFromUrl, scrollToPresetCard]);
-
-  const handleRecommendAnother = useCallback(async () => {
-    setRecommendBusy(true);
-    setSaveMessage(null);
-    try {
-      const treino = await getRecommendWorkout({
-        allowRepeats,
-        shuffle: true,
-        excludePresetId: selectedPresetId !== 'custom' ? selectedPresetId : null,
-      });
-      setDraftQueue(null);
-      lastSyncedSuggestedRef.current = treino.preset_id;
-      setSelectedPresetId(treino.preset_id);
-      scrollToPresetCard(treino.preset_id);
-    } catch {
-      setSaveMessage('Não foi possível sugerir outro treino agora.');
-    } finally {
-      setRecommendBusy(false);
-    }
-  }, [allowRepeats, selectedPresetId, scrollToPresetCard]);
+    setCustomizedIndices(new Set());
+    setActiveTab('train');
+  }, [suggestedPresetId, allPresets, presetFromUrl, fixedWorkoutIds.length]);
 
   useEffect(() => {
     setSelectedSchemeId((current) => {
@@ -209,7 +226,7 @@ export function BuilderPage() {
     [exercises],
   );
 
-  const selectedPreset = presets.find((p) => p.id === selectedPresetId);
+  const selectedPreset = allPresets.find((p) => p.id === selectedPresetId);
   const selectedSavedWorkout = isSavedPresetId(selectedPresetId)
     ? savedWorkouts.find((entry) => entry.id === fromSavedPresetId(selectedPresetId))
     : undefined;
@@ -236,12 +253,19 @@ export function BuilderPage() {
   );
 
   const applyRepScheme = useCallback(
-    (scheme: RepSchemeRecommendation, scope: 'all' | number, sourceQueue?: WorkoutQueueItem[]) => {
+    (
+      scheme: RepSchemeRecommendation,
+      scope: 'all' | number,
+      options?: { force?: boolean; sourceQueue?: WorkoutQueueItem[] },
+    ) => {
       setSelectedSchemeId(scheme.id);
-      const base = sourceQueue ?? draftQueue ?? baseQueue;
+      const base = options?.sourceQueue ?? draftQueue ?? baseQueue;
+      const force = options?.force ?? false;
+
       const next = base.map((item, idx) => {
         if (scope !== 'all' && idx !== scope) return item;
         if (item.modo === 'tempo') return item;
+        if (scope === 'all' && !force && customizedIndices.has(idx)) return item;
         return {
           ...item,
           series: scheme.series,
@@ -249,11 +273,31 @@ export function BuilderPage() {
           modo: 'reps' as ModoExercicio,
         };
       });
+
       setDraftQueue(next);
       if (selectedPresetId === 'custom') setCustomWorkout(next);
+
+      if (scope === 'all' && force) {
+        setCustomizedIndices(new Set());
+      } else if (typeof scope === 'number') {
+        setCustomizedIndices((prev) => new Set(prev).add(scope));
+      }
     },
-    [draftQueue, baseQueue, selectedPresetId, setCustomWorkout],
+    [draftQueue, baseQueue, selectedPresetId, setCustomWorkout, customizedIndices],
   );
+
+  useEffect(() => {
+    if (draftQueue !== null || !selectedSchemeId || baseQueue.length === 0) return;
+
+    const scheme = schemes.find((entry) => entry.id === selectedSchemeId);
+    if (!scheme) return;
+
+    const key = `${selectedPresetId}|${baseQueue.map((item) => item.slug).join('|')}`;
+    if (lastAppliedQueueKeyRef.current === key) return;
+    lastAppliedQueueKeyRef.current = key;
+
+    applyRepScheme(scheme, 'all', { force: true, sourceQueue: baseQueue });
+  }, [selectedPresetId, baseQueue, draftQueue, selectedSchemeId, schemes, applyRepScheme]);
 
   const persistDraftIfCustom = useCallback(
     (next: WorkoutQueueItem[]) => {
@@ -262,53 +306,58 @@ export function BuilderPage() {
     [selectedPresetId, setCustomWorkout],
   );
 
-  useEffect(() => {
-    if (!selectedSchemeId || baseQueue.length === 0) return;
-    const scheme = schemes.find((entry) => entry.id === selectedSchemeId);
-    if (!scheme) return;
-
-    const key = `${selectedSchemeId}|${selectedPresetId}|${baseQueue.map((item) => item.slug).join('|')}`;
-    if (schemeApplyKeyRef.current === key) return;
-    schemeApplyKeyRef.current = key;
-
-    applyRepScheme(scheme, 'all', draftQueue === null ? baseQueue : undefined);
-  }, [selectedSchemeId, selectedPresetId, baseQueue, schemes, draftQueue, applyRepScheme]);
-
   const handleSelectScheme = (scheme: StoredRepScheme) => {
-    schemeApplyKeyRef.current = '';
-    applyRepScheme(scheme, 'all');
+    lastAppliedQueueKeyRef.current = '';
+    applyRepScheme(scheme, 'all', { force: true });
   };
 
   const handleDeleteScheme = (schemeId: string) => {
     const next = removeRepScheme(nivel, schemeId);
     if (selectedSchemeId === schemeId) {
-      schemeApplyKeyRef.current = '';
+      lastAppliedQueueKeyRef.current = '';
       setSelectedSchemeId(next[0]?.id ?? null);
     }
   };
 
   const handleCreateScheme = (scheme: RepSchemeRecommendation) => {
     const next = addRepScheme(nivel, { ...scheme, isCustom: true });
-    schemeApplyKeyRef.current = '';
+    lastAppliedQueueKeyRef.current = '';
     const created = next[0];
     if (created) {
       setSelectedSchemeId(created.id);
-      applyRepScheme(created, 'all');
+      applyRepScheme(created, 'all', { force: true });
     }
   };
 
   const selectPreset = (id: string | 'custom') => {
-    setSelectedPresetId(id);
-    setDraftQueue(null);
-    schemeApplyKeyRef.current = '';
-    setSaveMessage(null);
-
     if (id === 'custom') {
+      setActiveTab('customize');
+      setSelectedPresetId('custom');
+      setDraftQueue(null);
+      setCustomizedIndices(new Set());
+      lastAppliedQueueKeyRef.current = '';
+      setSaveMessage(null);
       scrollToSection(customWorkout.length > 0 ? 'builder-queue' : 'builder-add-exercise');
       return;
     }
 
-    scrollToSection('builder-queue');
+    setActiveTab('train');
+    setSelectedPresetId(id);
+    setDraftQueue(null);
+    setCustomizedIndices(new Set());
+    lastAppliedQueueKeyRef.current = '';
+    setSaveMessage(null);
+    scrollToSection('builder-queue-preview');
+  };
+
+  const handleTabChange = (tab: BuilderTab) => {
+    setActiveTab(tab);
+    if (tab === 'customize' && selectedPresetId !== 'custom') {
+      setSelectedPresetId('custom');
+      setDraftQueue(null);
+      setCustomizedIndices(new Set());
+      lastAppliedQueueKeyRef.current = '';
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -317,15 +366,29 @@ export function BuilderPage() {
     const oldIndex = sortableIds.indexOf(String(active.id));
     const newIndex = sortableIds.indexOf(String(over.id));
     if (oldIndex < 0 || newIndex < 0) return;
+
     const next = arrayMove(activeQueue, oldIndex, newIndex);
     setDraftQueue(next);
     persistDraftIfCustom(next);
+
+    setCustomizedIndices((prev) => {
+      const remapped = new Set<number>();
+      prev.forEach((idx) => {
+        if (idx === oldIndex) remapped.add(newIndex);
+        else if (oldIndex < newIndex && idx > oldIndex && idx <= newIndex) remapped.add(idx - 1);
+        else if (oldIndex > newIndex && idx >= newIndex && idx < oldIndex) remapped.add(idx + 1);
+        else remapped.add(idx);
+      });
+      return remapped;
+    });
   };
 
-  const addExercise = () => {
-    const ex = exerciseMap.get(addSlug);
+  const addExercise = (slug: string) => {
+    const ex = exerciseMap.get(slug);
     if (!ex) return;
     const params = getExerciseParamsForNivel(ex, nivel);
+    const scheme = selectedSchemeId ? schemes.find((s) => s.id === selectedSchemeId) : null;
+
     const item: WorkoutQueueItem = {
       slug: ex.slug,
       nome: ex.nome,
@@ -334,22 +397,40 @@ export function BuilderPage() {
       musculo_principal: ex.musculo_principal,
       tempo_recomendado: params.tempo_seg || ex.tempo_recomendado,
       modo: params.modo,
-      series: 3,
-      repeticoes: params.repeticoes,
+      series: scheme && params.modo !== 'tempo' ? scheme.series : 3,
+      repeticoes: scheme && params.modo !== 'tempo' ? scheme.repeticoes : params.repeticoes,
       tempo_seg: params.tempo_seg,
       descanso_seg: globalDescanso,
     };
+
     const next = [...activeQueue, item];
     setDraftQueue(next);
     persistDraftIfCustom(next);
-    setAddSlug('');
     scrollToSection('builder-queue', 80);
+  };
+
+  const removeExercise = (index: number) => {
+    const next = activeQueue.filter((_, i) => i !== index);
+    setDraftQueue(next);
+    persistDraftIfCustom(next);
+    setCustomizedIndices((prev) => {
+      const updated = new Set<number>();
+      prev.forEach((idx) => {
+        if (idx < index) updated.add(idx);
+        else if (idx > index) updated.add(idx - 1);
+      });
+      return updated;
+    });
   };
 
   const updateQueueItem = (index: number, patch: Partial<WorkoutQueueItem>) => {
     const next = activeQueue.map((item, i) => (i === index ? { ...item, ...patch } : item));
     setDraftQueue(next);
     persistDraftIfCustom(next);
+
+    if ('series' in patch || 'repeticoes' in patch) {
+      setCustomizedIndices((prev) => new Set(prev).add(index));
+    }
   };
 
   const handleSaveWorkout = (nome: string) => {
@@ -370,14 +451,9 @@ export function BuilderPage() {
     saveWorkoutPreset(preset);
     setSelectedPresetId(toSavedPresetId(preset.id));
     setDraftQueue(null);
-    setSaveMessage(existingId ? 'Treino atualizado em Treinos sugeridos.' : 'Treino salvo em Treinos sugeridos.');
-    scrollToSection('builder-presets');
-
-    window.setTimeout(() => {
-      presetsCarouselRef.current
-        ?.querySelector<HTMLElement>(`[data-preset-id="${toSavedPresetId(preset.id)}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }, 280);
+    setCustomizedIndices(new Set());
+    setActiveTab('train');
+    setSaveMessage(existingId ? 'Treino atualizado em Treinos salvos.' : 'Treino salvo em Treinos salvos.');
   };
 
   const proceedToWorkout = () => {
@@ -396,61 +472,73 @@ export function BuilderPage() {
     navigate('/player');
   };
 
-  const startWorkout = () => {
-    if (activeQueue.length === 0) return;
-    if (!stats) {
-      proceedToWorkout();
-      return;
-    }
-    const canStillEarnExerciseXp =
-      stats.xp_hoje < stats.xp_diario_limite || (stats.xp_bonus_restante ?? 0) > 0;
-    if (canStillEarnExerciseXp) {
-      proceedToWorkout();
-      return;
-    }
-    const hasEnergyDrink = (stats.energy_drink_count ?? 0) > 0;
-    const hideWarning = authUser?.preferencias?.ocultar_aviso_xp_diario ?? user?.preferencias?.ocultar_aviso_xp_diario;
-    if (hasEnergyDrink || !hideWarning) {
-      setShowXpCapModal(true);
-      return;
-    }
-    proceedToWorkout();
-  };
-
   useEffect(() => {
     if (!presetFromUrl) return;
-    scrollToSection('builder-queue', 120);
+    scrollToSection('builder-queue-preview', 120);
   }, [presetFromUrl, scrollToSection]);
 
-  const handleRepeatLastWorkout = useCallback(
-    (workout: IWorkoutHistoryDocument) => {
-      const queue = workoutHistoryToQueue(workout.exercicios, exerciseMap, nivel);
-      if (queue.length === 0) return;
-      setDraftQueue(queue);
-      setSelectedPresetId('custom');
-      setSaveMessage(null);
-      scrollToSection('builder-queue', 80);
-    },
-    [exerciseMap, nivel, scrollToSection],
+  const muscleReferenceProfile = useMemo(() => {
+    if (selectedPreset) return getMuscleProfileFromPreset(selectedPreset, exerciseMap);
+    if (activeQueue.length > 0) return getMuscleProfileFromQueue(activeQueue);
+    return new Map();
+  }, [selectedPreset, activeQueue, exerciseMap]);
+
+  const similarPresets = useMemo(
+    () =>
+      filterSimilarPresets(allPresets, muscleReferenceProfile, exerciseMap, {
+        excludeId: selectedPreset?.id ?? null,
+        blockedIds: blockedWorkoutIds,
+      }),
+    [allPresets, muscleReferenceProfile, exerciseMap, selectedPreset?.id, blockedWorkoutIds],
   );
 
-  const showPresetsSection = presets.length > 0 || savedWorkouts.length > 0;
+  const similarSavedWorkouts = useMemo(
+    () =>
+      filterSimilarSavedWorkouts(savedWorkouts, muscleReferenceProfile, {
+        excludeId: selectedSavedWorkout?.id ?? null,
+      }),
+    [savedWorkouts, muscleReferenceProfile, selectedSavedWorkout?.id],
+  );
+
+  const handleSelectSimilarPreset = (presetId: string) => {
+    selectPreset(presetId);
+    setShowSimilarWorkout(false);
+  };
+
+  const handleSelectSimilarSaved = (savedId: string) => {
+    selectPreset(toSavedPresetId(savedId));
+    setShowSimilarWorkout(false);
+  };
+
   const canSaveWorkout = activeQueue.length > 0 && (selectedPresetId === 'custom' || selectedSavedWorkout);
   const saveWorkoutDefaultName = selectedSavedWorkout?.nome ?? 'Meu Treino';
 
+  const estimatedMinutes = useMemo(() => {
+    if (activeQueue.length === 0) return null;
+    const payload: ActiveWorkout = {
+      treino_nome: 'Preview',
+      treino_tipo: 'custom',
+      queue: activeQueue.map((q) => ({ ...q, descanso_seg: q.descanso_seg ?? globalDescanso })),
+      config: { descanso_padrao_seg: globalDescanso },
+    };
+    return Math.max(1, Math.round(estimateWorkoutDurationSeconds(payload) / 60));
+  }, [activeQueue, globalDescanso]);
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-24 md:pb-28">
       <GamePageHeader eyebrow="Escolha ou monte" title="Montar treino" />
 
-      <LastWorkoutPanel exerciseMap={exerciseMap} onRepeat={handleRepeatLastWorkout} />
+      {xpCapReached && <DailyXpCapBanner energyDrinkCount={stats?.energy_drink_count ?? 0} />}
 
-      {showPresetsSection && (
-        <section id="builder-presets">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+      <BuilderTabs active={activeTab} onChange={handleTabChange} />
+
+      {activeTab === 'train' && (
+        <div id="builder-panel-train" role="tabpanel" aria-labelledby="builder-tab-train" className="flex flex-col gap-5">
+          <section id="builder-presets">
+            <div className="mb-2 flex items-center gap-2">
               <Sparkles size={18} className="text-amber-500" />
               <div>
-                <h3 className="game-section-title !mb-0">Treinos sugeridos</h3>
+                <h3 className="game-section-title !mb-0">Treino do dia</h3>
                 <div className="game-builder-cycle-progress mt-1">
                   {cicloTreinos.map((c, i) => {
                     const done = !!rodadaDone[c];
@@ -476,49 +564,23 @@ export function BuilderPage() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className={`game-builder-action ${recommendBusy ? 'game-builder-action--busy' : ''}`}
-                disabled={recommendBusy}
-                onClick={() => void handleRecommendAnother()}
+
+            {suggestedWorkout && suggestedPresetId && selectedPresetId !== suggestedPresetId && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="game-builder-next-banner mb-3"
               >
-                <RefreshCw size={14} className={recommendBusy ? 'animate-spin' : undefined} />
-                Outro
-              </button>
-              <label className={`game-builder-action game-builder-action--toggle ${allowRepeats ? 'game-builder-action--on' : ''}`}>
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={allowRepeats}
-                  onChange={(e) => setAllowRepeats(e.target.checked)}
-                />
-                <Repeat size={14} />
-                Repetir
-              </label>
-            </div>
-          </div>
-          {suggestedWorkout && suggestedPresetId && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`game-builder-next-banner ${
-                selectedPresetId === suggestedPresetId ? 'game-builder-next-banner--active' : ''
-              }`}
-            >
-              <span className="game-builder-next-banner__icon" aria-hidden>
-                <Play size={14} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="game-builder-next-banner__label">Próximo treino</p>
-                <p className="game-builder-next-banner__title">
-                  Ciclo {suggestedWorkout.ciclo_id} —{' '}
-                  {suggestedWorkout.nome.split('—')[1]?.trim() ?? suggestedWorkout.nome}
-                </p>
-              </div>
-              {selectedPresetId === suggestedPresetId ? (
-                <span className="game-builder-next-banner__status">Selecionado</span>
-              ) : (
+                <span className="game-builder-next-banner__icon" aria-hidden>
+                  <Play size={14} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="game-builder-next-banner__label">Recomendado agora</p>
+                  <p className="game-builder-next-banner__title">
+                    Ciclo {suggestedWorkout.ciclo_id} —{' '}
+                    {suggestedWorkout.nome.split('—')[1]?.trim() ?? suggestedWorkout.nome}
+                  </p>
+                </div>
                 <button
                   type="button"
                   className="game-builder-next-banner__action"
@@ -526,131 +588,251 @@ export function BuilderPage() {
                 >
                   Usar
                 </button>
+              </motion.div>
+            )}
+
+            {saveMessage && <p className="game-modal__success mb-2">{saveMessage}</p>}
+
+            {(selectedPreset || selectedSavedWorkout) && (
+              <div className="glass-card rounded-2xl p-4">
+                {selectedPreset && (
+                  <>
+                    <p className="text-[0.65rem] font-bold text-emerald-600">Ciclo {selectedPreset.ciclo_id}</p>
+                    <p className="text-sm font-extrabold text-stone-900">
+                      {selectedPreset.nome.split('—')[1]?.trim() ?? selectedPreset.nome}
+                    </p>
+                    <MuscleTagGroup muscles={getPresetPrimaryMuscles(selectedPreset, exerciseMap)} className="mt-2" />
+                    <p className="mt-2 text-xs font-bold text-stone-600">{selectedPreset.descricao}</p>
+                    <p className="mt-1 text-[0.65rem] font-bold text-stone-500">{presetSummary(selectedPreset)}</p>
+                    <PreferenceToggleButtons
+                      className="mt-3"
+                      isPinned={fixedWorkoutIds.includes(selectedPreset.id)}
+                      isBlocked={blockedWorkoutIds.includes(selectedPreset.id)}
+                      onTogglePin={() => toggleWorkoutPin(selectedPreset.id)}
+                      onToggleBlock={() => toggleWorkoutBlock(selectedPreset.id)}
+                      pinAriaLabel="Sempre recomendar este treino"
+                      blockAriaLabel="Não recomendar este treino"
+                      feedbackKind="workout"
+                    />
+                  </>
+                )}
+                {selectedSavedWorkout && (
+                  <>
+                    <p className="text-[0.65rem] font-bold text-sky-600">Treino salvo</p>
+                    <p className="text-sm font-extrabold text-stone-900">{selectedSavedWorkout.nome}</p>
+                    <p className="mt-2 text-xs font-bold text-stone-600">
+                      {selectedSavedWorkout.queue.length} exercícios personalizados.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-stone-500">
+              Esquemas recomendados ({NIVEL_LABELS[nivel]})
+            </p>
+            <RepSchemeCarousel
+              schemes={schemes}
+              selectedId={selectedSchemeId}
+              nivelLabel={NIVEL_LABELS[nivel]}
+              onSelect={handleSelectScheme}
+              onDelete={handleDeleteScheme}
+              onCreateClick={() => setShowCreateScheme(true)}
+            />
+            <p className="mt-2 text-[0.65rem] font-bold text-stone-400">
+              O esquema define valores iniciais. Você pode ajustar cada exercício individualmente sem perder o vínculo.
+            </p>
+          </section>
+
+          <section id="builder-queue-preview" className="glass-card rounded-2xl p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="game-section-title !mb-0">Fila do treino</h3>
+              {activeQueue.length > 0 && (
+                <button
+                  type="button"
+                  className="game-builder-action"
+                  onClick={() => setShowSimilarWorkout(true)}
+                >
+                  <Shuffle size={14} aria-hidden />
+                  Trocar treino
+                </button>
               )}
-            </motion.div>
-          )}
-          {saveMessage && <p className="game-modal__success mb-2">{saveMessage}</p>}
-          <SwipeScroll
-            ref={presetsCarouselRef}
-            arrows
-            className="game-swipe-scroll--snap game-builder-presets flex max-w-full gap-2 pb-2"
-            prevLabel="Anterior"
-            nextLabel="Próximo"
+            </div>
+            {activeQueue.length === 0 ? (
+              <p className="text-sm text-stone-500">
+                {exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'}
+              </p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+                  <ul className="flex flex-col gap-2">
+                    {activeQueue.map((item, index) => (
+                      <SortableExerciseItem
+                        key={sortableIds[index]}
+                        id={sortableIds[index]}
+                        item={item}
+                        index={index}
+                        exercise={exerciseMap.get(item.slug)}
+                        showPreferences
+                        isPinned={fixedExerciseSlugs.includes(item.slug)}
+                        isBlocked={blockedExerciseSlugs.includes(item.slug)}
+                        onTogglePin={() => toggleExercisePin(item.slug)}
+                        onToggleBlock={() => toggleExerciseBlock(item.slug)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </section>
+        </div>
+      )}
+
+      {activeTab === 'customize' && (
+        <div
+          id="builder-panel-customize"
+          role="tabpanel"
+          aria-labelledby="builder-tab-customize"
+          className="flex flex-col gap-5"
+        >
+          <div className="glass-card rounded-2xl p-4">
+            <h3 className="game-section-title !mb-1">Meu Treino</h3>
+            <p className="text-xs font-semibold text-stone-500">
+              Monte sua fila personalizada: busque exercícios, reordene e ajuste séries/repetições.
+            </p>
+          </div>
+
+          <ExercisePicker exercises={exercises} loading={exercisesLoading} onAdd={addExercise} />
+
+          <button
+            type="button"
+            onClick={() => setShowConfig((s) => !s)}
+            className={`game-disclosure ${showConfig ? 'game-disclosure--open' : ''}`}
+            aria-expanded={showConfig}
+            aria-controls="workout-config-panel"
           >
-            {presets.map((p) => {
-              const isSuggested = p.id === suggestedPresetId;
-              const isSelected = selectedPresetId === p.id;
-              return (
-              <motion.button
-                key={p.id}
-                data-preset-id={p.id}
-                whileTap={{ scale: 0.97 }}
-                type="button"
-                onClick={() => selectPreset(p.id)}
-                className={[
-                  'game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left',
-                  isSelected ? 'game-builder-preset-card--selected game-quest-card' : 'glass-card',
-                  isSuggested ? 'game-builder-preset-card--next' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                aria-current={isSelected ? 'true' : undefined}
-                aria-label={
-                  isSuggested && isSelected
-                    ? `Próximo treino selecionado: Ciclo ${p.ciclo_id}, ${p.nome}`
-                    : isSuggested
-                      ? `Próximo treino: Ciclo ${p.ciclo_id}, ${p.nome}`
-                      : isSelected
-                        ? `Treino selecionado: Ciclo ${p.ciclo_id}, ${p.nome}`
-                        : `Ciclo ${p.ciclo_id}, ${p.nome}`
-                }
-              >
-                {(isSuggested || isSelected) && (
-                  <div className="game-builder-preset-card__badges">
-                    {isSuggested && (
-                      <span className="game-builder-preset-card__badge game-builder-preset-card__badge--next">
-                        Próximo
-                      </span>
-                    )}
-                    {isSelected && !isSuggested && (
-                      <span className="game-builder-preset-card__badge game-builder-preset-card__badge--picked">
-                        Selecionado
-                      </span>
+            <span className="game-disclosure__icon" aria-hidden>
+              <Settings2 size={18} />
+            </span>
+            <span className="game-disclosure__body">
+              <span className="game-disclosure__title">Configurar descanso, séries e repetições</span>
+              <span className="game-disclosure__hint">
+                {showConfig ? 'Toque para recolher' : 'Toque para ajustar descanso, séries e repetições'}
+              </span>
+            </span>
+            <span className={`game-disclosure__badge ${showConfig ? 'game-disclosure__badge--open' : ''}`}>
+              {showConfig ? 'Aberto' : 'Fechado'}
+            </span>
+            <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
+          </button>
+
+          {showConfig && (
+            <div id="workout-config-panel" className="glass-card game-disclosure-panel rounded-2xl p-4">
+              <WheelNumberPicker
+                label="Descanso padrão"
+                value={globalDescanso}
+                min={10}
+                max={90}
+                suffix="s"
+                onChange={setGlobalDescanso}
+              />
+              {activeQueue.map((item, idx) => (
+                <div key={sortableIds[idx]} className="mt-3 border-t border-stone-100 pt-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <span className="text-sm font-bold">{formatExerciseName(item)}</span>
+                      <p className="text-[0.65rem] font-bold text-stone-500">{formatExercisePrescription(item)}</p>
+                    </div>
+                    {item.modo === 'reps' && (
+                      <div className="flex flex-wrap gap-1">
+                        {schemes.map((scheme) => (
+                          <button
+                            key={`${item.slug}-${scheme.id}`}
+                            type="button"
+                            onClick={() => applyRepScheme(scheme, idx)}
+                            className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold ${
+                              selectedSchemeId === scheme.id && !customizedIndices.has(idx)
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-400'
+                            }`}
+                          >
+                            {scheme.label}
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
-                )}
-                <span className="text-[0.6rem] font-bold text-emerald-600">Ciclo {p.ciclo_id}</span>
-                <p className="line-clamp-2 text-[0.7rem] font-bold leading-tight text-stone-900">
-                  {p.nome.split('—')[1]?.trim() ?? p.nome}
-                </p>
-                <p className="mt-1 text-[0.58rem] font-bold text-stone-500">{presetSummary(p)}</p>
-              </motion.button>
-            );
-            })}
-            {savedWorkouts.map((saved) => {
-              const savedId = toSavedPresetId(saved.id);
-              return (
-                <motion.button
-                  key={saved.id}
-                  data-preset-id={savedId}
-                  whileTap={{ scale: 0.97 }}
-                  type="button"
-                  onClick={() => selectPreset(savedId)}
-                  className={`game-builder-preset-card min-w-[112px] max-w-[112px] shrink-0 cursor-pointer p-2 text-left ${
-                    selectedPresetId === savedId
-                      ? 'game-builder-preset-card--selected game-quest-card'
-                      : 'glass-card'
-                  }`}
-                >
-                  <span className="text-[0.6rem] font-bold text-sky-600">Salvo</span>
-                  <p className="line-clamp-2 text-[0.7rem] font-bold leading-tight text-stone-900">{saved.nome}</p>
-                  <p className="mt-1 text-[0.58rem] font-bold text-stone-500">{savedWorkoutSummary(saved)}</p>
-                </motion.button>
-              );
-            })}
-            <button
-              type="button"
-              data-preset-id="custom"
-              onClick={() => selectPreset('custom')}
-              className={`min-w-[120px] shrink-0 cursor-pointer rounded-2xl border-2 p-3 font-bold ${
-                selectedPresetId === 'custom' ? 'border-emerald-400 bg-emerald-50/90' : 'glass-card border-white/50'
-              }`}
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    <WheelNumberPicker
+                      label="Séries"
+                      value={item.series}
+                      min={1}
+                      max={10}
+                      onChange={(series) => updateQueueItem(idx, { series })}
+                    />
+                    <WheelNumberPicker
+                      label="Repetições"
+                      value={item.repeticoes ?? 12}
+                      min={1}
+                      max={50}
+                      disabled={item.modo === 'tempo'}
+                      placeholder="Por tempo"
+                      onChange={(repeticoes) => updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })}
+                    />
+                    <WheelNumberPicker
+                      label="Descanso (s)"
+                      value={item.descanso_seg ?? globalDescanso}
+                      min={5}
+                      max={90}
+                      suffix="s"
+                      onChange={(descanso_seg) => updateQueueItem(idx, { descanso_seg })}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <section id="builder-queue" className="glass-card rounded-2xl p-4">
+            <h3 className="game-section-title">Ordem dos exercícios</h3>
+            {activeQueue.length === 0 ? (
+              <p className="text-sm text-stone-500">
+                {exercisesLoading ? 'Carregando...' : 'Adicione exercícios da biblioteca acima.'}
+              </p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+                  <ul className="flex flex-col gap-2">
+                    {activeQueue.map((item, index) => (
+                      <SortableExerciseItem
+                        key={sortableIds[index]}
+                        id={sortableIds[index]}
+                        item={item}
+                        index={index}
+                        exercise={exerciseMap.get(item.slug)}
+                        onRemove={() => removeExercise(index)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </section>
+
+          {canSaveWorkout && (
+            <GameButton
+              variant="secondary"
+              className="flex w-full items-center justify-center gap-2"
+              onClick={() => setShowSaveWorkout(true)}
             >
-              Meu Treino
-            </button>
-          </SwipeScroll>
-        </section>
-      )}
-
-      {selectedPreset && (
-        <div className="glass-card rounded-2xl p-3 text-xs font-bold text-stone-600">
-          {selectedPreset.descricao}
+              <Bookmark size={18} />
+              {selectedSavedWorkout ? 'Atualizar treino salvo' : 'Salvar treino'}
+            </GameButton>
+          )}
         </div>
       )}
-
-      {selectedSavedWorkout && (
-        <div className="glass-card rounded-2xl p-3 text-xs font-bold text-stone-600">
-          Treino personalizado com {selectedSavedWorkout.queue.length} exercícios. Você pode iniciar agora ou salvar
-          novamente após ajustes.
-        </div>
-      )}
-
-      <section>
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-stone-500">
-          Esquemas recomendados ({NIVEL_LABELS[nivel]})
-        </p>
-        <RepSchemeCarousel
-          schemes={schemes}
-          selectedId={selectedSchemeId}
-          nivelLabel={NIVEL_LABELS[nivel]}
-          onSelect={handleSelectScheme}
-          onDelete={handleDeleteScheme}
-          onCreateClick={() => setShowCreateScheme(true)}
-        />
-        <p className="mt-2 text-[0.65rem] font-bold text-stone-400">
-          O esquema selecionado aplica repetições × séries em todos os exercícios por contagem.
-        </p>
-      </section>
 
       <CreateSchemeModal
         open={showCreateScheme}
@@ -665,150 +847,27 @@ export function BuilderPage() {
         onClose={() => setShowSaveWorkout(false)}
         onSave={handleSaveWorkout}
       />
-      <button
-        type="button"
-        onClick={() => setShowConfig((s) => !s)}
-        className={`game-disclosure ${showConfig ? 'game-disclosure--open' : ''}`}
-        aria-expanded={showConfig}
-        aria-controls="workout-config-panel"
-      >
-        <span className="game-disclosure__icon" aria-hidden>
-          <Settings2 size={18} />
-        </span>
-        <span className="game-disclosure__body">
-          <span className="game-disclosure__title">Configurar descanso, séries e repetições</span>
-          <span className="game-disclosure__hint">
-            {showConfig ? 'Toque para recolher' : 'Toque para ajustar descanso, séries e repetições'}
-          </span>
-        </span>
-        <span className={`game-disclosure__badge ${showConfig ? 'game-disclosure__badge--open' : ''}`}>
-          {showConfig ? 'Aberto' : 'Fechado'}
-        </span>
-        <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
-      </button>
 
-      {showConfig && (
-        <div id="workout-config-panel" className="glass-card game-disclosure-panel rounded-2xl p-4">
-          <WheelNumberPicker
-            label="Descanso padrão"
-            value={globalDescanso}
-            min={10}
-            max={90}
-            suffix="s"
-            onChange={setGlobalDescanso}
-          />
-          {activeQueue.map((item, idx) => (
-            <div key={sortableIds[idx]} className="mt-3 border-t border-stone-100 pt-3">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <span className="text-sm font-bold">{formatExerciseName(item)}</span>
-                  <p className="text-[0.65rem] font-bold text-stone-500">{formatExercisePrescription(item)}</p>
-                </div>
-                {item.modo === 'reps' && (
-                  <div className="flex flex-wrap gap-1">
-                    {schemes.map((scheme) => (
-                      <button
-                        key={`${item.slug}-${scheme.id}`}
-                        type="button"
-                        onClick={() => applyRepScheme(scheme, idx)}
-                        className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold ${
-                          selectedSchemeId === scheme.id
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                            : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-400'
-                        }`}
-                      >
-                        {scheme.label}
-                      </button>
-                    ))}                  </div>
-                )}
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <WheelNumberPicker
-                  label="Séries"
-                  value={item.series}
-                  min={1}
-                  max={10}
-                  onChange={(series) => updateQueueItem(idx, { series })}
-                />
-                <WheelNumberPicker
-                  label="Repetições"
-                  value={item.repeticoes ?? 12}
-                  min={1}
-                  max={50}
-                  disabled={item.modo === 'tempo'}
-                  placeholder="Por tempo"
-                  onChange={(repeticoes) => updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })}
-                />
-                <WheelNumberPicker
-                  label="Descanso (s)"
-                  value={item.descanso_seg ?? globalDescanso}
-                  min={5}
-                  max={90}
-                  suffix="s"
-                  onChange={(descanso_seg) => updateQueueItem(idx, { descanso_seg })}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <SimilarWorkoutModal
+        open={showSimilarWorkout}
+        onClose={() => setShowSimilarWorkout(false)}
+        similarPresets={similarPresets}
+        similarSaved={similarSavedWorkouts}
+        exerciseMap={exerciseMap}
+        currentSelectionId={selectedPresetId}
+        fixedWorkoutIds={fixedWorkoutIds}
+        blockedWorkoutIds={blockedWorkoutIds}
+        onSelectPreset={handleSelectSimilarPreset}
+        onSelectSaved={handleSelectSimilarSaved}
+        onToggleWorkoutPin={toggleWorkoutPin}
+        onToggleWorkoutBlock={toggleWorkoutBlock}
+      />
 
-      <section id="builder-queue" className="glass-card rounded-2xl p-4">
-        {activeQueue.length === 0 ? (
-          <p className="text-sm text-stone-500">
-            {exercisesLoading ? 'Carregando...' : 'Escolha um treino sugerido acima ou adicione exercícios ao seu treino.'}
-          </p>
-        ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-              <ul className="flex flex-col gap-2">
-                {activeQueue.map((item, index) => (
-                  <SortableExerciseItem key={sortableIds[index]} id={sortableIds[index]} item={item} index={index} />
-                ))}
-              </ul>
-            </SortableContext>
-          </DndContext>
-        )}
-      </section>
-
-      {selectedPresetId === 'custom' && (
-        <div id="builder-add-exercise" className="flex flex-col gap-3">
-          <div className="flex gap-2">
-            <select value={addSlug} onChange={(e) => setAddSlug(e.target.value)} className="flex-1 cursor-pointer rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-medium">
-              <option value="">Adicionar exercício...</option>
-              {exercises.map((e) => (
-                <option key={e.slug} value={e.slug}>{formatExerciseName(e)}</option>
-              ))}
-            </select>
-            <GameButton variant="secondary" onClick={addExercise} disabled={!addSlug}>+</GameButton>
-          </div>
-        </div>
-      )}
-
-      {canSaveWorkout && (
-        <GameButton
-          variant="secondary"
-          className="flex w-full items-center justify-center gap-2"
-          onClick={() => setShowSaveWorkout(true)}
-        >
-          <Bookmark size={18} />
-          {selectedSavedWorkout ? 'Atualizar treino salvo' : 'Salvar treino'}
-        </GameButton>
-      )}
-
-      <GameButton size="lg" className="flex w-full items-center justify-center gap-2" onClick={startWorkout} disabled={activeQueue.length === 0}>
-        <Play size={22} fill="currentColor" />
-        Iniciar Treino ({activeQueue.length})
-      </GameButton>
-
-      <DailyXpCapModal
-        open={showXpCapModal}
-        energyDrinkCount={stats?.energy_drink_count ?? 0}
-        onContinue={() => {
-          setShowXpCapModal(false);
-          proceedToWorkout();
-        }}
-        onCancel={() => setShowXpCapModal(false)}
+      <BuilderStickyBar
+        exerciseCount={activeQueue.length}
+        estimatedMinutes={estimatedMinutes}
+        disabled={activeQueue.length === 0}
+        onStart={proceedToWorkout}
       />
     </div>
   );

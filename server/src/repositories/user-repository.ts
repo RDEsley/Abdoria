@@ -118,6 +118,10 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
       exercicios_fixos: (profile.preferencias as unknown as UserDocument['preferencias'])?.exercicios_fixos ?? [],
       exercicios_nao_recomendar:
         (profile.preferencias as unknown as UserDocument['preferencias'])?.exercicios_nao_recomendar ?? [],
+      treinos_fixos:
+        (profile.preferencias as unknown as UserDocument['preferencias'])?.treinos_fixos ?? [],
+      treinos_nao_recomendar:
+        (profile.preferencias as unknown as UserDocument['preferencias'])?.treinos_nao_recomendar ?? [],
       ciclos_completados_rodada:
         (profile.preferencias as unknown as UserDocument['preferencias'])?.ciclos_completados_rodada ?? {},
     },
