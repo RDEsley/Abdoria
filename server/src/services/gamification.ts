@@ -33,7 +33,6 @@ export {
   XP_PER_EXERCISE as XP_SERIES,
   XP_ACHIEVEMENT_BONUS as XP_ACHIEVEMENT,
   XP_DAILY_CAP_BASE as XP_DAILY_CAP,
-  dailyXpCap,
   streakXpBonus,
 } from '../types/index.js';
 

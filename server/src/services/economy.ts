@@ -62,7 +62,8 @@ export function projectedAbdoriaAfterXpSpend(user: UserDocument, xpCost: number)
 
 export function getDailyXpCapBreakdownForUser(user: UserDocument) {
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
-  return dailyXpCapBreakdown(level, countBestiaryUnlocks(user));
+  const achievementsUnlocked = user.gamificacao.conquistas?.length ?? 0;
+  return dailyXpCapBreakdown(level, countBestiaryUnlocks(user), achievementsUnlocked);
 }
 
 export function getDailyXpCapForUser(user: UserDocument): number {

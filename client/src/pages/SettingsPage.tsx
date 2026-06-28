@@ -11,7 +11,7 @@ import { updateMe } from '@/lib/api';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
-import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, CURRENCY_NAME, formatFrozenStreakDescription, FROZEN_STREAK_LABEL, normalizeCicloTreinos, XP_ACHIEVEMENT_BONUS, XP_DAILY_CAP_BASE, XP_DAILY_CAP_PER_BESTIARY, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, XP_STREAK_BONUS_MAX, XP_STREAK_BONUS_PER_DAY } from '@/types';
+import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, CURRENCY_NAME, formatFrozenStreakDescription, FROZEN_STREAK_LABEL, normalizeCicloTreinos, XP_ACHIEVEMENT_BONUS, XP_DAILY_CAP_BASE, XP_DAILY_CAP_PER_ACHIEVEMENT, XP_DAILY_CAP_PER_BESTIARY, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, XP_STREAK_BONUS_MAX, XP_STREAK_BONUS_PER_DAY } from '@/types';
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
@@ -137,7 +137,8 @@ export function SettingsPage() {
             <li>
               Teto diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
               <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
-              <strong>{XP_DAILY_CAP_PER_BESTIARY}</strong> por inimigo descoberto no Bestiário.
+              <strong>{XP_DAILY_CAP_PER_BESTIARY}</strong> por inimigo descoberto no Bestiário +{' '}
+              <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
             </li>
             <li>
               Exercícios, streak e conquistas do treino contam no mesmo teto diário. EXP Instantâneo, AFK e códigos

@@ -549,29 +549,44 @@ export function dailyXpCapForLevel(level: number): number {
   return XP_DAILY_CAP_BASE + safeLevel * XP_DAILY_CAP_PER_LEVEL;
 }
 
-export function dailyXpCapForUser(level: number, bestiaryUnlockedCount = 0): number {
-  return dailyXpCapBreakdown(level, bestiaryUnlockedCount).total;
+/** Bônus permanente de teto diário por conquista desbloqueada (+2 XP cada). */
+export const XP_DAILY_CAP_PER_ACHIEVEMENT = 2;
+
+export function dailyXpCapForUser(
+  level: number,
+  bestiaryUnlockedCount = 0,
+  achievementUnlockedCount = 0,
+): number {
+  return dailyXpCapBreakdown(level, bestiaryUnlockedCount, achievementUnlockedCount).total;
 }
 
 export interface DailyXpCapBreakdown {
   base: number;
   bonus_nivel: number;
   bonus_bestiario: number;
+  bonus_conquista: number;
   total: number;
 }
 
 /** Componentes permanentes do teto diário de XP. */
-export function dailyXpCapBreakdown(level: number, bestiaryUnlockedCount = 0): DailyXpCapBreakdown {
+export function dailyXpCapBreakdown(
+  level: number,
+  bestiaryUnlockedCount = 0,
+  achievementUnlockedCount = 0,
+): DailyXpCapBreakdown {
   const safeLevel = Math.max(1, Math.floor(level));
-  const safeCount = Math.max(0, Math.floor(bestiaryUnlockedCount));
+  const safeBestiary = Math.max(0, Math.floor(bestiaryUnlockedCount));
+  const safeAchievements = Math.max(0, Math.floor(achievementUnlockedCount));
   const base = XP_DAILY_CAP_BASE;
   const bonus_nivel = safeLevel * XP_DAILY_CAP_PER_LEVEL;
-  const bonus_bestiario = safeCount * XP_DAILY_CAP_PER_BESTIARY;
+  const bonus_bestiario = safeBestiary * XP_DAILY_CAP_PER_BESTIARY;
+  const bonus_conquista = safeAchievements * XP_DAILY_CAP_PER_ACHIEVEMENT;
   return {
     base,
     bonus_nivel,
     bonus_bestiario,
-    total: base + bonus_nivel + bonus_bestiario,
+    bonus_conquista,
+    total: base + bonus_nivel + bonus_bestiario + bonus_conquista,
   };
 }
 
@@ -580,20 +595,16 @@ export function formatDailyXpCapBreakdown(breakdown: DailyXpCapBreakdown): strin
   if (breakdown.bonus_bestiario > 0) {
     parts.push(`+${breakdown.bonus_bestiario} bestiário`);
   }
+  if (breakdown.bonus_conquista > 0) {
+    parts.push(`+${breakdown.bonus_conquista} conquistas`);
+  }
   return `${parts.join(' · ')} = ${breakdown.total} máx.`;
 }
-
-/** @deprecated Conquistas não aumentam mais o teto diário. */
-export const XP_DAILY_CAP_PER_ACHIEVEMENT = 0;
 
 export function dailyFullExercisesForCap(cap: number): number {
   return Math.ceil(Math.max(0, cap) / XP_DAILY_PER_EXERCISE);
 }
 
-export function dailyXpCap(_unlockedAchievementCount = 0, level = 1): number {
-  void _unlockedAchievementCount;
-  return dailyXpCapForLevel(level);
-}
 export const XP_STREAK_BONUS_PER_DAY = 1;
 export const XP_STREAK_BONUS_MAX = 32;
 export const XP_ACHIEVEMENT_BONUS = 1;
@@ -966,6 +977,7 @@ export interface DashboardStats {
   xp_diario_cap_base: number;
   xp_diario_cap_bonus_nivel: number;
   xp_diario_cap_bonus_bestiario: number;
+  xp_diario_cap_bonus_conquista: number;
   xp_data_reset: string;
   inventario: Inventario;
   afk: AfkState;

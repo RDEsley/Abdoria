@@ -57,6 +57,7 @@ assert.deepEqual(resolveUserEquipment(null), {
   push_up_board: false,
   pull_up_bar: false,
   ab_wheel: false,
+  stability_ball: false,
 });
 
 if (errors > 0) {
