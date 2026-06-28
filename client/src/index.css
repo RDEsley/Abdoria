@@ -2321,7 +2321,7 @@ input[type='range'] {
     #d6d3d1 6px,
     #d6d3d1 12px
   );
-  animation: game-item-shake 2.5s ease-in-out infinite;
+  animation: game-item-shake 3.2s ease-in-out infinite;
 }
 
 .game-item-card--locked:active .game-item-card__thumb--locked:not(:has(.unlock-celebration)) {
@@ -2559,8 +2559,8 @@ input[type='range'] {
 
 @keyframes game-item-shake {
   0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-1deg); }
-  75% { transform: rotate(1deg); }
+  25% { transform: rotate(-0.7deg); }
+  75% { transform: rotate(0.7deg); }
 }
 
 @keyframes game-item-unlock-pulse {
@@ -3513,19 +3513,25 @@ input[type='range'] {
   color: #fff;
   background: linear-gradient(180deg, #34d399, #059669);
   border: 3px solid var(--game-ink);
-  box-shadow: 3px 3px 0 var(--game-ink);
+  box-shadow: 3px 3px 0 var(--game-ink), inset 0 2px 0 rgba(255, 255, 255, 0.35);
 }
 
 .game-podium__bar--gold {
-  background: linear-gradient(180deg, #fcd34d, #d97706);
+  background: linear-gradient(180deg, #fde68a, #fcd34d 45%, #d97706);
+  box-shadow:
+    3px 3px 0 var(--game-ink),
+    inset 0 2px 0 rgba(255, 255, 255, 0.5),
+    0 0 16px rgba(251, 191, 36, 0.4);
 }
 
 .game-podium__bar--silver {
-  background: linear-gradient(180deg, #e5e7eb, #9ca3af);
+  background: linear-gradient(180deg, #f1f5f9, #e5e7eb 45%, #94a3b8);
+  box-shadow: 3px 3px 0 var(--game-ink), inset 0 2px 0 rgba(255, 255, 255, 0.55);
 }
 
 .game-podium__bar--bronze {
-  background: linear-gradient(180deg, #fdba74, #c2410c);
+  background: linear-gradient(180deg, #fed7aa, #fdba74 45%, #c2410c);
+  box-shadow: 3px 3px 0 var(--game-ink), inset 0 2px 0 rgba(255, 255, 255, 0.4);
 }
 
 .game-podium__rank {
@@ -3576,6 +3582,12 @@ input[type='range'] {
   border: 2px solid var(--game-ink);
   box-shadow: 2px 2px 0 var(--game-ink);
   background: var(--game-paper);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.game-rank-row:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--game-ink);
 }
 
 .game-rank-row__rank {
@@ -3662,6 +3674,11 @@ input[type='range'] {
 .game-rank-row--me {
   background: #ecfdf5;
   border-color: var(--game-green-dark);
+  box-shadow: 2px 2px 0 var(--game-green-dark);
+}
+
+.game-rank-row--me:hover {
+  box-shadow: 3px 3px 0 var(--game-green-dark);
 }
 
 /* Player */
@@ -5258,13 +5275,13 @@ input[type='range'] {
   border: 3px solid var(--game-ink);
   border-radius: 1rem;
   background: linear-gradient(180deg, #fff, #fafaf9);
-  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18);
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .game-daily-card:hover:not(.game-daily-card--claimed) {
   transform: translateY(-2px);
-  box-shadow: 4px 5px 0 rgba(28, 25, 23, 0.22);
+  box-shadow: 4px 6px 0 rgba(28, 25, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .game-daily-card--comum {
@@ -5274,17 +5291,19 @@ input[type='range'] {
 .game-daily-card--incomum {
   background: linear-gradient(180deg, #ecfdf5, #fff);
   border-color: #059669;
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .game-daily-card--raro {
   background: linear-gradient(180deg, #eff6ff, #fff);
   border-color: #2563eb;
+  box-shadow: 3px 3px 0 rgba(37, 99, 235, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .game-daily-card--epico {
   background: linear-gradient(180deg, #faf5ff, #fff7ed);
   border-color: #9333ea;
-  box-shadow: 3px 3px 0 rgba(147, 51, 234, 0.25);
+  box-shadow: 3px 3px 0 rgba(147, 51, 234, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .game-daily-card--lucky {
@@ -5311,6 +5330,9 @@ input[type='range'] {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
+  border-bottom: 2px solid var(--game-ink);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.18);
 }
 
 .game-daily-luck--raro {
@@ -6479,7 +6501,7 @@ input[type='range'] {
 .game-shop-row--raro {
   border-color: #2563eb;
   background: linear-gradient(135deg, #eff6ff, #fff);
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.15), 0 0 16px rgba(37, 99, 235, 0.08);
+  box-shadow: 3px 3px 0 rgba(37, 99, 235, 0.22), inset 0 0 0 1px rgba(37, 99, 235, 0.15), 0 0 16px rgba(37, 99, 235, 0.08);
 }
 
 .game-shop-row--raro .game-shop-row__ornament { color: #2563eb; }
@@ -6487,7 +6509,7 @@ input[type='range'] {
 .game-shop-row--epico {
   border-color: #9333ea;
   background: linear-gradient(135deg, #faf5ff, #fff7ed);
-  box-shadow: inset 0 0 0 1px rgba(147, 51, 234, 0.18), 0 0 18px rgba(147, 51, 234, 0.12);
+  box-shadow: 3px 3px 0 rgba(147, 51, 234, 0.24), inset 0 0 0 1px rgba(147, 51, 234, 0.18), 0 0 18px rgba(147, 51, 234, 0.12);
 }
 
 .game-shop-row--epico .game-shop-row__ornament { color: #9333ea; }
@@ -6498,6 +6520,7 @@ input[type='range'] {
     linear-gradient(135deg, rgba(255, 247, 237, 0.95), rgba(254, 243, 199, 0.95)),
     linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(168, 85, 247, 0.12));
   box-shadow:
+    3px 3px 0 rgba(217, 119, 6, 0.28),
     inset 0 0 0 1px rgba(245, 158, 11, 0.35),
     0 0 20px rgba(245, 158, 11, 0.18);
   animation: game-shop-row-legendary 2.8s ease-in-out infinite;
@@ -7203,24 +7226,32 @@ input[type='range'] {
 .library-search__icon {
   position: absolute;
   left: 0.75rem;
-  color: #a8a29e;
+  color: #78716c;
 }
 
 .library-search__input {
   width: 100%;
-  padding: 0.65rem 2rem 0.65rem 2.25rem;
-  border-radius: 0.75rem;
-  border: 2px solid #e7e5e4;
+  padding: 0.6rem 2rem 0.6rem 2.25rem;
+  border-radius: 0;
+  border: 3px solid var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-ink);
   background: #fff;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--game-ink);
+  outline: none;
+  transition: background 0.12s ease;
+}
+
+.library-search__input:focus {
+  background: #ecfdf5;
 }
 
 .library-search__clear {
   position: absolute;
   right: 0.5rem;
   padding: 0.25rem;
-  color: #a8a29e;
+  color: #78716c;
   cursor: pointer;
 }
 
@@ -8590,6 +8621,46 @@ header .game-nav-item {
   padding-bottom: 0.45rem;
 }
 
+/* Portrait clicável — revela os drops e chances ao tocar no inimigo */
+.game-bestiary-card__portrait--button {
+  position: relative;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.game-bestiary-card__portrait--button:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(180deg, rgba(209, 250, 229, 0.55), rgba(250, 250, 249, 0.35));
+}
+
+.game-bestiary-card__portrait--button:active {
+  transform: scale(0.98);
+}
+
+.game-bestiary-card__portrait--active {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(180deg, rgba(209, 250, 229, 0.6), rgba(236, 253, 245, 0.4));
+}
+
+.game-bestiary-card__portrait-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.3rem;
+  transform: translateX(-50%);
+  padding: 0.08rem 0.45rem;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #047857;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .game-bestiary-card__meta {
   width: 100%;
   text-align: center;
@@ -8701,6 +8772,20 @@ header .game-nav-item {
 
 .game-bestiary-drop__label {
   line-height: 1.2;
+}
+
+.game-bestiary-drop__chance {
+  margin-left: 0.1rem;
+  padding-left: 0.28rem;
+  border-left: 1px solid rgba(28, 25, 23, 0.14);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #047857;
+}
+
+.game-bestiary-drop--hidden .game-bestiary-drop__chance {
+  color: #78716c;
+  border-left-color: rgba(28, 25, 23, 0.1);
 }
 
 .game-bestiary-dots {

@@ -29,12 +29,18 @@ function BestiarySectionCarousel({
   category: BestiaryResponse['categorias'][number];
 }) {
   const [index, setIndex] = useState(0);
+  const [showDrops, setShowDrops] = useState(false);
   const count = category.entries.length;
   const entry = category.entries[index] ?? category.entries[0];
 
   useEffect(() => {
     setIndex(0);
   }, [category.id]);
+
+  // Esconde os drops ao trocar de inimigo — só reaparecem ao clicar na imagem.
+  useEffect(() => {
+    setShowDrops(false);
+  }, [index, category.id]);
 
   if (!entry) return null;
 
@@ -69,12 +75,24 @@ function BestiarySectionCarousel({
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.18 }}
           >
-            <div className="game-bestiary-card__portrait">
-              <SlimePortrait
-                enemyId={entry.id as AfkEnemyId}
-                locked={!entry.desbloqueado}
-              />
-            </div>
+            {entry.desbloqueado ? (
+              <button
+                type="button"
+                className={`game-bestiary-card__portrait game-bestiary-card__portrait--button${showDrops ? ' game-bestiary-card__portrait--active' : ''}`}
+                onClick={() => setShowDrops((v) => !v)}
+                aria-expanded={showDrops}
+                aria-label={showDrops ? 'Ocultar drops' : 'Ver drops e chances'}
+              >
+                <SlimePortrait enemyId={entry.id as AfkEnemyId} locked={false} />
+                <span className="game-bestiary-card__portrait-hint">
+                  {showDrops ? 'Toque para ocultar' : 'Toque para ver drops'}
+                </span>
+              </button>
+            ) : (
+              <div className="game-bestiary-card__portrait">
+                <SlimePortrait enemyId={entry.id as AfkEnemyId} locked />
+              </div>
+            )}
             <div className="game-bestiary-card__meta">
               <span className={`game-bestiary-card__tier game-bestiary-card__tier--${entry.tier}`}>
                 {entry.desbloqueado ? tierLabel(entry.tier) : 'Desconhecido'}
@@ -83,7 +101,7 @@ function BestiarySectionCarousel({
               {entry.desbloqueado ? (
                 <>
                   <p>{entry.max_hp} HP · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário permanente</p>
-                  <BestiaryDropList drops={entry.drops} />
+                  {showDrops && <BestiaryDropList drops={entry.drops} />}
                 </>
               ) : (
                 <p>Derrote na Exploração AFK para revelar este inimigo.</p>

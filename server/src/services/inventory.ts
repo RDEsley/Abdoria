@@ -140,22 +140,26 @@ export function usePatrolCache(
   return { ok: true, claimed };
 }
 
-/** Usa Route Drink: aplica 1h de loot direto na conta (animação no cliente). */
+/** Usa Route Drink: aplica 1h de loot por unidade direto na conta (ou toda a stack). */
 export function useRouteDrinkInExploration(
   user: UserDocument,
+  quantity?: number,
 ):
-  | { ok: true; hours: number; claimed: AfkPendingReward; overflow_to_dorias: number }
+  | { ok: true; hours: number; quantity_used: number; claimed: AfkPendingReward; overflow_to_dorias: number }
   | { ok: false; error: string } {
-  if (getItemCount(user, ROUTE_DRINK_ITEM_ID) < 1) {
+  const available = getItemCount(user, ROUTE_DRINK_ITEM_ID);
+  if (available < 1) {
     return { ok: false, error: 'Você não tem Route Drink.' };
   }
 
-  if (!consumeInventoryItem(user, ROUTE_DRINK_ITEM_ID, 1)) {
+  const useQty = quantity == null ? available : Math.max(1, Math.min(quantity, available));
+  if (!consumeInventoryItem(user, ROUTE_DRINK_ITEM_ID, useQty)) {
     return { ok: false, error: 'Não foi possível consumir o item.' };
   }
 
-  const { claimed, overflow_to_dorias } = grantRouteDrinkRewards(user, ROUTE_DRINK_HOURS);
-  return { ok: true, hours: ROUTE_DRINK_HOURS, claimed, overflow_to_dorias };
+  const hours = ROUTE_DRINK_HOURS * useQty;
+  const { claimed, overflow_to_dorias } = grantRouteDrinkRewards(user, hours);
+  return { ok: true, hours, quantity_used: useQty, claimed, overflow_to_dorias };
 }
 
 function rollDoriaBagAmount(user: UserDocument, salt: number): number {

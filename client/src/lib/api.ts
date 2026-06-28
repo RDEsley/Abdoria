@@ -315,14 +315,18 @@ export function usePatrolCache(): Promise<{
   return fetchJson('/meta/inventory/bau-patrulha', { method: 'POST' });
 }
 
-export function useRouteDrink(): Promise<AfkMetaResponse & {
+export function useRouteDrink(useAll = true): Promise<AfkMetaResponse & {
   user: IUserDocument;
   hours: number;
+  quantity_used: number;
   claimed: AfkPendingReward;
   overflow_to_dorias?: number;
   inventario: InventarioSummary;
 }> {
-  return fetchJson('/meta/inventory/route-drink', { method: 'POST' });
+  return fetchJson('/meta/inventory/route-drink', {
+    method: 'POST',
+    body: JSON.stringify({ use_all: useAll }),
+  });
 }
 
 export function useExpInstant(useAll = false): Promise<{
@@ -353,6 +357,7 @@ export function useDoriaBag(quantity = 1): Promise<{
 export interface BestiaryDropEntry {
   id: string;
   label: string | null;
+  chance: string;
   descoberto: boolean;
 }
 

@@ -221,5 +221,7 @@ export {
   AFK_CRIT_BONUS_ESPADA,
   AFK_CRIT_BONUS_ARCO,
   AFK_CRIT_STREAK_STEP_ARCO,
+  AFK_LEVEL10_BOW_CRIT_CHANCE,
+  AFK_LEVEL10_SWORD_CRIT_CHANCE,
   resolvePatrolArmas,
 } from '../../../shared/types/index.js';

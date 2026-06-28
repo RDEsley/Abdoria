@@ -15,8 +15,8 @@ import {
 
 export const AFK_LEVEL10_BOW_DAMAGE_SPECIAL = 52;
 export const AFK_LEVEL10_SWORD_DAMAGE_SPECIAL = 60;
-export const AFK_LEVEL10_BOW_CRIT_CHANCE = 28;
-export const AFK_LEVEL10_SWORD_CRIT_CHANCE = 18;
+export const AFK_LEVEL10_BOW_CRIT_CHANCE = 35;
+export const AFK_LEVEL10_SWORD_CRIT_CHANCE = 16;
 
 /** Slimes comuns (sem Golden Slime) — alvo de Hit Kill no nível 10. */
 export function isPatrolHitKillTarget(enemyId: AfkEnemyId): boolean {
