@@ -60,7 +60,7 @@ export function ProfileProgressPanel({ profile, stats }: Props) {
               </p>
             </div>
           </div>
-          <StreakBadge streak={stats.streak_atual} />
+          <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
         </div>
         <p className="mt-3 text-[0.65rem] font-bold leading-relaxed text-stone-500">
           Faltam <strong className="text-emerald-700">{xpParaLevelUp} XP</strong> para o nível {level + 1}.

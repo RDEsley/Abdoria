@@ -894,6 +894,8 @@ export function BuilderPage() {
             </p>
           </section>
 
+          {configSection}
+
           <section id="builder-queue-preview" className="glass-card rounded-2xl p-4">
             <h3 className="game-section-title mb-3">Fila do treino</h3>
             {activeQueue.length === 0 ? (
@@ -925,8 +927,6 @@ export function BuilderPage() {
               </DndContext>
             )}
           </section>
-
-          {configSection}
         </div>
       )}
 

@@ -11,7 +11,7 @@ import { MUSCULO_LABELS, MUSCULO_HINTS, PRIORIDADE_LABELS, formatExerciseName } 
 
 export function LibraryPage() {
   const { exercises, muscleFilter, setMuscleFilter, ensureExercises, exercisesLoading, loadRecommendations } = useApp();
-  const { unlockedCount, isUnlocked, unlock } = useUnlockedExercises();
+  const { isUnlocked, unlock } = useUnlockedExercises();
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
   const [search, setSearch] = useState('');
@@ -46,6 +46,11 @@ export function LibraryPage() {
       return true;
     });
   }, [exercises, muscleFilter, nivelFilter, prioridadeFilter, search]);
+
+  const filteredUnlockedCount = useMemo(
+    () => filtered.filter((ex) => isUnlocked(ex.slug)).length,
+    [filtered, isUnlocked],
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -115,7 +120,7 @@ export function LibraryPage() {
       <p className="text-xs font-bold text-stone-500">
         {exercisesLoading
           ? 'Carregando itens...'
-          : `${filtered.length} habilidade(s) · ${unlockedCount} desbloqueada(s)`}
+          : `${filtered.length} habilidade(s) · ${filteredUnlockedCount} desbloqueada(s)`}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">

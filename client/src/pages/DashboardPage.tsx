@@ -116,7 +116,7 @@ export function DashboardPage() {
               </p>
             )}
             <div className="mt-2">
-              <StreakBadge streak={stats.streak_atual} />
+              <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
             </div>
           </div>
           {!stats.treino_hoje && (
