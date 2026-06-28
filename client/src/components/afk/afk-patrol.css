@@ -448,11 +448,19 @@
   justify-content: center;
   width: 2.1rem;
   height: 2.1rem;
-  color: #57534e;
-  background: linear-gradient(145deg, #f5f0e6, #e7e5e4);
-  border: 2px solid #a8a29e;
+  color: #fef9c3;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, transparent 55%),
+    linear-gradient(160deg, #0f766e 0%, #047857 50%, #065f46 100%);
+  border: 2px solid var(--afk-ink);
   border-radius: 0.5rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 2px 0 rgba(6, 78, 59, 0.5);
+}
+
+.game-afk-modal__title-icon .game-afk-fab-swords {
+  color: #fef9c3;
 }
 
 .game-afk-modal__title {
@@ -538,10 +546,13 @@
   height: 17rem;
   min-height: 17rem;
   overflow: hidden;
-  border: 2px solid #78716c;
+  border: 3px solid var(--afk-ink);
   border-radius: 0.65rem;
   background: #7ec8e8;
-  box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.08),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.18),
+    3px 3px 0 rgba(28, 25, 23, 0.22);
 }
 
 .game-afk-scene__viewport--sword-hit {

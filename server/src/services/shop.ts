@@ -486,14 +486,14 @@ function regenerateDailyShop(
     slots[2].label = buildSlotLabel(slots[2]);
   }
 
-  if (hashDailySeed(`${today}:exp-instant-free`) % 1000 < 35) {
+  if (hashDailySeed(`${today}:route-free`) % 1000 < 16) {
     slots[0] = {
       slot: 0,
       kind: 'recompensa_diaria',
       recompensa_tipo: 'item',
-      item_id: EXP_INSTANT_ITEM_ID,
+      item_id: ROUTE_DRINK_ITEM_ID,
       valor: 1,
-      raridade: 'incomum',
+      raridade: 'raro',
       preco_abdoria: 0,
       resgatado: false,
       label: '',
@@ -501,53 +501,19 @@ function regenerateDailyShop(
     slots[0].label = buildSlotLabel(slots[0]);
   }
 
-  if (hashDailySeed(`${today}:exp-instant-paid`) % 100 < 14) {
-    slots[1] = {
-      slot: 1,
-      kind: 'oferta',
-      recompensa_tipo: 'item',
-      item_id: EXP_INSTANT_ITEM_ID,
-      valor: 1,
-      raridade: 'raro',
-      preco_abdoria: EXP_INSTANT_SHOP_PRICE,
-      preco_xp: 0,
-      oferta_nome: EXP_INSTANT_LABEL,
-      resgatado: false,
-      label: '',
-    };
-    slots[1].label = buildSlotLabel(slots[1]);
-  }
-
-  if (hashDailySeed(`${today}:doria-bag-free`) % 1000 < 28) {
+  if (hashDailySeed(`${today}:bau-free`) % 1000 < 9) {
     slots[0] = {
       slot: 0,
       kind: 'recompensa_diaria',
       recompensa_tipo: 'item',
-      item_id: DORIA_BAG_ITEM_ID,
+      item_id: PATROL_CACHE_ITEM_ID,
       valor: 1,
-      raridade: 'incomum',
+      raridade: 'epico',
       preco_abdoria: 0,
       resgatado: false,
       label: '',
     };
     slots[0].label = buildSlotLabel(slots[0]);
-  }
-
-  if (hashDailySeed(`${today}:doria-bag-paid`) % 100 < 11) {
-    slots[2] = {
-      slot: 2,
-      kind: 'oferta',
-      recompensa_tipo: 'item',
-      item_id: DORIA_BAG_ITEM_ID,
-      valor: 1,
-      raridade: 'raro',
-      preco_abdoria: DORIA_BAG_SHOP_PRICE,
-      preco_xp: 0,
-      oferta_nome: DORIA_BAG_LABEL,
-      resgatado: false,
-      label: '',
-    };
-    slots[2].label = buildSlotLabel(slots[2]);
   }
 
   loja.data_reset = today;

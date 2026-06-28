@@ -31,6 +31,8 @@
   .game-afk-fab-swords__blade--r,
   .game-afk-fab-swords__spark,
   .game-item-card__thumb--locked,
+  .game-xp-section__ring--up .game-xp-section__level,
+  .game-xp-section__ring--up::after,
   .streak-fire-celebration__flame--lit,
   .game-daily-luck--raro,
   .game-daily-luck--epico,

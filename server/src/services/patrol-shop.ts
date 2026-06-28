@@ -1,4 +1,5 @@
 import {
+  AFK_CRIT_BONUS_ESPADA,
   AFK_CRIT_STREAK_STEP_ARCO,
   AFK_LEVEL10_BOW_CRIT_CHANCE,
   AFK_LEVEL10_SWORD_CRIT_CHANCE,
@@ -81,7 +82,7 @@ function toCatalogItem(
     dano_bonus: def.dano_base,
     dano_base: def.dano_base,
     dano_total,
-    crit_bonus: weaponKind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : 4,
+    crit_bonus: weaponKind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : AFK_CRIT_BONUS_ESPADA,
     dano_critico: patrolCritDamage(dano_total, weaponKind, 0),
     chance_critico,
   };
