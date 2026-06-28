@@ -46,7 +46,7 @@ export const AFK_HERO_DAMAGE_ESPADA = 12;
 export const AFK_CRIT_CHANCE_ESPADA = 6;
 export const AFK_CRIT_CHANCE_ARCO = 18;
 export const AFK_CRIT_STREAK_STEP_ARCO = 4;
-export const AFK_CRIT_BONUS_ESPADA = 4;
+export const AFK_CRIT_BONUS_ESPADA = 10;
 /** @deprecated Use {@link AFK_CRIT_STREAK_STEP_ARCO} — arcos acumulam +4 por crítico seguido. */
 export const AFK_CRIT_BONUS_ARCO = AFK_CRIT_STREAK_STEP_ARCO;
 /** @deprecated Arcos usam {@link AFK_CRIT_CHANCE_ARCO}. */

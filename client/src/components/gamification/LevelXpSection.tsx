@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Sun, TrendingUp, Zap } from 'lucide-react';
 import { XpBar } from '@/components/ui/XpBar';
@@ -26,6 +26,19 @@ export function LevelXpSection({
   showRulesLink = false,
 }: Props) {
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
+  const prevLevelRef = useRef(level);
+  const [leveledUp, setLeveledUp] = useState(false);
+
+  useEffect(() => {
+    if (level > prevLevelRef.current) {
+      setLeveledUp(true);
+      const timer = window.setTimeout(() => setLeveledUp(false), 1500);
+      prevLevelRef.current = level;
+      return () => window.clearTimeout(timer);
+    }
+    prevLevelRef.current = level;
+    return undefined;
+  }, [level]);
   const capBreakdown = formatDailyXpCapBreakdown({
     base: stats.xp_diario_cap_base,
     bonus_nivel: stats.xp_diario_cap_bonus_nivel,
@@ -40,11 +53,14 @@ export function LevelXpSection({
     >
       <header className="game-xp-section__hero">
         <div
-          className="game-xp-section__ring"
-          style={{ '--level-pct': `${levelPct}%` } as CSSProperties}
+          className={`game-xp-section__ring${leveledUp ? ' game-xp-section__ring--up' : ''}`}
+          style={{ '--level-pct': levelPct } as CSSProperties}
           aria-hidden
         >
-          <div className="game-level-badge game-xp-section__badge">{level}</div>
+          <div className="game-xp-section__level">
+            <span className="game-xp-section__level-label">Nível</span>
+            <span className="game-xp-section__level-num">{level}</span>
+          </div>
         </div>
 
         <div className="game-xp-section__summary">
