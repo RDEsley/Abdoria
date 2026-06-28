@@ -9,7 +9,7 @@
 Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas, personalizar o perfil e disputar o ranking — tudo de um jeito simples e motivador.
 
 [![Demo](https://img.shields.io/badge/Demo-abdoria--project.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://abdoria-project.vercel.app)
-[![Release](https://img.shields.io/badge/release-v1.4.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
+[![Release](https://img.shields.io/badge/release-v1.8.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)

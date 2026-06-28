@@ -73,6 +73,10 @@ $RECYCLE.BIN/
 .cursorignore
 .cursor/plans/
 
+# Claude Code (config local — não versionar)
+.claudecode
+.claude/
+
 # Vercel (link local do CLI)
 .vercel/
 
