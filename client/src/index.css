@@ -1290,6 +1290,54 @@ input[type='range'] {
   min-height: 5.15rem;
 }
 
+/* Skin: navbar fixa pintada com o fundo cosmético equipado */
+.top-navbar--skinned {
+  border-bottom-color: rgba(28, 25, 23, 0.55);
+}
+
+.top-navbar--skinned::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 20, 0.58);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.top-navbar--skinned > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Skin claro (fundos claros como praia) — overlay claro + nome escuro */
+.top-navbar--skinned-light {
+  border-bottom-color: rgba(28, 25, 23, 0.32);
+}
+
+.top-navbar--skinned-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.26);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.top-navbar--skinned-light > * {
+  position: relative;
+  z-index: 1;
+}
+
+.top-navbar--skinned-light .top-navbar__name {
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.top-navbar--skinned-light .top-navbar__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
+  color: #b45309;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
 .top-navbar__profile {
   cursor: pointer;
   border: none;
@@ -3937,6 +3985,79 @@ input[type='range'] {
   padding: 1rem 1.1rem;
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 45%, #fde68a 100%);
   border-bottom: 3px solid var(--game-ink);
+}
+
+/* Skin: hero de Nível & XP pintado com o fundo cosmético equipado */
+.game-xp-section__hero--skinned {
+  position: relative;
+}
+
+.game-xp-section__hero--skinned::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 20, 0.5);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-xp-section__hero--skinned > * {
+  position: relative;
+  z-index: 1;
+}
+
+.game-xp-section__hero--skinned .game-xp-section__title,
+.game-xp-section__hero--skinned .game-xp-section__subtitle {
+  color: #f8fafc;
+}
+
+.game-xp-section__hero--skinned .game-xp-section__subtitle strong {
+  color: #6ee7b7;
+}
+
+.game-xp-section__hero--skinned .game-xp-section__title-icon {
+  color: #fcd34d;
+}
+
+/* Trilho do anel visível sobre fundo escuro */
+.game-xp-section__hero--skinned .game-xp-section__ring::before {
+  background: conic-gradient(
+    #38bdf8 0deg,
+    #0ea5e9 calc(var(--level-pct, 0) * 3.6deg),
+    rgba(255, 255, 255, 0.28) calc(var(--level-pct, 0) * 3.6deg),
+    rgba(255, 255, 255, 0.28) 360deg
+  );
+}
+
+/* Skin claro (fundos claros como praia) — overlay claro + texto escuro */
+.game-xp-section__hero--skinned-light {
+  position: relative;
+}
+
+.game-xp-section__hero--skinned-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.24);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-xp-section__hero--skinned-light > * {
+  position: relative;
+  z-index: 1;
+}
+
+.game-xp-section__hero--skinned-light .game-xp-section__title {
+  color: #0f172a;
+}
+
+.game-xp-section__hero--skinned-light .game-xp-section__subtitle {
+  color: #1c1917;
+}
+
+.game-xp-section__hero--skinned-light .game-xp-section__subtitle strong {
+  color: #047857;
 }
 
 .game-xp-section__ring {
@@ -7043,6 +7164,38 @@ input[type='range'] {
 
 .game-profile-hero-shell--skinned .game-profile-hero__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
   color: rgba(248, 250, 252, 0.92);
+}
+
+/* Skin claro (fundos claros como praia) — overlay claro + texto escuro */
+.game-profile-hero-shell--skinned-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-profile-hero-shell--skinned-light > * {
+  position: relative;
+  z-index: 1;
+}
+
+.game-profile-hero-shell--skinned-light .game-profile-hero {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+}
+
+.game-profile-hero-shell--skinned-light .game-profile-hero__name,
+.game-profile-hero-shell--skinned-light .game-profile-hero__level {
+  color: #0f172a;
+}
+
+.game-profile-hero-shell--skinned-light .game-profile-hero__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
+  color: #047857;
 }
 
 .game-profile-hero {

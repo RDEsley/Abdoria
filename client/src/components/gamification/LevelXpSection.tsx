@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Sun, TrendingUp, Zap } from 'lucide-react';
 import { XpBar } from '@/components/ui/XpBar';
-import { formatDailyXpCapBreakdown, type DashboardStats } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { formatDailyXpCapBreakdown, resolveCosmeticos, type DashboardStats } from '@/types';
 
 interface Props {
   stats: DashboardStats;
@@ -25,6 +26,16 @@ export function LevelXpSection({
   id,
   showRulesLink = false,
 }: Props) {
+  const { user } = useAuth();
+  const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
+  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const heroClass =
+    fundoKey === 'padrao'
+      ? 'game-xp-section__hero'
+      : fundoKey === 'praia'
+        ? `game-xp-section__hero game-xp-section__hero--skinned-light game-card-fundo--${fundoKey}`
+        : `game-xp-section__hero game-xp-section__hero--skinned game-card-fundo--${fundoKey}`;
+
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
   const prevLevelRef = useRef(level);
   const [leveledUp, setLeveledUp] = useState(false);
@@ -51,7 +62,7 @@ export function LevelXpSection({
       id={id}
       className="game-xp-section glass-card scroll-mt-28 overflow-hidden rounded-2xl md:scroll-mt-24"
     >
-      <header className="game-xp-section__hero">
+      <header className={heroClass}>
         <div
           className={`game-xp-section__ring${leveledUp ? ' game-xp-section__ring--up' : ''}`}
           style={{ '--level-pct': levelPct } as CSSProperties}

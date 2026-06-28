@@ -17,6 +17,10 @@ export interface TopNavbarProps {
   userTitle?: string | null;
   titleClassName?: string;
   coinsEarnedPulse?: number | null;
+  /** Classe do fundo cosmético equipado (ex.: `game-card-fundo--vulcao`). */
+  backgroundClass?: string;
+  /** Fundo claro (ex.: praia) — usa overlay claro + texto escuro. */
+  backgroundLight?: boolean;
   onProfileClick?: () => void;
   onDoriasAddClick?: () => void;
   onInventoryClick?: () => void;
@@ -76,11 +80,16 @@ export function TopNavbar({
   userTitle,
   titleClassName,
   coinsEarnedPulse,
+  backgroundClass,
+  backgroundLight,
   onProfileClick,
   onDoriasAddClick,
   onInventoryClick,
 }: TopNavbarProps) {
   const xpPct = xpMax > 0 ? Math.min(100, (userXp / xpMax) * 100) : 0;
+  const skinClass = backgroundClass
+    ? `${backgroundLight ? 'top-navbar--skinned-light' : 'top-navbar--skinned'} ${backgroundClass}`
+    : '';
 
   const avatarNode =
     avatar ??
@@ -91,7 +100,9 @@ export function TopNavbar({
     ));
 
   return (
-    <header className="top-navbar fixed top-0 right-0 left-0 z-50 md:left-64">
+    <header
+      className={`top-navbar fixed top-0 right-0 left-0 z-50 md:left-64${skinClass ? ` ${skinClass}` : ''}`}
+    >
       <div className="top-navbar__inner flex items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
         <button
           type="button"
