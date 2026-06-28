@@ -73,6 +73,7 @@ export function recordBestiaryKillDrops(
 export interface BestiaryDropEntryResponse {
   id: BestiaryDropId;
   label: string | null;
+  chance: string;
   descoberto: boolean;
 }
 
@@ -115,6 +116,7 @@ export function readBestiaryResponse(user: UserDocument): {
         drops: bestiaryDropsForEnemy(id).map((dropId) => ({
           id: dropId,
           label: discovered.has(dropId) ? dropCatalog[dropId].label : null,
+          chance: dropCatalog[dropId].chance,
           descoberto: discovered.has(dropId),
         })),
       };

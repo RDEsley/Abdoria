@@ -1,5 +1,7 @@
 import {
   AFK_CRIT_STREAK_STEP_ARCO,
+  AFK_LEVEL10_BOW_CRIT_CHANCE,
+  AFK_LEVEL10_SWORD_CRIT_CHANCE,
   CURRENCY_NAME,
   type PatrolArmasState,
   type PatrolShopCatalogItem,
@@ -55,6 +57,13 @@ function toCatalogItem(
     abdoria >= def.unlock.preco_moedas;
   const weaponKind = def.kind === 'arco' ? 'arco' : 'espada';
   const dano_total = patrolHeroDamage(weaponKind, def.id);
+  // Armas Secret (nível 10) exibem o crítico especial contra elites/bosses.
+  const chance_critico =
+    def.nivel === 10
+      ? weaponKind === 'arco'
+        ? AFK_LEVEL10_BOW_CRIT_CHANCE
+        : AFK_LEVEL10_SWORD_CRIT_CHANCE
+      : patrolCritChance(weaponKind);
 
   return {
     id: def.id,
@@ -74,7 +83,7 @@ function toCatalogItem(
     dano_total,
     crit_bonus: weaponKind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : 4,
     dano_critico: patrolCritDamage(dano_total, weaponKind, 0),
-    chance_critico: patrolCritChance(weaponKind),
+    chance_critico,
   };
 }
 

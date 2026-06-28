@@ -30,7 +30,28 @@ export type BestiaryDropId =
 export interface BestiaryDropDefinition {
   id: BestiaryDropId;
   label: string;
+  /** Chance aproximada do drop, já formatada para exibição. */
+  chance: string;
 }
+
+/**
+ * Chance aproximada por drop (rótulo pronto para UI).
+ * Itens comuns refletem a banda na tabela de loot; itens raros, o roll dedicado.
+ */
+const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
+  xp: '85%',
+  abdoria: '8%',
+  abdoria_golden: '100%',
+  doria_bag: '2%',
+  exp_instant: '5%',
+  frozen_streak: '20%',
+  route_drink: '0,04%',
+  cosmetic_legendary: '0,03%',
+  cosmetic_secret: '0,01%',
+  titulo_secreto: '0,01%',
+  weapon_legendary: '0,5%',
+  weapon_secret: '0,003%',
+};
 
 const COMMON_ELITE_DROPS: BestiaryDropId[] = [
   'xp',
@@ -56,19 +77,24 @@ export function bestiaryDropsForEnemy(enemyId: AfkEnemyId): BestiaryDropId[] {
 }
 
 export function buildBestiaryDropCatalog(currencyName: string): Record<BestiaryDropId, BestiaryDropDefinition> {
+  const def = (id: BestiaryDropId, label: string): BestiaryDropDefinition => ({
+    id,
+    label,
+    chance: BESTIARY_DROP_CHANCE[id],
+  });
   return {
-    xp: { id: 'xp', label: '+1 XP' },
-    abdoria: { id: 'abdoria', label: `+1 ${currencyName}` },
-    abdoria_golden: { id: 'abdoria_golden', label: `+${AFK_GOLDEN_SLIME_ABDORIA} ${currencyName}` },
-    doria_bag: { id: 'doria_bag', label: 'Bolsa de Dorias' },
-    exp_instant: { id: 'exp_instant', label: 'EXP Instantâneo' },
-    frozen_streak: { id: 'frozen_streak', label: 'Frozen Streak' },
-    route_drink: { id: 'route_drink', label: 'Route Drink' },
-    cosmetic_legendary: { id: 'cosmetic_legendary', label: 'Cosmético lendário' },
-    cosmetic_secret: { id: 'cosmetic_secret', label: 'Cosmético secreto' },
-    titulo_secreto: { id: 'titulo_secreto', label: 'Título secreto' },
-    weapon_legendary: { id: 'weapon_legendary', label: 'Arma lendária' },
-    weapon_secret: { id: 'weapon_secret', label: 'Arma Secret' },
+    xp: def('xp', '+1 XP'),
+    abdoria: def('abdoria', `+1 ${currencyName}`),
+    abdoria_golden: def('abdoria_golden', `+${AFK_GOLDEN_SLIME_ABDORIA} ${currencyName}`),
+    doria_bag: def('doria_bag', 'Bolsa de Dorias'),
+    exp_instant: def('exp_instant', 'EXP Instantâneo'),
+    frozen_streak: def('frozen_streak', 'Frozen Streak'),
+    route_drink: def('route_drink', 'Route Drink'),
+    cosmetic_legendary: def('cosmetic_legendary', 'Cosmético lendário'),
+    cosmetic_secret: def('cosmetic_secret', 'Cosmético secreto'),
+    titulo_secreto: def('titulo_secreto', 'Título secreto'),
+    weapon_legendary: def('weapon_legendary', 'Arma lendária'),
+    weapon_secret: def('weapon_secret', 'Arma Secret'),
   };
 }
 

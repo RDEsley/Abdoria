@@ -123,7 +123,9 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
       return;
     }
     // Não sincronizar antes: syncAfkRewards adicionaria loot offline ao baú.
-    const result = useRouteDrinkInExploration(user);
+    const useAll = req.body?.use_all == null ? true : Boolean(req.body.use_all);
+    const quantity = useAll ? undefined : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
+    const result = useRouteDrinkInExploration(user, quantity);
     if (!result.ok) {
       res.status(400).json({ error: result.error });
       return;
@@ -133,6 +135,7 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
     res.json({
       user: sanitizeUser(user),
       hours: result.hours,
+      quantity_used: result.quantity_used,
       claimed: result.claimed,
       overflow_to_dorias: result.overflow_to_dorias,
       inventario: readInventarioSummary(user),

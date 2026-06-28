@@ -88,32 +88,93 @@
   filter: drop-shadow(0 1px 0 rgba(6, 78, 59, 0.45));
 }
 
-.game-afk-fab .game-afk-fab-swords__icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Espadas cruzadas (Lucide Swords) — FAB e header */
+/* Par de espadas que colidem — FAB (anima) e header (cruzadas estáticas) */
 .game-afk-fab-swords {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
   color: #57534e;
 }
 
-.game-afk-fab-swords__icon {
-  display: block;
-  flex-shrink: 0;
+.game-afk-fab-swords__blade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 80%;
+  will-change: transform;
+}
+
+.game-afk-fab-swords__blade--l {
+  transform: rotate(-7deg);
+}
+
+.game-afk-fab-swords__blade--r {
+  transform: scaleX(-1) rotate(-7deg);
+}
+
+.game-afk-fab-swords__spark {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: 0.46rem;
+  height: 0.46rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(254, 240, 138, 0.7) 45%, transparent 72%);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.2);
+  pointer-events: none;
+}
+
+/* Colisão em loop apenas dentro do FAB */
+.game-afk-fab .game-afk-fab-swords__blade--l {
+  animation: game-afk-fab-clash-l 2.2s ease-in-out infinite;
+}
+
+.game-afk-fab .game-afk-fab-swords__blade--r {
+  animation: game-afk-fab-clash-r 2.2s ease-in-out infinite;
+}
+
+.game-afk-fab .game-afk-fab-swords__spark {
+  animation: game-afk-fab-clash-spark 2.2s ease-in-out infinite;
+}
+
+/* Estado com recompensa: clash mais rápido e faísca dourada */
+.game-afk-fab--loot .game-afk-fab-swords__blade--l,
+.game-afk-fab--loot .game-afk-fab-swords__blade--r,
+.game-afk-fab--loot .game-afk-fab-swords__spark {
+  animation-duration: 1.5s;
+}
+
+.game-afk-fab--loot .game-afk-fab-swords__spark {
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(251, 191, 36, 0.85) 42%, transparent 72%);
+}
+
+@keyframes game-afk-fab-clash-l {
+  0%, 18%, 100% { transform: rotate(-7deg); }
+  38% { transform: rotate(-23deg); }
+  50% { transform: rotate(4deg); }
+  64% { transform: rotate(-7deg); }
+}
+
+@keyframes game-afk-fab-clash-r {
+  0%, 18%, 100% { transform: scaleX(-1) rotate(-7deg); }
+  38% { transform: scaleX(-1) rotate(-23deg); }
+  50% { transform: scaleX(-1) rotate(4deg); }
+  64% { transform: scaleX(-1) rotate(-7deg); }
+}
+
+@keyframes game-afk-fab-clash-spark {
+  0%, 44% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+  66% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
 }
 
 .game-afk-fab-swords--header {
-  width: 100%;
-  height: 100%;
-}
-
-.game-afk-fab-swords--header .game-afk-fab-swords__icon {
-  width: 1.12rem;
-  height: 1.12rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .game-afk-modal__title-icon .game-afk-fab-swords--header {
@@ -3227,7 +3288,7 @@
 
 .game-afk-slime__helm {
   position: absolute;
-  top: 4%;
+  top: 9%;
   left: 50%;
   width: 50%;
   height: 0.58rem;
@@ -3271,13 +3332,14 @@
 
 .game-afk-slime__cap {
   position: absolute;
-  top: 2%;
+  top: 8%;
   left: 50%;
   width: 46%;
   height: 0.5rem;
   margin-left: -23%;
   z-index: 5;
   pointer-events: none;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.16));
 }
 
 .game-afk-slime__cap::before {
@@ -3324,12 +3386,12 @@
 
 .game-afk-slime__crown {
   position: absolute;
-  top: 0;
+  top: 6%;
   left: 50%;
   width: 44%;
   height: 0.52rem;
   margin-left: -22%;
-  background: linear-gradient(180deg, #fef08a 0%, #fbbf24 40%, #d97706 100%);
+  background: linear-gradient(180deg, #fef9c3 0%, #fde047 32%, #fbbf24 64%, #d97706 100%);
   border: 2px solid var(--afk-ink);
   clip-path: polygon(
     0 100%, 8% 18%, 20% 100%, 34% 12%, 50% 100%, 66% 12%, 80% 100%, 92% 18%, 100% 100%
@@ -3339,7 +3401,7 @@
 }
 
 .game-afk-enemy--boss .game-afk-slime__crown {
-  top: -14%;
+  top: -4%;
   width: 46%;
   height: 0.66rem;
   margin-left: -23%;
@@ -3360,16 +3422,16 @@
 
 .game-afk-slime__hood {
   position: absolute;
-  top: 2%;
+  top: 7%;
   left: 50%;
   width: 58%;
   height: 0.72rem;
   margin-left: -29%;
-  background: linear-gradient(180deg, #7c3aed, #6d28d9 45%, #4c1d95);
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9 45%, #4c1d95);
   border: 2.5px solid var(--afk-ink);
   border-radius: 0.55rem 0.55rem 0 0;
   z-index: 5;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.12);
 }
 
 .game-afk-slime__hood::after {
@@ -3385,7 +3447,7 @@
 }
 
 .game-afk-enemy--boss .game-afk-slime__hood {
-  top: -7%;
+  top: 0%;
   width: 58%;
   height: 0.9rem;
   margin-left: -29%;
@@ -3554,7 +3616,7 @@
 
 .game-afk-slime__leaf {
   position: absolute;
-  top: 7%;
+  top: 12%;
   left: 58%;
   width: 0.38rem;
   height: 0.26rem;
@@ -3568,7 +3630,7 @@
 
 .game-afk-slime__beanie {
   position: absolute;
-  top: -2%;
+  top: 6%;
   left: 50%;
   width: 54%;
   height: 0.44rem;
@@ -3594,7 +3656,7 @@
 
 .game-afk-slime__flower {
   position: absolute;
-  top: 5%;
+  top: 10%;
   left: 60%;
   width: 0.3rem;
   height: 0.3rem;
@@ -3640,7 +3702,7 @@
 /* Bow — hair ribbon on top */
 .game-afk-slime__bow {
   position: absolute;
-  top: 3%;
+  top: 7%;
   left: 50%;
   width: 0.1rem;
   height: 0.1rem;

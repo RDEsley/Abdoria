@@ -47,7 +47,7 @@ export function BestiaryDropList({ drops }: Props) {
 
   return (
     <div className="game-bestiary-drops">
-      <p className="game-bestiary-drops__title">Drops possíveis</p>
+      <p className="game-bestiary-drops__title">Drops possíveis · chance aproximada</p>
       <ul className="game-bestiary-drops__list">
         {drops.map((drop) => (
           <li
@@ -58,6 +58,7 @@ export function BestiaryDropList({ drops }: Props) {
               <BestiaryDropIcon dropId={drop.id} />
             </span>
             <span className="game-bestiary-drop__label">{drop.descoberto && drop.label ? drop.label : '???'}</span>
+            <span className="game-bestiary-drop__chance">{drop.chance}</span>
           </li>
         ))}
       </ul>
