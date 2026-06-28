@@ -173,6 +173,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       xp_diario_cap_base: xpCap.base,
       xp_diario_cap_bonus_nivel: xpCap.bonus_nivel,
       xp_diario_cap_bonus_bestiario: xpCap.bonus_bestiario,
+      xp_diario_cap_bonus_conquista: xpCap.bonus_conquista,
       xp_data_reset: user.xp_diario?.data_reset ?? getTodaySaoPaulo(),
       inventario,
       afk: {

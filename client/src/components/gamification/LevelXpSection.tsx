@@ -54,6 +54,7 @@ export function LevelXpSection({
     base: stats.xp_diario_cap_base,
     bonus_nivel: stats.xp_diario_cap_bonus_nivel,
     bonus_bestiario: stats.xp_diario_cap_bonus_bestiario,
+    bonus_conquista: stats.xp_diario_cap_bonus_conquista,
     total: stats.xp_diario_limite,
   });
 

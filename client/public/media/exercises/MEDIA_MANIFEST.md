@@ -4,7 +4,7 @@ Arquivos esperados em `client/public/media/exercises/{slug}.gif`.
 
 Quando o GIF não está disponível, a interface exibe a inicial do exercício.
 
-## Catálogo (32)
+## Catálogo (37)
 
 | Arquivo | Exercício |
 |---------|-----------|
@@ -40,5 +40,10 @@ Quando o GIF não está disponível, a interface exibe a inicial do exercício.
 | `push-up.gif` | Push-Up (placeholder) |
 | `incline-push-up.gif` | Incline Push-Up (placeholder) |
 | `decline-push-up.gif` | Decline Push-Up (placeholder) |
+| `push-up-board-chest-wide.gif` | Prancha — Peito largo (PENDENTE) |
+| `push-up-board-decline.gif` | Prancha — Peito declinado (PENDENTE) |
+| `push-up-board-diamond.gif` | Prancha — Tríceps diamante (PENDENTE) |
+| `push-up-board-pike.gif` | Prancha — Ombros pike (PENDENTE) |
+| `push-up-board-back-wide.gif` | Prancha — Costas aberto (PENDENTE) |
 
 URL pública: `/media/exercises/{slug}.gif` (ver `client/src/lib/media.ts`).

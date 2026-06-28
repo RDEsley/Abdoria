@@ -670,6 +670,101 @@ export function BuilderPage() {
     return Math.max(1, Math.round(estimateWorkoutDurationSeconds(payload) / 60));
   }, [activeQueue, globalDescanso]);
 
+  const configSection = (
+    <>
+      <button
+        type="button"
+        onClick={() => setShowConfig((s) => !s)}
+        className={`game-disclosure ${showConfig ? 'game-disclosure--open' : ''}`}
+        aria-expanded={showConfig}
+        aria-controls="workout-config-panel"
+      >
+        <span className="game-disclosure__icon" aria-hidden>
+          <Settings2 size={18} />
+        </span>
+        <span className="game-disclosure__body">
+          <span className="game-disclosure__title">Configurar descanso, séries e repetições</span>
+          <span className="game-disclosure__hint">
+            {showConfig ? 'Toque para recolher' : 'Toque para ajustar descanso, séries e repetições'}
+          </span>
+        </span>
+        <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
+      </button>
+
+      {showConfig &&
+        (activeQueue.length === 0 ? (
+          <div className="glass-card game-disclosure-panel rounded-2xl p-4">
+            <p className="text-sm text-stone-500">Adicione ou recomende exercícios para ajustar.</p>
+          </div>
+        ) : (
+          <div id="workout-config-panel" className="glass-card game-disclosure-panel rounded-2xl p-4">
+            <WheelNumberPicker
+              label="Descanso padrão"
+              value={globalDescanso}
+              min={10}
+              max={90}
+              suffix="s"
+              onChange={setGlobalDescanso}
+            />
+            {activeQueue.map((item, idx) => (
+              <div key={sortableIds[idx]} className="mt-3 border-t border-stone-100 pt-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <span className="text-sm font-bold">{formatExerciseName(item)}</span>
+                    <p className="text-[0.65rem] font-bold text-stone-500">{formatExercisePrescription(item)}</p>
+                  </div>
+                  {item.modo === 'reps' && (
+                    <div className="flex flex-wrap gap-1">
+                      {schemes.map((scheme) => (
+                        <button
+                          key={`${item.slug}-${scheme.id}`}
+                          type="button"
+                          onClick={() => applyRepScheme(scheme, idx)}
+                          className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold ${
+                            selectedSchemeId === scheme.id && !customizedIndices.has(idx)
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                              : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-400'
+                          }`}
+                        >
+                          {scheme.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  <WheelNumberPicker
+                    label="Séries"
+                    value={item.series}
+                    min={1}
+                    max={10}
+                    onChange={(series) => updateQueueItem(idx, { series })}
+                  />
+                  <WheelNumberPicker
+                    label="Repetições"
+                    value={item.repeticoes ?? 12}
+                    min={1}
+                    max={50}
+                    disabled={item.modo === 'tempo'}
+                    placeholder="Por tempo"
+                    onChange={(repeticoes) => updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })}
+                  />
+                  <WheelNumberPicker
+                    label="Descanso (s)"
+                    value={item.descanso_seg ?? globalDescanso}
+                    min={5}
+                    max={90}
+                    suffix="s"
+                    onChange={(descanso_seg) => updateQueueItem(idx, { descanso_seg })}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+    </>
+  );
+
   return (
     <div className="flex flex-col gap-5 pb-24 md:pb-28">
       <GamePageHeader eyebrow="Escolha ou monte" title="Montar treino" />
@@ -830,6 +925,8 @@ export function BuilderPage() {
               </DndContext>
             )}
           </section>
+
+          {configSection}
         </div>
       )}
 
@@ -864,91 +961,7 @@ export function BuilderPage() {
 
           <ExercisePicker exercises={exercises} loading={exercisesLoading} onAdd={addExercise} />
 
-          <button
-            type="button"
-            onClick={() => setShowConfig((s) => !s)}
-            className={`game-disclosure ${showConfig ? 'game-disclosure--open' : ''}`}
-            aria-expanded={showConfig}
-            aria-controls="workout-config-panel"
-          >
-            <span className="game-disclosure__icon" aria-hidden>
-              <Settings2 size={18} />
-            </span>
-            <span className="game-disclosure__body">
-              <span className="game-disclosure__title">Configurar descanso, séries e repetições</span>
-              <span className="game-disclosure__hint">
-                {showConfig ? 'Toque para recolher' : 'Toque para ajustar descanso, séries e repetições'}
-              </span>
-            </span>
-            <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
-          </button>
-
-          {showConfig && (
-            <div id="workout-config-panel" className="glass-card game-disclosure-panel rounded-2xl p-4">
-              <WheelNumberPicker
-                label="Descanso padrão"
-                value={globalDescanso}
-                min={10}
-                max={90}
-                suffix="s"
-                onChange={setGlobalDescanso}
-              />
-              {activeQueue.map((item, idx) => (
-                <div key={sortableIds[idx]} className="mt-3 border-t border-stone-100 pt-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <span className="text-sm font-bold">{formatExerciseName(item)}</span>
-                      <p className="text-[0.65rem] font-bold text-stone-500">{formatExercisePrescription(item)}</p>
-                    </div>
-                    {item.modo === 'reps' && (
-                      <div className="flex flex-wrap gap-1">
-                        {schemes.map((scheme) => (
-                          <button
-                            key={`${item.slug}-${scheme.id}`}
-                            type="button"
-                            onClick={() => applyRepScheme(scheme, idx)}
-                            className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold ${
-                              selectedSchemeId === scheme.id && !customizedIndices.has(idx)
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-400'
-                            }`}
-                          >
-                            {scheme.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    <WheelNumberPicker
-                      label="Séries"
-                      value={item.series}
-                      min={1}
-                      max={10}
-                      onChange={(series) => updateQueueItem(idx, { series })}
-                    />
-                    <WheelNumberPicker
-                      label="Repetições"
-                      value={item.repeticoes ?? 12}
-                      min={1}
-                      max={50}
-                      disabled={item.modo === 'tempo'}
-                      placeholder="Por tempo"
-                      onChange={(repeticoes) => updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })}
-                    />
-                    <WheelNumberPicker
-                      label="Descanso (s)"
-                      value={item.descanso_seg ?? globalDescanso}
-                      min={5}
-                      max={90}
-                      suffix="s"
-                      onChange={(descanso_seg) => updateQueueItem(idx, { descanso_seg })}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {configSection}
 
           <section id="builder-queue" className="glass-card rounded-2xl p-4">
             <h3 className="game-section-title">Ordem dos exercícios</h3>

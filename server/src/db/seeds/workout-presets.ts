@@ -38,6 +38,7 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'stability-ball-crunch', series: 2, repeticoes: 10, descanso_seg: 40 },
       { slug: 'reverse-crunch', series: 3, repeticoes: 10, descanso_seg: 35 },
       { slug: 'incline-push-up', series: 2, repeticoes: 8, descanso_seg: 40 },
+      { slug: 'push-up-board-chest', series: 2, repeticoes: 8, descanso_seg: 40 },
     ],
   }),
   preset({
@@ -53,6 +54,8 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'stability-ball-crunch', series: 3, repeticoes: 15, descanso_seg: 25 },
       { slug: 'sit-up', series: 3, repeticoes: 14, descanso_seg: 25 },
       { slug: 'toe-touches', series: 3, repeticoes: 16, descanso_seg: 25 },
+      { slug: 'push-up-board-chest-wide', series: 3, repeticoes: 10, descanso_seg: 25 },
+      { slug: 'push-up-board-shoulders', series: 3, repeticoes: 8, descanso_seg: 25 },
     ],
   }),
   preset({
@@ -68,6 +71,8 @@ export const workoutPresets: IWorkoutPreset[] = [
       { slug: 'dragon-flag', series: 3, repeticoes: 5, descanso_seg: 25 },
       { slug: 'stability-ball-crunch', series: 4, repeticoes: 12, descanso_seg: 18 },
       { slug: 'crunch', series: 3, repeticoes: 15, descanso_seg: 18 },
+      { slug: 'push-up-board-triceps-diamond', series: 3, repeticoes: 8, descanso_seg: 20 },
+      { slug: 'push-up-board-decline', series: 3, repeticoes: 8, descanso_seg: 20 },
     ],
   }),
   preset({

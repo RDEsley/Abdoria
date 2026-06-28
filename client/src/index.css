@@ -2679,6 +2679,121 @@ input[type='range'] {
   max-width: 420px;
 }
 
+/* Modal Trocar exercício — header fixo, lista rolável, Cancelar fixo */
+.game-swap-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.game-swap-modal__header {
+  position: relative;
+  flex-shrink: 0;
+  padding: 1rem 1.15rem 0.75rem;
+  border-bottom: 3px solid var(--game-ink);
+}
+
+.game-swap-modal__header .game-modal__title {
+  margin: 0;
+  padding-right: 2rem;
+}
+
+.game-swap-modal__header .game-modal__text {
+  margin: 0.35rem 0 0;
+}
+
+.game-swap-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.85rem 1.15rem;
+}
+
+.game-swap-modal__footer {
+  flex-shrink: 0;
+  padding: 0.75rem 1.15rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-top: 3px solid var(--game-ink);
+  background: var(--game-paper);
+}
+
+.game-swap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-swap-option {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.14);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.game-swap-option:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18);
+}
+
+.game-swap-option__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  overflow: hidden;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.55rem;
+  background: #f5f5f4;
+}
+
+.game-swap-option__thumb-fallback {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #a8a29e;
+}
+
+.game-swap-option__info {
+  min-width: 0;
+}
+
+.game-swap-option__name {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #1c1917;
+}
+
+.game-swap-option__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.game-swap-option__prescription {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-swap-option__btn {
+  align-self: center;
+}
+
 .game-modal__close-btn {
   position: absolute;
   top: 0.65rem;

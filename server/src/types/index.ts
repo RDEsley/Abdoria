@@ -85,7 +85,6 @@ export {
   projectedAbdoriaAfterXpSpend,
   spendableXpForShop,
   xpFloorForCurrentLevel,
-  dailyXpCap,
   dailyXpCapForLevel,
   dailyFullExercisesForCap,
   XP_DAILY_CAP_BASE,

@@ -1,7 +1,7 @@
 import type { UserPreferencias } from '../types/index.js';
 
 /** Equipamentos opcionais que desbloqueiam exercícios no catálogo. */
-export type EquipmentId = 'push_up_board' | 'pull_up_bar' | 'ab_wheel';
+export type EquipmentId = 'push_up_board' | 'pull_up_bar' | 'ab_wheel' | 'stability_ball';
 
 export interface EquipmentDefinition {
   id: EquipmentId;
@@ -17,12 +17,17 @@ export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
   {
     id: 'push_up_board',
     nome: 'Prancha de Flexão 9 em 1',
-    descricao: 'Variações de flexão por posição e cor — peito, costas, tríceps e ombros.',
+    descricao: '9 variações de flexão por posição e cor — peito, ombros, costas e tríceps.',
     exerciseSlugs: [
       'push-up-board-chest',
+      'push-up-board-chest-wide',
+      'push-up-board-decline',
       'push-up-board-triceps',
+      'push-up-board-triceps-diamond',
       'push-up-board-shoulders',
+      'push-up-board-shoulders-pike',
       'push-up-board-back',
+      'push-up-board-back-wide',
     ],
     purchaseUrl:
       'https://www.mercadolivre.com.br/p/MLB64302822?matt_tool=38524122&pdp_filters=item_id:MLB4421861011&ua=nUCtTuSuVgT4qRpEAHq-vjywSt8yB7Ta5KFEOXFQFUmZBxZE#origin=share&sid=share&wid=MLB4421861011&action=copy',
@@ -40,6 +45,12 @@ export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
     exerciseSlugs: ['ab-wheel-knees', 'ab-wheel', 'ab-wheel-standing'],
     purchaseUrl:
       'https://www.mercadolivre.com.br/p/MLB26054619?matt_tool=38524122&pdp_filters=item_id:MLB3411770569&ua=964TOli9qe-gWQK7zlIWU1UyY_MlpNh3Pu1QQMdrij9E_r0P#origin=share&sid=share&wid=MLB3411770569&action=copy',
+  },
+  {
+    id: 'stability_ball',
+    nome: 'Bola Suíça',
+    descricao: 'Abdominais sobre a bola — maior amplitude e ativação do core.',
+    exerciseSlugs: ['stability-ball-crunch'],
   },
 ] as const;
 
@@ -65,6 +76,7 @@ export function resolveUserEquipment(
     push_up_board: Boolean(raw.push_up_board),
     pull_up_bar: Boolean(raw.pull_up_bar),
     ab_wheel: Boolean(raw.ab_wheel),
+    stability_ball: Boolean(raw.stability_ball),
   };
 }
 
