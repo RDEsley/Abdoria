@@ -43,6 +43,9 @@ export const EXERCISE_NOME_PT: Record<string, string> = {
   'chin-up': 'Barra fixa — supinada',
   'dead-hang': 'Suspensão isométrica',
   'copenhagen-plank': 'Prancha de Copenhagen',
+  'push-up': 'Flexão',
+  'incline-push-up': 'Flexão inclinada',
+  'decline-push-up': 'Flexão declinada',
 };
 
 export function resolveExerciseNomePt(exercise: { slug?: string; nome_pt?: string }): string | undefined {

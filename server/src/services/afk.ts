@@ -141,7 +141,7 @@ export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId
   const elapsedMs = Math.max(0, now.getTime() - lastSeen.getTime());
   let newMinutes = Math.floor(elapsedMs / 60_000);
   if (newMinutes <= 0) {
-    afk.last_seen_at = now.toISOString();
+    // Não atualiza last_seen_at — deixa o tempo fracionário acumular até completar 1 min.
     return collectNewBestiaryUnlocks(before, user);
   }
 
@@ -154,7 +154,8 @@ export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId
   rollFrozenStreakForExplorationMinutes(String(user.id), already, totalMinutes, afk.pending);
 
   afk.minutos_acumulados = totalMinutes;
-  afk.last_seen_at = now.toISOString();
+  // Avança last_seen_at exatamente pelos minutos consumidos — preserva segundos fracionários.
+  afk.last_seen_at = new Date(lastSeen.getTime() + newMinutes * 60_000).toISOString();
   return collectNewBestiaryUnlocks(before, user);
 }
 

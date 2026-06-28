@@ -153,10 +153,7 @@ export function TopNavbar({
               aria-label="Abrir inventário"
               title="Inventário"
             >
-              <span className="top-navbar__bag-icon-wrap" aria-hidden>
-                <Backpack size={22} strokeWidth={2.4} />
-              </span>
-              <span className="top-navbar__bag-label">Mochila</span>
+              <Backpack size={24} strokeWidth={2.2} aria-hidden />
               {inventoryItemCount > 0 && (
                 <span className="top-navbar__bag-badge tabular-nums" aria-hidden>
                   {inventoryItemCount > 99 ? '99+' : inventoryItemCount}

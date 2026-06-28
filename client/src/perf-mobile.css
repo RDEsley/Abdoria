@@ -40,7 +40,11 @@
   .game-afk-scene__sparkle,
   .game-afk-mascot__cape,
   .game-afk-enemy__boss-aura,
-  .game-xp-bar-wrap--full {
+  .game-xp-bar-wrap--full,
+  .game-streak--frozen,
+  .game-streak--frozen::before,
+  .game-streak--frozen::after,
+  .game-streak__snowflake {
     animation: none !important;
   }
 }
