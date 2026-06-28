@@ -48,6 +48,10 @@ export function GameHud() {
     + (stats?.exp_instant_count ?? 0)
     + (stats?.doria_bag_count ?? 0);
 
+  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const backgroundClass = fundoKey === 'padrao' ? undefined : `game-card-fundo--${fundoKey}`;
+  const backgroundLight = fundoKey === 'praia';
+
   return (
     <>
       <TopNavbar
@@ -57,6 +61,8 @@ export function GameHud() {
         xpMax={xpToNext}
         doriasAmount={cosmeticos.moedas}
         inventoryItemCount={inventoryItemCount}
+        backgroundClass={backgroundClass}
+        backgroundLight={backgroundLight}
         avatar={<CosmeticAvatar user={user} size="sm" className="top-navbar__cosmetic-avatar" />}
         userTitle={equippedTitle}
         titleClassName={titleClassName}

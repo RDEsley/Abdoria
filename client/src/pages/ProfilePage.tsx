@@ -36,10 +36,12 @@ export function ProfilePage() {
         ? 'game-profile-hero__title cosmetic-title--secreto'
         : 'game-profile-hero__title';
   const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
-  const isLightFundo = fundoKey === 'padrao' || fundoKey === 'praia';
-  const heroShellClass = isLightFundo
-    ? 'game-profile-hero-shell game-profile-hero-shell--default'
-    : `game-profile-hero-shell game-profile-hero-shell--skinned game-card-fundo--${fundoKey}`;
+  const heroShellClass =
+    fundoKey === 'padrao'
+      ? 'game-profile-hero-shell game-profile-hero-shell--default'
+      : fundoKey === 'praia'
+        ? `game-profile-hero-shell game-profile-hero-shell--skinned-light game-card-fundo--${fundoKey}`
+        : `game-profile-hero-shell game-profile-hero-shell--skinned game-card-fundo--${fundoKey}`;
   const xpLevel = xpProgressFromTotal(profile.gamificacao.nivel_xp).level;
 
   const handleRefresh = async () => {
