@@ -8,12 +8,15 @@ import type { IExerciseDocument, WorkoutQueueItem } from '@/types';
 import { formatExerciseName, formatExercisePrescription } from '@/types';
 import { MuscleTag } from '@/components/builder/MuscleTag';
 
+const DURATION_OPTIONS = [20, 30, 45, 60, 90, 120] as const;
+
 interface Props {
   id: string;
   item: WorkoutQueueItem;
   index: number;
   exercise?: IExerciseDocument;
   onRemove?: () => void;
+  onChangeTempo?: (seconds: number) => void;
   isPinned?: boolean;
   isBlocked?: boolean;
   onTogglePin?: () => void;
@@ -33,6 +36,7 @@ export function SortableExerciseItem({
   index,
   exercise,
   onRemove,
+  onChangeTempo,
   isPinned = false,
   isBlocked = false,
   onTogglePin,
@@ -115,6 +119,33 @@ export function SortableExerciseItem({
             onToggleBlock={onToggleBlock}
           />
         </div>
+
+        {item.modo === 'tempo' && onChangeTempo && (
+          <div className="flex flex-wrap items-center gap-1 pl-9">
+            <span className="mr-1 text-[0.6rem] font-bold uppercase tracking-wide text-stone-400">
+              Duração:
+            </span>
+            {DURATION_OPTIONS.map((sec) => {
+              const current = item.tempo_seg ?? item.tempo_recomendado ?? 30;
+              const active = current === sec;
+              return (
+                <button
+                  key={sec}
+                  type="button"
+                  onClick={() => onChangeTempo(sec)}
+                  className={[
+                    'rounded-full border px-2 py-0.5 text-[0.6rem] font-extrabold transition-colors',
+                    active
+                      ? 'border-emerald-700 bg-emerald-600 text-white'
+                      : 'border-stone-200 bg-white text-stone-500 hover:border-emerald-400 hover:text-emerald-700',
+                  ].join(' ')}
+                >
+                  {sec < 60 ? `${sec}s` : `${sec / 60}min`}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </li>
 
       {showVideo && exercise && (

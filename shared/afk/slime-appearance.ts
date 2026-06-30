@@ -41,7 +41,11 @@ export type SlimeAccessoryKind =
   | 'halo'
   | 'bow'
   | 'patch'
-  | 'sparkle';
+  | 'sparkle'
+  | 'wizard-hat'
+  | 'wand'
+  | 'crystal-shard'
+  | 'storm-bolt';
 
 export interface SlimeAppearance {
   eyes: SlimeEyeStyle;
@@ -92,8 +96,14 @@ export function resolveSlimeAppearance(
   if (isBoss && enemyId === 'boss_hydra') {
     return { eyes: 'wide', mouth: 'grin', extra: 'none' };
   }
+  if (isBoss && enemyId === 'boss_golem') {
+    return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+  }
   if (enemyId === 'golden_slime') {
     return { eyes: 'star', mouth: 'o', extra: 'aura' };
+  }
+  if (enemyId === 'magic_rabbit') {
+    return { eyes: 'star', mouth: 'smile', extra: 'sparkle' };
   }
   if (enemyId === 'skeleton') {
     return { eyes: 'round', mouth: 'flat', extra: 'none' };
@@ -108,7 +118,10 @@ export function resolveSlimeAppearance(
   if (enemyId === 'zombie' && (s >>> 10) % 3 === 0) {
     mouth = 'vampire';
   }
-  if (enemyId === 'demon_bat' && (s >>> 14) % 4 === 0) {
+  if (enemyId === 'crystal_slime' && (s >>> 14) % 4 === 0) {
+    eyes = 'wide';
+  }
+  if (enemyId === 'storm_slime' && (s >>> 14) % 3 === 0) {
     eyes = 'anime';
   }
   const extraRoll = (s >>> 16) % 100;
@@ -131,17 +144,23 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
     case 'armored_skeleton':
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
-    case 'demon_bat':
+    case 'crystal_slime':
+      return { eyes: 'wide', mouth: 'flat', extra: 'none' };
+    case 'storm_slime':
       return { eyes: 'anime', mouth: 'grin', extra: 'none' };
     case 'slime_knight':
       return { eyes: 'round', mouth: 'smile', extra: 'none' };
     case 'golden_slime':
       return { eyes: 'star', mouth: 'o', extra: 'aura' };
+    case 'magic_rabbit':
+      return { eyes: 'star', mouth: 'smile', extra: 'sparkle' };
     case 'boss_colossus':
       return { eyes: 'wide', mouth: 'grin', extra: 'none' };
     case 'boss_lich':
       return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
     case 'boss_hydra':
+      return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+    case 'boss_golem':
       return { eyes: 'wide', mouth: 'grin', extra: 'none' };
     default:
       return { eyes: 'round', mouth: 'smile', extra: 'none' };
@@ -166,6 +185,9 @@ export function collectSlimeAccessories(
         break;
       case 'boss_hydra':
         break;
+      case 'boss_golem':
+        items.push('crown', 'horn-l', 'horn-r');
+        break;
       default:
         items.push('crown');
     }
@@ -177,11 +199,14 @@ export function collectSlimeAccessories(
     return items;
   }
 
+  if (enemyId === 'magic_rabbit') {
+    items.push('wizard-hat', 'wand');
+    return items;
+  }
+
   switch (enemyId) {
     case 'bat':
-    case 'demon_bat':
       items.push('wing-l', 'wing-r');
-      if (enemyId === 'demon_bat') items.push('horn');
       break;
     case 'zombie':
       items.push('scar');
@@ -191,6 +216,12 @@ export function collectSlimeAccessories(
       break;
     case 'armored_skeleton':
       items.push('bone-a', 'bone-b', 'helm');
+      break;
+    case 'crystal_slime':
+      items.push('crystal-shard');
+      break;
+    case 'storm_slime':
+      items.push('storm-bolt');
       break;
     case 'slime_knight':
       items.push('helm-knight');
@@ -213,8 +244,10 @@ export function accessoryDropMotion(
   index: number,
 ): { x: number; y: number; rot: number } {
   const s = (seed >>> 0) + index * 97;
-  const x = ((s % 19) - 9) * 3;
-  const y = -(((s >>> 5) % 11) + 10);
-  const rot = ((s >>> 8) % 72) - 36;
+  // Espalhamento horizontal maior, impulso vertical mais forte e giro (tumble) amplo
+  // para a peça cair com sensação de gravidade/física natural.
+  const x = ((s % 23) - 11) * 4; // ~ -44..44 px
+  const y = -(((s >>> 5) % 13) + 16); // pop inicial -16..-28 px
+  const rot = ((s >>> 8) % 280) - 140; // tumble -140..140 graus
   return { x, y, rot };
 }

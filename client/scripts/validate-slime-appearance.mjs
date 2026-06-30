@@ -5,17 +5,19 @@ import {
 } from '../../shared/afk/slime-appearance.ts';
 
 const ENEMIES = [
-  'slime',
   'bat',
-  'demon_bat',
   'zombie',
   'skeleton',
   'armored_skeleton',
+  'crystal_slime',
+  'storm_slime',
   'slime_knight',
   'golden_slime',
+  'magic_rabbit',
   'boss_colossus',
   'boss_lich',
   'boss_hydra',
+  'boss_golem',
 ];
 
 let errors = 0;

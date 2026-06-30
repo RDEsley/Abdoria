@@ -36,7 +36,7 @@ export interface AppContextValue {
   setMuscleFilter: (m: MusculoPrincipal | null) => void;
   refresh: () => Promise<void>;
   loadRecommendations: (options?: { force?: boolean }) => Promise<void>;
-  ensureExercises: () => Promise<void>;
+  ensureExercises: (options?: { force?: boolean }) => Promise<void>;
   ensureHistory: () => Promise<void>;
   setCustomWorkout: (items: WorkoutQueueItem[]) => void;
   setCustomWorkoutName: (nome: string) => void;

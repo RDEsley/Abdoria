@@ -29,6 +29,10 @@ const KIND_CLASS: Record<SlimeAccessoryKind, string> = {
   bow: 'game-afk-slime__bow',
   patch: 'game-afk-slime__patch',
   sparkle: 'game-afk-slime__sparkle',
+  'wizard-hat': 'game-afk-slime__wizard-hat',
+  wand: 'game-afk-slime__wand',
+  'crystal-shard': 'game-afk-slime__crystal-shard',
+  'storm-bolt': 'game-afk-slime__storm-bolt',
 };
 
 const BACK_LAYER: ReadonlySet<SlimeAccessoryKind> = new Set([
@@ -41,6 +45,8 @@ const BACK_LAYER: ReadonlySet<SlimeAccessoryKind> = new Set([
   'bone-b',
   'scar',
   'staff',
+  'crystal-shard',
+  'storm-bolt',
 ]);
 
 export function isBackSlimeAccessory(kind: SlimeAccessoryKind): boolean {

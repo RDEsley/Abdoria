@@ -3,10 +3,12 @@ import { COSMETICS } from '../data/cosmetics.js';
 import {
   PATROL_LEGENDARY_WEAPON_IDS,
   PATROL_SECRET_WEAPON_IDS,
+  PATROL_SPELL_IDS,
   resolvePatrolArmas,
 } from '../../../shared/patrol/shop.js';
 import type { AfkEnemyTier } from '../types/index.js';
 import {
+  AFK_BOSS_LEGENDARY_WEAPON_ROLL,
   AFK_KILL_DROP_CHANCE_BOSS,
   AFK_KILL_DROP_CHANCE_COMMON,
   AFK_KILL_DROP_CHANCE_ELITE,
@@ -55,10 +57,10 @@ export function getKillDropChanceForTier(tier: AfkEnemyTier): number {
   return AFK_KILL_DROP_CHANCE_COMMON;
 }
 
-/** Espelha {@link AFK_BOSS_LEGENDARY_WEAPON_ROLL} em shared/afk/combat.ts */
-const BOSS_LEGENDARY_WEAPON_THRESHOLD = 9950;
+/** Fonte única em shared/afk/combat.ts (calibrado para ~160h até a 1ª lendária). */
+const BOSS_LEGENDARY_WEAPON_THRESHOLD = AFK_BOSS_LEGENDARY_WEAPON_ROLL;
 
-/** 0,5% por derrota de boss — arco ou espada lendária (nível 9). */
+/** 0,13% por derrota de boss — arco ou espada lendária (nível 9). */
 export function rollBossLegendaryWeapon(
   user: UserDocument,
   killIndex: number,
@@ -163,6 +165,51 @@ export function rollGoldenSlimeSecretCosmetic(
 
   pending.cosmetic_ids.push(cosmeticId);
   pending.drop_count = (pending.drop_count ?? 0) + 1;
+}
+
+/**
+ * Drop do Coelho Mágico — sempre dropa uma magia, priorizando as que o usuário ainda não tem.
+ * Distribuição por raridade: água 45%, terra 20%, gelo 16%, fogo 11%, raio 6%, buraco negro 2%.
+ */
+export function rollMagicRabbitSpell(
+  user: UserDocument,
+  killIndex: number,
+  pending: AfkPendingReward,
+): void {
+  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
+  const unlockedSpells = new Set(armas.desbloqueados);
+
+  const spellsNotOwned = (PATROL_SPELL_IDS as readonly string[]).filter(
+    (id) => !unlockedSpells.has(id) && !pending.weapon_ids.includes(id),
+  );
+
+  const pool = spellsNotOwned.length > 0 ? spellsNotOwned : [...PATROL_SPELL_IDS];
+
+  const weights = pool.map((id) => {
+    if (id === 'magia_agua') return 45;
+    if (id === 'magia_terra') return 20;
+    if (id === 'magia_gelo') return 16;
+    if (id === 'magia_fogo') return 11;
+    if (id === 'magia_relampago') return 6;
+    if (id === 'magia_buraco_negro') return 2;
+    return 1;
+  });
+
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+  const roll = hashKillSeed(String(user.id), killIndex + 6666) % totalWeight;
+
+  let cumulative = 0;
+  for (let i = 0; i < pool.length; i++) {
+    cumulative += weights[i] ?? 0;
+    if (roll < cumulative) {
+      const spellId = pool[i];
+      if (spellId && !pending.weapon_ids.includes(spellId)) {
+        pending.weapon_ids.push(spellId);
+        pending.drop_count = (pending.drop_count ?? 0) + 1;
+      }
+      return;
+    }
+  }
 }
 
 /** @deprecated use rollKillDrop */

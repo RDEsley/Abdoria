@@ -1,15 +1,12 @@
-import { Sparkles, Wand2 } from 'lucide-react';
-import type { PatrolWeaponKind } from '@/types';
-import { PatrolBowTabIcon, PatrolSwordTabIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
+import { Sparkles } from 'lucide-react';
 
 const VENDOR_ART_SRC = '/assets/patrol-shop-vendor.png';
 
 interface Props {
-  activeTab: PatrolWeaponKind;
   celebrating?: boolean;
 }
 
-export function PatrolShopVendor({ activeTab, celebrating }: Props) {
+export function PatrolShopVendor({ celebrating }: Props) {
   return (
     <div
       className={`game-patrol-vendor${celebrating ? ' game-patrol-vendor--celebrate' : ''}`}
@@ -34,14 +31,6 @@ export function PatrolShopVendor({ activeTab, celebrating }: Props) {
         </>
       )}
 
-      <div className="game-patrol-vendor__sign">
-        {activeTab === 'arco' && <PatrolBowTabIcon className="game-patrol-vendor__sign-icon" />}
-        {activeTab === 'espada' && <PatrolSwordTabIcon className="game-patrol-vendor__sign-icon" />}
-        {activeTab === 'magia' && <Wand2 size={12} aria-hidden />}
-        <span>
-          {activeTab === 'arco' ? 'Arcos' : activeTab === 'espada' ? 'Espadas' : 'Magias'}
-        </span>
-      </div>
     </div>
   );
 }

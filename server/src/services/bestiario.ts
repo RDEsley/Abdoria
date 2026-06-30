@@ -87,7 +87,7 @@ export interface BestiaryEntryResponse {
 }
 
 export interface BestiaryCategoryResponse {
-  id: 'common' | 'elite' | 'boss';
+  id: string;
   label: string;
   entries: BestiaryEntryResponse[];
 }

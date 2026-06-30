@@ -5,12 +5,15 @@ export type AfkEnemyId =
   | 'zombie'
   | 'skeleton'
   | 'armored_skeleton'
-  | 'demon_bat'
+  | 'crystal_slime'
+  | 'storm_slime'
   | 'slime_knight'
   | 'golden_slime'
+  | 'magic_rabbit'
   | 'boss_colossus'
   | 'boss_lich'
-  | 'boss_hydra';
+  | 'boss_hydra'
+  | 'boss_golem';
 
 export interface AfkEnemyDefinition {
   id: AfkEnemyId;
@@ -46,7 +49,7 @@ export const AFK_HERO_DAMAGE_ESPADA = 12;
 export const AFK_CRIT_CHANCE_ESPADA = 6;
 export const AFK_CRIT_CHANCE_ARCO = 18;
 export const AFK_CRIT_STREAK_STEP_ARCO = 4;
-export const AFK_CRIT_BONUS_ESPADA = 10;
+export const AFK_CRIT_BONUS_ESPADA = 25;
 /** @deprecated Use {@link AFK_CRIT_STREAK_STEP_ARCO} — arcos acumulam +4 por crítico seguido. */
 export const AFK_CRIT_BONUS_ARCO = AFK_CRIT_STREAK_STEP_ARCO;
 /** @deprecated Arcos usam {@link AFK_CRIT_CHANCE_ARCO}. */
@@ -87,25 +90,35 @@ export const AFK_GOLDEN_SLIME_CHANCE = 5000;
 export const AFK_GOLDEN_SLIME_ABDORIA = 99;
 export const AFK_LEGENDARY_ROLL_NORMAL = 9995;
 export const AFK_LEGENDARY_ROLL_BOSS = 9991;
-/** 0,5% por kill de boss — rolagem em /10000 (9950–9999). */
-export const AFK_BOSS_LEGENDARY_WEAPON_ROLL = 9950;
+/**
+ * 0,13% por kill de boss — rolagem em /10000 (9987–9999 = 13 valores).
+ * Calibrado para ~160h até a 1ª lendária: 8 kills/min × 60 × 160h = 76.800 kills,
+ * 1 boss a cada 100 kills (AFK_BOSS_INTERVAL) ⇒ 768 bosses; 1/0,0013 ≈ 769 bosses ≈ 76.900 kills ≈ 160,2h.
+ */
+export const AFK_BOSS_LEGENDARY_WEAPON_ROLL = 9987;
 
+// HP base dos slimes: comuns 80–150, elites 400–600, bosses 1000–1500, Golden = 10.000.
 export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
-  bat: { id: 'bat', tier: 'common', maxHp: 42, label: 'Slime Morcego' },
-  zombie: { id: 'zombie', tier: 'common', maxHp: 70, label: 'Slime Musgo' },
-  skeleton: { id: 'skeleton', tier: 'common', maxHp: 90, label: 'Slime Ósseo' },
-  armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 155, label: 'Slime Blindado' },
-  demon_bat: { id: 'demon_bat', tier: 'elite', maxHp: 190, label: 'Slime Demoníaco' },
-  slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 225, label: 'Slime Cavaleiro' },
-  golden_slime: { id: 'golden_slime', tier: 'common', maxHp: 110, label: 'Golden Slime' },
-  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 490, label: 'Rei Slime' },
-  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 560, label: 'Slime Lich' },
-  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 630, label: 'Hidra Slime' },
+  bat: { id: 'bat', tier: 'common', maxHp: 90, label: 'Slime Morcego' },
+  zombie: { id: 'zombie', tier: 'common', maxHp: 115, label: 'Slime Musgo' },
+  skeleton: { id: 'skeleton', tier: 'common', maxHp: 145, label: 'Slime Ósseo' },
+  armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 440, label: 'Slime Blindado' },
+  crystal_slime: { id: 'crystal_slime', tier: 'elite', maxHp: 510, label: 'Slime Cristalino' },
+  storm_slime: { id: 'storm_slime', tier: 'elite', maxHp: 580, label: 'Slime Trovão' },
+  slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 620, label: 'Slime Cavaleiro' },
+  golden_slime: { id: 'golden_slime', tier: 'common', maxHp: 10000, label: 'Golden Slime' },
+  magic_rabbit: { id: 'magic_rabbit', tier: 'common', maxHp: 8000, label: 'Coelho Mágico' },
+  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 1050, label: 'Rei Slime' },
+  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 1250, label: 'Slime Lich' },
+  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 1450, label: 'Hidra Slime' },
+  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 1350, label: 'Golem de Pedra' },
 };
 
+export const AFK_MAGIC_RABBIT_CHANCE = 2304;
+
 const COMMON_ENEMIES: AfkEnemyId[] = ['bat', 'zombie', 'skeleton'];
-const ELITE_ENEMIES: AfkEnemyId[] = ['armored_skeleton', 'demon_bat', 'slime_knight'];
-const BOSS_ENEMIES: AfkEnemyId[] = ['boss_colossus', 'boss_lich', 'boss_hydra'];
+const ELITE_ENEMIES: AfkEnemyId[] = ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'];
+const BOSS_ENEMIES: AfkEnemyId[] = ['boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem'];
 
 export const DEFAULT_AFK_COMBAT: AfkCombatState = {
   kills_total: 0,
@@ -151,6 +164,10 @@ export function shouldSpawnGoldenSlime(seed: number): boolean {
   return seed % AFK_GOLDEN_SLIME_CHANCE === 0;
 }
 
+export function shouldSpawnMagicRabbit(seed: number): boolean {
+  return seed % AFK_MAGIC_RABBIT_CHANCE === 0;
+}
+
 export function pickNextEnemy(
   seed: number,
   opts: { isBoss: boolean; isElite: boolean; previousEnemyId?: AfkEnemyId },
@@ -181,6 +198,10 @@ export function resolveNextSpawn(
 
   if (!isBoss && shouldSpawnGoldenSlime(seed)) {
     return { enemy_id: 'golden_slime', elite: false, is_boss: false };
+  }
+
+  if (!isBoss && shouldSpawnMagicRabbit(seed)) {
+    return { enemy_id: 'magic_rabbit', elite: false, is_boss: false };
   }
 
   const elite = !isBoss && shouldSpawnElite(seed);

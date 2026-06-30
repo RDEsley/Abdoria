@@ -1,6 +1,7 @@
 interface Props {
   showClouds?: boolean;
   showSparkles?: boolean;
+  enemyId?: string | null;
 }
 
 const TREE_SLOTS = [

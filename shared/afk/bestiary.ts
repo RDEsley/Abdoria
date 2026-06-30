@@ -1,6 +1,6 @@
 import { AFK_ENEMIES, type AfkEnemyId, type AfkEnemyTier } from './combat.js';
 
-export type BestiaryCategoryId = AfkEnemyTier;
+export type BestiaryCategoryId = AfkEnemyTier | 'golden';
 
 export interface BestiaryCategory {
   id: BestiaryCategoryId;
@@ -12,17 +12,22 @@ export const BESTIARY_CATEGORIES: BestiaryCategory[] = [
   {
     id: 'common',
     label: 'Comuns',
-    enemyIds: ['bat', 'zombie', 'skeleton', 'golden_slime'],
+    enemyIds: ['bat', 'zombie', 'skeleton'],
   },
   {
     id: 'elite',
     label: 'Elites',
-    enemyIds: ['armored_skeleton', 'demon_bat', 'slime_knight'],
+    enemyIds: ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'],
   },
   {
     id: 'boss',
     label: 'Chefes',
-    enemyIds: ['boss_colossus', 'boss_lich', 'boss_hydra'],
+    enemyIds: ['boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem'],
+  },
+  {
+    id: 'golden',
+    label: 'Especial',
+    enemyIds: ['golden_slime', 'magic_rabbit'],
   },
 ];
 

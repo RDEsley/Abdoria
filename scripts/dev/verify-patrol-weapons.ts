@@ -40,7 +40,7 @@ assert.equal(AFK_CRIT_CHANCE_ESPADA, 6);
 assert.equal(AFK_CRIT_STREAK_STEP_ARCO, 4);
 assert.equal(AFK_GOLDEN_SLIME_CHANCE, 5000);
 assert.equal(AFK_GOLDEN_SLIME_ABDORIA, 99);
-assert.equal(AFK_BOSS_LEGENDARY_WEAPON_ROLL, 9950);
+assert.equal(AFK_BOSS_LEGENDARY_WEAPON_ROLL, 9987);
 
 assert.equal(patrolWeaponsByKind('arco').length, 10);
 assert.equal(patrolWeaponsByKind('espada').length, 10);
@@ -64,14 +64,14 @@ assert.equal(arco10.raridade, 'secreto');
 assert.equal(espada10.raridade, 'secreto');
 
 assert.equal(patrolHeroDamage('arco', 'arco_05'), 24);
-assert.equal(patrolHeroDamage('espada', 'espada_09'), 70);
+assert.equal(patrolHeroDamage('espada', 'espada_09'), 50);
 
-assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'bat'), 42);
+assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'bat'), 90);
 assert.ok(isPatrolHitKillTarget('bat'));
 assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'armored_skeleton'), 52);
 assert.equal(resolvePatrolBaseDamage('espada', 'espada_10', 'golden_slime'), 60);
-assert.equal(resolvePatrolCritChancePercent('arco', 'arco_10', 'boss_colossus'), 28);
-assert.equal(resolvePatrolCritChancePercent('espada', 'espada_10', 'boss_colossus'), 18);
+assert.equal(resolvePatrolCritChancePercent('arco', 'arco_10', 'boss_colossus'), 35);
+assert.equal(resolvePatrolCritChancePercent('espada', 'espada_10', 'boss_colossus'), 16);
 
 let streak = 0;
 const crit1 = resolvePatrolAttackDamage({
@@ -111,7 +111,7 @@ const swordCrit = resolvePatrolAttackDamage({
   critStreak: 5,
   isCrit: true,
 });
-assert.equal(swordCrit.damage, 20 + 4);
+assert.equal(swordCrit.damage, 20 + 10);
 assert.equal(swordCrit.nextCritStreak, 0);
 
 let goldenHits = 0;
@@ -127,7 +127,7 @@ for (let i = 0; i < 20_000; i += 1) {
   if (roll < AFK_BOSS_LEGENDARY_WEAPON_ROLL) continue;
   weaponDrops += 1;
 }
-assert.ok(weaponDrops >= 60 && weaponDrops <= 140, `boss weapon roll gate ~0.5% (got ${weaponDrops}/20000)`);
+assert.ok(weaponDrops >= 10 && weaponDrops <= 50, `boss weapon roll gate ~0.13% (got ${weaponDrops}/20000)`);
 
 weaponDrops = 0;
 for (let i = 0; i < 20_000; i += 1) {
@@ -135,7 +135,7 @@ for (let i = 0; i < 20_000; i += 1) {
   rollBossLegendaryWeapon(mockUser, i, pending, new Set());
   if (pending.weapon_ids.length > 0) weaponDrops += 1;
 }
-assert.ok(weaponDrops >= 60 && weaponDrops <= 140, `boss weapon drop ~0.5% (got ${weaponDrops}/20000)`);
+assert.ok(weaponDrops >= 10 && weaponDrops <= 50, `boss weapon drop ~0.13% (got ${weaponDrops}/20000)`);
 assert.deepEqual([...PATROL_LEGENDARY_WEAPON_IDS], ['arco_09', 'espada_09']);
 
 console.log('Patrol weapons verification OK');
@@ -147,8 +147,11 @@ console.log(
       drop_proc_boss_pct: AFK_KILL_DROP_CHANCE_BOSS,
       loot_legendary_roll_normal: AFK_LEGENDARY_ROLL_NORMAL,
       loot_legendary_roll_boss: AFK_LEGENDARY_ROLL_BOSS,
-      boss_weapon_drop_pct: 0.5,
+      boss_weapon_drop_pct: (10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 100,
       boss_weapon_roll_threshold: AFK_BOSS_LEGENDARY_WEAPON_ROLL,
+      boss_weapon_hours_to_first: Math.round(
+        (1 / ((10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 10000)) * 100 / 8 / 60,
+      ),
       golden_slime_chance: `1/${AFK_GOLDEN_SLIME_CHANCE}`,
       golden_slime_abdoria: AFK_GOLDEN_SLIME_ABDORIA,
       bow_crit_pct: AFK_CRIT_CHANCE_ARCO,

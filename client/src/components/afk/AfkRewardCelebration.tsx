@@ -20,9 +20,9 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
   const [phase, setPhase] = useState<ChestPhase>('closed');
 
   useEffect(() => {
-    const shakeTimer = window.setTimeout(() => setPhase('shaking'), 220);
-    const openTimer = window.setTimeout(() => setPhase('opening'), 520);
-    const revealTimer = window.setTimeout(() => setPhase('open'), 1280);
+    const shakeTimer = window.setTimeout(() => setPhase('shaking'), 160);
+    const openTimer = window.setTimeout(() => setPhase('opening'), 400);
+    const revealTimer = window.setTimeout(() => setPhase('open'), 900);
     return () => {
       window.clearTimeout(shakeTimer);
       window.clearTimeout(openTimer);

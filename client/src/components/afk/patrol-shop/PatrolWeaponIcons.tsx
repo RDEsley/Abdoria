@@ -214,10 +214,16 @@ function swordPalette(variant?: string): SwordPalette {
   };
 }
 
+// Recurve bow limb path: from left string-attachment → left recurve hook (dips to y≈46) →
+// main arc peaking at y≈15 at center → right recurve hook → right string-attachment.
+const BOW_ARC =
+  'M11 37 C9 37,7 40,8 43 C9 46,13 46,14 38 C14 7,50 7,50 38 C51 46,55 46,56 43 C57 40,55 37,53 37';
+
 /** Arco recurvo estilizado — variantes por tier de arma. */
 export function PatrolBowIcon({ className, variant, style }: IconProps) {
   const uid = useId().replace(/:/g, '');
   const p = bowPalette(variant);
+  const lvl = weaponLevel(variant);
 
   return (
     <svg viewBox="0 0 64 48" className={className} style={style} aria-hidden>
@@ -240,87 +246,96 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
 
       {p.glow && <ellipse cx="32" cy="24" rx="28" ry="20" fill={`url(#${uid}-glow)`} />}
 
-      {/* Sombra */}
+      {/* Limb shadow */}
       <path
-        d="M12 38 C12 8, 52 8, 52 38"
+        d={BOW_ARC}
         fill="none"
         stroke={INK}
-        strokeWidth="3.4"
+        strokeWidth="7"
         strokeLinecap="round"
-        opacity="0.18"
-        transform="translate(0.6, 0.8)"
+        opacity="0.2"
+        transform="translate(0.7,0.9)"
       />
 
-      {/* Limbs */}
+      {/* Limb — thick gradient stroke for visible depth */}
+      <path d={BOW_ARC} fill="none" stroke={`url(#${uid}-limb)`} strokeWidth="6.5" strokeLinecap="round" />
+      {/* Limb outline */}
+      <path d={BOW_ARC} fill="none" stroke={INK} strokeWidth="1.9" strokeLinecap="round" />
+      {/* Inner belly shadow — slightly offset path to suggest cross-section */}
       <path
-        d="M11 37 C11 7, 53 7, 53 37"
-        fill="none"
-        stroke={`url(#${uid}-limb)`}
-        strokeWidth="4.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M11 37 C11 7, 53 7, 53 37"
+        d="M13 37 C11 10,51 10,51 37"
         fill="none"
         stroke={INK}
-        strokeWidth="2"
+        strokeWidth="1.3"
         strokeLinecap="round"
+        opacity="0.3"
       />
 
-      {/* Brilho no limb superior */}
+      {/* Front face highlight */}
       <path
-        d="M16 14 C24 9, 40 9, 48 14"
+        d="M16 15 C23 9, 41 9, 48 15"
         fill="none"
         stroke="#fff"
-        strokeWidth="1.2"
+        strokeWidth="1.1"
         strokeLinecap="round"
-        opacity="0.35"
+        opacity="0.38"
       />
 
-      {/* Pontas metálicas */}
-      <path d="M10 36 L8 39 L12 38 Z" fill={p.tip} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
-      <path d="M54 36 L56 39 L52 38 Z" fill={p.tip} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
+      {/* Riser / grip */}
+      <rect x="26" y="32" width="12" height="9" rx="2" fill={p.grip} stroke={INK} strokeWidth="1.5" />
+      <line x1="27" y1="34.5" x2="37" y2="34.5" stroke="#fff" strokeWidth="0.75" opacity="0.25" />
+      <line x1="27" y1="37.5" x2="37" y2="37.5" stroke="#fff" strokeWidth="0.6" opacity="0.18" />
+      <line x1="26.5" y1="36" x2="38.5" y2="36" stroke={INK} strokeWidth="0.85" opacity="0.22" />
 
-      {/* Empunhadura */}
-      <rect x="29" y="33" width="6" height="7" rx="1.2" fill={p.grip} stroke={INK} strokeWidth="1.4" />
-      <line x1="30" y1="35" x2="34" y2="35" stroke="#fff" strokeWidth="0.8" opacity="0.25" />
-      <line x1="30" y1="37.5" x2="34" y2="37.5" stroke="#fff" strokeWidth="0.8" opacity="0.2" />
-
-      {/* Corda */}
+      {/* Bowstring */}
       <path
-        d="M11 37 Q32 18, 53 37"
+        d="M11 37 Q32 19, 53 37"
         fill="none"
         stroke={p.string}
         strokeWidth="1.4"
         strokeLinecap="round"
       />
       <path
-        d="M11 37 Q32 18, 53 37"
+        d="M11 37 Q32 19, 53 37"
         fill="none"
         stroke={INK}
-        strokeWidth="0.6"
+        strokeWidth="0.55"
         strokeLinecap="round"
-        opacity="0.5"
+        opacity="0.55"
       />
 
-      {/* Flecha */}
-      <line x1="14" y1="34" x2="50" y2="12" stroke={`url(#${uid}-arrow)`} strokeWidth="2.2" strokeLinecap="round" />
-      <polygon points="50,12 58,8 52,16" fill={p.tip} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
-      <path d="M16 33 L12 31 L14 36 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
-      <path d="M18 35 L14 34 L17 38 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
+      {/* Arrow shaft */}
+      <line x1="15" y1="33" x2="50" y2="12" stroke={`url(#${uid}-arrow)`} strokeWidth="2.4" strokeLinecap="round" />
 
-      {weaponLevel(variant) >= 6 && (
+      {/* Broadhead arrowhead (4-point) */}
+      <path
+        d="M50 12 L56 7 L53 12 L56 17 Z"
+        fill={p.tip}
+        stroke={INK}
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
+
+      {/* 3-vane fletching */}
+      <path d="M17 32 L11 27 L15 34 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
+      <path d="M19 34 L13 33 L16 38 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
+      <path d="M15 31 L9 29 L13 34 Z" fill={p.fletch} stroke={INK} strokeWidth="0.8" strokeLinejoin="round" opacity="0.62" />
+
+      {/* Nock V */}
+      <path d="M15 32 L13 30 M15 33 L17 36" fill="none" stroke={INK} strokeWidth="1.3" strokeLinecap="round" />
+
+      {lvl >= 6 && (
         <>
-          <circle cx="42" cy="16" r="2" fill="#fde047" opacity="0.85" />
-          <circle cx="36" cy="22" r="1.2" fill="#fb923c" opacity="0.7" />
+          <circle cx="43" cy="17" r="2.2" fill="#fde047" opacity="0.85" />
+          <circle cx="37" cy="22" r="1.4" fill="#fb923c" opacity="0.7" />
         </>
       )}
-      {weaponLevel(variant) >= 3 && weaponLevel(variant) < 6 && (
-        <circle cx="32" cy="20" r="1.5" fill="#ecfdf5" opacity="0.9" />
+      {lvl >= 3 && lvl < 6 && (
+        <circle cx="33" cy="20" r="1.6" fill="#ecfdf5" opacity="0.9" />
       )}
-      {weaponLevel(variant) >= 10 && (
+      {lvl >= 10 && (
         <path
-          d="M50 6 L51 10 L55 11 L51 12 L50 16 L49 12 L45 11 L49 10 Z"
+          d="M50 5 L51.2 9 L55 10 L51.2 11 L50 15 L48.8 11 L45 10 L48.8 9 Z"
           fill="#fef9c3"
           stroke="#fde047"
           strokeWidth="0.5"
@@ -335,13 +350,14 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
 export function PatrolSwordIcon({ className, variant, style }: IconProps) {
   const uid = useId().replace(/:/g, '');
   const p = swordPalette(variant);
+  const lvl = weaponLevel(variant);
 
   return (
     <svg viewBox="0 0 48 64" className={className} style={style} aria-hidden>
       <defs>
         <linearGradient id={`${uid}-blade`} x1="50%" y1="0%" x2="50%" y2="100%">
           <stop offset="0%" stopColor={p.edge} />
-          <stop offset="35%" stopColor={p.bladeA} />
+          <stop offset="30%" stopColor={p.bladeA} />
           <stop offset="100%" stopColor={p.bladeB} />
         </linearGradient>
         <linearGradient id={`${uid}-guard`} x1="0%" y1="50%" x2="100%" y2="50%">
@@ -359,70 +375,90 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
 
       {p.glow && <ellipse cx="24" cy="22" rx="18" ry="24" fill={`url(#${uid}-glow)`} />}
 
-      {/* Sombra da lâmina */}
-      <path
-        d="M24 4 L24 36"
-        stroke={INK}
-        strokeWidth="7"
-        strokeLinecap="round"
-        opacity="0.12"
-        transform="translate(0.8, 0.8)"
+      {/* Blade shadow */}
+      <polygon
+        points="24,5 29,14 28.5,36 19.5,36 19,14"
+        fill={INK}
+        opacity="0.13"
+        transform="translate(0.8,0.8)"
       />
 
-      {/* Lâmina */}
-      <path
-        d="M24 3 L20 36 L24 38 L28 36 Z"
+      {/* Blade — wide taper: shoulder at ±5 from center, base at ±4.5 */}
+      <polygon
+        points="24,5 29,14 28.5,36 19.5,36 19,14"
         fill={`url(#${uid}-blade)`}
         stroke={INK}
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinejoin="round"
       />
 
-      {/* Fuller / canal central */}
-      <line x1="24" y1="8" x2="24" y2="32" stroke={INK} strokeWidth="0.9" opacity="0.22" />
-      <line x1="24" y1="8" x2="24" y2="32" stroke="#fff" strokeWidth="0.6" opacity="0.45" />
+      {/* Fuller (center groove) */}
+      <line x1="24" y1="10" x2="24" y2="32" stroke={INK} strokeWidth="0.85" opacity="0.22" />
+      <line x1="24" y1="10" x2="24" y2="32" stroke="#fff" strokeWidth="0.7" opacity="0.55" />
 
-      {/* Brilho lateral */}
-      <line x1="22" y1="10" x2="21" y2="30" stroke="#fff" strokeWidth="0.8" opacity="0.35" strokeLinecap="round" />
+      {/* Right bevel edge highlight */}
+      <line x1="25.8" y1="12" x2="26.2" y2="31" stroke="#fff" strokeWidth="0.8" opacity="0.42" strokeLinecap="round" />
 
-      {/* Runas (espada rúnica) */}
+      {/* Rune marks */}
       {p.rune && (
         <>
-          <path d="M24 12 L22 16 L26 16 Z" fill={p.rune} opacity="0.85" />
-          <rect x="22.5" y="18" width="3" height="1.2" rx="0.3" fill={p.rune} opacity="0.75" />
-          <path d="M24 21 L22 24 L26 24 Z" fill={p.rune} opacity="0.7" />
+          <circle cx="24" cy="15" r="2" fill="none" stroke={p.rune} strokeWidth="0.85" opacity="0.9" />
+          <circle cx="24" cy="15" r="0.7" fill={p.rune} opacity="0.9" />
+          <line x1="22" y1="21" x2="26" y2="21" stroke={p.rune} strokeWidth="0.9" opacity="0.8" />
+          <line x1="24" y1="19" x2="24" y2="23" stroke={p.rune} strokeWidth="0.9" opacity="0.8" />
+          <path d="M22.5 27 L24 25 L25.5 27 M22.5 29 L25.5 29" fill="none" stroke={p.rune} strokeWidth="0.8" opacity="0.72" />
         </>
       )}
 
-      {/* Guarda */}
-      <rect x="8" y="36" width="32" height="5" rx="1.5" fill={`url(#${uid}-guard)`} stroke={INK} strokeWidth="1.6" />
-      <line x1="10" y1="37.5" x2="38" y2="37.5" stroke="#fff" strokeWidth="0.7" opacity="0.28" />
+      {/* Guard — hexagonal with pointed wing tips */}
+      <path
+        d="M5 37.5 L9 33.5 L39 33.5 L43 37.5 L39 41.5 L9 41.5 Z"
+        fill={`url(#${uid}-guard)`}
+        stroke={INK}
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      {/* Guard top highlight */}
+      <line x1="9.5" y1="35" x2="38.5" y2="35" stroke="#fff" strokeWidth="0.7" opacity="0.28" />
+      {/* Wing-tip jewels */}
+      <circle cx="7" cy="37.5" r="2" fill={p.guardB} stroke={INK} strokeWidth="0.9" />
+      <circle cx="41" cy="37.5" r="2" fill={p.guardB} stroke={INK} strokeWidth="0.9" />
 
-      {/* Cabo */}
-      <rect x="19" y="41" width="10" height="14" rx="1.2" fill={p.grip} stroke={INK} strokeWidth="1.5" />
-      {[0, 1, 2, 3, 4].map((i) => (
+      {/* Grip */}
+      <rect x="19" y="42" width="10" height="13" rx="1.5" fill={p.grip} stroke={INK} strokeWidth="1.5" />
+      {/* Leather wrap */}
+      {[0, 1, 2, 3].map((i) => (
         <line
           key={i}
           x1="19.5"
-          y1={43 + i * 2.4}
+          y1={44 + i * 2.8}
           x2="28.5"
-          y2={43 + i * 2.4}
+          y2={44 + i * 2.8}
           stroke={p.gripWrap}
-          strokeWidth="1.6"
-          opacity="0.85"
+          strokeWidth="1.7"
+          opacity="0.88"
         />
       ))}
+      <line x1="19.5" y1="43" x2="28.5" y2="43" stroke="#fff" strokeWidth="0.5" opacity="0.25" />
 
-      {/* Pommel */}
-      <circle cx="24" cy="57.5" r="3.2" fill={p.pommel} stroke={INK} strokeWidth="1.5" />
-      <circle cx="23" cy="56.5" r="0.9" fill="#fff" opacity="0.35" />
+      {/* Pommel — diamond shape */}
+      <path
+        d="M24 55 L29 59 L24 63 L19 59 Z"
+        fill={p.pommel}
+        stroke={INK}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <line x1="24" y1="55" x2="24" y2="63" stroke={INK} strokeWidth="0.55" opacity="0.2" />
+      <line x1="19" y1="59" x2="29" y2="59" stroke={INK} strokeWidth="0.55" opacity="0.2" />
+      <path d="M21 58.5 L24 55 L27 58.5" fill="#fff" opacity="0.28" />
 
-      {weaponLevel(variant) >= 9 && (
-        <path d="M20 43 L24 47 L28 43" fill="none" stroke="#fde047" strokeWidth="0.8" opacity="0.6" />
+      {lvl >= 9 && (
+        <path d="M20 44 L24 48 L28 44" fill="none" stroke="#fde047" strokeWidth="0.9" opacity="0.65" />
       )}
-      {weaponLevel(variant) >= 10 && (
+      {lvl >= 10 && (
         <path
-          d="M24 1 L25 5 L29 6 L25 7 L24 11 L23 7 L19 6 L23 5 Z"
+          d="M24 1 L25.2 5 L29 6 L25.2 7 L24 11 L22.8 7 L19 6 L22.8 5 Z"
           fill="#fef9c3"
           stroke="#f5d0fe"
           strokeWidth="0.5"
