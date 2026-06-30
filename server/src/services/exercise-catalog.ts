@@ -44,7 +44,15 @@ export async function findExercisesForUser(
 
   const merged = new Map<string, ExerciseDocument>();
   for (const ex of [...active, ...gated]) {
-    if (matchesFilter(ex, filter)) {
+    // Garante a regra de equipamento mesmo se algum exercício de equipamento
+    // estiver salvo como `ativo: true` (não pode vazar com equipamento desmarcado).
+    if (
+      matchesFilter(ex, filter) &&
+      isExerciseAvailableForUser(
+        { ativo: ex.ativo, equipamento: ex.equipamento as EquipmentId | null | undefined },
+        preferencias,
+      )
+    ) {
       merged.set(ex.slug, ex);
     }
   }

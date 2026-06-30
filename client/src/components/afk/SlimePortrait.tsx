@@ -31,7 +31,7 @@ export function SlimePortrait({ enemyId, locked = false }: Props) {
     `game-afk-enemy--${enemyId}`,
     isBoss ? 'game-afk-enemy--boss' : '',
     elite ? 'game-afk-enemy--elite' : '',
-    enemyId === 'golden_slime' ? 'game-afk-enemy--golden' : '',
+    enemyId === 'golden_slime' || enemyId === 'magic_rabbit' ? 'game-afk-enemy--golden' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -39,7 +39,7 @@ export function SlimePortrait({ enemyId, locked = false }: Props) {
   return (
     <div className={className} aria-label={def?.label ?? 'Inimigo'}>
       {isBoss && <div className="game-afk-enemy__boss-aura" aria-hidden />}
-      {enemyId === 'golden_slime' && <div className="game-afk-enemy__golden-sparkle" aria-hidden />}
+      {(enemyId === 'golden_slime' || enemyId === 'magic_rabbit') && <div className="game-afk-enemy__golden-sparkle" aria-hidden />}
       <div className="game-afk-enemy__sprite game-afk-portrait__sprite">
         <SlimeBody
           enemyId={enemyId}

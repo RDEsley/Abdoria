@@ -54,7 +54,7 @@ export function AfkEnemySprite({
     `game-afk-enemy--${enemyId}`,
     combat.is_boss ? 'game-afk-enemy--boss' : '',
     combat.elite ? 'game-afk-enemy--elite' : '',
-    enemyId === 'golden_slime' ? 'game-afk-enemy--golden' : '',
+    enemyId === 'golden_slime' || enemyId === 'magic_rabbit' ? 'game-afk-enemy--golden' : '',
     hit && !critHit ? 'game-afk-enemy--hit' : '',
     hit && critHit ? 'game-afk-enemy--crit-hit' : '',
     dying ? 'game-afk-enemy--dying' : '',
@@ -65,7 +65,7 @@ export function AfkEnemySprite({
   return (
     <div key={hit ? `hit-${hitKey}` : 'idle'} className={className} aria-label={label}>
       {combat.is_boss && <div className="game-afk-enemy__boss-aura" aria-hidden />}
-      {enemyId === 'golden_slime' && <div className="game-afk-enemy__golden-sparkle" aria-hidden />}
+      {(enemyId === 'golden_slime' || enemyId === 'magic_rabbit') && <div className="game-afk-enemy__golden-sparkle" aria-hidden />}
 
       <div className="game-afk-enemy__sprite">
         <SlimeBody

@@ -1,5 +1,8 @@
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { Gift } from 'lucide-react';
 import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
+import { AfkLootTooltip } from '@/components/afk/AfkLootTooltip';
 import { AfkRewardIcon, buildAfkRewardItems, countAfkDropEvents, type AfkRewardItem } from '@/lib/afk-rewards';
 import type { AfkPendingReward } from '@/types';
 
@@ -14,32 +17,104 @@ interface Props {
   chestShaking?: boolean;
 }
 
-function RewardIconGrid({ items, amountPrefixPlus = false }: { items: AfkRewardItem[]; amountPrefixPlus?: boolean }) {
+/** Camada de partículas/luzes por raridade ao redor do ícone do loot. */
+function RewardChipFx({ rarity }: { rarity: AfkRewardItem['rarity'] }) {
+  if (rarity === 'lendario') {
+    return (
+      <span className="game-afk-reward-chip__orbit" aria-hidden>
+        <i /><i /><i /><i />
+      </span>
+    );
+  }
+  if (rarity === 'secret' || rarity === 'golden_secret') {
+    return (
+      <span className="game-afk-reward-chip__lightshow" aria-hidden>
+        <i /><i /><i /><i /><i /><i />
+      </span>
+    );
+  }
+  return null;
+}
+
+function RewardIconGrid({
+  items,
+  amountPrefixPlus = false,
+  interactive = false,
+}: {
+  items: AfkRewardItem[];
+  amountPrefixPlus?: boolean;
+  interactive?: boolean;
+}) {
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+
   return (
     <div className="game-afk-rewards__icon-grid" role="list" aria-label="Recompensas da exploração">
       {items.map((item, index) => {
         const showPlusPrefix =
           amountPrefixPlus && (item.kind === 'xp' || item.kind === 'abdoria') && item.amount != null && item.amount > 0;
+        const rarity = item.rarity ?? 'comum';
+        const isRare = rarity === 'lendario' || rarity === 'secret' || rarity === 'golden_secret';
+        const selected = selectedKey === item.key;
+
+        const chipClass = [
+          'game-afk-reward-chip',
+          `game-afk-reward-chip--${item.kind}`,
+          item.secret || rarity === 'secret' ? 'game-afk-reward-chip--secret' : '',
+          rarity === 'golden_secret' ? 'game-afk-reward-chip--golden-secret' : '',
+          rarity === 'lendario' ? 'game-afk-reward-chip--legendary' : '',
+          selected ? 'game-afk-reward-chip--selected' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        const content = (
+          <>
+            {isRare && <RewardChipFx rarity={rarity} />}
+            <span className="game-afk-reward-chip__icon">
+              <AfkRewardIcon item={item} size={24} />
+            </span>
+            {item.amount != null && item.amount > 0 && (
+              <span className="game-afk-reward-chip__badge tabular-nums">
+                {showPlusPrefix ? <span className="game-afk-reward-chip__badge-sign" aria-hidden>+</span> : null}
+                <span>{item.amount}</span>
+              </span>
+            )}
+            <AnimatePresence>
+              {selected && (
+                <AfkLootTooltip item={item} onClose={() => setSelectedKey(null)} />
+              )}
+            </AnimatePresence>
+          </>
+        );
+
+        if (!interactive) {
+          return (
+            <div
+              key={item.key}
+              role="listitem"
+              className={chipClass}
+              style={{ animationDelay: `${index * 0.07}s` }}
+              aria-label={item.ariaLabel}
+              title={item.ariaLabel}
+            >
+              {content}
+            </div>
+          );
+        }
 
         return (
-        <div
-          key={item.key}
-          role="listitem"
-          className={`game-afk-reward-chip game-afk-reward-chip--${item.kind}${item.secret ? ' game-afk-reward-chip--secret' : ''}`}
-          style={{ animationDelay: `${index * 0.07}s` }}
-          aria-label={item.ariaLabel}
-          title={item.ariaLabel}
-        >
-          <span className="game-afk-reward-chip__icon">
-            <AfkRewardIcon item={item} size={24} />
-          </span>
-          {item.amount != null && item.amount > 0 && (
-            <span className="game-afk-reward-chip__badge tabular-nums">
-              {showPlusPrefix ? <span className="game-afk-reward-chip__badge-sign" aria-hidden>+</span> : null}
-              <span>{item.amount}</span>
-            </span>
-          )}
-        </div>
+          <button
+            key={item.key}
+            type="button"
+            role="listitem"
+            className={chipClass}
+            style={{ animationDelay: `${index * 0.07}s` }}
+            aria-label={`${item.ariaLabel} — toque para detalhes`}
+            aria-expanded={selected}
+            onClick={() => setSelectedKey((prev) => (prev === item.key ? null : item.key))}
+          >
+            {content}
+          </button>
         );
       })}
     </div>
@@ -60,7 +135,7 @@ export function AfkRewardGrid({
   const showLootFromChest = withChest && (chestOpen || chestOpening);
 
   const iconGrid = hasLoot ? (
-    <RewardIconGrid items={items} amountPrefixPlus={showLootFromChest} />
+    <RewardIconGrid items={items} amountPrefixPlus={showLootFromChest} interactive={showLootFromChest} />
   ) : null;
 
   const emptyState = (

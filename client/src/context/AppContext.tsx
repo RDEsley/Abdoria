@@ -192,8 +192,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, [applyUserDados, hydrateAccountData]);
 
-  const ensureExercises = useCallback(async () => {
-    if (exercisesLoaded.current) return;
+  const ensureExercises = useCallback(async (options?: { force?: boolean }) => {
+    if (exercisesLoaded.current && !options?.force) return;
     exercisesLoaded.current = true;
     setExercisesLoading(true);
     try {

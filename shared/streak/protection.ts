@@ -98,7 +98,11 @@ function computeLongestStreakFromWorkouts(
   return max;
 }
 
-/** Detecta se ontem foi perdido e pode ser coberto por Frozen Streak (exatamente 1 dia). */
+/**
+ * Detecta se ontem foi perdido e pode ser coberto por Frozen Streak (exatamente 1 dia).
+ * Funciona como "ponte": continua detectando o dia perdido mesmo que o usuário já tenha
+ * treinado hoje na volta — para o freeze preservar a corrente anteontem→hoje.
+ */
 export function findStreakMissedDayForFreeze(
   histories: StreakWorkoutDay[],
   frozenDates: string[] = [],
@@ -109,13 +113,17 @@ export function findStreakMissedDayForFreeze(
   if (frozenDates.includes(yesterday)) return null;
 
   const workoutKeys = new Set(uniqueWorkoutDayKeys(histories));
-  if (workoutKeys.has(yesterday) || workoutKeys.has(today)) return null;
+  if (workoutKeys.has(yesterday)) return null; // ontem teve treino: nada a cobrir
 
-  const sortedWorkouts = uniqueWorkoutDayKeys(histories).sort().reverse();
-  if (sortedWorkouts.length === 0) return null;
+  // Último treino ANTES de ontem (ignora um eventual treino feito hoje na volta).
+  const beforeYesterday = uniqueWorkoutDayKeys(histories)
+    .filter((key) => key < yesterday)
+    .sort()
+    .reverse();
 
-  const lastWorkout = sortedWorkouts[0];
-  if (dayDiff(lastWorkout, yesterday) !== 1) return null;
+  const lastBefore = beforeYesterday[0];
+  if (!lastBefore) return null;
+  if (dayDiff(lastBefore, yesterday) !== 1) return null; // buraco de exatamente 1 dia
 
   return yesterday;
 }

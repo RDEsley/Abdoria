@@ -45,6 +45,7 @@ export function SlimeBody({
   const isSkeleton = enemyId === 'skeleton';
   const isLich = enemyId === 'boss_lich';
   const isColossus = enemyId === 'boss_colossus';
+  const isGolem = enemyId === 'boss_golem';
 
   const mouthClass = `game-afk-slime__mouth game-afk-slime__mouth--${appearance.mouth}${
     isBoss && !isHydra ? ' game-afk-slime__mouth--boss' : ''
@@ -67,6 +68,7 @@ export function SlimeBody({
     isSkeleton ? 'game-afk-slime__face--skeleton' : '',
     isHydra ? 'game-afk-slime__face--hydra-body' : '',
     isColossus ? 'game-afk-slime__face--colossus' : '',
+    isGolem ? 'game-afk-slime__face--golem' : '',
     hasPatch ? 'game-afk-slime__face--patched' : '',
     portrait ? 'game-afk-slime__face--portrait' : '',
   ]
@@ -79,6 +81,7 @@ export function SlimeBody({
       {isHydra && <SlimeHydraHeads />}
       {isColossus && <div className="game-afk-slime__colossus-spikes" aria-hidden />}
       {isLich && <div className="game-afk-slime__lich-orbs" aria-hidden />}
+      {isGolem && <div className="game-afk-slime__golem-cracks" aria-hidden />}
       <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="back" />
       <div className={faceClass}>
         <span className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}>
@@ -104,7 +107,7 @@ export function SlimeBody({
 
 export function buildSlimePortraitData(enemyId: AfkEnemyId) {
   const isBoss = enemyId.startsWith('boss_');
-  const elite = ['armored_skeleton', 'demon_bat', 'slime_knight'].includes(enemyId);
+  const elite = ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'].includes(enemyId);
   const appearance = resolvePortraitAppearance(enemyId);
   const accessories = collectSlimeAccessories(enemyId, isBoss, elite, appearance);
   return { isBoss, elite, appearance, accessories };

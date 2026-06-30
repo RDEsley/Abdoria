@@ -327,6 +327,17 @@ export function BuilderPage() {
     [selectedPresetId, setCustomWorkout],
   );
 
+  const handleChangeTempo = useCallback(
+    (idx: number, seconds: number) => {
+      const next = activeQueue.map((item, i) =>
+        i === idx ? { ...item, tempo_seg: seconds } : item,
+      );
+      setDraftQueue(next);
+      persistDraftIfCustom(next);
+    },
+    [activeQueue, persistDraftIfCustom],
+  );
+
   const handleSelectScheme = (scheme: StoredRepScheme) => {
     lastAppliedQueueKeyRef.current = '';
     applyRepScheme(scheme, 'all', { force: true });
@@ -916,6 +927,7 @@ export function BuilderPage() {
                         showPreferences
                         showSwapExercise
                         onSwapExercise={() => setSwapExerciseIndex(index)}
+                        onChangeTempo={(sec) => handleChangeTempo(index, sec)}
                         isPinned={fixedExerciseSlugs.includes(item.slug)}
                         isBlocked={blockedExerciseSlugs.includes(item.slug)}
                         onTogglePin={() => toggleExercisePin(item.slug)}
@@ -983,6 +995,7 @@ export function BuilderPage() {
                         onRemove={() => removeExercise(index)}
                         showSwapExercise
                         onSwapExercise={() => setSwapExerciseIndex(index)}
+                        onChangeTempo={(sec) => handleChangeTempo(index, sec)}
                       />
                     ))}
                   </ul>

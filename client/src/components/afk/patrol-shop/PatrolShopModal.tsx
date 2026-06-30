@@ -148,7 +148,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
             </span>
           </header>
 
-          <PatrolShopVendor activeTab={activeTab} celebrating={celebrating} />
+          <PatrolShopVendor celebrating={celebrating} />
 
           <nav className="game-patrol-shop-nav" aria-label="Categorias da loja">
             {TABS.map(({ id, label, kind }) => (

@@ -214,12 +214,8 @@ export function AfkPatrolModal({ open, onClose }: Props) {
           exit={{ opacity: 0, y: 16 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button type="button" className="game-modal__close-btn" onClick={onClose} aria-label="Fechar">
-            <X size={18} />
-          </button>
-
-          <div className="game-afk-modal__header game-afk-modal__header--compact">
-            <div className="game-afk-modal__header-main">
+          <div className="game-afk-modal__topbar">
+            <div className="game-afk-modal__title-group">
               <div className="game-afk-modal__title-icon" aria-hidden>
                 <AfkFabSwords variant="header" />
               </div>
@@ -227,52 +223,61 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 Exploração AFK
               </h2>
             </div>
-            <div className="game-afk-modal__header-actions">
+            <div className="game-afk-modal__toolbar">
               <button
                 type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--inventory"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
                 onClick={(e) => {
                   e.stopPropagation();
                   setInventoryOpen(true);
                 }}
+                title="Inventário"
                 aria-label={
                   inventoryItemCount > 0
                     ? `Abrir inventário, ${inventoryItemCount} itens`
                     : 'Abrir inventário'
                 }
               >
-                <Backpack size={14} aria-hidden />
-                Inventário
+                <Backpack size={26} aria-hidden />
                 {inventoryItemCount > 0 && (
                   <span className="game-afk-modal__inventory-badge tabular-nums">{inventoryItemCount}</span>
                 )}
               </button>
               <button
                 type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--bestiary"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--bestiary"
                 onClick={(e) => {
                   e.stopPropagation();
                   setBestiaryOpen(true);
                 }}
+                title="Bestiário"
                 aria-label="Abrir bestiário da exploração"
               >
-                <BookOpen size={14} aria-hidden />
-                Bestiário
+                <BookOpen size={26} aria-hidden />
                 <span className="game-afk-modal__inventory-badge tabular-nums">
                   {stats?.bestiario_desbloqueados?.length ?? 0}/{ALL_BESTIARY_ENEMY_IDS.length}
                 </span>
               </button>
               <button
                 type="button"
-                className="game-afk-modal__shop-btn"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShopOpen(true);
                 }}
+                title="Loja da Exploração"
                 aria-label="Abrir loja da exploração"
               >
-                <Store size={14} aria-hidden />
-                Loja da Exploração
+                <Store size={26} aria-hidden />
+              </button>
+              <button
+                type="button"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--close"
+                onClick={onClose}
+                title="Fechar"
+                aria-label="Fechar exploração"
+              >
+                <X size={22} aria-hidden />
               </button>
             </div>
           </div>
@@ -286,32 +291,36 @@ export function AfkPatrolModal({ open, onClose }: Props) {
             capped={capped}
           />
 
-          <AfkTimerPanel
-            minutos={meta?.minutos_acumulados ?? 0}
-            elapsedSinceSyncMin={elapsedSinceSyncMin}
-            capped={capped}
-            loading={loading}
-            dropChances={meta?.kill_drop_chances}
-          />
+          <div className="game-afk-dock">
+            <AfkTimerPanel
+              minutos={meta?.minutos_acumulados ?? 0}
+              elapsedSinceSyncMin={elapsedSinceSyncMin}
+              capped={capped}
+              loading={loading}
+              dropChances={meta?.kill_drop_chances}
+            />
 
-          <AfkRewardGrid pending={meta?.pending} withChest />
+            <div className="game-afk-dock__loot">
+              <AfkRewardGrid pending={meta?.pending} withChest />
+            </div>
 
-          <div className="game-afk-modal__footer">
-            <GameButton
-              className={`game-afk-claim-btn${meta?.has_rewards ? ' game-afk-claim-btn--ready' : ''}`}
-              size="lg"
-              disabled={claiming || loading}
-              onClick={() => void handleClaim()}
-              aria-label={
-                claiming
-                  ? 'Coletando recompensas'
-                  : meta?.has_rewards
-                    ? 'Coletar recompensas da exploração'
-                    : 'Coletar'
-              }
-            >
-              {claiming ? 'Coletando...' : 'Coletar'}
-            </GameButton>
+            <div className="game-afk-modal__footer">
+              <GameButton
+                className={`game-afk-claim-btn${meta?.has_rewards ? ' game-afk-claim-btn--ready' : ''}`}
+                size="lg"
+                disabled={claiming || loading}
+                onClick={() => void handleClaim()}
+                aria-label={
+                  claiming
+                    ? 'Coletando recompensas'
+                    : meta?.has_rewards
+                      ? 'Coletar recompensas da exploração'
+                      : 'Coletar'
+                }
+              >
+                {claiming ? 'Coletando...' : 'Coletar'}
+              </GameButton>
+            </div>
           </div>
         </motion.div>
       </div>

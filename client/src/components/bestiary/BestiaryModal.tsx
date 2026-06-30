@@ -1,26 +1,56 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Star } from 'lucide-react';
 import { getBestiary, type BestiaryResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { SlimePortrait } from '@/components/afk/SlimePortrait';
 import { BestiaryDropList } from '@/components/bestiary/BestiaryDropList';
 import type { AfkEnemyId } from '@/types';
-import { XP_DAILY_CAP_PER_BESTIARY } from '@/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Sobrepõe modais da exploração (z-index maior). */
   layer?: 'default' | 'modal';
 }
 
 function tierLabel(tier: string) {
   if (tier === 'boss') return 'Chefe';
   if (tier === 'elite') return 'Elite';
+  if (tier === 'golden') return 'Especial';
   return 'Comum';
+}
+
+interface DropsPopupProps {
+  entry: BestiaryResponse['categorias'][number]['entries'][number];
+  onClose: () => void;
+}
+
+function DropsPopup({ entry, onClose }: DropsPopupProps) {
+  return (
+    <motion.div
+      className="game-bestiary-drops-popup"
+      initial={{ opacity: 0, scale: 0.92, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 8 }}
+      transition={{ duration: 0.18 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="game-bestiary-drops-popup__head">
+        <span className="game-bestiary-drops-popup__title">Drops de {entry.label}</span>
+        <button
+          type="button"
+          className="game-bestiary-drops-popup__close"
+          onClick={onClose}
+          aria-label="Fechar drops"
+        >
+          <X size={14} />
+        </button>
+      </div>
+      <BestiaryDropList drops={entry.drops} />
+    </motion.div>
+  );
 }
 
 function BestiarySectionCarousel({
@@ -29,18 +59,19 @@ function BestiarySectionCarousel({
   category: BestiaryResponse['categorias'][number];
 }) {
   const [index, setIndex] = useState(0);
-  const [showDrops, setShowDrops] = useState(false);
+  const [dropsOpen, setDropsOpen] = useState(false);
   const count = category.entries.length;
   const entry = category.entries[index] ?? category.entries[0];
+  const isGolden = category.id === 'golden';
 
   useEffect(() => {
     setIndex(0);
+    setDropsOpen(false);
   }, [category.id]);
 
-  // Esconde os drops ao trocar de inimigo — só reaparecem ao clicar na imagem.
   useEffect(() => {
-    setShowDrops(false);
-  }, [index, category.id]);
+    setDropsOpen(false);
+  }, [index]);
 
   if (!entry) return null;
 
@@ -48,76 +79,101 @@ function BestiarySectionCarousel({
   const goNext = () => setIndex((i) => (i + 1) % count);
 
   return (
-    <section className="game-bestiary-section">
-      <div className="game-bestiary-section__head">
-        <h3 className="game-bestiary-section__title">{category.label}</h3>
-        <span className="game-bestiary-section__counter">
-          {index + 1}/{count}
-        </span>
-      </div>
+    <section className={`game-bestiary-section${isGolden ? ' game-bestiary-section--golden' : ''}`}>
+      {isGolden && (
+        <div className="game-bestiary-section__golden-banner">
+          <Star size={12} aria-hidden />
+          <span>Inimigo Especial</span>
+          <Star size={12} aria-hidden />
+        </div>
+      )}
+      {!isGolden && (
+        <div className="game-bestiary-section__head">
+          <h3 className="game-bestiary-section__title">{category.label}</h3>
+          {count > 1 && (
+            <span className="game-bestiary-section__counter">{index + 1}/{count}</span>
+          )}
+        </div>
+      )}
 
       <div className="game-bestiary-carousel">
-        <button
-          type="button"
-          className="game-bestiary-carousel__nav game-bestiary-carousel__nav--prev"
-          onClick={goPrev}
-          aria-label="Inimigo anterior"
-        >
-          <ChevronLeft size={18} />
-        </button>
+        {count > 1 && (
+          <button
+            type="button"
+            className="game-bestiary-carousel__nav game-bestiary-carousel__nav--prev"
+            onClick={goPrev}
+            aria-label="Inimigo anterior"
+          >
+            <ChevronLeft size={18} />
+          </button>
+        )}
 
         <AnimatePresence mode="wait">
           <motion.article
             key={entry.id}
-            className={`game-bestiary-card${entry.desbloqueado ? ' game-bestiary-card--unlocked' : ' game-bestiary-card--locked'}`}
+            className={[
+              'game-bestiary-card',
+              entry.desbloqueado ? 'game-bestiary-card--unlocked' : 'game-bestiary-card--locked',
+              isGolden ? 'game-bestiary-card--golden' : '',
+            ].filter(Boolean).join(' ')}
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.18 }}
           >
-            {entry.desbloqueado ? (
-              <button
-                type="button"
-                className={`game-bestiary-card__portrait game-bestiary-card__portrait--button${showDrops ? ' game-bestiary-card__portrait--active' : ''}`}
-                onClick={() => setShowDrops((v) => !v)}
-                aria-expanded={showDrops}
-                aria-label={showDrops ? 'Ocultar drops' : 'Ver drops e chances'}
-              >
-                <SlimePortrait enemyId={entry.id as AfkEnemyId} locked={false} />
-                <span className="game-bestiary-card__portrait-hint">
-                  {showDrops ? 'Toque para ocultar' : 'Toque para ver drops'}
-                </span>
-              </button>
-            ) : (
-              <div className="game-bestiary-card__portrait">
-                <SlimePortrait enemyId={entry.id as AfkEnemyId} locked />
-              </div>
-            )}
+            <div className="game-bestiary-card__portrait-wrap">
+              {entry.desbloqueado ? (
+                <button
+                  type="button"
+                  className={`game-bestiary-card__portrait game-bestiary-card__portrait--button${dropsOpen ? ' game-bestiary-card__portrait--active' : ''}`}
+                  onClick={() => setDropsOpen((v) => !v)}
+                  aria-expanded={dropsOpen}
+                  aria-label={dropsOpen ? 'Ocultar drops' : 'Ver drops'}
+                >
+                  <SlimePortrait enemyId={entry.id as AfkEnemyId} locked={false} />
+                </button>
+              ) : (
+                <div className="game-bestiary-card__portrait">
+                  <SlimePortrait enemyId={entry.id as AfkEnemyId} locked />
+                </div>
+              )}
+
+              <AnimatePresence>
+                {dropsOpen && entry.desbloqueado && (
+                  <DropsPopup entry={entry} onClose={() => setDropsOpen(false)} />
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="game-bestiary-card__meta">
-              <span className={`game-bestiary-card__tier game-bestiary-card__tier--${entry.tier}`}>
+              <span className={`game-bestiary-card__tier game-bestiary-card__tier--${entry.desbloqueado ? entry.tier : 'locked'}`}>
                 {entry.desbloqueado ? tierLabel(entry.tier) : 'Desconhecido'}
               </span>
               <h4>{entry.desbloqueado ? entry.label : '???'}</h4>
-              {entry.desbloqueado ? (
-                <>
-                  <p>{entry.max_hp} HP · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário permanente</p>
-                  {showDrops && <BestiaryDropList drops={entry.drops} />}
-                </>
-              ) : (
-                <p>Derrote na Exploração AFK para revelar este inimigo.</p>
+              {!entry.desbloqueado && (
+                <p className="game-bestiary-card__locked-hint">
+                  Derrote na Exploração AFK para revelar.
+                </p>
+              )}
+              {entry.desbloqueado && (
+                <p className="game-bestiary-card__drops-hint">
+                  Toque no retrato para ver drops
+                </p>
               )}
             </div>
           </motion.article>
         </AnimatePresence>
 
-        <button
-          type="button"
-          className="game-bestiary-carousel__nav game-bestiary-carousel__nav--next"
-          onClick={goNext}
-          aria-label="Próximo inimigo"
-        >
-          <ChevronRight size={18} />
-        </button>
+        {count > 1 && (
+          <button
+            type="button"
+            className="game-bestiary-carousel__nav game-bestiary-carousel__nav--next"
+            onClick={goNext}
+            aria-label="Próximo inimigo"
+          >
+            <ChevronRight size={18} />
+          </button>
+        )}
       </div>
 
       {count > 1 && (
@@ -173,6 +229,10 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
   const unlockedCount = data?.desbloqueados.length ?? 0;
   const total = data?.total_inimigos ?? 0;
 
+  // Split golden category for special rendering at end
+  const regularCategories = data?.categorias.filter((c) => c.id !== 'golden') ?? [];
+  const goldenCategory = data?.categorias.find((c) => c.id === 'golden');
+
   return createPortal(
     <div
       className={`game-modal-overlay game-bestiary-overlay${layer === 'modal' ? ' game-bestiary-overlay--modal' : ''}`}
@@ -193,12 +253,10 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
         </button>
 
         <header className="game-bestiary-modal__head">
-          <h2 id="bestiary-title" className="game-modal__title">
-            Bestiário
-          </h2>
+          <h2 id="bestiary-title" className="game-modal__title">Bestiário</h2>
           <p className="game-modal__text">
-            {unlockedCount}/{total} descobertos · +{XP_DAILY_CAP_PER_BESTIARY} máx. diário por inimigo novo
-            {data ? ` · bônus atual: +${data.bonus_cap_diario} XP/dia` : ''}
+            {unlockedCount}/{total} descobertos
+            {data ? ` · +${data.bonus_cap_diario} XP/dia de bônus` : ''}
           </p>
         </header>
 
@@ -206,9 +264,12 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
           <p className="game-loader">Carregando bestiário...</p>
         ) : (
           <div className="game-bestiary-scroll">
-            {data?.categorias.map((category) => (
+            {regularCategories.map((category) => (
               <BestiarySectionCarousel key={category.id} category={category} />
             ))}
+            {goldenCategory && (
+              <BestiarySectionCarousel key="golden" category={goldenCategory} />
+            )}
           </div>
         )}
       </motion.div>

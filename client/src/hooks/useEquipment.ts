@@ -24,7 +24,8 @@ export function useEquipment(onUpdated?: () => void) {
         },
       });
       await refreshUser();
-      await ensureExercises();
+      // Rebusca o catálogo: exercícios do equipamento desmarcado somem da Biblioteca na hora.
+      await ensureExercises({ force: true });
       void loadRecommendations({ force: true });
       onUpdated?.();
     },

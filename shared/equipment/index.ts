@@ -101,13 +101,36 @@ export interface ExerciseEquipmentFields {
   equipamento?: EquipmentId | null;
 }
 
-/** Exercício visível se ativo no catálogo ou se exige equipamento que o usuário possui. */
+/**
+ * Regra única de disponibilidade:
+ * - Exercício QUE EXIGE equipamento só aparece se o usuário possui (marcou) esse equipamento,
+ *   independentemente de `ativo` — equipamento desmarcado nunca vaza para recomendações/catálogo.
+ * - Exercício sem equipamento aparece quando está ativo no catálogo.
+ */
 export function isExerciseAvailableForUser(
   exercise: ExerciseEquipmentFields,
   preferencias?: UserPreferencias | null,
 ): boolean {
-  if (exercise.ativo) return true;
-  if (!exercise.equipamento) return false;
-  const owned = resolveUserEquipment(preferencias);
-  return Boolean(owned[exercise.equipamento]);
+  if (exercise.equipamento) {
+    const owned = resolveUserEquipment(preferencias);
+    return Boolean(owned[exercise.equipamento]);
+  }
+  return exercise.ativo;
+}
+
+/** Slugs que o usuário pediu para não recomendar. */
+export function getBlockedExerciseSlugs(preferencias?: UserPreferencias | null): string[] {
+  return preferencias?.exercicios_nao_recomendar ?? [];
+}
+
+/**
+ * Critério combinado para entrar nas recomendações de treino:
+ * disponível (equipamento marcado / ativo) E não bloqueado pelo usuário.
+ */
+export function isExerciseRecommendable(
+  exercise: ExerciseEquipmentFields & { slug: string },
+  preferencias?: UserPreferencias | null,
+): boolean {
+  if (getBlockedExerciseSlugs(preferencias).includes(exercise.slug)) return false;
+  return isExerciseAvailableForUser(exercise, preferencias);
 }

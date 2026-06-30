@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Coins, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
-import { WorkoutExerciseTimer } from '@/components/player/WorkoutExerciseTimer';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { GameButton } from '@/components/ui/GameButton';
@@ -535,12 +534,12 @@ export function PlayerPage() {
       </header>
 
       <div className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
-        <div className="game-player-content flex flex-col items-center gap-3 px-4 py-3 sm:gap-5 sm:px-6 sm:py-5">
+        <div className="game-player-content flex flex-col items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-4">
         {phaseBadge}
 
         <AnimatePresence mode="wait">
           <motion.div key={`${current.slug}-${exerciseIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-            <div className="game-player-frame relative mx-auto aspect-square w-full max-w-[10.5rem] sm:max-w-xs">
+            <div className="game-player-frame relative mx-auto aspect-square w-full max-w-[7.5rem] sm:max-w-[10rem]">
               {!mediaError ? (
                 <img src={exerciseMediaUrl(current.slug)} alt={currentName} className="h-full w-full object-cover" onError={() => setMediaError(true)} />
               ) : (
@@ -550,30 +549,21 @@ export function PlayerPage() {
           </motion.div>
         </AnimatePresence>
 
-        <div className="text-center">
+        <div className="w-full text-center">
           <h2 className="game-page-header__title !text-base">{currentName}</h2>
-          <p className="mt-1 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">Meta: {prescription}</p>
+          <p className="mt-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">Meta: {prescription}</p>
           {restStatus ? (
-            <div className="game-player-rest-status mt-2">
+            <div className="game-player-rest-status mt-1.5">
               <p className="game-player-rest-status__main">{restStatus.main}</p>
               <p className="game-player-rest-status__timer tabular-nums">{restStatus.timer}</p>
               <p className="game-player-rest-status__next">{restStatus.next}</p>
             </div>
           ) : (
             statusText && (
-              <p className="mt-2 max-w-xs text-xs font-bold leading-relaxed text-stone-600">{statusText}</p>
+              <p className="mx-auto mt-1.5 max-w-xs text-center text-xs font-bold leading-relaxed text-stone-600">{statusText}</p>
             )
           )}
         </div>
-
-        {phase === 'working' && current.modo === 'tempo' && (
-          <WorkoutExerciseTimer
-            secondsLeft={secondsLeft}
-            targetSeconds={targetSeconds}
-            paused={paused}
-            label={current.slug === 'dead-hang' ? 'Suspensão na barra' : 'Segure a posição'}
-          />
-        )}
 
         <div
           className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}

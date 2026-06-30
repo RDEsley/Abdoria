@@ -63,8 +63,8 @@ type AfkRow = {
 };
 
 const VALID_ENEMY_IDS = new Set<string>([
-  'bat', 'zombie', 'skeleton', 'armored_skeleton', 'demon_bat', 'slime_knight',
-  'golden_slime', 'boss_colossus', 'boss_lich', 'boss_hydra',
+  'bat', 'zombie', 'skeleton', 'armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight',
+  'golden_slime', 'magic_rabbit', 'boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem',
 ]);
 
 function normalizeCombat(raw: unknown): AfkCombatState {

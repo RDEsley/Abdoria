@@ -371,7 +371,7 @@ export interface BestiaryEntry {
 }
 
 export interface BestiaryCategory {
-  id: 'common' | 'elite' | 'boss';
+  id: string;
   label: string;
   entries: BestiaryEntry[];
 }

@@ -55,7 +55,7 @@ export function AfkCombatHud({ combat, displayHp }: EnemyBarProps) {
   const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (displayHp / maxHp) * 100)) : 0;
   const enemyLabel = AFK_ENEMIES[combat.enemy_id]?.label ?? 'Slime';
   const tierClass =
-    combat.enemy_id === 'golden_slime'
+    combat.enemy_id === 'golden_slime' || combat.enemy_id === 'magic_rabbit'
       ? 'golden'
       : combat.is_boss
         ? 'boss'
@@ -69,12 +69,15 @@ export function AfkCombatHud({ combat, displayHp }: EnemyBarProps) {
         <div className="game-afk-combat-hud__enemy-header">
           <div className="game-afk-combat-hud__enemy-identity">
             <span className="game-afk-combat-hud__enemy-slug" aria-hidden>
-              {combat.enemy_id === 'golden_slime' ? '✧' : combat.is_boss ? '👑' : combat.elite ? '✦' : '●'}
+              {combat.enemy_id === 'golden_slime' || combat.enemy_id === 'magic_rabbit' ? '✧' : combat.is_boss ? '👑' : combat.elite ? '✦' : '●'}
             </span>
             <div className="game-afk-combat-hud__enemy-title">
               <span className="game-afk-combat-hud__enemy-name">{enemyLabel}</span>
               {combat.enemy_id === 'golden_slime' && (
                 <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">Raro</span>
+              )}
+              {combat.enemy_id === 'magic_rabbit' && (
+                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">Mágico</span>
               )}
               {combat.is_boss && (
                 <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--boss">BOSS</span>

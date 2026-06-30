@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Sparkles } from 'lucide-react';
 import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
@@ -30,8 +31,8 @@ const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
   kills_until_boss: 0,
   kills_to_next_boss: AFK_BOSS_INTERVAL,
   enemy_id: 'bat',
-  enemy_hp: 42,
-  enemy_max_hp: 42,
+  enemy_hp: 90,
+  enemy_max_hp: 90,
   is_boss: false,
   elite: false,
   hero_damage_arco: 14,
@@ -44,9 +45,11 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
   const [attackIsCrit, setAttackIsCrit] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'attack'>('idle');
   const [enemyHit, setEnemyHit] = useState(false);
-  const [displayHp, setDisplayHp] = useState(combat?.enemy_hp ?? 42);
+  const [displayHp, setDisplayHp] = useState(combat?.enemy_hp ?? 90);
   const [dying, setDying] = useState(false);
   const [looting, setLooting] = useState(false);
+  const [lootDropSeq, setLootDropSeq] = useState(0);
+  const hasLootRef = useRef(hasLoot);
   const [spawnKillsTotal, setSpawnKillsTotal] = useState(combat?.kills_total ?? 0);
   const [localKillsUntilBoss, setLocalKillsUntilBoss] = useState(combat?.kills_until_boss ?? 0);
   const [localIsBoss, setLocalIsBoss] = useState(combat?.is_boss ?? false);
@@ -85,6 +88,10 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
     localIsBossRef.current = localIsBoss;
     localEnemyIdRef.current = localEnemyId;
   }, [localIsBoss, localEnemyId]);
+
+  useEffect(() => {
+    hasLootRef.current = hasLoot;
+  }, [hasLoot]);
 
   useEffect(() => {
     onBossChange?.(localIsBoss);
@@ -181,6 +188,10 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
             critStreakRef.current = 0;
             setDying(true);
             schedule(() => setLooting(true), 120);
+            // Drop ao vivo: quando há loot acumulado, mostra um item saltando do slime.
+            if (hasLootRef.current && Math.random() < 0.4) {
+              schedule(() => setLootDropSeq((n) => n + 1), 150);
+            }
             schedule(() => {
               const wasBoss = localIsBossRef.current;
               const nextKillsTotal = killsTotalRef.current + 1;
@@ -234,14 +245,16 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
       <div
         className={[
           'game-afk-scene__viewport',
+          `game-afk-scene__viewport--enemy-${localEnemyId}`,
           weapon === 'espada' && attacking && attackIsCrit ? 'game-afk-scene__viewport--sword-crit-hit' : '',
           weapon === 'espada' && attacking && !attackIsCrit ? 'game-afk-scene__viewport--sword-hit' : '',
           weapon === 'arco' && attacking && attackIsCrit ? 'game-afk-scene__viewport--arrow-crit-hit' : '',
         ]
           .filter(Boolean)
           .join(' ')}
+        data-enemy={localEnemyId}
       >
-        <AfkSkyCycle showClouds={!isMobile} showSparkles={showSparkles} />
+        <AfkSkyCycle showClouds={!isMobile} showSparkles={showSparkles} enemyId={localEnemyId} />
 
         <AfkBossProgressPanel
           killsUntilBoss={localKillsUntilBoss}
@@ -351,6 +364,12 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
           looting={looting}
           hitKey={attackSeq}
         />
+
+        {lootDropSeq > 0 && (
+          <span key={`loot-drop-${lootDropSeq}`} className="game-afk-scene__loot-drop" aria-hidden>
+            <Sparkles size={18} />
+          </span>
+        )}
 
         <div className="game-afk-scene__damage-layer" aria-hidden>
           {floaters.map((f) => (

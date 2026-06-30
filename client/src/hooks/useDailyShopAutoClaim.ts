@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { showGameToast } from '@/components/ui/GameToast';
 import { claimFreeDailyShopRewards } from '@/lib/api';
 import { formatDailyReward } from '@/lib/daily-shop-display';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import { getTodaySaoPaulo } from '@/lib/timezone';
+import { useSaoPauloMidnightRefresh } from '@/hooks/useSaoPauloMidnightRefresh';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 
@@ -26,10 +27,15 @@ export function useDailyShopAutoClaim() {
   const { refresh: refreshApp } = useApp();
   const inFlightRef = useRef(false);
 
+  // Dia (SP) corrente: ao virar a meia-noite com a aba aberta, muda e re-dispara a coleta.
+  const [dayKey, setDayKey] = useState(() => getTodaySaoPaulo());
+  useSaoPauloMidnightRefresh(() => setDayKey(getTodaySaoPaulo()));
+
   useEffect(() => {
     if (loading || !user?.id) return;
     if (!user.preferencias?.coletar_loja_diaria_automatico) return;
-    if (sessionStorage.getItem(sessionClaimKey(user.id))) return;
+    const claimKey = sessionClaimKey(user.id); // já inclui o dia SP atual
+    if (sessionStorage.getItem(claimKey)) return;
     if (inFlightRef.current) return;
 
     let cancelled = false;
@@ -40,7 +46,7 @@ export function useDailyShopAutoClaim() {
         const res = await claimFreeDailyShopRewards();
         if (cancelled) return;
 
-        sessionStorage.setItem(sessionClaimKey(user.id), '1');
+        sessionStorage.setItem(claimKey, '1');
         applyUser(res.user);
         void refreshApp();
 
@@ -51,8 +57,9 @@ export function useDailyShopAutoClaim() {
           const overflowMsg = overflowToastMessage(res.overflow_to_dorias);
           if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
         }
-      } catch {
-        // Falha silenciosa — o jogador pode resgatar manualmente no painel.
+      } catch (err) {
+        // Não mascara a falha: loga e mantém disponível para resgate manual no painel.
+        console.error('Coleta automática da loja diária falhou:', err);
       } finally {
         inFlightRef.current = false;
       }
@@ -61,5 +68,5 @@ export function useDailyShopAutoClaim() {
     return () => {
       cancelled = true;
     };
-  }, [applyUser, loading, refreshApp, user?.id, user?.preferencias?.coletar_loja_diaria_automatico]);
+  }, [applyUser, loading, refreshApp, user?.id, user?.preferencias?.coletar_loja_diaria_automatico, dayKey]);
 }

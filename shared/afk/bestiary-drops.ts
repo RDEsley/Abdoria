@@ -1,5 +1,5 @@
 import { AFK_ENEMIES, AFK_GOLDEN_SLIME_ABDORIA, type AfkEnemyId } from './combat.js';
-import { PATROL_LEGENDARY_WEAPON_IDS, PATROL_SECRET_WEAPON_IDS } from '../patrol/shop.js';
+import { PATROL_LEGENDARY_WEAPON_IDS, PATROL_SECRET_WEAPON_IDS, PATROL_SPELL_IDS } from '../patrol/shop.js';
 
 export type BestiaryPendingLike = {
   xp: number;
@@ -25,7 +25,8 @@ export type BestiaryDropId =
   | 'cosmetic_secret'
   | 'titulo_secreto'
   | 'weapon_legendary'
-  | 'weapon_secret';
+  | 'weapon_secret'
+  | 'weapon_spell';
 
 export interface BestiaryDropDefinition {
   id: BestiaryDropId;
@@ -49,8 +50,9 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   cosmetic_legendary: '0,03%',
   cosmetic_secret: '0,01%',
   titulo_secreto: '0,01%',
-  weapon_legendary: '0,5%',
+  weapon_legendary: '0,13%',
   weapon_secret: '0,003%',
+  weapon_spell: '100%',
 };
 
 const COMMON_ELITE_DROPS: BestiaryDropId[] = [
@@ -68,9 +70,11 @@ const COMMON_ELITE_DROPS: BestiaryDropId[] = [
 const BOSS_EXTRA_DROPS: BestiaryDropId[] = ['weapon_legendary'];
 
 const GOLDEN_SLIME_DROPS: BestiaryDropId[] = ['abdoria_golden', 'cosmetic_secret', 'route_drink'];
+const MAGIC_RABBIT_DROPS: BestiaryDropId[] = ['weapon_spell'];
 
 export function bestiaryDropsForEnemy(enemyId: AfkEnemyId): BestiaryDropId[] {
   if (enemyId === 'golden_slime') return [...GOLDEN_SLIME_DROPS];
+  if (enemyId === 'magic_rabbit') return [...MAGIC_RABBIT_DROPS];
   const tier = AFK_ENEMIES[enemyId]?.tier ?? 'common';
   if (tier === 'boss') return [...COMMON_ELITE_DROPS, ...BOSS_EXTRA_DROPS];
   return [...COMMON_ELITE_DROPS];
@@ -95,6 +99,7 @@ export function buildBestiaryDropCatalog(currencyName: string): Record<BestiaryD
     titulo_secreto: def('titulo_secreto', 'Título secreto'),
     weapon_legendary: def('weapon_legendary', 'Arma lendária'),
     weapon_secret: def('weapon_secret', 'Arma Secret'),
+    weapon_spell: def('weapon_spell', 'Magia'),
   };
 }
 
@@ -135,6 +140,14 @@ export function inferBestiaryDropsFromKill(
     if (after.abdoria > before.abdoria) found.push('abdoria_golden');
     if (after.cosmetic_ids.length > before.cosmetic_ids.length) found.push('cosmetic_secret');
     if (after.route_drinks > before.route_drinks) found.push('route_drink');
+    return found;
+  }
+
+  if (enemyId === 'magic_rabbit') {
+    const newWeaponIds = after.weapon_ids.filter((id) => !before.weapon_ids.includes(id));
+    if (newWeaponIds.some((id) => (PATROL_SPELL_IDS as readonly string[]).includes(id))) {
+      found.push('weapon_spell');
+    }
     return found;
   }
 

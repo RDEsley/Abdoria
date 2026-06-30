@@ -93,10 +93,11 @@ export function applyStreakFreezeProtection(
 
   const frozenDates = user.gamificacao.streak_congelamentos;
   const streakWithoutFreeze = computeStreakWithFrozenDays(histories, frozenDates);
-  if (streakWithoutFreeze.atual > 0) return false;
-
   const streakWithPendingFreeze = computeStreakWithFrozenDays(histories, [...frozenDates, missedDay]);
-  if (streakWithPendingFreeze.atual <= 0) return false;
+
+  // Só consome o item se o congelamento realmente estende a ofensiva (faz a ponte).
+  // Cobre tanto "streak iria a 0" quanto "treinou hoje mas perderia a corrente longa".
+  if (streakWithPendingFreeze.atual <= streakWithoutFreeze.atual) return false;
 
   if (getItemCount(user, FROZEN_STREAK_ITEM_ID) < 1) return false;
   if (!consumeInventoryItem(user, FROZEN_STREAK_ITEM_ID, 1)) return false;

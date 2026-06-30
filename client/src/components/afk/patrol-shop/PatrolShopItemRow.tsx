@@ -83,7 +83,8 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
             <span className="game-patrol-shop-row__stat-pill game-patrol-shop-row__stat-pill--crit">
               <Zap size={11} aria-hidden />
               {formatPatrolCritChancePercent(item.chance_critico)} crítico
-              {item.kind === 'arco' && <span className="game-patrol-shop-row__stat-note">combo +4</span>}
+              {item.kind === 'arco' && <span className="game-patrol-shop-row__stat-note">combo +4/hit</span>}
+              {item.kind === 'espada' && <span className="game-patrol-shop-row__stat-note">+25 dano</span>}
             </span>
           )}
         </div>

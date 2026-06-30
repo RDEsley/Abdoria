@@ -14,7 +14,7 @@ import {
   resolvePatrolArmas,
 } from '../types/index.js';
 import { normalizeCombat } from '../repositories/user-repository.js';
-import { rollKillDrop, rollRouteDrinkDrop, rollBossLegendaryWeapon, rollGoldenSlimeSecretCosmetic } from './afk-rolls.js';
+import { rollKillDrop, rollRouteDrinkDrop, rollBossLegendaryWeapon, rollGoldenSlimeSecretCosmetic, rollMagicRabbitSpell } from './afk-rolls.js';
 import { unlockBestiaryEnemy, recordBestiaryKillDrops } from './bestiario.js';
 import { snapshotBestiaryPending } from '../types/index.js';
 
@@ -59,6 +59,7 @@ function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: Af
   const defeatedEnemyId = combat.enemy_id;
   const wasBoss = combat.is_boss;
   const wasGolden = defeatedEnemyId === 'golden_slime';
+  const wasMagicRabbit = defeatedEnemyId === 'magic_rabbit';
   const tier = enemyTier(combat);
 
   unlockBestiaryEnemy(user, defeatedEnemyId);
@@ -72,6 +73,8 @@ function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: Af
     pending.abdoria += AFK_GOLDEN_SLIME_ABDORIA;
     pending.drop_count = (pending.drop_count ?? 0) + 1;
     rollGoldenSlimeSecretCosmetic(user, combat.kills_total, pending);
+  } else if (wasMagicRabbit) {
+    rollMagicRabbitSpell(user, combat.kills_total, pending);
   } else {
     rollKillDrop(user, combat.kills_total, pending, { bossBoost: wasBoss, tier });
     if (wasBoss) {

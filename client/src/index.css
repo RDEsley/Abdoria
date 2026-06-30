@@ -3384,6 +3384,27 @@ input[type='range'] {
   filter: drop-shadow(0 0 3px rgba(56, 189, 248, 0.8));
 }
 
+/* Crosta de gelo cobrindo o contador (mantém o número visível por baixo). */
+.game-streak__ice-crust {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 85% at 50% -25%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(180deg, rgba(224, 242, 254, 0.42), rgba(125, 211, 252, 0.22));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 7px rgba(2, 132, 199, 0.28);
+  mix-blend-mode: screen;
+  animation: streak-ice-crust-in 0.5s ease-out;
+}
+
+@keyframes streak-ice-crust-in {
+  0% { opacity: 0; transform: scale(0.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 @keyframes streak-ice-pulse {
   0%, 100% { transform: scale(1); box-shadow: 2px 2px 0 #0284c7; }
   50%       { transform: scale(1.035); box-shadow: 2px 2px 0 #38bdf8, 0 0 10px rgba(56, 189, 248, 0.4); }
@@ -3921,8 +3942,8 @@ input[type='range'] {
 }
 
 .game-timer-ring__svg {
-  width: clamp(7rem, 32vw, 11rem);
-  height: clamp(7rem, 32vw, 11rem);
+  width: clamp(6rem, 26vw, 9.5rem);
+  height: clamp(6rem, 26vw, 9.5rem);
 }
 
 .game-player-actions {
@@ -4471,7 +4492,73 @@ input[type='range'] {
 }
 
 .game-xp-section__panel--daily-full {
-  margin-top: 0.65rem;
+  margin-top: 0;
+}
+
+/* level pct label below the number */
+.game-xp-section__level-pct {
+  font-size: 0.38rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #059669;
+  text-transform: uppercase;
+}
+
+/* badge showing % in panel head */
+.game-xp-section__panel-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(28, 25, 23, 0.14);
+  background: #f5f5f4;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.4rem;
+  color: #44403c;
+  line-height: 1.4;
+}
+
+.game-xp-section__panel-badge--full {
+  background: #d1fae5;
+  border-color: #059669;
+  color: #065f46;
+}
+
+/* chips — today and cap variants */
+.game-xp-section__chip--today {
+  background: #fffbeb;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+.game-xp-section__chip--today .game-xp-section__chip-value { color: #b45309; }
+
+.game-xp-section__chip--cap {
+  background: #f0fdf4;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.game-xp-section__chip--cap .game-xp-section__chip-value { color: #047857; }
+
+/* streak row */
+.game-xp-section__streak-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.55rem 0.65rem;
+  border: 1.5px solid rgba(234, 88, 12, 0.3);
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #78350f;
+}
+
+.game-xp-section__streak-icon {
+  flex-shrink: 0;
+  margin-top: 0.08rem;
+  color: #ea580c;
 }
 
 .game-xp-section__panel-hint--cap {
@@ -8916,7 +9003,7 @@ header .game-nav-item {
 
 .game-bestiary-modal {
   width: min(100%, 22rem);
-  max-height: min(88vh, 42rem);
+  max-height: min(calc(100dvh - 2.5rem), 42rem);
   display: flex;
   flex-direction: column;
 }
@@ -8932,6 +9019,7 @@ header .game-nav-item {
 .game-bestiary-scroll {
   overflow: auto;
   padding-right: 0.15rem;
+  padding-bottom: 1.5rem;
 }
 
 .game-bestiary-section + .game-bestiary-section {

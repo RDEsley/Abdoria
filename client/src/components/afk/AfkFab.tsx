@@ -41,7 +41,6 @@ export function AfkFab() {
         <span className="game-afk-fab__icon" aria-hidden>
           <AfkFabSwords />
         </span>
-        <span className="game-afk-fab__label">Exploração</span>
         {hasRewards && (
           <span className="game-afk-fab__badge" aria-hidden>
             <span className="game-afk-fab__badge-core" />

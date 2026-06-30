@@ -32,6 +32,18 @@ export const PATROL_LEGENDARY_WEAPON_IDS = ['arco_09', 'espada_09'] as const;
 /** Armas Secret (nível 10) dropáveis na Exploração — taxa menor que título Secret. */
 export const PATROL_SECRET_WEAPON_IDS = ['arco_10', 'espada_10'] as const;
 
+/** Magias dropáveis exclusivamente do Coelho Mágico — não compráveis na loja. */
+export const PATROL_SPELL_IDS = [
+  'magia_agua',
+  'magia_terra',
+  'magia_gelo',
+  'magia_fogo',
+  'magia_relampago',
+  'magia_buraco_negro',
+] as const;
+
+export type PatrolSpellId = (typeof PATROL_SPELL_IDS)[number];
+
 const LEGACY_WEAPON_ID_MAP: Record<string, string> = {
   arco_basico: 'arco_01',
   arco_caca: 'arco_02',
@@ -86,8 +98,8 @@ const ESPADA_SEEDS: WeaponSeed[] = [
   { nivel: 5, preco: 4085, dano: 30, nome: 'Espada de Aço Negro', descricao: 'Equilíbrio perfeito entre peso e fio — implacável em combate corpo a corpo.' },
   { nivel: 6, preco: 5835, dano: 36, nome: 'Espada Valente', descricao: 'Carregada por heróis das campanhas AFK que nunca recuaram.' },
   { nivel: 7, preco: 12435, dano: 42, nome: 'Espada do Campeão', descricao: 'Troféu reservado a quem domina o ranking semanal da exploração.' },
-  { nivel: 8, preco: 19075, dano: 58, nome: 'Espada Imortal', descricao: 'Brilho eterno mesmo após mil confrontos nas ruínas esquecidas.' },
-  { nivel: 9, preco: 55135, dano: 70, nome: 'Lâmina do Dragão', descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.' },
+  { nivel: 8, preco: 19075, dano: 46, nome: 'Espada Imortal', descricao: 'Brilho eterno mesmo após mil confrontos nas ruínas esquecidas.' },
+  { nivel: 9, preco: 55135, dano: 50, nome: 'Lâmina do Dragão', descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.' },
   {
     nivel: 10,
     preco: 99999,
@@ -115,9 +127,73 @@ function buildWeapon(kind: 'arco' | 'espada', seed: WeaponSeed): PatrolWeaponDef
   };
 }
 
+const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
+  {
+    id: 'magia_agua',
+    kind: 'magia',
+    nivel: 1,
+    nome: 'Magia de Água',
+    descricao: 'Ondas de água pura que atingem o inimigo do alto, varrendo o campo de batalha.',
+    raridade: 'comum',
+    unlock: { tipo: 'futuro' },
+    dano_base: 28,
+  },
+  {
+    id: 'magia_terra',
+    kind: 'magia',
+    nivel: 2,
+    nome: 'Magia de Terra',
+    descricao: 'Pedregulhos surgem do chão e caem sobre o inimigo com força esmagadora.',
+    raridade: 'raro',
+    unlock: { tipo: 'futuro' },
+    dano_base: 32,
+  },
+  {
+    id: 'magia_gelo',
+    kind: 'magia',
+    nivel: 3,
+    nome: 'Magia de Gelo',
+    descricao: 'Cristais de gelo perfuram o alvo de cima, congelando qualquer resistência.',
+    raridade: 'raro',
+    unlock: { tipo: 'futuro' },
+    dano_base: 36,
+  },
+  {
+    id: 'magia_fogo',
+    kind: 'magia',
+    nivel: 4,
+    nome: 'Magia de Fogo',
+    descricao: 'Uma bola de fogo incandescente mergulha do céu e explode ao impacto.',
+    raridade: 'epico',
+    unlock: { tipo: 'futuro' },
+    dano_base: 42,
+  },
+  {
+    id: 'magia_relampago',
+    kind: 'magia',
+    nivel: 5,
+    nome: 'Magia de Raio',
+    descricao: 'Um relâmpago cortante rasga a atmosfera direto para a cabeça do inimigo.',
+    raridade: 'epico',
+    unlock: { tipo: 'futuro' },
+    dano_base: 48,
+  },
+  {
+    id: 'magia_buraco_negro',
+    kind: 'magia',
+    nivel: 6,
+    nome: 'Buraco Negro',
+    descricao: 'Uma singularidade gravitacional absorve tudo ao redor com força devastadora.',
+    raridade: 'lendario',
+    unlock: { tipo: 'futuro' },
+    dano_base: 60,
+  },
+];
+
 export const PATROL_WEAPONS: PatrolWeaponDefinition[] = [
   ...ARCO_SEEDS.map((seed) => buildWeapon('arco', seed)),
   ...ESPADA_SEEDS.map((seed) => buildWeapon('espada', seed)),
+  ...SPELL_DEFINITIONS,
 ];
 
 export const PATROL_WEAPON_BY_ID = Object.fromEntries(
