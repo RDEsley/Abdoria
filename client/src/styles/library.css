@@ -98,6 +98,91 @@
   background: currentColor;
 }
 
+/* Heatmap de consistência (grafo de contribuições) */
+.consistency-heatmap__summary {
+  margin-bottom: 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
+.consistency-heatmap__scroll {
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.consistency-heatmap__grid {
+  display: flex;
+  gap: 3px;
+  width: max-content;
+}
+
+.consistency-heatmap__col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.consistency-heatmap__month {
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #a8a29e;
+  white-space: nowrap;
+}
+
+.consistency-heatmap__cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid #e7e5e4;
+  background: #fafaf9;
+  padding: 0;
+  cursor: pointer;
+}
+
+.consistency-heatmap__cell:disabled {
+  cursor: default;
+  visibility: hidden;
+}
+
+.consistency-heatmap__cell--l1 {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+.consistency-heatmap__cell--l2 {
+  background: #bbf7d0;
+  border-color: #86efac;
+}
+.consistency-heatmap__cell--l3 {
+  background: #86efac;
+  border-color: #34d399;
+}
+.consistency-heatmap__cell--l4 {
+  background: #34d399;
+  border-color: #059669;
+}
+
+.consistency-heatmap__legend {
+  margin-top: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #a8a29e;
+}
+
+.consistency-heatmap__detail {
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #44403c;
+}
+
 .workout-calendar__detail {
   margin-top: 0.75rem;
   padding: 0.65rem 0.75rem;

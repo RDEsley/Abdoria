@@ -27,6 +27,11 @@ import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 const ActivityCalendar = lazy(() =>
   import('@/components/dashboard/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })),
 );
+const ConsistencyHeatmap = lazy(() =>
+  import('@/components/dashboard/ConsistencyHeatmap').then((m) => ({
+    default: m.ConsistencyHeatmap,
+  })),
+);
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -183,6 +188,13 @@ export function DashboardPage() {
           total={stats.conquistas.length}
         />
       </motion.div>
+
+      <motion.section variants={item} className="glass-card p-4">
+        <h3 className="game-section-title">Mapa de campanha</h3>
+        <Suspense fallback={<PageLoader />}>
+          <ConsistencyHeatmap />
+        </Suspense>
+      </motion.section>
 
       <motion.section variants={item} className="glass-card p-4">
         <h3 className="game-section-title">Mapa de treinos</h3>
