@@ -1,34 +1,21 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Bookmark, Check, Settings2, Sparkles, ChevronDown, Play } from 'lucide-react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { Bookmark } from 'lucide-react';
+import { arrayMove } from '@dnd-kit/sortable';
+import type { DragEndEvent } from '@dnd-kit/core';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
 import { RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
-import { SortableExerciseItem } from '@/components/builder/SortableExerciseItem';
 import { SimilarWorkoutModal } from '@/components/builder/SimilarWorkoutModal';
 import { SimilarExerciseModal } from '@/components/builder/SimilarExerciseModal';
 import { ExercisePicker } from '@/components/builder/ExercisePicker';
 import { BuilderTabs, type BuilderTab } from '@/components/builder/BuilderTabs';
 import { BuilderStickyBar } from '@/components/builder/BuilderStickyBar';
 import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
-import { MuscleTagGroup } from '@/components/builder/MuscleTag';
-import { getPresetPrimaryMuscles } from '@/components/builder/builder-muscles';
+import { TrainPresetSection } from '@/components/builder/TrainPresetSection';
+import { WorkoutConfigPanel } from '@/components/builder/WorkoutConfigPanel';
+import { WorkoutQueueList } from '@/components/builder/WorkoutQueueList';
+import { presetToQueue } from '@/components/builder/queue-utils';
 import {
   filterSimilarPresets,
   filterSimilarSavedWorkouts,
@@ -40,8 +27,6 @@ import { filterSimilarExercises, pickPresetForCycle } from '@/components/builder
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
-import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
-import { WheelNumberPicker } from '@/components/ui/WheelNumberPicker';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -50,9 +35,8 @@ import { resolveSelectedRepSchemeId } from '@/lib/user-dados';
 import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
 import type {
   ActiveWorkout,
-  IExerciseDocument,
-  IWorkoutPresetDocument,
   ModoExercicio,
+  IWorkoutPresetDocument,
   NivelUsuario,
   Objetivo,
   RepSchemeRecommendation,
@@ -65,46 +49,12 @@ import {
   CICLO_LABELS,
   NIVEL_LABELS,
   formatExerciseName,
-  formatExercisePrescription,
   fromSavedPresetId,
   getExerciseParamsForNivel,
   isSavedPresetId,
   normalizeCicloTreinos,
   toSavedPresetId,
 } from '@/types';
-
-function presetToQueue(
-  preset: IWorkoutPresetDocument,
-  exerciseMap: Map<string, IExerciseDocument>,
-  nivel: NivelUsuario,
-): WorkoutQueueItem[] {
-  return preset.exercicios
-    .map((pe) => {
-      const ex = exerciseMap.get(pe.slug);
-      if (!ex) return null;
-      const params = getExerciseParamsForNivel(ex, nivel);
-      return {
-        slug: ex.slug,
-        nome: ex.nome,
-        nome_pt: ex.nome_pt,
-        exercicio_id: ex.id,
-        musculo_principal: ex.musculo_principal,
-        tempo_recomendado: params.tempo_seg || ex.tempo_recomendado || 30,
-        modo: pe.modo ?? params.modo,
-        series: pe.series,
-        repeticoes: pe.repeticoes ?? params.repeticoes,
-        tempo_seg: pe.tempo_seg ?? params.tempo_seg,
-        descanso_seg: pe.descanso_seg ?? params.descanso_seg,
-      } satisfies WorkoutQueueItem;
-    })
-    .filter(Boolean) as WorkoutQueueItem[];
-}
-
-function presetSummary(preset: IWorkoutPresetDocument): string {
-  const count = preset.exercicios.length;
-  const reps = preset.exercicios.filter((e) => e.modo === 'reps' || !e.modo).length;
-  return `${count} exercícios${reps > 0 ? ` · ${reps} com repetições` : ''}`;
-}
 
 export function BuilderPage() {
   const {
@@ -263,11 +213,6 @@ export function BuilderPage() {
 
   const activeQueue = draftQueue ?? baseQueue;
   const sortableIds = activeQueue.map((item, i) => `${item.slug}-${i}`);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
 
   const applyRepScheme = useCallback(
     (
@@ -691,107 +636,19 @@ export function BuilderPage() {
   }, [activeQueue, globalDescanso]);
 
   const configSection = (
-    <>
-      <button
-        type="button"
-        onClick={() => setShowConfig((s) => !s)}
-        className={`game-disclosure ${showConfig ? 'game-disclosure--open' : ''}`}
-        aria-expanded={showConfig}
-        aria-controls="workout-config-panel"
-      >
-        <span className="game-disclosure__icon" aria-hidden>
-          <Settings2 size={18} />
-        </span>
-        <span className="game-disclosure__body">
-          <span className="game-disclosure__title">Configurar descanso, séries e repetições</span>
-          <span className="game-disclosure__hint">
-            {showConfig
-              ? 'Toque para recolher'
-              : 'Toque para ajustar descanso, séries e repetições'}
-          </span>
-        </span>
-        <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
-      </button>
-
-      {showConfig &&
-        (activeQueue.length === 0 ? (
-          <div className="glass-card game-disclosure-panel rounded-2xl p-4">
-            <p className="text-sm text-stone-500">Adicione ou recomende exercícios para ajustar.</p>
-          </div>
-        ) : (
-          <div
-            id="workout-config-panel"
-            className="glass-card game-disclosure-panel rounded-2xl p-4"
-          >
-            <WheelNumberPicker
-              label="Descanso padrão"
-              value={globalDescanso}
-              min={10}
-              max={90}
-              suffix="s"
-              onChange={setGlobalDescanso}
-            />
-            {activeQueue.map((item, idx) => (
-              <div key={sortableIds[idx]} className="mt-3 border-t border-stone-100 pt-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <span className="text-sm font-bold">{formatExerciseName(item)}</span>
-                    <p className="text-[0.65rem] font-bold text-stone-500">
-                      {formatExercisePrescription(item)}
-                    </p>
-                  </div>
-                  {item.modo === 'reps' && (
-                    <div className="flex flex-wrap gap-1">
-                      {schemes.map((scheme) => (
-                        <button
-                          key={`${item.slug}-${scheme.id}`}
-                          type="button"
-                          onClick={() => applyRepScheme(scheme, idx)}
-                          className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold ${
-                            selectedSchemeId === scheme.id && !customizedIndices.has(idx)
-                              ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                              : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-400'
-                          }`}
-                        >
-                          {scheme.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  <WheelNumberPicker
-                    label="Séries"
-                    value={item.series}
-                    min={1}
-                    max={10}
-                    onChange={(series) => updateQueueItem(idx, { series })}
-                  />
-                  <WheelNumberPicker
-                    label="Repetições"
-                    value={item.repeticoes ?? 12}
-                    min={1}
-                    max={50}
-                    disabled={item.modo === 'tempo'}
-                    placeholder="Por tempo"
-                    onChange={(repeticoes) =>
-                      updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })
-                    }
-                  />
-                  <WheelNumberPicker
-                    label="Descanso (s)"
-                    value={item.descanso_seg ?? globalDescanso}
-                    min={5}
-                    max={90}
-                    suffix="s"
-                    onChange={(descanso_seg) => updateQueueItem(idx, { descanso_seg })}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-    </>
+    <WorkoutConfigPanel
+      open={showConfig}
+      onToggle={() => setShowConfig((s) => !s)}
+      queue={activeQueue}
+      sortableIds={sortableIds}
+      globalDescanso={globalDescanso}
+      onChangeGlobalDescanso={setGlobalDescanso}
+      schemes={schemes}
+      selectedSchemeId={selectedSchemeId}
+      customizedIndices={customizedIndices}
+      onApplySchemeToItem={(scheme, idx) => applyRepScheme(scheme, idx)}
+      onUpdateItem={updateQueueItem}
+    />
   );
 
   return (
@@ -809,126 +666,23 @@ export function BuilderPage() {
           aria-labelledby="builder-tab-train"
           className="flex flex-col gap-5"
         >
-          <section id="builder-presets">
-            <div className="mb-2 flex items-center gap-2">
-              <Sparkles size={18} className="text-amber-500" />
-              <div>
-                <h3 className="game-section-title !mb-0">Treino do dia</h3>
-                <div
-                  className="game-builder-cycle-progress mt-1"
-                  role="tablist"
-                  aria-label="Ciclos de treino"
-                >
-                  {cicloTreinos.map((c, i) => {
-                    const done = !!rodadaDone[c];
-                    const isSuggested = suggestedWorkout?.ciclo_id === c;
-                    const isActive = selectedPreset?.ciclo_id === c;
-                    return (
-                      <Fragment key={c}>
-                        {i > 0 && (
-                          <span className="game-builder-cycle-progress__arrow" aria-hidden>
-                            →
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={isActive}
-                          className={[
-                            'game-builder-cycle-chip',
-                            done ? 'game-builder-cycle-chip--done' : '',
-                            isActive ? 'game-builder-cycle-chip--active' : '',
-                            !isActive && isSuggested ? 'game-builder-cycle-chip--next' : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' ')}
-                          onClick={() => handleSelectCiclo(c)}
-                          title={`Ciclo ${c} — ${CICLO_LABELS[c]}`}
-                        >
-                          {done && <Check size={10} strokeWidth={3} aria-hidden />}
-                          Ciclo {c}
-                        </button>
-                      </Fragment>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {suggestedWorkout && suggestedPresetId && selectedPresetId !== suggestedPresetId && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="game-builder-next-banner mb-3"
-              >
-                <span className="game-builder-next-banner__icon" aria-hidden>
-                  <Play size={14} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="game-builder-next-banner__label">Recomendado agora</p>
-                  <p className="game-builder-next-banner__title">
-                    Ciclo {suggestedWorkout.ciclo_id} —{' '}
-                    {suggestedWorkout.nome.split('—')[1]?.trim() ?? suggestedWorkout.nome}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="game-builder-next-banner__action"
-                  onClick={() => selectPreset(suggestedPresetId)}
-                >
-                  Usar
-                </button>
-              </motion.div>
-            )}
-
-            {(selectedPreset || selectedSavedWorkout) && (
-              <div className="glass-card rounded-2xl p-4">
-                {selectedPreset && (
-                  <>
-                    <p className="text-[0.65rem] font-bold text-emerald-600">
-                      Ciclo {selectedPreset.ciclo_id}
-                    </p>
-                    <p className="text-sm font-extrabold text-stone-900">
-                      {selectedPreset.nome.split('—')[1]?.trim() ?? selectedPreset.nome}
-                    </p>
-                    <MuscleTagGroup
-                      muscles={getPresetPrimaryMuscles(selectedPreset, exerciseMap)}
-                      className="mt-2"
-                    />
-                    <p className="mt-2 text-xs font-bold text-stone-600">
-                      {selectedPreset.descricao}
-                    </p>
-                    <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
-                      {presetSummary(selectedPreset)}
-                    </p>
-                    <PreferenceToggleButtons
-                      className="mt-3"
-                      onSwapWorkout={() => void handleSwapWorkout()}
-                      swapAriaLabel="Trocar treino similar"
-                      isPinned={fixedWorkoutIds.includes(selectedPreset.id)}
-                      isBlocked={blockedWorkoutIds.includes(selectedPreset.id)}
-                      onTogglePin={() => toggleWorkoutPin(selectedPreset.id)}
-                      onToggleBlock={() => toggleWorkoutBlock(selectedPreset.id)}
-                      pinAriaLabel="Sempre recomendar este treino"
-                      blockAriaLabel="Não recomendar este treino"
-                      feedbackKind="workout"
-                    />
-                  </>
-                )}
-                {selectedSavedWorkout && (
-                  <>
-                    <p className="text-[0.65rem] font-bold text-sky-600">Treino salvo</p>
-                    <p className="text-sm font-extrabold text-stone-900">
-                      {selectedSavedWorkout.nome}
-                    </p>
-                    <p className="mt-2 text-xs font-bold text-stone-600">
-                      {selectedSavedWorkout.queue.length} exercícios personalizados.
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-          </section>
+          <TrainPresetSection
+            cicloTreinos={cicloTreinos}
+            rodadaDone={rodadaDone}
+            suggestedWorkout={suggestedWorkout}
+            suggestedPresetId={suggestedPresetId}
+            selectedPresetId={selectedPresetId}
+            selectedPreset={selectedPreset}
+            selectedSavedWorkout={selectedSavedWorkout}
+            exerciseMap={exerciseMap}
+            fixedWorkoutIds={fixedWorkoutIds}
+            blockedWorkoutIds={blockedWorkoutIds}
+            onSelectCiclo={handleSelectCiclo}
+            onSelectPreset={selectPreset}
+            onSwapWorkout={() => void handleSwapWorkout()}
+            onToggleWorkoutPin={toggleWorkoutPin}
+            onToggleWorkoutBlock={toggleWorkoutBlock}
+          />
 
           <section>
             <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-stone-500">
@@ -952,39 +706,23 @@ export function BuilderPage() {
 
           <section id="builder-queue-preview" className="glass-card rounded-2xl p-4">
             <h3 className="game-section-title mb-3">Fila do treino</h3>
-            {activeQueue.length === 0 ? (
-              <p className="text-sm text-stone-500">
-                {exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'}
-              </p>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-                  <ul className="flex flex-col gap-2">
-                    {activeQueue.map((item, index) => (
-                      <SortableExerciseItem
-                        key={sortableIds[index]}
-                        id={sortableIds[index]}
-                        item={item}
-                        index={index}
-                        exercise={exerciseMap.get(item.slug)}
-                        showPreferences
-                        showSwapExercise
-                        onSwapExercise={() => setSwapExerciseIndex(index)}
-                        onChangeTempo={(sec) => handleChangeTempo(index, sec)}
-                        isPinned={fixedExerciseSlugs.includes(item.slug)}
-                        isBlocked={blockedExerciseSlugs.includes(item.slug)}
-                        onTogglePin={() => toggleExercisePin(item.slug)}
-                        onToggleBlock={() => toggleExerciseBlock(item.slug)}
-                      />
-                    ))}
-                  </ul>
-                </SortableContext>
-              </DndContext>
-            )}
+            <WorkoutQueueList
+              queue={activeQueue}
+              sortableIds={sortableIds}
+              exerciseMap={exerciseMap}
+              emptyMessage={
+                exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'
+              }
+              onDragEnd={handleDragEnd}
+              onSwapExercise={setSwapExerciseIndex}
+              onChangeTempo={handleChangeTempo}
+              preferences={{
+                fixedExerciseSlugs,
+                blockedExerciseSlugs,
+                onTogglePin: toggleExercisePin,
+                onToggleBlock: toggleExerciseBlock,
+              }}
+            />
           </section>
         </div>
       )}
@@ -1024,35 +762,18 @@ export function BuilderPage() {
 
           <section id="builder-queue" className="glass-card rounded-2xl p-4">
             <h3 className="game-section-title">Ordem dos exercícios</h3>
-            {activeQueue.length === 0 ? (
-              <p className="text-sm text-stone-500">
-                {exercisesLoading ? 'Carregando...' : 'Adicione exercícios da biblioteca acima.'}
-              </p>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-                  <ul className="flex flex-col gap-2">
-                    {activeQueue.map((item, index) => (
-                      <SortableExerciseItem
-                        key={sortableIds[index]}
-                        id={sortableIds[index]}
-                        item={item}
-                        index={index}
-                        exercise={exerciseMap.get(item.slug)}
-                        onRemove={() => removeExercise(index)}
-                        showSwapExercise
-                        onSwapExercise={() => setSwapExerciseIndex(index)}
-                        onChangeTempo={(sec) => handleChangeTempo(index, sec)}
-                      />
-                    ))}
-                  </ul>
-                </SortableContext>
-              </DndContext>
-            )}
+            <WorkoutQueueList
+              queue={activeQueue}
+              sortableIds={sortableIds}
+              exerciseMap={exerciseMap}
+              emptyMessage={
+                exercisesLoading ? 'Carregando...' : 'Adicione exercícios da biblioteca acima.'
+              }
+              onDragEnd={handleDragEnd}
+              onSwapExercise={setSwapExerciseIndex}
+              onChangeTempo={handleChangeTempo}
+              onRemove={removeExercise}
+            />
           </section>
 
           {canSaveWorkout && (
