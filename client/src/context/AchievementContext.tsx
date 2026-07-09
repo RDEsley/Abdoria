@@ -14,13 +14,14 @@ import { AchievementToast } from '@/components/gamification/AchievementToast';
 import type { AfkPingResponse } from '@/lib/api';
 import {
   notifyBestiaryUnlocks,
+  notifyPersonalRecords,
   notifyWorkoutAchievements,
   registerAchievementTrigger,
   type AchievementToastItem,
   type TriggerAchievementPayload,
 } from '@/lib/achievement-notifications';
 import { playAchievementUnlock } from '@/lib/sounds';
-import type { UnlockedAchievementNotice } from '@/types';
+import type { PersonalRecordNotice, UnlockedAchievementNotice } from '@/types';
 
 const MAX_VISIBLE = 3;
 
@@ -100,6 +101,15 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('abdoria:achievements-unlocked', onAchievements);
     return () => window.removeEventListener('abdoria:achievements-unlocked', onAchievements);
+  }, []);
+
+  useEffect(() => {
+    const onPersonalRecords = (event: Event) => {
+      const detail = (event as CustomEvent<PersonalRecordNotice[]>).detail;
+      if (detail?.length) notifyPersonalRecords(detail);
+    };
+    window.addEventListener('abdoria:personal-records-unlocked', onPersonalRecords);
+    return () => window.removeEventListener('abdoria:personal-records-unlocked', onPersonalRecords);
   }, []);
 
   const value = useMemo(() => ({ triggerAchievement: enqueue }), [enqueue]);

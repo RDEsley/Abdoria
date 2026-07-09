@@ -418,6 +418,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           new CustomEvent('abdoria:achievements-unlocked', { detail: result.new_achievements }),
         );
       }
+      if (result.new_personal_records?.length) {
+        window.dispatchEvent(
+          new CustomEvent('abdoria:personal-records-unlocked', {
+            detail: result.new_personal_records,
+          }),
+        );
+      }
 
       const [statsRes, recRes, historyRes] = await Promise.allSettled([
         getDashboardStats(),

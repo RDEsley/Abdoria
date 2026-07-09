@@ -1,7 +1,12 @@
-import type { AchievementIcon, AfkEnemyId, UnlockedAchievementNotice } from '@/types';
+import type {
+  AchievementIcon,
+  AfkEnemyId,
+  PersonalRecordNotice,
+  UnlockedAchievementNotice,
+} from '@/types';
 import { AFK_ENEMIES } from '@/types';
 
-export type AchievementToastType = 'achievement' | 'enemy';
+export type AchievementToastType = 'achievement' | 'enemy' | 'record';
 
 export interface TriggerAchievementPayload {
   title: string;
@@ -36,6 +41,7 @@ export function triggerAchievement(payload: TriggerAchievementPayload) {
 
 export const ACHIEVEMENT_UNLOCKED_TITLE = 'Conquista desbloqueada!';
 export const ENEMY_UNLOCKED_TITLE = 'Novo inimigo!';
+export const PERSONAL_RECORD_TITLE = 'Novo recorde!';
 
 export function notifyBestiaryUnlocks(enemyIds: AfkEnemyId[]) {
   for (const enemyId of enemyIds) {
@@ -55,6 +61,18 @@ export function notifyWorkoutAchievements(achievements: UnlockedAchievementNotic
       title: ACHIEVEMENT_UNLOCKED_TITLE,
       description: ach.titulo,
       icon: ach.icon,
+    });
+  }
+}
+
+export function notifyPersonalRecords(records: PersonalRecordNotice[]) {
+  for (const record of records) {
+    const unidade = record.unidade === 'segundos' ? 's' : 'reps';
+    triggerAchievement({
+      type: 'record',
+      title: PERSONAL_RECORD_TITLE,
+      description: `${record.nome}: ${record.valor_anterior} → ${record.valor_novo} ${unidade}`,
+      icon: 'medal',
     });
   }
 }

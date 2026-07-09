@@ -30,8 +30,12 @@ import { xpLevelFromTotal } from '../types/index.js';
 import { readInventarioSummary } from '../services/inventory.js';
 import { hasAfkRewardsToClaim, syncAfkRewards } from '../services/afk.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
-import type { TreinoBase, TreinoTipo } from '../types/index.js';
+import type { TreinoBase, TreinoTipo, WorkoutExerciseEntry } from '../types/index.js';
 import { normalizePending } from '../repositories/user-repository.js';
+import {
+  computePersonalRecords,
+  diffNewPersonalRecords,
+} from '../../../shared/personal-records.js';
 
 export const workoutsRouter = Router();
 
@@ -282,6 +286,18 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const musculos = [...musculosSet];
     const streakBefore = user.gamificacao.streak_atual;
 
+    const previousHistories = await WorkoutHistory.find({ usuario_id: user.id });
+    const previousRecords = computePersonalRecords(
+      previousHistories as unknown as Array<{
+        exercicios: WorkoutExerciseEntry[];
+        concluido_em: Date | string;
+      }>,
+    );
+    const newPersonalRecords = diffNewPersonalRecords(
+      previousRecords,
+      resolvedExercises as WorkoutExerciseEntry[],
+    );
+
     const history = await WorkoutHistory.create({
       usuario_id: user.id,
       treino_nome,
@@ -345,6 +361,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
           descricao: a!.descricao,
           icon: a!.icon,
         })),
+      new_personal_records: newPersonalRecords,
     });
   } catch (error) {
     console.error('POST /api/workouts/complete error:', error);

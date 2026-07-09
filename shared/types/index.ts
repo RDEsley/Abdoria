@@ -1024,6 +1024,15 @@ export interface UnlockedAchievementNotice {
   icon: AchievementIcon;
 }
 
+export interface PersonalRecordNotice {
+  slug: string;
+  nome: string;
+  modo: ModoExercicio;
+  valor_anterior: number;
+  valor_novo: number;
+  unidade: 'reps' | 'segundos';
+}
+
 export interface CompleteWorkoutResponse {
   history: IWorkoutHistoryDocument;
   user: IUserDocument;
@@ -1036,6 +1045,7 @@ export interface CompleteWorkoutResponse {
   level_up: LevelUpCelebration | null;
   rodada_completa?: boolean;
   new_achievements?: UnlockedAchievementNotice[];
+  new_personal_records?: PersonalRecordNotice[];
 }
 
 export interface CompleteWorkoutPayload {

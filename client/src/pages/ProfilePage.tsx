@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Save, Settings } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
+import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { GameButton } from '@/components/ui/GameButton';
@@ -231,7 +232,12 @@ export function ProfilePage() {
         </form>
       )}
 
-      {tab === 'progresso' && stats && <ProfileProgressPanel stats={stats} />}
+      {tab === 'progresso' && stats && (
+        <>
+          <ProfileProgressPanel stats={stats} />
+          <PersonalRecordsPanel />
+        </>
+      )}
 
       {tab === 'progresso' && !stats && (
         <div className="glass-card rounded-2xl p-4 text-center text-sm font-bold text-stone-500">
