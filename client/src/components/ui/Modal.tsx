@@ -1,0 +1,111 @@
+import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  /** `wide` usa `.game-modal--wide`; `bare` não aplica nenhuma classe de painel (o filho controla o próprio layout). */
+  variant?: 'default' | 'wide' | 'bare';
+  overlayClassName?: string;
+  panelClassName?: string;
+  labelledBy?: string;
+  describedBy?: string;
+  role?: 'dialog' | 'alertdialog';
+  /** Desliga fechar por Escape/clique fora — útil durante uma ação em andamento (ex.: compra). */
+  disableDismiss?: boolean;
+}
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Primitivo de modal: portal + scroll lock + Escape + trap de foco.
+ * Reaproveita as classes visuais `.game-modal-overlay`/`.game-modal` já existentes
+ * para não introduzir nenhuma mudança visual nos modais migrados.
+ */
+export function Modal({
+  open,
+  onClose,
+  children,
+  variant = 'default',
+  overlayClassName = '',
+  panelClassName = '',
+  labelledBy,
+  describedBy,
+  role = 'dialog',
+  disableDismiss = false,
+}: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const panel = panelRef.current;
+    const focusable = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (focusable ?? panel)?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (disableDismiss) return;
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !panel) return;
+
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+      previouslyFocused.current?.focus();
+    };
+  }, [open, onClose, disableDismiss]);
+
+  if (!open) return null;
+
+  const panelClass =
+    variant === 'bare'
+      ? panelClassName
+      : `game-modal ${variant === 'wide' ? 'game-modal--wide' : ''} ${panelClassName}`.trim();
+
+  return createPortal(
+    <div
+      className={`game-modal-overlay ${overlayClassName}`.trim()}
+      role="presentation"
+      onClick={disableDismiss ? undefined : onClose}
+    >
+      <div
+        ref={panelRef}
+        className={panelClass}
+        role={role}
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+}
