@@ -93,3 +93,8 @@ dump/
 
 # Supabase CLI temp
 supabase/.temp/
+
+# DOCS
+docs/private
+.private
+
