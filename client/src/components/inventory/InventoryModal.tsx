@@ -11,7 +11,7 @@ import {
   ExpInstantIcon,
   DoriaBagIcon,
 } from '@/lib/daily-shop-display';
-import { getInventory, useExpInstant, useDoriaBag, useRouteDrink } from '@/lib/api';
+import { getInventory, consumeExpInstant, consumeDoriaBag, consumeRouteDrink } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import {
@@ -132,7 +132,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     if (expInstantCount < 1) return;
     setUsingExpInstant(true);
     try {
-      const res = await useExpInstant(true);
+      const res = await consumeExpInstant(true);
       applyUser(res.user);
       await refreshApp();
       applyCounts(res.inventario);
@@ -152,7 +152,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     setUsingDoriaBag(true);
     setBagShake(true);
     try {
-      const res = await useDoriaBag(bagQuantity);
+      const res = await consumeDoriaBag(bagQuantity);
       applyUser(res.user);
       await refreshApp();
       applyCounts(res.inventario);
@@ -196,7 +196,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     if (routeCount < 1) return;
     setUsingRouteDrink(true);
     try {
-      const res = await useRouteDrink(true);
+      const res = await consumeRouteDrink(true);
       applyUser(res.user);
       await refreshApp();
       applyCounts(res.inventario);
