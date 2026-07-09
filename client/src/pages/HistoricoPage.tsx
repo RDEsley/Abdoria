@@ -8,7 +8,11 @@ import { getWorkoutHistoryFeed, getWorkoutHistorySessionDetail } from '@/lib/api
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { formatTrainingDuration } from '@/lib/utils';
-import type { IWorkoutHistoryDocument, WorkoutHistorySessionDetail } from '@/types';
+import type {
+  IWorkoutHistoryDocument,
+  WorkoutHistoryFeedCursor,
+  WorkoutHistorySessionDetail,
+} from '@/types';
 
 function formatSessionDate(concluidoEm: string | Date): string {
   const d = new Date(concluidoEm);
@@ -17,7 +21,7 @@ function formatSessionDate(concluidoEm: string | Date): string {
 
 export function HistoricoPage() {
   const [sessions, setSessions] = useState<IWorkoutHistoryDocument[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<WorkoutHistoryFeedCursor | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);

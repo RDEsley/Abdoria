@@ -93,6 +93,33 @@ export const WorkoutHistory = {
     return rowToHistory(data as Record<string, unknown>);
   },
 
+  /**
+   * Página ordenada por `concluido_em DESC, id DESC` com cursor composto —
+   * evita duplicar/pular item quando duas sessões têm o mesmo `concluido_em`.
+   */
+  async findPage(
+    usuario_id: string,
+    cursor: { concluido_em: string; id: string } | null,
+    limit: number,
+  ): Promise<WorkoutHistoryDocument[]> {
+    const sb = getSupabase();
+    let query = sb.from('workout_history').select('*').eq('usuario_id', usuario_id);
+
+    if (cursor) {
+      query = query.or(
+        `concluido_em.lt.${cursor.concluido_em},and(concluido_em.eq.${cursor.concluido_em},id.lt.${cursor.id})`,
+      );
+    }
+
+    const { data, error } = await query
+      .order('concluido_em', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return (data as Record<string, unknown>[]).map(rowToHistory);
+  },
+
   async findById(id: string, usuario_id: string): Promise<WorkoutHistoryDocument | null> {
     const sb = getSupabase();
     const { data, error } = await sb

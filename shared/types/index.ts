@@ -1033,9 +1033,14 @@ export interface PersonalRecordNotice {
   unidade: 'reps' | 'segundos';
 }
 
+export interface WorkoutHistoryFeedCursor {
+  concluido_em: string;
+  id: string;
+}
+
 export interface WorkoutHistoryFeedPage {
   items: IWorkoutHistoryDocument[];
-  next_cursor: string | null;
+  next_cursor: WorkoutHistoryFeedCursor | null;
 }
 
 export interface WorkoutHistorySessionDetail {

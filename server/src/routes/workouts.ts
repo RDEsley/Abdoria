@@ -36,6 +36,7 @@ import {
   computePersonalRecords,
   diffNewPersonalRecords,
 } from '../../../shared/personal-records.js';
+import { buildFeedPage, parseFeedCursor } from '../services/workout-history-feed.js';
 
 export const workoutsRouter = Router();
 
@@ -58,25 +59,24 @@ workoutsRouter.get('/history', async (req: AuthRequest, res) => {
 const HISTORY_FEED_DEFAULT_LIMIT = 20;
 const HISTORY_FEED_MAX_LIMIT = 50;
 
-/** Feed paginado por cursor de `concluido_em` — cobre contas com mais de 365 treinos. */
+/** Feed paginado por cursor composto (concluido_em, id) — cobre contas com mais de 365 treinos. */
 workoutsRouter.get('/history/feed', async (req: AuthRequest, res) => {
   try {
-    const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+    const cursor = parseFeedCursor(req.query.cursor, req.query.cursorId);
+    if (cursor === 'invalid') {
+      res.status(400).json({ error: 'Cursor de paginação inválido.' });
+      return;
+    }
+
     const requestedLimit = Number(req.query.limit);
     const limit = Number.isFinite(requestedLimit)
       ? Math.min(Math.max(1, requestedLimit), HISTORY_FEED_MAX_LIMIT)
       : HISTORY_FEED_DEFAULT_LIMIT;
 
-    const page = await WorkoutHistory.find(
-      { usuario_id: req.userId!, ...(cursor ? { concluido_em: { $lt: cursor } } : {}) },
-      { sort: { concluido_em: -1 }, limit: limit + 1 },
-    );
+    const fetched = await WorkoutHistory.findPage(req.userId!, cursor, limit + 1);
+    const { items, next_cursor } = buildFeedPage(fetched, limit);
 
-    const hasMore = page.length > limit;
-    const items = hasMore ? page.slice(0, limit) : page;
-    const nextCursor = hasMore ? String(items[items.length - 1].concluido_em) : null;
-
-    res.json({ items, next_cursor: nextCursor });
+    res.json({ items, next_cursor });
   } catch (error) {
     console.error('GET /api/workouts/history/feed error:', error);
     res.status(500).json({ error: 'Erro ao buscar histórico paginado.' });
