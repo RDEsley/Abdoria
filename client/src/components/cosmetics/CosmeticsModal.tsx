@@ -1,21 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Coins,
-  Crown,
-  Frame,
-  Image,
-  Music,
-  UserRound,
-  Wand2,
-} from 'lucide-react';
+import { Coins, Crown, Frame, Image, Music, UserRound, Wand2 } from 'lucide-react';
 import { ShopItemRow } from '@/components/shop/ShopItemRow';
 import { AbdoriaCoinsGuideOverlay } from '@/components/shop/AbdoriaCoinsGuideOverlay';
 import { ShopPreviewStage } from '@/components/shop/ShopPreviewStage';
-import { PurchaseConfirmDialog, type PurchaseConfirmDetails } from '@/components/shop/PurchaseConfirmDialog';
+import {
+  PurchaseConfirmDialog,
+  type PurchaseConfirmDetails,
+} from '@/components/shop/PurchaseConfirmDialog';
 import { GameButton } from '@/components/ui/GameButton';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
-import { equipCosmetic, getShop, purchaseCosmetic } from '@/lib/api';
+import { equipShopItem, getShop, purchaseShopItem } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
@@ -35,12 +30,7 @@ interface Props {
 }
 
 type ShopSectionId =
-  | 'shop-avatares'
-  | 'shop-bordas'
-  | 'shop-titulos'
-  | 'shop-fundos'
-  | 'shop-sons'
-  | 'shop-efeitos';
+  'shop-avatares' | 'shop-bordas' | 'shop-titulos' | 'shop-fundos' | 'shop-sons' | 'shop-efeitos';
 
 type PreviewState = Partial<Record<CosmeticKind, string>>;
 
@@ -97,7 +87,8 @@ export function CosmeticsModal({ open, onClose }: Props) {
     return (
       (preview.avatar !== undefined && preview.avatar !== cosmeticos.avatar_equipado) ||
       (preview.borda !== undefined && preview.borda !== cosmeticos.borda_equipada) ||
-      (preview.titulo !== undefined && preview.titulo !== (cosmeticos.titulo_equipado ?? undefined)) ||
+      (preview.titulo !== undefined &&
+        preview.titulo !== (cosmeticos.titulo_equipado ?? undefined)) ||
       (preview.fundo !== undefined && preview.fundo !== cosmeticos.fundo_equipado) ||
       (preview.efeito !== undefined && preview.efeito !== cosmeticos.efeito_equipado)
     );
@@ -168,7 +159,8 @@ export function CosmeticsModal({ open, onClose }: Props) {
     const root = scrollRef.current;
     const target = root?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
     if (root && target) {
-      const top = root.scrollTop + target.getBoundingClientRect().top - root.getBoundingClientRect().top - 6;
+      const top =
+        root.scrollTop + target.getBoundingClientRect().top - root.getBoundingClientRect().top - 6;
       root.scrollTo({
         top: Math.max(0, top),
         behavior: 'smooth',
@@ -213,13 +205,15 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const handlePurchase = async (item: ShopCatalogItem) => {
     setBusyId(item.id);
     try {
-      const res = await purchaseCosmetic(item.id);
+      const res = await purchaseShopItem(item.id);
       await syncUser(res.user);
       playPurchase();
       setPurchaseConfirm(null);
       showGameToast(`${item.nome} comprado!`, { variant: 'success' });
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), {
+        variant: 'error',
+      });
     } finally {
       setBusyId(null);
     }
@@ -241,7 +235,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const handleEquip = async (item: ShopCatalogItem) => {
     setBusyId(item.id);
     try {
-      const res = await equipCosmetic(item.kind, item.id);
+      const res = await equipShopItem(item.kind, item.id);
       await syncUser(res.user);
       playEquip();
       setPreview((prev) => {
@@ -251,7 +245,9 @@ export function CosmeticsModal({ open, onClose }: Props) {
       });
       showGameToast(`${item.nome} equipado!`, { variant: 'success' });
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), {
+        variant: 'error',
+      });
     } finally {
       setBusyId(null);
     }
@@ -273,111 +269,123 @@ export function CosmeticsModal({ open, onClose }: Props) {
         >
           <div className="game-shop-modal__content">
             <header className="game-shop-header">
-            <div>
-              <h2 id="cosmetics-title" className="game-shop-header__title">
-                Loja Abdoria
-              </h2>
-              <p className="game-shop-header__subtitle">Personalize seu perfil</p>
-            </div>
-            <button
-              type="button"
-              className="game-shop-header__coins"
-              onClick={() => setCoinsGuideOpen(true)}
-              aria-label={`${catalog?.abdoria ?? cosmeticos.moedas} ${CURRENCY_NAME}. Toque para ver como ganhar mais`}
-            >
-              <Coins size={16} aria-hidden /> {catalog?.abdoria ?? cosmeticos.moedas} {CURRENCY_NAME}
-            </button>
+              <div>
+                <h2 id="cosmetics-title" className="game-shop-header__title">
+                  Loja Abdoria
+                </h2>
+                <p className="game-shop-header__subtitle">Personalize seu perfil</p>
+              </div>
+              <button
+                type="button"
+                className="game-shop-header__coins"
+                onClick={() => setCoinsGuideOpen(true)}
+                aria-label={`${catalog?.abdoria ?? cosmeticos.moedas} ${CURRENCY_NAME}. Toque para ver como ganhar mais`}
+              >
+                <Coins size={16} aria-hidden /> {catalog?.abdoria ?? cosmeticos.moedas}{' '}
+                {CURRENCY_NAME}
+              </button>
             </header>
 
             <ShopPreviewStage
-            user={user}
-            firstName={firstName}
-            preview={preview}
-            hasPreviewOverrides={hasPreviewOverrides}
-            onResetPreview={resetPreview}
-          />
+              user={user}
+              firstName={firstName}
+              preview={preview}
+              hasPreviewOverrides={hasPreviewOverrides}
+              onResetPreview={resetPreview}
+            />
 
-          <div className="game-shop-body">
-            <SwipeScroll
-              ref={navRef}
-              as="nav"
-              className="game-shop-nav"
-              aria-label="Filtrar seções da loja"
-              prevLabel="Ver seções anteriores"
-              nextLabel="Ver mais seções"
-            >
-              {SECTIONS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  data-shop-section={id}
-                  className={`game-shop-nav__btn ${activeSection === id ? 'game-shop-nav__btn--active' : ''}`}
-                  onClick={() => scrollToSection(id)}
-                >
-                  <Icon size={14} />
-                  {label}
-                </button>
-              ))}
-            </SwipeScroll>
+            <div className="game-shop-body">
+              <SwipeScroll
+                ref={navRef}
+                as="nav"
+                className="game-shop-nav"
+                aria-label="Filtrar seções da loja"
+                prevLabel="Ver seções anteriores"
+                nextLabel="Ver mais seções"
+              >
+                {SECTIONS.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    data-shop-section={id}
+                    className={`game-shop-nav__btn ${activeSection === id ? 'game-shop-nav__btn--active' : ''}`}
+                    onClick={() => scrollToSection(id)}
+                  >
+                    <Icon size={14} />
+                    {label}
+                  </button>
+                ))}
+              </SwipeScroll>
 
-            <div ref={scrollRef} className="game-shop-scroll">
-              {loading ? (
-                <p className="game-loader mt-6">Carregando catálogo...</p>
-              ) : (
-                SECTIONS.map(({ id, kind, label, icon: Icon }) => (
-                  <section key={id} id={id} className="game-shop-section game-shop-section--anchored">
-                    <div className="game-shop-section__head">
-                      <div className="game-shop-section__ornament" aria-hidden />
-                      <h3 className="game-shop-section__title">
-                        <Icon size={16} /> {label}
-                      </h3>
-                      <div className="game-shop-section__ornament game-shop-section__ornament--mirror" aria-hidden />
-                    </div>
+              <div ref={scrollRef} className="game-shop-scroll">
+                {loading ? (
+                  <p className="game-loader mt-6">Carregando catálogo...</p>
+                ) : (
+                  SECTIONS.map(({ id, kind, label, icon: Icon }) => (
+                    <section
+                      key={id}
+                      id={id}
+                      className="game-shop-section game-shop-section--anchored"
+                    >
+                      <div className="game-shop-section__head">
+                        <div className="game-shop-section__ornament" aria-hidden />
+                        <h3 className="game-shop-section__title">
+                          <Icon size={16} /> {label}
+                        </h3>
+                        <div
+                          className="game-shop-section__ornament game-shop-section__ornament--mirror"
+                          aria-hidden
+                        />
+                      </div>
 
-                    <div className="game-shop-list">
-                      {catalog &&
-                        (() => {
-                          const items = catalogByKind(catalog, kind);
-                          const groups = groupCosmeticCatalogByRarity(items);
-                          const showRarityLabels = groups.length > 1;
+                      <div className="game-shop-list">
+                        {catalog &&
+                          (() => {
+                            const items = catalogByKind(catalog, kind);
+                            const groups = groupCosmeticCatalogByRarity(items);
+                            const showRarityLabels = groups.length > 1;
 
-                          return groups.flatMap(({ raridade, items: groupItems }) => {
-                            const nodes = groupItems.map((item) => (
-                              <ShopItemRow
-                                key={item.id}
-                                item={item}
-                                letter={firstName}
-                                busy={busyId === item.id}
-                                isPreviewing={isPreviewingItem(item)}
-                                onPreview={() => handlePreview(item)}
-                                onEquip={() => void handleEquip(item)}
-                                onPurchase={() => requestPurchase(item)}
-                              />
-                            ));
+                            return groups.flatMap(({ raridade, items: groupItems }) => {
+                              const nodes = groupItems.map((item) => (
+                                <ShopItemRow
+                                  key={item.id}
+                                  item={item}
+                                  letter={firstName}
+                                  busy={busyId === item.id}
+                                  isPreviewing={isPreviewingItem(item)}
+                                  onPreview={() => handlePreview(item)}
+                                  onEquip={() => void handleEquip(item)}
+                                  onPurchase={() => requestPurchase(item)}
+                                />
+                              ));
 
-                            if (!showRarityLabels) return nodes;
+                              if (!showRarityLabels) return nodes;
 
-                            return [
-                              <p
-                                key={`rarity-${kind}-${raridade}`}
-                                className={`game-shop-rarity-label game-shop-rarity-label--${raridade}`}
-                              >
-                                {COSMETIC_RARITY_LABELS[raridade]}
-                              </p>,
-                              ...nodes,
-                            ];
-                          });
-                        })()}
-                    </div>
-                  </section>
-                ))
-              )}
+                              return [
+                                <p
+                                  key={`rarity-${kind}-${raridade}`}
+                                  className={`game-shop-rarity-label game-shop-rarity-label--${raridade}`}
+                                >
+                                  {COSMETIC_RARITY_LABELS[raridade]}
+                                </p>,
+                                ...nodes,
+                              ];
+                            });
+                          })()}
+                      </div>
+                    </section>
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
           <footer className="game-shop-modal__footer">
-            <GameButton variant="secondary" className="game-shop-modal__close game-modal__close" onClick={onClose}>
+            <GameButton
+              variant="secondary"
+              className="game-shop-modal__close game-modal__close"
+              onClick={onClose}
+            >
               Fechar
             </GameButton>
           </footer>

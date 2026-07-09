@@ -7,7 +7,6 @@ import type {
   CompleteWorkoutPayload,
   CompleteWorkoutResponse,
   CosmeticKind,
-  CosmeticsResponse,
   DashboardStats,
   EquipCosmeticResponse,
   Inventario,
@@ -83,7 +82,10 @@ export function requestPasswordReset(email: string): Promise<{ message: string }
 }
 
 export function register(email: string, password: string, nome: string): Promise<AuthResponse> {
-  return fetchJson('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, nome }) });
+  return fetchJson('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, nome }),
+  });
 }
 
 export function logoutApi(): Promise<{ ok: boolean }> {
@@ -196,28 +198,18 @@ export function getMyLeaderboardRank(metric: LeaderboardMetric = 'xp'): Promise<
   return fetchJson(`/leaderboard/me?metric=${metric}`);
 }
 
-export function getCosmetics(): Promise<CosmeticsResponse> {
-  return fetchJson('/shop');
-}
-
 export function getShop(): Promise<ShopResponse> {
   return fetchJson('/shop');
 }
 
-export function purchaseShopItem(id: string): Promise<{ user: IUserDocument; abdoria_gasta?: number }> {
+export function purchaseShopItem(
+  id: string,
+): Promise<{ user: IUserDocument; abdoria_gasta?: number }> {
   return fetchJson('/shop/purchase', { method: 'POST', body: JSON.stringify({ id }) });
-}
-
-export function purchaseCosmetic(id: string): Promise<{ user: IUserDocument; moedas_gastas?: number }> {
-  return purchaseShopItem(id);
 }
 
 export function equipShopItem(kind: CosmeticKind, id: string): Promise<EquipCosmeticResponse> {
   return fetchJson('/shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });
-}
-
-export function equipCosmetic(kind: CosmeticKind, id: string): Promise<{ user: IUserDocument }> {
-  return equipShopItem(kind, id);
 }
 
 export function claimDailyShopSlot(slot: number): Promise<{
@@ -315,14 +307,16 @@ export function usePatrolCache(): Promise<{
   return fetchJson('/meta/inventory/bau-patrulha', { method: 'POST' });
 }
 
-export function useRouteDrink(useAll = true): Promise<AfkMetaResponse & {
-  user: IUserDocument;
-  hours: number;
-  quantity_used: number;
-  claimed: AfkPendingReward;
-  overflow_to_dorias?: number;
-  inventario: InventarioSummary;
-}> {
+export function useRouteDrink(useAll = true): Promise<
+  AfkMetaResponse & {
+    user: IUserDocument;
+    hours: number;
+    quantity_used: number;
+    claimed: AfkPendingReward;
+    overflow_to_dorias?: number;
+    inventario: InventarioSummary;
+  }
+> {
   return fetchJson('/meta/inventory/route-drink', {
     method: 'POST',
     body: JSON.stringify({ use_all: useAll }),
