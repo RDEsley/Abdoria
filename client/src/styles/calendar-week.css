@@ -1,0 +1,375 @@
+/* Fundos do card jogador */
+.game-card-fundo--padrao {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(251, 191, 36, 0.22), transparent 38%),
+    radial-gradient(circle at 82% 78%, rgba(14, 165, 233, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, transparent 32%),
+    repeating-linear-gradient(90deg, rgba(5, 150, 105, 0.07) 0 10px, transparent 10px 22px),
+    repeating-linear-gradient(0deg, rgba(14, 165, 233, 0.06) 0 10px, transparent 10px 22px),
+    linear-gradient(145deg, #e0f2fe 0%, #d1fae5 48%, #a7f3d0 72%, #bae6fd 100%);
+  color: #0f172a;
+}
+
+.game-card-fundo--aurora {
+  background:
+    radial-gradient(ellipse 55% 28% at 72% 12%, rgba(34, 211, 238, 0.55), transparent 68%),
+    radial-gradient(ellipse 45% 22% at 18% 18%, rgba(167, 139, 250, 0.5), transparent 65%),
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(52, 211, 153, 0.42), transparent 72%),
+    radial-gradient(ellipse 60% 35% at 20% 80%, rgba(168, 85, 247, 0.38), transparent 68%),
+    radial-gradient(circle at 88% 62%, rgba(244, 114, 182, 0.25), transparent 35%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.25) 0%, transparent 38%),
+    repeating-linear-gradient(125deg, rgba(255, 255, 255, 0.03) 0 3px, transparent 3px 28px),
+    linear-gradient(135deg, #0f172a 0%, #312e81 32%, #6d28d9 58%, #0891b2 82%, #22d3ee 100%);
+  color: #f8fafc;
+}
+
+.game-card-fundo--vulcao {
+  background:
+    radial-gradient(ellipse 70% 35% at 50% 92%, rgba(251, 146, 60, 0.75), transparent 72%),
+    radial-gradient(ellipse 40% 28% at 35% 88%, rgba(239, 68, 68, 0.55), transparent 60%),
+    radial-gradient(ellipse 40% 28% at 65% 90%, rgba(253, 186, 116, 0.45), transparent 58%),
+    radial-gradient(circle at 50% 16%, rgba(253, 224, 71, 0.32), transparent 38%),
+    radial-gradient(circle at 50% 8%, rgba(254, 243, 199, 0.18) 0 2px, transparent 3px),
+    linear-gradient(180deg, transparent 52%, rgba(69, 10, 10, 0.88) 52%, rgba(45, 8, 8, 0.98) 100%),
+    repeating-linear-gradient(90deg, rgba(127, 29, 29, 0.15) 0 18px, transparent 18px 36px),
+    linear-gradient(160deg, #450a0a, #991b1b 38%, #dc2626 62%, #f97316 100%);
+  color: #fff7ed;
+}
+
+.game-card-fundo--galaxia {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 22% 38%, rgba(255, 255, 255, 0.65) 0 1px, transparent 2px),
+    radial-gradient(circle at 45% 18%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
+    radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.55) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 24%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 92% 58%, rgba(255, 255, 255, 0.6) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 62%, rgba(255, 255, 255, 0.55) 0 1px, transparent 2px),
+    radial-gradient(circle at 88% 72%, rgba(255, 255, 255, 0.65) 0 1px, transparent 2px),
+    radial-gradient(ellipse 55% 40% at 50% 50%, rgba(139, 92, 246, 0.22), transparent 70%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 38%),
+    radial-gradient(circle at 80% 30%, rgba(168, 85, 247, 0.38), transparent 45%),
+    radial-gradient(circle at 55% 75%, rgba(59, 130, 246, 0.2), transparent 40%),
+    linear-gradient(160deg, #020617, #1e1b4b 42%, #4c1d95 72%, #312e81 100%);
+  color: #e9d5ff;
+}
+
+.game-card-fundo--dojo {
+  background:
+    radial-gradient(ellipse 88% 46% at 50% -6%, rgba(254, 243, 199, 0.52), transparent 58%),
+    radial-gradient(ellipse 42% 24% at 50% 4%, rgba(251, 191, 36, 0.22), transparent 68%),
+    linear-gradient(
+      90deg,
+      rgba(28, 25, 23, 0.94) 0%,
+      rgba(68, 64, 60, 0.45) 10%,
+      rgba(254, 249, 195, 0.16) 20%,
+      rgba(254, 249, 195, 0.24) 50%,
+      rgba(254, 249, 195, 0.16) 80%,
+      rgba(68, 64, 60, 0.45) 90%,
+      rgba(28, 25, 23, 0.94) 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 46%,
+      rgba(63, 63, 70, 0.28) 46%,
+      rgba(39, 39, 42, 0.42) 52%,
+      rgba(22, 101, 52, 0.18) 52%
+    ),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 42px),
+    repeating-linear-gradient(0deg, rgba(190, 242, 100, 0.06) 0 1px, transparent 1px 22px),
+    radial-gradient(ellipse 110% 70% at 50% 28%, rgba(87, 83, 78, 0.35), transparent 58%),
+    linear-gradient(
+      180deg,
+      #44403c 0%,
+      #292524 40%,
+      #1c1917 46%,
+      #365314 46%,
+      #4d7c0f 74%,
+      #3f6212 100%
+    );
+  color: #fef9c3;
+}
+
+.game-card-fundo--floresta {
+  background:
+    radial-gradient(ellipse 28% 65% at 8% 100%, rgba(21, 128, 61, 0.85), transparent 72%),
+    radial-gradient(ellipse 24% 58% at 92% 100%, rgba(22, 101, 52, 0.8), transparent 70%),
+    radial-gradient(ellipse 22% 50% at 50% 100%, rgba(34, 197, 94, 0.35), transparent 68%),
+    radial-gradient(ellipse 55% 30% at 50% 0%, rgba(251, 191, 36, 0.42), transparent 72%),
+    radial-gradient(circle at 72% 28%, rgba(134, 239, 172, 0.15), transparent 35%),
+    linear-gradient(180deg, #7c2d12 0%, transparent 32%),
+    repeating-linear-gradient(118deg, rgba(255, 255, 255, 0.02) 0 4px, transparent 4px 32px),
+    linear-gradient(160deg, #14532d, #166534 42%, #052e16 78%, #022c22 100%);
+  color: #ecfdf5;
+}
+
+.game-card-fundo--praia {
+  background:
+    radial-gradient(ellipse 28% 38% at 82% 16%, rgba(251, 191, 36, 0.62), transparent 72%),
+    radial-gradient(ellipse 22% 32% at 10% 20%, rgba(34, 197, 94, 0.5), transparent 70%),
+    radial-gradient(ellipse 18% 22% at 50% 12%, rgba(255, 255, 255, 0.35), transparent 65%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 18px),
+    linear-gradient(
+      180deg,
+      transparent 56%,
+      #38bdf8 56%,
+      #0ea5e9 76%,
+      #fde68a 76%,
+      #fbbf24 92%,
+      #f59e0b 100%
+    ),
+    linear-gradient(180deg, #7dd3fc 0%, #38bdf8 52%, #0ea5e9 100%);
+  color: #0f172a;
+}
+
+.game-card-fundo--templo {
+  background:
+    radial-gradient(
+      circle at 81% 10%,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(254, 249, 195, 0.45) 5%,
+      rgba(250, 204, 21, 0.1) 16%,
+      transparent 30%
+    ),
+    radial-gradient(circle at 81% 10%, rgba(254, 243, 199, 0.22) 0%, transparent 38%),
+    radial-gradient(circle at 14% 14%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 34% 9%, rgba(255, 255, 255, 0.45) 0 1px, transparent 2px),
+    radial-gradient(circle at 58% 16%, rgba(255, 255, 255, 0.55) 0 1px, transparent 2px),
+    radial-gradient(circle at 24% 28%, rgba(255, 255, 255, 0.35) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 24%, rgba(255, 255, 255, 0.4) 0 1px, transparent 2px),
+    radial-gradient(ellipse 85% 55% at 50% 68%, rgba(129, 140, 248, 0.32), transparent 62%),
+    radial-gradient(ellipse 50% 35% at 22% 42%, rgba(167, 139, 250, 0.18), transparent 58%),
+    radial-gradient(ellipse 4.5% 36% at 17% 74%, rgba(2, 6, 23, 0.88), transparent 100%),
+    radial-gradient(ellipse 4.5% 36% at 36% 74%, rgba(2, 6, 23, 0.82), transparent 100%),
+    radial-gradient(ellipse 5.5% 40% at 50% 72%, rgba(2, 6, 23, 0.92), transparent 100%),
+    radial-gradient(ellipse 4.5% 36% at 64% 74%, rgba(2, 6, 23, 0.82), transparent 100%),
+    radial-gradient(ellipse 4.5% 36% at 83% 74%, rgba(2, 6, 23, 0.88), transparent 100%),
+    linear-gradient(180deg, transparent 48%, rgba(15, 23, 42, 0.55) 48%, rgba(2, 6, 23, 0.82) 100%),
+    linear-gradient(
+      180deg,
+      transparent 76%,
+      rgba(148, 163, 184, 0.14) 76%,
+      rgba(100, 116, 139, 0.22) 100%
+    ),
+    linear-gradient(165deg, #0a0818 0%, #1e1b4b 30%, #3730a3 52%, #1e293b 76%, #0f172a 100%);
+  color: #e0e7ff;
+}
+
+.game-card-fundo--neon {
+  background:
+    linear-gradient(180deg, transparent 66%, rgba(15, 23, 42, 0.92) 66%),
+    repeating-linear-gradient(90deg, rgba(244, 114, 182, 0.42) 0 2px, transparent 2px 44px),
+    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.28) 0 2px, transparent 2px 32px),
+    radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.52), transparent 48%),
+    radial-gradient(circle at 80% 28%, rgba(34, 211, 238, 0.42), transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.12), transparent 55%),
+    radial-gradient(ellipse 80% 20% at 50% 100%, rgba(236, 72, 153, 0.35), transparent 70%),
+    linear-gradient(160deg, #020617, #1e1b4b 48%, #831843 78%, #500724 100%);
+  color: #fae8ff;
+}
+
+.game-profile-hero-shell {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.15);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+}
+
+.game-profile-hero-shell--default {
+  background: linear-gradient(180deg, #fffdf7 0%, #f5f2ea 100%);
+}
+
+.game-profile-hero-shell--skinned::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(12, 10, 9, 0.42);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-profile-hero-shell--skinned::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  z-index: 0;
+}
+
+.game-profile-hero-shell--skinned > * {
+  position: relative;
+  z-index: 1;
+}
+
+.game-profile-hero-shell--skinned .game-profile-hero {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+}
+
+.game-profile-hero-shell--skinned .game-profile-hero__name,
+.game-profile-hero-shell--skinned .game-profile-hero__level {
+  color: #f8fafc;
+}
+
+.game-profile-hero-shell--skinned
+  .game-profile-hero__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
+  color: rgba(248, 250, 252, 0.92);
+}
+
+/* Skin claro (fundos claros como praia) — overlay claro + texto escuro */
+.game-profile-hero-shell--skinned-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-profile-hero-shell--skinned-light > * {
+  position: relative;
+  z-index: 1;
+}
+
+.game-profile-hero-shell--skinned-light .game-profile-hero {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+}
+
+.game-profile-hero-shell--skinned-light .game-profile-hero__name,
+.game-profile-hero-shell--skinned-light .game-profile-hero__level {
+  color: #0f172a;
+}
+
+.game-profile-hero-shell--skinned-light
+  .game-profile-hero__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
+  color: #047857;
+}
+
+.game-profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: none;
+  box-shadow: none;
+}
+
+.game-profile-hero__name {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.game-profile-hero__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.game-profile-hero__level {
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.game-shop-row__thumb-fundo {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0;
+  border: 2px solid rgba(28, 25, 23, 0.15);
+}
+
+.game-shop-section--anchored {
+  scroll-margin-top: 0.5rem;
+}
+
+/* Calendário de treinos */
+.activity-calendar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.activity-calendar__nav {
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 0.5rem;
+  color: #57534e;
+}
+
+.activity-calendar__month {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #292524;
+}
+
+.activity-calendar__summary {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
+.activity-calendar__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.6rem;
+  color: #78716c;
+}
+
+.activity-calendar__legend-swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+}
+
+/* Zonas da semana */
+.muscle-bar-chart__chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+}
+
+.muscle-bar-chart__chip--most {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.muscle-bar-chart__chip--least {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+/* Builder chips */
+.game-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #44403c;
+  cursor: pointer;
+}
+
+.game-chip-btn:has(input:checked) {
+  border-color: #059669;
+  background: #ecfdf5;
+  color: #047857;
+}

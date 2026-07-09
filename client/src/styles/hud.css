@@ -1,0 +1,251 @@
+/* XP bar */
+.game-xp-bar-wrap {
+  width: 100%;
+}
+
+.game-xp-bar__meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+
+.game-xp-bar__label,
+.game-xp-bar__values {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.38rem;
+  color: #57534e;
+}
+
+.game-xp-bar__hint {
+  margin: 0 0 0.25rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #78716c;
+}
+
+.game-xp-bar {
+  height: 12px;
+  overflow: hidden;
+  background: #d6d3d1;
+  border: 2px solid var(--game-ink);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.game-xp-bar__fill {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, #34d399 0, #34d399 8px, #10b981 8px, #10b981 16px);
+  transition: width 0.35s ease;
+}
+
+.game-xp-bar--daily .game-xp-bar__fill {
+  background: repeating-linear-gradient(90deg, #fcd34d 0, #fcd34d 8px, #fbbf24 8px, #fbbf24 16px);
+}
+
+.game-xp-bar--extra .game-xp-bar__fill {
+  background: repeating-linear-gradient(90deg, #c4b5fd 0, #c4b5fd 8px, #a78bfa 8px, #a78bfa 16px);
+}
+
+.game-xp-bar--capped {
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px #f59e0b;
+}
+
+.game-xp-bar-wrap--full {
+  animation: game-xp-bar-full-wiggle 5s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.game-xp-bar-wrap--full .game-xp-bar--daily .game-xp-bar__fill {
+  animation: none;
+}
+
+@keyframes game-xp-bar-full-wiggle {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  90% {
+    transform: rotate(-0.8deg) translateY(-1px);
+  }
+  94% {
+    transform: rotate(0.8deg) translateY(0);
+  }
+  97% {
+    transform: rotate(-0.4deg) translateY(-0.5px);
+  }
+}
+
+@keyframes game-xp-bar-full-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+
+.game-xp-bar--hp .game-xp-bar__fill {
+  background: repeating-linear-gradient(90deg, #f87171 0, #f87171 8px, #ef4444 8px, #ef4444 16px);
+}
+
+/* Navegação */
+.game-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #57534e;
+  text-decoration: none;
+  border: 2px solid transparent;
+  transition:
+    transform 0.08s,
+    background 0.08s;
+}
+
+.game-nav-item:hover {
+  color: var(--game-ink);
+  background: #ecfdf5;
+  border-color: var(--game-ink);
+}
+
+.game-nav-item--active {
+  color: var(--game-ink);
+  background: #bbf7d0;
+  border: 2px solid var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-ink);
+}
+
+.game-bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.96) 0%, #fffdf7 100%);
+  border-top: 3px solid var(--game-ink);
+  box-shadow: 0 -6px 24px rgba(28, 25, 23, 0.1);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.game-bottom-nav__inner {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.15rem;
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: 0.45rem 0.5rem 0.35rem;
+}
+
+.game-bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 3.1rem;
+  padding: 0.35rem 0.4rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.34rem;
+  line-height: 1.3;
+  color: #78716c;
+  text-decoration: none;
+  border: 2px solid transparent;
+  border-radius: 0.65rem;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.game-bottom-nav__item:hover {
+  color: var(--game-ink);
+  background: rgba(236, 253, 245, 0.85);
+}
+
+.game-bottom-nav__item--active {
+  color: var(--game-ink);
+  background: #bbf7d0;
+  border-color: var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-ink);
+  transform: translateY(-3px);
+}
+
+.game-bottom-nav__grass {
+  height: 10px;
+  background: repeating-linear-gradient(
+    90deg,
+    #4ade80 0,
+    #4ade80 6px,
+    #22c55e 6px,
+    #22c55e 12px,
+    #16a34a 12px,
+    #16a34a 18px
+  );
+  border-top: 2px solid var(--game-ink);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Cabeçalhos de página */
+.game-page-header {
+  margin-bottom: 0.25rem;
+}
+
+.game-page-header__eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.45rem;
+  color: var(--game-green-dark);
+  letter-spacing: 0.04em;
+}
+
+.game-page-header__title {
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.75rem, 2.8vw, 0.95rem);
+  line-height: 1.55;
+  color: var(--game-ink);
+  text-shadow: 2px 2px 0 #bbf7d0;
+}
+
+/* Cards de missão / quest */
+.game-quest-card {
+  position: relative;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ecfdf5 0%, var(--game-paper) 55%, #fef3c7 100%);
+  border: 3px solid var(--game-ink);
+  box-shadow: var(--game-shadow);
+}
+
+.game-quest-card__badge {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.38rem;
+  color: #fff;
+  background: var(--game-green);
+  border: 2px solid var(--game-ink);
+}
+
+.game-quest-card__status {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  line-height: 1.5;
+  color: var(--game-ink);
+}
+
+.game-quest-card--done {
+  background: linear-gradient(135deg, #d1fae5, var(--game-paper));
+}
+
+.game-quest-card--done .game-quest-card__badge {
+  background: #6b7280;
+}

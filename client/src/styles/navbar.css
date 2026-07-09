@@ -1,0 +1,399 @@
+/* Top Navbar — estilo Clash Royale */
+.top-navbar {
+  padding-top: env(safe-area-inset-top, 0px);
+  background: linear-gradient(180deg, rgba(28, 36, 58, 0.94) 0%, rgba(14, 18, 32, 0.92) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 2px solid rgba(96, 165, 250, 0.22);
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.top-navbar__inner {
+  min-height: 5.15rem;
+}
+
+/* Skin: navbar fixa pintada com o fundo cosmético equipado */
+.top-navbar--skinned {
+  border-bottom-color: rgba(28, 25, 23, 0.55);
+}
+
+.top-navbar--skinned::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 20, 0.58);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.top-navbar--skinned > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Skin claro (fundos claros como praia) — overlay claro + nome escuro */
+.top-navbar--skinned-light {
+  border-bottom-color: rgba(28, 25, 23, 0.32);
+}
+
+.top-navbar--skinned-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.26);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.top-navbar--skinned-light > * {
+  position: relative;
+  z-index: 1;
+}
+
+.top-navbar--skinned-light .top-navbar__name {
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.top-navbar--skinned-light
+  .top-navbar__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
+  color: #b45309;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.top-navbar__profile {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  transition: filter 0.15s ease;
+}
+
+.top-navbar__profile:hover {
+  filter: brightness(1.06);
+}
+
+.top-navbar__profile:active {
+  filter: brightness(0.96);
+}
+
+.top-navbar__avatar-wrap {
+  position: relative;
+  width: 3.15rem;
+  height: 3.15rem;
+}
+
+.top-navbar__avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
+  border: 2px solid rgba(147, 197, 253, 0.55);
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.35),
+    0 0 12px rgba(59, 130, 246, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-navbar__cosmetic-avatar.game-cosmetic-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border-color: rgba(147, 197, 253, 0.45);
+  box-shadow: none;
+}
+
+.top-navbar__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.top-navbar__avatar-fallback {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.top-navbar__level-badge {
+  position: absolute;
+  left: -0.35rem;
+  bottom: -0.35rem;
+  z-index: 2;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.45rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.42rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(180deg, #38bdf8 0%, #2563eb 55%, #1d4ed8 100%);
+  border: 2px solid #0f172a;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.45),
+    0 0 8px rgba(56, 189, 248, 0.45);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+.top-navbar__name {
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: #f8fafc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.top-navbar__title {
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fcd34d;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.top-navbar__title.cosmetic-title--dono-do-jogo,
+.top-navbar__title.cosmetic-title--secreto {
+  font-size: 0.52rem;
+}
+
+.top-navbar__xp-track {
+  margin-top: 0.35rem;
+  height: 0.52rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.top-navbar__xp-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 45%, #7dd3fc 100%);
+  box-shadow:
+    0 0 10px rgba(56, 189, 248, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: width 0.35s ease;
+}
+
+.top-navbar__pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 4.85rem;
+  height: 2.05rem;
+  padding: 0 0.35rem 0 1.45rem;
+  border-radius: 999px;
+  background: #fff9e8;
+  border: 2.5px solid #1c1917;
+  box-shadow: 0 4px 0 #1c1917;
+}
+
+.top-navbar__pill-icon {
+  position: absolute;
+  left: -0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #fcd34d 0%, #f59e0b 55%, #b45309 100%);
+  border: 2.5px solid #1c1917;
+  box-shadow:
+    0 3px 0 #1c1917,
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.top-navbar__coin-icon {
+  color: #1c1917;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.3));
+}
+
+.top-navbar__pill-value {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0.15rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.42rem;
+  color: #1c1917;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.top-navbar__pill-add {
+  flex-shrink: 0;
+  width: 1.45rem;
+  height: 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #14532d;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+  box-shadow: 0 2px 0 #14532d;
+  transition:
+    filter 0.12s ease,
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
+}
+
+.top-navbar__pill-add:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 #14532d;
+}
+
+.top-navbar__pill-add:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #14532d;
+  filter: brightness(0.95);
+}
+
+.top-navbar__pill-pulse {
+  position: absolute;
+  top: -0.15rem;
+  right: 1.5rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.38rem;
+  color: #fde047;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.top-navbar__bag-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 2.5px solid #fbbf24;
+  border-radius: 0.65rem;
+  cursor: pointer;
+  color: #fbbf24;
+  background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
+  box-shadow:
+    0 4px 0 #92400e,
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    filter 0.12s ease;
+  filter: drop-shadow(0 1px 3px rgba(251, 191, 36, 0.18));
+}
+
+.top-navbar__bag-btn:hover {
+  filter: brightness(1.15) drop-shadow(0 2px 6px rgba(251, 191, 36, 0.3));
+  transform: translateY(-1px);
+  box-shadow:
+    0 5px 0 #92400e,
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.top-navbar__bag-btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #92400e,
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  filter: brightness(0.95);
+}
+
+.top-navbar__bag-badge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.36rem;
+  color: #fff;
+  background: #ef4444;
+  border: 2px solid #1e293b;
+  box-shadow: 0 2px 0 #7f1d1d;
+}
+
+@media (max-width: 380px) {
+  .top-navbar__pill {
+    min-width: 4.1rem;
+    height: 1.85rem;
+    padding-left: 1.25rem;
+  }
+
+  .top-navbar__pill-value {
+    font-size: 0.36rem;
+  }
+
+  .top-navbar__pill-icon {
+    width: 1.55rem;
+    height: 1.55rem;
+    left: -0.42rem;
+  }
+
+  .top-navbar__name {
+    font-size: 0.76rem;
+  }
+
+  .top-navbar__avatar-wrap {
+    width: 2.85rem;
+    height: 2.85rem;
+  }
+
+  .top-navbar__bag-btn {
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --top-navbar-height: calc(5.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  .top-navbar__inner {
+    min-height: 5.5rem;
+  }
+
+  .top-navbar__avatar-wrap {
+    width: 3.35rem;
+    height: 3.35rem;
+  }
+
+  .top-navbar__pill {
+    min-width: 5.35rem;
+    height: 2.2rem;
+  }
+
+  .top-navbar__pill-value {
+    font-size: 0.46rem;
+  }
+
+  .top-navbar__bag-btn {
+    width: 3rem;
+    height: 3rem;
+  }
+}

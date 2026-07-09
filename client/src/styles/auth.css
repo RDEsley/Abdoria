@@ -1,0 +1,1145 @@
+/* Login — estilo jogo 2D */
+.game-login {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1.5rem 1rem 7.5rem;
+}
+
+.game-login__sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% -10%, #fff 0%, transparent 45%),
+    linear-gradient(180deg, #38bdf8 0%, #7dd3fc 28%, #bae6fd 55%, #e0f2fe 100%);
+}
+
+.game-login__clouds {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.game-login__clouds--far .game-cloud {
+  opacity: 0.55;
+  filter: blur(0.5px);
+  animation-name: game-cloud-drift-slow;
+}
+
+.game-login__clouds--near .game-cloud {
+  opacity: 0.92;
+  animation-name: game-cloud-drift;
+}
+
+.game-cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow:
+    10px 0 0 #fff,
+    20px 3px 0 #fff,
+    -10px 3px 0 #fff;
+  animation: game-cloud-drift 28s linear infinite;
+}
+
+.game-cloud--f1 {
+  top: 6%;
+  left: -5%;
+  width: 64px;
+  height: 22px;
+  animation-duration: 42s;
+}
+.game-cloud--f2 {
+  top: 18%;
+  left: 30%;
+  width: 88px;
+  height: 28px;
+  animation-duration: 50s;
+  animation-delay: -12s;
+}
+.game-cloud--f3 {
+  top: 10%;
+  left: 70%;
+  width: 72px;
+  height: 24px;
+  animation-duration: 46s;
+  animation-delay: -20s;
+}
+.game-cloud--f4 {
+  top: 26%;
+  left: 90%;
+  width: 56px;
+  height: 20px;
+  animation-duration: 38s;
+  animation-delay: -6s;
+}
+
+.game-cloud--n1 {
+  top: 14%;
+  left: -10%;
+  width: 52px;
+  height: 18px;
+  animation-duration: 26s;
+}
+.game-cloud--n2 {
+  top: 8%;
+  left: 22%;
+  width: 76px;
+  height: 26px;
+  animation-duration: 32s;
+  animation-delay: -5s;
+}
+.game-cloud--n3 {
+  top: 20%;
+  left: 48%;
+  width: 60px;
+  height: 20px;
+  animation-duration: 30s;
+  animation-delay: -11s;
+}
+.game-cloud--n4 {
+  top: 12%;
+  left: 68%;
+  width: 84px;
+  height: 28px;
+  animation-duration: 34s;
+  animation-delay: -18s;
+}
+.game-cloud--n5 {
+  top: 24%;
+  left: 85%;
+  width: 48px;
+  height: 16px;
+  animation-duration: 28s;
+  animation-delay: -9s;
+}
+
+@keyframes game-cloud-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-130vw);
+  }
+}
+
+@keyframes game-cloud-drift-slow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-110vw);
+  }
+}
+
+/* Pássaros */
+.game-bird {
+  position: absolute;
+  z-index: 1;
+  width: 18px;
+  height: 10px;
+  animation: game-bird-fly linear infinite;
+}
+
+.game-bird__wing {
+  position: absolute;
+  top: 4px;
+  width: 9px;
+  height: 3px;
+  background: #1c1917;
+  border-radius: 2px;
+  animation: game-bird-flap 0.45s ease-in-out infinite;
+}
+
+.game-bird__wing--l {
+  left: 0;
+  transform-origin: right center;
+  transform: rotate(-28deg);
+}
+
+.game-bird__wing--r {
+  right: 0;
+  transform-origin: left center;
+  transform: rotate(28deg);
+  animation: game-bird-flap-r 0.45s ease-in-out infinite;
+  animation-delay: 0.22s;
+}
+
+.game-bird--1 {
+  top: 16%;
+  left: -5%;
+  animation-duration: 22s;
+}
+.game-bird--2 {
+  top: 28%;
+  left: -8%;
+  animation-duration: 28s;
+  animation-delay: -9s;
+}
+.game-bird--3 {
+  top: 11%;
+  left: -12%;
+  animation-duration: 19s;
+  animation-delay: -4s;
+}
+
+@keyframes game-bird-fly {
+  from {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(35vw) translateY(-8px);
+  }
+  50% {
+    transform: translateX(70vw) translateY(4px);
+  }
+  75% {
+    transform: translateX(105vw) translateY(-6px);
+  }
+  to {
+    transform: translateX(130vw) translateY(0);
+  }
+}
+
+@keyframes game-bird-flap {
+  0%,
+  100% {
+    transform: rotate(-28deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(-42deg) scaleY(0.7);
+  }
+}
+
+.game-bird--2 .game-bird__wing--l,
+.game-bird--2 .game-bird__wing--r {
+  animation-duration: 0.38s;
+}
+
+.game-bird--3 .game-bird__wing--l,
+.game-bird--3 .game-bird__wing--r {
+  animation-duration: 0.52s;
+}
+
+.game-bird--2 {
+  width: 15px;
+  height: 8px;
+}
+.game-bird--3 {
+  width: 20px;
+  height: 11px;
+}
+
+@keyframes game-bird-flap-r {
+  0%,
+  100% {
+    transform: rotate(28deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(42deg) scaleY(0.7);
+  }
+}
+
+.game-login__panel {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 340px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  text-align: center;
+  background: #fff9e8;
+  border: 4px solid #1c1917;
+  box-shadow: 6px 6px 0 #1c1917;
+  image-rendering: pixelated;
+}
+
+.game-login__logo {
+  margin: 0 auto;
+  display: block;
+  width: 7rem;
+  height: 7rem;
+  object-fit: contain;
+  filter: drop-shadow(3px 3px 0 rgba(28, 25, 23, 0.35));
+  animation: game-logo-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes game-logo-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.game-login__title {
+  margin: 1rem 0 1.25rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.85rem, 3.5vw, 1rem);
+  line-height: 1.6;
+  color: #047857;
+  text-shadow: 2px 2px 0 #a7f3d0;
+}
+
+.game-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.game-input {
+  width: 100%;
+  padding: 0.75rem 0.65rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  color: #1c1917;
+  background: #fff;
+  border: 3px solid #1c1917;
+  outline: none;
+  box-shadow: inset 3px 3px 0 #e7e5e4;
+}
+
+.game-input::placeholder {
+  color: #a8a29e;
+}
+
+.game-input:focus {
+  background: #ecfdf5;
+  box-shadow: inset 3px 3px 0 #d1fae5;
+}
+
+.game-login__error {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.5rem;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.5;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 2px solid #b91c1c;
+}
+
+/* Alertas de autenticação — legíveis, com hierarquia clara */
+.game-auth-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.game-auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  border: 2px solid transparent;
+  border-radius: 0.65rem;
+  box-shadow: 0 2px 0 rgba(28, 25, 23, 0.08);
+}
+
+.game-auth-alert__icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.game-auth-alert__body {
+  min-width: 0;
+}
+
+.game-auth-alert__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.game-auth-alert__message {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.game-auth-alert--error {
+  color: #991b1b;
+  background: linear-gradient(180deg, #fef2f2, #fee2e2);
+  border-color: #f87171;
+}
+
+.game-auth-alert--error .game-auth-alert__icon {
+  color: #dc2626;
+}
+
+.game-auth-alert--warn {
+  color: #92400e;
+  background: linear-gradient(180deg, #fffbeb, #fef3c7);
+  border-color: #fbbf24;
+}
+
+.game-auth-alert--warn .game-auth-alert__icon {
+  color: #d97706;
+}
+
+.game-auth-alert--success {
+  color: #166534;
+  background: linear-gradient(180deg, #f0fdf4, #dcfce7);
+  border-color: #4ade80;
+}
+
+.game-auth-alert--success .game-auth-alert__icon {
+  color: #16a34a;
+}
+
+.game-auth-alert--info {
+  color: #1e40af;
+  background: linear-gradient(180deg, #eff6ff, #dbeafe);
+  border-color: #60a5fa;
+}
+
+.game-auth-alert--info .game-auth-alert__icon {
+  color: #2563eb;
+}
+
+/* Campos do formulário de auth */
+.game-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.game-auth-field__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #44403c;
+  letter-spacing: 0.02em;
+}
+
+.game-auth-field__input.game-input {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.7rem 0.75rem;
+  border-width: 2px;
+  box-shadow: inset 2px 2px 0 #e7e5e4;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.game-auth-field__input.game-input::placeholder {
+  font-weight: 500;
+  color: #a8a29e;
+}
+
+.game-auth-field__password {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.game-auth-field__password .game-auth-field__input {
+  width: 100%;
+  padding-right: 2.65rem;
+}
+
+.game-auth-field__password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border: none;
+  background: transparent;
+  color: #78716c;
+  cursor: pointer;
+  transform: translateY(-50%);
+  border-radius: 0.35rem;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.game-auth-field__password-toggle:hover {
+  color: #44403c;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.game-auth-field--invalid .game-auth-field__input.game-input {
+  border-color: #ef4444;
+  background: #fff5f5;
+  box-shadow: inset 2px 2px 0 #fecaca;
+}
+
+.game-auth-field--invalid .game-auth-field__input.game-input:focus {
+  background: #fff1f2;
+  box-shadow:
+    inset 2px 2px 0 #fecaca,
+    0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+.game-auth-field__hint {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #78716c;
+}
+
+.game-auth-field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.45rem;
+}
+
+.game-auth-field__error::before {
+  content: '!';
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #fff;
+  background: #ef4444;
+  border-radius: 999px;
+}
+
+.game-login__form .game-auth-alert {
+  margin-top: 0.15rem;
+}
+
+.game-login__panel > .game-auth-alert {
+  margin-top: 0.75rem;
+  text-align: left;
+}
+
+.game-login__error--warn {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #d97706;
+}
+
+.game-login__error strong {
+  font-weight: 700;
+}
+
+.game-btn {
+  width: 100%;
+  padding: 0.85rem 0.5rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  color: #fff;
+  cursor: pointer;
+  border: 3px solid #1c1917;
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s;
+}
+
+.game-btn--primary {
+  background: #10b981;
+  box-shadow: 0 4px 0 #047857;
+}
+
+.game-btn--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #047857;
+}
+
+.game-btn--primary:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #047857;
+}
+
+.game-btn--secondary {
+  background: #fbbf24;
+  color: #1c1917;
+  box-shadow: 0 4px 0 #d97706;
+}
+
+.game-btn--secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #d97706;
+}
+
+.game-btn--secondary:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #d97706;
+}
+
+.game-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.game-login__link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  line-height: 1.6;
+  color: #0369a1;
+  text-decoration: none;
+}
+
+.game-login__link:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+.game-auth-extras {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.game-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.42rem;
+  line-height: 1.4;
+  color: #44403c;
+  cursor: pointer;
+}
+
+.game-check--solo {
+  justify-content: flex-start;
+}
+
+.game-check input {
+  width: 14px;
+  height: 14px;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+.game-text-link {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.42rem;
+  line-height: 1.4;
+  color: #0369a1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: right;
+}
+
+.game-text-link:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+.game-auth-guest {
+  margin-top: 0.65rem;
+}
+
+.game-login__panel--register {
+  max-width: 360px;
+}
+
+.game-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 1rem;
+}
+
+.game-modal-overlay--modal {
+  z-index: 78;
+}
+
+.game-modal {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  padding: 1.25rem 1.15rem 1.15rem;
+  background: #fff9e8;
+  border: 4px solid #1c1917;
+  box-shadow: 6px 6px 0 #1c1917;
+}
+
+.game-modal__title {
+  margin: 0 0 0.5rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  line-height: 1.5;
+  color: #047857;
+}
+
+.game-modal__text {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #57534e;
+}
+
+.game-economy-rules {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: linear-gradient(180deg, #fafaf9, #fff);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.85rem;
+}
+
+.game-economy-rules li {
+  position: relative;
+  padding-left: 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #57534e;
+}
+
+.game-economy-rules li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--game-green-dark);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.game-modal__success {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.45rem;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.5;
+  color: #047857;
+  background: #ecfdf5;
+  border: 2px solid #10b981;
+}
+
+.game-modal__close {
+  display: block;
+  width: 100%;
+  margin-top: 0.85rem;
+  text-align: center;
+}
+
+.game-purchase-confirm-overlay {
+  z-index: 80;
+}
+
+.game-purchase-confirm {
+  max-width: 22rem;
+}
+
+.game-purchase-confirm__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.game-purchase-confirm__card {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.8rem;
+  background: linear-gradient(180deg, #fff 0%, #fafaf9 100%);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.game-purchase-confirm__name {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.game-purchase-confirm__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #57534e;
+}
+
+.game-purchase-confirm__price {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px dashed rgba(28, 25, 23, 0.12);
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #b45309;
+}
+
+.game-purchase-confirm__balance {
+  margin: 0.35rem 0 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-purchase-confirm__actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.game-login__ground {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  height: 108px;
+}
+
+.game-login__scenery {
+  position: absolute;
+  right: 0;
+  bottom: 52px;
+  left: 0;
+  z-index: 2;
+  height: 120px;
+  pointer-events: none;
+}
+
+/* Árvores — estilo 2D arredondado */
+.game-tree {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-tree__trunk {
+  width: 11px;
+  height: 24px;
+  margin-top: -2px;
+  background: linear-gradient(90deg, #6b4423 0%, #8b5a2b 40%, #6b4423 100%);
+  border: 2px solid #3f2a14;
+  border-radius: 0 0 3px 3px;
+}
+
+.game-tree__trunk--wide {
+  width: 14px;
+  height: 30px;
+}
+
+.game-tree__trunk--thin {
+  width: 7px;
+  height: 16px;
+}
+
+/* Árvore redonda */
+.game-tree__foliage {
+  position: relative;
+  width: 54px;
+  height: 48px;
+  background: radial-gradient(circle at 35% 30%, #86efac 0%, #22c55e 45%, #15803d 100%);
+  border: 3px solid #14532d;
+  border-radius: 50% 50% 46% 46%;
+  box-shadow: 3px 3px 0 rgba(20, 83, 45, 0.35);
+}
+
+.game-tree__shine {
+  position: absolute;
+  top: 9px;
+  left: 11px;
+  width: 14px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+}
+
+/* Carvalho — três bolhas */
+.game-tree__crown {
+  position: relative;
+  width: 72px;
+  height: 52px;
+}
+
+.game-tree__blob {
+  position: absolute;
+  bottom: 0;
+  border: 3px solid #14532d;
+  border-radius: 50%;
+}
+
+.game-tree__blob--l {
+  left: 0;
+  bottom: 4px;
+  width: 34px;
+  height: 34px;
+  background: radial-gradient(circle at 40% 35%, #4ade80, #16a34a);
+}
+
+.game-tree__blob--c {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42px;
+  height: 42px;
+  background: radial-gradient(circle at 38% 32%, #86efac, #22c55e);
+  z-index: 1;
+}
+
+.game-tree__blob--r {
+  right: 0;
+  bottom: 2px;
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle at 40% 35%, #4ade80, #15803d);
+}
+
+/* Muda */
+.game-tree__sapling-top {
+  width: 22px;
+  height: 22px;
+  background: #4ade80;
+  border: 2px solid #14532d;
+  border-radius: 50%;
+}
+
+.game-tree__sapling-mid {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  background: #22c55e;
+  border: 2px solid #14532d;
+  border-radius: 50%;
+}
+
+.game-tree--1 {
+  left: 3%;
+  transform: scale(0.92);
+}
+.game-tree--2 {
+  right: 4%;
+  transform: scale(1);
+}
+.game-tree--3 {
+  left: 76%;
+  transform: scale(0.88);
+  opacity: 0.92;
+}
+
+/* Arbustos — cluster de folhas */
+.game-bush {
+  position: absolute;
+  bottom: 0;
+  width: 40px;
+  height: 28px;
+}
+
+.game-bush__leaf {
+  position: absolute;
+  bottom: 0;
+  border: 2px solid #14532d;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #86efac, #22c55e);
+}
+
+.game-bush__leaf--1 {
+  left: 0;
+  width: 22px;
+  height: 22px;
+}
+
+.game-bush__leaf--2 {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 4px;
+  width: 26px;
+  height: 26px;
+  z-index: 1;
+  background: radial-gradient(circle at 35% 30%, #bbf7d0, #16a34a);
+}
+
+.game-bush__leaf--3 {
+  right: 0;
+  width: 20px;
+  height: 20px;
+  bottom: 1px;
+  background: radial-gradient(circle at 35% 30%, #4ade80, #15803d);
+}
+
+.game-bush--1 {
+  left: 17%;
+  transform: scale(1);
+}
+.game-bush--2 {
+  left: 31%;
+  transform: scale(0.82);
+  opacity: 0.95;
+}
+.game-bush--3 {
+  right: 20%;
+  transform: scale(1.05);
+}
+.game-bush--4 {
+  right: 36%;
+  transform: scale(0.78);
+  bottom: 3px;
+}
+.game-bush--5 {
+  left: 50%;
+  transform: translateX(-50%) scale(0.7);
+  opacity: 0.88;
+}
+
+/* Pedras decorativas */
+.game-rock {
+  position: absolute;
+  bottom: 2px;
+  background: #78716c;
+  border: 2px solid #44403c;
+  border-radius: 4px;
+}
+
+.game-rock--1 {
+  left: 42%;
+  width: 14px;
+  height: 10px;
+  box-shadow: 3px 2px 0 #57534e;
+}
+
+.game-rock--2 {
+  right: 14%;
+  width: 10px;
+  height: 8px;
+  background: #a8a29e;
+}
+
+.game-login__dirt {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  height: 28px;
+  background: repeating-linear-gradient(
+    90deg,
+    #92400e 0px,
+    #92400e 8px,
+    #a16207 8px,
+    #a16207 16px,
+    #78350f 16px,
+    #78350f 24px
+  );
+  border-top: 3px solid #451a03;
+  box-shadow: inset 0 4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.game-login__grass {
+  position: absolute;
+  right: 0;
+  bottom: 28px;
+  left: 0;
+  z-index: 1;
+  height: 52px;
+  background: repeating-linear-gradient(
+    90deg,
+    #4ade80 0px,
+    #4ade80 6px,
+    #22c55e 6px,
+    #22c55e 12px,
+    #16a34a 12px,
+    #16a34a 18px
+  );
+  border-top: 4px solid #1c1917;
+  box-shadow:
+    inset 0 10px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -6px 0 #15803d;
+}
+
+.game-login__grass::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: 0;
+  left: 0;
+  height: 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 14px,
+    #22c55e 14px,
+    #22c55e 16px,
+    transparent 16px,
+    transparent 28px,
+    #16a34a 28px,
+    #16a34a 30px
+  );
+  clip-path: polygon(
+    0% 100%,
+    3% 40%,
+    6% 100%,
+    9% 30%,
+    12% 100%,
+    15% 50%,
+    18% 100%,
+    21% 35%,
+    24% 100%,
+    27% 55%,
+    30% 100%,
+    33% 25%,
+    36% 100%,
+    39% 45%,
+    42% 100%,
+    45% 30%,
+    48% 100%,
+    51% 50%,
+    54% 100%,
+    57% 35%,
+    60% 100%,
+    63% 40%,
+    66% 100%,
+    69% 28%,
+    72% 100%,
+    75% 52%,
+    78% 100%,
+    81% 38%,
+    84% 100%,
+    87% 45%,
+    90% 100%,
+    93% 32%,
+    96% 100%,
+    100% 100%
+  );
+}

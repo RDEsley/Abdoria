@@ -1,0 +1,257 @@
+/* Efeitos legados (aliases) */
+.game-shop-effect-preview--agua .game-shop-effect-preview__drop,
+.game-cosmetic-effect--agua .game-cosmetic-effect__water-drop {
+  position: absolute;
+  width: 7px;
+  height: 10px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+}
+
+.game-shop-effect-preview--glitch .game-shop-effect-preview__glitch,
+.game-cosmetic-effect--glitch .game-cosmetic-effect__glitch-block {
+  position: absolute;
+  height: 3px;
+  box-shadow:
+    2px 0 #f472b6,
+    -2px 0 #fde047;
+}
+
+/* Bordas ornamentadas */
+.game-cosmetic-avatar {
+  overflow: visible;
+  isolation: isolate;
+}
+
+.game-cosmetic-avatar--border-ouro::before,
+.game-cosmetic-avatar--border-lendario::before,
+.game-cosmetic-avatar--border-fogo::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: calc(0.75rem + 5px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.game-cosmetic-avatar--border-ouro::before {
+  background: conic-gradient(from 45deg, #fde047, #f59e0b, #fde047, #fff7ed, #fde047);
+  padding: 3px;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  animation: game-border-ouro-rotate 6s linear infinite;
+}
+
+.game-cosmetic-avatar--border-lendario::before {
+  background: conic-gradient(from 0deg, #a855f7, #ec4899, #8b5cf6, #22d3ee, #fbbf24, #a855f7);
+  padding: 3px;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  clip-path: polygon(
+    50% 0%,
+    58% 14%,
+    72% 8%,
+    76% 24%,
+    92% 30%,
+    80% 44%,
+    90% 60%,
+    72% 64%,
+    68% 84%,
+    50% 76%,
+    32% 84%,
+    28% 64%,
+    10% 60%,
+    20% 44%,
+    8% 30%,
+    24% 24%,
+    28% 8%,
+    42% 14%
+  );
+  animation: game-border-lendario-rotate 5s linear infinite;
+}
+
+.game-cosmetic-avatar--border-fogo::before {
+  inset: -5px;
+  background: conic-gradient(from 180deg, #ef4444, #f97316, #fde047, #f97316, #dc2626, #ef4444);
+  padding: 3px;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
+  animation: game-border-fogo-ring 1.6s ease-in-out infinite;
+}
+
+.game-cosmetic-avatar--border-fogo::after {
+  content: none;
+}
+
+.game-avatar-portrait,
+.game-avatar-initial-letter {
+  position: relative;
+  z-index: 1;
+}
+
+.game-avatar-border-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.game-avatar-border-fx--fogo {
+  inset: -10px;
+}
+
+.game-avatar-border-fx__flame-mount {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center 138%;
+}
+
+.game-avatar-border-fx__flame {
+  display: block;
+  width: 6px;
+  height: 11px;
+  margin-left: -3px;
+  margin-top: -5.5px;
+  background: linear-gradient(to top, #dc2626 0%, #f97316 42%, #fde047 88%, transparent 100%);
+  border-radius: 50% 50% 18% 18%;
+  opacity: 0.9;
+  animation: game-avatar-flame-dance 0.55s ease-in-out infinite;
+}
+
+.game-cosmetic-avatar--lg .game-avatar-border-fx__flame {
+  width: 7px;
+  height: 13px;
+  margin-left: -3.5px;
+  margin-top: -6.5px;
+}
+
+.game-avatar-border-fx__flame-mount[data-i='0'] {
+  transform: rotate(0deg) translateY(-1.55rem);
+}
+.game-avatar-border-fx__flame-mount[data-i='1'] {
+  transform: rotate(90deg) translateY(-1.55rem);
+}
+.game-avatar-border-fx__flame-mount[data-i='2'] {
+  transform: rotate(180deg) translateY(-1.55rem);
+}
+.game-avatar-border-fx__flame-mount[data-i='3'] {
+  transform: rotate(270deg) translateY(-1.55rem);
+}
+
+.game-avatar-border-fx__flame-mount[data-i='0'] .game-avatar-border-fx__flame {
+  animation-delay: 0s;
+}
+.game-avatar-border-fx__flame-mount[data-i='1'] .game-avatar-border-fx__flame {
+  animation-delay: -0.14s;
+}
+.game-avatar-border-fx__flame-mount[data-i='2'] .game-avatar-border-fx__flame {
+  animation-delay: -0.28s;
+}
+.game-avatar-border-fx__flame-mount[data-i='3'] .game-avatar-border-fx__flame {
+  animation-delay: -0.42s;
+}
+
+.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount {
+  transform-origin: center 142%;
+}
+
+.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='0'] {
+  transform: rotate(0deg) translateY(-2rem);
+}
+.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='1'] {
+  transform: rotate(90deg) translateY(-2rem);
+}
+.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='2'] {
+  transform: rotate(180deg) translateY(-2rem);
+}
+.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='3'] {
+  transform: rotate(270deg) translateY(-2rem);
+}
+
+@keyframes game-border-ouro-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes game-border-lendario-rotate {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes game-border-fogo-ring {
+  0%,
+  100% {
+    filter: brightness(1) saturate(1);
+    opacity: 1;
+  }
+  50% {
+    filter: brightness(1.2) saturate(1.25);
+    opacity: 0.92;
+  }
+}
+
+@keyframes game-border-fogo-heat {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes game-avatar-flame-dance {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scaleY(1.2) scaleX(0.92);
+    opacity: 1;
+  }
+}
+
+@keyframes game-avatar-ember-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.2);
+  }
+}
+
+.game-swipe-scroll__arrow {
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+}

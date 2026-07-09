@@ -1,0 +1,501 @@
+/* —— Inventário —— */
+.game-inventory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.game-inventory-overlay--modal {
+  z-index: 75;
+}
+
+.game-inventory-modal {
+  max-width: 22rem;
+}
+
+.game-inventory-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(145deg, #fff, #ecfeff);
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.75rem;
+}
+
+.game-inventory-item--compact {
+  margin-top: 0.75rem;
+}
+
+.game-inventory-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: #cffafe;
+  border: 2px solid #0891b2;
+  border-radius: 0.65rem;
+}
+
+.game-inventory-item__name {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0e7490;
+}
+
+.game-inventory-item__desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #57534e;
+}
+
+.game-inventory-item__count {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #44403c;
+}
+
+.game-inventory-use {
+  margin-top: 0.75rem;
+  padding: 0.65rem;
+  background: #f5f5f4;
+  border-radius: 0.65rem;
+}
+
+.game-inventory-use__label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #78716c;
+}
+
+.game-inventory-use__stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.game-inventory-use__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.45rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.game-inventory-use__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.game-inventory-use__value {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.game-inventory-use__hint {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #0e7490;
+}
+
+.game-inventory-dont-show {
+  user-select: none;
+}
+
+.game-inventory-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 1rem;
+  padding: 0 0.2rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  line-height: 1.1rem;
+  text-align: center;
+  color: #fff;
+  background: #0891b2;
+  border: 2px solid var(--game-ink);
+  border-radius: 999px;
+}
+
+.game-inventory-badge--inline {
+  position: static;
+  margin-left: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+}
+
+.game-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.game-inventory-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 0.35rem;
+  border: 2px solid #d6d3d1;
+  border-radius: 0.55rem;
+  background: linear-gradient(180deg, #fafaf9, #f5f5f4);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.game-inventory-slot:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #0891b2;
+}
+
+.game-inventory-slot--active {
+  border-color: #0891b2;
+  box-shadow:
+    0 0 0 2px rgba(8, 145, 178, 0.2),
+    2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.game-inventory-slot--empty {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.game-inventory-slot__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-inventory-slot__qty {
+  position: absolute;
+  right: 0.18rem;
+  bottom: 0.12rem;
+  min-width: 1rem;
+  padding: 0 0.2rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  color: #fff;
+  background: #0891b2;
+  border: 1.5px solid var(--game-ink);
+  border-radius: 999px;
+}
+
+.game-inventory-detail {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.65rem;
+  background: #fafaf9;
+}
+
+.game-inventory-detail__title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #1c1917;
+}
+
+.game-inventory-detail__desc {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #57534e;
+}
+
+.game-inventory-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.game-inventory-detail__actions .game-btn {
+  flex: 1;
+}
+
+.game-profile-hero .game-nav-item,
+header .game-nav-item {
+  position: relative;
+}
+
+/* Frozen Streak icon */
+.game-frozen-streak-icon {
+  display: inline-flex;
+  color: #38bdf8;
+}
+
+.game-frozen-streak-icon__cube {
+  fill: #0ea5e9;
+  stroke: #bae6fd;
+  stroke-width: 1.5;
+}
+
+.game-frozen-streak-icon__facet,
+.game-frozen-streak-icon__spark {
+  stroke: #e0f2fe;
+}
+
+.game-patrol-cache-icon {
+  display: inline-flex;
+  color: #b45309;
+}
+
+.game-patrol-cache-icon__body {
+  fill: #d97706;
+  stroke: #78350f;
+  stroke-width: 1.5;
+}
+
+.game-patrol-cache-icon__lid {
+  stroke: #78350f;
+}
+
+.game-patrol-cache-icon__lock {
+  fill: #fcd34d;
+  stroke: #78350f;
+  stroke-width: 1;
+}
+
+.game-patrol-cache-icon__gem {
+  fill: #fef3c7;
+}
+
+/* Título secreto shimmer */
+.cosmetic-title--secreto {
+  background: linear-gradient(
+    90deg,
+    #fafafa 0%,
+    #737373 25%,
+    #fafafa 50%,
+    #737373 75%,
+    #fafafa 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cosmetic-title-secreto-shimmer 2.5s linear infinite;
+}
+
+@keyframes cosmetic-title-secreto-shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.cosmetic-title--golden {
+  background: linear-gradient(
+    90deg,
+    #fff7c2 0%,
+    #ffd700 20%,
+    #fff8dc 40%,
+    #b8860b 60%,
+    #ffd700 80%,
+    #fff7c2 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cosmetic-title-secreto-shimmer 2s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.45));
+}
+
+.game-doria-bag-icon {
+  display: inline-flex;
+  color: #ca8a04;
+}
+
+.game-doria-bag-icon__body,
+.game-doria-bag-icon__tie {
+  stroke: currentColor;
+}
+
+.game-doria-bag-icon__coin {
+  fill: #fbbf24;
+}
+
+.game-exp-instant-icon {
+  display: inline-flex;
+  color: #2563eb;
+}
+
+.game-daily-reward-card__icon--item {
+  background: linear-gradient(145deg, #ecfeff, #cffafe);
+  color: #0891b2;
+}
+
+.game-route-drink-icon {
+  display: inline-flex;
+  color: #7c3aed;
+}
+
+.game-route-drink-icon__cap {
+  fill: #4c1d95;
+}
+
+.game-route-drink-icon__body {
+  fill: #8b5cf6;
+}
+
+.game-route-drink-icon__tree {
+  stroke: #f5f3ff;
+  fill: none;
+}
+
+.game-afk-modal__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.game-inventory-empty {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-bestiary-modal {
+  width: min(100%, 22rem);
+  max-height: min(calc(100dvh - 2.5rem), 42rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.game-bestiary-overlay--modal {
+  z-index: 75;
+}
+
+.game-bestiary-modal__head {
+  margin-bottom: 0.75rem;
+}
+
+.game-bestiary-scroll {
+  overflow: auto;
+  padding-right: 0.15rem;
+  padding-bottom: 1.5rem;
+}
+
+.game-bestiary-section + .game-bestiary-section {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 2px dashed rgba(28, 25, 23, 0.1);
+}
+
+.game-bestiary-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.game-bestiary-section__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #57534e;
+}
+
+.game-bestiary-section__counter {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #a8a29e;
+}
+
+.game-bestiary-carousel {
+  display: grid;
+  grid-template-columns: 2rem 1fr 2rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.game-bestiary-carousel__nav {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(28, 25, 23, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #44403c;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.game-bestiary-carousel__nav:hover {
+  background: #fff;
+  transform: scale(1.04);
+}
+
+.game-bestiary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.55rem 0.65rem;
+  border: 2px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.95rem;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92), rgba(250, 250, 249, 0.78));
+  min-height: 13.5rem;
+}
+
+.game-bestiary-card--locked {
+  opacity: 0.92;
+}
+
+.game-bestiary-card__portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 7.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, rgba(231, 229, 228, 0.55), rgba(250, 250, 249, 0.35));
+  overflow: visible;
+}
+
+.game-bestiary-card__portrait:has(.game-afk-portrait--boss_hydra),
+.game-bestiary-card__portrait:has(.game-afk-portrait--boss_colossus),
+.game-bestiary-card__portrait:has(.game-afk-portrait--boss_lich) {
+  min-height: 8.25rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0.45rem;
+}

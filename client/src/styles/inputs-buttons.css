@@ -1,0 +1,90 @@
+/* Inputs no app */
+.game-app .game-select,
+.game-select {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--game-ink);
+  background: #fff;
+  border: 3px solid var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-ink);
+  outline: none;
+}
+
+.game-app .game-select:focus,
+.game-select:focus {
+  background: #ecfdf5;
+}
+
+.game-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.55rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.38rem;
+  color: var(--game-green-dark);
+  background: #d1fae5;
+  border: 2px solid var(--game-ink);
+}
+
+/* Botões globais extras */
+.game-btn--ghost {
+  background: var(--game-paper);
+  color: var(--game-ink);
+  box-shadow: 0 3px 0 #a8a29e;
+}
+
+.game-btn--ghost:hover:not(:disabled) {
+  background: #f5f5f4;
+  box-shadow: 0 5px 0 #a8a29e;
+}
+
+.game-btn--danger {
+  background: #ef4444;
+  box-shadow: 0 4px 0 #b91c1c;
+}
+
+.game-btn--sm {
+  padding: 0.55rem 0.45rem;
+  font-size: 0.5rem;
+}
+
+.game-btn--lg {
+  padding: 1rem 0.65rem;
+  font-size: 0.7rem;
+}
+
+.game-profile-form__actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 2px dashed rgba(28, 25, 23, 0.14);
+}
+
+.game-profile-form__actions .game-btn.game-profile-save-btn,
+.definicao-sim__actions .game-btn.game-profile-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  letter-spacing: 0.02em;
+}
+
+.game-profile-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  letter-spacing: 0.02em;
+}
+
+.game-btn:not(.game-login .game-btn):not(.game-profile-save-btn) {
+  width: auto;
+}

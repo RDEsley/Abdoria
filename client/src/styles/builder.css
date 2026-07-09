@@ -1,0 +1,223 @@
+/* Último treino (builder) */
+.game-last-workout__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  color: #57534e;
+  background: linear-gradient(145deg, #f5f5f4, #e7e5e4);
+  border: 1.5px solid rgba(120, 113, 108, 0.25);
+}
+
+.game-last-workout__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(120, 113, 108, 0.15);
+}
+
+.game-last-workout__chip--xp {
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(254, 243, 199, 0.65);
+}
+
+.game-last-workout__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-last-workout__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.game-last-workout__more {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #78716c;
+}
+
+/* Loja diária countdown inline */
+.game-daily-reset-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+/* Toggle — coleta automática da loja diária */
+.game-daily-autoclaim {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  border: 3px solid var(--game-ink, #1c1917);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #fff, #fafaf9);
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.game-daily-autoclaim:hover:not(:disabled) {
+  border-color: var(--game-ink, #1c1917);
+  transform: translateY(-2px);
+  box-shadow: 4px 5px 0 rgba(28, 25, 23, 0.22);
+}
+
+.game-daily-autoclaim:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+.game-daily-autoclaim--on {
+  border-color: #059669;
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.28);
+}
+
+.game-daily-autoclaim--on:hover:not(:disabled) {
+  border-color: #047857;
+  box-shadow: 4px 5px 0 rgba(5, 150, 105, 0.32);
+}
+
+.game-daily-autoclaim--busy {
+  opacity: 0.72;
+  cursor: wait;
+  transform: none;
+}
+
+.game-daily-autoclaim__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 0.55rem;
+  border: 2px solid #1c1917;
+  background: linear-gradient(180deg, #fde68a 0%, #fbbf24 55%, #f59e0b 100%);
+  color: #78350f;
+  flex-shrink: 0;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.22);
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__icon {
+  background: linear-gradient(180deg, #6ee7b7 0%, #34d399 55%, #10b981 100%);
+  color: #064e3b;
+  box-shadow:
+    2px 2px 0 rgba(28, 25, 23, 0.18),
+    0 0 10px rgba(52, 211, 153, 0.45);
+}
+
+.game-daily-autoclaim__spark {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.22rem;
+  color: #047857;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8));
+  animation: game-daily-autoclaim-spark 1.8s ease-in-out infinite;
+}
+
+.game-daily-autoclaim__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-daily-autoclaim__title {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #1c1917;
+  line-height: 1.25;
+}
+
+.game-daily-autoclaim__hint {
+  display: block;
+  margin-top: 0.14rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #78716c;
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__title {
+  color: #065f46;
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__hint {
+  color: #047857;
+}
+
+.game-daily-autoclaim__track {
+  position: relative;
+  width: 2.65rem;
+  height: 1.48rem;
+  border-radius: 999px;
+  border: 2px solid #1c1917;
+  background: #d6d3d1;
+  flex-shrink: 0;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.14);
+  transition: background 0.22s ease;
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__track {
+  background: linear-gradient(180deg, #34d399, #10b981);
+}
+
+.game-daily-autoclaim__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0.1rem;
+  width: 0.98rem;
+  height: 0.98rem;
+  margin-top: -0.49rem;
+  border-radius: 999px;
+  border: 2px solid #1c1917;
+  background: linear-gradient(180deg, #fff, #f5f5f4);
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.16);
+  transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+.game-daily-autoclaim--on .game-daily-autoclaim__thumb {
+  transform: translateX(1.08rem);
+}
+
+@keyframes game-daily-autoclaim-spark {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(12deg);
+  }
+}

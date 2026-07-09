@@ -1,0 +1,407 @@
+/* Portrait clicável — revela os drops e chances ao tocar no inimigo */
+.game-bestiary-card__portrait--button {
+  position: relative;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.game-bestiary-card__portrait--button:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(180deg, rgba(209, 250, 229, 0.55), rgba(250, 250, 249, 0.35));
+}
+
+.game-bestiary-card__portrait--button:active {
+  transform: scale(0.98);
+}
+
+.game-bestiary-card__portrait--active {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(180deg, rgba(209, 250, 229, 0.6), rgba(236, 253, 245, 0.4));
+}
+
+.game-bestiary-card__portrait-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.3rem;
+  transform: translateX(-50%);
+  padding: 0.08rem 0.45rem;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #047857;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.game-bestiary-card__meta {
+  width: 100%;
+  text-align: center;
+}
+
+.game-bestiary-card__tier {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.game-bestiary-card__tier--common {
+  background: #e7e5e4;
+  color: #57534e;
+}
+
+.game-bestiary-card__tier--elite {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.game-bestiary-card__tier--boss {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.game-bestiary-card__meta h4 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.game-bestiary-card__meta p {
+  margin: 0.3rem 0 0;
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #78716c;
+}
+
+.game-bestiary-drops {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(28, 25, 23, 0.12);
+}
+
+.game-bestiary-drops__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a8a29e;
+}
+
+.game-bestiary-drops__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-bestiary-drop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.14rem 0.38rem;
+  font-size: 0.54rem;
+  font-weight: 800;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 23, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+  color: #57534e;
+}
+
+.game-bestiary-drop--hidden {
+  color: #a8a29e;
+  background: rgba(245, 245, 244, 0.85);
+  border-style: dashed;
+}
+
+.game-bestiary-drop--revealed {
+  color: #1c1917;
+  background: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.game-bestiary-drop__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.game-bestiary-drop__weapon-icon {
+  width: 0.85rem;
+  height: auto;
+  display: block;
+}
+
+.game-bestiary-drop__label {
+  line-height: 1.2;
+}
+
+.game-bestiary-drop__chance {
+  margin-left: 0.1rem;
+  padding-left: 0.28rem;
+  border-left: 1px solid rgba(28, 25, 23, 0.14);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #047857;
+}
+
+.game-bestiary-drop--hidden .game-bestiary-drop__chance {
+  color: #78716c;
+  border-left-color: rgba(28, 25, 23, 0.1);
+}
+
+.game-bestiary-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.game-bestiary-dots__dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  padding: 0;
+  border: 2px solid #d6d3d1;
+  border-radius: 999px;
+  background: #fafaf9;
+  cursor: pointer;
+}
+
+.game-bestiary-dots__dot--active {
+  background: #78716c;
+  border-color: #57534e;
+  transform: scale(1.12);
+}
+
+.game-bestiary-dots__dot--locked {
+  background: #e7e5e4;
+}
+
+.game-afk-portrait {
+  position: relative;
+  width: 5.2rem;
+  height: 5.4rem;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.game-afk-portrait.game-afk-enemy {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.game-afk-portrait.game-afk-enemy--boss {
+  width: 5.6rem;
+  height: 6rem;
+  right: auto;
+  bottom: auto;
+}
+
+.game-afk-portrait--boss_hydra {
+  width: 6rem;
+  height: 6.75rem;
+}
+
+.game-afk-portrait .game-afk-enemy__sprite {
+  position: relative;
+  left: auto;
+  right: auto;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.game-afk-portrait__sprite {
+  animation: none !important;
+  transform: none !important;
+}
+
+.game-afk-portrait .game-afk-enemy__boss-aura {
+  inset: -0.35rem;
+  transform-origin: center center;
+}
+
+.game-afk-portrait--boss_lich .game-afk-slime__staff {
+  right: -0.12rem;
+}
+
+.game-afk-portrait--boss_lich .game-afk-slime__lich-orbs::before {
+  left: 4%;
+}
+
+.game-afk-portrait--boss_lich .game-afk-slime__lich-orbs::after {
+  right: 4%;
+}
+
+.game-afk-portrait--boss_colossus .game-afk-slime__colossus-spikes::before {
+  left: 8%;
+}
+
+.game-afk-portrait--boss_colossus .game-afk-slime__colossus-spikes::after {
+  right: 8%;
+}
+
+.game-afk-portrait--boss_hydra .game-afk-slime__hydra-neck--l {
+  left: 20%;
+}
+
+.game-afk-portrait--boss_hydra .game-afk-slime__hydra-neck--r {
+  right: 20%;
+}
+
+.game-afk-portrait--locked {
+  display: grid;
+  place-items: center;
+  width: 5.2rem;
+  height: 5.4rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(160deg, #d6d3d1, #a8a29e);
+}
+
+.game-afk-portrait__silhouette {
+  width: 3.2rem;
+  height: 2.6rem;
+  border-radius: 45% 45% 35% 35%;
+  background: #57534e;
+  opacity: 0.55;
+}
+
+.game-afk-portrait__lock {
+  position: absolute;
+  bottom: 0.35rem;
+  right: 0.35rem;
+  color: #fafaf9;
+}
+
+/* —— Achievement toast stack (Steam-style) —— */
+.achievement-toast-stack {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 0.65rem;
+  width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.achievement-toast {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  overflow: hidden;
+  color: #f8fafc;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 27, 75, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.85rem;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(99, 102, 241, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.achievement-toast__glow {
+  position: absolute;
+  inset: -40% auto auto -20%;
+  width: 60%;
+  height: 140%;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.achievement-toast--enemy {
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(239, 68, 68, 0.25);
+}
+
+.achievement-toast--enemy .achievement-toast__glow {
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.32), transparent 70%);
+}
+
+.achievement-toast__icon-wrap {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.08);
+}
+
+.achievement-toast__icon-wrap .game-afk-portrait {
+  transform: scale(0.58);
+  transform-origin: center;
+}
+
+.achievement-toast__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.achievement-toast__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #c7d2fe;
+}
+
+.achievement-toast--enemy .achievement-toast__title {
+  color: #fecaca;
+}
+
+.achievement-toast__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #f8fafc;
+}
+
+@media (max-width: 480px) {
+  .achievement-toast-stack {
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    align-items: stretch;
+  }
+}
