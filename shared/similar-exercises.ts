@@ -20,7 +20,10 @@ function isIsometricMechanic(item: Pick<SimilarExerciseRef, 'modo' | 'prioridade
 }
 
 /** Pontua similaridade entre dois exercícios (maior = mais parecido). */
-export function scoreExerciseSimilarity(reference: SimilarExerciseRef, candidate: SimilarExerciseRef): number {
+export function scoreExerciseSimilarity(
+  reference: SimilarExerciseRef,
+  candidate: SimilarExerciseRef,
+): number {
   if (reference.slug === candidate.slug) return -1;
 
   let score = 0;

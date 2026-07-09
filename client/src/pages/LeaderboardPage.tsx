@@ -8,7 +8,12 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { CURRENCY_NAME, weeklyLeaderboardReward, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
+import {
+  CURRENCY_NAME,
+  weeklyLeaderboardReward,
+  type LeaderboardEntry,
+  type LeaderboardMetric,
+} from '@/types';
 
 const PODIUM_SLOTS = [
   { entryIndex: 1, medal: 'silver', height: 'h-28' },
@@ -34,8 +39,7 @@ function WeeklyRewardBadge({ rank }: { rank: number }) {
 
   return (
     <span className="game-rank-reward">
-      <Coins size={11} aria-hidden />
-      +{reward}
+      <Coins size={11} aria-hidden />+{reward}
     </span>
   );
 }
@@ -44,7 +48,11 @@ function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: Leaderb
   return (
     <span className="game-rank-row__value">
       {metric === 'moedas' && <Coins size={14} aria-hidden />}
-      {metric === 'xp' ? `${entry.nivel_xp} XP` : metric === 'streak' ? `${entry.streak_atual}d` : `${entry.moedas} ${CURRENCY_NAME}`}
+      {metric === 'xp'
+        ? `${entry.nivel_xp} XP`
+        : metric === 'streak'
+          ? `${entry.streak_atual}d`
+          : `${entry.moedas} ${CURRENCY_NAME}`}
     </span>
   );
 }
@@ -87,7 +95,9 @@ export function LeaderboardPage() {
       .catch((err: unknown) => {
         setEntries([]);
         setMe(null);
-        showGameToast(getErrorMessage(err, 'Não foi possível carregar o ranking.'), { variant: 'error' });
+        showGameToast(getErrorMessage(err, 'Não foi possível carregar o ranking.'), {
+          variant: 'error',
+        });
       })
       .finally(() => setLoading(false));
   }, [metric]);
@@ -143,14 +153,19 @@ export function LeaderboardPage() {
                     transition={{ delay: visualIdx * 0.1 }}
                     className={`game-podium__slot game-podium__slot--${slot.medal}`}
                   >
-                    <LeaderboardUserAvatar entry={entry} size="md" className="game-podium__avatar" />
+                    <LeaderboardUserAvatar
+                      entry={entry}
+                      size="md"
+                      className="game-podium__avatar"
+                    />
                     <p className="game-podium__name">{entry.nome}</p>
-                    <div className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}>
+                    <div
+                      className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}
+                    >
                       <span className="game-podium__rank">#{entry.rank}</span>
                       {weeklyLeaderboardReward(entry.rank) && (
                         <span className="game-podium__reward">
-                          <Coins size={10} aria-hidden />
-                          +{weeklyLeaderboardReward(entry.rank)}
+                          <Coins size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
                         </span>
                       )}
                     </div>

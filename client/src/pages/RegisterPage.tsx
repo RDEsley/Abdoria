@@ -76,7 +76,9 @@ export function RegisterPage() {
             }}
             onBlur={() => {
               const err = validateRegisterNome(nome);
-              setFieldErrors((prev) => (err ? { ...prev, nome: err } : { ...prev, nome: undefined }));
+              setFieldErrors((prev) =>
+                err ? { ...prev, nome: err } : { ...prev, nome: undefined },
+              );
             }}
             error={fieldErrors.nome}
             placeholder="Como quer ser chamado"
@@ -95,7 +97,9 @@ export function RegisterPage() {
             }}
             onBlur={() => {
               const err = validateEmail(email);
-              setFieldErrors((prev) => (err ? { ...prev, email: err } : { ...prev, email: undefined }));
+              setFieldErrors((prev) =>
+                err ? { ...prev, email: err } : { ...prev, email: undefined },
+              );
             }}
             error={fieldErrors.email}
             placeholder="seu@email.com"
@@ -114,7 +118,9 @@ export function RegisterPage() {
             }}
             onBlur={() => {
               const err = validatePassword(password);
-              setFieldErrors((prev) => (err ? { ...prev, password: err } : { ...prev, password: undefined }));
+              setFieldErrors((prev) =>
+                err ? { ...prev, password: err } : { ...prev, password: undefined },
+              );
             }}
             error={fieldErrors.password}
             hint="Mínimo de 6 caracteres."
@@ -143,7 +149,12 @@ export function RegisterPage() {
           />
 
           {submitError && (
-            <AuthAlert variant="error" title="Não foi possível criar a conta" message={submitError} live />
+            <AuthAlert
+              variant="error"
+              title="Não foi possível criar a conta"
+              message={submitError}
+              live
+            />
           )}
 
           <button type="submit" disabled={loading} className="game-btn game-btn--primary">

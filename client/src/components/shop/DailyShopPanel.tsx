@@ -4,10 +4,18 @@ import { Clock, Gift, Sparkles } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { DailyShopRewardReveal } from '@/components/shop/DailyShopRewardReveal';
 import { DailyShopAutoCollectToggle } from '@/components/shop/DailyShopAutoCollectToggle';
-import { PurchaseConfirmDialog, type PurchaseConfirmDetails } from '@/components/shop/PurchaseConfirmDialog';
+import {
+  PurchaseConfirmDialog,
+  type PurchaseConfirmDetails,
+} from '@/components/shop/PurchaseConfirmDialog';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
-import { claimDailyShopSlot, claimFreeDailyShopRewards, getShop, updateMetaPreferences } from '@/lib/api';
+import {
+  claimDailyShopSlot,
+  claimFreeDailyShopRewards,
+  getShop,
+  updateMetaPreferences,
+} from '@/lib/api';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import {
   dailyRewardIcon,
@@ -47,7 +55,12 @@ function canAffordSlot(
   const abdoriaCost = slot.preco_abdoria ?? 0;
   const xpCost = slot.preco_xp ?? 0;
   if (xpCost > spendableXp) return false;
-  const abdoriaAfterXp = projectedAbdoriaAfterXpSpend(nivelXp, abdoriaBalance, moedasXpBlocos, xpCost);
+  const abdoriaAfterXp = projectedAbdoriaAfterXpSpend(
+    nivelXp,
+    abdoriaBalance,
+    moedasXpBlocos,
+    xpCost,
+  );
   if (abdoriaCost > abdoriaAfterXp) return false;
   return true;
 }
@@ -57,12 +70,19 @@ export function DailyShopPanel() {
   const { refresh: refreshApp } = useApp();
   const [shopMeta, setShopMeta] = useState<Pick<
     ShopResponse,
-    'abdoria' | 'spendable_xp' | 'shop_xp_cost_per_abdoria' | 'shop_abdoria_cost_per_xp' | 'efeito_equipado'
+    | 'abdoria'
+    | 'spendable_xp'
+    | 'shop_xp_cost_per_abdoria'
+    | 'shop_abdoria_cost_per_xp'
+    | 'efeito_equipado'
   > | null>(null);
   const [loja, setLoja] = useState<{ data_reset: string; slots: LojaDiariaSlot[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busySlot, setBusySlot] = useState<number | null>(null);
-  const [rewardReveal, setRewardReveal] = useState<{ slot: LojaDiariaSlot; message: string } | null>(null);
+  const [rewardReveal, setRewardReveal] = useState<{
+    slot: LojaDiariaSlot;
+    message: string;
+  } | null>(null);
   const [autoCollect, setAutoCollect] = useState(
     () => user?.preferencias?.coletar_loja_diaria_automatico ?? false,
   );
@@ -78,7 +98,9 @@ export function DailyShopPanel() {
 
   useEffect(() => {
     const handler = (event: Event) => {
-      const detail = (event as CustomEvent<{ loja_diaria: { data_reset: string; slots: LojaDiariaSlot[] } }>).detail;
+      const detail = (
+        event as CustomEvent<{ loja_diaria: { data_reset: string; slots: LojaDiariaSlot[] } }>
+      ).detail;
       if (detail?.loja_diaria) setLoja(detail.loja_diaria);
     };
     window.addEventListener('abdoria:daily-shop-updated', handler);
@@ -111,7 +133,9 @@ export function DailyShopPanel() {
         efeito_equipado: data.efeito_equipado,
       });
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível carregar a loja diária.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar a loja diária.'), {
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -128,7 +152,10 @@ export function DailyShopPanel() {
   const resetSecondsLeft = useMidnightSecondsLeft();
 
   const applyFreeClaimResult = useCallback(
-    async (res: Awaited<ReturnType<typeof claimFreeDailyShopRewards>>, opts?: { showReveal?: boolean }) => {
+    async (
+      res: Awaited<ReturnType<typeof claimFreeDailyShopRewards>>,
+      opts?: { showReveal?: boolean },
+    ) => {
       applyUser(res.user);
       setLoja(res.loja_diaria);
       await refreshApp();
@@ -171,7 +198,9 @@ export function DailyShopPanel() {
         void load();
       }
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível salvar a preferência.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível salvar a preferência.'), {
+        variant: 'error',
+      });
     } finally {
       setSavingAutoCollect(false);
     }
@@ -190,7 +219,8 @@ export function DailyShopPanel() {
 
       let successMessage = 'Compra realizada!';
       if (slot.kind === 'recompensa_diaria' && isLuckyFreeDailyReward(slot)) {
-        successMessage = DAILY_LUCK_LABELS[slot.raridade] ?? 'Sorte grande! Recompensa rara resgatada!';
+        successMessage =
+          DAILY_LUCK_LABELS[slot.raridade] ?? 'Sorte grande! Recompensa rara resgatada!';
       } else if (slot.kind === 'recompensa_diaria') {
         successMessage = 'Recompensa diária resgatada!';
       } else {
@@ -203,7 +233,9 @@ export function DailyShopPanel() {
       if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
       void load();
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível resgatar esta oferta.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível resgatar esta oferta.'), {
+        variant: 'error',
+      });
     } finally {
       setBusySlot(null);
     }
@@ -237,11 +269,13 @@ export function DailyShopPanel() {
               </h3>
               <p className="game-daily-reset-inline" aria-live="polite">
                 <Clock size={13} aria-hidden />
-                Renova em <strong className="tabular-nums">{formatCountdown(resetSecondsLeft)}</strong>
+                Renova em{' '}
+                <strong className="tabular-nums">{formatCountdown(resetSecondsLeft)}</strong>
               </p>
             </div>
             <p className="mt-1 text-[0.65rem] font-bold leading-relaxed text-stone-500">
-              1ª opção grátis · {xpPerAbdoria} XP = 1 {CURRENCY_NAME} · {abdoriaPerXp} {CURRENCY_NAME} = 1 XP
+              1ª opção grátis · {xpPerAbdoria} XP = 1 {CURRENCY_NAME} · {abdoriaPerXp}{' '}
+              {CURRENCY_NAME} = 1 XP
             </p>
             {shopMeta && (
               <p className="mt-1 text-[0.65rem] font-bold text-emerald-700">
@@ -270,67 +304,69 @@ export function DailyShopPanel() {
           <p className="game-loader mt-4">Carregando ofertas...</p>
         ) : (
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {loja?.slots.map((slot) => {
-                const lucky = isLuckyFreeDailyReward(slot) && !slot.resgatado;
-                const affordable = canAffordSlot(
-                  slot,
-                  abdoriaBalance,
-                  spendableXp,
-                  nivelXp,
-                  moedasXpBlocos,
-                );
+            {loja?.slots.map((slot) => {
+              const lucky = isLuckyFreeDailyReward(slot) && !slot.resgatado;
+              const affordable = canAffordSlot(
+                slot,
+                abdoriaBalance,
+                spendableXp,
+                nivelXp,
+                moedasXpBlocos,
+              );
 
-                return (
-                  <article
-                    key={slot.slot}
-                    className={`game-daily-card ${rarityClass(slot.raridade)} ${slot.resgatado ? 'game-daily-card--claimed' : ''} ${lucky ? 'game-daily-card--lucky' : ''}`}
-                  >
-                    {lucky && (
-                      <motion.div
-                        className={`game-daily-luck game-daily-luck--${slot.raridade}`}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                      >
-                        <Sparkles size={14} aria-hidden />
-                        <span>{DAILY_LUCK_LABELS[slot.raridade]}</span>
-                      </motion.div>
-                    )}
+              return (
+                <article
+                  key={slot.slot}
+                  className={`game-daily-card ${rarityClass(slot.raridade)} ${slot.resgatado ? 'game-daily-card--claimed' : ''} ${lucky ? 'game-daily-card--lucky' : ''}`}
+                >
+                  {lucky && (
+                    <motion.div
+                      className={`game-daily-luck game-daily-luck--${slot.raridade}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                    >
+                      <Sparkles size={14} aria-hidden />
+                      <span>{DAILY_LUCK_LABELS[slot.raridade]}</span>
+                    </motion.div>
+                  )}
 
-                    <div className="game-daily-card__badge">
-                      {slot.kind === 'recompensa_diaria' ? 'Diária grátis' : slot.oferta_nome ?? 'Oferta paga'}
+                  <div className="game-daily-card__badge">
+                    {slot.kind === 'recompensa_diaria'
+                      ? 'Diária grátis'
+                      : (slot.oferta_nome ?? 'Oferta paga')}
+                  </div>
+
+                  <div className="game-daily-card__reward">
+                    {dailyRewardIcon(slot)}
+                    <span>{formatDailyReward(slot)}</span>
+                  </div>
+
+                  <p className="game-daily-card__rarity">{DAILY_RARITY_LABELS[slot.raridade]}</p>
+                  <p className="game-daily-card__label">{slot.label}</p>
+
+                  {slot.resgatado ? (
+                    <div className="game-daily-card__claimed">
+                      <span>Resgatado</span>
                     </div>
-
-                    <div className="game-daily-card__reward">
-                      {dailyRewardIcon(slot)}
-                      <span>{formatDailyReward(slot)}</span>
-                    </div>
-
-                    <p className="game-daily-card__rarity">{DAILY_RARITY_LABELS[slot.raridade]}</p>
-                    <p className="game-daily-card__label">{slot.label}</p>
-
-                    {slot.resgatado ? (
-                      <div className="game-daily-card__claimed">
-                        <span>Resgatado</span>
-                      </div>
-                    ) : (
-                      <GameButton
-                        size="sm"
-                        className="w-full mt-3"
-                        variant={slot.kind === 'recompensa_diaria' ? 'primary' : 'secondary'}
-                        disabled={busySlot === slot.slot || !affordable}
-                        onClick={() => void requestClaim(slot)}
-                      >
-                        {slot.kind === 'recompensa_diaria'
-                          ? 'Resgatar grátis'
-                          : `Comprar · ${formatDailyPurchasePrice(slot)}`}
-                      </GameButton>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          )}
+                  ) : (
+                    <GameButton
+                      size="sm"
+                      className="w-full mt-3"
+                      variant={slot.kind === 'recompensa_diaria' ? 'primary' : 'secondary'}
+                      disabled={busySlot === slot.slot || !affordable}
+                      onClick={() => void requestClaim(slot)}
+                    >
+                      {slot.kind === 'recompensa_diaria'
+                        ? 'Resgatar grátis'
+                        : `Comprar · ${formatDailyPurchasePrice(slot)}`}
+                    </GameButton>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {rewardReveal && (

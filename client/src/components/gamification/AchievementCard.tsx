@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Achievement } from '@/types';
-import {
-  ACHIEVEMENT_DIFFICULTY_LABELS,
-  formatAchievementPlayerPct,
-} from '@/types';
+import { ACHIEVEMENT_DIFFICULTY_LABELS, formatAchievementPlayerPct } from '@/types';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 
 interface Props {
@@ -24,7 +21,8 @@ export function AchievementCard({ achievement, compact = false }: Props) {
         <span className="game-achievement__title">{titulo}</span>
         {!compact && <span className="game-achievement__desc">{descricao}</span>}
         <span className="game-achievement__meta">
-          {ACHIEVEMENT_DIFFICULTY_LABELS[dificuldade]} · {formatAchievementPlayerPct(pct_jogadores)} dos jogadores
+          {ACHIEVEMENT_DIFFICULTY_LABELS[dificuldade]} · {formatAchievementPlayerPct(pct_jogadores)}{' '}
+          dos jogadores
         </span>
       </div>
     </div>

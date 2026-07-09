@@ -65,7 +65,9 @@ export function AfkEnemySprite({
   return (
     <div key={hit ? `hit-${hitKey}` : 'idle'} className={className} aria-label={label}>
       {combat.is_boss && <div className="game-afk-enemy__boss-aura" aria-hidden />}
-      {(enemyId === 'golden_slime' || enemyId === 'magic_rabbit') && <div className="game-afk-enemy__golden-sparkle" aria-hidden />}
+      {(enemyId === 'golden_slime' || enemyId === 'magic_rabbit') && (
+        <div className="game-afk-enemy__golden-sparkle" aria-hidden />
+      )}
 
       <div className="game-afk-enemy__sprite">
         <SlimeBody

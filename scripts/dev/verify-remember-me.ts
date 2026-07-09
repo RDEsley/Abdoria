@@ -31,8 +31,10 @@ function mockStorage(name: string): Storage {
   };
 }
 
-(globalThis as { localStorage: Storage; sessionStorage: Storage }).localStorage = mockStorage('local');
-(globalThis as { localStorage: Storage; sessionStorage: Storage }).sessionStorage = mockStorage('session');
+(globalThis as { localStorage: Storage; sessionStorage: Storage }).localStorage =
+  mockStorage('local');
+(globalThis as { localStorage: Storage; sessionStorage: Storage }).sessionStorage =
+  mockStorage('session');
 
 const {
   setToken,

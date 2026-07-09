@@ -36,10 +36,10 @@ export function mergeDadosSalvos(current: DadosLike, patch: DadosLike): UserDado
 
 export function isEmptyDadosSalvos(dados: UserDadosSalvos): boolean {
   return (
-    dados.treino_personalizado.length === 0
-    && dados.treinos_salvos.length === 0
-    && Object.keys(dados.esquemas_reps).length === 0
-    && dados.exercicios_desbloqueados.length === 0
+    dados.treino_personalizado.length === 0 &&
+    dados.treinos_salvos.length === 0 &&
+    Object.keys(dados.esquemas_reps).length === 0 &&
+    dados.exercicios_desbloqueados.length === 0
   );
 }
 

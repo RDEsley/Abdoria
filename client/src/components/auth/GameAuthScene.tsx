@@ -10,7 +10,13 @@ function GameBird({ className }: { className: string }) {
   );
 }
 
-function GameTree({ className, variant = 'round' }: { className: string; variant?: 'round' | 'oak' | 'sapling' }) {
+function GameTree({
+  className,
+  variant = 'round',
+}: {
+  className: string;
+  variant?: 'round' | 'oak' | 'sapling';
+}) {
   if (variant === 'oak') {
     return (
       <div className={`game-tree game-tree--oak ${className}`} aria-hidden>

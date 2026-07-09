@@ -1,4 +1,10 @@
-import type { IExerciseDocument, IWorkoutPresetDocument, MusculoPrincipal, SavedWorkoutPreset, WorkoutQueueItem } from '@/types';
+import type {
+  IExerciseDocument,
+  IWorkoutPresetDocument,
+  MusculoPrincipal,
+  SavedWorkoutPreset,
+  WorkoutQueueItem,
+} from '@/types';
 
 const SIMILAR_MUSCLES: Record<MusculoPrincipal, MusculoPrincipal[]> = {
   superior: ['superior', 'core'],
@@ -8,7 +14,9 @@ const SIMILAR_MUSCLES: Record<MusculoPrincipal, MusculoPrincipal[]> = {
   completo: ['completo', 'superior', 'inferior', 'obliquos', 'core'],
 };
 
-export function getMuscleProfileFromQueue(queue: WorkoutQueueItem[]): Map<MusculoPrincipal, number> {
+export function getMuscleProfileFromQueue(
+  queue: WorkoutQueueItem[],
+): Map<MusculoPrincipal, number> {
   const counts = new Map<MusculoPrincipal, number>();
   for (const item of queue) {
     if (!item.musculo_principal) continue;
@@ -120,12 +128,12 @@ export function filterSimilarSavedWorkouts(
     const profile = getMuscleProfileFromQueue(entry.queue);
     return isSimilarProfile(referenceProfile, profile);
   });
-  return rankBySimilarity(filtered, referenceProfile, (entry) => getMuscleProfileFromQueue(entry.queue));
+  return rankBySimilarity(filtered, referenceProfile, (entry) =>
+    getMuscleProfileFromQueue(entry.queue),
+  );
 }
 
-export type SimilarWorkoutChoice =
-  | { kind: 'preset'; id: string }
-  | { kind: 'saved'; id: string };
+export type SimilarWorkoutChoice = { kind: 'preset'; id: string } | { kind: 'saved'; id: string };
 
 export function listSimilarWorkoutChoices(
   similarPresets: IWorkoutPresetDocument[],

@@ -40,8 +40,8 @@ export function RouteDrinkSuggestModal({
         <p className="game-modal__text">
           {canUse ? (
             <>
-              Receba na hora o loot de {routeDrinkCount * ROUTE_DRINK_HOURS}h de Exploração AFK ({ROUTE_DRINK_HOURS}h por
-              unidade) — baú animado e itens aplicados direto na conta.
+              Receba na hora o loot de {routeDrinkCount * ROUTE_DRINK_HOURS}h de Exploração AFK (
+              {ROUTE_DRINK_HOURS}h por unidade) — baú animado e itens aplicados direto na conta.
             </>
           ) : (
             <>Você não tem {ROUTE_DRINK_LABEL} no inventário.</>
@@ -61,7 +61,13 @@ export function RouteDrinkSuggestModal({
           <GameButton size="lg" className="w-full" disabled={using || !canUse} onClick={onConfirm}>
             {using ? 'Usando...' : 'Usar Todos'}
           </GameButton>
-          <GameButton size="lg" variant="secondary" className="w-full" disabled={using} onClick={onCancel}>
+          <GameButton
+            size="lg"
+            variant="secondary"
+            className="w-full"
+            disabled={using}
+            onClick={onCancel}
+          >
             Agora não
           </GameButton>
         </div>

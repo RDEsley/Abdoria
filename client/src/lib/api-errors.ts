@@ -67,7 +67,11 @@ export function toApiError(error: unknown, status?: number): ApiError {
 
   if (error instanceof TypeError) {
     const msg = error.message.toLowerCase();
-    if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed')) {
+    if (
+      msg.includes('failed to fetch') ||
+      msg.includes('networkerror') ||
+      msg.includes('load failed')
+    ) {
       return new ApiError(NETWORK_MESSAGE, 'NETWORK');
     }
     return new ApiError(NETWORK_MESSAGE, 'NETWORK');

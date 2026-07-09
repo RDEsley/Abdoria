@@ -29,7 +29,9 @@ function ItemThumb({ item, letter }: { item: ShopCatalogItem; letter: string }) 
 
   if (item.kind === 'borda') {
     return (
-      <div className={`game-shop-row__thumb-ring game-cosmetic-avatar--border-${item.id.replace('borda_', '')}`}>
+      <div
+        className={`game-shop-row__thumb-ring game-cosmetic-avatar--border-${item.id.replace('borda_', '')}`}
+      >
         <span className="game-shop-row__thumb-dot" />
       </div>
     );
@@ -84,7 +86,11 @@ export function ShopItemRow({
 
       <div className="game-shop-row__content">
         <div className="game-shop-row__head">
-          <h4 className={item.id === 'titulo_dono_do_jogo' ? 'cosmetic-title--dono-do-jogo' : undefined}>
+          <h4
+            className={
+              item.id === 'titulo_dono_do_jogo' ? 'cosmetic-title--dono-do-jogo' : undefined
+            }
+          >
             {item.nome}
           </h4>
           <span className="game-shop-row__rarity">{COSMETIC_RARITY_LABELS[item.raridade]}</span>

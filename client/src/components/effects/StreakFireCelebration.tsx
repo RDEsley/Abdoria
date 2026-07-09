@@ -67,7 +67,7 @@ export function StreakFireCelebration({ streak }: Props) {
             animate={{
               opacity: [0, 1, 0],
               y: [8, -28 - (ember.id % 4) * 12],
-              x: [(ember.id % 2 === 0 ? -1 : 1) * (4 + ember.id % 5)],
+              x: [(ember.id % 2 === 0 ? -1 : 1) * (4 + (ember.id % 5))],
               scale: [0, 1, 0.3],
             }}
             transition={{ duration: 0.9, delay: ember.delay, ease: 'easeOut' }}

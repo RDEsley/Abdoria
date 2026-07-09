@@ -66,9 +66,15 @@ exercisesRouter.get('/similar', requireAuth, async (req: AuthRequest, res) => {
     const queueRaw = req.query.queueSlugs;
     const queueSlugs =
       typeof queueRaw === 'string'
-        ? queueRaw.split(',').map((s) => s.trim()).filter(Boolean)
+        ? queueRaw
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : Array.isArray(queueRaw)
-          ? queueRaw.flatMap((v) => String(v).split(',')).map((s) => s.trim()).filter(Boolean)
+          ? queueRaw
+              .flatMap((v) => String(v).split(','))
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [];
 
     const result = await findSimilarExercisesForUser(user, slug, { queueSlugs });

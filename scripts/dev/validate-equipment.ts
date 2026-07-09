@@ -35,8 +35,14 @@ assert.ok((deadHang?.tempo_seg_avancado ?? 0) <= 60);
 const withoutBar = { equipamentos: { push_up_board: true, ab_wheel: false, pull_up_bar: false } };
 const withBar = { equipamentos: { pull_up_bar: true } };
 
-assert.equal(isExerciseAvailableForUser({ ativo: false, equipamento: 'pull_up_bar' }, withoutBar), false);
-assert.equal(isExerciseAvailableForUser({ ativo: false, equipamento: 'pull_up_bar' }, withBar), true);
+assert.equal(
+  isExerciseAvailableForUser({ ativo: false, equipamento: 'pull_up_bar' }, withoutBar),
+  false,
+);
+assert.equal(
+  isExerciseAvailableForUser({ ativo: false, equipamento: 'pull_up_bar' }, withBar),
+  true,
+);
 assert.equal(isExerciseAvailableForUser({ ativo: true, equipamento: null }, withoutBar), true);
 
 const unlocked = slugsUnlockedByEquipment(withBar);

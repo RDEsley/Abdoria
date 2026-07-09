@@ -8,7 +8,13 @@ interface Props {
   title?: string;
 }
 
-export function AvatarPortrait({ avatarId, letter, unlocked = true, className = '', title }: Props) {
+export function AvatarPortrait({
+  avatarId,
+  letter,
+  unlocked = true,
+  className = '',
+  title,
+}: Props) {
   const src = avatarArtSrc(avatarId);
   const showLetter = avatarId === 'avatar_inicial' && letter;
 

@@ -35,12 +35,18 @@ function toAfkRewardItem(item: RewardPresentationItem): AfkRewardItem {
       ariaLabel: item.name,
     };
   }
-  return { key: item.id, kind: item.kind as AfkRewardItem['kind'], amount: item.amount, ariaLabel: item.name };
+  return {
+    key: item.id,
+    kind: item.kind as AfkRewardItem['kind'],
+    amount: item.amount,
+    ariaLabel: item.name,
+  };
 }
 
 export function SecretRewardReveal({ item, golden = false, onContinue }: Props) {
   const afkItem = toAfkRewardItem(item);
-  const rarityLabel = COSMETIC_RARITY_LABELS[item.rarity === 'comum' ? 'comum' : item.rarity] ?? 'Secret';
+  const rarityLabel =
+    COSMETIC_RARITY_LABELS[item.rarity === 'comum' ? 'comum' : item.rarity] ?? 'Secret';
 
   return createPortal(
     <button
@@ -49,7 +55,10 @@ export function SecretRewardReveal({ item, golden = false, onContinue }: Props) 
       onClick={onContinue}
       aria-label={`Revelar próxima recompensa — ${item.name}`}
     >
-      <div className={`reward-secret-rays${golden ? ' reward-secret-rays--golden' : ''}`} aria-hidden />
+      <div
+        className={`reward-secret-rays${golden ? ' reward-secret-rays--golden' : ''}`}
+        aria-hidden
+      />
       <motion.div
         className={`reward-secret-card${golden ? ' reward-secret-card--golden' : ''}`}
         initial={{ scale: 0.75, opacity: 0 }}

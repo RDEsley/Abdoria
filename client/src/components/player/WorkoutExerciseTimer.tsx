@@ -38,7 +38,9 @@ export function WorkoutExerciseTimer({
         />
       </div>
       <p className="game-workout-timer__hint">
-        {paused ? 'Pausado — retome quando estiver pronto.' : 'O tempo avança sozinho até completar a série.'}
+        {paused
+          ? 'Pausado — retome quando estiver pronto.'
+          : 'O tempo avança sozinho até completar a série.'}
       </p>
     </div>
   );

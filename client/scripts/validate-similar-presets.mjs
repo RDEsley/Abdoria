@@ -51,7 +51,10 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-const superiorRef = new Map([['superior', 4], ['core', 1]]);
+const superiorRef = new Map([
+  ['superior', 4],
+  ['core', 1],
+]);
 const superiorMatch = new Map([['superior', 3]]);
 const inferiorOnly = new Map([['inferior', 5]]);
 
@@ -62,8 +65,14 @@ assert(
   'score superior deve ser maior que inferior',
 );
 
-const obliquesRef = new Map([['obliquos', 3], ['core', 2]]);
-const coreHeavy = new Map([['core', 4], ['superior', 1]]);
+const obliquesRef = new Map([
+  ['obliquos', 3],
+  ['core', 2],
+]);
+const coreHeavy = new Map([
+  ['core', 4],
+  ['superior', 1],
+]);
 assert(isSimilar(obliquesRef, coreHeavy), 'obliques e core-heavy devem ser similares');
 
 const choices = [

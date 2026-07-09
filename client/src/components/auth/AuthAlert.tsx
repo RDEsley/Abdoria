@@ -22,7 +22,14 @@ interface AuthAlertProps {
   id?: string;
 }
 
-export function AuthAlert({ variant, title, message, live = false, toast = false, id }: AuthAlertProps) {
+export function AuthAlert({
+  variant,
+  title,
+  message,
+  live = false,
+  toast = false,
+  id,
+}: AuthAlertProps) {
   const lastToastKey = useRef('');
 
   useEffect(() => {

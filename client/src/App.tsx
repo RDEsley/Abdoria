@@ -7,9 +7,7 @@ import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/ProtectedRout
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageLoader } from '@/components/ui/PageLoader';
 
-const LoginPage = lazy(() =>
-  import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })),
-);
+const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() =>
   import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
 );
@@ -51,106 +49,106 @@ export default function App() {
       <AuthProvider>
         <AchievementProvider>
           <Routes>
-          <Route element={<PublicOnlyRoute />}>
-            <Route
-              path="login"
-              element={
-                <LazyPage>
-                  <LoginPage />
-                </LazyPage>
-              }
-            />
-            <Route
-              path="register"
-              element={
-                <LazyPage>
-                  <RegisterPage />
-                </LazyPage>
-              }
-            />
-          </Route>
-
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppDataProvider />}>
+            <Route element={<PublicOnlyRoute />}>
               <Route
-                path="onboarding"
+                path="login"
                 element={
                   <LazyPage>
-                    <OnboardingPage />
+                    <LoginPage />
                   </LazyPage>
                 }
               />
-              <Route element={<AppLayout />}>
-                <Route
-                  index
-                  element={
-                    <LazyPage>
-                      <DashboardPage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="biblioteca"
-                  element={
-                    <LazyPage>
-                      <LibraryPage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="construtor"
-                  element={
-                    <LazyPage>
-                      <BuilderPage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="ranking"
-                  element={
-                    <LazyPage>
-                      <LeaderboardPage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="perfil"
-                  element={
-                    <LazyPage>
-                      <ProfilePage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="configuracoes"
-                  element={
-                    <LazyPage>
-                      <SettingsPage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="conquistas"
-                  element={
-                    <LazyPage>
-                      <AchievementsPage />
-                    </LazyPage>
-                  }
-                />
-              </Route>
               <Route
-                path="player"
+                path="register"
                 element={
                   <LazyPage>
-                    <PlayerPage />
+                    <RegisterPage />
                   </LazyPage>
                 }
               />
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppDataProvider />}>
+                <Route
+                  path="onboarding"
+                  element={
+                    <LazyPage>
+                      <OnboardingPage />
+                    </LazyPage>
+                  }
+                />
+                <Route element={<AppLayout />}>
+                  <Route
+                    index
+                    element={
+                      <LazyPage>
+                        <DashboardPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="biblioteca"
+                    element={
+                      <LazyPage>
+                        <LibraryPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="construtor"
+                    element={
+                      <LazyPage>
+                        <BuilderPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="ranking"
+                    element={
+                      <LazyPage>
+                        <LeaderboardPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="perfil"
+                    element={
+                      <LazyPage>
+                        <ProfilePage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="configuracoes"
+                    element={
+                      <LazyPage>
+                        <SettingsPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="conquistas"
+                    element={
+                      <LazyPage>
+                        <AchievementsPage />
+                      </LazyPage>
+                    }
+                  />
+                </Route>
+                <Route
+                  path="player"
+                  element={
+                    <LazyPage>
+                      <PlayerPage />
+                    </LazyPage>
+                  }
+                />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </AchievementProvider>
       </AuthProvider>
     </BrowserRouter>

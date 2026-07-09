@@ -10,7 +10,14 @@ import type { MusculoPrincipal, Prioridade } from '@/types';
 import { MUSCULO_LABELS, MUSCULO_HINTS, PRIORIDADE_LABELS, formatExerciseName } from '@/types';
 
 export function LibraryPage() {
-  const { exercises, muscleFilter, setMuscleFilter, ensureExercises, exercisesLoading, loadRecommendations } = useApp();
+  const {
+    exercises,
+    muscleFilter,
+    setMuscleFilter,
+    ensureExercises,
+    exercisesLoading,
+    loadRecommendations,
+  } = useApp();
   const { isUnlocked, unlock } = useUnlockedExercises();
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
@@ -20,12 +27,8 @@ export function LibraryPage() {
     void loadRecommendations({ force: true });
   }, [loadRecommendations]);
 
-  const {
-    fixedExerciseSlugs,
-    blockedExerciseSlugs,
-    toggleExercisePin,
-    toggleExerciseBlock,
-  } = useUserPreferences(refreshRecommendations);
+  const { fixedExerciseSlugs, blockedExerciseSlugs, toggleExercisePin, toggleExerciseBlock } =
+    useUserPreferences(refreshRecommendations);
 
   useEffect(() => {
     void ensureExercises();
@@ -34,7 +37,11 @@ export function LibraryPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return exercises.filter((ex) => {
-      if (muscleFilter && ex.musculo_principal !== muscleFilter && !ex.musculos_secundarios?.includes(muscleFilter)) {
+      if (
+        muscleFilter &&
+        ex.musculo_principal !== muscleFilter &&
+        !ex.musculos_secundarios?.includes(muscleFilter)
+      ) {
         return false;
       }
       if (nivelFilter !== '' && ex.nivel !== nivelFilter) return false;
@@ -68,7 +75,12 @@ export function LibraryPage() {
             aria-label="Buscar exercício"
           />
           {search && (
-            <button type="button" className="library-search__clear" onClick={() => setSearch('')} aria-label="Limpar busca">
+            <button
+              type="button"
+              className="library-search__clear"
+              onClick={() => setSearch('')}
+              aria-label="Limpar busca"
+            >
               <X size={14} />
             </button>
           )}
@@ -83,7 +95,9 @@ export function LibraryPage() {
           >
             <option value="">Todos os músculos</option>
             {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((m) => (
-              <option key={m} value={m}>{MUSCULO_LABELS[m]}</option>
+              <option key={m} value={m}>
+                {MUSCULO_LABELS[m]}
+              </option>
             ))}
           </select>
           <select
@@ -94,7 +108,9 @@ export function LibraryPage() {
           >
             <option value="">Todos os níveis</option>
             {[1, 2, 3, 4].map((n) => (
-              <option key={n} value={n}>Nível {n}</option>
+              <option key={n} value={n}>
+                Nível {n}
+              </option>
             ))}
           </select>
           <select
@@ -105,15 +121,15 @@ export function LibraryPage() {
           >
             <option value="">Todas prioridades</option>
             {(Object.keys(PRIORIDADE_LABELS) as Prioridade[]).map((p) => (
-              <option key={p} value={p}>{PRIORIDADE_LABELS[p]}</option>
+              <option key={p} value={p}>
+                {PRIORIDADE_LABELS[p]}
+              </option>
             ))}
           </select>
         </div>
       </div>
 
-      {muscleFilter && (
-        <p className="muscle-zone-hint -mt-2">{MUSCULO_HINTS[muscleFilter]}</p>
-      )}
+      {muscleFilter && <p className="muscle-zone-hint -mt-2">{MUSCULO_HINTS[muscleFilter]}</p>}
 
       <EquipmentPanel onEquipmentChange={refreshRecommendations} />
 
@@ -124,18 +140,20 @@ export function LibraryPage() {
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {exercisesLoading ? null : filtered.map((exercise) => (
-          <ExerciseCard
-            key={exercise.slug}
-            exercise={exercise}
-            unlocked={isUnlocked(exercise.slug)}
-            onUnlock={unlock}
-            isPinned={fixedExerciseSlugs.includes(exercise.slug)}
-            isBlocked={blockedExerciseSlugs.includes(exercise.slug)}
-            onTogglePin={toggleExercisePin}
-            onToggleBlock={toggleExerciseBlock}
-          />
-        ))}
+        {exercisesLoading
+          ? null
+          : filtered.map((exercise) => (
+              <ExerciseCard
+                key={exercise.slug}
+                exercise={exercise}
+                unlocked={isUnlocked(exercise.slug)}
+                onUnlock={unlock}
+                isPinned={fixedExerciseSlugs.includes(exercise.slug)}
+                isBlocked={blockedExerciseSlugs.includes(exercise.slug)}
+                onTogglePin={toggleExercisePin}
+                onToggleBlock={toggleExerciseBlock}
+              />
+            ))}
       </div>
     </div>
   );

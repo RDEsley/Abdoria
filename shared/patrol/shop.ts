@@ -2,9 +2,7 @@ export type PatrolWeaponKind = 'arco' | 'espada' | 'magia';
 export type PatrolWeaponRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'secreto';
 
 export type PatrolWeaponUnlock =
-  | { tipo: 'gratis' }
-  | { tipo: 'moedas'; preco_moedas: number }
-  | { tipo: 'futuro' };
+  { tipo: 'gratis' } | { tipo: 'moedas'; preco_moedas: number } | { tipo: 'futuro' };
 
 export interface PatrolWeaponDefinition {
   id: string;
@@ -72,15 +70,69 @@ type WeaponSeed = {
 };
 
 const ARCO_SEEDS: WeaponSeed[] = [
-  { nivel: 1, preco: 335, dano: 10, nome: 'Arco de Madeira', descricao: 'O primeiro companheiro de todo explorador — leve, firme e sempre pronto.' },
-  { nivel: 2, preco: 665, dano: 14, nome: 'Arco de Caçador', descricao: 'Corda reforçada e mira estável para patrulhas mais longas nas rotas.' },
-  { nivel: 3, preco: 1340, dano: 18, nome: 'Arco Silvestre', descricao: 'Entalhes das florestas antigas guiam cada flecha com precisão natural.' },
-  { nivel: 4, preco: 2340, dano: 20, nome: 'Arco do Vento', descricao: 'Disparos silenciosos que cortam o ar antes do inimigo perceber.' },
-  { nivel: 5, preco: 3950, dano: 24, nome: 'Arco de Cristal', descricao: 'Lâmina de luz refinada perfura armaduras leves com elegância letal.' },
-  { nivel: 6, preco: 5700, dano: 28, nome: 'Arco Flamejante', descricao: 'Forjado nas caldeiras do vulcão; cada tiro deixa um rastro ardente.' },
-  { nivel: 7, preco: 12300, dano: 32, nome: 'Arco Celestial', descricao: 'Abençoado pelas constelações que vigiam a patrulha noturna.' },
-  { nivel: 8, preco: 18940, dano: 36, nome: 'Arco do Abismo', descricao: 'Sussurra nas sombras e dispara quando a vítima menos espera.' },
-  { nivel: 9, preco: 55000, dano: 48, nome: 'Arco Dracônico', descricao: 'Escamas lendárias endurecem a madeira e multiplicam o impacto.' },
+  {
+    nivel: 1,
+    preco: 335,
+    dano: 10,
+    nome: 'Arco de Madeira',
+    descricao: 'O primeiro companheiro de todo explorador — leve, firme e sempre pronto.',
+  },
+  {
+    nivel: 2,
+    preco: 665,
+    dano: 14,
+    nome: 'Arco de Caçador',
+    descricao: 'Corda reforçada e mira estável para patrulhas mais longas nas rotas.',
+  },
+  {
+    nivel: 3,
+    preco: 1340,
+    dano: 18,
+    nome: 'Arco Silvestre',
+    descricao: 'Entalhes das florestas antigas guiam cada flecha com precisão natural.',
+  },
+  {
+    nivel: 4,
+    preco: 2340,
+    dano: 20,
+    nome: 'Arco do Vento',
+    descricao: 'Disparos silenciosos que cortam o ar antes do inimigo perceber.',
+  },
+  {
+    nivel: 5,
+    preco: 3950,
+    dano: 24,
+    nome: 'Arco de Cristal',
+    descricao: 'Lâmina de luz refinada perfura armaduras leves com elegância letal.',
+  },
+  {
+    nivel: 6,
+    preco: 5700,
+    dano: 28,
+    nome: 'Arco Flamejante',
+    descricao: 'Forjado nas caldeiras do vulcão; cada tiro deixa um rastro ardente.',
+  },
+  {
+    nivel: 7,
+    preco: 12300,
+    dano: 32,
+    nome: 'Arco Celestial',
+    descricao: 'Abençoado pelas constelações que vigiam a patrulha noturna.',
+  },
+  {
+    nivel: 8,
+    preco: 18940,
+    dano: 36,
+    nome: 'Arco do Abismo',
+    descricao: 'Sussurra nas sombras e dispara quando a vítima menos espera.',
+  },
+  {
+    nivel: 9,
+    preco: 55000,
+    dano: 48,
+    nome: 'Arco Dracônico',
+    descricao: 'Escamas lendárias endurecem a madeira e multiplicam o impacto.',
+  },
   {
     nivel: 10,
     preco: 99999,
@@ -91,15 +143,69 @@ const ARCO_SEEDS: WeaponSeed[] = [
 ];
 
 const ESPADA_SEEDS: WeaponSeed[] = [
-  { nivel: 1, preco: 470, dano: 12, nome: 'Espada de Treino', descricao: 'Lâmina confiável da guarda, perfeita para aprender o ritmo da batalha.' },
-  { nivel: 2, preco: 800, dano: 16, nome: 'Espada de Ferro', descricao: 'Aço temperado que aguenta patrulhas intermináveis sem perder o fio.' },
-  { nivel: 3, preco: 1475, dano: 20, nome: 'Espada Rúnica', descricao: 'Runas ancestrais pulsam a cada golpe, amplificando sua força.' },
-  { nivel: 4, preco: 2475, dano: 26, nome: 'Espada do Guardião', descricao: 'Forjada para proteger exploradores nas rotas mais perigosas.' },
-  { nivel: 5, preco: 4085, dano: 30, nome: 'Espada de Aço Negro', descricao: 'Equilíbrio perfeito entre peso e fio — implacável em combate corpo a corpo.' },
-  { nivel: 6, preco: 5835, dano: 36, nome: 'Espada Valente', descricao: 'Carregada por heróis das campanhas AFK que nunca recuaram.' },
-  { nivel: 7, preco: 12435, dano: 42, nome: 'Espada do Campeão', descricao: 'Troféu reservado a quem domina o ranking semanal da exploração.' },
-  { nivel: 8, preco: 19075, dano: 46, nome: 'Espada Imortal', descricao: 'Brilho eterno mesmo após mil confrontos nas ruínas esquecidas.' },
-  { nivel: 9, preco: 55135, dano: 50, nome: 'Lâmina do Dragão', descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.' },
+  {
+    nivel: 1,
+    preco: 470,
+    dano: 12,
+    nome: 'Espada de Treino',
+    descricao: 'Lâmina confiável da guarda, perfeita para aprender o ritmo da batalha.',
+  },
+  {
+    nivel: 2,
+    preco: 800,
+    dano: 16,
+    nome: 'Espada de Ferro',
+    descricao: 'Aço temperado que aguenta patrulhas intermináveis sem perder o fio.',
+  },
+  {
+    nivel: 3,
+    preco: 1475,
+    dano: 20,
+    nome: 'Espada Rúnica',
+    descricao: 'Runas ancestrais pulsam a cada golpe, amplificando sua força.',
+  },
+  {
+    nivel: 4,
+    preco: 2475,
+    dano: 26,
+    nome: 'Espada do Guardião',
+    descricao: 'Forjada para proteger exploradores nas rotas mais perigosas.',
+  },
+  {
+    nivel: 5,
+    preco: 4085,
+    dano: 30,
+    nome: 'Espada de Aço Negro',
+    descricao: 'Equilíbrio perfeito entre peso e fio — implacável em combate corpo a corpo.',
+  },
+  {
+    nivel: 6,
+    preco: 5835,
+    dano: 36,
+    nome: 'Espada Valente',
+    descricao: 'Carregada por heróis das campanhas AFK que nunca recuaram.',
+  },
+  {
+    nivel: 7,
+    preco: 12435,
+    dano: 42,
+    nome: 'Espada do Campeão',
+    descricao: 'Troféu reservado a quem domina o ranking semanal da exploração.',
+  },
+  {
+    nivel: 8,
+    preco: 19075,
+    dano: 46,
+    nome: 'Espada Imortal',
+    descricao: 'Brilho eterno mesmo após mil confrontos nas ruínas esquecidas.',
+  },
+  {
+    nivel: 9,
+    preco: 55135,
+    dano: 50,
+    nome: 'Lâmina do Dragão',
+    descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.',
+  },
   {
     nivel: 10,
     preco: 99999,
@@ -214,7 +320,9 @@ export function resolvePatrolArmas(pref?: Partial<PatrolArmasState> | null): Pat
   const espadaEquipadaRaw = migrateWeaponId(pref?.espada_equipada ?? DEFAULT_ESPADA_ID);
 
   const arcoEquipado = desbloqueados.has(arcoEquipadoRaw) ? arcoEquipadoRaw : DEFAULT_ARCO_ID;
-  const espadaEquipada = desbloqueados.has(espadaEquipadaRaw) ? espadaEquipadaRaw : DEFAULT_ESPADA_ID;
+  const espadaEquipada = desbloqueados.has(espadaEquipadaRaw)
+    ? espadaEquipadaRaw
+    : DEFAULT_ESPADA_ID;
 
   return {
     desbloqueados: [...desbloqueados],

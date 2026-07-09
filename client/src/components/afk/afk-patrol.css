@@ -40,7 +40,10 @@
     3px 4px 0 rgba(15, 23, 42, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
   cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
   overflow: visible;
 }
 
@@ -121,7 +124,12 @@
   width: 0.46rem;
   height: 0.46rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(254, 240, 138, 0.7) 45%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(254, 240, 138, 0.7) 45%,
+    transparent 72%
+  );
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.2);
   pointer-events: none;
@@ -148,28 +156,66 @@
 }
 
 .game-afk-fab--loot .game-afk-fab-swords__spark {
-  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(56, 189, 248, 0.9) 42%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(56, 189, 248, 0.9) 42%,
+    transparent 72%
+  );
 }
 
 @keyframes game-afk-fab-clash-l {
-  0%, 18%, 100% { transform: rotate(-7deg); }
-  38% { transform: rotate(-23deg); }
-  50% { transform: rotate(4deg); }
-  64% { transform: rotate(-7deg); }
+  0%,
+  18%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  38% {
+    transform: rotate(-23deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+  64% {
+    transform: rotate(-7deg);
+  }
 }
 
 @keyframes game-afk-fab-clash-r {
-  0%, 18%, 100% { transform: scaleX(-1) rotate(-7deg); }
-  38% { transform: scaleX(-1) rotate(-23deg); }
-  50% { transform: scaleX(-1) rotate(4deg); }
-  64% { transform: scaleX(-1) rotate(-7deg); }
+  0%,
+  18%,
+  100% {
+    transform: scaleX(-1) rotate(-7deg);
+  }
+  38% {
+    transform: scaleX(-1) rotate(-23deg);
+  }
+  50% {
+    transform: scaleX(-1) rotate(4deg);
+  }
+  64% {
+    transform: scaleX(-1) rotate(-7deg);
+  }
 }
 
 @keyframes game-afk-fab-clash-spark {
-  0%, 44% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
-  66% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  0%,
+  44% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  66% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
 }
 
 .game-afk-fab-swords--header {
@@ -216,7 +262,8 @@
 }
 
 @keyframes game-afk-fab-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 0 1px rgba(56, 189, 248, 0.4),
       3px 4px 0 rgba(4, 16, 30, 0.55),
@@ -292,8 +339,13 @@
 }
 
 @keyframes game-afk-badge-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.12); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
 }
 
 /* Overlay + modal */
@@ -615,7 +667,9 @@
   border: none;
   border-radius: 0.35rem;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .game-afk-weapon-toggle__btn--active {
@@ -662,28 +716,63 @@
 }
 
 @keyframes game-afk-scene-sword-shake {
-  0%, 100% { transform: translate(0, 0); }
-  18% { transform: translate(-2px, 1px); }
-  36% { transform: translate(2px, -1px); }
-  54% { transform: translate(-1px, 0); }
-  72% { transform: translate(1px, 0); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  18% {
+    transform: translate(-2px, 1px);
+  }
+  36% {
+    transform: translate(2px, -1px);
+  }
+  54% {
+    transform: translate(-1px, 0);
+  }
+  72% {
+    transform: translate(1px, 0);
+  }
 }
 
 @keyframes game-afk-scene-sword-crit-shake {
-  0%, 100% { transform: translate(0, 0); }
-  12% { transform: translate(-4px, 2px); }
-  24% { transform: translate(4px, -2px); }
-  36% { transform: translate(-3px, 1px); }
-  48% { transform: translate(3px, -1px); }
-  62% { transform: translate(-2px, 0); }
-  78% { transform: translate(1px, 0); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  12% {
+    transform: translate(-4px, 2px);
+  }
+  24% {
+    transform: translate(4px, -2px);
+  }
+  36% {
+    transform: translate(-3px, 1px);
+  }
+  48% {
+    transform: translate(3px, -1px);
+  }
+  62% {
+    transform: translate(-2px, 0);
+  }
+  78% {
+    transform: translate(1px, 0);
+  }
 }
 
 @keyframes game-afk-scene-arrow-crit-shake {
-  0%, 100% { transform: translate(0, 0); }
-  20% { transform: translate(-2px, 1px); }
-  40% { transform: translate(2px, -1px); }
-  60% { transform: translate(-1px, 0); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    transform: translate(2px, -1px);
+  }
+  60% {
+    transform: translate(-1px, 0);
+  }
 }
 
 /* Terraria-style day/night sky cycle */
@@ -703,13 +792,31 @@
 }
 
 @keyframes afk-sky-gradient {
-  0%, 4% { background: linear-gradient(180deg, #f9c074 0%, #87ceeb 32%, #6eb5e8 62%, #b8dff5 100%); }
-  12%, 36% { background: linear-gradient(180deg, #7ec8e8 0%, #5eb0e5 38%, #a8daf5 72%, #d4effc 100%); }
-  44% { background: linear-gradient(180deg, #f9a66c 0%, #e8784a 28%, #9b6bb8 58%, #4a6fa5 100%); }
-  50% { background: linear-gradient(180deg, #1a2744 0%, #243b6b 45%, #1e3a5f 100%); }
-  56%, 88% { background: linear-gradient(180deg, #0f1a30 0%, #1a2d52 48%, #1e3a5f 100%); }
-  94% { background: linear-gradient(180deg, #2d3a6b 0%, #5b6bb8 38%, #87a8e8 100%); }
-  98%, 100% { background: linear-gradient(180deg, #f9c074 0%, #fbbf24 22%, #87ceeb 68%, #b8dff5 100%); }
+  0%,
+  4% {
+    background: linear-gradient(180deg, #f9c074 0%, #87ceeb 32%, #6eb5e8 62%, #b8dff5 100%);
+  }
+  12%,
+  36% {
+    background: linear-gradient(180deg, #7ec8e8 0%, #5eb0e5 38%, #a8daf5 72%, #d4effc 100%);
+  }
+  44% {
+    background: linear-gradient(180deg, #f9a66c 0%, #e8784a 28%, #9b6bb8 58%, #4a6fa5 100%);
+  }
+  50% {
+    background: linear-gradient(180deg, #1a2744 0%, #243b6b 45%, #1e3a5f 100%);
+  }
+  56%,
+  88% {
+    background: linear-gradient(180deg, #0f1a30 0%, #1a2d52 48%, #1e3a5f 100%);
+  }
+  94% {
+    background: linear-gradient(180deg, #2d3a6b 0%, #5b6bb8 38%, #87a8e8 100%);
+  }
+  98%,
+  100% {
+    background: linear-gradient(180deg, #f9c074 0%, #fbbf24 22%, #87ceeb 68%, #b8dff5 100%);
+  }
 }
 
 .game-afk-sky-cycle__stars {
@@ -718,21 +825,30 @@
   opacity: 0;
   background-image:
     radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 28% 32%, rgba(255,255,255,0.9) 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 32%, rgba(255, 255, 255, 0.9) 50%, transparent 51%),
     radial-gradient(1.5px 1.5px at 45% 12%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 62% 28%, rgba(255,255,255,0.85) 50%, transparent 51%),
+    radial-gradient(1px 1px at 62% 28%, rgba(255, 255, 255, 0.85) 50%, transparent 51%),
     radial-gradient(1px 1px at 78% 15%, #fff 50%, transparent 51%),
     radial-gradient(1.5px 1.5px at 88% 35%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 22% 8%, rgba(255,255,255,0.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 8%, rgba(255, 255, 255, 0.7) 50%, transparent 51%),
     radial-gradient(1px 1px at 55% 22%, #fff 50%, transparent 51%),
     radial-gradient(1px 1px at 72% 8%, #fff 50%, transparent 51%);
   animation: afk-stars-fade var(--afk-cycle) linear infinite;
 }
 
 @keyframes afk-stars-fade {
-  0%, 46% { opacity: 0; }
-  54%, 90% { opacity: 1; }
-  96%, 100% { opacity: 0; }
+  0%,
+  46% {
+    opacity: 0;
+  }
+  54%,
+  90% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .game-afk-sky-cycle__sun {
@@ -749,13 +865,40 @@
 }
 
 @keyframes afk-sun-arc {
-  0% { left: -6%; top: 62%; opacity: 0; }
-  3% { opacity: 1; }
-  8% { left: 4%; top: 48%; opacity: 1; }
-  25% { left: 42%; top: 10%; opacity: 1; }
-  42% { left: 82%; top: 48%; opacity: 1; }
-  47% { left: 96%; top: 62%; opacity: 0; }
-  48%, 100% { left: 96%; top: 62%; opacity: 0; }
+  0% {
+    left: -6%;
+    top: 62%;
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  8% {
+    left: 4%;
+    top: 48%;
+    opacity: 1;
+  }
+  25% {
+    left: 42%;
+    top: 10%;
+    opacity: 1;
+  }
+  42% {
+    left: 82%;
+    top: 48%;
+    opacity: 1;
+  }
+  47% {
+    left: 96%;
+    top: 62%;
+    opacity: 0;
+  }
+  48%,
+  100% {
+    left: 96%;
+    top: 62%;
+    opacity: 0;
+  }
 }
 
 .game-afk-sky-cycle__moon {
@@ -772,14 +915,45 @@
 }
 
 @keyframes afk-moon-arc {
-  0%, 49% { left: -6%; top: 62%; opacity: 0; }
-  50% { left: -6%; top: 62%; opacity: 0; }
-  53% { opacity: 1; }
-  58% { left: 4%; top: 48%; opacity: 1; }
-  75% { left: 42%; top: 12%; opacity: 1; }
-  92% { left: 82%; top: 48%; opacity: 1; }
-  97% { left: 96%; top: 62%; opacity: 0; }
-  100% { left: 96%; top: 62%; opacity: 0; }
+  0%,
+  49% {
+    left: -6%;
+    top: 62%;
+    opacity: 0;
+  }
+  50% {
+    left: -6%;
+    top: 62%;
+    opacity: 0;
+  }
+  53% {
+    opacity: 1;
+  }
+  58% {
+    left: 4%;
+    top: 48%;
+    opacity: 1;
+  }
+  75% {
+    left: 42%;
+    top: 12%;
+    opacity: 1;
+  }
+  92% {
+    left: 82%;
+    top: 48%;
+    opacity: 1;
+  }
+  97% {
+    left: 96%;
+    top: 62%;
+    opacity: 0;
+  }
+  100% {
+    left: 96%;
+    top: 62%;
+    opacity: 0;
+  }
 }
 
 .game-afk-sky-cycle__cloud {
@@ -795,15 +969,47 @@
   z-index: 1;
 }
 
-.game-afk-sky-cycle__cloud--1 { width: 2.8rem; top: 14%; left: -15%; animation-duration: 32s; animation-delay: 0s; }
-.game-afk-sky-cycle__cloud--2 { width: 2rem; top: 26%; left: -20%; animation-duration: 24s; animation-delay: -8s; opacity: 0.7; }
-.game-afk-sky-cycle__cloud--3 { width: 1.6rem; top: 8%; left: -25%; animation-duration: 20s; animation-delay: -14s; }
+.game-afk-sky-cycle__cloud--1 {
+  width: 2.8rem;
+  top: 14%;
+  left: -15%;
+  animation-duration: 32s;
+  animation-delay: 0s;
+}
+.game-afk-sky-cycle__cloud--2 {
+  width: 2rem;
+  top: 26%;
+  left: -20%;
+  animation-duration: 24s;
+  animation-delay: -8s;
+  opacity: 0.7;
+}
+.game-afk-sky-cycle__cloud--3 {
+  width: 1.6rem;
+  top: 8%;
+  left: -25%;
+  animation-duration: 20s;
+  animation-delay: -14s;
+}
 
 @keyframes afk-cloud-drift {
-  0%, 4% { transform: translateX(0); opacity: 0; }
-  8% { opacity: 0.85; }
-  40% { transform: translateX(130%); opacity: 0.85; }
-  46%, 100% { transform: translateX(130%); opacity: 0; }
+  0%,
+  4% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.85;
+  }
+  40% {
+    transform: translateX(130%);
+    opacity: 0.85;
+  }
+  46%,
+  100% {
+    transform: translateX(130%);
+    opacity: 0;
+  }
 }
 
 /* Terraria-style parallax hills (soft curves, no diagonal stripes) */
@@ -819,9 +1025,18 @@
 }
 
 @keyframes afk-backdrop-tint {
-  0%, 42% { filter: brightness(1) saturate(1); }
-  50%, 88% { filter: brightness(0.5) saturate(0.75) hue-rotate(-8deg); }
-  96%, 100% { filter: brightness(1) saturate(1); }
+  0%,
+  42% {
+    filter: brightness(1) saturate(1);
+  }
+  50%,
+  88% {
+    filter: brightness(0.5) saturate(0.75) hue-rotate(-8deg);
+  }
+  96%,
+  100% {
+    filter: brightness(1) saturate(1);
+  }
 }
 
 .game-afk-sky-cycle__mountain {
@@ -1101,13 +1316,32 @@
   animation: game-afk-sparkle 2.5s ease-in-out infinite;
 }
 
-.game-afk-scene__sparkle--1 { top: 20%; left: 30%; animation-delay: 0s; }
-.game-afk-scene__sparkle--2 { top: 45%; left: 70%; animation-delay: 0.8s; }
-.game-afk-scene__sparkle--3 { top: 60%; left: 45%; animation-delay: 1.6s; }
+.game-afk-scene__sparkle--1 {
+  top: 20%;
+  left: 30%;
+  animation-delay: 0s;
+}
+.game-afk-scene__sparkle--2 {
+  top: 45%;
+  left: 70%;
+  animation-delay: 0.8s;
+}
+.game-afk-scene__sparkle--3 {
+  top: 60%;
+  left: 45%;
+  animation-delay: 1.6s;
+}
 
 @keyframes game-afk-sparkle {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 1; transform: scale(1.2); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 .game-afk-boss-banner {
@@ -1130,22 +1364,29 @@
   background: linear-gradient(90deg, rgba(124, 45, 18, 0.92), rgba(180, 83, 9, 0.92));
   border: 2px solid #fbbf24;
   border-radius: 0.45rem;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22), 0 0 12px rgba(251, 191, 36, 0.35);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.22),
+    0 0 12px rgba(251, 191, 36, 0.35);
   transform: translateX(-50%);
   animation: game-afk-scene-boss-callout 1.6s ease-in-out infinite;
   pointer-events: none;
 }
 
 @keyframes game-afk-scene-boss-callout {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.92;
     transform: translateX(-50%) translateY(0);
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22), 0 0 10px rgba(251, 191, 36, 0.28);
+    box-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.22),
+      0 0 10px rgba(251, 191, 36, 0.28);
   }
   50% {
     opacity: 1;
     transform: translateX(-50%) translateY(-1px);
-    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2), 0 0 16px rgba(251, 191, 36, 0.5);
+    box-shadow:
+      0 3px 0 rgba(0, 0, 0, 0.2),
+      0 0 16px rgba(251, 191, 36, 0.5);
   }
 }
 
@@ -1230,8 +1471,15 @@
 }
 
 @keyframes game-afk-mascot-sword-shadow {
-  0%, 100% { transform: scaleX(1); opacity: 1; }
-  38% { transform: scaleX(1.18) scaleY(0.9); opacity: 0.8; }
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  38% {
+    transform: scaleX(1.18) scaleY(0.9);
+    opacity: 0.8;
+  }
 }
 
 .game-afk-mascot__sword-release {
@@ -1242,22 +1490,42 @@
   width: 1rem;
   height: 1rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(254, 240, 138, 0.55) 38%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(254, 240, 138, 0.55) 38%,
+    transparent 72%
+  );
   opacity: 0;
   animation: game-afk-sword-release-flash 0.38s ease-out 0.28s forwards;
   pointer-events: none;
 }
 
 @keyframes game-afk-sword-release-flash {
-  0% { opacity: 0; transform: scale(0.3); }
-  35% { opacity: 1; transform: scale(1.2); }
-  100% { opacity: 0; transform: scale(1.5); }
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
 }
 
 @keyframes game-afk-mascot-lunge-fig {
-  0% { transform: translateX(0) translateY(0); }
-  40% { transform: translateX(10px) translateY(-2px); }
-  100% { transform: translateX(2px) translateY(0); }
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  40% {
+    transform: translateX(10px) translateY(-2px);
+  }
+  100% {
+    transform: translateX(2px) translateY(0);
+  }
 }
 
 @keyframes game-afk-mascot-bow-draw {
@@ -1292,8 +1560,15 @@
 }
 
 @keyframes game-afk-mascot-bow-shadow {
-  0%, 100% { transform: scaleX(1); opacity: 1; }
-  42% { transform: scaleX(1.22) scaleY(0.88); opacity: 0.78; }
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  42% {
+    transform: scaleX(1.22) scaleY(0.88);
+    opacity: 0.78;
+  }
 }
 
 .game-afk-mascot__magic-burst {
@@ -1303,16 +1578,30 @@
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(110, 231, 183, 0.85) 0%, rgba(16, 185, 129, 0.35) 45%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(110, 231, 183, 0.85) 0%,
+    rgba(16, 185, 129, 0.35) 45%,
+    transparent 72%
+  );
   opacity: 0;
   animation: game-afk-mascot-magic-burst 0.55s ease-out forwards;
   pointer-events: none;
 }
 
 @keyframes game-afk-mascot-magic-burst {
-  0% { opacity: 0; transform: scale(0.4); }
-  35% { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 0; transform: scale(1.35); }
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
 }
 
 .game-afk-mascot--idle {
@@ -1329,8 +1618,13 @@
 }
 
 @keyframes game-afk-mascot-breathe {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .game-afk-mascot__cape,
@@ -1446,7 +1740,12 @@
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(186, 230, 253, 0.55) 35%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(186, 230, 253, 0.55) 35%,
+    transparent 70%
+  );
   opacity: 0;
   transform: scale(0.2);
   animation: game-afk-arrow-impact-burst 0.38s ease-out 0.34s forwards;
@@ -1548,15 +1847,33 @@
 }
 
 @keyframes game-afk-arrow-impact-burst {
-  0% { opacity: 0; transform: scale(0.2); }
-  30% { opacity: 1; transform: scale(1.25); }
-  100% { opacity: 0; transform: scale(1.65); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.65);
+  }
 }
 
 @keyframes game-afk-arrow-impact-ring {
-  0% { opacity: 0; transform: scale(0.35, 0.5); }
-  28% { opacity: 0.95; transform: scale(1.15, 0.75); }
-  100% { opacity: 0; transform: scale(1.85, 0.35); }
+  0% {
+    opacity: 0;
+    transform: scale(0.35, 0.5);
+  }
+  28% {
+    opacity: 0.95;
+    transform: scale(1.15, 0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.85, 0.35);
+  }
 }
 
 /* Flecha — animações de crítico */
@@ -1602,7 +1919,13 @@
   width: 2.8rem;
   height: 2.8rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(253, 224, 71, 0.7) 28%, rgba(249, 115, 22, 0.45) 52%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(253, 224, 71, 0.7) 28%,
+    rgba(249, 115, 22, 0.45) 52%,
+    transparent 72%
+  );
   opacity: 0;
   pointer-events: none;
   animation: game-afk-scene-arrow-crit-nova 0.46s ease-out 0.28s forwards;
@@ -1611,7 +1934,13 @@
 .game-afk-arrow-impact--crit {
   width: 2.2rem;
   height: 2.2rem;
-  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(253, 224, 71, 0.75) 30%, rgba(249, 115, 22, 0.55) 55%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(253, 224, 71, 0.75) 30%,
+    rgba(249, 115, 22, 0.55) 55%,
+    transparent 72%
+  );
   animation: game-afk-arrow-impact-burst-crit 0.44s ease-out 0.28s forwards;
 }
 
@@ -1623,43 +1952,112 @@
 }
 
 @keyframes game-afk-scene-arrow-flight-crit {
-  0% { opacity: 0; transform: translate(0, 0) scaleX(0.25) rotate(-1deg); }
-  5% { opacity: 1; transform: translate(0.5rem, 0) scaleX(1) rotate(-1deg); }
-  50% { opacity: 1; transform: translate(9.2rem, 0) scaleX(1.12) rotate(-1deg); }
-  82% { opacity: 1; transform: translate(13.2rem, 0) scaleX(1.04) rotate(-1deg); }
-  100% { opacity: 0; transform: translate(13.6rem, 0) scaleX(0.5) rotate(-1deg); visibility: hidden; }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scaleX(0.25) rotate(-1deg);
+  }
+  5% {
+    opacity: 1;
+    transform: translate(0.5rem, 0) scaleX(1) rotate(-1deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(9.2rem, 0) scaleX(1.12) rotate(-1deg);
+  }
+  82% {
+    opacity: 1;
+    transform: translate(13.2rem, 0) scaleX(1.04) rotate(-1deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(13.6rem, 0) scaleX(0.5) rotate(-1deg);
+    visibility: hidden;
+  }
 }
 
 @keyframes game-afk-scene-arrow-trail-crit {
-  0% { opacity: 0; transform: translate(0, 0) scaleX(0.3); }
-  12% { opacity: 1; transform: translate(0.3rem, 0) scaleX(1.1); }
-  55% { opacity: 0.85; transform: translate(6.5rem, 0) scaleX(3); }
-  100% { opacity: 0; transform: translate(13rem, 0) scaleX(3.4); visibility: hidden; }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scaleX(0.3);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(0.3rem, 0) scaleX(1.1);
+  }
+  55% {
+    opacity: 0.85;
+    transform: translate(6.5rem, 0) scaleX(3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(13rem, 0) scaleX(3.4);
+    visibility: hidden;
+  }
 }
 
 @keyframes game-afk-scene-arrow-sonic-crit {
-  0% { opacity: 0; transform: translate(0, 0) scale(0.3, 0.5); }
-  15% { opacity: 1; transform: translate(0.8rem, 0) scale(1, 0.62); }
-  55% { opacity: 0.75; transform: translate(6.8rem, 0) scale(1.85, 0.48); }
-  100% { opacity: 0; transform: translate(13.2rem, 0) scale(3, 0.28); visibility: hidden; }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3, 0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(0.8rem, 0) scale(1, 0.62);
+  }
+  55% {
+    opacity: 0.75;
+    transform: translate(6.8rem, 0) scale(1.85, 0.48);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(13.2rem, 0) scale(3, 0.28);
+    visibility: hidden;
+  }
 }
 
 @keyframes game-afk-scene-arrow-crit-nova {
-  0% { opacity: 0; transform: scale(0.15) rotate(0deg); }
-  22% { opacity: 1; transform: scale(1.35) rotate(18deg); }
-  100% { opacity: 0; transform: scale(1.85) rotate(36deg); }
+  0% {
+    opacity: 0;
+    transform: scale(0.15) rotate(0deg);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1.35) rotate(18deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.85) rotate(36deg);
+  }
 }
 
 @keyframes game-afk-arrow-impact-burst-crit {
-  0% { opacity: 0; transform: scale(0.15); }
-  24% { opacity: 1; transform: scale(1.55); }
-  100% { opacity: 0; transform: scale(2.1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  24% {
+    opacity: 1;
+    transform: scale(1.55);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
 }
 
 @keyframes game-afk-arrow-impact-ring-crit {
-  0% { opacity: 0; transform: scale(0.25, 0.45); }
-  24% { opacity: 1; transform: scale(1.35, 0.9); }
-  100% { opacity: 0; transform: scale(2.4, 0.4); }
+  0% {
+    opacity: 0;
+    transform: scale(0.25, 0.45);
+  }
+  24% {
+    opacity: 1;
+    transform: scale(1.35, 0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4, 0.4);
+  }
 }
 
 /* Flecha legada no mascote (não usada — mantida para referência de rig) */
@@ -1709,7 +2107,12 @@
   width: 0.55rem;
   height: 0.34rem;
   margin-top: -0.08rem;
-  background: linear-gradient(90deg, transparent, rgba(254, 243, 199, 0.85) 40%, rgba(251, 191, 36, 0.55));
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(254, 243, 199, 0.85) 40%,
+    rgba(251, 191, 36, 0.55)
+  );
   border-radius: 0 2px 2px 0;
   opacity: 0;
   transform-origin: left center;
@@ -1725,7 +2128,13 @@
   width: 2.4rem;
   height: 0.42rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 18%, rgba(254, 243, 199, 0.55) 55%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 18%,
+    rgba(254, 243, 199, 0.55) 55%,
+    transparent 100%
+  );
   opacity: 0;
   transform: rotate(-6deg);
   animation: game-afk-arrow-streak 0.44s ease-out 0.1s forwards;
@@ -1740,7 +2149,12 @@
   width: 0.85rem;
   height: 0.85rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(251, 191, 36, 0.45) 42%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(254, 243, 199, 0.95) 0%,
+    rgba(251, 191, 36, 0.45) 42%,
+    transparent 72%
+  );
   opacity: 0;
   animation: game-afk-bow-release-flash 0.42s ease-out forwards;
   pointer-events: none;
@@ -1749,14 +2163,26 @@
 .game-afk-mascot__bow-release--crit {
   width: 1.05rem;
   height: 1.05rem;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(253, 224, 71, 0.75) 35%, rgba(249, 115, 22, 0.45) 62%, transparent 78%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(253, 224, 71, 0.75) 35%,
+    rgba(249, 115, 22, 0.45) 62%,
+    transparent 78%
+  );
   animation: game-afk-bow-release-flash-crit 0.42s ease-out forwards;
 }
 
 .game-afk-mascot__sword-release--crit {
   width: 1.2rem;
   height: 1.2rem;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.98) 0%, rgba(253, 224, 71, 0.7) 38%, rgba(249, 115, 22, 0.5) 65%, transparent 78%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(253, 224, 71, 0.7) 38%,
+    rgba(249, 115, 22, 0.5) 65%,
+    transparent 78%
+  );
   animation: game-afk-sword-release-flash-crit 0.4s ease-out 0.22s forwards;
 }
 
@@ -1769,29 +2195,71 @@
 }
 
 @keyframes game-afk-bow-release-flash-crit {
-  0% { opacity: 0; transform: scale(0.25); }
-  28% { opacity: 1; transform: scale(1.35); }
-  100% { opacity: 0; transform: scale(1.65); }
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.65);
+  }
 }
 
 @keyframes game-afk-sword-release-flash-crit {
-  0% { opacity: 0; transform: scale(0.25); }
-  32% { opacity: 1; transform: scale(1.45); }
-  100% { opacity: 0; transform: scale(1.75); }
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  32% {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.75);
+  }
 }
 
 @keyframes game-afk-mascot-sword-strike-crit {
-  0% { transform: translateX(0) translateY(0) scale(1) rotate(0deg); filter: brightness(1); }
-  14% { transform: translateX(-8px) translateY(2px) scale(0.95) rotate(-6deg); filter: brightness(0.92); }
-  34% { transform: translateX(10px) translateY(-4px) scale(1.06) rotate(3deg); filter: brightness(1.25) drop-shadow(0 0 8px rgba(251, 191, 36, 0.65)); }
-  100% { transform: translateX(2px) translateY(0) scale(1) rotate(0deg); filter: brightness(1); }
+  0% {
+    transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  14% {
+    transform: translateX(-8px) translateY(2px) scale(0.95) rotate(-6deg);
+    filter: brightness(0.92);
+  }
+  34% {
+    transform: translateX(10px) translateY(-4px) scale(1.06) rotate(3deg);
+    filter: brightness(1.25) drop-shadow(0 0 8px rgba(251, 191, 36, 0.65));
+  }
+  100% {
+    transform: translateX(2px) translateY(0) scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
 }
 
 @keyframes game-afk-mascot-bow-draw-crit {
-  0% { transform: translateX(0) translateY(0) scale(1) rotate(0deg); filter: brightness(1); }
-  18% { transform: translateX(-6px) translateY(1px) scale(0.97) rotate(-2deg); filter: brightness(0.94); }
-  36% { transform: translateX(4px) translateY(-2px) scale(1.03) rotate(1deg); filter: brightness(1.18) drop-shadow(0 0 6px rgba(249, 115, 22, 0.55)); }
-  100% { transform: translateX(1px) translateY(0) scale(1) rotate(0deg); filter: brightness(1); }
+  0% {
+    transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  18% {
+    transform: translateX(-6px) translateY(1px) scale(0.97) rotate(-2deg);
+    filter: brightness(0.94);
+  }
+  36% {
+    transform: translateX(4px) translateY(-2px) scale(1.03) rotate(1deg);
+    filter: brightness(1.18) drop-shadow(0 0 6px rgba(249, 115, 22, 0.55));
+  }
+  100% {
+    transform: translateX(1px) translateY(0) scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
 }
 
 .game-afk-mascot__arrow-spark {
@@ -1857,28 +2325,68 @@
 }
 
 @keyframes game-afk-arrow-tail {
-  0%, 24% { opacity: 0; transform: translate(0, 0) scaleX(0.3); }
-  34% { opacity: 0.9; transform: translate(0.15rem, -0.06rem) scaleX(1); }
-  52% { opacity: 0.65; transform: translate(3.2rem, -0.35rem) scaleX(1.15); }
-  100% { opacity: 0; transform: translate(7.5rem, -0.2rem) scaleX(0.7); }
+  0%,
+  24% {
+    opacity: 0;
+    transform: translate(0, 0) scaleX(0.3);
+  }
+  34% {
+    opacity: 0.9;
+    transform: translate(0.15rem, -0.06rem) scaleX(1);
+  }
+  52% {
+    opacity: 0.65;
+    transform: translate(3.2rem, -0.35rem) scaleX(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(7.5rem, -0.2rem) scaleX(0.7);
+  }
 }
 
 @keyframes game-afk-arrow-streak {
-  0% { opacity: 0; transform: rotate(-6deg) translateX(-0.5rem) scaleX(0.35); }
-  28% { opacity: 0.85; transform: rotate(-4deg) translateX(0.4rem) scaleX(1.05); }
-  100% { opacity: 0; transform: rotate(-2deg) translateX(5.5rem) scaleX(0.65); }
+  0% {
+    opacity: 0;
+    transform: rotate(-6deg) translateX(-0.5rem) scaleX(0.35);
+  }
+  28% {
+    opacity: 0.85;
+    transform: rotate(-4deg) translateX(0.4rem) scaleX(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-2deg) translateX(5.5rem) scaleX(0.65);
+  }
 }
 
 @keyframes game-afk-bow-release-flash {
-  0% { opacity: 0; transform: scale(0.35); }
-  32% { opacity: 1; transform: scale(1.15); }
-  100% { opacity: 0; transform: scale(1.45); }
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  32% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
 }
 
 @keyframes game-afk-arrow-spark {
-  0% { opacity: 0; transform: scale(0.2) translate(0, 0); }
-  35% { opacity: 1; transform: scale(1.35); }
-  100% { opacity: 0; transform: scale(0.5) translate(12px, -6px); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2) translate(0, 0);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) translate(12px, -6px);
+  }
 }
 
 .game-afk-mascot__shadow {
@@ -1909,8 +2417,13 @@
 }
 
 @keyframes game-afk-cape-sway {
-  0%, 100% { transform: skewX(-4deg) scaleX(1); }
-  50% { transform: skewX(-8deg) scaleX(1.04); }
+  0%,
+  100% {
+    transform: skewX(-4deg) scaleX(1);
+  }
+  50% {
+    transform: skewX(-8deg) scaleX(1.04);
+  }
 }
 
 .game-afk-mascot__legs {
@@ -2038,12 +2551,19 @@
 }
 
 @keyframes game-afk-draw-arm {
-  0% { transform: translateX(0) rotate(-18deg); }
-  32% { transform: translateX(-7px) rotate(-32deg); }
-  48% { transform: translateX(3px) rotate(-6deg); }
-  100% { transform: translateX(0) rotate(-18deg); }
+  0% {
+    transform: translateX(0) rotate(-18deg);
+  }
+  32% {
+    transform: translateX(-7px) rotate(-32deg);
+  }
+  48% {
+    transform: translateX(3px) rotate(-6deg);
+  }
+  100% {
+    transform: translateX(0) rotate(-18deg);
+  }
 }
-
 
 .game-afk-mascot__profile {
   display: block;
@@ -2130,15 +2650,29 @@
 }
 
 @keyframes game-afk-bow-string-draw {
-  0% { d: path('M16 6 L16 26 L16 46'); }
-  34% { d: path('M16 6 L4 26 L16 46'); }
-  46% { d: path('M16 6 L16 26 L16 46'); }
-  100% { d: path('M16 6 L16 26 L16 46'); }
+  0% {
+    d: path('M16 6 L16 26 L16 46');
+  }
+  34% {
+    d: path('M16 6 L4 26 L16 46');
+  }
+  46% {
+    d: path('M16 6 L16 26 L16 46');
+  }
+  100% {
+    d: path('M16 6 L16 26 L16 46');
+  }
 }
 
 @keyframes game-afk-bow-nock-hide {
-  0%, 42% { opacity: 1; }
-  46%, 100% { opacity: 0; }
+  0%,
+  42% {
+    opacity: 1;
+  }
+  46%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .game-afk-mascot__bow-rig--shoot {
@@ -2146,9 +2680,15 @@
 }
 
 @keyframes game-afk-bow-recoil {
-  0% { transform: rotate(0deg); }
-  44% { transform: rotate(-4deg) translateX(1px); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  44% {
+    transform: rotate(-4deg) translateX(1px);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 .game-afk-mascot__arrow-shot {
@@ -2187,12 +2727,32 @@
 }
 
 @keyframes game-afk-arrow-from-bow {
-  0% { transform: translateX(0) scaleX(0.35); opacity: 0; }
-  14% { transform: translateX(0) scaleX(1); opacity: 1; }
-  30% { transform: translateX(0.15rem) scaleX(1); opacity: 1; }
-  64% { transform: translateX(6.75rem) scaleX(1); opacity: 1; }
-  68% { transform: translateX(6.75rem) scaleX(0.55); opacity: 0; visibility: hidden; }
-  100% { transform: translateX(6.75rem) scaleX(0.55); opacity: 0; visibility: hidden; }
+  0% {
+    transform: translateX(0) scaleX(0.35);
+    opacity: 0;
+  }
+  14% {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translateX(0.15rem) scaleX(1);
+    opacity: 1;
+  }
+  64% {
+    transform: translateX(6.75rem) scaleX(1);
+    opacity: 1;
+  }
+  68% {
+    transform: translateX(6.75rem) scaleX(0.55);
+    opacity: 0;
+    visibility: hidden;
+  }
+  100% {
+    transform: translateX(6.75rem) scaleX(0.55);
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
 .game-afk-mascot__sword-rig {
@@ -2208,9 +2768,15 @@
 }
 
 @keyframes game-afk-sword-swing-rig {
-  0% { transform: rotate(-12deg); }
-  45% { transform: rotate(38deg) translateX(3px); }
-  100% { transform: rotate(-12deg); }
+  0% {
+    transform: rotate(-12deg);
+  }
+  45% {
+    transform: rotate(38deg) translateX(3px);
+  }
+  100% {
+    transform: rotate(-12deg);
+  }
 }
 
 .game-afk-mascot__sword {
@@ -2256,27 +2822,51 @@
 }
 
 @keyframes game-afk-mascot-lunge {
-  0% { transform: translateX(0) translateY(0) scale(1); }
-  40% { transform: translateX(16px) translateY(-2px) scale(1.05); }
-  100% { transform: translateX(2px) translateY(0) scale(1); }
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  40% {
+    transform: translateX(16px) translateY(-2px) scale(1.05);
+  }
+  100% {
+    transform: translateX(2px) translateY(0) scale(1);
+  }
 }
 
 @keyframes game-afk-hero-bow-recoil {
-  0% { transform: translateX(0); }
-  40% { transform: translateX(4px) scale(0.96); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(4px) scale(0.96);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 @keyframes game-afk-hero-lunge {
-  0% { transform: translateX(0); }
-  35% { transform: translateX(10px) scale(1.06); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(10px) scale(1.06);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 @keyframes game-afk-sword-swing {
-  0% { transform: rotate(-55deg); }
-  45% { transform: rotate(42deg) translateX(4px); }
-  100% { transform: rotate(-8deg); }
+  0% {
+    transform: rotate(-55deg);
+  }
+  45% {
+    transform: rotate(42deg) translateX(4px);
+  }
+  100% {
+    transform: rotate(-8deg);
+  }
 }
 
 .game-afk-slash-wave {
@@ -2322,7 +2912,13 @@
   width: 2.8rem;
   height: 0.5rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(254, 243, 199, 0.5) 55%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(254, 243, 199, 0.5) 55%,
+    transparent 100%
+  );
   opacity: 0;
   transform: rotate(-8deg);
   pointer-events: none;
@@ -2358,10 +2954,22 @@
 }
 
 @keyframes game-afk-slash-streak-flight {
-  0% { opacity: 0; transform: rotate(-8deg) translate(0, 0) scaleX(0.3); }
-  18% { opacity: 0.85; transform: rotate(-8deg) translate(1.4rem, 0) scaleX(1); }
-  52% { opacity: 0.6; transform: rotate(-8deg) translate(9.8rem, 0) scaleX(1.12); }
-  100% { opacity: 0; transform: rotate(-8deg) translate(12.8rem, 0) scaleX(0.45); }
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg) translate(0, 0) scaleX(0.3);
+  }
+  18% {
+    opacity: 0.85;
+    transform: rotate(-8deg) translate(1.4rem, 0) scaleX(1);
+  }
+  52% {
+    opacity: 0.6;
+    transform: rotate(-8deg) translate(9.8rem, 0) scaleX(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-8deg) translate(12.8rem, 0) scaleX(0.45);
+  }
 }
 
 /* Espada — animações de crítico */
@@ -2384,7 +2992,13 @@
 
 .game-afk-slash-streak--crit {
   height: 0.62rem;
-  background: linear-gradient(90deg, transparent 0%, rgba(249, 115, 22, 0.2) 15%, rgba(253, 224, 71, 0.75) 52%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(249, 115, 22, 0.2) 15%,
+    rgba(253, 224, 71, 0.75) 52%,
+    transparent 100%
+  );
   animation: game-afk-slash-streak-flight-crit 0.36s linear 0.02s forwards;
 }
 
@@ -2449,7 +3063,13 @@
 .game-afk-sword-impact--crit {
   width: 2.6rem;
   height: 2.6rem;
-  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(253, 224, 71, 0.8) 28%, rgba(249, 115, 22, 0.55) 55%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(253, 224, 71, 0.8) 28%,
+    rgba(249, 115, 22, 0.55) 55%,
+    transparent 72%
+  );
   animation: game-afk-sword-impact-burst-crit 0.46s ease-out 0.16s forwards;
 }
 
@@ -2466,34 +3086,84 @@
 }
 
 @keyframes game-afk-slash-wave-flight-crit {
-  0% { opacity: 0; transform: translate(0, 0) rotate(-10deg) scale(0.4); }
-  8% { opacity: 1; transform: translate(0.9rem, 0) rotate(-10deg) scale(0.95); }
-  45% { opacity: 1; transform: translate(9.5rem, 0) rotate(-10deg) scale(1.18); }
-  100% { opacity: 0; transform: translate(13.4rem, 0) rotate(-10deg) scale(0.55); visibility: hidden; }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(-10deg) scale(0.4);
+  }
+  8% {
+    opacity: 1;
+    transform: translate(0.9rem, 0) rotate(-10deg) scale(0.95);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(9.5rem, 0) rotate(-10deg) scale(1.18);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(13.4rem, 0) rotate(-10deg) scale(0.55);
+    visibility: hidden;
+  }
 }
 
 @keyframes game-afk-slash-streak-flight-crit {
-  0% { opacity: 0; transform: rotate(-8deg) translate(0, 0) scaleX(0.35); }
-  20% { opacity: 1; transform: rotate(-8deg) translate(1.8rem, 0) scaleX(1.15); }
-  100% { opacity: 0; transform: rotate(-8deg) translate(13rem, 0) scaleX(0.5); }
+  0% {
+    opacity: 0;
+    transform: rotate(-8deg) translate(0, 0) scaleX(0.35);
+  }
+  20% {
+    opacity: 1;
+    transform: rotate(-8deg) translate(1.8rem, 0) scaleX(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-8deg) translate(13rem, 0) scaleX(0.5);
+  }
 }
 
 @keyframes game-afk-slash-crit-wave {
-  0% { opacity: 0; transform: translate(0, 0) rotate(22deg) scale(0.35); }
-  18% { opacity: 0.95; transform: translate(1.2rem, 0) rotate(22deg) scale(1); }
-  100% { opacity: 0; transform: translate(12.5rem, 0) rotate(22deg) scale(0.5); visibility: hidden; }
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(22deg) scale(0.35);
+  }
+  18% {
+    opacity: 0.95;
+    transform: translate(1.2rem, 0) rotate(22deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(12.5rem, 0) rotate(22deg) scale(0.5);
+    visibility: hidden;
+  }
 }
 
 @keyframes game-afk-sword-crit-cross {
-  0% { opacity: 0; transform: scale(0.2) rotate(0deg); }
-  28% { opacity: 1; transform: scale(1.2) rotate(8deg); }
-  100% { opacity: 0; transform: scale(1.45) rotate(16deg); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1.2) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45) rotate(16deg);
+  }
 }
 
 @keyframes game-afk-sword-impact-burst-crit {
-  0% { opacity: 0; transform: scale(0.15); }
-  26% { opacity: 1; transform: scale(1.55); }
-  100% { opacity: 0; transform: scale(2.05); }
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  26% {
+    opacity: 1;
+    transform: scale(1.55);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.05);
+  }
 }
 
 .game-afk-sword-impact {
@@ -2504,7 +3174,12 @@
   width: 2rem;
   height: 2rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.6) 32%, transparent 68%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(251, 191, 36, 0.6) 32%,
+    transparent 68%
+  );
   opacity: 0;
   transform: scale(0.2);
   animation: game-afk-sword-impact-burst 0.44s ease-out 0.2s forwards;
@@ -2519,7 +3194,13 @@
   width: 2.4rem;
   height: 3px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.95) 30%, #fbbf24 55%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.95) 30%,
+    #fbbf24 55%,
+    transparent 100%
+  );
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.85);
   opacity: 0;
   pointer-events: none;
@@ -2559,28 +3240,67 @@
 }
 
 @keyframes game-afk-sword-impact-burst {
-  0% { opacity: 0; transform: scale(0.2); }
-  28% { opacity: 1; transform: scale(1.35); }
-  55% { opacity: 0.75; transform: scale(1.55); }
-  100% { opacity: 0; transform: scale(1.85); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  55% {
+    opacity: 0.75;
+    transform: scale(1.55);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.85);
+  }
 }
 
 @keyframes game-afk-sword-impact-cut-a {
-  0% { opacity: 0; transform: rotate(-42deg) scaleX(0.15); }
-  30% { opacity: 1; transform: rotate(-42deg) scaleX(1.15); }
-  100% { opacity: 0; transform: rotate(-42deg) scaleX(0.85); }
+  0% {
+    opacity: 0;
+    transform: rotate(-42deg) scaleX(0.15);
+  }
+  30% {
+    opacity: 1;
+    transform: rotate(-42deg) scaleX(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-42deg) scaleX(0.85);
+  }
 }
 
 @keyframes game-afk-sword-impact-cut-b {
-  0% { opacity: 0; transform: rotate(38deg) scaleX(0.15); }
-  30% { opacity: 1; transform: rotate(38deg) scaleX(1.1); }
-  100% { opacity: 0; transform: rotate(38deg) scaleX(0.8); }
+  0% {
+    opacity: 0;
+    transform: rotate(38deg) scaleX(0.15);
+  }
+  30% {
+    opacity: 1;
+    transform: rotate(38deg) scaleX(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(38deg) scaleX(0.8);
+  }
 }
 
 @keyframes game-afk-sword-impact-spark {
-  0% { opacity: 0; transform: scale(0.2) translate(0, 0); }
-  35% { opacity: 1; transform: scale(1.4); }
-  100% { opacity: 0; transform: scale(0.5) translate(-10px, 8px); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2) translate(0, 0);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) translate(-10px, 8px);
+  }
 }
 
 .game-afk-slash {
@@ -2615,15 +3335,33 @@
 }
 
 @keyframes game-afk-slash-flash-1 {
-  0% { opacity: 0; transform: rotate(-50deg) scale(0.4); }
-  32% { opacity: 1; transform: rotate(5deg) scale(1.15); }
-  100% { opacity: 0; transform: rotate(48deg) scale(0.75); }
+  0% {
+    opacity: 0;
+    transform: rotate(-50deg) scale(0.4);
+  }
+  32% {
+    opacity: 1;
+    transform: rotate(5deg) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(48deg) scale(0.75);
+  }
 }
 
 @keyframes game-afk-slash-flash-2 {
-  0% { opacity: 0; transform: rotate(-70deg) scale(0.3); }
-  38% { opacity: 0.85; transform: rotate(-15deg) scale(1); }
-  100% { opacity: 0; transform: rotate(25deg) scale(0.65); }
+  0% {
+    opacity: 0;
+    transform: rotate(-70deg) scale(0.3);
+  }
+  38% {
+    opacity: 0.85;
+    transform: rotate(-15deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(25deg) scale(0.65);
+  }
 }
 
 .game-afk-hero--espada.game-afk-hero--attack .game-afk-slash,
@@ -2632,9 +3370,18 @@
 }
 
 @keyframes game-afk-slash-flash {
-  0% { opacity: 0; transform: rotate(-30deg) scale(0.5); }
-  40% { opacity: 1; transform: rotate(20deg) scale(1.1); }
-  100% { opacity: 0; transform: rotate(60deg) scale(0.8); }
+  0% {
+    opacity: 0;
+    transform: rotate(-30deg) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: rotate(20deg) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(60deg) scale(0.8);
+  }
 }
 
 /* Enemy slimes */
@@ -2657,7 +3404,9 @@
 }
 
 .game-afk-enemy--elite .game-afk-slime__blob {
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.45), 3px 4px 0 rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 0 10px rgba(168, 85, 247, 0.45),
+    3px 4px 0 rgba(0, 0, 0, 0.22);
 }
 
 .game-afk-enemy__boss-aura {
@@ -2670,8 +3419,15 @@
 }
 
 @keyframes game-afk-boss-aura {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 .game-afk-enemy--hit {
@@ -2687,22 +3443,52 @@
 }
 
 @keyframes game-afk-enemy-hit {
-  0% { transform: translateX(0) scale(1); filter: brightness(1); }
-  25% { transform: translateX(10px) scale(0.9); filter: brightness(1.55); }
-  55% { transform: translateX(6px) scale(0.94); filter: brightness(1.2); }
-  100% { transform: translateX(4px) scale(0.97); filter: brightness(1); }
+  0% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+  }
+  25% {
+    transform: translateX(10px) scale(0.9);
+    filter: brightness(1.55);
+  }
+  55% {
+    transform: translateX(6px) scale(0.94);
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: translateX(4px) scale(0.97);
+    filter: brightness(1);
+  }
 }
 
 @keyframes game-afk-enemy-crit-hit {
-  0% { transform: translateX(0) scale(1); filter: brightness(1); }
-  18% { transform: translateX(14px) scale(0.84); filter: brightness(1.85) saturate(1.25); }
-  38% { transform: translateX(8px) scale(0.9); filter: brightness(1.45); }
-  100% { transform: translateX(4px) scale(0.96); filter: brightness(1); }
+  0% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+  }
+  18% {
+    transform: translateX(14px) scale(0.84);
+    filter: brightness(1.85) saturate(1.25);
+  }
+  38% {
+    transform: translateX(8px) scale(0.9);
+    filter: brightness(1.45);
+  }
+  100% {
+    transform: translateX(4px) scale(0.96);
+    filter: brightness(1);
+  }
 }
 
 @keyframes game-afk-enemy-die {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.6) translateY(8px); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.6) translateY(8px);
+  }
 }
 
 .game-afk-enemy__sprite {
@@ -2716,9 +3502,16 @@
 }
 
 @keyframes game-afk-slime-idle {
-  0%, 100% { transform: translateY(0) scaleX(1) scaleY(1); }
-  30% { transform: translateY(-3px) scaleX(1.05) scaleY(0.96); }
-  60% { transform: translateY(-5px) scaleX(0.97) scaleY(1.04); }
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1);
+  }
+  30% {
+    transform: translateY(-3px) scaleX(1.05) scaleY(0.96);
+  }
+  60% {
+    transform: translateY(-5px) scaleX(0.97) scaleY(1.04);
+  }
 }
 
 .game-afk-slime__blob {
@@ -2904,7 +3697,16 @@
   margin-left: -0.22rem;
   background: radial-gradient(circle at 50% 50%, #fde047 0%, #f59e0b 55%, #b45309 100%);
   clip-path: polygon(
-    50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
   );
   border-radius: 0;
 }
@@ -2934,7 +3736,13 @@
   width: 0.44rem;
   height: 0.54rem;
   margin-left: -0.22rem;
-  background: radial-gradient(circle at 45% 38%, #a5f3fc 0%, #22d3ee 38%, #0891b2 72%, #164e63 100%);
+  background: radial-gradient(
+    circle at 45% 38%,
+    #a5f3fc 0%,
+    #22d3ee 38%,
+    #0891b2 72%,
+    #164e63 100%
+  );
 }
 
 .game-afk-slime__face--eyes-anime .game-afk-slime__iris::after {
@@ -3292,13 +4100,23 @@
 }
 
 @keyframes game-afk-wing-flap {
-  0%, 100% { transform: rotate(-8deg) scaleY(1); }
-  50% { transform: rotate(-16deg) scaleY(0.9); }
+  0%,
+  100% {
+    transform: rotate(-8deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(-16deg) scaleY(0.9);
+  }
 }
 
 @keyframes game-afk-wing-flap-r {
-  0%, 100% { transform: scaleX(-1) rotate(-8deg) scaleY(1); }
-  50% { transform: scaleX(-1) rotate(-16deg) scaleY(0.9); }
+  0%,
+  100% {
+    transform: scaleX(-1) rotate(-8deg) scaleY(1);
+  }
+  50% {
+    transform: scaleX(-1) rotate(-16deg) scaleY(0.9);
+  }
 }
 
 .game-afk-slime__horn {
@@ -3354,8 +4172,16 @@
   z-index: 1;
 }
 
-.game-afk-slime__bone--a { top: 40%; left: 25%; transform: rotate(35deg); }
-.game-afk-slime__bone--b { top: 52%; right: 22%; transform: rotate(-20deg); }
+.game-afk-slime__bone--a {
+  top: 40%;
+  left: 25%;
+  transform: rotate(35deg);
+}
+.game-afk-slime__bone--b {
+  top: 52%;
+  right: 22%;
+  transform: rotate(-20deg);
+}
 
 .game-afk-slime__skull {
   position: absolute;
@@ -3584,8 +4410,13 @@
   border-top: 0.35rem solid #0ea5e9;
 }
 @keyframes afk-crystal-shard-pulse {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.5)); }
-  50%       { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.9)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.9));
+  }
 }
 
 /* storm-bolt — raio do Slime Trovão */
@@ -3611,8 +4442,15 @@
   text-shadow: 0 0 6px rgba(167, 139, 250, 0.9);
 }
 @keyframes afk-storm-bolt-flash {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%       { opacity: 1; transform: scale(1.15); }
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
 }
 
 /* magic_rabbit blob — roxo-lavanda suave com brilho */
@@ -3625,8 +4463,21 @@
   animation: game-afk-magic-rabbit-pulse 1.8s ease-in-out infinite;
 }
 @keyframes game-afk-magic-rabbit-pulse {
-  0%, 100% { filter: brightness(1); box-shadow: 0 0 16px rgba(192, 132, 252, 0.6), inset 0 -6px 12px rgba(255,255,255,0.35), 2px 3px 0 rgba(0,0,0,0.14); }
-  50%       { filter: brightness(1.1); box-shadow: 0 0 24px rgba(192, 132, 252, 0.85), inset 0 -6px 12px rgba(255,255,255,0.45), 2px 3px 0 rgba(0,0,0,0.14); }
+  0%,
+  100% {
+    filter: brightness(1);
+    box-shadow:
+      0 0 16px rgba(192, 132, 252, 0.6),
+      inset 0 -6px 12px rgba(255, 255, 255, 0.35),
+      2px 3px 0 rgba(0, 0, 0, 0.14);
+  }
+  50% {
+    filter: brightness(1.1);
+    box-shadow:
+      0 0 24px rgba(192, 132, 252, 0.85),
+      inset 0 -6px 12px rgba(255, 255, 255, 0.45),
+      2px 3px 0 rgba(0, 0, 0, 0.14);
+  }
 }
 
 .game-afk-slime__crown {
@@ -3639,7 +4490,15 @@
   background: linear-gradient(180deg, #fef9c3 0%, #fde047 32%, #fbbf24 64%, #d97706 100%);
   border: 2px solid var(--afk-ink);
   clip-path: polygon(
-    0 100%, 8% 18%, 20% 100%, 34% 12%, 50% 100%, 66% 12%, 80% 100%, 92% 18%, 100% 100%
+    0 100%,
+    8% 18%,
+    20% 100%,
+    34% 12%,
+    50% 100%,
+    66% 12%,
+    80% 100%,
+    92% 18%,
+    100% 100%
   );
   z-index: 6;
   filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.22));
@@ -3676,7 +4535,9 @@
   border: 2.5px solid var(--afk-ink);
   border-radius: 0.55rem 0.55rem 0 0;
   z-index: 5;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.12);
 }
 
 .game-afk-slime__hood::after {
@@ -3721,9 +4582,18 @@
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
 }
 
-.game-afk-slime__mini-head--l { left: 10%; transform: rotate(-6deg); }
-.game-afk-slime__mini-head--c { left: 50%; margin-left: -0.2rem; }
-.game-afk-slime__mini-head--r { right: 10%; transform: rotate(6deg); }
+.game-afk-slime__mini-head--l {
+  left: 10%;
+  transform: rotate(-6deg);
+}
+.game-afk-slime__mini-head--c {
+  left: 50%;
+  margin-left: -0.2rem;
+}
+.game-afk-slime__mini-head--r {
+  right: 10%;
+  transform: rotate(6deg);
+}
 
 .game-afk-enemy--bat .game-afk-slime__blob {
   background: linear-gradient(165deg, #c4b5fd 0%, #a78bfa 40%, #6d28d9 70%, #4c1d95 100%);
@@ -3776,8 +4646,13 @@
 }
 
 @keyframes game-afk-golden-pulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.12); }
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.12);
+  }
 }
 
 .game-afk-enemy__golden-sparkle {
@@ -3791,8 +4666,15 @@
 }
 
 @keyframes game-afk-golden-sparkle {
-  0%, 100% { opacity: 0.45; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
 }
 
 .game-afk-slime__accessories {
@@ -3829,8 +4711,15 @@
 }
 
 @keyframes game-afk-slime-aura {
-  0%, 100% { opacity: 0.55; transform: scale(0.96); }
-  50% { opacity: 1; transform: scale(1.04); }
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
 }
 
 .game-afk-enemy--golden .game-afk-slime__aura {
@@ -3846,8 +4735,7 @@
   height: 0.4rem;
   margin-left: -0.67rem;
   z-index: 9;
-  background:
-    linear-gradient(var(--afk-ink), var(--afk-ink)) 50% 0.17rem / 0.22rem 2.5px no-repeat;
+  background: linear-gradient(var(--afk-ink), var(--afk-ink)) 50% 0.17rem / 0.22rem 2.5px no-repeat;
 }
 
 .game-afk-slime__glasses::before,
@@ -3862,8 +4750,12 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-.game-afk-slime__glasses::before { left: 0; }
-.game-afk-slime__glasses::after { right: 0; }
+.game-afk-slime__glasses::before {
+  left: 0;
+}
+.game-afk-slime__glasses::after {
+  right: 0;
+}
 
 .game-afk-slime__face--patched .game-afk-slime__glasses::before {
   background: rgba(28, 25, 23, 0.08);
@@ -3950,8 +4842,15 @@
 }
 
 @keyframes game-afk-halo-float {
-  0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.92; }
-  50% { transform: translateY(-0.04rem) scaleX(1.03); opacity: 1; }
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: translateY(-0.04rem) scaleX(1.03);
+    opacity: 1;
+  }
 }
 
 /* Bow — hair ribbon on top */
@@ -4068,8 +4967,15 @@
 }
 
 @keyframes game-afk-sparkle-twinkle {
-  0%, 100% { transform: scale(0.85) rotate(0deg); opacity: 0.65; }
-  50% { transform: scale(1.15) rotate(22deg); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(0.85) rotate(0deg);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.15) rotate(22deg);
+    opacity: 1;
+  }
 }
 
 .game-afk-enemy__loot-layer {
@@ -4122,34 +5028,41 @@
   }
   18% {
     opacity: 1;
-    transform: translate(-50%, -50%) translate(calc(var(--loot-drift, 0px) * 0.25), var(--loot-pop, -22px)) rotate(calc(var(--loot-rot, 0deg) * 0.2)) scale(1.1);
+    transform: translate(-50%, -50%)
+      translate(calc(var(--loot-drift, 0px) * 0.25), var(--loot-pop, -22px))
+      rotate(calc(var(--loot-rot, 0deg) * 0.2)) scale(1.1);
     animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.5);
   }
   /* queda acelerando (gravidade) */
   60% {
     opacity: 1;
-    transform: translate(-50%, -50%) translate(calc(var(--loot-drift, 0px) * 0.7), 34px) rotate(calc(var(--loot-rot, 0deg) * 0.7)) scale(1);
+    transform: translate(-50%, -50%) translate(calc(var(--loot-drift, 0px) * 0.7), 34px)
+      rotate(calc(var(--loot-rot, 0deg) * 0.7)) scale(1);
     animation-timing-function: cubic-bezier(0.3, 0, 0.7, 1);
   }
   /* impacto: leve achatamento (squash) */
   74% {
     opacity: 0.95;
-    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 52px) rotate(var(--loot-rot, 0deg)) scale(1.08, 0.82);
+    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 52px)
+      rotate(var(--loot-rot, 0deg)) scale(1.08, 0.82);
     animation-timing-function: ease-out;
   }
   /* quique para cima (stretch) */
   84% {
     opacity: 0.78;
-    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 40px) rotate(calc(var(--loot-rot, 0deg) + 8deg)) scale(0.94, 1.08);
+    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 40px)
+      rotate(calc(var(--loot-rot, 0deg) + 8deg)) scale(0.94, 1.08);
     animation-timing-function: ease-in;
   }
   94% {
     opacity: 0.4;
-    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 52px) rotate(calc(var(--loot-rot, 0deg) + 4deg)) scale(1.02, 0.92);
+    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 52px)
+      rotate(calc(var(--loot-rot, 0deg) + 4deg)) scale(1.02, 0.92);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 54px) rotate(calc(var(--loot-rot, 0deg) + 6deg)) scale(0.9);
+    transform: translate(-50%, -50%) translate(var(--loot-drift, 0px), 54px)
+      rotate(calc(var(--loot-rot, 0deg) + 6deg)) scale(0.9);
   }
 }
 
@@ -4279,13 +5192,24 @@
 }
 
 @keyframes game-afk-hydra-sway {
-  0%, 100% { transform: rotate(var(--hydra-tilt, 0deg)) translateY(0); }
-  50% { transform: rotate(calc(var(--hydra-tilt, 0deg) + 4deg)) translateY(-2px); }
+  0%,
+  100% {
+    transform: rotate(var(--hydra-tilt, 0deg)) translateY(0);
+  }
+  50% {
+    transform: rotate(calc(var(--hydra-tilt, 0deg) + 4deg)) translateY(-2px);
+  }
 }
 
-.game-afk-slime__hydra-neck--l { --hydra-tilt: -22deg; }
-.game-afk-slime__hydra-neck--c { --hydra-tilt: 0deg; }
-.game-afk-slime__hydra-neck--r { --hydra-tilt: 22deg; }
+.game-afk-slime__hydra-neck--l {
+  --hydra-tilt: -22deg;
+}
+.game-afk-slime__hydra-neck--c {
+  --hydra-tilt: 0deg;
+}
+.game-afk-slime__hydra-neck--r {
+  --hydra-tilt: 22deg;
+}
 
 .game-afk-slime__colossus-spikes {
   position: absolute;
@@ -4361,8 +5285,15 @@
 }
 
 @keyframes game-afk-lich-orb {
-  0%, 100% { transform: translateY(0); opacity: 0.85; }
-  50% { transform: translateY(-4px); opacity: 1; }
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 .game-afk-enemy--boss_lich .game-afk-slime__blob {
@@ -4561,10 +5492,22 @@
 }
 
 @keyframes game-afk-loot-drop-fx {
-  0% { opacity: 0; transform: translate(0, 6px) scale(0.4) rotate(-15deg); }
-  20% { opacity: 1; transform: translate(-6px, -22px) scale(1.15) rotate(8deg); }
-  55% { opacity: 1; transform: translate(-14px, -34px) scale(1) rotate(-6deg); }
-  100% { opacity: 0; transform: translate(-26px, -10px) scale(0.7) rotate(12deg); }
+  0% {
+    opacity: 0;
+    transform: translate(0, 6px) scale(0.4) rotate(-15deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-6px, -22px) scale(1.15) rotate(8deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(-14px, -34px) scale(1) rotate(-6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-26px, -10px) scale(0.7) rotate(12deg);
+  }
 }
 
 .game-afk-scene__damage {
@@ -4705,8 +5648,17 @@
 }
 
 @keyframes game-afk-boss-panel-pulse {
-  0%, 100% { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 rgba(248, 113, 113, 0); }
-  50% { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 12px rgba(248, 113, 113, 0.35); }
+  0%,
+  100% {
+    box-shadow:
+      0 4px 14px rgba(0, 0, 0, 0.45),
+      0 0 0 rgba(248, 113, 113, 0);
+  }
+  50% {
+    box-shadow:
+      0 4px 14px rgba(0, 0, 0, 0.45),
+      0 0 12px rgba(248, 113, 113, 0.35);
+  }
 }
 
 .game-afk-combat-hud__boss-header {
@@ -5045,7 +5997,9 @@ button.game-afk-reward-chip {
 }
 
 @keyframes afk-rb-spin {
-  to { --afk-rb: 360deg; }
+  to {
+    --afk-rb: 360deg;
+  }
 }
 
 /* ---- Item LENDÁRIO: borda arco-íris animada + partículas orbitando ---- */
@@ -5053,9 +6007,22 @@ button.game-afk-reward-chip {
   border: 2.5px solid transparent;
   background:
     linear-gradient(160deg, #fff 0%, #fafaf9 100%) padding-box,
-    conic-gradient(from var(--afk-rb), #ff3b3b, #ffb13b, #ffe83b, #3bff6e, #3bd5ff, #8b3bff, #ff3bd5, #ff3b3b) border-box;
+    conic-gradient(
+        from var(--afk-rb),
+        #ff3b3b,
+        #ffb13b,
+        #ffe83b,
+        #3bff6e,
+        #3bd5ff,
+        #8b3bff,
+        #ff3bd5,
+        #ff3b3b
+      )
+      border-box;
   box-shadow: 0 0 14px rgba(255, 184, 70, 0.5);
-  animation: game-afk-reward-in 0.4s ease-out backwards, afk-rb-spin 3s linear infinite;
+  animation:
+    game-afk-reward-in 0.4s ease-out backwards,
+    afk-rb-spin 3s linear infinite;
 }
 
 /* halo arco-íris suave por trás do chip */
@@ -5066,7 +6033,14 @@ button.game-afk-reward-chip {
   border-radius: 0.85rem;
   background: conic-gradient(
     from var(--afk-rb),
-    #ff3b3b, #ffb13b, #ffe83b, #3bff6e, #3bd5ff, #8b3bff, #ff3bd5, #ff3b3b
+    #ff3b3b,
+    #ffb13b,
+    #ffe83b,
+    #3bff6e,
+    #3bd5ff,
+    #8b3bff,
+    #ff3bd5,
+    #ff3b3b
   );
   filter: blur(6px);
   opacity: 0.5;
@@ -5079,9 +6053,12 @@ button.game-afk-reward-chip {
   color: #92400e;
   background:
     linear-gradient(160deg, #fffef5, #fff7e0) padding-box,
-    conic-gradient(from var(--afk-rb), #fffbe6, #fde047, #f59e0b, #fffbe6, #fbbf24, #fffbe6) border-box;
+    conic-gradient(from var(--afk-rb), #fffbe6, #fde047, #f59e0b, #fffbe6, #fbbf24, #fffbe6)
+      border-box;
   box-shadow: 0 0 14px rgba(250, 204, 21, 0.5);
-  animation: game-afk-reward-in 0.4s ease-out backwards, afk-rb-spin 3s linear infinite;
+  animation:
+    game-afk-reward-in 0.4s ease-out backwards,
+    afk-rb-spin 3s linear infinite;
 }
 
 .game-afk-reward-chip__orbit {
@@ -5103,13 +6080,23 @@ button.game-afk-reward-chip {
   box-shadow: 0 0 6px 1px rgba(255, 210, 110, 0.95);
 }
 
-.game-afk-reward-chip__orbit i:nth-child(1) { transform: rotate(0deg) translateY(-1.55rem); }
-.game-afk-reward-chip__orbit i:nth-child(2) { transform: rotate(90deg) translateY(-1.55rem); }
-.game-afk-reward-chip__orbit i:nth-child(3) { transform: rotate(180deg) translateY(-1.55rem); }
-.game-afk-reward-chip__orbit i:nth-child(4) { transform: rotate(270deg) translateY(-1.55rem); }
+.game-afk-reward-chip__orbit i:nth-child(1) {
+  transform: rotate(0deg) translateY(-1.55rem);
+}
+.game-afk-reward-chip__orbit i:nth-child(2) {
+  transform: rotate(90deg) translateY(-1.55rem);
+}
+.game-afk-reward-chip__orbit i:nth-child(3) {
+  transform: rotate(180deg) translateY(-1.55rem);
+}
+.game-afk-reward-chip__orbit i:nth-child(4) {
+  transform: rotate(270deg) translateY(-1.55rem);
+}
 
 @keyframes afk-orbit-rotate {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ---- Item SECRET: ícone P&B girando + borda B&P animada + show de luzes ---- */
@@ -5126,12 +6113,19 @@ button.game-afk-reward-chip {
 }
 
 @keyframes afk-secret-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes afk-secret-glow {
-  0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.35); }
-  50% { box-shadow: 0 0 18px rgba(216, 180, 254, 0.7); }
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(216, 180, 254, 0.7);
+  }
 }
 
 .game-afk-reward-chip__lightshow {
@@ -5152,12 +6146,30 @@ button.game-afk-reward-chip {
   transform-origin: center;
 }
 
-.game-afk-reward-chip__lightshow i:nth-child(1) { transform: rotate(0deg) translateY(-1.6rem); background: linear-gradient(#ff5b5b, transparent); }
-.game-afk-reward-chip__lightshow i:nth-child(2) { transform: rotate(60deg) translateY(-1.6rem); background: linear-gradient(#ffd83b, transparent); }
-.game-afk-reward-chip__lightshow i:nth-child(3) { transform: rotate(120deg) translateY(-1.6rem); background: linear-gradient(#3bff6e, transparent); }
-.game-afk-reward-chip__lightshow i:nth-child(4) { transform: rotate(180deg) translateY(-1.6rem); background: linear-gradient(#3bd5ff, transparent); }
-.game-afk-reward-chip__lightshow i:nth-child(5) { transform: rotate(240deg) translateY(-1.6rem); background: linear-gradient(#8b3bff, transparent); }
-.game-afk-reward-chip__lightshow i:nth-child(6) { transform: rotate(300deg) translateY(-1.6rem); background: linear-gradient(#ff3bd5, transparent); }
+.game-afk-reward-chip__lightshow i:nth-child(1) {
+  transform: rotate(0deg) translateY(-1.6rem);
+  background: linear-gradient(#ff5b5b, transparent);
+}
+.game-afk-reward-chip__lightshow i:nth-child(2) {
+  transform: rotate(60deg) translateY(-1.6rem);
+  background: linear-gradient(#ffd83b, transparent);
+}
+.game-afk-reward-chip__lightshow i:nth-child(3) {
+  transform: rotate(120deg) translateY(-1.6rem);
+  background: linear-gradient(#3bff6e, transparent);
+}
+.game-afk-reward-chip__lightshow i:nth-child(4) {
+  transform: rotate(180deg) translateY(-1.6rem);
+  background: linear-gradient(#3bd5ff, transparent);
+}
+.game-afk-reward-chip__lightshow i:nth-child(5) {
+  transform: rotate(240deg) translateY(-1.6rem);
+  background: linear-gradient(#8b3bff, transparent);
+}
+.game-afk-reward-chip__lightshow i:nth-child(6) {
+  transform: rotate(300deg) translateY(-1.6rem);
+  background: linear-gradient(#ff3bd5, transparent);
+}
 
 /* Golden Secret: feixes em branco e dourado */
 .game-afk-reward-chip--golden-secret .game-afk-reward-chip__lightshow i:nth-child(odd) {
@@ -5168,7 +6180,9 @@ button.game-afk-reward-chip {
 }
 
 @keyframes afk-lightshow-rotate {
-  to { transform: rotate(-360deg); }
+  to {
+    transform: rotate(-360deg);
+  }
 }
 
 /* ---- Tooltip de loot ---- */
@@ -5200,12 +6214,26 @@ button.game-afk-reward-chip {
   border-top-color: #1c1917;
 }
 
-.game-afk-loot-tooltip--secret { background: #1c1917; color: #fafafa; }
-.game-afk-loot-tooltip--secret::after { border-top-color: #1c1917; }
-.game-afk-loot-tooltip--lendario { border-color: #f59e0b; }
-.game-afk-loot-tooltip--lendario::after { border-top-color: #f59e0b; }
-.game-afk-loot-tooltip--golden_secret { border-color: #f59e0b; background: linear-gradient(160deg, #fffef5, #fff7e0); }
-.game-afk-loot-tooltip--golden_secret::after { border-top-color: #f59e0b; }
+.game-afk-loot-tooltip--secret {
+  background: #1c1917;
+  color: #fafafa;
+}
+.game-afk-loot-tooltip--secret::after {
+  border-top-color: #1c1917;
+}
+.game-afk-loot-tooltip--lendario {
+  border-color: #f59e0b;
+}
+.game-afk-loot-tooltip--lendario::after {
+  border-top-color: #f59e0b;
+}
+.game-afk-loot-tooltip--golden_secret {
+  border-color: #f59e0b;
+  background: linear-gradient(160deg, #fffef5, #fff7e0);
+}
+.game-afk-loot-tooltip--golden_secret::after {
+  border-top-color: #f59e0b;
+}
 
 .game-afk-loot-tooltip__close {
   position: absolute;
@@ -5223,7 +6251,9 @@ button.game-afk-reward-chip {
   opacity: 0.6;
   cursor: pointer;
 }
-.game-afk-loot-tooltip__close:hover { opacity: 1; }
+.game-afk-loot-tooltip__close:hover {
+  opacity: 1;
+}
 
 .game-afk-loot-tooltip__head {
   display: flex;
@@ -5247,7 +6277,17 @@ button.game-afk-reward-chip {
 
 /* Nome arco-íris (lendário), dourado (golden secret) e P&B (secret) */
 .game-afk-loot-tooltip--lendario .game-afk-loot-tooltip__name {
-  background: linear-gradient(90deg, #ff3b3b, #ffb13b, #ffe83b, #3bff6e, #3bd5ff, #8b3bff, #ff3bd5, #ff3b3b);
+  background: linear-gradient(
+    90deg,
+    #ff3b3b,
+    #ffb13b,
+    #ffe83b,
+    #3bff6e,
+    #3bd5ff,
+    #8b3bff,
+    #ff3bd5,
+    #ff3b3b
+  );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -5274,7 +6314,9 @@ button.game-afk-reward-chip {
 }
 
 @keyframes afk-rainbow-text {
-  to { background-position: 200% center; }
+  to {
+    background-position: 200% center;
+  }
 }
 
 .game-afk-loot-tooltip__rarity {
@@ -5285,11 +6327,21 @@ button.game-afk-reward-chip {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-.game-afk-loot-tooltip__rarity--comum { color: #78716c; }
-.game-afk-loot-tooltip__rarity--epico { color: #9333ea; }
-.game-afk-loot-tooltip__rarity--lendario { color: #d97706; }
-.game-afk-loot-tooltip__rarity--secret { color: #c4b5fd; }
-.game-afk-loot-tooltip__rarity--golden_secret { color: #d97706; }
+.game-afk-loot-tooltip__rarity--comum {
+  color: #78716c;
+}
+.game-afk-loot-tooltip__rarity--epico {
+  color: #9333ea;
+}
+.game-afk-loot-tooltip__rarity--lendario {
+  color: #d97706;
+}
+.game-afk-loot-tooltip__rarity--secret {
+  color: #c4b5fd;
+}
+.game-afk-loot-tooltip__rarity--golden_secret {
+  color: #d97706;
+}
 
 .game-afk-loot-tooltip__desc {
   margin-top: 0.4rem;
@@ -5304,8 +6356,14 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-reward-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.85); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Patrol chest */
@@ -5380,7 +6438,9 @@ button.game-afk-reward-chip {
   border-radius: 0.16rem;
   background: radial-gradient(circle at 50% 32%, #fff7cc, #fde047 42%, #f59e0b 100%);
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.22);
-  transition: opacity 0.25s ease, transform 0.35s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.35s ease;
 }
 
 /* Buraco da fechadura */
@@ -5419,8 +6479,13 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-badge-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
 }
 
 .game-afk-chest__stock {
@@ -5497,8 +6562,14 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-ready-pulse {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.08); box-shadow: 0 0 10px rgba(251, 191, 36, 0.35); }
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
+  }
 }
 
 .game-afk-chest--ready .game-afk-chest__lock {
@@ -5506,9 +6577,16 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-lock-wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-6deg); }
-  75% { transform: rotate(6deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(6deg);
+  }
 }
 
 .game-afk-chest--opening .game-afk-chest__lid-wrap,
@@ -5526,18 +6604,36 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-lid-bounce {
-  0% { transform: rotate(0deg); }
-  55% { transform: rotate(-118deg) translateY(-4px); }
-  78% { transform: rotate(-102deg) translateY(-1px); }
-  100% { transform: rotate(-108deg) translateY(-2px); }
+  0% {
+    transform: rotate(0deg);
+  }
+  55% {
+    transform: rotate(-118deg) translateY(-4px);
+  }
+  78% {
+    transform: rotate(-102deg) translateY(-1px);
+  }
+  100% {
+    transform: rotate(-108deg) translateY(-2px);
+  }
 }
 
 @keyframes game-afk-chest-lid-celebrate {
-  0% { transform: rotate(0deg) scale(1); }
-  18% { transform: rotate(-6deg) scale(1.01); }
-  58% { transform: rotate(-120deg) translateY(-5px) scale(1.02); }
-  80% { transform: rotate(-102deg) translateY(-1px) scale(1); }
-  100% { transform: rotate(-108deg) translateY(-2px) scale(1); }
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  18% {
+    transform: rotate(-6deg) scale(1.01);
+  }
+  58% {
+    transform: rotate(-120deg) translateY(-5px) scale(1.02);
+  }
+  80% {
+    transform: rotate(-102deg) translateY(-1px) scale(1);
+  }
+  100% {
+    transform: rotate(-108deg) translateY(-2px) scale(1);
+  }
 }
 
 .game-afk-chest--shaking {
@@ -5545,9 +6641,16 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-shake {
-  0%, 100% { transform: rotate(0deg) translateX(0); }
-  25% { transform: rotate(-2deg) translateX(-2px); }
-  75% { transform: rotate(2deg) translateX(2px); }
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  25% {
+    transform: rotate(-2deg) translateX(-2px);
+  }
+  75% {
+    transform: rotate(2deg) translateX(2px);
+  }
 }
 
 .game-afk-chest__burst {
@@ -5559,16 +6662,30 @@ button.game-afk-reward-chip {
   height: 2.4rem;
   margin-left: -1.2rem;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(251, 191, 36, 0.55) 35%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(254, 243, 199, 0.95) 0%,
+    rgba(251, 191, 36, 0.55) 35%,
+    transparent 72%
+  );
   opacity: 0;
   animation: game-afk-chest-burst 0.55s ease-out 0.08s forwards;
   pointer-events: none;
 }
 
 @keyframes game-afk-chest-burst {
-  0% { opacity: 0; transform: scale(0.2); }
-  35% { opacity: 1; transform: scale(1.15); }
-  100% { opacity: 0; transform: scale(1.55); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
 }
 
 /* Raios de luz girando ao redor do estouro de abertura */
@@ -5579,14 +6696,30 @@ button.game-afk-reward-chip {
   border-radius: inherit;
   background: conic-gradient(
     from 0deg,
-    transparent 0deg, rgba(255, 236, 150, 0.7) 8deg, transparent 16deg,
-    transparent 45deg, rgba(255, 236, 150, 0.7) 53deg, transparent 61deg,
-    transparent 90deg, rgba(255, 236, 150, 0.7) 98deg, transparent 106deg,
-    transparent 135deg, rgba(255, 236, 150, 0.7) 143deg, transparent 151deg,
-    transparent 180deg, rgba(255, 236, 150, 0.7) 188deg, transparent 196deg,
-    transparent 225deg, rgba(255, 236, 150, 0.7) 233deg, transparent 241deg,
-    transparent 270deg, rgba(255, 236, 150, 0.7) 278deg, transparent 286deg,
-    transparent 315deg, rgba(255, 236, 150, 0.7) 323deg, transparent 331deg
+    transparent 0deg,
+    rgba(255, 236, 150, 0.7) 8deg,
+    transparent 16deg,
+    transparent 45deg,
+    rgba(255, 236, 150, 0.7) 53deg,
+    transparent 61deg,
+    transparent 90deg,
+    rgba(255, 236, 150, 0.7) 98deg,
+    transparent 106deg,
+    transparent 135deg,
+    rgba(255, 236, 150, 0.7) 143deg,
+    transparent 151deg,
+    transparent 180deg,
+    rgba(255, 236, 150, 0.7) 188deg,
+    transparent 196deg,
+    transparent 225deg,
+    rgba(255, 236, 150, 0.7) 233deg,
+    transparent 241deg,
+    transparent 270deg,
+    rgba(255, 236, 150, 0.7) 278deg,
+    transparent 286deg,
+    transparent 315deg,
+    rgba(255, 236, 150, 0.7) 323deg,
+    transparent 331deg
   );
   -webkit-mask: radial-gradient(circle, #000 18%, transparent 70%);
   mask: radial-gradient(circle, #000 18%, transparent 70%);
@@ -5594,9 +6727,17 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-rays {
-  0% { opacity: 0; transform: rotate(0deg) scale(0.4); }
-  35% { opacity: 0.9; }
-  100% { opacity: 0; transform: rotate(70deg) scale(1.3); }
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.4);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(70deg) scale(1.3);
+  }
 }
 
 /* Feixe/luz dourada subindo de dentro do baú aberto (sensação de tesouro) */
@@ -5623,9 +6764,17 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-glow-rise {
-  0% { opacity: 0; transform: translateX(-50%) scaleY(0.4); }
-  60% { opacity: 1; }
-  100% { opacity: 0.8; transform: translateX(-50%) scaleY(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.4);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scaleY(1);
+  }
 }
 
 .game-afk-chest--opening .game-afk-chest__lock,
@@ -5646,16 +6795,45 @@ button.game-afk-reward-chip {
   animation: game-afk-chest-spark 0.7s ease-out forwards;
 }
 
-.game-afk-chest__spark--1 { top: 8%; left: 18%; animation-delay: 0.15s; }
-.game-afk-chest__spark--2 { top: 2%; right: 22%; animation-delay: 0.28s; }
-.game-afk-chest__spark--3 { top: 12%; left: 48%; animation-delay: 0.38s; }
-.game-afk-chest__spark--4 { top: 4%; right: 10%; animation-delay: 0.48s; }
-.game-afk-chest__spark--5 { top: 16%; left: 8%; animation-delay: 0.58s; }
+.game-afk-chest__spark--1 {
+  top: 8%;
+  left: 18%;
+  animation-delay: 0.15s;
+}
+.game-afk-chest__spark--2 {
+  top: 2%;
+  right: 22%;
+  animation-delay: 0.28s;
+}
+.game-afk-chest__spark--3 {
+  top: 12%;
+  left: 48%;
+  animation-delay: 0.38s;
+}
+.game-afk-chest__spark--4 {
+  top: 4%;
+  right: 10%;
+  animation-delay: 0.48s;
+}
+.game-afk-chest__spark--5 {
+  top: 16%;
+  left: 8%;
+  animation-delay: 0.58s;
+}
 
 @keyframes game-afk-chest-spark {
-  0% { opacity: 0; transform: scale(0.2); }
-  30% { opacity: 1; transform: scale(1.6); }
-  100% { opacity: 0; transform: scale(0.5) translateY(-14px); }
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) translateY(-14px);
+  }
 }
 
 .game-afk-chest--celebrate .game-afk-chest__spark {
@@ -5705,15 +6883,33 @@ button.game-afk-reward-chip {
   animation: game-afk-reward-pop 0.48s cubic-bezier(0.34, 1.35, 0.64, 1) backwards;
 }
 
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(1)  { animation-delay: 0.38s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(2)  { animation-delay: 0.46s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(3)  { animation-delay: 0.54s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(4)  { animation-delay: 0.62s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(5)  { animation-delay: 0.70s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(6)  { animation-delay: 0.78s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(7)  { animation-delay: 0.86s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(8)  { animation-delay: 0.94s; }
-.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(n+9) { animation-delay: 1.02s; }
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(1) {
+  animation-delay: 0.38s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(2) {
+  animation-delay: 0.46s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(3) {
+  animation-delay: 0.54s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(4) {
+  animation-delay: 0.62s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(5) {
+  animation-delay: 0.7s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(6) {
+  animation-delay: 0.78s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(7) {
+  animation-delay: 0.86s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(8) {
+  animation-delay: 0.94s;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip:nth-child(n + 9) {
+  animation-delay: 1.02s;
+}
 
 /* Legendary entrance — dramatic bounce + rotate */
 .game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip--legendary {
@@ -5738,24 +6934,54 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-reward-pop {
-  0%   { opacity: 0; transform: translateY(16px) scale(0.7); }
-  65%  { opacity: 1; transform: translateY(-5px) scale(1.1); }
-  82%  { transform: translateY(2px) scale(0.97); }
-  100% { transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.7);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.1);
+  }
+  82% {
+    transform: translateY(2px) scale(0.97);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes game-afk-reward-pop-legendary {
-  0%   { opacity: 0; transform: translateY(20px) scale(0.65) rotate(-8deg); }
-  60%  { opacity: 1; transform: translateY(-8px) scale(1.18) rotate(4deg); }
-  80%  { transform: translateY(3px) scale(0.96) rotate(-1deg); }
-  100% { transform: translateY(0) scale(1) rotate(0deg); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.65) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.18) rotate(4deg);
+  }
+  80% {
+    transform: translateY(3px) scale(0.96) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
 }
 
 @keyframes game-afk-reward-pop-secret {
-  0%   { opacity: 0; transform: scale(0) rotate(-20deg); }
-  62%  { opacity: 1; transform: scale(1.22) rotate(8deg); }
-  82%  { transform: scale(0.95) rotate(-3deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-20deg);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.22) rotate(8deg);
+  }
+  82% {
+    transform: scale(0.95) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 .game-afk-modal__footer {
@@ -5933,8 +7159,13 @@ button.game-afk-reward-chip {
   animation: afk-crystal-shimmer 4s ease-in-out infinite;
 }
 @keyframes afk-crystal-shimmer {
-  0%, 100% { opacity: 0.6; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* storm_slime — thunderstorm */
@@ -5954,8 +7185,13 @@ button.game-afk-reward-chip {
   animation: afk-storm-pulse 2s ease-in-out infinite;
 }
 @keyframes afk-storm-pulse {
-  0%, 100% { opacity: 0.65; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* magic_rabbit — enchanted meadow */
@@ -5983,8 +7219,15 @@ button.game-afk-reward-chip {
   animation: afk-magic-twinkle 3.5s ease-in-out infinite;
 }
 @keyframes afk-magic-twinkle {
-  0%, 100% { opacity: 0.5; transform: translateY(0); }
-  50%       { opacity: 1; transform: translateY(-4px); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
 }
 
 /* slime_knight — medieval castle */
@@ -6018,8 +7261,15 @@ button.game-afk-reward-chip {
   animation: afk-golden-env-shimmer 3s ease-in-out infinite;
 }
 @keyframes afk-golden-env-shimmer {
-  0%, 100% { opacity: 0.5; transform: translateY(0); }
-  50%       { opacity: 1; transform: translateY(-6px); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-6px);
+  }
 }
 
 /* boss_colossus — volcanic */
@@ -6039,8 +7289,13 @@ button.game-afk-reward-chip {
   animation: afk-volcano-pulse 3s ease-in-out infinite;
 }
 @keyframes afk-volcano-pulse {
-  0%, 100% { opacity: 0.8; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* boss_lich — necromancer tower */
@@ -6059,8 +7314,13 @@ button.game-afk-reward-chip {
   animation: afk-lich-pulse 4s ease-in-out infinite;
 }
 @keyframes afk-lich-pulse {
-  0%, 100% { opacity: 0.7; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* boss_hydra — abyss underwater */
@@ -6079,8 +7339,14 @@ button.game-afk-reward-chip {
   animation: afk-hydra-wave 5s ease-in-out infinite;
 }
 @keyframes afk-hydra-wave {
-  0%, 100% { opacity: 0.6; }
-  50%       { opacity: 1; transform: scaleY(1.04); }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.04);
+  }
 }
 
 /* boss_golem — stone ruins */
@@ -6105,11 +7371,11 @@ button.game-afk-reward-chip {
 
 /* When a custom per-enemy background is active, hide the animated sky layer
    (gradient, sun, moon, stars, clouds) — keep only terrain silhouettes */
-.game-afk-scene__viewport:not([data-enemy="bat"]) .game-afk-sky-cycle__gradient,
-.game-afk-scene__viewport:not([data-enemy="bat"]) .game-afk-sky-cycle__sun,
-.game-afk-scene__viewport:not([data-enemy="bat"]) .game-afk-sky-cycle__moon,
-.game-afk-scene__viewport:not([data-enemy="bat"]) .game-afk-sky-cycle__stars,
-.game-afk-scene__viewport:not([data-enemy="bat"]) .game-afk-sky-cycle__cloud {
+.game-afk-scene__viewport:not([data-enemy='bat']) .game-afk-sky-cycle__gradient,
+.game-afk-scene__viewport:not([data-enemy='bat']) .game-afk-sky-cycle__sun,
+.game-afk-scene__viewport:not([data-enemy='bat']) .game-afk-sky-cycle__moon,
+.game-afk-scene__viewport:not([data-enemy='bat']) .game-afk-sky-cycle__stars,
+.game-afk-scene__viewport:not([data-enemy='bat']) .game-afk-sky-cycle__cloud {
   display: none;
 }
 
@@ -6121,61 +7387,156 @@ button.game-afk-reward-chip {
   filter: hue-rotate(60deg) saturate(0.7) brightness(0.55);
 }
 
-.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #c08040 0%, #d09050 100%); }
-.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #b87030 0%, #906020 100%); }
-.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #c8883a, #d89848, #c8883a); }
-.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #b07030 0%, #904020 100%); }
+.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #c08040 0%, #d09050 100%);
+}
+.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #b87030 0%, #906020 100%);
+}
+.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #c8883a, #d89848, #c8883a);
+}
+.game-afk-scene__viewport--enemy-skeleton .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #b07030 0%, #904020 100%);
+}
 
-.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #0a0a14 0%, #141420 100%); opacity: 0.9; }
-.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #1a1a28 0%, #0e0e1c 100%); }
-.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #22222e, #2e2e3e, #22222e); }
-.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #1e1e2a 0%, #12121c 100%); }
+.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #0a0a14 0%, #141420 100%);
+  opacity: 0.9;
+}
+.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #1a1a28 0%, #0e0e1c 100%);
+}
+.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #22222e, #2e2e3e, #22222e);
+}
+.game-afk-scene__viewport--enemy-armored_skeleton .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #1e1e2a 0%, #12121c 100%);
+}
 
-.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #062040 0%, #0a3050 100%); opacity: 0.9; }
-.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #0a2840 0%, #061820 100%); }
-.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #083050, #0e4870, #083050); }
-.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #061828 0%, #040e18 100%); }
+.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #062040 0%, #0a3050 100%);
+  opacity: 0.9;
+}
+.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #0a2840 0%, #061820 100%);
+}
+.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #083050, #0e4870, #083050);
+}
+.game-afk-scene__viewport--enemy-crystal_slime .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #061828 0%, #040e18 100%);
+}
 
-.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #100820 0%, #1a1030 100%); opacity: 0.95; }
-.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #140828 0%, #0c0418 100%); }
-.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #1e1038, #2e1850, #1e1038); }
-.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #160c28 0%, #0c0618 100%); }
+.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #100820 0%, #1a1030 100%);
+  opacity: 0.95;
+}
+.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #140828 0%, #0c0418 100%);
+}
+.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #1e1038, #2e1850, #1e1038);
+}
+.game-afk-scene__viewport--enemy-storm_slime .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #160c28 0%, #0c0618 100%);
+}
 
-.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #2a1050 0%, #3a1868 100%); opacity: 0.75; }
-.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #2a1050 0%, #1a0840 100%); }
-.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #3a1060, #501878, #3a1060); }
-.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #2e1050 0%, #1e0838 100%); }
+.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #2a1050 0%, #3a1868 100%);
+  opacity: 0.75;
+}
+.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #2a1050 0%, #1a0840 100%);
+}
+.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #3a1060, #501878, #3a1060);
+}
+.game-afk-scene__viewport--enemy-magic_rabbit .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #2e1050 0%, #1e0838 100%);
+}
 
-.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #1e2438 0%, #2a3048 100%); }
-.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #1e2c18 0%, #141e10 100%); }
-.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #2a3028, #383e36, #2a3028); }
-.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #2e2e3a 0%, #1e1e28 100%); }
+.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #1e2438 0%, #2a3048 100%);
+}
+.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #1e2c18 0%, #141e10 100%);
+}
+.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #2a3028, #383e36, #2a3028);
+}
+.game-afk-scene__viewport--enemy-slime_knight .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #2e2e3a 0%, #1e1e28 100%);
+}
 
-.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #c07820 0%, #d08830 100%); opacity: 0.6; }
-.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #e09820 0%, #c07810 100%); }
-.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #c8880a, #e0a820, #c8880a); }
-.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #a86010 0%, #804800 100%); }
+.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #c07820 0%, #d08830 100%);
+  opacity: 0.6;
+}
+.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #e09820 0%, #c07810 100%);
+}
+.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #c8880a, #e0a820, #c8880a);
+}
+.game-afk-scene__viewport--enemy-golden_slime .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #a86010 0%, #804800 100%);
+}
 
-.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #180800 0%, #2a1000 100%); }
-.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #1a0800 0%, #0e0400 100%); }
-.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #4a1000, #6a1800, #4a1000); }
-.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #3a0e00 0%, #200800 100%); }
+.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #180800 0%, #2a1000 100%);
+}
+.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #1a0800 0%, #0e0400 100%);
+}
+.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #4a1000, #6a1800, #4a1000);
+}
+.game-afk-scene__viewport--enemy-boss_colossus .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #3a0e00 0%, #200800 100%);
+}
 
-.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #060212 0%, #10081e 100%); }
-.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #140a1e 0%, #0a0412 100%); }
-.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #16082a, #22103c, #16082a); }
-.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #120820 0%, #08040e 100%); }
+.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #060212 0%, #10081e 100%);
+}
+.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #140a1e 0%, #0a0412 100%);
+}
+.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #16082a, #22103c, #16082a);
+}
+.game-afk-scene__viewport--enemy-boss_lich .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #120820 0%, #08040e 100%);
+}
 
-.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #020810 0%, #041018 100%); }
-.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__tree-crown { display: none; }
-.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__tree-trunk { display: none; }
-.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #041428, #062030, #041428); }
-.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #041828 0%, #020c18 100%); }
+.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #020810 0%, #041018 100%);
+}
+.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__tree-crown {
+  display: none;
+}
+.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__tree-trunk {
+  display: none;
+}
+.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #041428, #062030, #041428);
+}
+.game-afk-scene__viewport--enemy-boss_hydra .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #041828 0%, #020c18 100%);
+}
 
-.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__mountain { background: linear-gradient(180deg, #0c0c0e 0%, #161618 100%); }
-.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__tree-crown { background: radial-gradient(ellipse at 50% 80%, #1a1a1e 0%, #0e0e10 100%); }
-.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__grass-edge { background: linear-gradient(90deg, #202024, #2a2a2e, #202024); }
-.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__dirt-layer { background: linear-gradient(180deg, #1e1e22 0%, #121214 100%); }
+.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__mountain {
+  background: linear-gradient(180deg, #0c0c0e 0%, #161618 100%);
+}
+.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__tree-crown {
+  background: radial-gradient(ellipse at 50% 80%, #1a1a1e 0%, #0e0e10 100%);
+}
+.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__grass-edge {
+  background: linear-gradient(90deg, #202024, #2a2a2e, #202024);
+}
+.game-afk-scene__viewport--enemy-boss_golem .game-afk-sky-cycle__dirt-layer {
+  background: linear-gradient(180deg, #1e1e22 0%, #121214 100%);
+}
 
 /* Slime Musgo — swamp: murky green-brown sky */
 .game-afk-sky-cycle--swamp .game-afk-sky-cycle__gradient {
@@ -6230,7 +7591,10 @@ button.game-afk-reward-chip {
 .game-afk-sky-cycle--dungeon .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #0e0e1e 0%, #1e1e32 100%);
 }
-.game-afk-sky-cycle--dungeon .game-afk-sky-cycle__stars { animation: none; opacity: 0.6; }
+.game-afk-sky-cycle--dungeon .game-afk-sky-cycle__stars {
+  animation: none;
+  opacity: 0.6;
+}
 .game-afk-sky-cycle--dungeon .game-afk-sky-cycle__grass-edge {
   background: linear-gradient(90deg, #3a3a3a, #555570, #3a3a3a);
 }
@@ -6244,8 +7608,13 @@ button.game-afk-reward-chip {
   background: linear-gradient(180deg, #1a0000 0%, #3a0a0a 30%, #6b1010 60%, #8b1a1a 100%);
 }
 @keyframes afk-hell-gradient {
-  0%, 100% { background: linear-gradient(180deg, #1a0000 0%, #3a0a0a 30%, #6b1010 60%, #8b1a1a 100%); }
-  50% { background: linear-gradient(180deg, #220000 0%, #4a0e0e 30%, #7a1818 60%, #9b2222 100%); }
+  0%,
+  100% {
+    background: linear-gradient(180deg, #1a0000 0%, #3a0a0a 30%, #6b1010 60%, #8b1a1a 100%);
+  }
+  50% {
+    background: linear-gradient(180deg, #220000 0%, #4a0e0e 30%, #7a1818 60%, #9b2222 100%);
+  }
 }
 .game-afk-sky-cycle--hell .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #1a0000 0%, #3a0808 100%);
@@ -6275,9 +7644,17 @@ button.game-afk-reward-chip {
   animation: afk-ember-float 3s linear infinite;
 }
 @keyframes afk-ember-float {
-  0%   { transform: translateY(0); opacity: 0.7; }
-  50%  { opacity: 1; }
-  100% { transform: translateY(-3.5rem); opacity: 0; }
+  0% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-3.5rem);
+    opacity: 0;
+  }
 }
 
 /* Slime Cavaleiro — castle: stone medieval */
@@ -6304,8 +7681,13 @@ button.game-afk-reward-chip {
   background: linear-gradient(180deg, #fbbf24 0%, #fde68a 32%, #fef3c7 65%, #fffbeb 100%);
 }
 @keyframes afk-golden-sky {
-  0%, 100% { background: linear-gradient(180deg, #f59e0b 0%, #fde68a 35%, #fef3c7 68%, #fffbeb 100%); }
-  50%       { background: linear-gradient(180deg, #fbbf24 0%, #fef08a 35%, #fffde7 68%, #ffffff 100%); }
+  0%,
+  100% {
+    background: linear-gradient(180deg, #f59e0b 0%, #fde68a 35%, #fef3c7 68%, #fffbeb 100%);
+  }
+  50% {
+    background: linear-gradient(180deg, #fbbf24 0%, #fef08a 35%, #fffde7 68%, #ffffff 100%);
+  }
 }
 .game-afk-sky-cycle--golden .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #d97706 0%, #f59e0b 100%);
@@ -6339,8 +7721,15 @@ button.game-afk-reward-chip {
   animation: afk-golden-shimmer 2.8s ease-in-out infinite;
 }
 @keyframes afk-golden-shimmer {
-  0%, 100% { opacity: 0.6; transform: translateY(0); }
-  50%       { opacity: 1; transform: translateY(-4px); }
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
 }
 
 /* Rei Slime — volcano: magma red/dark */
@@ -6349,13 +7738,21 @@ button.game-afk-reward-chip {
   background: linear-gradient(180deg, #1c0a00 0%, #3a1000 32%, #6b1a00 62%, #8b2500 100%);
 }
 @keyframes afk-volcano-sky {
-  0%, 100% { background: linear-gradient(180deg, #1c0a00 0%, #3a1000 32%, #6b1a00 62%, #8b2500 100%); }
-  50%       { background: linear-gradient(180deg, #200c00 0%, #421200 32%, #781e00 62%, #952a00 100%); }
+  0%,
+  100% {
+    background: linear-gradient(180deg, #1c0a00 0%, #3a1000 32%, #6b1a00 62%, #8b2500 100%);
+  }
+  50% {
+    background: linear-gradient(180deg, #200c00 0%, #421200 32%, #781e00 62%, #952a00 100%);
+  }
 }
 .game-afk-sky-cycle--volcano .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #1a0800 0%, #2e0e00 100%);
 }
-.game-afk-sky-cycle--volcano .game-afk-sky-cycle__stars { animation: none; opacity: 0.4; }
+.game-afk-sky-cycle--volcano .game-afk-sky-cycle__stars {
+  animation: none;
+  opacity: 0.4;
+}
 .game-afk-sky-cycle--volcano .game-afk-sky-cycle__grass-edge {
   background: linear-gradient(90deg, #5a1200, #7a1800, #5a1200);
 }
@@ -6371,7 +7768,10 @@ button.game-afk-reward-chip {
 .game-afk-sky-cycle--graveyard .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #0a0418 0%, #16082e 100%);
 }
-.game-afk-sky-cycle--graveyard .game-afk-sky-cycle__stars { animation: none; opacity: 0.95; }
+.game-afk-sky-cycle--graveyard .game-afk-sky-cycle__stars {
+  animation: none;
+  opacity: 0.95;
+}
 .game-afk-sky-cycle--graveyard .game-afk-sky-cycle__grass-edge {
   background: linear-gradient(90deg, #1a0a30, #280e48, #1a0a30);
 }
@@ -6385,13 +7785,21 @@ button.game-afk-reward-chip {
   background: linear-gradient(180deg, #020e18 0%, #062030 35%, #0a3848 62%, #105060 100%);
 }
 @keyframes afk-abyss-sky {
-  0%, 100% { background: linear-gradient(180deg, #020e18 0%, #062030 35%, #0a3848 62%, #105060 100%); }
-  50%       { background: linear-gradient(180deg, #031218 0%, #082838 35%, #0e4050 62%, #145868 100%); }
+  0%,
+  100% {
+    background: linear-gradient(180deg, #020e18 0%, #062030 35%, #0a3848 62%, #105060 100%);
+  }
+  50% {
+    background: linear-gradient(180deg, #031218 0%, #082838 35%, #0e4050 62%, #145868 100%);
+  }
 }
 .game-afk-sky-cycle--abyss .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #010810 0%, #04162a 100%);
 }
-.game-afk-sky-cycle--abyss .game-afk-sky-cycle__stars { animation: none; opacity: 0.3; }
+.game-afk-sky-cycle--abyss .game-afk-sky-cycle__stars {
+  animation: none;
+  opacity: 0.3;
+}
 .game-afk-sky-cycle--abyss .game-afk-sky-cycle__grass-edge {
   background: linear-gradient(90deg, #052838, #083848, #052838);
 }
@@ -6414,7 +7822,10 @@ button.game-afk-reward-chip {
 .game-afk-sky-cycle--ruins .game-afk-sky-cycle__mountain {
   background: linear-gradient(180deg, #141418 0%, #222228 100%);
 }
-.game-afk-sky-cycle--ruins .game-afk-sky-cycle__stars { animation: none; opacity: 0.5; }
+.game-afk-sky-cycle--ruins .game-afk-sky-cycle__stars {
+  animation: none;
+  opacity: 0.5;
+}
 .game-afk-sky-cycle--ruins .game-afk-sky-cycle__grass-edge {
   background: linear-gradient(90deg, #2a2a30, #3a3a42, #2a2a30);
 }
@@ -6427,13 +7838,7 @@ button.game-afk-reward-chip {
    ============================================================ */
 
 .game-afk-enemy--boss_golem .game-afk-slime__blob {
-  background: linear-gradient(
-    165deg,
-    #6b7280 0%,
-    #4b5563 30%,
-    #374151 60%,
-    #1f2937 100%
-  );
+  background: linear-gradient(165deg, #6b7280 0%, #4b5563 30%, #374151 60%, #1f2937 100%);
   box-shadow:
     inset 0 2px 0 rgba(180, 190, 200, 0.35),
     inset 0 -2px 4px rgba(0, 0, 0, 0.5),
@@ -6457,7 +7862,7 @@ button.game-afk-reward-chip {
   height: 55%;
   background:
     linear-gradient(135deg, transparent 45%, rgba(255, 120, 0, 0.55) 47%, transparent 49%),
-    linear-gradient(60deg,  transparent 52%, rgba(255, 80, 0, 0.4) 54%, transparent 56%),
+    linear-gradient(60deg, transparent 52%, rgba(255, 80, 0, 0.4) 54%, transparent 56%),
     linear-gradient(200deg, transparent 38%, rgba(255, 140, 0, 0.45) 40%, transparent 42%);
   animation: game-afk-golem-glow 2.2s ease-in-out infinite;
   border-radius: 40%;
@@ -6470,27 +7875,34 @@ button.game-afk-reward-chip {
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    repeating-linear-gradient(
-      48deg,
-      transparent,
-      transparent 3px,
-      rgba(80, 90, 100, 0.18) 3px,
-      rgba(80, 90, 100, 0.18) 4px
-    );
+  background: repeating-linear-gradient(
+    48deg,
+    transparent,
+    transparent 3px,
+    rgba(80, 90, 100, 0.18) 3px,
+    rgba(80, 90, 100, 0.18) 4px
+  );
   border-radius: 40%;
 }
 
 @keyframes game-afk-golem-glow {
-  0%, 100% { opacity: 0.6; }
-  50%       { opacity: 1; filter: brightness(1.15); }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.15);
+  }
 }
 
 .game-afk-slime__face--golem .game-afk-slime__eye {
   width: 0.8rem;
   height: 0.85rem;
   background: radial-gradient(circle at 40% 35%, #ff8c00 0%, #ff4500 40%, #cc2200 100%);
-  box-shadow: 0 0 8px rgba(255, 100, 0, 0.8), 0 0 14px rgba(255, 60, 0, 0.4);
+  box-shadow:
+    0 0 8px rgba(255, 100, 0, 0.8),
+    0 0 14px rgba(255, 60, 0, 0.4);
 }
 
 .game-afk-slime__face--golem .game-afk-slime__iris {
@@ -6506,14 +7918,22 @@ button.game-afk-reward-chip {
   width: 0.86rem;
   height: 0.96rem;
   background: radial-gradient(circle at 38% 32%, #fca5a5 0%, #dc2626 40%, #7f1d1d 100%);
-  box-shadow: 0 0 10px rgba(220, 38, 38, 0.75), 0 0 18px rgba(185, 28, 28, 0.4);
+  box-shadow:
+    0 0 10px rgba(220, 38, 38, 0.75),
+    0 0 18px rgba(185, 28, 28, 0.4);
   border: 1px solid rgba(250, 200, 200, 0.3);
 }
 
 .game-afk-slime__face--colossus .game-afk-slime__iris {
   width: 54%;
   height: 54%;
-  background: radial-gradient(circle at 35% 30%, #fff0f0 0%, #fca5a5 30%, #dc2626 65%, #7f1d1d 100%);
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fff0f0 0%,
+    #fca5a5 30%,
+    #dc2626 65%,
+    #7f1d1d 100%
+  );
   box-shadow: 0 0 6px rgba(255, 120, 120, 0.8);
 }
 
@@ -6524,8 +7944,13 @@ button.game-afk-reward-chip {
   color: #fff !important;
   box-shadow: 2px 2px 0 #7f1d1d !important;
 }
-.game-afk-modal__shop-btn--close:hover { transform: translateY(-1px); }
-.game-afk-modal__shop-btn--close:active { transform: translateY(1px); box-shadow: 1px 1px 0 #7f1d1d !important; }
+.game-afk-modal__shop-btn--close:hover {
+  transform: translateY(-1px);
+}
+.game-afk-modal__shop-btn--close:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 #7f1d1d !important;
+}
 
 /* ============================================================
    CHEST — smoother "ready" animation (no brightness flicker)
@@ -6537,8 +7962,14 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-ready-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.88; box-shadow: 0 0 8px rgba(251, 191, 36, 0.28); }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.88;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.28);
+  }
 }
 
 .game-afk-chest--ready .game-afk-chest__lock {
@@ -6546,10 +7977,19 @@ button.game-afk-reward-chip {
 }
 
 @keyframes game-afk-chest-lock-wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  20%       { transform: rotate(-4deg); }
-  40%       { transform: rotate(4deg); }
-  60%       { transform: rotate(0deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-4deg);
+  }
+  40% {
+    transform: rotate(4deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
 }
 
 /* ============================================================
@@ -6632,7 +8072,7 @@ button.game-afk-reward-chip {
 /* Modal shell */
 .game-bestiary-modal {
   max-height: min(calc(100dvh - 2.5rem), 42rem);
-  overflow: hidden;           /* modal não rola — o scroll-area rola */
+  overflow: hidden; /* modal não rola — o scroll-area rola */
   display: flex;
   flex-direction: column;
 }
@@ -6647,7 +8087,7 @@ button.game-afk-reward-chip {
 /* Scroll area — ocupa o espaço restante e rola */
 .game-bestiary-scroll {
   flex: 1;
-  min-height: 0;              /* essencial: permite o flex-child encolher e rolar */
+  min-height: 0; /* essencial: permite o flex-child encolher e rolar */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -6747,7 +8187,9 @@ button.game-afk-reward-chip {
   background: rgba(255, 255, 255, 0.85);
   color: #44403c;
   cursor: pointer;
-  transition: background 0.12s, transform 0.12s;
+  transition:
+    background 0.12s,
+    transform 0.12s;
 }
 .game-bestiary-carousel__nav:hover {
   background: #fff;
@@ -6757,7 +8199,7 @@ button.game-afk-reward-chip {
 /* Card — ROW layout: portrait-wrap | meta */
 .game-bestiary-card {
   display: flex;
-  flex-direction: row;        /* override index.css column */
+  flex-direction: row; /* override index.css column */
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.75rem 0.7rem;
@@ -6765,9 +8207,9 @@ button.game-afk-reward-chip {
   border-radius: 0.75rem;
   background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), rgba(250, 250, 249, 0.85));
   flex: 1;
-  min-height: unset;          /* override index.css 13.5rem */
-  overflow: visible;          /* allow drops popup to overflow */
-  text-align: left;           /* override index.css center */
+  min-height: unset; /* override index.css 13.5rem */
+  overflow: visible; /* allow drops popup to overflow */
+  text-align: left; /* override index.css center */
 }
 
 .game-bestiary-card--unlocked {
@@ -6806,7 +8248,7 @@ button.game-afk-reward-chip {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: unset;          /* override index.css 7.5rem */
+  min-height: unset; /* override index.css 7.5rem */
   width: auto;
   padding: 0;
   background: none;
@@ -6819,7 +8261,10 @@ button.game-afk-reward-chip {
   border: 2px solid transparent;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: border-color 0.14s ease, background 0.14s ease, transform 0.1s ease;
+  transition:
+    border-color 0.14s ease,
+    background 0.14s ease,
+    transform 0.1s ease;
   outline: none;
   padding: 0;
 }
@@ -6841,7 +8286,7 @@ button.game-afk-reward-chip {
   flex: 1;
   min-width: 0;
   width: auto;
-  text-align: left;           /* override index.css center */
+  text-align: left; /* override index.css center */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -6860,11 +8305,26 @@ button.game-afk-reward-chip {
   margin-bottom: 0.2rem;
 }
 
-.game-bestiary-card__tier--common   { background: #e0f2fe; color: #0369a1; }
-.game-bestiary-card__tier--elite    { background: #f3e8ff; color: #7c3aed; }
-.game-bestiary-card__tier--boss     { background: #fee2e2; color: #b91c1c; }
-.game-bestiary-card__tier--golden   { background: #fef3c7; color: #b45309; }
-.game-bestiary-card__tier--locked   { background: #f3f4f6; color: #6b7280; }
+.game-bestiary-card__tier--common {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.game-bestiary-card__tier--elite {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+.game-bestiary-card__tier--boss {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.game-bestiary-card__tier--golden {
+  background: #fef3c7;
+  color: #b45309;
+}
+.game-bestiary-card__tier--locked {
+  background: #f3f4f6;
+  color: #6b7280;
+}
 
 .game-bestiary-card__meta h4 {
   margin: 0 0 0.12rem;
@@ -6949,7 +8409,7 @@ button.game-afk-reward-chip {
   align-items: center;
   gap: 0.38rem;
   padding: 0.15rem 0;
-  margin-top: 0;            /* override index.css margin-top: 0.55rem */
+  margin-top: 0; /* override index.css margin-top: 0.55rem */
 }
 
 .game-bestiary-dots__dot {
@@ -6960,7 +8420,10 @@ button.game-afk-reward-chip {
   border: 2px solid #c8c5c2;
   padding: 0;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.15s,
+    border-color 0.15s;
 }
 
 .game-bestiary-dots__dot--active {
@@ -6973,4 +8436,3 @@ button.game-afk-reward-chip {
   opacity: 0.42;
   background: #e7e5e4;
 }
-

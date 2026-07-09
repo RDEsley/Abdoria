@@ -39,7 +39,11 @@ export function AfkBossProgressPanel({
         aria-valuenow={killsUntilBoss}
         aria-valuemin={0}
         aria-valuemax={AFK_BOSS_INTERVAL - 1}
-        aria-label={bossActive ? 'Boss em combate' : `Progresso até o boss: ${killsUntilBoss} de ${AFK_BOSS_INTERVAL - 1}`}
+        aria-label={
+          bossActive
+            ? 'Boss em combate'
+            : `Progresso até o boss: ${killsUntilBoss} de ${AFK_BOSS_INTERVAL - 1}`
+        }
       >
         <div
           className="game-afk-combat-hud__boss-fill"
@@ -65,25 +69,41 @@ export function AfkCombatHud({ combat, displayHp }: EnemyBarProps) {
 
   return (
     <div className="game-afk-combat-hud">
-      <div className={`game-afk-combat-hud__enemy-bar game-afk-combat-hud__enemy-bar--${tierClass}`}>
+      <div
+        className={`game-afk-combat-hud__enemy-bar game-afk-combat-hud__enemy-bar--${tierClass}`}
+      >
         <div className="game-afk-combat-hud__enemy-header">
           <div className="game-afk-combat-hud__enemy-identity">
             <span className="game-afk-combat-hud__enemy-slug" aria-hidden>
-              {combat.enemy_id === 'golden_slime' || combat.enemy_id === 'magic_rabbit' ? '✧' : combat.is_boss ? '👑' : combat.elite ? '✦' : '●'}
+              {combat.enemy_id === 'golden_slime' || combat.enemy_id === 'magic_rabbit'
+                ? '✧'
+                : combat.is_boss
+                  ? '👑'
+                  : combat.elite
+                    ? '✦'
+                    : '●'}
             </span>
             <div className="game-afk-combat-hud__enemy-title">
               <span className="game-afk-combat-hud__enemy-name">{enemyLabel}</span>
               {combat.enemy_id === 'golden_slime' && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">Raro</span>
+                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">
+                  Raro
+                </span>
               )}
               {combat.enemy_id === 'magic_rabbit' && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">Mágico</span>
+                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">
+                  Mágico
+                </span>
               )}
               {combat.is_boss && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--boss">BOSS</span>
+                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--boss">
+                  BOSS
+                </span>
               )}
               {!combat.is_boss && combat.elite && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--elite">Elite</span>
+                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--elite">
+                  Elite
+                </span>
               )}
             </div>
           </div>
@@ -115,9 +135,12 @@ export function useDamageFloaters() {
     const id = Date.now() + Math.random();
     const drift = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 16);
     setFloaters((prev) => [...prev.slice(-3), { id, value, drift, crit }]);
-    window.setTimeout(() => {
-      setFloaters((prev) => prev.filter((f) => f.id !== id));
-    }, crit ? 1050 : 950);
+    window.setTimeout(
+      () => {
+        setFloaters((prev) => prev.filter((f) => f.id !== id));
+      },
+      crit ? 1050 : 950,
+    );
   }, []);
 
   useEffect(() => () => setFloaters([]), []);

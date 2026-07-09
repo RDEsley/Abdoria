@@ -238,6 +238,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   },
 ];
 
-export const ACHIEVEMENT_BY_ID = Object.fromEntries(
-  ACHIEVEMENTS.map((a) => [a.id, a]),
-) as Record<string, AchievementDefinition>;
+export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a])) as Record<
+  string,
+  AchievementDefinition
+>;

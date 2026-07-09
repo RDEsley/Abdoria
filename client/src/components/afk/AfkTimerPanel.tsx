@@ -15,7 +15,13 @@ interface Props {
   dropChances?: AfkKillDropChances;
 }
 
-export function AfkTimerPanel({ minutos, elapsedSinceSyncMin, capped, loading, dropChances }: Props) {
+export function AfkTimerPanel({
+  minutos,
+  elapsedSinceSyncMin,
+  capped,
+  loading,
+  dropChances,
+}: Props) {
   const display = afkDisplayMinutes(minutos, capped ? 0 : elapsedSinceSyncMin);
   const progress = capped ? 1 : afkProgressToCap(minutos, elapsedSinceSyncMin);
   const chances = dropChances ?? AFK_KILL_DROP_CHANCES;
@@ -41,10 +47,16 @@ export function AfkTimerPanel({ minutos, elapsedSinceSyncMin, capped, loading, d
         aria-valuemax={100}
         aria-label="Progresso até o limite de 24h de exploração"
       >
-        <div className="game-afk-timer__bar-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
+        <div
+          className="game-afk-timer__bar-fill"
+          style={{ width: `${Math.round(progress * 100)}%` }}
+        />
       </div>
       {!capped && (
-        <span className="game-afk-timer__label" style={{ textAlign: 'center', marginTop: '0.1rem' }}>
+        <span
+          className="game-afk-timer__label"
+          style={{ textAlign: 'center', marginTop: '0.1rem' }}
+        >
           Cada inimigo derrotado pode dropar loot · máx. {AFK_MAX_MINUTES / 60}h
         </span>
       )}

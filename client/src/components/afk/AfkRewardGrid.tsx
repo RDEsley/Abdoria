@@ -3,7 +3,12 @@ import { AnimatePresence } from 'framer-motion';
 import { Gift } from 'lucide-react';
 import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
 import { AfkLootTooltip } from '@/components/afk/AfkLootTooltip';
-import { AfkRewardIcon, buildAfkRewardItems, countAfkDropEvents, type AfkRewardItem } from '@/lib/afk-rewards';
+import {
+  AfkRewardIcon,
+  buildAfkRewardItems,
+  countAfkDropEvents,
+  type AfkRewardItem,
+} from '@/lib/afk-rewards';
 import type { AfkPendingReward } from '@/types';
 
 export { countAfkRewardItems, countAfkDropEvents } from '@/lib/afk-rewards';
@@ -22,14 +27,22 @@ function RewardChipFx({ rarity }: { rarity: AfkRewardItem['rarity'] }) {
   if (rarity === 'lendario') {
     return (
       <span className="game-afk-reward-chip__orbit" aria-hidden>
-        <i /><i /><i /><i />
+        <i />
+        <i />
+        <i />
+        <i />
       </span>
     );
   }
   if (rarity === 'secret' || rarity === 'golden_secret') {
     return (
       <span className="game-afk-reward-chip__lightshow" aria-hidden>
-        <i /><i /><i /><i /><i /><i />
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
       </span>
     );
   }
@@ -51,7 +64,10 @@ function RewardIconGrid({
     <div className="game-afk-rewards__icon-grid" role="list" aria-label="Recompensas da exploração">
       {items.map((item, index) => {
         const showPlusPrefix =
-          amountPrefixPlus && (item.kind === 'xp' || item.kind === 'abdoria') && item.amount != null && item.amount > 0;
+          amountPrefixPlus &&
+          (item.kind === 'xp' || item.kind === 'abdoria') &&
+          item.amount != null &&
+          item.amount > 0;
         const rarity = item.rarity ?? 'comum';
         const isRare = rarity === 'lendario' || rarity === 'secret' || rarity === 'golden_secret';
         const selected = selectedKey === item.key;
@@ -75,14 +91,16 @@ function RewardIconGrid({
             </span>
             {item.amount != null && item.amount > 0 && (
               <span className="game-afk-reward-chip__badge tabular-nums">
-                {showPlusPrefix ? <span className="game-afk-reward-chip__badge-sign" aria-hidden>+</span> : null}
+                {showPlusPrefix ? (
+                  <span className="game-afk-reward-chip__badge-sign" aria-hidden>
+                    +
+                  </span>
+                ) : null}
                 <span>{item.amount}</span>
               </span>
             )}
             <AnimatePresence>
-              {selected && (
-                <AfkLootTooltip item={item} onClose={() => setSelectedKey(null)} />
-              )}
+              {selected && <AfkLootTooltip item={item} onClose={() => setSelectedKey(null)} />}
             </AnimatePresence>
           </>
         );
@@ -135,7 +153,11 @@ export function AfkRewardGrid({
   const showLootFromChest = withChest && (chestOpen || chestOpening);
 
   const iconGrid = hasLoot ? (
-    <RewardIconGrid items={items} amountPrefixPlus={showLootFromChest} interactive={showLootFromChest} />
+    <RewardIconGrid
+      items={items}
+      amountPrefixPlus={showLootFromChest}
+      interactive={showLootFromChest}
+    />
   ) : null;
 
   const emptyState = (

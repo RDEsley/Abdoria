@@ -38,15 +38,23 @@ function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
     tempo_recomendado: Number(row.tempo_recomendado),
     prioridade: String(row.prioridade),
     modo: row.modo ? String(row.modo) : undefined,
-    repeticoes_iniciante: row.repeticoes_iniciante != null ? Number(row.repeticoes_iniciante) : undefined,
-    repeticoes_intermediario: row.repeticoes_intermediario != null ? Number(row.repeticoes_intermediario) : undefined,
-    repeticoes_avancado: row.repeticoes_avancado != null ? Number(row.repeticoes_avancado) : undefined,
-    tempo_seg_iniciante: row.tempo_seg_iniciante != null ? Number(row.tempo_seg_iniciante) : undefined,
-    tempo_seg_intermediario: row.tempo_seg_intermediario != null ? Number(row.tempo_seg_intermediario) : undefined,
+    repeticoes_iniciante:
+      row.repeticoes_iniciante != null ? Number(row.repeticoes_iniciante) : undefined,
+    repeticoes_intermediario:
+      row.repeticoes_intermediario != null ? Number(row.repeticoes_intermediario) : undefined,
+    repeticoes_avancado:
+      row.repeticoes_avancado != null ? Number(row.repeticoes_avancado) : undefined,
+    tempo_seg_iniciante:
+      row.tempo_seg_iniciante != null ? Number(row.tempo_seg_iniciante) : undefined,
+    tempo_seg_intermediario:
+      row.tempo_seg_intermediario != null ? Number(row.tempo_seg_intermediario) : undefined,
     tempo_seg_avancado: row.tempo_seg_avancado != null ? Number(row.tempo_seg_avancado) : undefined,
-    descanso_seg_iniciante: row.descanso_seg_iniciante != null ? Number(row.descanso_seg_iniciante) : undefined,
-    descanso_seg_intermediario: row.descanso_seg_intermediario != null ? Number(row.descanso_seg_intermediario) : undefined,
-    descanso_seg_avancado: row.descanso_seg_avancado != null ? Number(row.descanso_seg_avancado) : undefined,
+    descanso_seg_iniciante:
+      row.descanso_seg_iniciante != null ? Number(row.descanso_seg_iniciante) : undefined,
+    descanso_seg_intermediario:
+      row.descanso_seg_intermediario != null ? Number(row.descanso_seg_intermediario) : undefined,
+    descanso_seg_avancado:
+      row.descanso_seg_avancado != null ? Number(row.descanso_seg_avancado) : undefined,
     descricao: row.descricao ? String(row.descricao) : undefined,
     media: row.media as ExerciseDocument['media'],
     ativo: Boolean(row.ativo),
@@ -82,12 +90,16 @@ function exerciseToRow(ex: Partial<ExerciseDocument>): Record<string, unknown> {
 }
 
 export const Exercise = {
-  async find(filter: Record<string, unknown> = {}, options?: { sort?: Record<string, 1 | -1> }): Promise<ExerciseDocument[]> {
+  async find(
+    filter: Record<string, unknown> = {},
+    options?: { sort?: Record<string, 1 | -1> },
+  ): Promise<ExerciseDocument[]> {
     const sb = getSupabase();
     let query = sb.from('exercises').select('*');
 
     if (filter.ativo === true) query = query.eq('ativo', true);
-    if (filter.musculo_principal) query = query.eq('musculo_principal', filter.musculo_principal as string);
+    if (filter.musculo_principal)
+      query = query.eq('musculo_principal', filter.musculo_principal as string);
     if (filter.nivel != null) query = query.eq('nivel', filter.nivel as number);
     if (filter.prioridade) query = query.eq('prioridade', filter.prioridade as string);
     if (filter.slug && typeof filter.slug === 'object' && '$in' in filter.slug) {
@@ -100,7 +112,11 @@ export const Exercise = {
       }
     }
     if (filter.ativo === false) query = query.eq('ativo', false);
-    if (filter.equipamento && typeof filter.equipamento === 'object' && '$in' in filter.equipamento) {
+    if (
+      filter.equipamento &&
+      typeof filter.equipamento === 'object' &&
+      '$in' in filter.equipamento
+    ) {
       query = query.in('equipamento', filter.equipamento.$in as string[]);
     }
     if (typeof filter.equipamento === 'string') {
@@ -137,7 +153,12 @@ export const Exercise = {
     const row = exerciseToRow({ ...existing, ...update.$set, slug: filter.slug });
 
     if (existing) {
-      const { data, error } = await sb.from('exercises').update(row).eq('slug', filter.slug).select('*').single();
+      const { data, error } = await sb
+        .from('exercises')
+        .update(row)
+        .eq('slug', filter.slug)
+        .select('*')
+        .single();
       if (error) throw error;
       return rowToExercise(data as Record<string, unknown>);
     }
@@ -151,7 +172,10 @@ export const Exercise = {
     return null;
   },
 
-  async updateMany(filter: { slug?: { $in?: string[] } }, update: { $set: { ativo?: boolean } }): Promise<{ modifiedCount: number }> {
+  async updateMany(
+    filter: { slug?: { $in?: string[] } },
+    update: { $set: { ativo?: boolean } },
+  ): Promise<{ modifiedCount: number }> {
     const sb = getSupabase();
     let query = sb.from('exercises').update(update.$set);
     if (filter.slug?.$in?.length) query = query.in('slug', filter.slug.$in);

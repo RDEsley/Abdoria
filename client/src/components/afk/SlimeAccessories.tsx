@@ -106,7 +106,9 @@ export function SlimeAccessoryLayer({
   layer: 'back' | 'front';
 }) {
   const items = accessories.filter((kind) =>
-    layer === 'back' ? isBackSlimeAccessory(kind) : !isBackSlimeAccessory(kind) && !isFaceSlimeAccessory(kind),
+    layer === 'back'
+      ? isBackSlimeAccessory(kind)
+      : !isBackSlimeAccessory(kind) && !isFaceSlimeAccessory(kind),
   );
   if (items.length === 0) return null;
 

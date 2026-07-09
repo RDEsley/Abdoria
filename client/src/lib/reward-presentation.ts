@@ -12,7 +12,9 @@ import {
 import { COSMETIC_DISPLAY } from '@/lib/cosmetics-meta';
 import type { RewardPresentationItem } from '@shared/rewards/presentation';
 
-export function buildRewardPresentationFromAfk(pending: AfkPendingReward): RewardPresentationItem[] {
+export function buildRewardPresentationFromAfk(
+  pending: AfkPendingReward,
+): RewardPresentationItem[] {
   const items: RewardPresentationItem[] = [];
 
   if (pending.xp > 0) {
@@ -76,7 +78,12 @@ export function buildRewardPresentationFromAfk(pending: AfkPendingReward): Rewar
     items.push({
       id: weaponId,
       kind: 'weapon',
-      rarity: weapon?.raridade === 'secreto' ? 'secreto' : weapon?.raridade === 'lendario' ? 'lendario' : 'epico',
+      rarity:
+        weapon?.raridade === 'secreto'
+          ? 'secreto'
+          : weapon?.raridade === 'lendario'
+            ? 'lendario'
+            : 'epico',
       name: weapon?.nome ?? weaponId,
       description: weapon?.descricao,
       cosmeticId: weaponId,

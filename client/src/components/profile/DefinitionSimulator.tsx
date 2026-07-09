@@ -52,9 +52,14 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
 
   const faixa = gorduraAtualNum != null ? getGorduraFaixa(gorduraAtualNum, sexo) : null;
   const diff = gorduraAtualNum != null ? gorduraAtualNum - gorduraMeta : null;
-  const progresso = gorduraAtualNum != null
-    ? calcProgressoDefinicao(gorduraAtualNum, gorduraMeta, saved?.gordura_inicio_pct ?? gorduraAtualNum)
-    : 0;
+  const progresso =
+    gorduraAtualNum != null
+      ? calcProgressoDefinicao(
+          gorduraAtualNum,
+          gorduraMeta,
+          saved?.gordura_inicio_pct ?? gorduraAtualNum,
+        )
+      : 0;
   const kgPerder =
     gorduraAtualNum != null && profile.peso_kg
       ? calcKgParaMeta(profile.peso_kg, gorduraAtualNum, gorduraMeta)
@@ -89,12 +94,16 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
 
   const handleEstimateFromImc = () => {
     if (!imc || !profile.idade) {
-      showGameToast('Preencha peso, altura e idade na aba Dados para estimar.', { variant: 'warn' });
+      showGameToast('Preencha peso, altura e idade na aba Dados para estimar.', {
+        variant: 'warn',
+      });
       return;
     }
     const est = estimarGorduraCorporal(imc, profile.idade, sexo);
     setGorduraAtual(String(est));
-    showGameToast(`Estimativa por IMC/idade: ~${est}% (referência educativa).`, { variant: 'info' });
+    showGameToast(`Estimativa por IMC/idade: ~${est}% (referência educativa).`, {
+      variant: 'info',
+    });
   };
 
   const handleSave = async () => {
@@ -134,8 +143,8 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
         <div>
           <h3 className="game-section-title !mb-1">Simulação de definição</h3>
           <p className="definicao-sim__intro">
-            Projeção educativa com base em % de gordura, perfil e constância nos treinos. Não substitui
-            avaliação profissional.
+            Projeção educativa com base em % de gordura, perfil e constância nos treinos. Não
+            substitui avaliação profissional.
           </p>
         </div>
       </header>
@@ -177,7 +186,9 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
         ) : (
           <p className="definicao-sim__faixa-label">Informe sua gordura estimada</p>
         )}
-        <p className="definicao-sim__faixa-hint">{faixa?.descricao ?? 'Use o campo abaixo ou estime pelo IMC na aba Dados.'}</p>
+        <p className="definicao-sim__faixa-hint">
+          {faixa?.descricao ?? 'Use o campo abaixo ou estime pelo IMC na aba Dados.'}
+        </p>
       </div>
 
       {gorduraAtualNum != null && (
@@ -186,7 +197,9 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
             <span className="definicao-sim__compare-label">Atual</span>
             <span className="definicao-sim__compare-value">{gorduraAtualNum}%</span>
           </div>
-          <div className="definicao-sim__compare-arrow" aria-hidden>→</div>
+          <div className="definicao-sim__compare-arrow" aria-hidden>
+            →
+          </div>
           <div className="definicao-sim__compare-card definicao-sim__compare-card--meta">
             <span className="definicao-sim__compare-label">Meta</span>
             <span className="definicao-sim__compare-value">{gorduraMeta}%</span>
@@ -220,13 +233,18 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
               className="definicao-sim__range"
             />
             <span className="definicao-sim__range-hint">
-              Referência: {getDefinicaoMetaPadrao(sexo)}% ({sexo === 'masculino' ? 'homens' : 'mulheres'})
+              Referência: {getDefinicaoMetaPadrao(sexo)}% (
+              {sexo === 'masculino' ? 'homens' : 'mulheres'})
             </span>
           </label>
         </div>
 
         <div className="definicao-sim__quick-actions">
-          <button type="button" onClick={handleEstimateFromImc} className="game-scheme-chip !min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={handleEstimateFromImc}
+            className="game-scheme-chip !min-w-0 flex-1"
+          >
             <span className="game-scheme-chip__label">Estimar por IMC</span>
             <span className="game-scheme-chip__hint">Usa peso, altura e idade</span>
           </button>
@@ -288,10 +306,14 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
               </p>
               <p className="definicao-sim__projection-value">
                 {projecao.realista}–{projecao.conservador} semanas
-                <span className="definicao-sim__projection-optimistic"> (otimista: {projecao.otimista} sem.)</span>
+                <span className="definicao-sim__projection-optimistic">
+                  {' '}
+                  (otimista: {projecao.otimista} sem.)
+                </span>
               </p>
               <p className="definicao-sim__projection-hint">
-                Baseado em {treinosSemana} estímulo(s) muscular(es) esta semana · streak {stats?.streak_atual ?? 0}d
+                Baseado em {treinosSemana} estímulo(s) muscular(es) esta semana · streak{' '}
+                {stats?.streak_atual ?? 0}d
               </p>
             </div>
           )}

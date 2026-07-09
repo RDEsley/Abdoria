@@ -1,5 +1,9 @@
 import { AFK_ENEMIES, AFK_GOLDEN_SLIME_ABDORIA, type AfkEnemyId } from './combat.js';
-import { PATROL_LEGENDARY_WEAPON_IDS, PATROL_SECRET_WEAPON_IDS, PATROL_SPELL_IDS } from '../patrol/shop.js';
+import {
+  PATROL_LEGENDARY_WEAPON_IDS,
+  PATROL_SECRET_WEAPON_IDS,
+  PATROL_SPELL_IDS,
+} from '../patrol/shop.js';
 
 export type BestiaryPendingLike = {
   xp: number;
@@ -80,7 +84,9 @@ export function bestiaryDropsForEnemy(enemyId: AfkEnemyId): BestiaryDropId[] {
   return [...COMMON_ELITE_DROPS];
 }
 
-export function buildBestiaryDropCatalog(currencyName: string): Record<BestiaryDropId, BestiaryDropDefinition> {
+export function buildBestiaryDropCatalog(
+  currencyName: string,
+): Record<BestiaryDropId, BestiaryDropDefinition> {
   const def = (id: BestiaryDropId, label: string): BestiaryDropDefinition => ({
     id,
     label,

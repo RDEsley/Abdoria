@@ -5,7 +5,10 @@ import {
   snapshotBestiaryPending,
 } from '../../shared/afk/bestiary-drops.js';
 
-function simulateStackAdd(current: number, amount: number): { added: number; overflow: number; final: number } {
+function simulateStackAdd(
+  current: number,
+  amount: number,
+): { added: number; overflow: number; final: number } {
   const space = Math.max(0, INVENTORY_STACK_CAP - current);
   const added = Math.min(amount, space);
   const overflow = amount - added;

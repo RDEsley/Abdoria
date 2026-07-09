@@ -68,7 +68,10 @@ const leaderboardFilter = {
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
-    const limit = Math.min(Number(req.query.limit) || LEADERBOARD_DISPLAY_LIMIT, LEADERBOARD_DISPLAY_LIMIT);
+    const limit = Math.min(
+      Number(req.query.limit) || LEADERBOARD_DISPLAY_LIMIT,
+      LEADERBOARD_DISPLAY_LIMIT,
+    );
 
     if (metric === 'moedas') {
       await syncAbdoriaBalancesForLeaderboard();
@@ -80,9 +83,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       limit,
     });
 
-    const entries = users.map((user, index) =>
-      toEntry(user, index + 1, user.id === req.userId),
-    );
+    const entries = users.map((user, index) => toEntry(user, index + 1, user.id === req.userId));
 
     res.json(entries);
   } catch (error) {

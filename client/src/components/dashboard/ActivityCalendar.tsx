@@ -5,8 +5,18 @@ import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 
 const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
 ];
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -77,7 +87,12 @@ export function ActivityCalendar() {
   return (
     <div className="workout-calendar">
       <div className="workout-calendar__header">
-        <button type="button" className="workout-calendar__nav" onClick={() => shiftMonth(-1)} aria-label="Mês anterior">
+        <button
+          type="button"
+          className="workout-calendar__nav"
+          onClick={() => shiftMonth(-1)}
+          aria-label="Mês anterior"
+        >
           <ChevronLeft size={18} />
         </button>
         <div className="text-center">
@@ -88,7 +103,12 @@ export function ActivityCalendar() {
             {summary.activeDays} dias ativos · {summary.totalWorkouts} treinos
           </p>
         </div>
-        <button type="button" className="workout-calendar__nav" onClick={() => shiftMonth(1)} aria-label="Próximo mês">
+        <button
+          type="button"
+          className="workout-calendar__nav"
+          onClick={() => shiftMonth(1)}
+          aria-label="Próximo mês"
+        >
           <ChevronRight size={18} />
         </button>
       </div>
@@ -104,7 +124,12 @@ export function ActivityCalendar() {
       <div className="workout-calendar__grid">
         {cells.map((cell, index) => {
           if (!cell.date || !cell.day) {
-            return <span key={`empty-${index}`} className="workout-calendar__cell workout-calendar__cell--empty" />;
+            return (
+              <span
+                key={`empty-${index}`}
+                className="workout-calendar__cell workout-calendar__cell--empty"
+              />
+            );
           }
           const meta = dayMeta.get(cell.date);
           const isSelected = selectedDay === cell.date;

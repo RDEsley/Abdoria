@@ -635,10 +635,9 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
 ];
 
-export const COSMETIC_BY_ID = Object.fromEntries(COSMETICS.map((item) => [item.id, item])) as Record<
-  string,
-  CosmeticDefinition
->;
+export const COSMETIC_BY_ID = Object.fromEntries(
+  COSMETICS.map((item) => [item.id, item]),
+) as Record<string, CosmeticDefinition>;
 
 export const DEFAULT_AVATAR_ID = 'avatar_inicial';
 export const DEFAULT_BORDA_ID = 'borda_basica';

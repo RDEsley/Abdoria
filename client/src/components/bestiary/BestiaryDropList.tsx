@@ -57,7 +57,9 @@ export function BestiaryDropList({ drops }: Props) {
             <span className="game-bestiary-drop__icon" aria-hidden>
               <BestiaryDropIcon dropId={drop.id} />
             </span>
-            <span className="game-bestiary-drop__label">{drop.descoberto && drop.label ? drop.label : '???'}</span>
+            <span className="game-bestiary-drop__label">
+              {drop.descoberto && drop.label ? drop.label : '???'}
+            </span>
             <span className="game-bestiary-drop__chance">{drop.chance}</span>
           </li>
         ))}

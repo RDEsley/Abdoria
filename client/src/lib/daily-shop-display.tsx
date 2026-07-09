@@ -19,7 +19,14 @@ export function FrozenStreakIcon({ size = 16, className }: { size?: number; clas
   return (
     <span className={`game-frozen-streak-icon${className ? ` ${className}` : ''}`} aria-hidden>
       <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
-        <rect x="5" y="5" width="14" height="14" rx="2.5" className="game-frozen-streak-icon__cube" />
+        <rect
+          x="5"
+          y="5"
+          width="14"
+          height="14"
+          rx="2.5"
+          className="game-frozen-streak-icon__cube"
+        />
         <path d="M5 12h14M12 5v14" className="game-frozen-streak-icon__facet" strokeWidth="1.4" />
         <path d="M8 8l8 8M16 8l-8 8" className="game-frozen-streak-icon__spark" strokeWidth="1.2" />
       </svg>
@@ -43,7 +50,12 @@ export function RouteDrinkIcon({ size = 16, className }: { size?: number; classN
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path d="M12 15v2" className="game-route-drink-icon__tree" strokeWidth="1.4" strokeLinecap="round" />
+        <path
+          d="M12 15v2"
+          className="game-route-drink-icon__tree"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
       </svg>
     </span>
   );
@@ -53,7 +65,14 @@ export function PatrolCacheIcon({ size = 16, className }: { size?: number; class
   return (
     <span className={`game-patrol-cache-icon${className ? ` ${className}` : ''}`} aria-hidden>
       <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
-        <rect x="4" y="9" width="16" height="10" rx="1.5" className="game-patrol-cache-icon__body" />
+        <rect
+          x="4"
+          y="9"
+          width="16"
+          height="10"
+          rx="1.5"
+          className="game-patrol-cache-icon__body"
+        />
         <path d="M4 12h16" className="game-patrol-cache-icon__lid" strokeWidth="2" />
         <rect x="9" y="6" width="6" height="4" rx="1" className="game-patrol-cache-icon__lock" />
         <circle cx="12" cy="14" r="1.5" className="game-patrol-cache-icon__gem" />
@@ -79,7 +98,12 @@ export function DoriaBagIcon({ size = 16, className }: { size?: number; classNam
           className="game-doria-bag-icon__body"
           strokeWidth="1.6"
         />
-        <path d="M9 10h6" className="game-doria-bag-icon__tie" strokeWidth="1.6" strokeLinecap="round" />
+        <path
+          d="M9 10h6"
+          className="game-doria-bag-icon__tie"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
         <circle cx="10" cy="15" r="1" className="game-doria-bag-icon__coin" />
         <circle cx="14" cy="16" r="1" className="game-doria-bag-icon__coin" />
       </svg>
@@ -116,7 +140,11 @@ export function dailyRewardIcon(slot: LojaDiariaSlot, size = 16) {
     return <FrozenStreakIcon size={size} />;
   }
   if (slot.recompensa_tipo === 'pacote') return <Package size={size} aria-hidden />;
-  return slot.recompensa_tipo === 'xp' ? <Zap size={size} aria-hidden /> : <Coins size={size} aria-hidden />;
+  return slot.recompensa_tipo === 'xp' ? (
+    <Zap size={size} aria-hidden />
+  ) : (
+    <Coins size={size} aria-hidden />
+  );
 }
 
 export function formatDailyPurchasePrice(slot: LojaDiariaSlot): string {
@@ -132,7 +160,9 @@ export function dailyOfferTitle(slot: LojaDiariaSlot): string {
 }
 
 export function isLuckyFreeDailyReward(slot: LojaDiariaSlot): boolean {
-  return slot.kind === 'recompensa_diaria' && (slot.raridade === 'raro' || slot.raridade === 'epico');
+  return (
+    slot.kind === 'recompensa_diaria' && (slot.raridade === 'raro' || slot.raridade === 'epico')
+  );
 }
 
 export function formatPatrolCacheDescription(): string {

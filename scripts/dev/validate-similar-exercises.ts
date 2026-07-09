@@ -33,9 +33,13 @@ const pushUp = {
 assert.ok(scoreExerciseSimilarity(plank, { ...plank, slug: 'side-plank' }) >= 8);
 assert.ok(scoreExerciseSimilarity(plank, pushUp) < 8);
 
-const similares = filterSimilarExercises(plank, [crunch, pushUp, { ...plank, slug: 'side-plank' }], {
-  minScore: 8,
-});
+const similares = filterSimilarExercises(
+  plank,
+  [crunch, pushUp, { ...plank, slug: 'side-plank' }],
+  {
+    minScore: 8,
+  },
+);
 assert.ok(similares.some((s) => s.slug === 'side-plank'));
 assert.ok(!similares.some((s) => s.slug === 'push-up'));
 

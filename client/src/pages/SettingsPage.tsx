@@ -11,7 +11,24 @@ import { updateMe } from '@/lib/api';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
-import { ABDORIA_XP_STEP, CICLO_LABELS, CICLOS_OPCIONAIS, CURRENCY_NAME, formatFrozenStreakDescription, FROZEN_STREAK_LABEL, normalizeCicloTreinos, XP_ACHIEVEMENT_BONUS, XP_DAILY_CAP_BASE, XP_DAILY_CAP_PER_ACHIEVEMENT, XP_DAILY_CAP_PER_BESTIARY, XP_DAILY_CAP_PER_LEVEL, XP_DAILY_MIN_EXERCISES, XP_DAILY_PER_EXERCISE, XP_STREAK_BONUS_MAX, XP_STREAK_BONUS_PER_DAY } from '@/types';
+import {
+  ABDORIA_XP_STEP,
+  CICLO_LABELS,
+  CICLOS_OPCIONAIS,
+  CURRENCY_NAME,
+  formatFrozenStreakDescription,
+  FROZEN_STREAK_LABEL,
+  normalizeCicloTreinos,
+  XP_ACHIEVEMENT_BONUS,
+  XP_DAILY_CAP_BASE,
+  XP_DAILY_CAP_PER_ACHIEVEMENT,
+  XP_DAILY_CAP_PER_BESTIARY,
+  XP_DAILY_CAP_PER_LEVEL,
+  XP_DAILY_MIN_EXERCISES,
+  XP_DAILY_PER_EXERCISE,
+  XP_STREAK_BONUS_MAX,
+  XP_STREAK_BONUS_PER_DAY,
+} from '@/types';
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
@@ -86,12 +103,25 @@ export function SettingsPage() {
           <Volume2 size={14} /> Áudio
         </h3>
         <label className="flex cursor-pointer items-center gap-3 font-semibold">
-          <input type="checkbox" checked={som} onChange={(e) => setSom(e.target.checked)} className="cursor-pointer" />
+          <input
+            type="checkbox"
+            checked={som}
+            onChange={(e) => setSom(e.target.checked)}
+            className="cursor-pointer"
+          />
           Sons habilitados
         </label>
         <label className="mt-4 block text-sm font-bold">
           Volume: {Math.round(volume * 100)}%
-          <input type="range" min={0} max={1} step={0.1} value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="mt-2 w-full cursor-pointer" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.1}
+            value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            className="mt-2 w-full cursor-pointer"
+          />
         </label>
       </section>
 
@@ -99,7 +129,14 @@ export function SettingsPage() {
         <h3 className="game-section-title mb-4">Treino</h3>
         <label className="block text-sm font-bold">
           Descanso padrão: {descanso}s
-          <input type="range" min={10} max={90} value={descanso} onChange={(e) => setDescanso(Number(e.target.value))} className="mt-2 w-full cursor-pointer" />
+          <input
+            type="range"
+            min={10}
+            max={90}
+            value={descanso}
+            onChange={(e) => setDescanso(Number(e.target.value))}
+            className="mt-2 w-full cursor-pointer"
+          />
         </label>
         <p className="mt-4 text-sm font-bold">Ciclo de treinos</p>
         <p className="mt-1 text-xs font-medium text-stone-500">
@@ -118,7 +155,9 @@ export function SettingsPage() {
                 }`}
               >
                 {c} — {CICLO_LABELS[c]}
-                {optional && <span className="block text-[0.6rem] font-semibold text-stone-400">Opcional</span>}
+                {optional && (
+                  <span className="block text-[0.6rem] font-semibold text-stone-400">Opcional</span>
+                )}
               </button>
             );
           })}
@@ -131,8 +170,8 @@ export function SettingsPage() {
           <p className="mb-2 font-bold text-stone-700">Treino diário</p>
           <ul className="mb-3 list-disc space-y-1 pl-5">
             <li>
-              <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com mínimo de{' '}
-              <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
+              <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com mínimo
+              de <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
             </li>
             <li>
               Teto diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
@@ -141,15 +180,16 @@ export function SettingsPage() {
               <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
             </li>
             <li>
-              Exercícios, streak e conquistas do treino contam no mesmo teto diário. EXP Instantâneo, AFK e códigos
-              presente vão direto ao total.
+              Exercícios, streak e conquistas do treino contam no mesmo teto diário. EXP
+              Instantâneo, AFK e códigos presente vão direto ao total.
             </li>
             <li>Após atingir o teto, o restante do dia não rende mais XP de treino.</li>
           </ul>
           <p className="mb-2 font-bold text-stone-700">Bônus de treino</p>
           <ul className="mb-3 list-disc space-y-1 pl-5">
             <li>
-              Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+{XP_STREAK_BONUS_PER_DAY} por dia de sequência).
+              Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+{XP_STREAK_BONUS_PER_DAY} por
+              dia de sequência).
             </li>
             <li>
               Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
@@ -162,8 +202,8 @@ export function SettingsPage() {
           <p className="mb-2 font-bold text-stone-700">{CURRENCY_NAME}</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{ABDORIA_XP_STEP} XP</strong> totais ganhos (conversão
-              automática).
+              <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{ABDORIA_XP_STEP} XP</strong> totais
+              ganhos (conversão automática).
             </li>
           </ul>
         </div>
@@ -186,17 +226,31 @@ export function SettingsPage() {
       </section>
 
       <div className="flex flex-col gap-2">
-        <button type="button" onClick={() => setShowTutorial(true)} className="cursor-pointer text-left font-bold text-emerald-600 hover:underline">
+        <button
+          type="button"
+          onClick={() => setShowTutorial(true)}
+          className="cursor-pointer text-left font-bold text-emerald-600 hover:underline"
+        >
           Ver tutorial
         </button>
-        <button type="button" onClick={() => setShowTerms(true)} className="cursor-pointer text-left font-bold text-stone-600 hover:underline">
+        <button
+          type="button"
+          onClick={() => setShowTerms(true)}
+          className="cursor-pointer text-left font-bold text-stone-600 hover:underline"
+        >
           Termos e condições
         </button>
       </div>
 
-      <GameButton onClick={save} disabled={saving}>{saving ? 'Salvando...' : 'Salvar configurações'}</GameButton>
+      <GameButton onClick={save} disabled={saving}>
+        {saving ? 'Salvando...' : 'Salvar configurações'}
+      </GameButton>
 
-      <GameButton variant="secondary" onClick={handleLogout} className="flex items-center justify-center gap-2 text-red-600">
+      <GameButton
+        variant="secondary"
+        onClick={handleLogout}
+        className="flex items-center justify-center gap-2 text-red-600"
+      >
         <LogOut size={18} /> Sair da conta
       </GameButton>
 

@@ -48,7 +48,10 @@ export const EXERCISE_NOME_PT: Record<string, string> = {
   'decline-push-up': 'Flexão declinada',
 };
 
-export function resolveExerciseNomePt(exercise: { slug?: string; nome_pt?: string }): string | undefined {
+export function resolveExerciseNomePt(exercise: {
+  slug?: string;
+  nome_pt?: string;
+}): string | undefined {
   if (exercise.nome_pt?.trim()) return exercise.nome_pt.trim();
   if (exercise.slug) return EXERCISE_NOME_PT[exercise.slug];
   return undefined;

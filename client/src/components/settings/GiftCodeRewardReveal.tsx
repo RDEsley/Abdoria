@@ -44,9 +44,7 @@ export function GiftCodeRewardReveal({ result, effectId, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const rewards = result.recompensas?.length
-    ? result.recompensas
-    : buildFallbackRewards(result);
+  const rewards = result.recompensas?.length ? result.recompensas : buildFallbackRewards(result);
 
   return createPortal(
     <div

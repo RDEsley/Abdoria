@@ -145,7 +145,9 @@ export function PreferenceToggleButtons({
         type="button"
         className={[
           'game-item-card__action-icon game-item-card__action-icon--pin',
-          isPinned ? 'game-item-card__action-icon--active game-item-card__action-icon--pin-active' : '',
+          isPinned
+            ? 'game-item-card__action-icon--active game-item-card__action-icon--pin-active'
+            : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -154,7 +156,12 @@ export function PreferenceToggleButtons({
         aria-label={isPinned ? `${pinAriaLabel} (ativo)` : pinAriaLabel}
         title={pinAriaLabel}
       >
-        <Pin size={13} fill={isPinned ? 'currentColor' : 'none'} strokeWidth={isPinned ? 2.5 : 2} aria-hidden />
+        <Pin
+          size={13}
+          fill={isPinned ? 'currentColor' : 'none'}
+          strokeWidth={isPinned ? 2.5 : 2}
+          aria-hidden
+        />
       </button>
       <button
         type="button"

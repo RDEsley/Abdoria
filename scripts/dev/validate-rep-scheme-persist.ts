@@ -22,8 +22,8 @@ const mergedLevels = mergeDadosSalvos(
   },
 );
 assert(
-  mergedLevels.esquema_reps_selecionado.iniciante === 'vol-10x3'
-    && mergedLevels.esquema_reps_selecionado.intermediario === 'vol-14x3',
+  mergedLevels.esquema_reps_selecionado.iniciante === 'vol-10x3' &&
+    mergedLevels.esquema_reps_selecionado.intermediario === 'vol-14x3',
   'deve mesclar esquemas por nível sem sobrescrever outros',
 );
 

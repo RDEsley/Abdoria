@@ -48,7 +48,12 @@ function ResourcePill({ icon, amount, onAdd, addAriaLabel, pulse }: ResourcePill
       </div>
       <span className="top-navbar__pill-value">{formatAmount(amount)}</span>
       {onAdd && (
-        <button type="button" className="top-navbar__pill-add" onClick={onAdd} aria-label={addAriaLabel}>
+        <button
+          type="button"
+          className="top-navbar__pill-add"
+          onClick={onAdd}
+          aria-label={addAriaLabel}
+        >
           <Plus size={13} strokeWidth={3} />
         </button>
       )}
@@ -121,7 +126,9 @@ export function TopNavbar({
             <div className="top-navbar__name-row flex min-w-0 items-baseline gap-1.5">
               <span className="top-navbar__name truncate">{userName}</span>
               {userTitle && (
-                <span className={`top-navbar__title truncate ${titleClassName ?? ''}`.trim()}>{userTitle}</span>
+                <span className={`top-navbar__title truncate ${titleClassName ?? ''}`.trim()}>
+                  {userTitle}
+                </span>
               )}
             </div>
             <div

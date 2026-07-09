@@ -24,10 +24,7 @@ export function XpBar({
   const isFull = !valueOnly && max > 0 && value >= max;
   const visualMax = valueOnly ? Math.max(value, 30) : max;
   const pct = visualMax > 0 ? Math.min(100, (value / visualMax) * 100) : 0;
-  const wrapClass = [
-    'game-xp-bar-wrap',
-    pulseWhenFull && isFull ? 'game-xp-bar-wrap--full' : '',
-  ]
+  const wrapClass = ['game-xp-bar-wrap', pulseWhenFull && isFull ? 'game-xp-bar-wrap--full' : '']
     .filter(Boolean)
     .join(' ');
 
@@ -45,10 +42,7 @@ export function XpBar({
       )}
       {hint && <p className="game-xp-bar__hint">{hint}</p>}
       <div
-        className={[
-          `game-xp-bar game-xp-bar--${variant}`,
-          isFull ? 'game-xp-bar--capped' : '',
-        ]
+        className={[`game-xp-bar game-xp-bar--${variant}`, isFull ? 'game-xp-bar--capped' : '']
           .filter(Boolean)
           .join(' ')}
         role="progressbar"

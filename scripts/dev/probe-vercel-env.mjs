@@ -26,7 +26,9 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 
-const sb = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+const sb = createClient(url, serviceKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 const { error, data } = await sb.from('profiles').select('id').limit(1);
 
 if (error) {

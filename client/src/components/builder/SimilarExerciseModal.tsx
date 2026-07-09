@@ -71,9 +71,15 @@ export function SimilarExerciseModal({
             Trocar exercício
           </h2>
           <p className="game-modal__text">
-            Substituir <strong>{sourceName}</strong> por um similar (mesmo foco muscular ou mecânica parecida).
+            Substituir <strong>{sourceName}</strong> por um similar (mesmo foco muscular ou mecânica
+            parecida).
           </p>
-          <button type="button" onClick={onClose} className="game-modal__close-btn" aria-label="Fechar">
+          <button
+            type="button"
+            onClick={onClose}
+            className="game-modal__close-btn"
+            aria-label="Fechar"
+          >
             <X size={18} />
           </button>
         </header>
@@ -113,7 +119,11 @@ export function SimilarExerciseModal({
                         <span className="game-swap-option__prescription">{prescription}</span>
                       </div>
                     </div>
-                    <GameButton size="sm" className="game-swap-option__btn" onClick={() => onSelect(option.slug)}>
+                    <GameButton
+                      size="sm"
+                      className="game-swap-option__btn"
+                      onClick={() => onSelect(option.slug)}
+                    >
                       Usar
                     </GameButton>
                   </li>

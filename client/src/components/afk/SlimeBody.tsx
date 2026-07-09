@@ -1,9 +1,5 @@
 import type { AfkEnemyId } from '@/types';
-import {
-  collectSlimeAccessories,
-  resolvePortraitAppearance,
-  type SlimeAppearance,
-} from '@/types';
+import { collectSlimeAccessories, resolvePortraitAppearance, type SlimeAppearance } from '@/types';
 import { SlimeAccessoryLayer, SlimeAccessoryPart } from '@/components/afk/SlimeAccessories';
 
 function SlimeHydraHeads() {
@@ -84,7 +80,9 @@ export function SlimeBody({
       {isGolem && <div className="game-afk-slime__golem-cracks" aria-hidden />}
       <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="back" />
       <div className={faceClass}>
-        <span className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}>
+        <span
+          className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}
+        >
           <span className="game-afk-slime__iris" />
         </span>
         <span className="game-afk-slime__eye game-afk-slime__eye--r">
@@ -107,7 +105,9 @@ export function SlimeBody({
 
 export function buildSlimePortraitData(enemyId: AfkEnemyId) {
   const isBoss = enemyId.startsWith('boss_');
-  const elite = ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'].includes(enemyId);
+  const elite = ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'].includes(
+    enemyId,
+  );
   const appearance = resolvePortraitAppearance(enemyId);
   const accessories = collectSlimeAccessories(enemyId, isBoss, elite, appearance);
   return { isBoss, elite, appearance, accessories };

@@ -23,10 +23,14 @@ export function RepSchemeCarousel({
       <div className="game-scheme-empty">
         <p className="game-scheme-empty__title">Nenhum esquema salvo</p>
         <p className="game-scheme-empty__text">
-          Esquemas definem repetições × séries para todos os exercícios de uma vez. Comece criando o seu — sugerimos
-          12 × 3 para {nivelLabel}.
+          Esquemas definem repetições × séries para todos os exercícios de uma vez. Comece criando o
+          seu — sugerimos 12 × 3 para {nivelLabel}.
         </p>
-        <button type="button" className="game-scheme-create-card game-scheme-create-card--solo" onClick={onCreateClick}>
+        <button
+          type="button"
+          className="game-scheme-create-card game-scheme-create-card--solo"
+          onClick={onCreateClick}
+        >
           <Plus size={22} />
           <span>Criar um esquema</span>
         </button>
@@ -45,7 +49,11 @@ export function RepSchemeCarousel({
       {schemes.map((scheme) => {
         const active = selectedId === scheme.id;
         return (
-          <div key={scheme.id} className={`game-scheme-card ${active ? 'game-scheme-card--active' : ''}`} role="listitem">
+          <div
+            key={scheme.id}
+            className={`game-scheme-card ${active ? 'game-scheme-card--active' : ''}`}
+            role="listitem"
+          >
             <button
               type="button"
               className="game-scheme-card__delete"
@@ -57,7 +65,11 @@ export function RepSchemeCarousel({
             >
               <X size={14} />
             </button>
-            <button type="button" className="game-scheme-card__body" onClick={() => onSelect(scheme)}>
+            <button
+              type="button"
+              className="game-scheme-card__body"
+              onClick={() => onSelect(scheme)}
+            >
               <span className="game-scheme-card__label">{scheme.label}</span>
               <span className="game-scheme-card__hint">{scheme.descricao}</span>
               {active && <span className="game-scheme-card__badge">Em uso</span>}

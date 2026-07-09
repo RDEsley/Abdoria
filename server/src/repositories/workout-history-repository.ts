@@ -28,14 +28,22 @@ function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
 
 export const WorkoutHistory = {
   async find(
-    filter: { usuario_id?: string; treino_tipo?: Record<string, unknown>; concluido_em?: Record<string, unknown> },
+    filter: {
+      usuario_id?: string;
+      treino_tipo?: Record<string, unknown>;
+      concluido_em?: Record<string, unknown>;
+    },
     options?: { sort?: Record<string, 1 | -1>; limit?: number; select?: string },
   ): Promise<WorkoutHistoryDocument[]> {
     const sb = getSupabase();
     let query = sb.from('workout_history').select('*');
 
     if (filter.usuario_id) query = query.eq('usuario_id', filter.usuario_id);
-    if (filter.treino_tipo && typeof filter.treino_tipo === 'object' && '$nin' in filter.treino_tipo) {
+    if (
+      filter.treino_tipo &&
+      typeof filter.treino_tipo === 'object' &&
+      '$nin' in filter.treino_tipo
+    ) {
       const excluded = filter.treino_tipo.$nin as (string | null)[];
       for (const val of excluded) {
         if (val === null || val === '') {
@@ -45,7 +53,11 @@ export const WorkoutHistory = {
         }
       }
     }
-    if (filter.concluido_em && typeof filter.concluido_em === 'object' && '$gte' in filter.concluido_em) {
+    if (
+      filter.concluido_em &&
+      typeof filter.concluido_em === 'object' &&
+      '$gte' in filter.concluido_em
+    ) {
       query = query.gte('concluido_em', filter.concluido_em.$gte as string);
     }
 
@@ -86,14 +98,24 @@ export const WorkoutHistory = {
       xp_ganho: data.xp_ganho,
       concluido_em: data.concluido_em ?? new Date().toISOString(),
     };
-    const { data: inserted, error } = await sb.from('workout_history').insert(row).select('*').single();
+    const { data: inserted, error } = await sb
+      .from('workout_history')
+      .insert(row)
+      .select('*')
+      .single();
     if (error) throw error;
     return rowToHistory(inserted as Record<string, unknown>);
   },
 
-  async exists(filter: { usuario_id: string; concluido_em?: Record<string, unknown> }): Promise<boolean> {
+  async exists(filter: {
+    usuario_id: string;
+    concluido_em?: Record<string, unknown>;
+  }): Promise<boolean> {
     const sb = getSupabase();
-    let query = sb.from('workout_history').select('id', { count: 'exact', head: true }).eq('usuario_id', filter.usuario_id);
+    let query = sb
+      .from('workout_history')
+      .select('id', { count: 'exact', head: true })
+      .eq('usuario_id', filter.usuario_id);
     if (filter.concluido_em && '$gte' in filter.concluido_em) {
       query = query.gte('concluido_em', filter.concluido_em.$gte as string);
     }
@@ -111,9 +133,14 @@ export const WorkoutHistory = {
     const userId = String(match.usuario_id ?? '');
 
     if (
-      pipeline.some((s) => (s as { $group?: { _id?: string } }).$group?._id === '$musculos_estimulados')
+      pipeline.some(
+        (s) => (s as { $group?: { _id?: string } }).$group?._id === '$musculos_estimulados',
+      )
     ) {
-      const { data } = await sb.from('workout_history').select('musculos_estimulados').eq('usuario_id', userId);
+      const { data } = await sb
+        .from('workout_history')
+        .select('musculos_estimulados')
+        .eq('usuario_id', userId);
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
         for (const m of (row.musculos_estimulados as string[]) ?? []) {
@@ -136,7 +163,10 @@ export const WorkoutHistory = {
 
       const sumExpr = groupStage?.$group?.total?.$sum;
       if (sumExpr && JSON.stringify(sumExpr).includes('$size')) {
-        const total = (data ?? []).reduce((s, r) => s + ((r.exercicios as unknown[])?.length ?? 0), 0);
+        const total = (data ?? []).reduce(
+          (s, r) => s + ((r.exercicios as unknown[])?.length ?? 0),
+          0,
+        );
         return [{ total }];
       }
     }
@@ -148,12 +178,16 @@ export const WorkoutHistory = {
         return JSON.stringify(groupId).includes('dateToString');
       })
     ) {
-      let query = sb.from('workout_history').select('concluido_em,duracao_total_segundos').eq('usuario_id', userId);
+      let query = sb
+        .from('workout_history')
+        .select('concluido_em,duracao_total_segundos')
+        .eq('usuario_id', userId);
       const concluidoFilter = match.concluido_em as { $gte?: Date | string } | undefined;
       if (concluidoFilter?.$gte) {
-        const since = concluidoFilter.$gte instanceof Date
-          ? concluidoFilter.$gte.toISOString()
-          : String(concluidoFilter.$gte);
+        const since =
+          concluidoFilter.$gte instanceof Date
+            ? concluidoFilter.$gte.toISOString()
+            : String(concluidoFilter.$gte);
         query = query.gte('concluido_em', since);
       }
       const { data } = await query;

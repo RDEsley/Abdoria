@@ -117,7 +117,12 @@ export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
 export const AFK_MAGIC_RABBIT_CHANCE = 2304;
 
 const COMMON_ENEMIES: AfkEnemyId[] = ['bat', 'zombie', 'skeleton'];
-const ELITE_ENEMIES: AfkEnemyId[] = ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'];
+const ELITE_ENEMIES: AfkEnemyId[] = [
+  'armored_skeleton',
+  'crystal_slime',
+  'storm_slime',
+  'slime_knight',
+];
 const BOSS_ENEMIES: AfkEnemyId[] = ['boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem'];
 
 export const DEFAULT_AFK_COMBAT: AfkCombatState = {
@@ -148,11 +153,7 @@ export interface AfkSpawnResult {
   is_boss: boolean;
 }
 
-function pickFromPool(
-  pool: AfkEnemyId[],
-  seed: number,
-  previousEnemyId?: AfkEnemyId,
-): AfkEnemyId {
+function pickFromPool(pool: AfkEnemyId[], seed: number, previousEnemyId?: AfkEnemyId): AfkEnemyId {
   let idx = (seed >>> 8) % pool.length;
   if (pool.length > 1 && previousEnemyId && pool[idx] === previousEnemyId) {
     idx = (idx + 1 + ((seed >>> 16) % (pool.length - 1))) % pool.length;

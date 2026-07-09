@@ -11,7 +11,10 @@ export function useUnlockedExercises() {
     [unlockExercise],
   );
 
-  const isUnlocked = useCallback((slug: string) => unlockedExercises.has(slug), [unlockedExercises]);
+  const isUnlocked = useCallback(
+    (slug: string) => unlockedExercises.has(slug),
+    [unlockedExercises],
+  );
 
   return {
     unlocked: unlockedExercises,

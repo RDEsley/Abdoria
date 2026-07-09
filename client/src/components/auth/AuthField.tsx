@@ -41,7 +41,9 @@ export function AuthField({
           type={inputType}
           className="game-input game-auth-field__input"
           aria-invalid={isInvalid ? true : undefined}
-          aria-describedby={[hintId, errorId, inputProps['aria-describedby']].filter(Boolean).join(' ') || undefined}
+          aria-describedby={
+            [hintId, errorId, inputProps['aria-describedby']].filter(Boolean).join(' ') || undefined
+          }
         />
         {isPassword && showPasswordToggle && (
           <button

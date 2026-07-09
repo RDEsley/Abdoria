@@ -44,7 +44,9 @@ export async function seedDemoUsers(): Promise<void> {
       },
       { upsert: true },
     );
-    console.log(`NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, ${moedas} moedas, streak ${demo.gamificacao.streak_atual}`);
+    console.log(
+      `NPC: ${demo.nome} — ${demo.gamificacao.nivel_xp} XP, ${moedas} moedas, streak ${demo.gamificacao.streak_atual}`,
+    );
   }
 
   console.log(`Total NPCs: ${DEMO_USERS.length}`);

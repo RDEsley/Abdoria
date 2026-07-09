@@ -91,7 +91,9 @@ function BestiarySectionCarousel({
         <div className="game-bestiary-section__head">
           <h3 className="game-bestiary-section__title">{category.label}</h3>
           {count > 1 && (
-            <span className="game-bestiary-section__counter">{index + 1}/{count}</span>
+            <span className="game-bestiary-section__counter">
+              {index + 1}/{count}
+            </span>
           )}
         </div>
       )}
@@ -115,7 +117,9 @@ function BestiarySectionCarousel({
               'game-bestiary-card',
               entry.desbloqueado ? 'game-bestiary-card--unlocked' : 'game-bestiary-card--locked',
               isGolden ? 'game-bestiary-card--golden' : '',
-            ].filter(Boolean).join(' ')}
+            ]
+              .filter(Boolean)
+              .join(' ')}
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
@@ -146,7 +150,9 @@ function BestiarySectionCarousel({
             </div>
 
             <div className="game-bestiary-card__meta">
-              <span className={`game-bestiary-card__tier game-bestiary-card__tier--${entry.desbloqueado ? entry.tier : 'locked'}`}>
+              <span
+                className={`game-bestiary-card__tier game-bestiary-card__tier--${entry.desbloqueado ? entry.tier : 'locked'}`}
+              >
                 {entry.desbloqueado ? tierLabel(entry.tier) : 'Desconhecido'}
               </span>
               <h4>{entry.desbloqueado ? entry.label : '???'}</h4>
@@ -156,9 +162,7 @@ function BestiarySectionCarousel({
                 </p>
               )}
               {entry.desbloqueado && (
-                <p className="game-bestiary-card__drops-hint">
-                  Toque no retrato para ver drops
-                </p>
+                <p className="game-bestiary-card__drops-hint">Toque no retrato para ver drops</p>
               )}
             </div>
           </motion.article>
@@ -177,7 +181,11 @@ function BestiarySectionCarousel({
       </div>
 
       {count > 1 && (
-        <div className="game-bestiary-dots" role="tablist" aria-label={`${category.label} — navegação`}>
+        <div
+          className="game-bestiary-dots"
+          role="tablist"
+          aria-label={`${category.label} — navegação`}
+        >
           {category.entries.map((item, dotIndex) => (
             <button
               key={item.id}
@@ -204,7 +212,9 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
     try {
       setData(await getBestiary());
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível carregar o bestiário.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar o bestiário.'), {
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -248,12 +258,19 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
         animate={{ opacity: 1, y: 0 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" className="game-modal__close-btn" onClick={onClose} aria-label="Fechar">
+        <button
+          type="button"
+          className="game-modal__close-btn"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
           <X size={18} />
         </button>
 
         <header className="game-bestiary-modal__head">
-          <h2 id="bestiary-title" className="game-modal__title">Bestiário</h2>
+          <h2 id="bestiary-title" className="game-modal__title">
+            Bestiário
+          </h2>
           <p className="game-modal__text">
             {unlockedCount}/{total} descobertos
             {data ? ` · +${data.bonus_cap_diario} XP/dia de bônus` : ''}
@@ -267,9 +284,7 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
             {regularCategories.map((category) => (
               <BestiarySectionCarousel key={category.id} category={category} />
             ))}
-            {goldenCategory && (
-              <BestiarySectionCarousel key="golden" category={goldenCategory} />
-            )}
+            {goldenCategory && <BestiarySectionCarousel key="golden" category={goldenCategory} />}
           </div>
         )}
       </motion.div>

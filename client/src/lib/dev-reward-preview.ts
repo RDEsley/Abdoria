@@ -6,7 +6,9 @@ export type DevSecretPreviewVariant = 'title' | 'golden' | 'weapon' | 'all';
 
 const tituloSecreto = COSMETIC_DISPLAY.titulo_secreto;
 
-export function buildDevSecretPreviewItem(variant: DevSecretPreviewVariant): RewardPresentationItem[] {
+export function buildDevSecretPreviewItem(
+  variant: DevSecretPreviewVariant,
+): RewardPresentationItem[] {
   switch (variant) {
     case 'golden':
       return [

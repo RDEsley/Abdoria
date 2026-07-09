@@ -24,7 +24,8 @@ export function EquipmentPanel({ onEquipmentChange }: Props) {
             Meus Equipamentos
           </h2>
           <p className="library-equipment__subtitle">
-            Marque o que você possui para desbloquear exercícios extras na biblioteca e nas recomendações.
+            Marque o que você possui para desbloquear exercícios extras na biblioteca e nas
+            recomendações.
           </p>
         </div>
       </div>
@@ -34,7 +35,10 @@ export function EquipmentPanel({ onEquipmentChange }: Props) {
           const owned = isOwned(item.id);
           const inputId = `equipment-${item.id}`;
           return (
-            <li key={item.id} className={`library-equipment__item${owned ? ' library-equipment__item--owned' : ''}`}>
+            <li
+              key={item.id}
+              className={`library-equipment__item${owned ? ' library-equipment__item--owned' : ''}`}
+            >
               <label htmlFor={inputId} className="library-equipment__label">
                 <input
                   id={inputId}
@@ -49,7 +53,8 @@ export function EquipmentPanel({ onEquipmentChange }: Props) {
                   <span className="library-equipment__question">Você possui este equipamento?</span>
                   <span className="library-equipment__desc">{item.descricao}</span>
                   <span className="library-equipment__count">
-                    {item.exerciseSlugs.length} exercício(s) · {owned ? 'Desbloqueados' : 'Bloqueados'}
+                    {item.exerciseSlugs.length} exercício(s) ·{' '}
+                    {owned ? 'Desbloqueados' : 'Bloqueados'}
                   </span>
                 </span>
               </label>

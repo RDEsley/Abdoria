@@ -50,7 +50,9 @@ export function RewardSummaryReveal({ items, onClose }: Props) {
                 key={item.id}
                 className={`reward-summary-chip reward-summary-chip--${item.rarity}${isLegendary ? ' reward-summary-chip--rainbow' : ''}`}
               >
-                <div className={`reward-summary-chip__icon${isLegendary ? ' reward-summary-chip__icon--rainbow' : ''}`}>
+                <div
+                  className={`reward-summary-chip__icon${isLegendary ? ' reward-summary-chip__icon--rainbow' : ''}`}
+                >
                   {item.kind === 'cosmetic' && item.icon ? (
                     <CosmeticIcon icon={item.icon as never} size={28} />
                   ) : (
@@ -60,7 +62,8 @@ export function RewardSummaryReveal({ items, onClose }: Props) {
                 <div className="reward-summary-chip__body">
                   <p className="reward-summary-chip__name">{rewardChipLabel(item)}</p>
                   <p className="reward-summary-chip__rarity">
-                    {COSMETIC_RARITY_LABELS[item.rarity === 'comum' ? 'comum' : item.rarity] ?? item.rarity}
+                    {COSMETIC_RARITY_LABELS[item.rarity === 'comum' ? 'comum' : item.rarity] ??
+                      item.rarity}
                   </p>
                 </div>
               </article>

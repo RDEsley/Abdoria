@@ -64,7 +64,12 @@ export function AbdoriaCoinsGuideOverlay({ open, onClose }: Props) {
         aria-labelledby="abdoria-coins-guide-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" onClick={onClose} className="absolute right-4 top-4 cursor-pointer text-stone-400" aria-label="Fechar">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 cursor-pointer text-stone-400"
+          aria-label="Fechar"
+        >
           <X size={24} />
         </button>
 
@@ -74,7 +79,12 @@ export function AbdoriaCoinsGuideOverlay({ open, onClose }: Props) {
         </p>
 
         <AnimatePresence mode="wait">
-          <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
               <Icon size={28} />
             </div>
@@ -99,7 +109,12 @@ export function AbdoriaCoinsGuideOverlay({ open, onClose }: Props) {
             {step + 1}/{SLIDES.length}
           </span>
           {step < SLIDES.length - 1 ? (
-            <button type="button" onClick={() => setStep((s) => s + 1)} className="cursor-pointer" aria-label="Próxima dica">
+            <button
+              type="button"
+              onClick={() => setStep((s) => s + 1)}
+              className="cursor-pointer"
+              aria-label="Próxima dica"
+            >
               <ChevronRight size={24} />
             </button>
           ) : (

@@ -60,7 +60,9 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
         <h2 id="forgot-title" className="game-modal__title">
           ESQUECI A SENHA
         </h2>
-        <p className="game-modal__text">Informe o email da sua conta. Enviaremos as instruções se ele estiver cadastrado.</p>
+        <p className="game-modal__text">
+          Informe o email da sua conta. Enviaremos as instruções se ele estiver cadastrado.
+        </p>
 
         <form onSubmit={handleSubmit} className="game-login__form" noValidate>
           <AuthField
@@ -79,7 +81,9 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
             autoComplete="email"
           />
 
-          {error && <AuthAlert variant="error" title="Não foi possível enviar" message={error} live />}
+          {error && (
+            <AuthAlert variant="error" title="Não foi possível enviar" message={error} live />
+          )}
           {message && <AuthAlert variant="success" title="Verifique seu email" message={message} />}
 
           <button type="submit" disabled={loading} className="game-btn game-btn--primary">

@@ -53,7 +53,10 @@ export function AfkPatrolChest({
         </>
       )}
       {itemCount > 0 && !open && !opening && (
-        <span className="game-afk-chest__count-badge tabular-nums" aria-label={`${itemCount} drop${itemCount === 1 ? '' : 's'} de inimigos`}>
+        <span
+          className="game-afk-chest__count-badge tabular-nums"
+          aria-label={`${itemCount} drop${itemCount === 1 ? '' : 's'} de inimigos`}
+        >
           {itemCount}
         </span>
       )}

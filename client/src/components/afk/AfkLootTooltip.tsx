@@ -24,7 +24,10 @@ export function AfkLootTooltip({ item, onClose }: Props) {
       <button
         type="button"
         className="game-afk-loot-tooltip__close"
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
         aria-label="Fechar detalhes"
       >
         <X size={13} aria-hidden />
@@ -36,7 +39,9 @@ export function AfkLootTooltip({ item, onClose }: Props) {
         </span>
         <div className="game-afk-loot-tooltip__title">
           <p className="game-afk-loot-tooltip__name">{item.ariaLabel}</p>
-          <span className={`game-afk-loot-tooltip__rarity game-afk-loot-tooltip__rarity--${rarity}`}>
+          <span
+            className={`game-afk-loot-tooltip__rarity game-afk-loot-tooltip__rarity--${rarity}`}
+          >
             {AFK_RARITY_LABEL[rarity]}
           </span>
         </div>

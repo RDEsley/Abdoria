@@ -7,7 +7,10 @@ import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
 import { InventoryModal } from '@/components/inventory/InventoryModal';
-import { buildRewardPresentationFromAfk, partitionRewardPresentation } from '@/lib/reward-presentation';
+import {
+  buildRewardPresentationFromAfk,
+  partitionRewardPresentation,
+} from '@/lib/reward-presentation';
 import { useRewardPresentation } from '@/context/RewardPresentationContext';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
@@ -70,7 +73,9 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível carregar a exploração.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível carregar a exploração.'), {
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -184,7 +189,9 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       showClaimedCelebration(res.claimed, res.overflow_to_dorias);
       await load();
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), {
+        variant: 'error',
+      });
     } finally {
       setClaiming(false);
     }
@@ -194,10 +201,10 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   const capped = meta?.capped ?? false;
   const inventoryItemCount =
-    (stats?.frozen_streak_count ?? 0)
-    + (stats?.route_drink_count ?? meta?.route_drink_count ?? 0)
-    + (stats?.exp_instant_count ?? 0)
-    + (stats?.doria_bag_count ?? 0);
+    (stats?.frozen_streak_count ?? 0) +
+    (stats?.route_drink_count ?? meta?.route_drink_count ?? 0) +
+    (stats?.exp_instant_count ?? 0) +
+    (stats?.doria_bag_count ?? 0);
 
   const handleInventoryClose = () => {
     setInventoryOpen(false);
@@ -206,7 +213,13 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   return createPortal(
     <>
-      <div className="game-afk-overlay" role="dialog" aria-modal="true" aria-labelledby="afk-patrol-title" onClick={onClose}>
+      <div
+        className="game-afk-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="afk-patrol-title"
+        onClick={onClose}
+      >
         <motion.div
           className="game-afk-modal"
           initial={{ opacity: 0, y: 24, scale: 0.96 }}
@@ -240,7 +253,9 @@ export function AfkPatrolModal({ open, onClose }: Props) {
               >
                 <Backpack size={26} aria-hidden />
                 {inventoryItemCount > 0 && (
-                  <span className="game-afk-modal__inventory-badge tabular-nums">{inventoryItemCount}</span>
+                  <span className="game-afk-modal__inventory-badge tabular-nums">
+                    {inventoryItemCount}
+                  </span>
                 )}
               </button>
               <button

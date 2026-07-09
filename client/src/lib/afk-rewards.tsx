@@ -1,13 +1,45 @@
 import type React from 'react';
-import { CircleDot, Coins, Droplets, Flame, Mountain, Snowflake, Sparkles, Zap } from 'lucide-react';
+import {
+  CircleDot,
+  Coins,
+  Droplets,
+  Flame,
+  Mountain,
+  Snowflake,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { PatrolBowIcon, PatrolSwordIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
-import { FrozenStreakIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/daily-shop-display';
+import {
+  FrozenStreakIcon,
+  RouteDrinkIcon,
+  ExpInstantIcon,
+  DoriaBagIcon,
+} from '@/lib/daily-shop-display';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { CURRENCY_NAME, EXP_INSTANT_LABEL, DORIA_BAG_LABEL, FROZEN_STREAK_LABEL, PATROL_WEAPON_BY_ID, isGoldenSlimeSecretCosmetic, type AfkPendingReward, type CosmeticAvatarIcon } from '@/types';
+import {
+  CURRENCY_NAME,
+  EXP_INSTANT_LABEL,
+  DORIA_BAG_LABEL,
+  FROZEN_STREAK_LABEL,
+  PATROL_WEAPON_BY_ID,
+  isGoldenSlimeSecretCosmetic,
+  type AfkPendingReward,
+  type CosmeticAvatarIcon,
+} from '@/types';
 import { countAfkDropEvents } from '@shared/utils/afk';
 
-export type AfkRewardKind = 'xp' | 'abdoria' | 'frozen_streak' | 'route_drink' | 'exp_instant' | 'doria_bag' | 'cosmetic' | 'secret' | 'weapon';
+export type AfkRewardKind =
+  | 'xp'
+  | 'abdoria'
+  | 'frozen_streak'
+  | 'route_drink'
+  | 'exp_instant'
+  | 'doria_bag'
+  | 'cosmetic'
+  | 'secret'
+  | 'weapon';
 
 export type AfkRewardRarity = 'comum' | 'epico' | 'lendario' | 'secret' | 'golden_secret';
 
@@ -198,7 +230,13 @@ export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?:
     }
     const kind = item.cosmeticId.startsWith('arco_') ? 'arco' : 'espada';
     const Icon = kind === 'arco' ? PatrolBowIcon : PatrolSwordIcon;
-    return <Icon className="inline-block" variant={item.cosmeticId} style={{ width: size, height: size }} />;
+    return (
+      <Icon
+        className="inline-block"
+        variant={item.cosmeticId}
+        style={{ width: size, height: size }}
+      />
+    );
   }
   if (item.cosmeticIcon) {
     return (

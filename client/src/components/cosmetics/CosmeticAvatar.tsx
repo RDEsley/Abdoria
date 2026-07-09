@@ -25,7 +25,9 @@ export function CosmeticAvatar({ user, size = 'md', className = '', avatarId, bo
   const avatarDef = COSMETIC_BY_ID[resolvedAvatarId];
   const borderDef = COSMETIC_BY_ID[resolvedBorderId];
   const firstName = user?.nome?.split(' ')[0] ?? 'A';
-  const borderClass = borderDef ? `game-cosmetic-avatar--border-${borderDef.id.replace('borda_', '')}` : '';
+  const borderClass = borderDef
+    ? `game-cosmetic-avatar--border-${borderDef.id.replace('borda_', '')}`
+    : '';
   const initialClass = resolvedAvatarId === 'avatar_inicial' ? 'game-cosmetic-avatar--inicial' : '';
 
   return (
@@ -34,11 +36,7 @@ export function CosmeticAvatar({ user, size = 'md', className = '', avatarId, bo
       title={avatarDef?.nome}
     >
       {borderDef && <CosmeticAvatarBorderFx borderId={borderDef.id} />}
-      <AvatarPortrait
-        avatarId={resolvedAvatarId}
-        letter={firstName}
-        title={avatarDef?.nome}
-      />
+      <AvatarPortrait avatarId={resolvedAvatarId} letter={firstName} title={avatarDef?.nome} />
     </div>
   );
 }

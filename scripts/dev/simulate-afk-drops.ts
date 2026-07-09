@@ -9,7 +9,11 @@ import {
   resolveNextSpawn,
   shouldSpawnBoss,
 } from '../../shared/afk/combat.js';
-import { DEFAULT_AFK_COMBAT, type AfkCombatState, type AfkPendingReward } from '../../shared/types/index.js';
+import {
+  DEFAULT_AFK_COMBAT,
+  type AfkCombatState,
+  type AfkPendingReward,
+} from '../../shared/types/index.js';
 import {
   rollBossLegendaryWeapon,
   rollGoldenSlimeSecretCosmetic,
@@ -119,11 +123,13 @@ function hoursToKills(hours: number): number {
   return Math.floor(hours * 60 * AFK_KILLS_PER_MINUTE);
 }
 
-const EXPLORATION_LEGENDARY_POOL = COSMETICS.filter((c) => isExplorationLegendaryCosmeticDrop(c)).map(
-  (c) => ({ id: c.id, nome: c.nome, kind: c.kind, raridade: c.raridade }),
-);
+const EXPLORATION_LEGENDARY_POOL = COSMETICS.filter((c) =>
+  isExplorationLegendaryCosmeticDrop(c),
+).map((c) => ({ id: c.id, nome: c.nome, kind: c.kind, raridade: c.raridade }));
 
-const LEGENDARY_SHOP_COSMETICS = EXPLORATION_LEGENDARY_POOL.filter((c) => c.raridade === 'lendario');
+const LEGENDARY_SHOP_COSMETICS = EXPLORATION_LEGENDARY_POOL.filter(
+  (c) => c.raridade === 'lendario',
+);
 const EPIC_SHOP_COSMETICS = EXPLORATION_LEGENDARY_POOL.filter((c) => c.raridade === 'epico');
 
 const HOURS = [1, 6, 24] as const;
@@ -139,24 +145,43 @@ const results = HOURS.map((h) => {
 
 for (const r of results) {
   console.log(`--- ${r.hours}h (${r.kills} kills) ---`);
-  console.log(`  Inimigos: comum ${r.tierKills.common}, elite ${r.tierKills.elite}, boss ${r.tierKills.boss}, golden ${r.tierKills.golden}`);
+  console.log(
+    `  Inimigos: comum ${r.tierKills.common}, elite ${r.tierKills.elite}, boss ${r.tierKills.boss}, golden ${r.tierKills.golden}`,
+  );
   console.log(`  XP: ${r.pending.xp}`);
   console.log(`  Dorias (loot): ${r.pending.abdoria}`);
   console.log(`  Dorias (golden): ${r.tierKills.golden * AFK_GOLDEN_SLIME_ABDORIA}`);
   console.log(`  Frozen Streaks: ${r.pending.frozen_streaks}`);
-  console.log(`  EXP Instantâneo: ${r.pending.exp_instant} (=${r.pending.exp_instant * EXP_INSTANT_XP} XP se usar)`);
-  console.log(`  Bolsas de Dorias: ${r.pending.doria_bags} (${DORIA_BAG_MIN}-${DORIA_BAG_MAX} Dorias cada)`);
-  console.log(`  Route Drinks (~${(AFK_ROUTE_DRINK_DROP_THRESHOLD / 10000 * r.kills).toFixed(1)} esperado em ${r.hours}h): ${r.pending.route_drinks}`);
+  console.log(
+    `  EXP Instantâneo: ${r.pending.exp_instant} (=${r.pending.exp_instant * EXP_INSTANT_XP} XP se usar)`,
+  );
+  console.log(
+    `  Bolsas de Dorias: ${r.pending.doria_bags} (${DORIA_BAG_MIN}-${DORIA_BAG_MAX} Dorias cada)`,
+  );
+  console.log(
+    `  Route Drinks (~${((AFK_ROUTE_DRINK_DROP_THRESHOLD / 10000) * r.kills).toFixed(1)} esperado em ${r.hours}h): ${r.pending.route_drinks}`,
+  );
   console.log(`  Cosméticos lendários: ${r.pending.cosmetic_ids.length}`, r.pending.cosmetic_ids);
-  console.log(`  Cosméticos golden secret: ${r.pending.cosmetic_ids.filter((id) => GOLDEN_SLIME_SECRET_COSMETIC_IDS.includes(id as never)).length}`);
-  console.log(`  Armas lendárias boss: ${r.pending.weapon_ids.filter((id) => PATROL_LEGENDARY_WEAPON_IDS.includes(id as never)).length}`, r.pending.weapon_ids.filter((id) => PATROL_LEGENDARY_WEAPON_IDS.includes(id as never)));
-  console.log(`  Armas Secret: ${r.pending.weapon_ids.filter((id) => PATROL_SECRET_WEAPON_IDS.includes(id as never)).length}`, r.pending.weapon_ids.filter((id) => PATROL_SECRET_WEAPON_IDS.includes(id as never)));
+  console.log(
+    `  Cosméticos golden secret: ${r.pending.cosmetic_ids.filter((id) => GOLDEN_SLIME_SECRET_COSMETIC_IDS.includes(id as never)).length}`,
+  );
+  console.log(
+    `  Armas lendárias boss: ${r.pending.weapon_ids.filter((id) => PATROL_LEGENDARY_WEAPON_IDS.includes(id as never)).length}`,
+    r.pending.weapon_ids.filter((id) => PATROL_LEGENDARY_WEAPON_IDS.includes(id as never)),
+  );
+  console.log(
+    `  Armas Secret: ${r.pending.weapon_ids.filter((id) => PATROL_SECRET_WEAPON_IDS.includes(id as never)).length}`,
+    r.pending.weapon_ids.filter((id) => PATROL_SECRET_WEAPON_IDS.includes(id as never)),
+  );
   console.log(`  Título secreto: ${r.pending.titulo_secreto}`);
   console.log('');
 }
 
 console.log('=== Catálogo de drops possíveis ===\n');
-console.log('Cosméticos lendários/epicos (Exploração, sem som/dono):', EXPLORATION_LEGENDARY_POOL.length);
+console.log(
+  'Cosméticos lendários/epicos (Exploração, sem som/dono):',
+  EXPLORATION_LEGENDARY_POOL.length,
+);
 console.log('  Lendários:', LEGENDARY_SHOP_COSMETICS.length);
 LEGENDARY_SHOP_COSMETICS.forEach((c) => console.log(`    - ${c.nome} (${c.id}, ${c.kind})`));
 console.log('  Épicos:', EPIC_SHOP_COSMETICS.length);

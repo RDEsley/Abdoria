@@ -36,7 +36,11 @@ for (const enemyId of ENEMIES) {
 
     accessories.forEach((kind, index) => {
       const motion = accessoryDropMotion(seed, index);
-      if (typeof motion.x !== 'number' || typeof motion.y !== 'number' || typeof motion.rot !== 'number') {
+      if (
+        typeof motion.x !== 'number' ||
+        typeof motion.y !== 'number' ||
+        typeof motion.rot !== 'number'
+      ) {
         console.error(`Invalid drop motion for ${enemyId} seed=${seed} kind=${kind}`);
         errors += 1;
       }

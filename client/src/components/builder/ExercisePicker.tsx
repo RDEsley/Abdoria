@@ -81,7 +81,12 @@ export function ExercisePicker({ exercises, loading, onAdd }: Props) {
         )}
       </div>
 
-      <GameButton variant="secondary" className="w-full" onClick={handleAdd} disabled={!selectedSlug}>
+      <GameButton
+        variant="secondary"
+        className="w-full"
+        onClick={handleAdd}
+        disabled={!selectedSlug}
+      >
         Adicionar ao treino
       </GameButton>
     </div>

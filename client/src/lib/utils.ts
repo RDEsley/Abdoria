@@ -57,19 +57,38 @@ export interface BodyMetricsValidation {
 }
 
 /** Valida idade, peso e altura quando informados. */
-export function validateBodyMetrics(idade: string, peso: string, altura: string): BodyMetricsValidation {
+export function validateBodyMetrics(
+  idade: string,
+  peso: string,
+  altura: string,
+): BodyMetricsValidation {
   const idadeNum = parseOptionalInt(idade);
   const pesoNum = parseOptionalInt(peso);
   const alturaNum = parseOptionalInt(altura);
 
   if (idadeNum !== null && (idadeNum < 10 || idadeNum > 120)) {
-    return { idade: idadeNum, peso_kg: pesoNum, altura_cm: alturaNum, error: 'Idade deve estar entre 10 e 120 anos.' };
+    return {
+      idade: idadeNum,
+      peso_kg: pesoNum,
+      altura_cm: alturaNum,
+      error: 'Idade deve estar entre 10 e 120 anos.',
+    };
   }
   if (pesoNum !== null && (pesoNum < 20 || pesoNum > 300)) {
-    return { idade: idadeNum, peso_kg: pesoNum, altura_cm: alturaNum, error: 'Peso deve estar entre 20 e 300 kg.' };
+    return {
+      idade: idadeNum,
+      peso_kg: pesoNum,
+      altura_cm: alturaNum,
+      error: 'Peso deve estar entre 20 e 300 kg.',
+    };
   }
   if (alturaNum !== null && (alturaNum < 100 || alturaNum > 250)) {
-    return { idade: idadeNum, peso_kg: pesoNum, altura_cm: alturaNum, error: 'Altura deve estar entre 100 e 250 cm.' };
+    return {
+      idade: idadeNum,
+      peso_kg: pesoNum,
+      altura_cm: alturaNum,
+      error: 'Altura deve estar entre 100 e 250 cm.',
+    };
   }
 
   return { idade: idadeNum, peso_kg: pesoNum, altura_cm: alturaNum, error: null };

@@ -3,16 +3,7 @@ import type { AfkEnemyId } from './combat.js';
 export type SlimeEyeStyle = 'round' | 'happy' | 'sleepy' | 'wide' | 'star' | 'anime';
 export type SlimeMouthStyle = 'smile' | 'o' | 'cat' | 'grin' | 'flat' | 'vampire';
 export type SlimeExtraAccessory =
-  | 'none'
-  | 'aura'
-  | 'glasses'
-  | 'leaf'
-  | 'beanie'
-  | 'flower'
-  | 'halo'
-  | 'bow'
-  | 'patch'
-  | 'sparkle';
+  'none' | 'aura' | 'glasses' | 'leaf' | 'beanie' | 'flower' | 'halo' | 'bow' | 'patch' | 'sparkle';
 
 export type SlimeAccessoryKind =
   | 'crown'

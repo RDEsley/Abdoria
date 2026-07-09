@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { RewardPresentationItem } from '@shared/rewards/presentation';
 import { partitionRewardPresentation } from '@/lib/reward-presentation';
 import {

@@ -233,7 +233,8 @@ export const additionalExercises = [
       musculo_principal: 'superior',
       tempo_recomendado: 30,
       prioridade: 'B',
-      descricao: 'Crunch sobre a bola suíça com maior amplitude — apoie a lombar na bola e suba contraindo o abdômen.',
+      descricao:
+        'Crunch sobre a bola suíça com maior amplitude — apoie a lombar na bola e suba contraindo o abdômen.',
       media: { gif: 'stability-ball-crunch.gif' },
       ativo: false,
       equipamento: 'stability_ball',

@@ -10,7 +10,18 @@ export interface CosmeticEffectLayerProps {
   className?: string;
 }
 
-const CONFETE = ['#059669', '#34d399', '#fbbf24', '#38bdf8', '#a78bfa', '#f472b6', '#22d3ee', '#fde047', '#fb7185', '#4ade80'];
+const CONFETE = [
+  '#059669',
+  '#34d399',
+  '#fbbf24',
+  '#38bdf8',
+  '#a78bfa',
+  '#f472b6',
+  '#22d3ee',
+  '#fde047',
+  '#fb7185',
+  '#4ade80',
+];
 const PADRAO = ['#34d399', '#059669', '#fbbf24', '#fef9c3', '#6ee7b7', '#fcd34d', '#10b981'];
 const FOGO = ['#f97316', '#fb923c', '#ef4444', '#fbbf24', '#dc2626', '#fde047', '#ea580c'];
 const RAIOS = ['#fde047', '#facc15', '#fef08a', '#fff', '#a5f3fc', '#fef9c3'];
@@ -83,7 +94,7 @@ export function CosmeticEffectLayer({
             initial={{ opacity: 0, x: 0, scaleX: 1 }}
             animate={{
               opacity: [0, 1, 0.15, 1, 0],
-              x: [0, (i % 2 === 0 ? 18 : -18), 0, (i % 2 === 0 ? -10 : 10), 0],
+              x: [0, i % 2 === 0 ? 18 : -18, 0, i % 2 === 0 ? -10 : 10, 0],
               scaleX: [1, 2.2, 0.5, 1.6, 1],
             }}
             transition={{
@@ -217,7 +228,11 @@ export function CosmeticEffectLayer({
             key={`flame-${i}`}
             className="game-cosmetic-effect__flame"
             style={{ left: `${5 + i * 5.8}%`, height: preview ? '24px' : '18px' }}
-            animate={{ opacity: [0.55, 1, 0.35], scaleY: [0.65, 1.35, 0.75], scaleX: [0.85, 1.15, 0.9] }}
+            animate={{
+              opacity: [0.55, 1, 0.35],
+              scaleY: [0.65, 1.35, 0.75],
+              scaleX: [0.85, 1.15, 0.9],
+            }}
             transition={{ duration: 0.48, delay: i * 0.05, repeat: loop, repeatType: 'mirror' }}
           />
         ))}
@@ -330,7 +345,10 @@ export function CosmeticEffectLayer({
                   ? {
                       opacity: [1, 1, 0.85, 0],
                       y: [0, 95 + (i % 6) * 12, 130 + (i % 4) * 8],
-                      x: [(i % 2 === 0 ? -1 : 1) * (6 + (i % 7) * 3), (i % 2 === 0 ? 1 : -1) * (4 + (i % 5) * 2)],
+                      x: [
+                        (i % 2 === 0 ? -1 : 1) * (6 + (i % 7) * 3),
+                        (i % 2 === 0 ? 1 : -1) * (4 + (i % 5) * 2),
+                      ],
                       rotate: [0, 180 + i * 32, 360 + i * 20],
                       scale: [1, 1.1, 0.85],
                     }

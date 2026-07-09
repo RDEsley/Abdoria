@@ -26,10 +26,15 @@ export const SwipeScroll = forwardRef<HTMLDivElement, SwipeScrollProps>(function
   forwardedRef,
 ) {
   const localRef = useRef<HTMLDivElement>(null);
-  const { canScrollLeft, canScrollRight, scrollPrev, scrollNext } = useHorizontalScrollNav(localRef);
+  const { canScrollLeft, canScrollRight, scrollPrev, scrollNext } =
+    useHorizontalScrollNav(localRef);
 
   const scrollable = (
-    <Tag ref={mergeRefs(forwardedRef, localRef)} className={`game-swipe-scroll${className ? ` ${className}` : ''}`} {...rest}>
+    <Tag
+      ref={mergeRefs(forwardedRef, localRef)}
+      className={`game-swipe-scroll${className ? ` ${className}` : ''}`}
+      {...rest}
+    >
       {children}
     </Tag>
   );

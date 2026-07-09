@@ -52,7 +52,9 @@ export function DailyShopRewardReveal({ slot, message, effectId, onClose }: Prop
         onClick={(event) => event.stopPropagation()}
       >
         {lucky && (
-          <div className={`game-daily-reward-card__luck game-daily-reward-card__luck--${slot.raridade}`}>
+          <div
+            className={`game-daily-reward-card__luck game-daily-reward-card__luck--${slot.raridade}`}
+          >
             <Sparkles size={14} aria-hidden />
             <span>{DAILY_LUCK_LABELS[slot.raridade]}</span>
           </div>
@@ -67,7 +69,9 @@ export function DailyShopRewardReveal({ slot, message, effectId, onClose }: Prop
         <p className="game-daily-reward-card__message">{message}</p>
 
         <div className="game-daily-reward-card__loot" aria-label="Recompensa recebida">
-          <div className={`game-daily-reward-card__icon game-daily-reward-card__icon--${slot.recompensa_tipo}`}>
+          <div
+            className={`game-daily-reward-card__icon game-daily-reward-card__icon--${slot.recompensa_tipo}`}
+          >
             {dailyRewardIcon(slot, 28)}
           </div>
           <p className="game-daily-reward-card__reward">{formatDailyReward(slot)}</p>

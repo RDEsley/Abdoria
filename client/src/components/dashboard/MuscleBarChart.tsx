@@ -10,7 +10,10 @@ const MUSCLE_ORDER: MusculoPrincipal[] = ['superior', 'inferior', 'obliquos', 'c
 export function MuscleBarChart({ muscles }: Props) {
   const maxMuscle = Math.max(...Object.values(muscles), 1);
   const entries = MUSCLE_ORDER.map((muscle) => ({ muscle, count: muscles[muscle] }));
-  const mostTrained = entries.reduce((best, item) => (item.count > best.count ? item : best), entries[0]);
+  const mostTrained = entries.reduce(
+    (best, item) => (item.count > best.count ? item : best),
+    entries[0],
+  );
   const leastTrained = entries
     .filter((item) => item.count > 0)
     .reduce((best, item) => (item.count < best.count ? item : best), mostTrained);
@@ -35,7 +38,8 @@ export function MuscleBarChart({ muscles }: Props) {
           const count = muscles[muscle];
           const pct = (count / maxMuscle) * 100;
           const isMost = muscle === mostTrained.muscle && count > 0;
-          const isLeast = muscle === leastTrained?.muscle && count > 0 && muscle !== mostTrained.muscle;
+          const isLeast =
+            muscle === leastTrained?.muscle && count > 0 && muscle !== mostTrained.muscle;
           return (
             <div key={muscle} className="muscle-bar-chart__row">
               <div className="mb-1.5 flex items-start justify-between gap-2 text-xs">

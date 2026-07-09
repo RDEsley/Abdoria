@@ -25,7 +25,10 @@ export function validateRegisterNome(value: string): string | undefined {
   return undefined;
 }
 
-export function validateConfirmPassword(password: string, confirmPassword: string): string | undefined {
+export function validateConfirmPassword(
+  password: string,
+  confirmPassword: string,
+): string | undefined {
   if (!confirmPassword) return 'Confirme sua senha.';
   if (password !== confirmPassword) return 'As senhas não coincidem.';
   return undefined;

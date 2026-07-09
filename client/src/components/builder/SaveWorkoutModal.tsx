@@ -11,7 +11,13 @@ interface Props {
   onSave: (nome: string) => void;
 }
 
-export function SaveWorkoutModal({ open, defaultName = 'Meu Treino', isUpdate, onClose, onSave }: Props) {
+export function SaveWorkoutModal({
+  open,
+  defaultName = 'Meu Treino',
+  isUpdate,
+  onClose,
+  onSave,
+}: Props) {
   const [nome, setNome] = useState(defaultName);
 
   useEffect(() => {
@@ -42,7 +48,12 @@ export function SaveWorkoutModal({ open, defaultName = 'Meu Treino', isUpdate, o
         aria-labelledby="save-workout-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" className="game-modal__close-btn" onClick={onClose} aria-label="Fechar">
+        <button
+          type="button"
+          className="game-modal__close-btn"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
           <X size={18} />
         </button>
 

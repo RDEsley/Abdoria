@@ -79,13 +79,17 @@ export function startOfDaySaoPaulo(date = new Date()): Date {
         new Intl.DateTimeFormat('en-US', {
           timeZone: 'America/Sao_Paulo',
           minute: 'numeric',
-        }).formatToParts(candidate).find((p) => p.type === 'minute')?.value ?? 0,
+        })
+          .formatToParts(candidate)
+          .find((p) => p.type === 'minute')?.value ?? 0,
       );
       const second = Number(
         new Intl.DateTimeFormat('en-US', {
           timeZone: 'America/Sao_Paulo',
           second: 'numeric',
-        }).formatToParts(candidate).find((p) => p.type === 'second')?.value ?? 0,
+        })
+          .formatToParts(candidate)
+          .find((p) => p.type === 'second')?.value ?? 0,
       );
       if (hour === 0 && minute === 0 && second === 0) return candidate;
     }

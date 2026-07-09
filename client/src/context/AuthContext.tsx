@@ -1,5 +1,19 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { getMe, login as apiLogin, loginAsGuest as apiGuest, logoutApi, register as apiRegister } from '@/lib/api';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  getMe,
+  login as apiLogin,
+  loginAsGuest as apiGuest,
+  logoutApi,
+  register as apiRegister,
+} from '@/lib/api';
 import { clearToken, getToken, setSavedEmail, setToken } from '@/lib/auth-storage';
 import { clearLegacyLocalData } from '@/lib/user-dados';
 import { setSfxPack, setSoundSettings } from '@/lib/sounds';
@@ -26,7 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applyUser = useCallback((next: IUserDocument) => {
     setUser(next);
-    setSoundSettings(next.preferencias?.som_habilitado ?? true, next.preferencias?.sfx_volume ?? 0.7);
+    setSoundSettings(
+      next.preferencias?.som_habilitado ?? true,
+      next.preferencias?.sfx_volume ?? 0.7,
+    );
     setSfxPack(next.cosmeticos?.som_equipado ?? 'som_classico');
   }, []);
 
@@ -77,7 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(res.token, remember);
     setSavedEmail(remember ? email : null);
     setUser(res.user);
-    setSoundSettings(res.user.preferencias?.som_habilitado ?? true, res.user.preferencias?.sfx_volume ?? 0.7);
+    setSoundSettings(
+      res.user.preferencias?.som_habilitado ?? true,
+      res.user.preferencias?.sfx_volume ?? 0.7,
+    );
   }, []);
 
   const loginAsGuest = useCallback(async () => {
@@ -85,7 +105,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(res.token, false);
     setSavedEmail(null);
     setUser(res.user);
-    setSoundSettings(res.user.preferencias?.som_habilitado ?? true, res.user.preferencias?.sfx_volume ?? 0.7);
+    setSoundSettings(
+      res.user.preferencias?.som_habilitado ?? true,
+      res.user.preferencias?.sfx_volume ?? 0.7,
+    );
   }, []);
 
   const register = useCallback(async (email: string, password: string, nome: string) => {

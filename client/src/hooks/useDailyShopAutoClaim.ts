@@ -68,5 +68,12 @@ export function useDailyShopAutoClaim() {
     return () => {
       cancelled = true;
     };
-  }, [applyUser, loading, refreshApp, user?.id, user?.preferencias?.coletar_loja_diaria_automatico, dayKey]);
+  }, [
+    applyUser,
+    loading,
+    refreshApp,
+    user?.id,
+    user?.preferencias?.coletar_loja_diaria_automatico,
+    dayKey,
+  ]);
 }

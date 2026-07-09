@@ -1,18 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Coins, Store, Wand2 } from 'lucide-react';
-import { PurchaseConfirmDialog, type PurchaseConfirmDetails } from '@/components/shop/PurchaseConfirmDialog';
+import {
+  PurchaseConfirmDialog,
+  type PurchaseConfirmDetails,
+} from '@/components/shop/PurchaseConfirmDialog';
 import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
-import { PatrolBowTabIcon, PatrolSwordTabIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
+import {
+  PatrolBowTabIcon,
+  PatrolSwordTabIcon,
+} from '@/components/afk/patrol-shop/PatrolWeaponIcons';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { equipPatrolWeapon, getPatrolShop, purchasePatrolWeapon } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { playEquip, playPurchase } from '@/lib/sounds';
-import { CURRENCY_NAME, type ArmaPreferida, type PatrolShopCatalogItem, type PatrolShopResponse, type PatrolWeaponKind } from '@/types';
+import {
+  CURRENCY_NAME,
+  type ArmaPreferida,
+  type PatrolShopCatalogItem,
+  type PatrolShopResponse,
+  type PatrolWeaponKind,
+} from '@/types';
 import './patrol-shop.css';
 
 interface Props {
@@ -48,7 +60,9 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       const data = await getPatrolShop();
       setCatalog(data);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja da exploração.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja da exploração.'), {
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -84,7 +98,9 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       setPurchaseConfirm(null);
       await load();
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), {
+        variant: 'error',
+      });
     } finally {
       setBusyId(null);
     }
@@ -115,7 +131,9 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       showGameToast(`${item.nome} equipado!`, { variant: 'success' });
       await load();
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), {
+        variant: 'error',
+      });
     } finally {
       setBusyId(null);
     }
@@ -124,10 +142,18 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   if (!open) return null;
 
   const items =
-    activeTab === 'arco' ? catalog?.arcos ?? [] : activeTab === 'espada' ? catalog?.espadas ?? [] : [];
+    activeTab === 'arco'
+      ? (catalog?.arcos ?? [])
+      : activeTab === 'espada'
+        ? (catalog?.espadas ?? [])
+        : [];
 
   return createPortal(
-    <div className="game-modal-overlay game-patrol-shop-overlay" onClick={onClose} role="presentation">
+    <div
+      className="game-modal-overlay game-patrol-shop-overlay"
+      onClick={onClose}
+      role="presentation"
+    >
       <div
         className="game-modal game-patrol-shop-modal"
         role="dialog"
@@ -141,7 +167,9 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
               <h2 id="patrol-shop-title" className="game-patrol-shop-header__title">
                 <Store size={18} aria-hidden /> Loja da Exploração
               </h2>
-              <p className="game-patrol-shop-header__subtitle">Armas para sua exploração automática</p>
+              <p className="game-patrol-shop-header__subtitle">
+                Armas para sua exploração automática
+              </p>
             </div>
             <span className="game-patrol-shop-header__coins">
               <Coins size={16} aria-hidden /> {catalog?.abdoria ?? '—'} {CURRENCY_NAME}
@@ -196,7 +224,11 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
         </div>
 
         <footer className="game-patrol-shop-modal__footer">
-          <GameButton variant="secondary" className="game-patrol-shop-modal__close game-modal__close" onClick={onClose}>
+          <GameButton
+            variant="secondary"
+            className="game-patrol-shop-modal__close game-modal__close"
+            onClick={onClose}
+          >
             Fechar
           </GameButton>
         </footer>

@@ -32,7 +32,10 @@ export function useUserPreferences(onUpdated?: () => void) {
         ? fixedExerciseSlugs.filter((s) => s !== slug)
         : [...fixedExerciseSlugs, slug];
       const nextBlocked = blockedExerciseSlugs.filter((s) => s !== slug);
-      void patchPreferences({ exercicios_fixos: nextFixed, exercicios_nao_recomendar: nextBlocked });
+      void patchPreferences({
+        exercicios_fixos: nextFixed,
+        exercicios_nao_recomendar: nextBlocked,
+      });
     },
     [blockedExerciseSlugs, fixedExerciseSlugs, patchPreferences],
   );
@@ -43,7 +46,10 @@ export function useUserPreferences(onUpdated?: () => void) {
         ? blockedExerciseSlugs.filter((s) => s !== slug)
         : [...blockedExerciseSlugs, slug];
       const nextFixed = fixedExerciseSlugs.filter((s) => s !== slug);
-      void patchPreferences({ exercicios_nao_recomendar: nextBlocked, exercicios_fixos: nextFixed });
+      void patchPreferences({
+        exercicios_nao_recomendar: nextBlocked,
+        exercicios_fixos: nextFixed,
+      });
     },
     [blockedExerciseSlugs, fixedExerciseSlugs, patchPreferences],
   );

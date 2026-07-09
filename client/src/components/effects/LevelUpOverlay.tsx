@@ -20,7 +20,12 @@ export function LevelUpOverlay({ level, onDone }: Props) {
   }, [level, onDone]);
 
   return createPortal(
-    <div className="level-up-overlay" role="dialog" aria-live="assertive" aria-label={`Subiu para o nível ${level}`}>
+    <div
+      className="level-up-overlay"
+      role="dialog"
+      aria-live="assertive"
+      aria-label={`Subiu para o nível ${level}`}
+    >
       <motion.div
         className="level-up-overlay__backdrop"
         initial={{ opacity: 0 }}

@@ -2,7 +2,14 @@ import type { IWorkoutPreset } from '../../types/index.js';
 
 function preset(
   p: Omit<IWorkoutPreset, 'exercicios'> & {
-    slugs: { slug: string; series?: number; modo?: 'tempo' | 'reps'; repeticoes?: number; tempo_seg?: number; descanso_seg?: number }[];
+    slugs: {
+      slug: string;
+      series?: number;
+      modo?: 'tempo' | 'reps';
+      repeticoes?: number;
+      tempo_seg?: number;
+      descanso_seg?: number;
+    }[];
   },
 ): IWorkoutPreset {
   return {

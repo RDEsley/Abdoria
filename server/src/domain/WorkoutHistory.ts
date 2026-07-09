@@ -1,1 +1,4 @@
-export { WorkoutHistory, type WorkoutHistoryDocument } from '../repositories/workout-history-repository.js';
+export {
+  WorkoutHistory,
+  type WorkoutHistoryDocument,
+} from '../repositories/workout-history-repository.js';

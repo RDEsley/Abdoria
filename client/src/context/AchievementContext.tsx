@@ -134,4 +134,8 @@ export function useAchievement(): AchievementContextValue {
   return ctx;
 }
 
-export { triggerAchievement, notifyBestiaryUnlocks, notifyWorkoutAchievements } from '@/lib/achievement-notifications';
+export {
+  triggerAchievement,
+  notifyBestiaryUnlocks,
+  notifyWorkoutAchievements,
+} from '@/lib/achievement-notifications';

@@ -1,4 +1,9 @@
-import type { IExerciseDocument, IWorkoutPresetDocument, MusculoPrincipal, SavedWorkoutPreset } from '@/types';
+import type {
+  IExerciseDocument,
+  IWorkoutPresetDocument,
+  MusculoPrincipal,
+  SavedWorkoutPreset,
+} from '@/types';
 
 /** Agrega os grupamentos musculares mais frequentes de um preset sugerido. */
 export function getPresetPrimaryMuscles(

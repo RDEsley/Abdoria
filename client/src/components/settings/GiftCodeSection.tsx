@@ -59,7 +59,9 @@ export function GiftCodeSection() {
       setGiftCode('');
       setRewardReveal(res);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Código inválido ou já usado nesta conta.'), { variant: 'error' });
+      showGameToast(getErrorMessage(err, 'Código inválido ou já usado nesta conta.'), {
+        variant: 'error',
+      });
     } finally {
       setBusy(false);
     }

@@ -5,9 +5,19 @@ import { AuthField } from '@/components/auth/AuthField';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
 import { getHealth } from '@/lib/api';
-import { DATABASE_BANNER, getErrorMessage, isLoginCredentialsError, OFFLINE_BANNER } from '@/lib/api-errors';
+import {
+  DATABASE_BANNER,
+  getErrorMessage,
+  isLoginCredentialsError,
+  OFFLINE_BANNER,
+} from '@/lib/api-errors';
 import { getSavedEmail, getRememberMePreference } from '@/lib/auth-storage';
-import { validateEmail, validateLoginForm, validatePassword, type AuthFieldErrors } from '@/lib/auth-validation';
+import {
+  validateEmail,
+  validateLoginForm,
+  validatePassword,
+  type AuthFieldErrors,
+} from '@/lib/auth-validation';
 import { useAuth } from '@/context/AuthContext';
 
 export function LoginPage() {
@@ -120,18 +130,10 @@ export function LoginPage() {
         {showSystemAlert && (
           <div className="game-auth-alerts">
             {apiOnline === false && (
-              <AuthAlert
-                variant="warn"
-                title="Sem conexão"
-                message={OFFLINE_BANNER}
-              />
+              <AuthAlert variant="warn" title="Sem conexão" message={OFFLINE_BANNER} />
             )}
             {apiOnline === true && dbOnline === false && (
-              <AuthAlert
-                variant="warn"
-                title="Dados indisponíveis"
-                message={DATABASE_BANNER}
-              />
+              <AuthAlert variant="warn" title="Dados indisponíveis" message={DATABASE_BANNER} />
             )}
           </div>
         )}
@@ -151,7 +153,9 @@ export function LoginPage() {
             }}
             onBlur={() => {
               const err = validateEmail(email);
-              setFieldErrors((prev) => (err ? { ...prev, email: err } : { ...prev, email: undefined }));
+              setFieldErrors((prev) =>
+                err ? { ...prev, email: err } : { ...prev, email: undefined },
+              );
             }}
             error={fieldErrors.email}
             placeholder="seu@email.com"
@@ -172,7 +176,9 @@ export function LoginPage() {
             }}
             onBlur={() => {
               const err = validatePassword(password, 1);
-              setFieldErrors((prev) => (err ? { ...prev, password: err } : { ...prev, password: undefined }));
+              setFieldErrors((prev) =>
+                err ? { ...prev, password: err } : { ...prev, password: undefined },
+              );
             }}
             error={fieldErrors.password}
             placeholder="••••••••"
@@ -188,16 +194,16 @@ export function LoginPage() {
               />
               Lembrar de mim
             </label>
-            <button
-              type="button"
-              onClick={() => setForgotOpen(true)}
-              className="game-text-link"
-            >
+            <button type="button" onClick={() => setForgotOpen(true)} className="game-text-link">
               Esqueci a senha
             </button>
           </div>
 
-          <button type="submit" disabled={loading || guestLoading} className="game-btn game-btn--primary">
+          <button
+            type="submit"
+            disabled={loading || guestLoading}
+            className="game-btn game-btn--primary"
+          >
             {loading ? 'Entrando…' : 'Jogar'}
           </button>
 

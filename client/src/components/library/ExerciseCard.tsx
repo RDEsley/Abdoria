@@ -73,7 +73,9 @@ export const ExerciseCard = memo(function ExerciseCard({
           <div className="min-w-0 flex-1 text-left">
             <h3 className="game-item-card__hidden-title">???</h3>
             <p className="mt-1 text-xs font-bold text-stone-400">Habilidade secreta</p>
-            <span className="game-item-card__rarity game-item-card__rarity--locked">Toque para revelar</span>
+            <span className="game-item-card__rarity game-item-card__rarity--locked">
+              Toque para revelar
+            </span>
           </div>
         </button>
       </article>

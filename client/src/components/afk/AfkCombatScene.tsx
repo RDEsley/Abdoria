@@ -13,7 +13,11 @@ import {
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
 import { AfkEnemySprite } from '@/components/afk/AfkEnemySprite';
-import { AfkCombatHud, AfkBossProgressPanel, useDamageFloaters } from '@/components/afk/AfkCombatHud';
+import {
+  AfkCombatHud,
+  AfkBossProgressPanel,
+  useDamageFloaters,
+} from '@/components/afk/AfkCombatHud';
 import { AfkSkyCycle } from '@/components/afk/AfkSkyCycle';
 
 interface Props {
@@ -39,7 +43,15 @@ const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
   hero_damage_espada: 22,
 };
 
-export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capped, onBossChange }: Props) {
+export function AfkCombatScene({
+  userId,
+  weapon,
+  weaponId,
+  combat,
+  hasLoot,
+  capped,
+  onBossChange,
+}: Props) {
   const isMobile = useMobileViewport();
   const [attackSeq, setAttackSeq] = useState(0);
   const [attackIsCrit, setAttackIsCrit] = useState(false);
@@ -118,12 +130,7 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
 
   const respawnLocalEnemy = useCallback(
     (killsUntilBoss: number, killsTotal: number) => {
-      const picked = resolveNextSpawn(
-        userId,
-        killsUntilBoss,
-        killsTotal,
-        localEnemyIdRef.current,
-      );
+      const picked = resolveNextSpawn(userId, killsUntilBoss, killsTotal, localEnemyIdRef.current);
 
       setLocalEnemyId(picked.enemy_id);
       setLocalIsBoss(picked.is_boss);
@@ -246,9 +253,15 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
         className={[
           'game-afk-scene__viewport',
           `game-afk-scene__viewport--enemy-${localEnemyId}`,
-          weapon === 'espada' && attacking && attackIsCrit ? 'game-afk-scene__viewport--sword-crit-hit' : '',
-          weapon === 'espada' && attacking && !attackIsCrit ? 'game-afk-scene__viewport--sword-hit' : '',
-          weapon === 'arco' && attacking && attackIsCrit ? 'game-afk-scene__viewport--arrow-crit-hit' : '',
+          weapon === 'espada' && attacking && attackIsCrit
+            ? 'game-afk-scene__viewport--sword-crit-hit'
+            : '',
+          weapon === 'espada' && attacking && !attackIsCrit
+            ? 'game-afk-scene__viewport--sword-hit'
+            : '',
+          weapon === 'arco' && attacking && attackIsCrit
+            ? 'game-afk-scene__viewport--arrow-crit-hit'
+            : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -268,7 +281,12 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
           </div>
         )}
 
-        <AfkMascotHero weapon={weapon} attacking={attacking} attackSeq={attackSeq} isCrit={attackIsCrit} />
+        <AfkMascotHero
+          weapon={weapon}
+          attacking={attacking}
+          attackSeq={attackSeq}
+          isCrit={attackIsCrit}
+        />
 
         {weapon === 'arco' && attacking && (
           <>
@@ -293,7 +311,11 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
               aria-hidden
             />
             {attackIsCrit && (
-              <span key={`arrow-crit-nova-${attackSeq}`} className="game-afk-scene-arrow-crit-nova" aria-hidden />
+              <span
+                key={`arrow-crit-nova-${attackSeq}`}
+                className="game-afk-scene-arrow-crit-nova"
+                aria-hidden
+              />
             )}
             <span
               key={`arrow-impact-${attackSeq}`}
@@ -322,8 +344,16 @@ export function AfkCombatScene({ userId, weapon, weaponId, combat, hasLoot, capp
             />
             {attackIsCrit && (
               <>
-                <span key={`slash-crit-wave-${attackSeq}`} className="game-afk-slash-crit-wave" aria-hidden />
-                <span key={`slash-crit-x-${attackSeq}`} className="game-afk-sword-crit-cross" aria-hidden />
+                <span
+                  key={`slash-crit-wave-${attackSeq}`}
+                  className="game-afk-slash-crit-wave"
+                  aria-hidden
+                />
+                <span
+                  key={`slash-crit-x-${attackSeq}`}
+                  className="game-afk-sword-crit-cross"
+                  aria-hidden
+                />
               </>
             )}
             <span

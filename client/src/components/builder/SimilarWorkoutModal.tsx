@@ -2,7 +2,10 @@ import { X } from 'lucide-react';
 import type { IExerciseDocument, IWorkoutPresetDocument, SavedWorkoutPreset } from '@/types';
 import { savedWorkoutSummary, toSavedPresetId } from '@/types';
 import { MuscleTagGroup } from '@/components/builder/MuscleTag';
-import { getPresetPrimaryMuscles, getSavedWorkoutMuscles } from '@/components/builder/builder-muscles';
+import {
+  getPresetPrimaryMuscles,
+  getSavedWorkoutMuscles,
+} from '@/components/builder/builder-muscles';
 import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
 import { GameButton } from '@/components/ui/GameButton';
 
@@ -40,9 +43,19 @@ export function SimilarWorkoutModal({
   const hasOptions = similarPresets.length > 0 || similarSaved.length > 0;
 
   return (
-    <div className="game-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="similar-workout-title">
+    <div
+      className="game-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="similar-workout-title"
+    >
       <div className="game-modal game-modal--wide max-h-[85vh] overflow-y-auto">
-        <button type="button" onClick={onClose} className="game-modal__close-btn" aria-label="Fechar">
+        <button
+          type="button"
+          onClick={onClose}
+          className="game-modal__close-btn"
+          aria-label="Fechar"
+        >
           <X size={18} />
         </button>
 
@@ -50,8 +63,8 @@ export function SimilarWorkoutModal({
           Treinos similares
         </h2>
         <p className="game-modal__text">
-          Opções que trabalham o mesmo foco muscular ou zonas muito parecidas. Use &quot;Sempre incluir&quot; para
-          priorizar um treino nas recomendações.
+          Opções que trabalham o mesmo foco muscular ou zonas muito parecidas. Use &quot;Sempre
+          incluir&quot; para priorizar um treino nas recomendações.
         </p>
 
         {!hasOptions ? (
@@ -70,7 +83,9 @@ export function SimilarWorkoutModal({
                 <li key={preset.id} className="glass-card rounded-2xl p-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-[0.65rem] font-bold text-emerald-600">Ciclo {preset.ciclo_id}</p>
+                      <p className="text-[0.65rem] font-bold text-emerald-600">
+                        Ciclo {preset.ciclo_id}
+                      </p>
                       <p className="text-sm font-extrabold text-stone-900">
                         {preset.nome.split('—')[1]?.trim() ?? preset.nome}
                       </p>
@@ -115,7 +130,9 @@ export function SimilarWorkoutModal({
                       <p className="text-[0.65rem] font-bold text-sky-600">Salvo</p>
                       <p className="text-sm font-extrabold text-stone-900">{saved.nome}</p>
                       <MuscleTagGroup muscles={muscles} className="mt-1.5" />
-                      <p className="mt-1 text-[0.65rem] font-bold text-stone-500">{savedWorkoutSummary(saved)}</p>
+                      <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
+                        {savedWorkoutSummary(saved)}
+                      </p>
                     </div>
                     {!isCurrent && (
                       <GameButton size="sm" onClick={() => onSelectSaved(saved.id)}>

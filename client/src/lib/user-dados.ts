@@ -43,7 +43,10 @@ export function resolveSelectedRepSchemeId(
   return schemes[0]?.id ?? null;
 }
 
-export function getRepSchemesForNivel(dados: UserDadosSalvos, nivel: NivelUsuario): StoredRepScheme[] {
+export function getRepSchemesForNivel(
+  dados: UserDadosSalvos,
+  nivel: NivelUsuario,
+): StoredRepScheme[] {
   const stored = dados.esquemas_reps[nivel];
   if (stored && stored.length > 0) return stored;
   return recommendedSchemesForNivel(nivel);
@@ -93,10 +96,10 @@ function readLegacySavedWorkouts(): SavedWorkoutPreset[] {
 
 function isEmptyDadosSalvos(dados: UserDadosSalvos): boolean {
   return (
-    dados.treino_personalizado.length === 0
-    && dados.treinos_salvos.length === 0
-    && Object.keys(dados.esquemas_reps).length === 0
-    && dados.exercicios_desbloqueados.length === 0
+    dados.treino_personalizado.length === 0 &&
+    dados.treinos_salvos.length === 0 &&
+    Object.keys(dados.esquemas_reps).length === 0 &&
+    dados.exercicios_desbloqueados.length === 0
   );
 }
 

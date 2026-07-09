@@ -11,12 +11,7 @@ export type NivelUsuario = 'iniciante' | 'intermediario' | 'avancado';
 
 export type Objetivo = 'definicao' | 'resistencia' | 'forca' | 'manutencao';
 
-export type MusculoPrincipal =
-  | 'superior'
-  | 'inferior'
-  | 'obliquos'
-  | 'core'
-  | 'completo';
+export type MusculoPrincipal = 'superior' | 'inferior' | 'obliquos' | 'core' | 'completo';
 
 export type Prioridade = 'S' | 'A' | 'B' | 'C' | 'dinamico' | 'isometrico';
 
@@ -148,11 +143,7 @@ export interface UserPreferencias {
 export type ArmaPreferida = 'arco' | 'espada';
 
 export type InventoryItemId =
-  | 'frozen_streak'
-  | 'route_drink'
-  | 'bau_patrulha'
-  | 'exp_instant'
-  | 'doria_bag';
+  'frozen_streak' | 'route_drink' | 'bau_patrulha' | 'exp_instant' | 'doria_bag';
 
 export interface InventoryEntry {
   item_id: InventoryItemId;
@@ -189,12 +180,7 @@ export interface AfkState {
   has_rewards?: boolean;
 }
 
-export type {
-  AfkCombatState,
-  AfkCombatSnapshot,
-  AfkEnemyId,
-  AfkEnemyTier,
-} from '../afk/combat.js';
+export type { AfkCombatState, AfkCombatSnapshot, AfkEnemyId, AfkEnemyTier } from '../afk/combat.js';
 
 export type {
   SlimeEyeStyle,
@@ -219,7 +205,11 @@ export {
   mergeBestiaryDropDiscoveries,
   snapshotBestiaryPending,
 } from '../afk/bestiary-drops.js';
-export type { BestiaryDropId, BestiaryDropDiscoveryMap, BestiaryPendingSnapshot } from '../afk/bestiary-drops.js';
+export type {
+  BestiaryDropId,
+  BestiaryDropDiscoveryMap,
+  BestiaryPendingSnapshot,
+} from '../afk/bestiary-drops.js';
 
 export {
   AFK_BOSS_INTERVAL,
@@ -281,19 +271,15 @@ export interface Gamificacao {
   /** Inimigos derrotados pela primeira vez no Bestiário. */
   bestiario_desbloqueados?: AfkEnemyId[];
   /** Drops já obtidos de cada inimigo (para revelar loot no bestiário). */
-  bestiario_drops_descobertos?: Partial<Record<AfkEnemyId, import('../afk/bestiary-drops.js').BestiaryDropId[]>>;
+  bestiario_drops_descobertos?: Partial<
+    Record<AfkEnemyId, import('../afk/bestiary-drops.js').BestiaryDropId[]>
+  >;
 }
 
 export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'fundo';
 
 export type CosmeticUnlockType =
-  | 'gratis'
-  | 'nivel'
-  | 'conquista'
-  | 'moedas'
-  | 'codigo'
-  | 'afk_secreto'
-  | 'golden_slime';
+  'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo' | 'afk_secreto' | 'golden_slime';
 
 export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'secreto';
 
@@ -715,7 +701,18 @@ export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
-  pending: { xp: 0, abdoria: 0, frozen_streaks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], exp_instant: 0, doria_bags: 0, titulo_secreto: false, drop_count: 0 },
+  pending: {
+    xp: 0,
+    abdoria: 0,
+    frozen_streaks: 0,
+    route_drinks: 0,
+    cosmetic_ids: [],
+    weapon_ids: [],
+    exp_instant: 0,
+    doria_bags: 0,
+    titulo_secreto: false,
+    drop_count: 0,
+  },
   combat: { ...DEFAULT_AFK_COMBAT },
 };
 
@@ -781,7 +778,13 @@ export const DEFAULT_COSMETICOS: Cosmeticos = {
   som_equipado: 'som_classico',
   efeito_equipado: 'efeito_padrao',
   fundo_equipado: 'fundo_padrao',
-  desbloqueados: ['avatar_inicial', 'borda_basica', 'som_classico', 'efeito_padrao', 'fundo_padrao'],
+  desbloqueados: [
+    'avatar_inicial',
+    'borda_basica',
+    'som_classico',
+    'efeito_padrao',
+    'fundo_padrao',
+  ],
   codigos_resgatados: [],
 };
 
@@ -881,9 +884,9 @@ export interface IUser {
   inventario?: Inventario;
   afk?: AfkState;
   onboarding_completed: boolean;
-    terms_accepted_at?: string | null;
-    muscle_map_reset_at?: string | null;
-    is_guest?: boolean;
+  terms_accepted_at?: string | null;
+  muscle_map_reset_at?: string | null;
+  is_guest?: boolean;
 }
 
 export interface IUserDocument extends IUser {
@@ -1093,7 +1096,9 @@ export function resolveUserDadosSalvos(dados?: Partial<UserDadosSalvos> | null):
     treino_personalizado_nome: dados?.treino_personalizado_nome ?? '',
     treinos_salvos: dados?.treinos_salvos ?? [],
     esquemas_reps: esquemas ? { ...esquemas } : {},
-    esquema_reps_selecionado: dados?.esquema_reps_selecionado ? { ...dados.esquema_reps_selecionado } : {},
+    esquema_reps_selecionado: dados?.esquema_reps_selecionado
+      ? { ...dados.esquema_reps_selecionado }
+      : {},
     exercicios_desbloqueados: dados?.exercicios_desbloqueados ?? [],
   };
 }
@@ -1309,19 +1314,67 @@ export function weeklyLeaderboardReward(rank: number): number | null {
 
 export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]> = {
   iniciante: [
-    { id: 'vol-12x3', label: '12 × 3', series: 3, repeticoes: 12, descricao: 'Volume clássico — ideal para começar' },
-    { id: 'vol-10x3', label: '10 × 3', series: 3, repeticoes: 10, descricao: 'Controle e forma antes da carga' },
-    { id: 'end-15x3', label: '15 × 3', series: 3, repeticoes: 15, descricao: 'Resistência com volume equilibrado' },
+    {
+      id: 'vol-12x3',
+      label: '12 × 3',
+      series: 3,
+      repeticoes: 12,
+      descricao: 'Volume clássico — ideal para começar',
+    },
+    {
+      id: 'vol-10x3',
+      label: '10 × 3',
+      series: 3,
+      repeticoes: 10,
+      descricao: 'Controle e forma antes da carga',
+    },
+    {
+      id: 'end-15x3',
+      label: '15 × 3',
+      series: 3,
+      repeticoes: 15,
+      descricao: 'Resistência com volume equilibrado',
+    },
   ],
   intermediario: [
-    { id: 'vol-14x3', label: '14 × 3', series: 3, repeticoes: 14, descricao: 'Volume moderado-alto' },
-    { id: 'vol-12x4', label: '12 × 4', series: 4, repeticoes: 12, descricao: 'Mais séries, mesmo volume por série' },
-    { id: 'end-16x3', label: '16 × 3', series: 3, repeticoes: 16, descricao: 'Foco em resistência muscular' },
+    {
+      id: 'vol-14x3',
+      label: '14 × 3',
+      series: 3,
+      repeticoes: 14,
+      descricao: 'Volume moderado-alto',
+    },
+    {
+      id: 'vol-12x4',
+      label: '12 × 4',
+      series: 4,
+      repeticoes: 12,
+      descricao: 'Mais séries, mesmo volume por série',
+    },
+    {
+      id: 'end-16x3',
+      label: '16 × 3',
+      series: 3,
+      repeticoes: 16,
+      descricao: 'Foco em resistência muscular',
+    },
   ],
   avancado: [
     { id: 'for-8x4', label: '8 × 4', series: 4, repeticoes: 8, descricao: 'Força e densidade' },
-    { id: 'for-10x5', label: '10 × 5', series: 5, repeticoes: 10, descricao: 'Alto volume total por exercício' },
-    { id: 'vol-12x3', label: '12 × 3', series: 3, repeticoes: 12, descricao: 'Manutenção técnica com volume' },
+    {
+      id: 'for-10x5',
+      label: '10 × 5',
+      series: 5,
+      repeticoes: 10,
+      descricao: 'Alto volume total por exercício',
+    },
+    {
+      id: 'vol-12x3',
+      label: '12 × 3',
+      series: 3,
+      repeticoes: 12,
+      descricao: 'Manutenção técnica com volume',
+    },
   ],
 };
 
@@ -1365,18 +1418,72 @@ export interface GorduraFaixa {
 
 export const GORDURA_FAIXAS: Record<SexoBiologico, GorduraFaixa[]> = {
   masculino: [
-    { id: 'atleta', label: 'Atleta', descricao: 'Abdômen muito definido, vascularização visível.', min: 6, max: 10 },
-    { id: 'definido', label: 'Definido', descricao: 'Six-pack visível com boa iluminação.', min: 10, max: 14 },
-    { id: 'atletico', label: 'Atlético', descricao: 'Contorno abdominal perceptível.', min: 14, max: 18 },
-    { id: 'medio', label: 'Médio', descricao: 'Pouca definição; foco em consistência.', min: 18, max: 25 },
-    { id: 'acima', label: 'Acima', descricao: 'Priorize hábito, sono e déficit calórico leve.', min: 25, max: 60 },
+    {
+      id: 'atleta',
+      label: 'Atleta',
+      descricao: 'Abdômen muito definido, vascularização visível.',
+      min: 6,
+      max: 10,
+    },
+    {
+      id: 'definido',
+      label: 'Definido',
+      descricao: 'Six-pack visível com boa iluminação.',
+      min: 10,
+      max: 14,
+    },
+    {
+      id: 'atletico',
+      label: 'Atlético',
+      descricao: 'Contorno abdominal perceptível.',
+      min: 14,
+      max: 18,
+    },
+    {
+      id: 'medio',
+      label: 'Médio',
+      descricao: 'Pouca definição; foco em consistência.',
+      min: 18,
+      max: 25,
+    },
+    {
+      id: 'acima',
+      label: 'Acima',
+      descricao: 'Priorize hábito, sono e déficit calórico leve.',
+      min: 25,
+      max: 60,
+    },
   ],
   feminino: [
-    { id: 'atleta', label: 'Atleta', descricao: 'Definição alta com pouca gordura essencial.', min: 14, max: 18 },
+    {
+      id: 'atleta',
+      label: 'Atleta',
+      descricao: 'Definição alta com pouca gordura essencial.',
+      min: 14,
+      max: 18,
+    },
     { id: 'definido', label: 'Definido', descricao: 'Linha do abdômen visível.', min: 18, max: 22 },
-    { id: 'atletico', label: 'Atlético', descricao: 'Formato tonificado, definição parcial.', min: 22, max: 28 },
-    { id: 'medio', label: 'Médio', descricao: 'Zona comum; treino + alimentação aceleram.', min: 28, max: 35 },
-    { id: 'acima', label: 'Acima', descricao: 'Comece com volume moderado e constância.', min: 35, max: 60 },
+    {
+      id: 'atletico',
+      label: 'Atlético',
+      descricao: 'Formato tonificado, definição parcial.',
+      min: 22,
+      max: 28,
+    },
+    {
+      id: 'medio',
+      label: 'Médio',
+      descricao: 'Zona comum; treino + alimentação aceleram.',
+      min: 28,
+      max: 35,
+    },
+    {
+      id: 'acima',
+      label: 'Acima',
+      descricao: 'Comece com volume moderado e constância.',
+      min: 35,
+      max: 60,
+    },
   ],
 };
 
@@ -1390,11 +1497,7 @@ export function getGorduraFaixa(pct: number, sexo: SexoBiologico = 'masculino'):
 }
 
 /** Estimativa educativa (fórmula de Deurenberg) — não substitui bioimpedância ou adipômetro. */
-export function estimarGorduraCorporal(
-  imc: number,
-  idade: number,
-  sexo: SexoBiologico,
-): number {
+export function estimarGorduraCorporal(imc: number, idade: number, sexo: SexoBiologico): number {
   const sex = sexo === 'masculino' ? 1 : 0;
   const raw = 1.2 * imc + 0.23 * idade - 10.8 * sex - 5.4;
   return Math.round(Math.min(55, Math.max(8, raw)) * 10) / 10;
@@ -1411,11 +1514,7 @@ export function calcKgParaMeta(
   return Math.round(Math.max(0, pesoKg - pesoMeta) * 10) / 10;
 }
 
-export function calcProgressoDefinicao(
-  atual: number,
-  meta: number,
-  inicio?: number,
-): number {
+export function calcProgressoDefinicao(atual: number, meta: number, inicio?: number): number {
   if (atual <= meta) return 100;
   const base = inicio ?? atual;
   if (base <= meta) return 0;
@@ -1457,7 +1556,9 @@ export function getDefinicaoDicas(faixaId: string, diffPct: number | null): stri
     'Priorize proteína e sono — definição depende de recuperação.',
   ];
   if (diffPct != null && diffPct > 0) {
-    base.unshift(`Faltam ~${diffPct.toFixed(1)} p.p. de gordura para a meta — consistência vale mais que intensidade extrema.`);
+    base.unshift(
+      `Faltam ~${diffPct.toFixed(1)} p.p. de gordura para a meta — consistência vale mais que intensidade extrema.`,
+    );
   }
   if (faixaId === 'acima' || faixaId === 'medio') {
     base.push('Evite déficit agressivo; 300–500 kcal abaixo da manutenção é mais sustentável.');
@@ -1492,7 +1593,8 @@ export function getExerciseParamsForNivel(
   nivel: NivelUsuario,
 ): { modo: ModoExercicio; repeticoes: number; tempo_seg: number; descanso_seg: number } {
   const isIso = exercise.prioridade === 'isometrico' || exercise.modo === 'tempo';
-  const modo: ModoExercicio = exercise.modo === 'ambos' ? (isIso ? 'tempo' : 'reps') : exercise.modo;
+  const modo: ModoExercicio =
+    exercise.modo === 'ambos' ? (isIso ? 'tempo' : 'reps') : exercise.modo;
 
   const repMap = {
     iniciante: exercise.repeticoes_iniciante,

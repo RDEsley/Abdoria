@@ -26,7 +26,16 @@ import {
   type TreinoBase,
 } from '@/types';
 
-const STEPS = ['terms', 'body', 'level', 'weapon', 'objective', 'cycle', 'prefs', 'tutorial'] as const;
+const STEPS = [
+  'terms',
+  'body',
+  'level',
+  'weapon',
+  'objective',
+  'cycle',
+  'prefs',
+  'tutorial',
+] as const;
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 const REP_SCHEMES = [
@@ -57,7 +66,10 @@ export function OnboardingPage() {
   const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
   const [saving, setSaving] = useState(false);
 
-  const bodyMetrics = useMemo(() => validateBodyMetrics(idade, peso, altura), [idade, peso, altura]);
+  const bodyMetrics = useMemo(
+    () => validateBodyMetrics(idade, peso, altura),
+    [idade, peso, altura],
+  );
   const imc =
     bodyMetrics.peso_kg && bodyMetrics.altura_cm
       ? calcImc(bodyMetrics.peso_kg, bodyMetrics.altura_cm)
@@ -73,8 +85,7 @@ export function OnboardingPage() {
             ? 'Sobrepeso'
             : 'Obesidade';
 
-  const nivelSugerido =
-    bodyMetrics.idade && imc ? suggestNivel(bodyMetrics.idade, imc) : null;
+  const nivelSugerido = bodyMetrics.idade && imc ? suggestNivel(bodyMetrics.idade, imc) : null;
 
   const saveAndFinish = async (skip = false) => {
     setSaving(true);
@@ -268,7 +279,9 @@ export function OnboardingPage() {
                       type="button"
                       onClick={() => setNivel(n)}
                       className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-left font-bold ${
-                        nivel === n ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-stone-200'
+                        nivel === n
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                          : 'border-stone-200'
                       }`}
                     >
                       {NIVEL_LABELS[n]}
@@ -285,20 +298,24 @@ export function OnboardingPage() {
                   Escolha o estilo de combate na Exploração AFK.
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  {([
+                  {[
                     { id: 'arco' as const, label: 'Arco', hint: 'Ataque à distância' },
                     { id: 'espada' as const, label: 'Espada', hint: 'Combate corpo a corpo' },
-                  ]).map((weapon) => (
+                  ].map((weapon) => (
                     <button
                       key={weapon.id}
                       type="button"
                       onClick={() => setArmaPreferida(weapon.id)}
                       className={`cursor-pointer rounded-xl border-2 px-4 py-4 text-left font-bold ${
-                        armaPreferida === weapon.id ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-stone-200'
+                        armaPreferida === weapon.id
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                          : 'border-stone-200'
                       }`}
                     >
                       {weapon.label}
-                      <span className="mt-1 block text-xs font-medium text-stone-500">{weapon.hint}</span>
+                      <span className="mt-1 block text-xs font-medium text-stone-500">
+                        {weapon.hint}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -308,7 +325,9 @@ export function OnboardingPage() {
             {step === 4 && (
               <>
                 <h2 className="text-2xl font-extrabold">Seu objetivo</h2>
-                <p className="mt-1 text-sm text-stone-500">O que você quer alcançar com os treinos?</p>
+                <p className="mt-1 text-sm text-stone-500">
+                  O que você quer alcançar com os treinos?
+                </p>
                 <div className="mt-4 flex flex-col gap-2">
                   {(['definicao', 'resistencia', 'forca', 'manutencao'] as Objetivo[]).map((o) => (
                     <button
@@ -332,7 +351,9 @@ export function OnboardingPage() {
             {step === 5 && (
               <>
                 <h2 className="text-2xl font-extrabold">Seu ciclo de treinos</h2>
-                <p className="mt-1 text-sm text-stone-500">Escolha pelo menos 2 ciclos ativos (A–E). F e G chegam em breve.</p>
+                <p className="mt-1 text-sm text-stone-500">
+                  Escolha pelo menos 2 ciclos ativos (A–E). F e G chegam em breve.
+                </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {CICLOS.map((c) => {
                     const optional = CICLOS_OPCIONAIS.includes(c);
@@ -352,7 +373,9 @@ export function OnboardingPage() {
                         }`}
                       >
                         {c} — {CICLO_LABELS[c]}
-                        {optional && <span className="ml-1 text-[0.65rem] font-semibold">(em breve)</span>}
+                        {optional && (
+                          <span className="ml-1 text-[0.65rem] font-semibold">(em breve)</span>
+                        )}
                       </button>
                     );
                   })}
@@ -390,7 +413,9 @@ export function OnboardingPage() {
                 </div>
                 {modo === 'reps' && (
                   <div className="mt-4">
-                    <p className="mb-2 text-sm font-bold text-stone-700">Esquema de repetições padrão</p>
+                    <p className="mb-2 text-sm font-bold text-stone-700">
+                      Esquema de repetições padrão
+                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       {REP_SCHEMES.map((scheme) => (
                         <button
@@ -398,7 +423,9 @@ export function OnboardingPage() {
                           type="button"
                           onClick={() => setRepSchemeId(scheme.id)}
                           className={`cursor-pointer rounded-xl border-2 px-3 py-2 text-sm font-bold ${
-                            repSchemeId === scheme.id ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                            repSchemeId === scheme.id
+                              ? 'border-emerald-500 bg-emerald-50'
+                              : 'border-stone-200'
                           }`}
                         >
                           {scheme.label}
@@ -413,20 +440,41 @@ export function OnboardingPage() {
             {step === 7 && (
               <>
                 <h2 className="text-2xl font-extrabold">Bem-vindo ao Abdoria!</h2>
-                <p className="mt-2 text-sm font-semibold text-emerald-700">Sua jornada começa agora — passo 8/8</p>
+                <p className="mt-2 text-sm font-semibold text-emerald-700">
+                  Sua jornada começa agora — passo 8/8
+                </p>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
-                  <li><strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Máx. = 100 base + bônus por nível e Bestiário. Reseta à meia-noite (SP).</li>
-                  <li><strong>{CURRENCY_NAME}:</strong> 1 a cada {ABDORIA_XP_STEP} XP ganhos — use na loja de cosméticos.</li>
-                  <li><strong>Treinos:</strong> Monte ou escolha sugestões no Construtor. Ciclos A–E alternam foco muscular.</li>
-                  <li><strong>Ranking semanal:</strong> Top 25 ganham {CURRENCY_NAME} todo domingo.</li>
-                  <li><strong>Streak & conquistas:</strong> XP extra no treino, dentro do máx. diário.</li>
+                  <li>
+                    <strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Máx. = 100
+                    base + bônus por nível e Bestiário. Reseta à meia-noite (SP).
+                  </li>
+                  <li>
+                    <strong>{CURRENCY_NAME}:</strong> 1 a cada {ABDORIA_XP_STEP} XP ganhos — use na
+                    loja de cosméticos.
+                  </li>
+                  <li>
+                    <strong>Treinos:</strong> Monte ou escolha sugestões no Construtor. Ciclos A–E
+                    alternam foco muscular.
+                  </li>
+                  <li>
+                    <strong>Ranking semanal:</strong> Top 25 ganham {CURRENCY_NAME} todo domingo.
+                  </li>
+                  <li>
+                    <strong>Streak & conquistas:</strong> XP extra no treino, dentro do máx. diário.
+                  </li>
                 </ul>
               </>
             )}
 
             <div className="mt-6 flex gap-3">
               {step > 0 && (
-                <GameButton type="button" variant="secondary" onClick={prev} className="flex items-center gap-1" size="lg">
+                <GameButton
+                  type="button"
+                  variant="secondary"
+                  onClick={prev}
+                  className="flex items-center gap-1"
+                  size="lg"
+                >
                   <ChevronLeft size={18} /> Voltar
                 </GameButton>
               )}

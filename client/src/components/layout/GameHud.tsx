@@ -45,7 +45,9 @@ export function GameHud() {
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(xpTotal);
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const equippedTitle = cosmeticos.titulo_equipado ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome : null;
+  const equippedTitle = cosmeticos.titulo_equipado
+    ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome
+    : null;
   const titleClassName =
     cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
       ? 'cosmetic-title--dono-do-jogo'
@@ -54,10 +56,10 @@ export function GameHud() {
         : undefined;
 
   const inventoryItemCount =
-    (stats?.frozen_streak_count ?? 0)
-    + (stats?.route_drink_count ?? 0)
-    + (stats?.exp_instant_count ?? 0)
-    + (stats?.doria_bag_count ?? 0);
+    (stats?.frozen_streak_count ?? 0) +
+    (stats?.route_drink_count ?? 0) +
+    (stats?.exp_instant_count ?? 0) +
+    (stats?.doria_bag_count ?? 0);
 
   const newInventoryCount = Math.max(0, inventoryItemCount - seenInventoryCount);
 

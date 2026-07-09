@@ -61,15 +61,15 @@ export function buildAfkMetaFields(minutos: number) {
 
 function hasAfkPendingLoot(pending: AfkPendingReward): boolean {
   return (
-    pending.xp > 0
-    || pending.abdoria > 0
-    || pending.frozen_streaks > 0
-    || pending.route_drinks > 0
-    || pending.exp_instant > 0
-    || pending.doria_bags > 0
-    || pending.cosmetic_ids.length > 0
-    || (pending.weapon_ids?.length ?? 0) > 0
-    || pending.titulo_secreto
+    pending.xp > 0 ||
+    pending.abdoria > 0 ||
+    pending.frozen_streaks > 0 ||
+    pending.route_drinks > 0 ||
+    pending.exp_instant > 0 ||
+    pending.doria_bags > 0 ||
+    pending.cosmetic_ids.length > 0 ||
+    (pending.weapon_ids?.length ?? 0) > 0 ||
+    pending.titulo_secreto
   );
 }
 
@@ -91,11 +91,11 @@ export function countAfkDropEvents(pending: AfkPendingReward | null | undefined)
   if (tracked > 0) return tracked;
 
   return (
-    pending.xp
-    + pending.frozen_streaks
-    + pending.route_drinks
-    + pending.cosmetic_ids.length
-    + (pending.titulo_secreto ? 1 : 0)
-    + pending.abdoria
+    pending.xp +
+    pending.frozen_streaks +
+    pending.route_drinks +
+    pending.cosmetic_ids.length +
+    (pending.titulo_secreto ? 1 : 0) +
+    pending.abdoria
   );
 }

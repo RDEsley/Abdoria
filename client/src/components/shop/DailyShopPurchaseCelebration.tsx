@@ -9,7 +9,12 @@ interface Props {
   fullscreen?: boolean;
 }
 
-export function DailyShopPurchaseCelebration({ effectId, message, onComplete, fullscreen = false }: Props) {
+export function DailyShopPurchaseCelebration({
+  effectId,
+  message,
+  onComplete,
+  fullscreen = false,
+}: Props) {
   useEffect(() => {
     if (!onComplete) return;
     const timer = window.setTimeout(onComplete, 2200);
@@ -31,7 +36,11 @@ export function DailyShopPurchaseCelebration({ effectId, message, onComplete, fu
         aria-hidden
       />
 
-      <CosmeticEffectLayer effectId={effectId} mode="burst" className="game-daily-celebration__effect" />
+      <CosmeticEffectLayer
+        effectId={effectId}
+        mode="burst"
+        className="game-daily-celebration__effect"
+      />
 
       {message && (
         <motion.p

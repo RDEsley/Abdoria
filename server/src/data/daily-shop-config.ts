@@ -5,10 +5,7 @@ import type {
   DailyShopSlotKind,
   LojaDiariaSlot,
 } from '../types/index.js';
-import {
-  abdoriaCostForXpReward,
-  xpCostForAbdoriaReward,
-} from '../types/index.js';
+import { abdoriaCostForXpReward, xpCostForAbdoriaReward } from '../types/index.js';
 
 export const DAILY_RARITY_WEIGHTS: Record<DailyRewardRarity, number> = {
   comum: 45,
@@ -85,7 +82,9 @@ export function paidOfferXpCost(
   return 0;
 }
 
-export function inferPaidOfferKind(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo'>): DailyShopPaidOfferKind | null {
+export function inferPaidOfferKind(
+  slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo'>,
+): DailyShopPaidOfferKind | null {
   if (slot.kind !== 'oferta') return null;
   if (slot.recompensa_tipo === 'xp') return 'surto_xp';
   if (slot.recompensa_tipo === 'abdoria') return 'bolsa_abdoria';
@@ -140,14 +139,20 @@ export function hashDailySeed(input: string): number {
 export function pickDailyRarity(date: string, slot: number): DailyRewardRarity {
   const roll = hashDailySeed(`${date}:${slot}`) % 100;
   let acc = 0;
-  for (const [raridade, weight] of Object.entries(DAILY_RARITY_WEIGHTS) as [DailyRewardRarity, number][]) {
+  for (const [raridade, weight] of Object.entries(DAILY_RARITY_WEIGHTS) as [
+    DailyRewardRarity,
+    number,
+  ][]) {
     acc += weight;
     if (roll < acc) return raridade;
   }
   return 'comum';
 }
 
-export function pickFreeDailyRewardType(date: string, slot: number): Exclude<DailyRewardType, 'pacote'> {
+export function pickFreeDailyRewardType(
+  date: string,
+  slot: number,
+): Exclude<DailyRewardType, 'pacote'> {
   return hashDailySeed(`${date}:${slot}:tipo`) % 2 === 0 ? 'xp' : 'abdoria';
 }
 
@@ -172,7 +177,9 @@ export function pickPaidOfferKind(date: string, slot: number): DailyShopPaidOffe
   return PAID_OFFER_KINDS[index] ?? 'pacote_misto';
 }
 
-export function pickDistinctPaidOfferKinds(date: string): [DailyShopPaidOfferKind, DailyShopPaidOfferKind] {
+export function pickDistinctPaidOfferKinds(
+  date: string,
+): [DailyShopPaidOfferKind, DailyShopPaidOfferKind] {
   const first = pickPaidOfferKind(date, 1);
   const candidates = PAID_OFFER_KINDS.filter((kind) => kind !== first);
   const second = candidates[hashDailySeed(`${date}:paid:2`) % candidates.length] ?? 'bolsa_abdoria';

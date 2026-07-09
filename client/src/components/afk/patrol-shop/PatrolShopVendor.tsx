@@ -12,12 +12,7 @@ export function PatrolShopVendor({ celebrating }: Props) {
       className={`game-patrol-vendor${celebrating ? ' game-patrol-vendor--celebrate' : ''}`}
       aria-hidden
     >
-      <img
-        src={VENDOR_ART_SRC}
-        alt=""
-        className="game-patrol-vendor__art"
-        draggable={false}
-      />
+      <img src={VENDOR_ART_SRC} alt="" className="game-patrol-vendor__art" draggable={false} />
       <div className="game-patrol-vendor__shade" />
 
       {celebrating && (
@@ -30,7 +25,6 @@ export function PatrolShopVendor({ celebrating }: Props) {
           </span>
         </>
       )}
-
     </div>
   );
 }

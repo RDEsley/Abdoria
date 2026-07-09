@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
-import {
-  AchievementCard,
-  sortAchievements,
-} from '@/components/gamification/AchievementCard';
+import { AchievementCard, sortAchievements } from '@/components/gamification/AchievementCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -21,7 +18,9 @@ export function AchievementsPage() {
   if (!stats) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <p className="text-sm font-bold text-stone-500">Não foi possível carregar suas conquistas.</p>
+        <p className="text-sm font-bold text-stone-500">
+          Não foi possível carregar suas conquistas.
+        </p>
         <GameButton onClick={() => void refresh()}>Tentar novamente</GameButton>
         <Link to="/" className="text-xs font-bold text-emerald-700 hover:underline">
           ← Voltar à Base

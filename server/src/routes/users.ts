@@ -5,7 +5,11 @@ import { requireAuth } from '../middleware/auth.js';
 import { calcImc, suggestNivel } from '../types/index.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
-import { awardAbdoriaFromXp, awardSkillUnlockXp, countNewSkillUnlocks } from '../services/economy.js';
+import {
+  awardAbdoriaFromXp,
+  awardSkillUnlockXp,
+  countNewSkillUnlocks,
+} from '../services/economy.js';
 import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
 
@@ -40,8 +44,14 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
     }
 
     const allowed = [
-      'nome', 'idade', 'peso_kg', 'altura_cm', 'nivel', 'objetivo',
-      'simulacao_definicao', 'preferencias',
+      'nome',
+      'idade',
+      'peso_kg',
+      'altura_cm',
+      'nivel',
+      'objetivo',
+      'simulacao_definicao',
+      'preferencias',
     ] as const;
     const update: Record<string, unknown> = {};
 
@@ -141,7 +151,17 @@ usersRouter.patch('/me/onboarding', async (req: AuthRequest, res) => {
     const body = req.body as Record<string, unknown>;
     const update: Record<string, unknown> = {};
 
-    const fields = ['nome', 'idade', 'peso_kg', 'altura_cm', 'nivel', 'objetivo', 'simulacao_definicao', 'preferencias', 'onboarding_completed'] as const;
+    const fields = [
+      'nome',
+      'idade',
+      'peso_kg',
+      'altura_cm',
+      'nivel',
+      'objetivo',
+      'simulacao_definicao',
+      'preferencias',
+      'onboarding_completed',
+    ] as const;
     for (const key of fields) {
       if (body[key] !== undefined) update[key] = body[key];
     }

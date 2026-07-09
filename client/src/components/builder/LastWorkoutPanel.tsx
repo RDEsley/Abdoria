@@ -96,7 +96,10 @@ export function LastWorkoutPanel({ exerciseMap, onRepeat }: Props) {
   const moreCount = Math.max(0, lastWorkout.exercicios.length - preview.length);
 
   return (
-    <section className="game-last-workout glass-card rounded-2xl p-4" aria-labelledby="last-workout-title">
+    <section
+      className="game-last-workout glass-card rounded-2xl p-4"
+      aria-labelledby="last-workout-title"
+    >
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2.5">
           <div className="game-last-workout__icon" aria-hidden>
@@ -106,7 +109,9 @@ export function LastWorkoutPanel({ exerciseMap, onRepeat }: Props) {
             <h3 id="last-workout-title" className="game-section-title !mb-0">
               Último treino
             </h3>
-            <p className="mt-0.5 truncate text-sm font-bold text-stone-800">{lastWorkout.treino_nome}</p>
+            <p className="mt-0.5 truncate text-sm font-bold text-stone-800">
+              {lastWorkout.treino_nome}
+            </p>
             <p className="mt-0.5 text-[0.68rem] font-semibold text-stone-500">
               {formatWorkoutWhen(lastWorkout.concluido_em)}
             </p>
@@ -132,8 +137,7 @@ export function LastWorkoutPanel({ exerciseMap, onRepeat }: Props) {
         </span>
         {(lastWorkout.xp_ganho ?? 0) > 0 && (
           <span className="game-last-workout__chip game-last-workout__chip--xp">
-            <Zap size={12} aria-hidden />
-            +{lastWorkout.xp_ganho} XP
+            <Zap size={12} aria-hidden />+{lastWorkout.xp_ganho} XP
           </span>
         )}
       </div>
@@ -142,13 +146,18 @@ export function LastWorkoutPanel({ exerciseMap, onRepeat }: Props) {
         {preview.map((entry) => (
           <li key={`${entry.slug}-${entry.exercicio_id}`} className="game-last-workout__item">
             <span className="truncate font-bold text-stone-800">
-              {formatExerciseName({ nome: entry.nome, nome_pt: exerciseMap.get(entry.slug)?.nome_pt })}
+              {formatExerciseName({
+                nome: entry.nome,
+                nome_pt: exerciseMap.get(entry.slug)?.nome_pt,
+              })}
             </span>
             <span className="shrink-0 text-stone-500">{historyEntryPrescription(entry)}</span>
           </li>
         ))}
         {moreCount > 0 && (
-          <li className="game-last-workout__more">+{moreCount} exercício{moreCount === 1 ? '' : 's'}</li>
+          <li className="game-last-workout__more">
+            +{moreCount} exercício{moreCount === 1 ? '' : 's'}
+          </li>
         )}
       </ul>
     </section>

@@ -140,7 +140,9 @@ export function BuilderPage() {
   const [showConfig, setShowConfig] = useState(false);
   const [showSimilarWorkout, setShowSimilarWorkout] = useState(false);
   const [swapExerciseIndex, setSwapExerciseIndex] = useState<number | null>(null);
-  const [globalDescanso, setGlobalDescanso] = useState<number>(authUser?.preferencias?.descanso_padrao_seg ?? 30);
+  const [globalDescanso, setGlobalDescanso] = useState<number>(
+    authUser?.preferencias?.descanso_padrao_seg ?? 30,
+  );
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
@@ -166,10 +168,7 @@ export function BuilderPage() {
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
   const objetivo: Objetivo = user?.objetivo ?? authUser?.objetivo ?? 'definicao';
   const storedSchemeKey = repSchemesByNivel[nivel]?.map((scheme) => scheme.id).join('|') ?? '';
-  const schemes = useMemo(
-    () => getRepSchemes(nivel),
-    [getRepSchemes, nivel, storedSchemeKey],
-  );
+  const schemes = useMemo(() => getRepSchemes(nivel), [getRepSchemes, nivel, storedSchemeKey]);
   const persistedSchemeId = selectedRepSchemeIds[nivel];
   const cicloTreinos = normalizeCicloTreinos(
     user?.preferencias?.ciclo_treinos ?? authUser?.preferencias?.ciclo_treinos,
@@ -241,10 +240,7 @@ export function BuilderPage() {
     setSelectedSchemeId(resolveSelectedRepSchemeId(persistedSchemeId, schemes));
   }, [nivel, persistedSchemeId, schemes]);
 
-  const exerciseMap = useMemo(
-    () => new Map(exercises.map((e) => [e.slug, e])),
-    [exercises],
-  );
+  const exerciseMap = useMemo(() => new Map(exercises.map((e) => [e.slug, e])), [exercises]);
 
   const selectedPreset = allPresets.find((p) => p.id === selectedPresetId);
   const selectedSavedWorkout = isSavedPresetId(selectedPresetId)
@@ -252,7 +248,8 @@ export function BuilderPage() {
     : undefined;
 
   const scrollToSection = useCallback((id: string, delay = 0) => {
-    const run = () => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const run = () =>
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (delay > 0) window.setTimeout(run, delay);
     else window.requestAnimationFrame(run);
   }, []);
@@ -304,7 +301,15 @@ export function BuilderPage() {
         setCustomizedIndices((prev) => new Set(prev).add(scope));
       }
     },
-    [draftQueue, baseQueue, selectedPresetId, setCustomWorkout, customizedIndices, nivel, setSelectedRepSchemeId],
+    [
+      draftQueue,
+      baseQueue,
+      selectedPresetId,
+      setCustomWorkout,
+      customizedIndices,
+      nivel,
+      setSelectedRepSchemeId,
+    ],
   );
 
   useEffect(() => {
@@ -402,7 +407,9 @@ export function BuilderPage() {
     const ref = exerciseMap.get(swapSourceItem.slug);
     if (!ref) return [];
 
-    const catalog = exercises.filter((ex) => ex.ativo !== false && !blockedExerciseSlugs.includes(ex.slug));
+    const catalog = exercises.filter(
+      (ex) => ex.ativo !== false && !blockedExerciseSlugs.includes(ex.slug),
+    );
     const ranked = filterSimilarExercises(
       {
         slug: ref.slug,
@@ -443,8 +450,8 @@ export function BuilderPage() {
         tempo_recomendado: params.tempo_seg || ex.tempo_recomendado || 30,
         modo: useReps ? 'reps' : params.modo,
         series: current.series,
-        repeticoes: useReps ? current.repeticoes ?? params.repeticoes : params.repeticoes,
-        tempo_seg: useReps ? undefined : current.tempo_seg ?? params.tempo_seg,
+        repeticoes: useReps ? (current.repeticoes ?? params.repeticoes) : params.repeticoes,
+        tempo_seg: useReps ? undefined : (current.tempo_seg ?? params.tempo_seg),
         descanso_seg: current.descanso_seg ?? globalDescanso,
       };
 
@@ -667,8 +674,10 @@ export function BuilderPage() {
     }
   };
 
-  const canSaveWorkout = activeQueue.length > 0 && (selectedPresetId === 'custom' || selectedSavedWorkout);
-  const saveWorkoutDefaultName = selectedSavedWorkout?.nome ?? (customWorkoutName.trim() || 'Meu Treino');
+  const canSaveWorkout =
+    activeQueue.length > 0 && (selectedPresetId === 'custom' || selectedSavedWorkout);
+  const saveWorkoutDefaultName =
+    selectedSavedWorkout?.nome ?? (customWorkoutName.trim() || 'Meu Treino');
 
   const estimatedMinutes = useMemo(() => {
     if (activeQueue.length === 0) return null;
@@ -696,7 +705,9 @@ export function BuilderPage() {
         <span className="game-disclosure__body">
           <span className="game-disclosure__title">Configurar descanso, séries e repetições</span>
           <span className="game-disclosure__hint">
-            {showConfig ? 'Toque para recolher' : 'Toque para ajustar descanso, séries e repetições'}
+            {showConfig
+              ? 'Toque para recolher'
+              : 'Toque para ajustar descanso, séries e repetições'}
           </span>
         </span>
         <ChevronDown size={20} className="game-disclosure__chevron" aria-hidden />
@@ -708,7 +719,10 @@ export function BuilderPage() {
             <p className="text-sm text-stone-500">Adicione ou recomende exercícios para ajustar.</p>
           </div>
         ) : (
-          <div id="workout-config-panel" className="glass-card game-disclosure-panel rounded-2xl p-4">
+          <div
+            id="workout-config-panel"
+            className="glass-card game-disclosure-panel rounded-2xl p-4"
+          >
             <WheelNumberPicker
               label="Descanso padrão"
               value={globalDescanso}
@@ -722,7 +736,9 @@ export function BuilderPage() {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <span className="text-sm font-bold">{formatExerciseName(item)}</span>
-                    <p className="text-[0.65rem] font-bold text-stone-500">{formatExercisePrescription(item)}</p>
+                    <p className="text-[0.65rem] font-bold text-stone-500">
+                      {formatExercisePrescription(item)}
+                    </p>
                   </div>
                   {item.modo === 'reps' && (
                     <div className="flex flex-wrap gap-1">
@@ -758,7 +774,9 @@ export function BuilderPage() {
                     max={50}
                     disabled={item.modo === 'tempo'}
                     placeholder="Por tempo"
-                    onChange={(repeticoes) => updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })}
+                    onChange={(repeticoes) =>
+                      updateQueueItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })
+                    }
                   />
                   <WheelNumberPicker
                     label="Descanso (s)"
@@ -785,20 +803,33 @@ export function BuilderPage() {
       <BuilderTabs active={activeTab} onChange={handleTabChange} />
 
       {activeTab === 'train' && (
-        <div id="builder-panel-train" role="tabpanel" aria-labelledby="builder-tab-train" className="flex flex-col gap-5">
+        <div
+          id="builder-panel-train"
+          role="tabpanel"
+          aria-labelledby="builder-tab-train"
+          className="flex flex-col gap-5"
+        >
           <section id="builder-presets">
             <div className="mb-2 flex items-center gap-2">
               <Sparkles size={18} className="text-amber-500" />
               <div>
                 <h3 className="game-section-title !mb-0">Treino do dia</h3>
-                <div className="game-builder-cycle-progress mt-1" role="tablist" aria-label="Ciclos de treino">
+                <div
+                  className="game-builder-cycle-progress mt-1"
+                  role="tablist"
+                  aria-label="Ciclos de treino"
+                >
                   {cicloTreinos.map((c, i) => {
                     const done = !!rodadaDone[c];
                     const isSuggested = suggestedWorkout?.ciclo_id === c;
                     const isActive = selectedPreset?.ciclo_id === c;
                     return (
                       <Fragment key={c}>
-                        {i > 0 && <span className="game-builder-cycle-progress__arrow" aria-hidden>→</span>}
+                        {i > 0 && (
+                          <span className="game-builder-cycle-progress__arrow" aria-hidden>
+                            →
+                          </span>
+                        )}
                         <button
                           type="button"
                           role="tab"
@@ -854,13 +885,22 @@ export function BuilderPage() {
               <div className="glass-card rounded-2xl p-4">
                 {selectedPreset && (
                   <>
-                    <p className="text-[0.65rem] font-bold text-emerald-600">Ciclo {selectedPreset.ciclo_id}</p>
+                    <p className="text-[0.65rem] font-bold text-emerald-600">
+                      Ciclo {selectedPreset.ciclo_id}
+                    </p>
                     <p className="text-sm font-extrabold text-stone-900">
                       {selectedPreset.nome.split('—')[1]?.trim() ?? selectedPreset.nome}
                     </p>
-                    <MuscleTagGroup muscles={getPresetPrimaryMuscles(selectedPreset, exerciseMap)} className="mt-2" />
-                    <p className="mt-2 text-xs font-bold text-stone-600">{selectedPreset.descricao}</p>
-                    <p className="mt-1 text-[0.65rem] font-bold text-stone-500">{presetSummary(selectedPreset)}</p>
+                    <MuscleTagGroup
+                      muscles={getPresetPrimaryMuscles(selectedPreset, exerciseMap)}
+                      className="mt-2"
+                    />
+                    <p className="mt-2 text-xs font-bold text-stone-600">
+                      {selectedPreset.descricao}
+                    </p>
+                    <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
+                      {presetSummary(selectedPreset)}
+                    </p>
                     <PreferenceToggleButtons
                       className="mt-3"
                       onSwapWorkout={() => void handleSwapWorkout()}
@@ -878,7 +918,9 @@ export function BuilderPage() {
                 {selectedSavedWorkout && (
                   <>
                     <p className="text-[0.65rem] font-bold text-sky-600">Treino salvo</p>
-                    <p className="text-sm font-extrabold text-stone-900">{selectedSavedWorkout.nome}</p>
+                    <p className="text-sm font-extrabold text-stone-900">
+                      {selectedSavedWorkout.nome}
+                    </p>
                     <p className="mt-2 text-xs font-bold text-stone-600">
                       {selectedSavedWorkout.queue.length} exercícios personalizados.
                     </p>
@@ -901,7 +943,8 @@ export function BuilderPage() {
               onCreateClick={() => setShowCreateScheme(true)}
             />
             <p className="mt-2 text-[0.65rem] font-bold text-stone-400">
-              O esquema define valores iniciais. Você pode ajustar cada exercício individualmente sem perder o vínculo.
+              O esquema define valores iniciais. Você pode ajustar cada exercício individualmente
+              sem perder o vínculo.
             </p>
           </section>
 
@@ -914,7 +957,11 @@ export function BuilderPage() {
                 {exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'}
               </p>
             ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
                 <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
                   <ul className="flex flex-col gap-2">
                     {activeQueue.map((item, index) => (
@@ -982,7 +1029,11 @@ export function BuilderPage() {
                 {exercisesLoading ? 'Carregando...' : 'Adicione exercícios da biblioteca acima.'}
               </p>
             ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
                 <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
                   <ul className="flex flex-col gap-2">
                     {activeQueue.map((item, index) => (

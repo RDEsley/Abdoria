@@ -19,11 +19,7 @@ const d3 = addDaysSaoPaulo(today, -3);
 const workout = (dayKey: string): StreakWorkoutDay => ({ concluido_em: `${dayKey}T12:00:00Z` });
 
 // 1) Treinou anteontem, faltou ontem, abriu hoje SEM treinar → cobre ontem.
-assert.equal(
-  findStreakMissedDayForFreeze([workout(d2)], []),
-  d1,
-  'volta sem treino: cobre ontem',
-);
+assert.equal(findStreakMissedDayForFreeze([workout(d2)], []), d1, 'volta sem treino: cobre ontem');
 
 // 2) PONTE: treinou anteontem, faltou ontem, treinou hoje → ainda cobre ontem.
 assert.equal(
@@ -39,7 +35,11 @@ assert.equal(findStreakMissedDayForFreeze([workout(d1)], []), null, 'treinou ont
 assert.equal(findStreakMissedDayForFreeze([workout(d3)], []), null, '2 dias perdidos: sem freeze');
 
 // 5) Ontem já congelado → não consome de novo.
-assert.equal(findStreakMissedDayForFreeze([workout(d2)], [d1]), null, 'ontem já congelado: sem freeze');
+assert.equal(
+  findStreakMissedDayForFreeze([workout(d2)], [d1]),
+  null,
+  'ontem já congelado: sem freeze',
+);
 
 // 6) Guarda do consumo: o freeze precisa ESTENDER a ofensiva (caso ponte).
 const hist = [workout(d2), workout(today)];

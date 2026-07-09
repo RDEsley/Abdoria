@@ -9,11 +9,14 @@ interface Props {
 }
 
 /** Rótulo de zona abdominal com subtítulo opcional. */
-export function MuscleZoneLabel({ muscle, showHint = false, hintOnly = false, className = '' }: Props) {
+export function MuscleZoneLabel({
+  muscle,
+  showHint = false,
+  hintOnly = false,
+  className = '',
+}: Props) {
   if (hintOnly) {
-    return (
-      <span className={`muscle-zone-hint ${className}`.trim()}>{MUSCULO_HINTS[muscle]}</span>
-    );
+    return <span className={`muscle-zone-hint ${className}`.trim()}>{MUSCULO_HINTS[muscle]}</span>;
   }
 
   return (

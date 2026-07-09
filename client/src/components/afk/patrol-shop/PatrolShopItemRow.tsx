@@ -1,7 +1,15 @@
 import { Coins, Lock, Sparkles, Swords, Zap } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { PatrolBowIcon, PatrolSwordIcon, patrolWeaponIconStyle } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
-import { PATROL_WEAPON_RARITY_LABELS, formatPatrolCritChancePercent, type PatrolShopCatalogItem } from '@/types';
+import {
+  PatrolBowIcon,
+  PatrolSwordIcon,
+  patrolWeaponIconStyle,
+} from '@/components/afk/patrol-shop/PatrolWeaponIcons';
+import {
+  PATROL_WEAPON_RARITY_LABELS,
+  formatPatrolCritChancePercent,
+  type PatrolShopCatalogItem,
+} from '@/types';
 
 interface Props {
   item: PatrolShopCatalogItem;
@@ -25,7 +33,9 @@ function WeaponThumb({ item }: { item: PatrolShopCatalogItem }) {
           : 'basic';
 
   return (
-    <div className={`game-patrol-shop-row__thumb game-patrol-shop-row__thumb--${item.kind} game-patrol-shop-row__thumb--${tier}`}>
+    <div
+      className={`game-patrol-shop-row__thumb game-patrol-shop-row__thumb--${item.kind} game-patrol-shop-row__thumb--${tier}`}
+    >
       {item.kind === 'arco' ? (
         <PatrolBowIcon
           className="game-patrol-shop-row__thumb-svg"
@@ -63,7 +73,9 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
             <span className="game-patrol-shop-row__level">Nv. {item.nivel}</span>
             <h4>{item.nome}</h4>
           </div>
-          <span className={`game-patrol-shop-row__rarity game-patrol-shop-row__rarity--${item.raridade}`}>
+          <span
+            className={`game-patrol-shop-row__rarity game-patrol-shop-row__rarity--${item.raridade}`}
+          >
             {PATROL_WEAPON_RARITY_LABELS[item.raridade]}
           </span>
         </div>
@@ -83,8 +95,12 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
             <span className="game-patrol-shop-row__stat-pill game-patrol-shop-row__stat-pill--crit">
               <Zap size={11} aria-hidden />
               {formatPatrolCritChancePercent(item.chance_critico)} crítico
-              {item.kind === 'arco' && <span className="game-patrol-shop-row__stat-note">combo +4/hit</span>}
-              {item.kind === 'espada' && <span className="game-patrol-shop-row__stat-note">+25 dano</span>}
+              {item.kind === 'arco' && (
+                <span className="game-patrol-shop-row__stat-note">combo +4/hit</span>
+              )}
+              {item.kind === 'espada' && (
+                <span className="game-patrol-shop-row__stat-note">+25 dano</span>
+              )}
             </span>
           )}
         </div>

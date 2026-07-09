@@ -1010,13 +1010,7 @@ function playTone(
 }
 
 function playStep(step: ToneStep, fallbackType: OscillatorType = 'sine') {
-  playTone(
-    step.freq,
-    step.dur ?? 0.1,
-    step.type ?? fallbackType,
-    step.gain ?? 0.07,
-    step.harmonic,
-  );
+  playTone(step.freq, step.dur ?? 0.1, step.type ?? fallbackType, step.gain ?? 0.07, step.harmonic);
 }
 
 function playSequence(steps: ToneStep[], fallbackType: OscillatorType = 'sine') {
@@ -1071,7 +1065,10 @@ export function playTimerDone() {
 }
 
 export function playWorkoutComplete() {
-  playSequence(getPack().success.map((step) => ({ ...step, dur: (step.dur ?? 0.1) + 0.04 })), 'sine');
+  playSequence(
+    getPack().success.map((step) => ({ ...step, dur: (step.dur ?? 0.1) + 0.04 })),
+    'sine',
+  );
 }
 
 export function playTabSwitch() {
@@ -1135,7 +1132,11 @@ function sequenceDurationMs(steps: ToneStep[]): number {
   return gapMs + (last.dur ?? 0.1) * 1000 + 80;
 }
 
-function playSequenceForPack(steps: ToneStep[], pack: string, fallbackType: OscillatorType = 'sine') {
+function playSequenceForPack(
+  steps: ToneStep[],
+  pack: string,
+  fallbackType: OscillatorType = 'sine',
+) {
   if (!PACKS[pack]) return;
   steps.forEach((step, index) => {
     const delay = steps.slice(0, index).reduce((total, prev) => total + (prev.gap ?? 80), 0);
@@ -1167,8 +1168,11 @@ export function previewSfxPack(pack: string) {
   setTimeout(() => playSequenceForPack(def.shopPreview, pack, fallbackType), previewStartMs);
 
   const previewMs = previewStartMs + sequenceDurationMs(def.shopPreview);
-  previewRestoreTimer = setTimeout(() => {
-    sfxPack = previous;
-    previewRestoreTimer = null;
-  }, Math.max(previewMs + 120, 600));
+  previewRestoreTimer = setTimeout(
+    () => {
+      sfxPack = previous;
+      previewRestoreTimer = null;
+    },
+    Math.max(previewMs + 120, 600),
+  );
 }

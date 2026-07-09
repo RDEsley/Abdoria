@@ -7,11 +7,7 @@ import {
   type AfkEnemyId,
   type PatrolWeaponDamageKind,
 } from '../afk/combat.js';
-import {
-  PATROL_WEAPON_BY_ID,
-  patrolHeroDamage,
-  type PatrolWeaponDefinition,
-} from './shop.js';
+import { PATROL_WEAPON_BY_ID, patrolHeroDamage, type PatrolWeaponDefinition } from './shop.js';
 
 export const AFK_LEVEL10_BOW_DAMAGE_SPECIAL = 52;
 export const AFK_LEVEL10_SWORD_DAMAGE_SPECIAL = 60;

@@ -8,7 +8,15 @@ interface Props {
 export function StreakBadge({ streak, frozen = false }: Props) {
   const tier = frozen
     ? 'frozen'
-    : streak >= 30 ? 'hot' : streak >= 7 ? 'warm' : streak >= 3 ? 'cool' : streak > 0 ? 'active' : 'none';
+    : streak >= 30
+      ? 'hot'
+      : streak >= 7
+        ? 'warm'
+        : streak >= 3
+          ? 'cool'
+          : streak > 0
+            ? 'active'
+            : 'none';
 
   return (
     <span

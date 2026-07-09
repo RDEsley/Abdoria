@@ -17,8 +17,8 @@ export function AfkFab() {
     return () => window.removeEventListener('abdoria:open-afk', onOpen);
   }, []);
 
-  const hasRewards = stats?.afk?.has_rewards
-    ?? (stats?.afk ? hasAfkRewardsToClaim(stats.afk) : false);
+  const hasRewards =
+    stats?.afk?.has_rewards ?? (stats?.afk ? hasAfkRewardsToClaim(stats.afk) : false);
 
   useEffect(() => {
     if (!hasRewards || autoOpenedRef.current) return;
@@ -34,7 +34,11 @@ export function AfkFab() {
         type="button"
         className={`game-afk-fab${hasRewards ? ' game-afk-fab--loot' : ''}`}
         onClick={() => setOpen(true)}
-        aria-label={hasRewards ? 'Exploração de Abdoria — recompensas disponíveis' : 'Abrir exploração de Abdoria'}
+        aria-label={
+          hasRewards
+            ? 'Exploração de Abdoria — recompensas disponíveis'
+            : 'Abrir exploração de Abdoria'
+        }
       >
         <span className="game-afk-fab__glow" aria-hidden />
         <span className="game-afk-fab__shine" aria-hidden />

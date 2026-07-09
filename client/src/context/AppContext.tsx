@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { showGameToast } from '@/components/ui/GameToast';
 import {
   completeWorkout,
@@ -103,7 +96,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? { ...pendingPersist.current?.esquemas_reps, ...patch.esquemas_reps }
           : pendingPersist.current?.esquemas_reps,
         esquema_reps_selecionado: patch.esquema_reps_selecionado
-          ? { ...pendingPersist.current?.esquema_reps_selecionado, ...patch.esquema_reps_selecionado }
+          ? {
+              ...pendingPersist.current?.esquema_reps_selecionado,
+              ...patch.esquema_reps_selecionado,
+            }
           : pendingPersist.current?.esquema_reps_selecionado,
       };
 
@@ -175,7 +171,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUser(userRes.value);
       await hydrateAccountData(userRes.value);
     } else {
-      errors.push(userRes.reason instanceof Error ? userRes.reason.message : 'Erro ao carregar usuário');
+      errors.push(
+        userRes.reason instanceof Error ? userRes.reason.message : 'Erro ao carregar usuário',
+      );
       dadosHydratedFor.current = null;
       applyUserDados(resolveUserDadosSalvos());
     }
@@ -183,10 +181,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (statsRes.status === 'fulfilled') {
       setStats(statsRes.value);
       if (statsRes.value.streak_frozen_notice) {
-        showGameToast('Você não treinou ontem, mas um Frozen Streak salvou sua ofensiva!', { variant: 'info' });
+        showGameToast('Você não treinou ontem, mas um Frozen Streak salvou sua ofensiva!', {
+          variant: 'info',
+        });
       }
-    }
-    else errors.push(statsRes.reason instanceof Error ? statsRes.reason.message : 'Erro ao carregar estatísticas');
+    } else
+      errors.push(
+        statsRes.reason instanceof Error
+          ? statsRes.reason.message
+          : 'Erro ao carregar estatísticas',
+      );
 
     setError(errors.length > 0 ? errors.join(' · ') : null);
     setLoading(false);
@@ -257,14 +261,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
   }, []);
 
-  useEffect(() => () => {
-    if (persistTimer.current !== null) {
-      window.clearTimeout(persistTimer.current);
-    }
-    if (pendingPersist.current) {
-      void flushPersist();
-    }
-  }, [flushPersist]);
+  useEffect(
+    () => () => {
+      if (persistTimer.current !== null) {
+        window.clearTimeout(persistTimer.current);
+      }
+      if (pendingPersist.current) {
+        void flushPersist();
+      }
+    },
+    [flushPersist],
+  );
 
   const loadRecommendations = useCallback(async (options?: { force?: boolean }) => {
     if (recommendationsLoaded.current && !options?.force) return;
@@ -326,9 +333,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (preset: SavedWorkoutPreset) => {
       const list = userDadosRef.current.treinos_salvos;
       const index = list.findIndex((entry) => entry.id === preset.id);
-      const treinos_salvos = index >= 0
-        ? list.map((entry, i) => (i === index ? preset : entry))
-        : [preset, ...list];
+      const treinos_salvos =
+        index >= 0 ? list.map((entry, i) => (i === index ? preset : entry)) : [preset, ...list];
       const next = mergeUserDadosSalvos(userDadosRef.current, { treinos_salvos });
       applyUserDados(next);
       schedulePersist({ treinos_salvos }, true);
@@ -370,7 +376,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeRepScheme = useCallback(
     (nivel: NivelUsuario, schemeId: string) => {
       const current = getRepSchemesForNivel(userDadosRef.current, nivel);
-      return saveRepSchemes(nivel, current.filter((scheme) => scheme.id !== schemeId));
+      return saveRepSchemes(
+        nivel,
+        current.filter((scheme) => scheme.id !== schemeId),
+      );
     },
     [saveRepSchemes],
   );

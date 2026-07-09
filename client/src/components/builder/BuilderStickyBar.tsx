@@ -21,7 +21,9 @@ export function BuilderStickyBar({ exerciseCount, estimatedMinutes, disabled, on
     >
       <div className="pointer-events-auto mx-auto max-w-lg border-t border-stone-200/80 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:max-w-3xl">
         <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 text-xs font-bold leading-snug text-stone-500">{timeLabel}</p>
+          <p className="min-w-0 flex-1 text-xs font-bold leading-snug text-stone-500">
+            {timeLabel}
+          </p>
           <GameButton
             size="lg"
             className="flex shrink-0 items-center justify-center gap-2 px-5"

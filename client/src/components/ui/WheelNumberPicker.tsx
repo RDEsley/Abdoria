@@ -101,7 +101,11 @@ function WheelPickerCore({ value, min, max, step = 1, suffix = '', onChange }: W
         aria-label="Selecionar valor"
       >
         {Array.from({ length: PAD_COUNT }).map((_, i) => (
-          <div key={`pad-top-${i}`} className="game-wheel-picker__item game-wheel-picker__item--spacer" aria-hidden />
+          <div
+            key={`pad-top-${i}`}
+            className="game-wheel-picker__item game-wheel-picker__item--spacer"
+            aria-hidden
+          />
         ))}
         {options.map((n, index) => (
           <button
@@ -117,7 +121,11 @@ function WheelPickerCore({ value, min, max, step = 1, suffix = '', onChange }: W
           </button>
         ))}
         {Array.from({ length: PAD_COUNT }).map((_, i) => (
-          <div key={`pad-bot-${i}`} className="game-wheel-picker__item game-wheel-picker__item--spacer" aria-hidden />
+          <div
+            key={`pad-bot-${i}`}
+            className="game-wheel-picker__item game-wheel-picker__item--spacer"
+            aria-hidden
+          />
         ))}
       </div>
     </div>
@@ -185,7 +193,9 @@ export function WheelNumberPicker({
 
   return (
     <>
-      <div className={`game-wheel-picker ${disabled ? 'game-wheel-picker--disabled' : ''} ${className}`.trim()}>
+      <div
+        className={`game-wheel-picker ${disabled ? 'game-wheel-picker--disabled' : ''} ${className}`.trim()}
+      >
         {label && <span className="game-wheel-picker__label">{label}</span>}
         <button
           type="button"
@@ -196,10 +206,14 @@ export function WheelNumberPicker({
           aria-expanded={open}
           aria-label={label ? `${label}: ${displayValue}` : displayValue}
         >
-          <span className={`game-wheel-picker__value ${disabled ? 'game-wheel-picker__value--muted' : ''}`}>
+          <span
+            className={`game-wheel-picker__value ${disabled ? 'game-wheel-picker__value--muted' : ''}`}
+          >
             {disabled ? placeholder : displayValue}
           </span>
-          {!disabled && <ChevronDown size={16} className="game-wheel-picker__chevron" aria-hidden />}
+          {!disabled && (
+            <ChevronDown size={16} className="game-wheel-picker__chevron" aria-hidden />
+          )}
         </button>
       </div>
 

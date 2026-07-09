@@ -258,7 +258,13 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
       />
 
       {/* Limb — thick gradient stroke for visible depth */}
-      <path d={BOW_ARC} fill="none" stroke={`url(#${uid}-limb)`} strokeWidth="6.5" strokeLinecap="round" />
+      <path
+        d={BOW_ARC}
+        fill="none"
+        stroke={`url(#${uid}-limb)`}
+        strokeWidth="6.5"
+        strokeLinecap="round"
+      />
       {/* Limb outline */}
       <path d={BOW_ARC} fill="none" stroke={INK} strokeWidth="1.9" strokeLinecap="round" />
       {/* Inner belly shadow — slightly offset path to suggest cross-section */}
@@ -282,7 +288,16 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
       />
 
       {/* Riser / grip */}
-      <rect x="26" y="32" width="12" height="9" rx="2" fill={p.grip} stroke={INK} strokeWidth="1.5" />
+      <rect
+        x="26"
+        y="32"
+        width="12"
+        height="9"
+        rx="2"
+        fill={p.grip}
+        stroke={INK}
+        strokeWidth="1.5"
+      />
       <line x1="27" y1="34.5" x2="37" y2="34.5" stroke="#fff" strokeWidth="0.75" opacity="0.25" />
       <line x1="27" y1="37.5" x2="37" y2="37.5" stroke="#fff" strokeWidth="0.6" opacity="0.18" />
       <line x1="26.5" y1="36" x2="38.5" y2="36" stroke={INK} strokeWidth="0.85" opacity="0.22" />
@@ -305,7 +320,15 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
       />
 
       {/* Arrow shaft */}
-      <line x1="15" y1="33" x2="50" y2="12" stroke={`url(#${uid}-arrow)`} strokeWidth="2.4" strokeLinecap="round" />
+      <line
+        x1="15"
+        y1="33"
+        x2="50"
+        y2="12"
+        stroke={`url(#${uid}-arrow)`}
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
 
       {/* Broadhead arrowhead (4-point) */}
       <path
@@ -317,12 +340,37 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
       />
 
       {/* 3-vane fletching */}
-      <path d="M17 32 L11 27 L15 34 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
-      <path d="M19 34 L13 33 L16 38 Z" fill={p.fletch} stroke={INK} strokeWidth="0.9" strokeLinejoin="round" />
-      <path d="M15 31 L9 29 L13 34 Z" fill={p.fletch} stroke={INK} strokeWidth="0.8" strokeLinejoin="round" opacity="0.62" />
+      <path
+        d="M17 32 L11 27 L15 34 Z"
+        fill={p.fletch}
+        stroke={INK}
+        strokeWidth="0.9"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19 34 L13 33 L16 38 Z"
+        fill={p.fletch}
+        stroke={INK}
+        strokeWidth="0.9"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15 31 L9 29 L13 34 Z"
+        fill={p.fletch}
+        stroke={INK}
+        strokeWidth="0.8"
+        strokeLinejoin="round"
+        opacity="0.62"
+      />
 
       {/* Nock V */}
-      <path d="M15 32 L13 30 M15 33 L17 36" fill="none" stroke={INK} strokeWidth="1.3" strokeLinecap="round" />
+      <path
+        d="M15 32 L13 30 M15 33 L17 36"
+        fill="none"
+        stroke={INK}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
 
       {lvl >= 6 && (
         <>
@@ -330,9 +378,7 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
           <circle cx="37" cy="22" r="1.4" fill="#fb923c" opacity="0.7" />
         </>
       )}
-      {lvl >= 3 && lvl < 6 && (
-        <circle cx="33" cy="20" r="1.6" fill="#ecfdf5" opacity="0.9" />
-      )}
+      {lvl >= 3 && lvl < 6 && <circle cx="33" cy="20" r="1.6" fill="#ecfdf5" opacity="0.9" />}
       {lvl >= 10 && (
         <path
           d="M50 5 L51.2 9 L55 10 L51.2 11 L50 15 L48.8 11 L45 10 L48.8 9 Z"
@@ -397,16 +443,39 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
       <line x1="24" y1="10" x2="24" y2="32" stroke="#fff" strokeWidth="0.7" opacity="0.55" />
 
       {/* Right bevel edge highlight */}
-      <line x1="25.8" y1="12" x2="26.2" y2="31" stroke="#fff" strokeWidth="0.8" opacity="0.42" strokeLinecap="round" />
+      <line
+        x1="25.8"
+        y1="12"
+        x2="26.2"
+        y2="31"
+        stroke="#fff"
+        strokeWidth="0.8"
+        opacity="0.42"
+        strokeLinecap="round"
+      />
 
       {/* Rune marks */}
       {p.rune && (
         <>
-          <circle cx="24" cy="15" r="2" fill="none" stroke={p.rune} strokeWidth="0.85" opacity="0.9" />
+          <circle
+            cx="24"
+            cy="15"
+            r="2"
+            fill="none"
+            stroke={p.rune}
+            strokeWidth="0.85"
+            opacity="0.9"
+          />
           <circle cx="24" cy="15" r="0.7" fill={p.rune} opacity="0.9" />
           <line x1="22" y1="21" x2="26" y2="21" stroke={p.rune} strokeWidth="0.9" opacity="0.8" />
           <line x1="24" y1="19" x2="24" y2="23" stroke={p.rune} strokeWidth="0.9" opacity="0.8" />
-          <path d="M22.5 27 L24 25 L25.5 27 M22.5 29 L25.5 29" fill="none" stroke={p.rune} strokeWidth="0.8" opacity="0.72" />
+          <path
+            d="M22.5 27 L24 25 L25.5 27 M22.5 29 L25.5 29"
+            fill="none"
+            stroke={p.rune}
+            strokeWidth="0.8"
+            opacity="0.72"
+          />
         </>
       )}
 
@@ -425,7 +494,16 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
       <circle cx="41" cy="37.5" r="2" fill={p.guardB} stroke={INK} strokeWidth="0.9" />
 
       {/* Grip */}
-      <rect x="19" y="42" width="10" height="13" rx="1.5" fill={p.grip} stroke={INK} strokeWidth="1.5" />
+      <rect
+        x="19"
+        y="42"
+        width="10"
+        height="13"
+        rx="1.5"
+        fill={p.grip}
+        stroke={INK}
+        strokeWidth="1.5"
+      />
       {/* Leather wrap */}
       {[0, 1, 2, 3].map((i) => (
         <line
@@ -454,7 +532,13 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
       <path d="M21 58.5 L24 55 L27 58.5" fill="#fff" opacity="0.28" />
 
       {lvl >= 9 && (
-        <path d="M20 44 L24 48 L28 44" fill="none" stroke="#fde047" strokeWidth="0.9" opacity="0.65" />
+        <path
+          d="M20 44 L24 48 L28 44"
+          fill="none"
+          stroke="#fde047"
+          strokeWidth="0.9"
+          opacity="0.65"
+        />
       )}
       {lvl >= 10 && (
         <path
@@ -478,7 +562,10 @@ export function PatrolSwordTabIcon({ className }: { className?: string }) {
   return <PatrolSwordIcon className={className} variant="espada_03" />;
 }
 
-export function patrolWeaponIconStyle(kind: 'arco' | 'espada', variant?: string): CSSProperties | undefined {
+export function patrolWeaponIconStyle(
+  kind: 'arco' | 'espada',
+  variant?: string,
+): CSSProperties | undefined {
   const level = weaponLevel(variant);
   if (level >= 10) {
     return { filter: 'drop-shadow(0 0 6px rgba(217, 70, 239, 0.55))' };

@@ -5,10 +5,12 @@ import { ensureAbdoriaWallet } from './economy.js';
 
 const RETIRED_SLUGS = new Set(['pallof-press']);
 
-export async function syncAllUsersProgressData(): Promise<{ users: number; pruned: number; coinsAdjusted: number }> {
-  const activeSlugs = new Set(
-    (await Exercise.find({ ativo: true })).map((e) => e.slug),
-  );
+export async function syncAllUsersProgressData(): Promise<{
+  users: number;
+  pruned: number;
+  coinsAdjusted: number;
+}> {
+  const activeSlugs = new Set((await Exercise.find({ ativo: true })).map((e) => e.slug));
 
   const usersLean = await User.find({});
   let pruned = 0;
@@ -21,7 +23,9 @@ export async function syncAllUsersProgressData(): Promise<{ users: number; prune
     let dirty = false;
 
     const unlocked = user.dados_salvos?.exercicios_desbloqueados ?? [];
-    const nextUnlocked = unlocked.filter((slug) => activeSlugs.has(slug) && !RETIRED_SLUGS.has(slug));
+    const nextUnlocked = unlocked.filter(
+      (slug) => activeSlugs.has(slug) && !RETIRED_SLUGS.has(slug),
+    );
     if (nextUnlocked.length !== unlocked.length) {
       user.dados_salvos.exercicios_desbloqueados = nextUnlocked;
       pruned += unlocked.length - nextUnlocked.length;
