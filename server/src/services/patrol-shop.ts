@@ -19,7 +19,7 @@ import {
   resolvePatrolArmas,
 } from '../types/index.js';
 import type { UserMutable } from '../repositories/user-repository.js';
-import type { UserDocument } from '../types/user-document.js';
+import type { UserRecord } from '../types/user-record.js';
 import { User } from '../domain/User.js';
 import { readAbdoriaBalance } from './economy.js';
 
@@ -52,10 +52,7 @@ function toCatalogItem(
   const equipada = slotEquipped && def.kind === armaPreferida;
   const futuro = def.unlock.tipo === 'futuro';
   const pode_comprar =
-    !desbloqueada &&
-    !futuro &&
-    def.unlock.tipo === 'moedas' &&
-    abdoria >= def.unlock.preco_moedas;
+    !desbloqueada && !futuro && def.unlock.tipo === 'moedas' && abdoria >= def.unlock.preco_moedas;
   const weaponKind = def.kind === 'arco' ? 'arco' : 'espada';
   const dano_total = patrolHeroDamage(weaponKind, def.id);
   // Armas Secret (nível 10) exibem o crítico especial contra elites/bosses.
@@ -88,8 +85,7 @@ function toCatalogItem(
   };
 }
 
-export function buildPatrolShopResponse(user: UserDocument): PatrolShopResponse {
-  const cosmeticos = resolveCosmeticos(user.cosmeticos, user.gamificacao.nivel_xp);
+export function buildPatrolShopResponse(user: UserRecord): PatrolShopResponse {
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const abdoria = readAbdoriaBalance(user);
   const armaPreferida = user.preferencias?.arma_preferida === 'espada' ? 'espada' : 'arco';
@@ -98,8 +94,12 @@ export function buildPatrolShopResponse(user: UserDocument): PatrolShopResponse 
     abdoria,
     armas,
     arma_preferida: armaPreferida,
-    arcos: patrolWeaponsByKind('arco').map((def) => toCatalogItem(def, armas, abdoria, armaPreferida)),
-    espadas: patrolWeaponsByKind('espada').map((def) => toCatalogItem(def, armas, abdoria, armaPreferida)),
+    arcos: patrolWeaponsByKind('arco').map((def) =>
+      toCatalogItem(def, armas, abdoria, armaPreferida),
+    ),
+    espadas: patrolWeaponsByKind('espada').map((def) =>
+      toCatalogItem(def, armas, abdoria, armaPreferida),
+    ),
   };
 }
 
@@ -130,7 +130,10 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   const cosmeticos = resolveCosmeticos(user.cosmeticos, user.gamificacao.nivel_xp);
   const preco = def.unlock.preco_moedas;
   if (cosmeticos.moedas < preco) {
-    return { error: `${CURRENCY_NAME} insuficientes. Faltam ${preco - cosmeticos.moedas} ${CURRENCY_NAME}.`, status: 400 as const };
+    return {
+      error: `${CURRENCY_NAME} insuficientes. Faltam ${preco - cosmeticos.moedas} ${CURRENCY_NAME}.`,
+      status: 400 as const,
+    };
   }
 
   cosmeticos.moedas -= preco;

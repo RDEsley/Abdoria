@@ -33,7 +33,7 @@ import {
 } from '../../shared/patrol/damage.ts';
 import { rollBossLegendaryWeapon, hashKillSeed } from '../../server/src/services/afk-rolls.ts';
 import { EMPTY_AFK_PENDING } from '../../server/src/repositories/user-repository.ts';
-import type { UserDocument } from '../../server/src/types/user-document.ts';
+import type { UserRecord } from '../../server/src/types/user-record.ts';
 
 assert.equal(AFK_CRIT_CHANCE_ARCO, 18);
 assert.equal(AFK_CRIT_CHANCE_ESPADA, 6);
@@ -120,14 +120,17 @@ for (let seed = 0; seed < 50_000; seed += 1) {
 }
 assert.equal(goldenHits, 10, 'golden slime 1/5000 over 50k seeds');
 
-const mockUser = { id: 'boss-drop-test' } as UserDocument;
+const mockUser = { id: 'boss-drop-test' } as UserRecord;
 let weaponDrops = 0;
 for (let i = 0; i < 20_000; i += 1) {
   const roll = hashKillSeed('boss-drop-test', i + 9001) % 10000;
   if (roll < AFK_BOSS_LEGENDARY_WEAPON_ROLL) continue;
   weaponDrops += 1;
 }
-assert.ok(weaponDrops >= 10 && weaponDrops <= 50, `boss weapon roll gate ~0.13% (got ${weaponDrops}/20000)`);
+assert.ok(
+  weaponDrops >= 10 && weaponDrops <= 50,
+  `boss weapon roll gate ~0.13% (got ${weaponDrops}/20000)`,
+);
 
 weaponDrops = 0;
 for (let i = 0; i < 20_000; i += 1) {
@@ -135,7 +138,10 @@ for (let i = 0; i < 20_000; i += 1) {
   rollBossLegendaryWeapon(mockUser, i, pending, new Set());
   if (pending.weapon_ids.length > 0) weaponDrops += 1;
 }
-assert.ok(weaponDrops >= 10 && weaponDrops <= 50, `boss weapon drop ~0.13% (got ${weaponDrops}/20000)`);
+assert.ok(
+  weaponDrops >= 10 && weaponDrops <= 50,
+  `boss weapon drop ~0.13% (got ${weaponDrops}/20000)`,
+);
 assert.deepEqual([...PATROL_LEGENDARY_WEAPON_IDS], ['arco_09', 'espada_09']);
 
 console.log('Patrol weapons verification OK');
@@ -150,7 +156,7 @@ console.log(
       boss_weapon_drop_pct: (10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 100,
       boss_weapon_roll_threshold: AFK_BOSS_LEGENDARY_WEAPON_ROLL,
       boss_weapon_hours_to_first: Math.round(
-        (1 / ((10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 10000)) * 100 / 8 / 60,
+        ((1 / ((10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 10000)) * 100) / 8 / 60,
       ),
       golden_slime_chance: `1/${AFK_GOLDEN_SLIME_CHANCE}`,
       golden_slime_abdoria: AFK_GOLDEN_SLIME_ABDORIA,

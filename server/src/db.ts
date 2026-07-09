@@ -1,5 +1,4 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import ws from 'ws';
 
 type Cached = { client: SupabaseClient | null; url: string; key: string };
 
@@ -22,7 +21,6 @@ export function getSupabase(): SupabaseClient {
     cached.key = key;
     cached.client = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
-      realtime: { transport: ws as any },
     });
   }
   return cached.client;

@@ -1,6 +1,5 @@
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import {
-  AFK_KILLS_PER_MINUTE,
   AFK_MAX_MINUTES,
   DORIA_BAG_ITEM_ID,
   EXP_INSTANT_ITEM_ID,
@@ -11,17 +10,22 @@ import {
   type AfkPendingReward,
 } from '../types/index.js';
 import { rollFrozenStreakForExplorationMinutes } from '../../../shared/afk/frozen-streak-drop.js';
-import { afkCapReached, afkKillsForHours, buildAfkMetaFields } from '../../../shared/utils/afk.js';
+import { afkKillsForHours, buildAfkMetaFields } from '../../../shared/utils/afk.js';
 import { grantAbdoria } from './economy.js';
 import { addInventoryItem } from './inventory.js';
 import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-repository.js';
-import { combatSnapshot, ensureCombat, simulateOfflineKills, defeatCurrentEnemy } from './afk-combat.js';
+import {
+  combatSnapshot,
+  ensureCombat,
+  simulateOfflineKills,
+  defeatCurrentEnemy,
+} from './afk-combat.js';
 import { ensureBestiario } from './bestiario.js';
 import { resolvePatrolArmas, type AfkEnemyId } from '../types/index.js';
 
 const SECRET_TITLE_ID = 'titulo_secreto';
 
-function ensureAfk(user: UserDocument): {
+function ensureAfk(user: UserRecord): {
   last_seen_at: Date | string | null;
   minutos_acumulados: number;
   pending: AfkPendingReward;
@@ -38,7 +42,10 @@ function ensureAfk(user: UserDocument): {
   return user.afk;
 }
 
-function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): {
+function applyAfkRewardBundle(
+  user: UserRecord,
+  bundle: AfkPendingReward,
+): {
   claimed: AfkPendingReward;
   overflow_to_dorias: number;
 } {
@@ -88,7 +95,11 @@ function applyAfkRewardBundle(user: UserDocument, bundle: AfkPendingReward): {
   return { claimed, overflow_to_dorias };
 }
 
-function simulateKillsIntoPending(user: UserDocument, pending: AfkPendingReward, kills: number): void {
+function simulateKillsIntoPending(
+  user: UserRecord,
+  pending: AfkPendingReward,
+  kills: number,
+): void {
   ensureCombat(user);
   for (let i = 0; i < kills; i += 1) {
     defeatCurrentEnemy(user, pending);
@@ -97,7 +108,7 @@ function simulateKillsIntoPending(user: UserDocument, pending: AfkPendingReward,
 
 /** Concede recompensas equivalentes a N horas de Exploração AFK (simula kills + aplica na conta). */
 export function grantPatrolCacheRewards(
-  user: UserDocument,
+  user: UserRecord,
   hours = PATROL_CACHE_HOURS,
 ): AfkPendingReward {
   return grantExplorationHourRewards(user, hours).claimed;
@@ -105,14 +116,14 @@ export function grantPatrolCacheRewards(
 
 /** Route Drink: 1h de loot aplicado direto na conta (sem passar pelo baú). */
 export function grantRouteDrinkRewards(
-  user: UserDocument,
+  user: UserRecord,
   hours = ROUTE_DRINK_HOURS,
 ): { claimed: AfkPendingReward; overflow_to_dorias: number } {
   return grantExplorationHourRewards(user, hours);
 }
 
 function grantExplorationHourRewards(
-  user: UserDocument,
+  user: UserRecord,
   hours: number,
 ): { claimed: AfkPendingReward; overflow_to_dorias: number } {
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
@@ -120,7 +131,7 @@ function grantExplorationHourRewards(
   return applyAfkRewardBundle(user, pending);
 }
 
-export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId[] {
+export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[] {
   const before = new Set(ensureBestiario(user));
   const afk = ensureAfk(user);
   const lastSeen = afk.last_seen_at ? new Date(afk.last_seen_at) : now;
@@ -159,26 +170,28 @@ export function syncAfkRewards(user: UserDocument, now = new Date()): AfkEnemyId
   return collectNewBestiaryUnlocks(before, user);
 }
 
-function collectNewBestiaryUnlocks(before: Set<AfkEnemyId>, user: UserDocument): AfkEnemyId[] {
+function collectNewBestiaryUnlocks(before: Set<AfkEnemyId>, user: UserRecord): AfkEnemyId[] {
   return ensureBestiario(user).filter((id) => !before.has(id));
 }
 
-export function hasAfkRewardsToClaim(afk: { pending?: AfkPendingReward | null } | null | undefined): boolean {
+export function hasAfkRewardsToClaim(
+  afk: { pending?: AfkPendingReward | null } | null | undefined,
+): boolean {
   const p = normalizePending(afk?.pending);
   return (
-    p.xp > 0
-    || p.abdoria > 0
-    || p.frozen_streaks > 0
-    || p.route_drinks > 0
-    || p.exp_instant > 0
-    || p.doria_bags > 0
-    || p.cosmetic_ids.length > 0
-    || p.weapon_ids.length > 0
-    || p.titulo_secreto
+    p.xp > 0 ||
+    p.abdoria > 0 ||
+    p.frozen_streaks > 0 ||
+    p.route_drinks > 0 ||
+    p.exp_instant > 0 ||
+    p.doria_bags > 0 ||
+    p.cosmetic_ids.length > 0 ||
+    p.weapon_ids.length > 0 ||
+    p.titulo_secreto
   );
 }
 
-export function claimAfkRewards(user: UserDocument): {
+export function claimAfkRewards(user: UserRecord): {
   claimed: AfkPendingReward;
   overflow_to_dorias: number;
 } {
@@ -192,12 +205,12 @@ export function claimAfkRewards(user: UserDocument): {
   return { claimed, overflow_to_dorias };
 }
 
-export function touchAfkPresence(user: UserDocument): AfkEnemyId[] {
+export function touchAfkPresence(user: UserRecord): AfkEnemyId[] {
   return syncAfkRewards(user);
 }
 
 export function afkResponsePayload(
-  user: UserDocument,
+  user: UserRecord,
   extra?: { arma_preferida?: string; route_drink_count?: number },
   bestiario_novos: AfkEnemyId[] = [],
 ) {

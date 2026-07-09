@@ -3,11 +3,23 @@ import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { awardAbdoriaFromXp } from '../services/economy.js';
-import { claimAfkRewards, afkResponsePayload, hasAfkRewardsToClaim, syncAfkRewards, touchAfkPresence } from '../services/afk.js';
+import {
+  claimAfkRewards,
+  afkResponsePayload,
+  hasAfkRewardsToClaim,
+  syncAfkRewards,
+  touchAfkPresence,
+} from '../services/afk.js';
 import { readBestiaryResponse } from '../services/bestiario.js';
-import { readInventarioSummary, usePatrolCache, useRouteDrinkInExploration, useExpInstant, useDoriaBag } from '../services/inventory.js';
+import {
+  readInventarioSummary,
+  usePatrolCache,
+  useRouteDrinkInExploration,
+  useExpInstant,
+  useDoriaBag,
+} from '../services/inventory.js';
 import { getItemCount } from '../services/inventory.js';
-import { CURRENCY_NAME, ROUTE_DRINK_ITEM_ID } from '../types/index.js';
+import { ROUTE_DRINK_ITEM_ID } from '../types/index.js';
 
 export const metaRouter = Router();
 
@@ -22,10 +34,16 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
     }
     const bestiario_novos = syncAfkRewards(user);
     await user.save();
-    res.json(afkResponsePayload(user, {
-      arma_preferida: user.preferencias?.arma_preferida ?? 'arco',
-      route_drink_count: getItemCount(user, ROUTE_DRINK_ITEM_ID),
-    }, bestiario_novos));
+    res.json(
+      afkResponsePayload(
+        user,
+        {
+          arma_preferida: user.preferencias?.arma_preferida ?? 'arco',
+          route_drink_count: getItemCount(user, ROUTE_DRINK_ITEM_ID),
+        },
+        bestiario_novos,
+      ),
+    );
   } catch (error) {
     console.error('GET /api/meta/afk error:', error);
     res.status(500).json({ error: 'Erro ao sincronizar Exploração AFK.' });
@@ -89,7 +107,6 @@ metaRouter.get('/inventory', async (req: AuthRequest, res) => {
   }
 });
 
-
 metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
   try {
     const user = await User.findById(req.userId!);
@@ -124,7 +141,9 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
     }
     // Não sincronizar antes: syncAfkRewards adicionaria loot offline ao baú.
     const useAll = req.body?.use_all == null ? true : Boolean(req.body.use_all);
-    const quantity = useAll ? undefined : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
+    const quantity = useAll
+      ? undefined
+      : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
     const result = useRouteDrinkInExploration(user, quantity);
     if (!result.ok) {
       res.status(400).json({ error: result.error });
@@ -158,7 +177,9 @@ metaRouter.post('/inventory/exp-instant', async (req: AuthRequest, res) => {
       return;
     }
     const useAll = Boolean(req.body?.use_all);
-    const quantity = useAll ? undefined : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
+    const quantity = useAll
+      ? undefined
+      : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
     const result = useExpInstant(user, quantity);
     if (!result.ok) {
       res.status(400).json({ error: result.error });
@@ -229,7 +250,9 @@ metaRouter.patch('/preferences', async (req: AuthRequest, res) => {
       user.preferencias.ocultar_aviso_xp_diario = Boolean(req.body.ocultar_aviso_xp_diario);
     }
     if (req.body?.coletar_loja_diaria_automatico !== undefined) {
-      user.preferencias.coletar_loja_diaria_automatico = Boolean(req.body.coletar_loja_diaria_automatico);
+      user.preferencias.coletar_loja_diaria_automatico = Boolean(
+        req.body.coletar_loja_diaria_automatico,
+      );
     }
     if (req.body?.arma_preferida === 'arco' || req.body?.arma_preferida === 'espada') {
       user.preferencias.arma_preferida = req.body.arma_preferida;

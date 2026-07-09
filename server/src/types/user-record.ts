@@ -13,7 +13,7 @@ import type {
   XpDiario,
 } from './index.js';
 
-export interface UserDocument {
+export interface UserRecord {
   id: string;
   email: string;
   passwordHash?: string;
@@ -42,4 +42,4 @@ export interface UserDocument {
   updatedAt?: Date | string;
 }
 
-export type UserLean = UserDocument;
+export type UserLean = UserRecord;

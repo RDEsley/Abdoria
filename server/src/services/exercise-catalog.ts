@@ -1,5 +1,5 @@
 import { Exercise, type ExerciseDocument } from '../domain/Exercise.js';
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import type { MusculoPrincipal, Prioridade, UserPreferencias } from '../types/index.js';
 import {
   getEnabledEquipmentIds,
@@ -81,6 +81,9 @@ export function isSlugAvailable(
   );
 }
 
-export async function findExercisesForUserDocument(user: UserDocument, filter?: ExerciseCatalogFilter) {
+export async function findExercisesForUserDocument(
+  user: UserRecord,
+  filter?: ExerciseCatalogFilter,
+) {
   return findExercisesForUser(user.preferencias, filter);
 }

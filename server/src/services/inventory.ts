@@ -1,4 +1,4 @@
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import {
   DORIA_BAG_ITEM_ID,
   DORIA_BAG_MAX,
@@ -43,19 +43,20 @@ function migrateLegacyInventoryItems(inv: Inventario): void {
   inv.itens = inv.itens.filter((e) => (e.item_id as string) !== LEGACY_ENERGY_DRINK_ID);
 }
 
-export function ensureInventario(user: UserDocument): Inventario {
+export function ensureInventario(user: UserRecord): Inventario {
   if (!user.inventario || !Array.isArray(user.inventario.itens)) {
-    user.inventario = { itens: [] } as unknown as UserDocument['inventario'];
+    user.inventario = { itens: [] } as unknown as UserRecord['inventario'];
   }
   const inv = user.inventario as unknown as Inventario;
   migrateLegacyInventoryItems(inv);
   return inv;
 }
 
-export function getItemCount(user: UserDocument, itemId: InventoryItemId): number {
+export function getItemCount(user: UserRecord, itemId: InventoryItemId): number {
   const inv = ensureInventario(user);
   if (itemId === FROZEN_STREAK_ITEM_ID) {
-    const legacy = inv.itens.find((e) => (e.item_id as string) === LEGACY_ENERGY_DRINK_ID)?.quantidade ?? 0;
+    const legacy =
+      inv.itens.find((e) => (e.item_id as string) === LEGACY_ENERGY_DRINK_ID)?.quantidade ?? 0;
     const current = inv.itens.find((e) => e.item_id === FROZEN_STREAK_ITEM_ID)?.quantidade ?? 0;
     return current + legacy;
   }
@@ -68,7 +69,7 @@ function resolveInventoryItemId(itemId: string): InventoryItemId {
 }
 
 export function addInventoryItem(
-  user: UserDocument,
+  user: UserRecord,
   itemId: InventoryItemId | string,
   amount: number,
 ): AddInventoryResult {
@@ -76,14 +77,16 @@ export function addInventoryItem(
 }
 
 function addInventoryItemInternal(
-  user: UserDocument,
+  user: UserRecord,
   itemId: InventoryItemId,
   amount: number,
 ): AddInventoryResult {
   if (amount <= 0) return { added: 0, overflow_to_dorias: 0 };
 
   const inv = ensureInventario(user);
-  const entry = inv.itens.find((e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId);
+  const entry = inv.itens.find(
+    (e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId,
+  );
   const current = entry?.quantidade ?? 0;
 
   let added = amount;
@@ -110,22 +113,31 @@ function addInventoryItemInternal(
   return { added, overflow_to_dorias: overflow };
 }
 
-export function consumeInventoryItem(user: UserDocument, itemId: InventoryItemId, amount = 1): boolean {
+export function consumeInventoryItem(
+  user: UserRecord,
+  itemId: InventoryItemId,
+  amount = 1,
+): boolean {
   if (amount <= 0) return true;
   const inv = ensureInventario(user);
   migrateLegacyInventoryItems(inv);
-  const entry = inv.itens.find((e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId);
+  const entry = inv.itens.find(
+    (e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId,
+  );
   if (!entry || entry.quantidade < amount) return false;
   entry.quantidade -= amount;
   if (entry.quantidade <= 0) {
-    inv.itens = inv.itens.filter((e: { item_id: InventoryItemId; quantidade: number }) => e.item_id !== itemId || e.quantidade > 0);
+    inv.itens = inv.itens.filter(
+      (e: { item_id: InventoryItemId; quantidade: number }) =>
+        e.item_id !== itemId || e.quantidade > 0,
+    );
   }
   return true;
 }
 
 /** Usa Baú da Exploração: recompensas equivalentes a 6h de Exploração AFK. */
 export function usePatrolCache(
-  user: UserDocument,
+  user: UserRecord,
 ): { ok: true; claimed: AfkPendingReward } | { ok: false; error: string } {
   const available = getItemCount(user, PATROL_CACHE_ITEM_ID);
   if (available < 1) {
@@ -142,10 +154,16 @@ export function usePatrolCache(
 
 /** Usa Route Drink: aplica 1h de loot por unidade direto na conta (ou toda a stack). */
 export function useRouteDrinkInExploration(
-  user: UserDocument,
+  user: UserRecord,
   quantity?: number,
 ):
-  | { ok: true; hours: number; quantity_used: number; claimed: AfkPendingReward; overflow_to_dorias: number }
+  | {
+      ok: true;
+      hours: number;
+      quantity_used: number;
+      claimed: AfkPendingReward;
+      overflow_to_dorias: number;
+    }
   | { ok: false; error: string } {
   const available = getItemCount(user, ROUTE_DRINK_ITEM_ID);
   if (available < 1) {
@@ -162,7 +180,7 @@ export function useRouteDrinkInExploration(
   return { ok: true, hours, quantity_used: useQty, claimed, overflow_to_dorias };
 }
 
-function rollDoriaBagAmount(user: UserDocument, salt: number): number {
+function rollDoriaBagAmount(user: UserRecord, salt: number): number {
   const span = DORIA_BAG_MAX - DORIA_BAG_MIN + 1;
   const roll = hashKillSeed(String(user.id), salt) % span;
   return DORIA_BAG_MIN + roll;
@@ -170,7 +188,7 @@ function rollDoriaBagAmount(user: UserDocument, salt: number): number {
 
 /** EXP Instantâneo: +10 XP por unidade (ou toda a stack). */
 export function useExpInstant(
-  user: UserDocument,
+  user: UserRecord,
   quantity?: number,
 ): { ok: true; xp_ganho: number; quantity_used: number } | { ok: false; error: string } {
   const available = getItemCount(user, EXP_INSTANT_ITEM_ID);
@@ -190,9 +208,11 @@ export function useExpInstant(
 
 /** Bolsa de Dorias: 4–21 Dorias aleatórias por unidade. */
 export function useDoriaBag(
-  user: UserDocument,
+  user: UserRecord,
   quantity = 1,
-): { ok: true; abdoria_ganha: number; rolls: number[]; quantity_used: number } | { ok: false; error: string } {
+):
+  | { ok: true; abdoria_ganha: number; rolls: number[]; quantity_used: number }
+  | { ok: false; error: string } {
   if (quantity < 1) return { ok: false, error: 'Quantidade inválida.' };
 
   const available = getItemCount(user, DORIA_BAG_ITEM_ID);
@@ -216,7 +236,7 @@ export function useDoriaBag(
   return { ok: true, abdoria_ganha: total, rolls, quantity_used: quantity };
 }
 
-export function readInventarioSummary(user: UserDocument) {
+export function readInventarioSummary(user: UserRecord) {
   ensureInventario(user);
   return {
     frozen_streak: getItemCount(user, FROZEN_STREAK_ITEM_ID),

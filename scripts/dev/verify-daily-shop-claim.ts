@@ -5,7 +5,7 @@
 import { getTodaySaoPaulo } from '../../server/src/utils/timezone.js';
 import { isStaleDailyOffer } from '../../server/src/data/daily-shop-config.js';
 import { syncDailyShop } from '../../server/src/services/shop.js';
-import type { UserDocument } from '../../server/src/types/user-document.js';
+import type { UserRecord } from '../../server/src/types/user-record.js';
 
 const today = getTodaySaoPaulo();
 
@@ -57,7 +57,7 @@ const user = {
       },
     ],
   },
-} as unknown as UserDocument;
+} as unknown as UserRecord;
 
 syncDailyShop(user);
 const free = user.loja_diaria.slots[0];

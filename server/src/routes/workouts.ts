@@ -19,7 +19,11 @@ import {
   calculateWorkoutXpBreakdown,
   getDailyXpCapBreakdownForUser,
 } from '../services/economy.js';
-import { getSuggestedWorkout, getRecommendationAlerts, markCycleCompleted } from '../services/recommendation.js';
+import {
+  getSuggestedWorkout,
+  getRecommendationAlerts,
+  markCycleCompleted,
+} from '../services/recommendation.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
@@ -84,9 +88,7 @@ workoutsRouter.get('/stats/recommendations', async (req: AuthRequest, res) => {
     res.json({
       treino_sugerido: treinoSugerido,
       alertas_recomendacao: alertas,
-      proximo_treino: treinoHoje
-        ? 'Descanso ativo'
-        : treinoSugerido?.nome ?? 'Treino do dia',
+      proximo_treino: treinoHoje ? 'Descanso ativo' : (treinoSugerido?.nome ?? 'Treino do dia'),
     });
   } catch (error) {
     console.error('GET /api/workouts/stats/recommendations error:', error);
@@ -96,7 +98,7 @@ workoutsRouter.get('/stats/recommendations', async (req: AuthRequest, res) => {
 
 workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
   try {
-    let user = await syncUserGamification(req.userId!);
+    const user = await syncUserGamification(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -115,28 +117,29 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
 
-    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg] = await Promise.all([
-      hasTrainedToday(userId),
-      getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
-      WorkoutHistory.aggregate([
-        { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m', date: '$concluido_em' } },
-            minutos: { $sum: { $divide: ['$duracao_total_segundos', 60] } },
+    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg] =
+      await Promise.all([
+        hasTrainedToday(userId),
+        getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
+        WorkoutHistory.aggregate([
+          { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: '%Y-%m', date: '$concluido_em' } },
+              minutos: { $sum: { $divide: ['$duracao_total_segundos', 60] } },
+            },
           },
-        },
-        { $sort: { _id: 1 } },
-      ]),
-      WorkoutHistory.aggregate([
-        { $match: { usuario_id: user.id } },
-        { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
-      ]),
-      WorkoutHistory.aggregate([
-        { $match: { usuario_id: user.id } },
-        { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
-      ]),
-    ]);
+          { $sort: { _id: 1 } },
+        ]),
+        WorkoutHistory.aggregate([
+          { $match: { usuario_id: user.id } },
+          { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
+        ]),
+        WorkoutHistory.aggregate([
+          { $match: { usuario_id: user.id } },
+          { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
+        ]),
+      ]);
 
     const muscles = Object.entries(weeklyMuscles) as [MusculoPrincipal, number][];
     const trained = muscles.filter(([, count]) => count > 0);
@@ -191,7 +194,10 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       bestiario_bonus_cap: (user.gamificacao.bestiario_desbloqueados ?? []).length,
       conquistas,
       musculos_semana: weeklyMuscles,
-      evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({ mes: m._id, minutos: Math.round(m.minutos) })),
+      evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({
+        mes: m._id,
+        minutos: Math.round(m.minutos),
+      })),
       area_mais_treinada: sorted[0]?.[0] ?? null,
       area_menos_treinada: trained.length > 0 ? trained.sort((a, b) => a[1] - b[1])[0][0] : null,
       total_exercicios: (totalExercisesAgg[0] as { total?: number })?.total ?? 0,
@@ -218,7 +224,9 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       return;
     }
 
-    const ciclosAtivos = normalizeCicloTreinos(user.preferencias?.ciclo_treinos as TreinoBase[] | undefined);
+    const ciclosAtivos = normalizeCicloTreinos(
+      user.preferencias?.ciclo_treinos as TreinoBase[] | undefined,
+    );
     const tipoResolvido = (treino_tipo ?? 'custom') as TreinoTipo;
     if (tipoResolvido !== 'custom' && !ciclosAtivos.includes(tipoResolvido as TreinoBase)) {
       res.status(400).json({ error: 'Ciclo de treino inválido para este perfil.' });
@@ -231,43 +239,45 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const foundExercises = await Exercise.find({ slug: { $in: slugs } });
     const exerciseBySlug = new Map(foundExercises.map((ex) => [ex.slug, ex]));
 
-    const resolvedExercises = exercicios.map((e: {
-      exercicio_id?: string;
-      slug: string;
-      nome: string;
-      duracao_segundos: number;
-      musculo_principal: MusculoPrincipal;
-      series?: number;
-      repeticoes_realizadas?: number;
-      modo?: string;
-      descanso_seg?: number;
-    }) => {
-      let exerciseId = e.exercicio_id;
-      const found = exerciseBySlug.get(e.slug);
+    const resolvedExercises = exercicios.map(
+      (e: {
+        exercicio_id?: string;
+        slug: string;
+        nome: string;
+        duracao_segundos: number;
+        musculo_principal: MusculoPrincipal;
+        series?: number;
+        repeticoes_realizadas?: number;
+        modo?: string;
+        descanso_seg?: number;
+      }) => {
+        let exerciseId = e.exercicio_id;
+        const found = exerciseBySlug.get(e.slug);
 
-      if (!exerciseId) {
-        exerciseId = found?.id?.toString();
-      }
-
-      musculosSet.add(e.musculo_principal);
-      if (found?.musculos_secundarios) {
-        for (const m of found.musculos_secundarios) {
-          musculosSet.add(m as MusculoPrincipal);
+        if (!exerciseId) {
+          exerciseId = found?.id?.toString();
         }
-      }
 
-      return {
-        exercicio_id: exerciseId ?? found?.id ?? crypto.randomUUID(),
-        slug: e.slug,
-        nome: e.nome,
-        duracao_segundos: e.duracao_segundos,
-        musculo_principal: e.musculo_principal,
-        series: e.series,
-        repeticoes_realizadas: e.repeticoes_realizadas,
-        modo: e.modo,
-        descanso_seg: e.descanso_seg,
-      };
-    });
+        musculosSet.add(e.musculo_principal);
+        if (found?.musculos_secundarios) {
+          for (const m of found.musculos_secundarios) {
+            musculosSet.add(m as MusculoPrincipal);
+          }
+        }
+
+        return {
+          exercicio_id: exerciseId ?? found?.id ?? crypto.randomUUID(),
+          slug: e.slug,
+          nome: e.nome,
+          duracao_segundos: e.duracao_segundos,
+          musculo_principal: e.musculo_principal,
+          series: e.series,
+          repeticoes_realizadas: e.repeticoes_realizadas,
+          modo: e.modo,
+          descanso_seg: e.descanso_seg,
+        };
+      },
+    );
 
     const musculos = [...musculosSet];
     const streakBefore = user.gamificacao.streak_atual;
@@ -292,7 +302,9 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       return;
     }
 
-    const newAchievements = updatedUser.gamificacao.conquistas.filter((a) => !prevAchievements.has(a));
+    const newAchievements = updatedUser.gamificacao.conquistas.filter(
+      (a) => !prevAchievements.has(a),
+    );
     const xpBreakdown = calculateWorkoutXpBreakdown(
       exercicios.length,
       Math.max(streakBefore, updatedUser.gamificacao.streak_atual),
@@ -302,9 +314,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const xpAwarded = applyWorkoutXpBreakdown(updatedUser, xpBreakdown);
     const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
     const levelUp =
-      levelAfter > levelBefore
-        ? { level_anterior: levelBefore, level_novo: levelAfter }
-        : null;
+      levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null;
     const abdoriaGanha = awardAbdoriaFromXpProgress(updatedUser);
     syncShopUnlocks(updatedUser);
 

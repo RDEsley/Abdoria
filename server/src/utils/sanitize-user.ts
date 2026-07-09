@@ -1,9 +1,9 @@
-import type { UserDocument } from '../types/user-document.js';
+import type { UserRecord } from '../types/user-record.js';
 import { DEFAULT_PREFERENCIAS, resolveCosmeticos } from '../types/index.js';
 import { resolveDadosSalvosForUser } from './user-dados.js';
 
 /** Resposta JSON segura do usuário para o client (sem senha). */
-export function sanitizeUser(user: UserDocument | Record<string, unknown>) {
+export function sanitizeUser(user: UserRecord | Record<string, unknown>) {
   const raw = { ...user } as Record<string, unknown>;
   delete raw.passwordHash;
 
@@ -26,7 +26,9 @@ export function sanitizeUser(user: UserDocument | Record<string, unknown>) {
     Number((raw.gamificacao as { nivel_xp?: number } | undefined)?.nivel_xp ?? 0),
   );
 
-  raw.dados_salvos = resolveDadosSalvosForUser(raw.dados_salvos as Parameters<typeof resolveDadosSalvosForUser>[0]);
+  raw.dados_salvos = resolveDadosSalvosForUser(
+    raw.dados_salvos as Parameters<typeof resolveDadosSalvosForUser>[0],
+  );
 
   if (raw.simulacao_definicao && typeof raw.simulacao_definicao === 'object') {
     const sim = raw.simulacao_definicao as Record<string, unknown>;

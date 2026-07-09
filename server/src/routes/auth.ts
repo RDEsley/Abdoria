@@ -3,14 +3,18 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { User, sanitizeUser } from '../domain/User.js';
 import { signToken } from '../middleware/auth.js';
-import { calcImc, DEFAULT_PREFERENCIAS, DEFAULT_XP_DIARIO } from '../types/index.js';
+import { DEFAULT_PREFERENCIAS, DEFAULT_XP_DIARIO } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
 export const authRouter = Router();
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { email, password, nome } = req.body as { email?: string; password?: string; nome?: string };
+    const { email, password, nome } = req.body as {
+      email?: string;
+      password?: string;
+      nome?: string;
+    };
 
     if (!email || !password || !nome) {
       res.status(400).json({ error: 'Email, senha e nome são obrigatórios.' });
@@ -57,7 +61,10 @@ authRouter.post('/login', async (req, res) => {
       return;
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }, { select: '+passwordHash' });
+    const user = await User.findOne(
+      { email: email.toLowerCase().trim() },
+      { select: '+passwordHash' },
+    );
     if (!user?.passwordHash) {
       res.status(401).json({ error: 'Credenciais inválidas.' });
       return;

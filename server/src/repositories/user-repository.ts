@@ -11,7 +11,7 @@ import {
   type AfkState,
   getEnemyMaxHp,
 } from '../types/index.js';
-import type { UserDocument, UserLean } from '../types/user-document.js';
+import type { UserRecord, UserLean } from '../types/user-record.js';
 
 const EMPTY_AFK_PENDING: AfkPendingReward = {
   xp: 0,
@@ -63,8 +63,19 @@ type AfkRow = {
 };
 
 const VALID_ENEMY_IDS = new Set<string>([
-  'bat', 'zombie', 'skeleton', 'armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight',
-  'golden_slime', 'magic_rabbit', 'boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem',
+  'bat',
+  'zombie',
+  'skeleton',
+  'armored_skeleton',
+  'crystal_slime',
+  'storm_slime',
+  'slime_knight',
+  'golden_slime',
+  'magic_rabbit',
+  'boss_colossus',
+  'boss_lich',
+  'boss_hydra',
+  'boss_golem',
 ]);
 
 function normalizeCombat(raw: unknown): AfkCombatState {
@@ -89,7 +100,10 @@ function normalizePending(raw: unknown): AfkPendingReward {
   return {
     xp: Number(p.xp ?? 0),
     abdoria: Number(p.abdoria ?? 0),
-    frozen_streaks: Math.max(0, Number(p.frozen_streaks ?? (p as { energy_drinks?: number }).energy_drinks ?? 0)),
+    frozen_streaks: Math.max(
+      0,
+      Number(p.frozen_streaks ?? (p as { energy_drinks?: number }).energy_drinks ?? 0),
+    ),
     route_drinks: Number(p.route_drinks ?? 0),
     cosmetic_ids: Array.isArray(p.cosmetic_ids) ? [...p.cosmetic_ids] : [],
     weapon_ids: Array.isArray(p.weapon_ids) ? [...p.weapon_ids] : [],
@@ -100,7 +114,7 @@ function normalizePending(raw: unknown): AfkPendingReward {
   };
 }
 
-function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = false): UserDocument {
+function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = false): UserRecord {
   const pending = normalizePending(afk?.pending);
   const afkState: AfkState & { pending: AfkPendingReward } = {
     last_seen_at: afk?.last_seen_at ?? null,
@@ -109,7 +123,7 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     combat: normalizeCombat(afk?.combat),
   };
 
-  const user: UserDocument = {
+  const user: UserRecord = {
     id: profile.id,
     email: profile.email,
     nome: profile.nome,
@@ -117,28 +131,39 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     peso_kg: profile.peso_kg != null ? Number(profile.peso_kg) : undefined,
     altura_cm: profile.altura_cm != null ? Number(profile.altura_cm) : undefined,
     imc: profile.imc != null ? Number(profile.imc) : undefined,
-    nivel: profile.nivel as UserDocument['nivel'],
-    objetivo: profile.objetivo as UserDocument['objetivo'],
-    gamificacao: profile.gamificacao as unknown as UserDocument['gamificacao'],
-    cosmeticos: { ...DEFAULT_COSMETICOS, ...(profile.cosmeticos as unknown as UserDocument['cosmeticos']) },
-    loja_diaria: profile.loja_diaria as unknown as UserDocument['loja_diaria'],
-    simulacao_definicao: profile.simulacao_definicao as unknown as UserDocument['simulacao_definicao'],
+    nivel: profile.nivel as UserRecord['nivel'],
+    objetivo: profile.objetivo as UserRecord['objetivo'],
+    gamificacao: profile.gamificacao as unknown as UserRecord['gamificacao'],
+    cosmeticos: {
+      ...DEFAULT_COSMETICOS,
+      ...(profile.cosmeticos as unknown as UserRecord['cosmeticos']),
+    },
+    loja_diaria: profile.loja_diaria as unknown as UserRecord['loja_diaria'],
+    simulacao_definicao:
+      profile.simulacao_definicao as unknown as UserRecord['simulacao_definicao'],
     preferencias: {
       ...DEFAULT_PREFERENCIAS,
-      ...(profile.preferencias as unknown as UserDocument['preferencias']),
-      exercicios_fixos: (profile.preferencias as unknown as UserDocument['preferencias'])?.exercicios_fixos ?? [],
+      ...(profile.preferencias as unknown as UserRecord['preferencias']),
+      exercicios_fixos:
+        (profile.preferencias as unknown as UserRecord['preferencias'])?.exercicios_fixos ?? [],
       exercicios_nao_recomendar:
-        (profile.preferencias as unknown as UserDocument['preferencias'])?.exercicios_nao_recomendar ?? [],
+        (profile.preferencias as unknown as UserRecord['preferencias'])
+          ?.exercicios_nao_recomendar ?? [],
       treinos_fixos:
-        (profile.preferencias as unknown as UserDocument['preferencias'])?.treinos_fixos ?? [],
+        (profile.preferencias as unknown as UserRecord['preferencias'])?.treinos_fixos ?? [],
       treinos_nao_recomendar:
-        (profile.preferencias as unknown as UserDocument['preferencias'])?.treinos_nao_recomendar ?? [],
+        (profile.preferencias as unknown as UserRecord['preferencias'])?.treinos_nao_recomendar ??
+        [],
       ciclos_completados_rodada:
-        (profile.preferencias as unknown as UserDocument['preferencias'])?.ciclos_completados_rodada ?? {},
+        (profile.preferencias as unknown as UserRecord['preferencias'])
+          ?.ciclos_completados_rodada ?? {},
     },
-    dados_salvos: { ...DEFAULT_USER_DADOS_SALVOS, ...(profile.dados_salvos as unknown as UserDocument['dados_salvos']) },
-    xp_diario: profile.xp_diario as unknown as UserDocument['xp_diario'],
-    inventario: profile.inventario as unknown as UserDocument['inventario'],
+    dados_salvos: {
+      ...DEFAULT_USER_DADOS_SALVOS,
+      ...(profile.dados_salvos as unknown as UserRecord['dados_salvos']),
+    },
+    xp_diario: profile.xp_diario as unknown as UserRecord['xp_diario'],
+    inventario: profile.inventario as unknown as UserRecord['inventario'],
     afk: afkState,
     onboarding_completed: profile.onboarding_completed,
     terms_accepted_at: profile.terms_accepted_at ?? null,
@@ -156,7 +181,7 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
   return user;
 }
 
-function userToProfileRow(user: UserDocument): Record<string, unknown> {
+function userToProfileRow(user: UserRecord): Record<string, unknown> {
   return {
     email: user.email,
     password_hash: user.passwordHash ?? undefined,
@@ -203,7 +228,11 @@ async function fetchAfkBatch(userIds: string[]): Promise<Map<string, AfkRow>> {
 
 async function ensureAfkRow(userId: string): Promise<void> {
   const sb = getSupabase();
-  const { data } = await sb.from('user_afk_state').select('user_id').eq('user_id', userId).maybeSingle();
+  const { data } = await sb
+    .from('user_afk_state')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
   if (!data) {
     await sb.from('user_afk_state').insert({
       user_id: userId,
@@ -222,7 +251,7 @@ function mapPatchToRow(patch: Record<string, unknown>): Record<string, unknown> 
   return row;
 }
 
-export class UserMutable implements UserDocument {
+export class UserMutable implements UserRecord {
   id!: string;
   email!: string;
   passwordHash?: string;
@@ -231,17 +260,17 @@ export class UserMutable implements UserDocument {
   peso_kg?: number;
   altura_cm?: number;
   imc?: number;
-  nivel!: UserDocument['nivel'];
-  objetivo!: UserDocument['objetivo'];
-  gamificacao!: UserDocument['gamificacao'];
-  cosmeticos!: UserDocument['cosmeticos'];
-  loja_diaria!: UserDocument['loja_diaria'];
-  simulacao_definicao!: UserDocument['simulacao_definicao'];
-  preferencias!: UserDocument['preferencias'];
-  dados_salvos!: UserDocument['dados_salvos'];
-  xp_diario!: UserDocument['xp_diario'];
-  inventario!: UserDocument['inventario'];
-  afk!: UserDocument['afk'];
+  nivel!: UserRecord['nivel'];
+  objetivo!: UserRecord['objetivo'];
+  gamificacao!: UserRecord['gamificacao'];
+  cosmeticos!: UserRecord['cosmeticos'];
+  loja_diaria!: UserRecord['loja_diaria'];
+  simulacao_definicao!: UserRecord['simulacao_definicao'];
+  preferencias!: UserRecord['preferencias'];
+  dados_salvos!: UserRecord['dados_salvos'];
+  xp_diario!: UserRecord['xp_diario'];
+  inventario!: UserRecord['inventario'];
+  afk!: UserRecord['afk'];
   onboarding_completed!: boolean;
   terms_accepted_at?: Date | string | null;
   muscle_map_reset_at?: Date | string | null;
@@ -250,7 +279,7 @@ export class UserMutable implements UserDocument {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 
-  constructor(data: UserDocument) {
+  constructor(data: UserRecord) {
     Object.assign(this, data);
     this.afk = {
       ...data.afk,
@@ -307,9 +336,14 @@ export const User = {
     options?: { select?: string; lean?: boolean },
   ): Promise<UserMutable | null> {
     const sb = getSupabase();
-    const selectPassword = options?.select?.includes('passwordHash') || options?.select?.includes('+passwordHash');
+    const selectPassword =
+      options?.select?.includes('passwordHash') || options?.select?.includes('+passwordHash');
 
-    const { data: profile, error } = await sb.from('profiles').select('*').eq('id', id).maybeSingle();
+    const { data: profile, error } = await sb
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
     if (error || !profile) return null;
 
     const afk = await fetchAfk(id);
@@ -324,7 +358,8 @@ export const User = {
     options?: { select?: string },
   ): Promise<UserMutable | null> {
     const sb = getSupabase();
-    const selectPassword = options?.select?.includes('passwordHash') || options?.select?.includes('+passwordHash');
+    const selectPassword =
+      options?.select?.includes('passwordHash') || options?.select?.includes('+passwordHash');
     let query = sb.from('profiles').select('*');
     if (filter.email) query = query.eq('email', filter.email);
     const { data: profile, error } = await query.maybeSingle();
@@ -413,7 +448,7 @@ export const User = {
     return count ?? 0;
   },
 
-  async create(data: Partial<UserDocument> & { email: string; nome: string }): Promise<UserMutable> {
+  async create(data: Partial<UserRecord> & { email: string; nome: string }): Promise<UserMutable> {
     const sb = getSupabase();
     const row = {
       email: data.email,
@@ -421,7 +456,13 @@ export const User = {
       nome: data.nome,
       nivel: data.nivel ?? 'iniciante',
       objetivo: data.objetivo ?? 'definicao',
-      gamificacao: data.gamificacao ?? { nivel_xp: 0, streak_atual: 0, streak_maior: 0, total_minutos: 0, conquistas: [] },
+      gamificacao: data.gamificacao ?? {
+        nivel_xp: 0,
+        streak_atual: 0,
+        streak_maior: 0,
+        total_minutos: 0,
+        conquistas: [],
+      },
       cosmeticos: data.cosmeticos ?? DEFAULT_COSMETICOS,
       loja_diaria: data.loja_diaria ?? { data_reset: '', slots: [] },
       simulacao_definicao: data.simulacao_definicao ?? { gordura_meta_pct: 12 },
@@ -484,7 +525,7 @@ export const User = {
         nome,
         passwordHash: merged.password_hash as string | undefined,
         ...merged,
-      } as Partial<UserDocument> & { email: string; nome: string });
+      } as Partial<UserRecord> & { email: string; nome: string });
       return User.findById(created.id, { lean: true }) as Promise<UserLean | null>;
     }
 

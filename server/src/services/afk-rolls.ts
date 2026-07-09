@@ -1,4 +1,4 @@
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import { COSMETICS } from '../data/cosmetics.js';
 import {
   PATROL_LEGENDARY_WEAPON_IDS,
@@ -36,7 +36,7 @@ export function hashKillSeed(userId: string, killIndex: number): number {
 /** @deprecated use hashKillSeed */
 export const hashIntervalSeed = hashKillSeed;
 
-function pickLegendaryCosmeticId(user: UserDocument, killIndex: number): string | null {
+function pickLegendaryCosmeticId(user: UserRecord, killIndex: number): string | null {
   const unlocked = new Set(user.cosmeticos?.desbloqueados ?? []);
   const candidates = COSMETICS.filter(
     (c) => !unlocked.has(c.id) && isExplorationLegendaryCosmeticDrop(c),
@@ -62,7 +62,7 @@ const BOSS_LEGENDARY_WEAPON_THRESHOLD = AFK_BOSS_LEGENDARY_WEAPON_ROLL;
 
 /** 0,13% por derrota de boss — arco ou espada lendária (nível 9). */
 export function rollBossLegendaryWeapon(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
   unlockedWeaponIds: Set<string>,
@@ -83,7 +83,7 @@ export function rollBossLegendaryWeapon(
 
 /** Arma Secret (nv. 10) — roll 9998 + portão 1/3 (~0,0033% na tabela vs 0,01% do título). */
 function rollSecretPatrolWeapon(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
   unlockedWeaponIds: Set<string>,
@@ -105,7 +105,7 @@ function rollSecretPatrolWeapon(
 
 /** Uma rolagem na tabela de loot da exploração (distribuição de raridade). */
 export function rollLootTable(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
   opts?: RollLootOptions,
@@ -145,7 +145,7 @@ export function rollLootTable(
 
 /** Drop secreto do Golden Slime — mesma chance do título secreto (roll exato 9999). */
 export function rollGoldenSlimeSecretCosmetic(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
 ): void {
@@ -172,7 +172,7 @@ export function rollGoldenSlimeSecretCosmetic(
  * Distribuição por raridade: água 45%, terra 20%, gelo 16%, fogo 11%, raio 6%, buraco negro 2%.
  */
 export function rollMagicRabbitSpell(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
 ): void {
@@ -214,7 +214,7 @@ export function rollMagicRabbitSpell(
 
 /** @deprecated use rollKillDrop */
 export function rollIntervalReward(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
   opts?: RollLootOptions,
@@ -224,7 +224,7 @@ export function rollIntervalReward(
 
 /** ~5 Route Drinks em 24h: roll % 10.000 < {@link AFK_ROUTE_DRINK_DROP_THRESHOLD}. */
 export function rollRouteDrinkDrop(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
 ): void {
@@ -236,7 +236,7 @@ export function rollRouteDrinkDrop(
 
 /** Chance de drop por kill conforme tier; se acertar, usa a tabela de raridade. */
 export function rollKillDrop(
-  user: UserDocument,
+  user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
   opts?: RollLootOptions,

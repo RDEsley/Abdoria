@@ -1,4 +1,4 @@
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import {
   AFK_KILLS_PER_MINUTE,
   AFK_GOLDEN_SLIME_ABDORIA,
@@ -14,16 +14,33 @@ import {
   resolvePatrolArmas,
 } from '../types/index.js';
 import { normalizeCombat } from '../repositories/user-repository.js';
-import { rollKillDrop, rollRouteDrinkDrop, rollBossLegendaryWeapon, rollGoldenSlimeSecretCosmetic, rollMagicRabbitSpell } from './afk-rolls.js';
+import {
+  rollKillDrop,
+  rollRouteDrinkDrop,
+  rollBossLegendaryWeapon,
+  rollGoldenSlimeSecretCosmetic,
+  rollMagicRabbitSpell,
+} from './afk-rolls.js';
 import { unlockBestiaryEnemy, recordBestiaryKillDrops } from './bestiario.js';
 import { snapshotBestiaryPending } from '../types/index.js';
 
-export function ensureCombat(user: UserDocument): AfkCombatState {
+export function ensureCombat(user: UserRecord): AfkCombatState {
   if (!user.afk) {
     user.afk = {
       last_seen_at: null,
       minutos_acumulados: 0,
-      pending: { xp: 0, abdoria: 0, frozen_streaks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], exp_instant: 0, doria_bags: 0, titulo_secreto: false, drop_count: 0 },
+      pending: {
+        xp: 0,
+        abdoria: 0,
+        frozen_streaks: 0,
+        route_drinks: 0,
+        cosmetic_ids: [],
+        weapon_ids: [],
+        exp_instant: 0,
+        doria_bags: 0,
+        titulo_secreto: false,
+        drop_count: 0,
+      },
       combat: { ...DEFAULT_AFK_COMBAT },
     };
   }
@@ -40,7 +57,7 @@ function enemyTier(combat: AfkCombatState): AfkEnemyTier {
   return 'common';
 }
 
-function respawnEnemy(user: UserDocument, combat: AfkCombatState): void {
+function respawnEnemy(user: UserRecord, combat: AfkCombatState): void {
   const previousEnemyId = combat.enemy_id;
   const picked = resolveNextSpawn(
     String(user.id),
@@ -55,7 +72,11 @@ function respawnEnemy(user: UserDocument, combat: AfkCombatState): void {
   combat.elite = picked.elite;
 }
 
-function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: AfkPendingReward): void {
+function onEnemyDefeated(
+  user: UserRecord,
+  combat: AfkCombatState,
+  pending: AfkPendingReward,
+): void {
   const defeatedEnemyId = combat.enemy_id;
   const wasBoss = combat.is_boss;
   const wasGolden = defeatedEnemyId === 'golden_slime';
@@ -91,24 +112,33 @@ function onEnemyDefeated(user: UserDocument, combat: AfkCombatState, pending: Af
 }
 
 /** Derrota o inimigo atual e aplica drops (golden slime, boss, etc.). */
-export function defeatCurrentEnemy(user: UserDocument, pending: AfkPendingReward): void {
+export function defeatCurrentEnemy(user: UserRecord, pending: AfkPendingReward): void {
   const combat = ensureCombat(user);
   combat.enemy_hp = 0;
   onEnemyDefeated(user, combat, pending);
 }
 
 /** Aplica dano até matar o inimigo atual (um kill). */
-export function applyKill(user: UserDocument): void {
+export function applyKill(user: UserRecord): void {
   const combat = ensureCombat(user);
   const afk = user.afk!;
-  afk.pending = afk.pending ?? { xp: 0, abdoria: 0, frozen_streaks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], titulo_secreto: false, drop_count: 0 };
+  afk.pending = afk.pending ?? {
+    xp: 0,
+    abdoria: 0,
+    frozen_streaks: 0,
+    route_drinks: 0,
+    cosmetic_ids: [],
+    weapon_ids: [],
+    titulo_secreto: false,
+    drop_count: 0,
+  };
 
   combat.enemy_hp = 0;
   onEnemyDefeated(user, combat, afk.pending);
 }
 
 /** Simula kills offline proporcionais aos minutos em exploração. */
-export function simulateOfflineKills(user: UserDocument, newMinutes: number): number {
+export function simulateOfflineKills(user: UserRecord, newMinutes: number): number {
   if (newMinutes <= 0) return 0;
 
   const killsToSimulate = Math.floor(newMinutes * AFK_KILLS_PER_MINUTE);
@@ -116,11 +146,22 @@ export function simulateOfflineKills(user: UserDocument, newMinutes: number): nu
 
   const combat = ensureCombat(user);
   const afk = user.afk!;
-  afk.pending = afk.pending ?? { xp: 0, abdoria: 0, frozen_streaks: 0, route_drinks: 0, cosmetic_ids: [], weapon_ids: [], titulo_secreto: false, drop_count: 0 };
+  afk.pending = afk.pending ?? {
+    xp: 0,
+    abdoria: 0,
+    frozen_streaks: 0,
+    route_drinks: 0,
+    cosmetic_ids: [],
+    weapon_ids: [],
+    titulo_secreto: false,
+    drop_count: 0,
+  };
 
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const avgDamage = Math.round(
-    (patrolHeroDamage('arco', armas.arco_equipado) + patrolHeroDamage('espada', armas.espada_equipada)) / 2,
+    (patrolHeroDamage('arco', armas.arco_equipado) +
+      patrolHeroDamage('espada', armas.espada_equipada)) /
+      2,
   );
   let applied = 0;
 
@@ -142,7 +183,7 @@ export function simulateOfflineKills(user: UserDocument, newMinutes: number): nu
   return applied;
 }
 
-export function combatSnapshot(user: UserDocument) {
+export function combatSnapshot(user: UserRecord) {
   const combat = ensureCombat(user);
   const snap = buildCombatSnapshot(combat);
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);

@@ -12,20 +12,23 @@ import {
   isStaleDailyOffer,
   hashDailySeed,
 } from '../data/daily-shop-config.js';
-import { GIFT_CODE_BY_KEY, hasGiftCodeRewards, isGiftCodeExpired, type GiftCodeDefinition } from '../data/gift-codes.js';
+import {
+  GIFT_CODE_BY_KEY,
+  hasGiftCodeRewards,
+  isGiftCodeExpired,
+  type GiftCodeDefinition,
+} from '../data/gift-codes.js';
 import {
   COSMETIC_BY_ID,
   COSMETICS,
   DEFAULT_AVATAR_ID,
   DEFAULT_BORDA_ID,
 } from '../data/cosmetics.js';
-import { User, type UserDocument } from '../domain/User.js';
+import { User } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import type {
   CosmeticDefinition,
   CosmeticKind,
-  DailyRewardRarity,
-  DailyShopSlotKind,
   LojaDiaria,
   LojaDiariaSlot,
   ShopCatalogItem,
@@ -61,8 +64,20 @@ import {
   xpLevelFromTotal,
 } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
-import { giftCodeFormatError, isValidGiftCodeFormat, normalizeGiftCode } from '../utils/gift-code.js';
-import { awardAbdoriaFromXp, awardDailyXp, ensureAbdoriaWallet, grantAbdoria, projectedAbdoriaAfterXpSpend, readAbdoriaBalance, spendXpForShop } from './economy.js';
+import {
+  giftCodeFormatError,
+  isValidGiftCodeFormat,
+  normalizeGiftCode,
+} from '../utils/gift-code.js';
+import {
+  awardAbdoriaFromXp,
+  awardDailyXp,
+  ensureAbdoriaWallet,
+  grantAbdoria,
+  projectedAbdoriaAfterXpSpend,
+  readAbdoriaBalance,
+  spendXpForShop,
+} from './economy.js';
 import { addInventoryItem } from './inventory.js';
 
 export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
@@ -131,7 +146,9 @@ export function buildUnlockLabel(item: CosmeticDefinition): string {
     case 'nivel':
       return `Alcance o nível ${item.unlock.nivel_min ?? '?'}`;
     case 'conquista': {
-      const ach = item.unlock.conquista_id ? ACHIEVEMENT_BY_ID[item.unlock.conquista_id] : undefined;
+      const ach = item.unlock.conquista_id
+        ? ACHIEVEMENT_BY_ID[item.unlock.conquista_id]
+        : undefined;
       return ach ? `Conquista: ${ach.titulo}` : 'Complete uma conquista especial';
     }
     case 'moedas':
@@ -143,7 +160,11 @@ export function buildUnlockLabel(item: CosmeticDefinition): string {
   }
 }
 
-function isAutoUnlockEligible(item: CosmeticDefinition, level: number, conquistas: Set<string>): boolean {
+function isAutoUnlockEligible(
+  item: CosmeticDefinition,
+  level: number,
+  conquistas: Set<string>,
+): boolean {
   const { tipo, nivel_min, conquista_id } = item.unlock;
   if (tipo === 'gratis') return true;
   if (tipo === 'nivel' && nivel_min != null && level >= nivel_min) return true;
@@ -166,17 +187,34 @@ export function syncShopUnlocks(user: UserDoc): void {
 
   user.cosmeticos.desbloqueados = [...unlocked];
 
-  if (!unlocked.has(user.cosmeticos.avatar_equipado)) user.cosmeticos.avatar_equipado = DEFAULT_AVATAR_ID;
-  if (!unlocked.has(user.cosmeticos.borda_equipada)) user.cosmeticos.borda_equipada = DEFAULT_BORDA_ID;
+  if (!unlocked.has(user.cosmeticos.avatar_equipado))
+    user.cosmeticos.avatar_equipado = DEFAULT_AVATAR_ID;
+  if (!unlocked.has(user.cosmeticos.borda_equipada))
+    user.cosmeticos.borda_equipada = DEFAULT_BORDA_ID;
   if (!unlocked.has(user.cosmeticos.som_equipado)) user.cosmeticos.som_equipado = DEFAULT_SOM_ID;
-  if (!unlocked.has(user.cosmeticos.efeito_equipado)) user.cosmeticos.efeito_equipado = DEFAULT_EFEITO_ID;
-  if (!unlocked.has(user.cosmeticos.fundo_equipado)) user.cosmeticos.fundo_equipado = 'fundo_padrao';
+  if (!unlocked.has(user.cosmeticos.efeito_equipado))
+    user.cosmeticos.efeito_equipado = DEFAULT_EFEITO_ID;
+  if (!unlocked.has(user.cosmeticos.fundo_equipado))
+    user.cosmeticos.fundo_equipado = 'fundo_padrao';
   if (user.cosmeticos.titulo_equipado && !unlocked.has(user.cosmeticos.titulo_equipado)) {
     user.cosmeticos.titulo_equipado = null;
   }
 }
 
-function buildSlotLabel(slot: Pick<LojaDiariaSlot, 'kind' | 'recompensa_tipo' | 'valor' | 'raridade' | 'oferta_nome' | 'bonus_xp' | 'bonus_abdoria' | 'item_id' | 'preco_abdoria'>): string {
+function buildSlotLabel(
+  slot: Pick<
+    LojaDiariaSlot,
+    | 'kind'
+    | 'recompensa_tipo'
+    | 'valor'
+    | 'raridade'
+    | 'oferta_nome'
+    | 'bonus_xp'
+    | 'bonus_abdoria'
+    | 'item_id'
+    | 'preco_abdoria'
+  >,
+): string {
   const rarity = DAILY_RARITY_LABELS[slot.raridade];
 
   if (slot.recompensa_tipo === 'item' && slot.item_id === FROZEN_STREAK_ITEM_ID) {
@@ -258,7 +296,11 @@ function generateFreeDailySlot(date: string, slot: number): LojaDiariaSlot {
   return draft;
 }
 
-function generatePaidDailySlot(date: string, slot: number, offerKind: keyof typeof PAID_OFFER_CONFIG): LojaDiariaSlot {
+function generatePaidDailySlot(
+  date: string,
+  slot: number,
+  offerKind: keyof typeof PAID_OFFER_CONFIG,
+): LojaDiariaSlot {
   const raridade = pickDailyRarity(date, slot);
   const config = PAID_OFFER_CONFIG[offerKind][raridade];
   const oferta_nome = DAILY_PAID_OFFER_LABELS[offerKind];
@@ -329,10 +371,7 @@ export function syncDailyShop(user: UserDoc): LojaDiaria {
   };
 }
 
-function regenerateDailyShop(
-  loja: ReturnType<typeof ensureLojaDiaria>,
-  today: string,
-): LojaDiaria {
+function regenerateDailyShop(loja: ReturnType<typeof ensureLojaDiaria>, today: string): LojaDiaria {
   const [offerKindSlot1, offerKindSlot2] = pickDistinctPaidOfferKinds(today);
   const slots = [
     generateFreeDailySlot(today, 0),
@@ -388,7 +427,10 @@ function regenerateDailyShop(
     slots[1].label = buildSlotLabel(slots[1]);
   }
 
-  if (hashDailySeed(`${today}:route-paid`) % 100 < 8 && hashDailySeed(`${today}:bau-patrol`) % 1000 >= 12) {
+  if (
+    hashDailySeed(`${today}:route-paid`) % 100 < 8 &&
+    hashDailySeed(`${today}:bau-patrol`) % 1000 >= 12
+  ) {
     slots[2] = {
       slot: 2,
       kind: 'oferta',
@@ -546,7 +588,9 @@ function toCatalogItem(item: CosmeticDefinition, user: UserDoc): ShopCatalogItem
   const desbloqueada = unlocked.has(item.id);
   const equipada = isEquipped(user, item);
   const pode_comprar =
-    !desbloqueada && item.unlock.tipo === 'moedas' && (item.unlock.preco_moedas ?? 0) <= readAbdoriaBalance(user);
+    !desbloqueada &&
+    item.unlock.tipo === 'moedas' &&
+    (item.unlock.preco_moedas ?? 0) <= readAbdoriaBalance(user);
 
   return {
     ...item,
@@ -565,7 +609,8 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
   const byKind = (kind: CosmeticKind) =>
     sortCosmeticCatalogItems(
       COSMETICS.filter(
-        (item) => item.kind === kind && !(SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id),
+        (item) =>
+          item.kind === kind && !(SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id),
       ).map((item) => toCatalogItem(item, user)),
     );
 
@@ -616,7 +661,8 @@ export async function purchaseShopItem(userId: string, itemId: string) {
 
   const item = COSMETIC_BY_ID[itemId];
   if (!item) return { error: 'Item não encontrado.', status: 404 as const };
-  if (item.unlock.tipo !== 'moedas') return { error: 'Este item não está à venda.', status: 400 as const };
+  if (item.unlock.tipo !== 'moedas')
+    return { error: 'Este item não está à venda.', status: 400 as const };
 
   const price = item.unlock.preco_moedas ?? 0;
   const unlocked = new Set(user.cosmeticos.desbloqueados);
@@ -719,7 +765,9 @@ function mapLojaDiariaResponse(lojaDoc: ReturnType<typeof ensureLojaDiaria>): Lo
   };
 }
 
-function snapshotDailySlot(slotDoc: (ReturnType<typeof ensureLojaDiaria>['slots'][number])): LojaDiariaSlot {
+function snapshotDailySlot(
+  slotDoc: ReturnType<typeof ensureLojaDiaria>['slots'][number],
+): LojaDiariaSlot {
   return {
     slot: slotDoc.slot,
     kind: slotDoc.kind,
@@ -907,7 +955,9 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
   await user.save();
 
   const recompensas = buildGiftCodeRewardLines(definition, xp_ganho, definition.abdoria);
-  const tituloItem = definition.titulo_equipar ? COSMETIC_BY_ID[definition.titulo_equipar] : undefined;
+  const tituloItem = definition.titulo_equipar
+    ? COSMETIC_BY_ID[definition.titulo_equipar]
+    : undefined;
 
   return {
     user,
@@ -952,7 +1002,9 @@ function buildGiftCodeRewardLines(
 /** Compatibilidade com serviço anterior. */
 export const syncCosmeticUnlocks = syncShopUnlocks;
 export const awardLevelCoins = awardAbdoriaFromXpProgress;
-export function buildCosmeticsResponse(user: UserDoc): ShopResponse & { moedas: number; moedas_por_nivel: number } {
+export function buildCosmeticsResponse(
+  user: UserDoc,
+): ShopResponse & { moedas: number; moedas_por_nivel: number } {
   const shop = buildShopResponse(user);
   return {
     ...shop,

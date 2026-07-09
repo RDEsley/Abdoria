@@ -1,4 +1,4 @@
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import type { XpBreakdown } from '../types/index.js';
 import {
   ABDORIA_XP_STEP,
@@ -11,7 +11,6 @@ import {
   XP_STREAK_BONUS_PER_DAY,
   dailyXpCapBreakdown,
   dailyXpCapForLevel,
-  dailyXpCapForUser,
   spendableXpForShop,
   streakXpBonus,
   projectedAbdoriaAfterXpSpend as projectedAbdoriaAfterXpSpendFromState,
@@ -22,9 +21,9 @@ import { resetXpDiarioIfNeeded } from './gamification.js';
 import { countBestiaryUnlocks } from './bestiario.js';
 
 /** Garante carteira Abdoria numérica no documento do usuário. */
-export function ensureAbdoriaWallet(user: UserDocument): void {
+export function ensureAbdoriaWallet(user: UserRecord): void {
   if (!user.cosmeticos || typeof user.cosmeticos !== 'object') {
-    user.cosmeticos = { ...DEFAULT_COSMETICOS } as UserDocument['cosmeticos'];
+    user.cosmeticos = { ...DEFAULT_COSMETICOS } as UserRecord['cosmeticos'];
   }
 
   if (typeof user.cosmeticos.moedas !== 'number' || Number.isNaN(user.cosmeticos.moedas)) {
@@ -32,8 +31,8 @@ export function ensureAbdoriaWallet(user: UserDocument): void {
   }
 
   if (
-    typeof user.cosmeticos.moedas_xp_blocos !== 'number'
-    || Number.isNaN(user.cosmeticos.moedas_xp_blocos)
+    typeof user.cosmeticos.moedas_xp_blocos !== 'number' ||
+    Number.isNaN(user.cosmeticos.moedas_xp_blocos)
   ) {
     user.cosmeticos.moedas_xp_blocos = 0;
   }
@@ -50,7 +49,7 @@ export function readAbdoriaBalance(user: {
 }
 
 /** Saldo Abdoria após gastar XP na loja (desconta conversão passiva por blocos). */
-export function projectedAbdoriaAfterXpSpend(user: UserDocument, xpCost: number): number {
+export function projectedAbdoriaAfterXpSpend(user: UserRecord, xpCost: number): number {
   ensureAbdoriaWallet(user);
   return projectedAbdoriaAfterXpSpendFromState(
     user.gamificacao.nivel_xp,
@@ -60,23 +59,23 @@ export function projectedAbdoriaAfterXpSpend(user: UserDocument, xpCost: number)
   );
 }
 
-export function getDailyXpCapBreakdownForUser(user: UserDocument) {
+export function getDailyXpCapBreakdownForUser(user: UserRecord) {
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
   const achievementsUnlocked = user.gamificacao.conquistas?.length ?? 0;
   return dailyXpCapBreakdown(level, countBestiaryUnlocks(user), achievementsUnlocked);
 }
 
-export function getDailyXpCapForUser(user: UserDocument): number {
+export function getDailyXpCapForUser(user: UserRecord): number {
   return getDailyXpCapBreakdownForUser(user).total;
 }
 
-export function isDailyXpCapReached(user: UserDocument): boolean {
+export function isDailyXpCapReached(user: UserRecord): boolean {
   resetXpDiarioIfNeeded(user);
   return user.xp_diario.ganho_hoje >= getDailyXpCapForUser(user);
 }
 
 /** XP contabilizado no teto diário unificado (exercícios, streak, conquistas, loja, habilidades). */
-export function awardDailyXp(user: UserDocument, amount: number): number {
+export function awardDailyXp(user: UserRecord, amount: number): number {
   if (amount <= 0) return 0;
   resetXpDiarioIfNeeded(user);
 
@@ -90,7 +89,7 @@ export function awardDailyXp(user: UserDocument, amount: number): number {
   return awarded;
 }
 
-export function applyWorkoutXpBreakdown(user: UserDocument, breakdown: XpBreakdown): number {
+export function applyWorkoutXpBreakdown(user: UserRecord, breakdown: XpBreakdown): number {
   const awarded = awardDailyXp(user, breakdown.total_bruto);
   breakdown.aplicado = awarded;
 
@@ -132,7 +131,7 @@ export function calculateWorkoutXpBreakdown(
   };
 }
 
-export function awardAbdoriaFromXp(user: UserDocument): number {
+export function awardAbdoriaFromXp(user: UserRecord): number {
   ensureAbdoriaWallet(user);
   const blocks = Math.floor(user.gamificacao.nivel_xp / ABDORIA_XP_STEP);
   const previous = user.cosmeticos.moedas_xp_blocos;
@@ -144,14 +143,14 @@ export function awardAbdoriaFromXp(user: UserDocument): number {
   return gained;
 }
 
-export function grantAbdoria(user: UserDocument, amount: number): void {
+export function grantAbdoria(user: UserRecord, amount: number): void {
   if (amount <= 0) return;
   ensureAbdoriaWallet(user);
   user.cosmeticos.moedas += amount;
 }
 
 export function spendXpForShop(
-  user: UserDocument,
+  user: UserRecord,
   amount: number,
 ): { spent: number } | { error: string } {
   if (amount <= 0) return { spent: 0 };
@@ -184,7 +183,7 @@ export function spendXpForShop(
   return { spent: amount };
 }
 
-export function awardSkillUnlockXp(user: UserDocument, newUnlockCount: number): number {
+export function awardSkillUnlockXp(user: UserRecord, newUnlockCount: number): number {
   if (newUnlockCount <= 0) return 0;
   return awardDailyXp(user, newUnlockCount * XP_PER_SKILL_UNLOCK);
 }

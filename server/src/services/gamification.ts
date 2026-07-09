@@ -13,7 +13,7 @@ import {
   findStreakMissedDayForFreeze,
 } from '../../../shared/streak/protection.js';
 import { consumeInventoryItem, getItemCount } from './inventory.js';
-import { User, type UserDocument } from '../domain/User.js';
+import { User, type UserRecord } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
 import {
@@ -23,7 +23,6 @@ import {
   getWeekStartSaoPaulo,
   startOfDaySaoPaulo,
   endOfDaySaoPaulo,
-  isSameDaySaoPaulo,
 } from '../utils/timezone.js';
 
 export { ACHIEVEMENTS };
@@ -35,14 +34,6 @@ export {
   XP_DAILY_CAP_BASE as XP_DAILY_CAP,
   streakXpBonus,
 } from '../types/index.js';
-
-function startOfDay(date: Date): Date {
-  return startOfDaySaoPaulo(date);
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return isSameDaySaoPaulo(a, b);
-}
 
 function getWeekStart(date: Date): Date {
   const weekKey = getWeekStartSaoPaulo(date);
@@ -66,7 +57,10 @@ type HistorySummary = {
   duracao_total_segundos?: number;
 };
 
-function computeStreakFromHistories(histories: HistorySummary[], frozenDates: string[] = []): { atual: number; maior: number } {
+function computeStreakFromHistories(
+  histories: HistorySummary[],
+  frozenDates: string[] = [],
+): { atual: number; maior: number } {
   return computeStreakWithFrozenDays(histories, frozenDates);
 }
 
@@ -81,7 +75,7 @@ export async function computeStreak(userId: string): Promise<{ atual: number; ma
 
 /** Tenta consumir Frozen Streak para cobrir exatamente 1 dia perdido. */
 export function applyStreakFreezeProtection(
-  user: UserDocument,
+  user: UserRecord,
   histories: HistorySummary[],
 ): boolean {
   if (!user.gamificacao.streak_congelamentos) {
@@ -93,7 +87,10 @@ export function applyStreakFreezeProtection(
 
   const frozenDates = user.gamificacao.streak_congelamentos;
   const streakWithoutFreeze = computeStreakWithFrozenDays(histories, frozenDates);
-  const streakWithPendingFreeze = computeStreakWithFrozenDays(histories, [...frozenDates, missedDay]);
+  const streakWithPendingFreeze = computeStreakWithFrozenDays(histories, [
+    ...frozenDates,
+    missedDay,
+  ]);
 
   // Só consome o item se o congelamento realmente estende a ofensiva (faz a ponte).
   // Cobre tanto "streak iria a 0" quanto "treinou hoje mas perderia a corrente longa".
@@ -105,7 +102,10 @@ export function applyStreakFreezeProtection(
   user.gamificacao.streak_congelamentos.push(missedDay);
   user.gamificacao.streak_freeze_notice_pending = true;
   user.gamificacao.streak_atual = streakWithPendingFreeze.atual;
-  user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streakWithPendingFreeze.maior);
+  user.gamificacao.streak_maior = Math.max(
+    user.gamificacao.streak_maior,
+    streakWithPendingFreeze.maior,
+  );
 
   return true;
 }
@@ -156,7 +156,9 @@ export async function getWeeklyMuscles(
 ): Promise<Record<MusculoPrincipal, number>> {
   const weekStart = getWeekStart(new Date());
   const resetDate = resetAt ? new Date(resetAt) : null;
-  const since = resetDate ? new Date(Math.max(weekStart.getTime(), resetDate.getTime())) : weekStart;
+  const since = resetDate
+    ? new Date(Math.max(weekStart.getTime(), resetDate.getTime()))
+    : weekStart;
 
   const histories = await WorkoutHistory.find({
     usuario_id: userId,
@@ -180,7 +182,7 @@ export async function getWeeklyMuscles(
   return counts;
 }
 
-export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
+export function resetXpDiarioIfNeeded(user: UserRecord): boolean {
   const today = getTodaySaoPaulo();
   if (!user.xp_diario || user.xp_diario.data_reset !== today) {
     user.xp_diario = {
@@ -195,7 +197,7 @@ export function resetXpDiarioIfNeeded(user: UserDocument): boolean {
   return false;
 }
 
-export async function evaluateAchievements(user: UserDocument): Promise<string[]> {
+export async function evaluateAchievements(user: UserRecord): Promise<string[]> {
   const histories = await WorkoutHistory.find(
     { usuario_id: user.id },
     { sort: { concluido_em: -1 } },
@@ -204,7 +206,7 @@ export async function evaluateAchievements(user: UserDocument): Promise<string[]
 }
 
 export function evaluateAchievementsFromHistories(
-  user: UserDocument,
+  user: UserRecord,
   histories: HistorySummary[],
 ): string[] {
   const weekStart = getWeekStart(new Date());
@@ -246,17 +248,19 @@ export function evaluateAchievementsFromHistories(
   if (streak.atual >= 7 || streak.maior >= 7) unlocked.add('streak_7');
   if (totalExercises >= 50) unlocked.add('exercicios_50');
   if (level >= 3) unlocked.add('nivel_3');
-  if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) < 8)) unlocked.add('early_bird');
-  if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) >= 22)) unlocked.add('night_owl');
+  if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) < 8))
+    unlocked.add('early_bird');
+  if (summary.some((h) => getHourSaoPaulo(new Date(h.concluido_em)) >= 22))
+    unlocked.add('night_owl');
   if (hasWeekendWarrior(summary)) unlocked.add('fim_de_semana');
   if (ciclosSemana.has('A') && ciclosSemana.has('B')) unlocked.add('ciclo_ab');
   if (streak.atual >= 14 || streak.maior >= 14) unlocked.add('streak_14');
   if (streak.atual >= 30 || streak.maior >= 30) unlocked.add('streak_30');
   if (totalExercises >= 100) unlocked.add('exercicios_100');
 
-  const allMusclesTrained = (['superior', 'inferior', 'obliquos', 'core'] as MusculoPrincipal[]).every(
-    (m) => counts[m] > 0,
-  );
+  const allMusclesTrained = (
+    ['superior', 'inferior', 'obliquos', 'core'] as MusculoPrincipal[]
+  ).every((m) => counts[m] > 0);
   if (allMusclesTrained) unlocked.add('treino_completo');
 
   if (level >= 5) unlocked.add('nivel_5');

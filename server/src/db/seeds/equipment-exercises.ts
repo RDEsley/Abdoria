@@ -1,4 +1,4 @@
-import { withCustomParams, withLevelParams } from '../../utils/exercise-params.js';
+import { withCustomParams } from '../../utils/exercise-params.js';
 import type { IExercise } from '../../types/index.js';
 
 /** Exercícios gated por equipamento — `ativo: false` até o usuário marcar que possui o item. */
@@ -15,7 +15,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'A',
       modo: 'reps',
-      descricao: 'Encaixe as pegadas nos slots vermelhos, na largura dos ombros apontando à frente. Cotovelos a ~45°, desça o peito até a altura dos cabos. Foco em peitoral com core firme.',
+      descricao:
+        'Encaixe as pegadas nos slots vermelhos, na largura dos ombros apontando à frente. Cotovelos a ~45°, desça o peito até a altura dos cabos. Foco em peitoral com core firme.',
       media: { gif: 'push-up.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -33,7 +34,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'A',
       modo: 'reps',
-      descricao: 'Encaixe as pegadas nos slots verdes, com pegada estreita (mãos próximas). Cotovelos colados ao corpo descendo para trás. Ênfase em tríceps e peito interno.',
+      descricao:
+        'Encaixe as pegadas nos slots verdes, com pegada estreita (mãos próximas). Cotovelos colados ao corpo descendo para trás. Ênfase em tríceps e peito interno.',
       media: { gif: 'push-up.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -51,7 +53,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'B',
       modo: 'reps',
-      descricao: 'Encaixe as pegadas nos slots azuis, mãos largas e à frente. Incline o tronco para frente (quadril mais alto) para ativar deltoides e estabilizadores.',
+      descricao:
+        'Encaixe as pegadas nos slots azuis, mãos largas e à frente. Incline o tronco para frente (quadril mais alto) para ativar deltoides e estabilizadores.',
       media: { gif: 'incline-push-up.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -69,7 +72,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'B',
       modo: 'reps',
-      descricao: 'Encaixe as pegadas nos slots amarelos, mãos anguladas e mais largas. Puxe forçando a retração das escápulas (remada) com core anti-rotação. Foco em dorsais.',
+      descricao:
+        'Encaixe as pegadas nos slots amarelos, mãos anguladas e mais largas. Puxe forçando a retração das escápulas (remada) com core anti-rotação. Foco em dorsais.',
       media: { gif: 'decline-push-up.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -87,7 +91,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'A',
       modo: 'reps',
-      descricao: 'Encaixe as pegadas nos slots vermelhos mais externos (mãos bem abertas). Maior alongamento do peitoral; desça controlado.',
+      descricao:
+        'Encaixe as pegadas nos slots vermelhos mais externos (mãos bem abertas). Maior alongamento do peitoral; desça controlado.',
       media: { gif: 'push-up-board-chest-wide.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -105,7 +110,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'B',
       modo: 'reps',
-      descricao: 'Pegadas nos slots vermelhos com os pés elevados (num apoio). Carga deslocada para o peito superior e ombros.',
+      descricao:
+        'Pegadas nos slots vermelhos com os pés elevados (num apoio). Carga deslocada para o peito superior e ombros.',
       media: { gif: 'push-up-board-decline.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -123,7 +129,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'A',
       modo: 'reps',
-      descricao: 'Pegadas nos slots verdes centrais formando um diamante (mãos juntas sob o peito). Cotovelos colados — máxima tensão no tríceps.',
+      descricao:
+        'Pegadas nos slots verdes centrais formando um diamante (mãos juntas sob o peito). Cotovelos colados — máxima tensão no tríceps.',
       media: { gif: 'push-up-board-diamond.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -141,7 +148,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'B',
       modo: 'reps',
-      descricao: 'Pegadas nos slots azuis com o quadril bem alto (posição de "V" invertido). Desça a cabeça entre as mãos — foco total nos deltoides.',
+      descricao:
+        'Pegadas nos slots azuis com o quadril bem alto (posição de "V" invertido). Desça a cabeça entre as mãos — foco total nos deltoides.',
       media: { gif: 'push-up-board-pike.gif' },
       ativo: false,
       equipamento: 'push_up_board',
@@ -159,7 +167,8 @@ export const equipmentExercises: IExercise[] = [
       tempo_recomendado: 30,
       prioridade: 'B',
       modo: 'reps',
-      descricao: 'Pegadas nos slots amarelos mais largos e angulados. Puxe forçando a retração das escápulas a cada repetição — dorsais e estabilizadores.',
+      descricao:
+        'Pegadas nos slots amarelos mais largos e angulados. Puxe forçando a retração das escápulas a cada repetição — dorsais e estabilizadores.',
       media: { gif: 'push-up-board-back-wide.gif' },
       ativo: false,
       equipamento: 'push_up_board',

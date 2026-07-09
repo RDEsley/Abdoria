@@ -26,20 +26,39 @@ import {
   afkProgressToCap,
   countAfkDropEvents,
 } from '../../shared/utils/afk.ts';
-import { grantPatrolCacheRewards, syncAfkRewards, claimAfkRewards } from '../../server/src/services/afk.ts';
-import { applyKill, ensureCombat, simulateOfflineKills, defeatCurrentEnemy } from '../../server/src/services/afk-combat.ts';
-import { getKillDropChanceForTier, rollKillDrop, rollLootTable } from '../../server/src/services/afk-rolls.ts';
-import type { UserDocument } from '../../server/src/types/user-document.ts';
+import {
+  grantPatrolCacheRewards,
+  syncAfkRewards,
+  claimAfkRewards,
+} from '../../server/src/services/afk.ts';
+import {
+  applyKill,
+  ensureCombat,
+  simulateOfflineKills,
+  defeatCurrentEnemy,
+} from '../../server/src/services/afk-combat.ts';
+import {
+  getKillDropChanceForTier,
+  rollKillDrop,
+  rollLootTable,
+} from '../../server/src/services/afk-rolls.ts';
+import type { UserRecord } from '../../server/src/types/user-record.ts';
 import { EMPTY_AFK_PENDING } from '../../server/src/repositories/user-repository.ts';
 
-function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}): UserDocument {
+function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}): UserRecord {
   return {
     id: 'test-user-afk',
     email: 'afk@test.local',
     nome: 'Tester',
     nivel: 'iniciante',
     objetivo: 'definicao',
-    gamificacao: { nivel_xp: 0, streak_atual: 0, streak_maior: 0, total_minutos: 0, conquistas: [] },
+    gamificacao: {
+      nivel_xp: 0,
+      streak_atual: 0,
+      streak_maior: 0,
+      total_minutos: 0,
+      conquistas: [],
+    },
     cosmeticos: {
       moedas: 0,
       moedas_xp_blocos: 0,
@@ -55,7 +74,12 @@ function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}):
     loja_diaria: { data_reset: '', slots: [] },
     simulacao_definicao: { gordura_meta_pct: 12 },
     preferencias: {},
-    dados_salvos: { treino_personalizado: [], treinos_salvos: [], esquemas_reps: {}, exercicios_desbloqueados: [] },
+    dados_salvos: {
+      treino_personalizado: [],
+      treinos_salvos: [],
+      esquemas_reps: {},
+      exercicios_desbloqueados: [],
+    },
     xp_diario: { ganho_hoje: 0, data_reset: '' },
     inventario: { itens: [] },
     afk: {
@@ -91,10 +115,7 @@ syncAfkRewards(u1, new Date(t0.getTime() + 15 * 60_000));
 assert.equal(u1.afk.minutos_acumulados, 15);
 assert.ok(u1.afk.combat && u1.afk.combat.kills_total >= 1, 'offline kills simulated');
 const expectedKills15 = Math.floor(15 * AFK_KILLS_PER_MINUTE);
-assert.ok(
-  u1.afk.combat!.kills_total >= expectedKills15 - 2,
-  `~${expectedKills15} kills in 15 min`,
-);
+assert.ok(u1.afk.combat!.kills_total >= expectedKills15 - 2, `~${expectedKills15} kills in 15 min`);
 
 const uClaim = mockUser(25);
 claimAfkRewards(uClaim);
@@ -115,7 +136,8 @@ const pendingBoss = { ...EMPTY_AFK_PENDING };
 rollLootTable(uBoss, 1, pendingBefore);
 rollLootTable(uBoss, 2, pendingBoss, { bossBoost: true });
 assert.ok(
-  pendingBoss.xp + pendingBoss.abdoria + pendingBoss.frozen_streaks >= pendingBefore.xp + pendingBefore.abdoria + pendingBefore.frozen_streaks - 1,
+  pendingBoss.xp + pendingBoss.abdoria + pendingBoss.frozen_streaks >=
+    pendingBefore.xp + pendingBefore.abdoria + pendingBefore.frozen_streaks - 1,
   'boss loot table runs',
 );
 
@@ -124,7 +146,13 @@ let procHits = 0;
 for (let i = 0; i < 50; i += 1) {
   const trial = { ...EMPTY_AFK_PENDING };
   rollKillDrop(uBoss, 10_000 + i, trial, { tier: 'common' });
-  if (trial.xp === 0 && trial.abdoria === 0 && trial.frozen_streaks === 0 && trial.cosmetic_ids.length === 0 && !trial.titulo_secreto) {
+  if (
+    trial.xp === 0 &&
+    trial.abdoria === 0 &&
+    trial.frozen_streaks === 0 &&
+    trial.cosmetic_ids.length === 0 &&
+    !trial.titulo_secreto
+  ) {
     procMisses += 1;
   } else {
     procHits += 1;
@@ -146,7 +174,11 @@ ensureCombat(uGoldenDefeat);
 uGoldenDefeat.afk!.combat!.enemy_id = 'golden_slime';
 const goldenPending = { ...EMPTY_AFK_PENDING };
 defeatCurrentEnemy(uGoldenDefeat, goldenPending);
-assert.equal(goldenPending.abdoria, AFK_GOLDEN_SLIME_ABDORIA, 'defeatCurrentEnemy golden slime bonus');
+assert.equal(
+  goldenPending.abdoria,
+  AFK_GOLDEN_SLIME_ABDORIA,
+  'defeatCurrentEnemy golden slime bonus',
+);
 assert.equal(goldenPending.drop_count, 1, 'defeatCurrentEnemy golden slime drop event');
 
 assert.equal(

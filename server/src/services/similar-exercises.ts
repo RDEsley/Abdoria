@@ -1,4 +1,4 @@
-import type { UserDocument } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import {
   filterSimilarExercises,
   scoreExerciseSimilarity,
@@ -37,7 +37,7 @@ function toSimilarRef(ex: ExerciseLike): SimilarExerciseRef {
 }
 
 export async function findSimilarExercisesForUser(
-  user: UserDocument,
+  user: UserRecord,
   slug: string,
   options: { queueSlugs?: string[]; limit?: number } = {},
 ): Promise<{ reference: SimilarExerciseRef | null; similares: SimilarExerciseResponse[] }> {
