@@ -44,7 +44,8 @@ assert.equal(AFK_BOSS_LEGENDARY_WEAPON_ROLL, 9987);
 
 assert.equal(patrolWeaponsByKind('arco').length, 10);
 assert.equal(patrolWeaponsByKind('espada').length, 10);
-assert.equal(PATROL_WEAPONS.length, 20);
+assert.equal(patrolWeaponsByKind('magia').length, 6);
+assert.equal(PATROL_WEAPONS.length, 26);
 
 const arco1 = PATROL_WEAPONS.find((w) => w.id === 'arco_01')!;
 const espada1 = PATROL_WEAPONS.find((w) => w.id === 'espada_01')!;
@@ -111,7 +112,7 @@ const swordCrit = resolvePatrolAttackDamage({
   critStreak: 5,
   isCrit: true,
 });
-assert.equal(swordCrit.damage, 20 + 10);
+assert.equal(swordCrit.damage, 20 + 25);
 assert.equal(swordCrit.nextCritStreak, 0);
 
 let goldenHits = 0;

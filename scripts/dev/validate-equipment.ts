@@ -67,8 +67,7 @@ assert.deepEqual(resolveUserEquipment(null), {
 });
 
 if (errors > 0) {
-  console.error(`Equipment validation failed (${errors} issues)`);
-  process.exit(1);
+  throw new Error(`Equipment validation failed (${errors} issues)`);
 }
 
 console.log('Equipment validation OK');

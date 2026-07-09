@@ -24,8 +24,7 @@ const cosmeticOffer = {
 };
 
 if (isStaleDailyOffer(cosmeticOffer)) {
-  console.error('FAIL: oferta cosmética não deve ser considerada stale');
-  process.exit(1);
+  throw new Error('FAIL: oferta cosmética não deve ser considerada stale');
 }
 
 const user = {
@@ -63,13 +62,11 @@ syncDailyShop(user);
 const free = user.loja_diaria.slots[0];
 
 if (!free?.resgatado) {
-  console.error('FAIL: syncDailyShop resetou resgatado da recompensa grátis no mesmo dia');
-  process.exit(1);
+  throw new Error('FAIL: syncDailyShop resetou resgatado da recompensa grátis no mesmo dia');
 }
 
 if (user.loja_diaria.slots.length !== 3) {
-  console.error('FAIL: loja perdeu slots após sync');
-  process.exit(1);
+  throw new Error('FAIL: loja perdeu slots após sync');
 }
 
 console.log('OK: recompensa grátis permanece resgatada após sync no mesmo dia');
