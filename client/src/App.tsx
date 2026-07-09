@@ -38,6 +38,9 @@ const AchievementsPage = lazy(() =>
 const PlayerPage = lazy(() =>
   import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })),
 );
+const HistoricoPage = lazy(() =>
+  import('@/pages/HistoricoPage').then((m) => ({ default: m.HistoricoPage })),
+);
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
@@ -132,6 +135,14 @@ export default function App() {
                     element={
                       <LazyPage>
                         <AchievementsPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="historico"
+                    element={
+                      <LazyPage>
+                        <HistoricoPage />
                       </LazyPage>
                     }
                   />

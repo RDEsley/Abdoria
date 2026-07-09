@@ -6,6 +6,8 @@ import type {
   IWorkoutPresetDocument,
   TreinoBase,
   TreinoSugerido,
+  WorkoutHistoryFeedPage,
+  WorkoutHistorySessionDetail,
 } from '@/types';
 import { fetchJson } from './client';
 
@@ -21,6 +23,21 @@ export function getDashboardRecommendations(): Promise<
 
 export function getWorkoutHistory(): Promise<IWorkoutHistoryDocument[]> {
   return fetchJson('/workouts/history');
+}
+
+export function getWorkoutHistoryFeed(options?: {
+  cursor?: string | null;
+  limit?: number;
+}): Promise<WorkoutHistoryFeedPage> {
+  const params = new URLSearchParams();
+  if (options?.cursor) params.set('cursor', options.cursor);
+  if (options?.limit) params.set('limit', String(options.limit));
+  const q = params.toString();
+  return fetchJson(`/workouts/history/feed${q ? `?${q}` : ''}`);
+}
+
+export function getWorkoutHistorySessionDetail(id: string): Promise<WorkoutHistorySessionDetail> {
+  return fetchJson(`/workouts/history/${id}`);
 }
 
 export function completeWorkout(payload: CompleteWorkoutPayload): Promise<CompleteWorkoutResponse> {

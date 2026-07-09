@@ -60,6 +60,13 @@ export const WorkoutHistory = {
     ) {
       query = query.gte('concluido_em', filter.concluido_em.$gte as string);
     }
+    if (
+      filter.concluido_em &&
+      typeof filter.concluido_em === 'object' &&
+      '$lt' in filter.concluido_em
+    ) {
+      query = query.lt('concluido_em', filter.concluido_em.$lt as string);
+    }
 
     if (options?.sort?.concluido_em) {
       query = query.order('concluido_em', { ascending: options.sort.concluido_em === 1 });
@@ -82,6 +89,18 @@ export const WorkoutHistory = {
       query = query.order('concluido_em', { ascending: false });
     }
     const { data, error } = await query.limit(1).maybeSingle();
+    if (error || !data) return null;
+    return rowToHistory(data as Record<string, unknown>);
+  },
+
+  async findById(id: string, usuario_id: string): Promise<WorkoutHistoryDocument | null> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('workout_history')
+      .select('*')
+      .eq('id', id)
+      .eq('usuario_id', usuario_id)
+      .maybeSingle();
     if (error || !data) return null;
     return rowToHistory(data as Record<string, unknown>);
   },

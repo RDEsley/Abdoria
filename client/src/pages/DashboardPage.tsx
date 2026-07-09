@@ -206,6 +206,9 @@ export function DashboardPage() {
         <Suspense fallback={<PageLoader />}>
           <ActivityCalendar />
         </Suspense>
+        <Link to="/historico" className="game-link-btn mt-3 inline-flex">
+          Ver histórico completo →
+        </Link>
       </motion.section>
 
       <motion.section variants={item} className="glass-card p-4">

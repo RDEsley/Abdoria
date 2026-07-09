@@ -1033,6 +1033,16 @@ export interface PersonalRecordNotice {
   unidade: 'reps' | 'segundos';
 }
 
+export interface WorkoutHistoryFeedPage {
+  items: IWorkoutHistoryDocument[];
+  next_cursor: string | null;
+}
+
+export interface WorkoutHistorySessionDetail {
+  session: IWorkoutHistoryDocument;
+  personal_records_hit: PersonalRecordNotice[];
+}
+
 export interface CompleteWorkoutResponse {
   history: IWorkoutHistoryDocument;
   user: IUserDocument;

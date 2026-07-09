@@ -55,6 +55,65 @@ workoutsRouter.get('/history', async (req: AuthRequest, res) => {
   }
 });
 
+const HISTORY_FEED_DEFAULT_LIMIT = 20;
+const HISTORY_FEED_MAX_LIMIT = 50;
+
+/** Feed paginado por cursor de `concluido_em` — cobre contas com mais de 365 treinos. */
+workoutsRouter.get('/history/feed', async (req: AuthRequest, res) => {
+  try {
+    const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+    const requestedLimit = Number(req.query.limit);
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(1, requestedLimit), HISTORY_FEED_MAX_LIMIT)
+      : HISTORY_FEED_DEFAULT_LIMIT;
+
+    const page = await WorkoutHistory.find(
+      { usuario_id: req.userId!, ...(cursor ? { concluido_em: { $lt: cursor } } : {}) },
+      { sort: { concluido_em: -1 }, limit: limit + 1 },
+    );
+
+    const hasMore = page.length > limit;
+    const items = hasMore ? page.slice(0, limit) : page;
+    const nextCursor = hasMore ? String(items[items.length - 1].concluido_em) : null;
+
+    res.json({ items, next_cursor: nextCursor });
+  } catch (error) {
+    console.error('GET /api/workouts/history/feed error:', error);
+    res.status(500).json({ error: 'Erro ao buscar histórico paginado.' });
+  }
+});
+
+/** Detalhe de uma sessão + PRs batidos naquele treino (recalculado contra o histórico anterior). */
+workoutsRouter.get('/history/:id', async (req: AuthRequest, res) => {
+  try {
+    const session = await WorkoutHistory.findById(String(req.params.id), req.userId!);
+    if (!session) {
+      res.status(404).json({ error: 'Sessão não encontrada.' });
+      return;
+    }
+
+    const priorHistories = await WorkoutHistory.find({
+      usuario_id: req.userId!,
+      concluido_em: { $lt: session.concluido_em },
+    });
+    const priorRecords = computePersonalRecords(
+      priorHistories as unknown as Array<{
+        exercicios: WorkoutExerciseEntry[];
+        concluido_em: Date | string;
+      }>,
+    );
+    const personalRecordsHit = diffNewPersonalRecords(
+      priorRecords,
+      session.exercicios as unknown as WorkoutExerciseEntry[],
+    );
+
+    res.json({ session, personal_records_hit: personalRecordsHit });
+  } catch (error) {
+    console.error('GET /api/workouts/history/:id error:', error);
+    res.status(500).json({ error: 'Erro ao buscar detalhe da sessão.' });
+  }
+});
+
 workoutsRouter.get('/achievements', async (req: AuthRequest, res) => {
   try {
     const user = await User.findById(req.userId!);
