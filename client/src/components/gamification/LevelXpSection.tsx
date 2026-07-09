@@ -14,6 +14,8 @@ interface Props {
   dailyXpHint: string;
   id?: string;
   showRulesLink?: boolean;
+  /** Omite o cabeçalho com anel — para quando a página já tem um hero de nível (Dashboard). */
+  hideHero?: boolean;
 }
 
 export function LevelXpSection({
@@ -25,6 +27,7 @@ export function LevelXpSection({
   dailyXpHint,
   id,
   showRulesLink = false,
+  hideHero = false,
 }: Props) {
   const { user } = useAuth();
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
@@ -59,58 +62,66 @@ export function LevelXpSection({
     total: stats.xp_diario_limite,
   });
 
-  const dailyPct = stats.xp_diario_limite > 0
-    ? Math.min(100, Math.round((stats.xp_hoje / stats.xp_diario_limite) * 100))
-    : 0;
+  const dailyPct =
+    stats.xp_diario_limite > 0
+      ? Math.min(100, Math.round((stats.xp_hoje / stats.xp_diario_limite) * 100))
+      : 0;
 
   return (
     <section
       id={id}
       className="game-xp-section glass-card scroll-mt-28 overflow-hidden rounded-2xl md:scroll-mt-24"
     >
-      <header className={heroClass}>
-        <div
-          className={`game-xp-section__ring${leveledUp ? ' game-xp-section__ring--up' : ''}`}
-          style={{ '--level-pct': levelPct } as CSSProperties}
-          aria-hidden
-        >
-          <div className="game-xp-section__level">
-            <span className="game-xp-section__level-label">Nível</span>
-            <span className="game-xp-section__level-num">{level}</span>
-            <span className="game-xp-section__level-pct">{levelPct}%</span>
+      {!hideHero && (
+        <header className={heroClass}>
+          <div
+            className={`game-xp-section__ring${leveledUp ? ' game-xp-section__ring--up' : ''}`}
+            style={{ '--level-pct': levelPct } as CSSProperties}
+            aria-hidden
+          >
+            <div className="game-xp-section__level">
+              <span className="game-xp-section__level-label">Nível</span>
+              <span className="game-xp-section__level-num">{level}</span>
+              <span className="game-xp-section__level-pct">{levelPct}%</span>
+            </div>
           </div>
-        </div>
 
-        <div className="game-xp-section__summary">
-          <h3 className="game-xp-section__title">
-            <Zap size={14} className="game-xp-section__title-icon" aria-hidden />
-            Nível & XP
-          </h3>
-          <p className="game-xp-section__subtitle">
-            Faltam <strong>{xpParaLevelUp} XP</strong> para o nível <strong>{level + 1}</strong>
-          </p>
-          <ul className="game-xp-section__chips" aria-label="Resumo de XP">
-            <li className="game-xp-section__chip game-xp-section__chip--total">
-              <span className="game-xp-section__chip-value">{stats.nivel_xp}</span>
-              <span className="game-xp-section__chip-label">XP total</span>
-            </li>
-            <li className="game-xp-section__chip game-xp-section__chip--today">
-              <span className="game-xp-section__chip-value">{stats.xp_hoje}</span>
-              <span className="game-xp-section__chip-label">XP hoje</span>
-            </li>
-            <li className="game-xp-section__chip game-xp-section__chip--cap">
-              <span className="game-xp-section__chip-value">{stats.xp_diario_limite}</span>
-              <span className="game-xp-section__chip-label">Max. diário</span>
-            </li>
-          </ul>
-        </div>
-      </header>
+          <div className="game-xp-section__summary">
+            <h3 className="game-xp-section__title">
+              <Zap size={14} className="game-xp-section__title-icon" aria-hidden />
+              Nível & XP
+            </h3>
+            <p className="game-xp-section__subtitle">
+              Faltam <strong>{xpParaLevelUp} XP</strong> para o nível <strong>{level + 1}</strong>
+            </p>
+            <ul className="game-xp-section__chips" aria-label="Resumo de XP">
+              <li className="game-xp-section__chip game-xp-section__chip--total">
+                <span className="game-xp-section__chip-value">{stats.nivel_xp}</span>
+                <span className="game-xp-section__chip-label">XP total</span>
+              </li>
+              <li className="game-xp-section__chip game-xp-section__chip--today">
+                <span className="game-xp-section__chip-value">{stats.xp_hoje}</span>
+                <span className="game-xp-section__chip-label">XP hoje</span>
+              </li>
+              <li className="game-xp-section__chip game-xp-section__chip--cap">
+                <span className="game-xp-section__chip-value">{stats.xp_diario_limite}</span>
+                <span className="game-xp-section__chip-label">Max. diário</span>
+              </li>
+            </ul>
+          </div>
+        </header>
+      )}
 
       <div className="game-xp-section__body">
+        {hideHero && <h3 className="game-section-title">Nível & XP</h3>}
         {/* Progresso no nível atual */}
         <article className="game-xp-section__panel game-xp-section__panel--level">
           <div className="game-xp-section__panel-head">
-            <BarChart2 size={16} className="game-xp-section__panel-icon game-xp-section__panel-icon--level" aria-hidden />
+            <BarChart2
+              size={16}
+              className="game-xp-section__panel-icon game-xp-section__panel-icon--level"
+              aria-hidden
+            />
             <div>
               <p className="game-xp-section__panel-title">Progresso do nível</p>
               <p className="game-xp-section__panel-desc">
@@ -128,14 +139,20 @@ export function LevelXpSection({
         {/* XP diário */}
         <article className="game-xp-section__panel game-xp-section__panel--daily-full">
           <div className="game-xp-section__panel-head">
-            <Sun size={16} className="game-xp-section__panel-icon game-xp-section__panel-icon--daily" aria-hidden />
+            <Sun
+              size={16}
+              className="game-xp-section__panel-icon game-xp-section__panel-icon--daily"
+              aria-hidden
+            />
             <div>
               <p className="game-xp-section__panel-title">XP de hoje</p>
               <p className="game-xp-section__panel-desc">
                 {stats.xp_hoje} / {stats.xp_diario_limite} XP · {dailyPct}% do teto
               </p>
             </div>
-            <span className={`game-xp-section__panel-badge${dailyPct >= 100 ? ' game-xp-section__panel-badge--full' : ''}`}>
+            <span
+              className={`game-xp-section__panel-badge${dailyPct >= 100 ? ' game-xp-section__panel-badge--full' : ''}`}
+            >
               {dailyPct}%
             </span>
           </div>
@@ -149,9 +166,7 @@ export function LevelXpSection({
           <p className="game-xp-section__panel-hint game-xp-section__panel-hint--cap">
             Teto: {capBreakdown}
           </p>
-          {dailyXpHint && (
-            <p className="game-xp-section__panel-hint">{dailyXpHint}</p>
-          )}
+          {dailyXpHint && <p className="game-xp-section__panel-hint">{dailyXpHint}</p>}
         </article>
 
         {/* Dica de streak */}
@@ -159,15 +174,19 @@ export function LevelXpSection({
           <div className="game-xp-section__streak-row">
             <Flame size={13} className="game-xp-section__streak-icon" aria-hidden />
             <span>
-              Streak de <strong>{stats.streak_atual} dia{stats.streak_atual !== 1 ? 's' : ''}</strong>
-              {' '}· mantenha treinando todo dia para continuar ganhando XP bônus
+              Streak de{' '}
+              <strong>
+                {stats.streak_atual} dia{stats.streak_atual !== 1 ? 's' : ''}
+              </strong>{' '}
+              · mantenha treinando todo dia para continuar ganhando XP bônus
             </span>
           </div>
         )}
 
         {showRulesLink && (
           <p className="game-xp-section__footnote">
-            Streak, conquistas e treino compartilham o mesmo teto diário. Nível e Bestiário aumentam o máx. permanentemente.{' '}
+            Streak, conquistas e treino compartilham o mesmo teto diário. Nível e Bestiário aumentam
+            o máx. permanentemente.{' '}
             <Link to="/configuracoes#regras-xp" className="game-xp-section__link">
               Ver regras de XP
             </Link>

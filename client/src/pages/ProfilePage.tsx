@@ -4,6 +4,7 @@ import { Save, Settings } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
+import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -12,7 +13,16 @@ import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import { playTabSwitch } from '@/lib/sounds';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import { calcImc, NIVEL_LABELS, OBJETIVO_HINTS, OBJETIVO_LABELS, resolveCosmeticos, xpProgressFromTotal, type NivelUsuario, type Objetivo } from '@/types';
+import {
+  calcImc,
+  NIVEL_LABELS,
+  OBJETIVO_HINTS,
+  OBJETIVO_LABELS,
+  resolveCosmeticos,
+  xpProgressFromTotal,
+  type NivelUsuario,
+  type Objetivo,
+} from '@/types';
 
 type Tab = 'dados' | 'progresso' | 'definicao';
 
@@ -26,9 +36,13 @@ export function ProfilePage() {
     return <PageLoader />;
   }
 
-  const imc = profile.imc ?? (profile.peso_kg && profile.altura_cm ? calcImc(profile.peso_kg, profile.altura_cm) : null);
+  const imc =
+    profile.imc ??
+    (profile.peso_kg && profile.altura_cm ? calcImc(profile.peso_kg, profile.altura_cm) : null);
   const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
-  const equippedTitle = cosmeticos.titulo_equipado ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome : null;
+  const equippedTitle = cosmeticos.titulo_equipado
+    ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome
+    : null;
   const titleClass =
     cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
       ? 'game-profile-hero__title cosmetic-title--dono-do-jogo'
@@ -85,20 +99,25 @@ export function ProfilePage() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex items-start justify-between gap-3">
-        <GamePageHeader eyebrow="Ficha do herói" title={profile.nome} />
+        <GamePageHeader eyebrow="Ficha do herói" title="Perfil" />
         <Link to="/configuracoes" className="game-nav-item shrink-0 !p-3">
           <Settings size={20} />
         </Link>
       </header>
-      <p className="-mt-3 text-xs font-bold text-stone-500">{profile.email}</p>
 
       <div className={heroShellClass}>
         <div className="game-profile-hero">
           <CosmeticAvatar user={profile} size="lg" />
-          <div className="game-profile-hero__meta">
+          <div className="game-profile-hero__meta min-w-0">
             <p className="game-profile-hero__name">{profile.nome}</p>
             {equippedTitle && <p className={titleClass}>{equippedTitle}</p>}
             <p className="game-profile-hero__level">Nível {xpLevel}</p>
+            <p className="game-profile-hero__level break-all">{profile.email}</p>
+            {stats && (
+              <div className="mt-1.5">
+                <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -123,7 +142,11 @@ export function ProfilePage() {
         <form onSubmit={handleSave} className="glass-card flex flex-col gap-4 rounded-2xl p-4">
           <label className="flex flex-col gap-1 text-sm font-bold text-stone-700">
             Nome
-            <input name="nome" defaultValue={profile.nome} className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2 font-medium" />
+            <input
+              name="nome"
+              defaultValue={profile.nome}
+              className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2 font-medium"
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm font-bold">
             Idade
@@ -160,20 +183,36 @@ export function ProfilePage() {
               />
             </label>
           </div>
-          {imc && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">IMC: {imc}</p>}
+          {imc && (
+            <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">
+              IMC: {imc}
+            </p>
+          )}
           <label className="flex flex-col gap-1 text-sm font-bold">
             Nível
-            <select name="nivel" defaultValue={profile.nivel} className="cursor-pointer rounded-xl border border-stone-300 bg-stone-50 px-3 py-2">
+            <select
+              name="nivel"
+              defaultValue={profile.nivel}
+              className="cursor-pointer rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+            >
               {(['iniciante', 'intermediario', 'avancado'] as NivelUsuario[]).map((n) => (
-                <option key={n} value={n}>{NIVEL_LABELS[n]}</option>
+                <option key={n} value={n}>
+                  {NIVEL_LABELS[n]}
+                </option>
               ))}
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm font-bold">
             Objetivo
-            <select name="objetivo" defaultValue={profile.objetivo} className="cursor-pointer rounded-xl border border-stone-300 bg-stone-50 px-3 py-2">
+            <select
+              name="objetivo"
+              defaultValue={profile.objetivo}
+              className="cursor-pointer rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+            >
               {(['definicao', 'resistencia', 'forca', 'manutencao'] as Objetivo[]).map((o) => (
-                <option key={o} value={o}>{OBJETIVO_LABELS[o]}</option>
+                <option key={o} value={o}>
+                  {OBJETIVO_LABELS[o]}
+                </option>
               ))}
             </select>
             <p className="text-xs font-medium text-stone-500">{OBJETIVO_HINTS[profile.objetivo]}</p>
@@ -192,7 +231,7 @@ export function ProfilePage() {
         </form>
       )}
 
-      {tab === 'progresso' && stats && <ProfileProgressPanel profile={profile} stats={stats} />}
+      {tab === 'progresso' && stats && <ProfileProgressPanel stats={stats} />}
 
       {tab === 'progresso' && !stats && (
         <div className="glass-card rounded-2xl p-4 text-center text-sm font-bold text-stone-500">
@@ -203,7 +242,6 @@ export function ProfilePage() {
       {tab === 'definicao' && (
         <DefinitionSimulator profile={profile} stats={stats} onSaved={handleRefresh} />
       )}
-
     </div>
   );
 }
