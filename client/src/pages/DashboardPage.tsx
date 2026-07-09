@@ -6,6 +6,7 @@ import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { WeekSummary } from '@/components/dashboard/WeekSummary';
+import { WeeklyChronicle } from '@/components/dashboard/WeeklyChronicle';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { DailyShopPanel } from '@/components/shop/DailyShopPanel';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
@@ -151,6 +152,10 @@ export function DashboardPage() {
 
       <motion.div variants={item}>
         <WeekSummary />
+      </motion.div>
+
+      <motion.div variants={item}>
+        <WeeklyChronicle />
       </motion.div>
 
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
