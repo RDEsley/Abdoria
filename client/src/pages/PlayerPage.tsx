@@ -17,6 +17,7 @@ import { CompletionCelebration } from '@/components/effects/CompletionCelebratio
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { GameButton } from '@/components/ui/GameButton';
+import { Modal } from '@/components/ui/Modal';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
@@ -420,42 +421,45 @@ export function PlayerPage() {
           </GameButton>
         </motion.div>
 
-        {showRodadaModal && (
+        <Modal
+          open={showRodadaModal}
+          onClose={handleRodadaManter}
+          variant="bare"
+          panelClassName="w-full max-w-sm"
+          labelledBy="rodada-completa-title"
+          disableDismiss
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/50 p-6"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="game-victory !p-6"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="game-victory w-full max-w-sm !p-6"
-            >
-              <h3 className="game-victory__title !text-base">Rodada completa!</h3>
-              <p className="mt-2 text-sm font-bold text-stone-600">
-                Você completou todos os ciclos ativos. Quer um novo set de treinos?
-              </p>
-              <div className="mt-5 flex flex-col gap-2">
-                <GameButton
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleRodadaManter}
-                >
-                  Manter sugestão atual
-                </GameButton>
-                <GameButton
-                  size="lg"
-                  className="w-full"
-                  disabled={rodadaBusy}
-                  onClick={() => void handleRodadaTrocar()}
-                >
-                  {rodadaBusy ? 'Sorteando...' : 'Trocar por novo set'}
-                </GameButton>
-              </div>
-            </motion.div>
+            <h3 id="rodada-completa-title" className="game-victory__title !text-base">
+              Rodada completa!
+            </h3>
+            <p className="mt-2 text-sm font-bold text-stone-600">
+              Você completou todos os ciclos ativos. Quer um novo set de treinos?
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <GameButton
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                onClick={handleRodadaManter}
+              >
+                Manter sugestão atual
+              </GameButton>
+              <GameButton
+                size="lg"
+                className="w-full"
+                disabled={rodadaBusy}
+                onClick={() => void handleRodadaTrocar()}
+              >
+                {rodadaBusy ? 'Sorteando...' : 'Trocar por novo set'}
+              </GameButton>
+            </div>
           </motion.div>
-        )}
+        </Modal>
       </div>
     );
   }
@@ -575,6 +579,28 @@ export function PlayerPage() {
           {muted ? <VolumeX size={24} /> : <Volume2 size={24} />}
         </button>
       </header>
+
+      <div
+        className="relative z-10 flex shrink-0 gap-1 px-4 pb-1 sm:px-6"
+        role="progressbar"
+        aria-valuenow={exerciseIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={workout.queue.length}
+        aria-label={`Exercício ${exerciseIndex + 1} de ${workout.queue.length}`}
+      >
+        {workout.queue.map((item, i) => (
+          <span
+            key={`${item.slug}-${i}`}
+            className={`h-1.5 flex-1 rounded-full border border-stone-900/25 ${
+              i < exerciseIndex
+                ? 'bg-emerald-500'
+                : i === exerciseIndex
+                  ? 'bg-amber-400'
+                  : 'bg-stone-200/80'
+            }`}
+          />
+        ))}
+      </div>
 
       <div className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
         <div className="game-player-content flex flex-col items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-4">
@@ -726,47 +752,46 @@ export function PlayerPage() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {showQuitModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/50 p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="game-victory w-full max-w-sm !p-6"
+      <Modal
+        open={showQuitModal}
+        onClose={() => setShowQuitModal(false)}
+        variant="bare"
+        panelClassName="w-full max-w-sm"
+        labelledBy="quit-workout-title"
+        role="alertdialog"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="game-victory !p-6"
+        >
+          <h3 id="quit-workout-title" className="game-victory__title !text-base">
+            Desistir do treino?
+          </h3>
+          <p className="mt-2 text-sm font-bold text-stone-600">
+            Se você sair agora, este treino não será contado — nada do que fez até aqui será salvo.
+            Para treinar de novo, volte na aba <strong>Missão</strong> (ícone de haltere) e inicie
+            outro treino.
+          </p>
+          <div className="mt-5 flex flex-col gap-2">
+            <GameButton
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              onClick={() => setShowQuitModal(false)}
             >
-              <h3 className="game-victory__title !text-base">Desistir do treino?</h3>
-              <p className="mt-2 text-sm font-bold text-stone-600">
-                Se você sair agora, este treino não será contado — nada do que fez até aqui será
-                salvo. Para treinar de novo, volte na aba <strong>Missão</strong> (ícone de haltere)
-                e inicie outro treino.
-              </p>
-              <div className="mt-5 flex flex-col gap-2">
-                <GameButton
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  onClick={() => setShowQuitModal(false)}
-                >
-                  Continuar treinando
-                </GameButton>
-                <GameButton
-                  size="lg"
-                  className="w-full !bg-red-600 hover:!bg-red-700"
-                  onClick={quitWorkout}
-                >
-                  Sim, desistir
-                </GameButton>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Continuar treinando
+            </GameButton>
+            <GameButton
+              size="lg"
+              className="w-full !bg-red-600 hover:!bg-red-700"
+              onClick={quitWorkout}
+            >
+              Sim, desistir
+            </GameButton>
+          </div>
+        </motion.div>
+      </Modal>
     </div>
   );
 }
