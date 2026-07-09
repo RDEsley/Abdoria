@@ -1,23 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Check,
-  Coins,
-  Pause,
-  Play,
-  SkipForward,
-  Timer,
-  Volume2,
-  VolumeX,
-  X,
-  Zap,
-} from 'lucide-react';
-import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
-import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
-import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
+import { Check, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X } from 'lucide-react';
+import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
+import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
+import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { GameButton } from '@/components/ui/GameButton';
-import { Modal } from '@/components/ui/Modal';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
@@ -46,7 +34,6 @@ import {
   readWorkoutStartedAt,
 } from '@/lib/workout-duration';
 import {
-  CURRENCY_NAME,
   formatExerciseName,
   formatExercisePrescription,
   resolveCosmeticos,
@@ -360,107 +347,21 @@ export function PlayerPage() {
 
   if (phase === 'done') {
     return (
-      <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
-        <AnimatedBackground variant="player" />
-        <CompletionCelebration effectId={equippedEffectId} />
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="game-victory relative z-10"
-        >
-          {streakCelebration !== null ? (
-            <StreakFireCelebration streak={streakCelebration} />
-          ) : levelUpCelebration ? (
-            <LevelUpCelebration
-              level={levelUpCelebration.level_novo}
-              previousLevel={levelUpCelebration.level_anterior}
-            />
-          ) : (
-            <div className="game-level-badge mx-auto mb-4">✓</div>
-          )}
-          <h2 className="game-victory__title">MISSÃO COMPLETA!</h2>
-          {levelUpCelebration && streakCelebration !== null && (
-            <LevelUpCelebration
-              compact
-              level={levelUpCelebration.level_novo}
-              previousLevel={levelUpCelebration.level_anterior}
-            />
-          )}
-          <p className="mt-2 text-sm font-bold text-stone-600">{workout.treino_nome}</p>
-          {xpGained > 0 && (
-            <div className="game-victory__rewards">
-              <p className="game-victory__xp">
-                <Zap size={14} aria-hidden /> +{xpGained} XP
-              </p>
-              {abdoriaGained > 0 && (
-                <p className="game-victory__abdoria">
-                  <Coins size={14} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
-                </p>
-              )}
-              {xpBreakdown && (
-                <ul className="game-victory__breakdown">
-                  {xpBreakdown.exercicios > 0 && <li>Exercícios +{xpBreakdown.exercicios}</li>}
-                  {xpBreakdown.exercicios === 0 && xpBreakdown.total_diario === 0 && (
-                    <li className="game-victory__breakdown-cap">
-                      Mín. 3 exercícios para XP diário
-                    </li>
-                  )}
-                  {xpBreakdown.streak > 0 && <li>Streak +{xpBreakdown.streak}</li>}
-                  {xpBreakdown.conquistas > 0 && <li>Conquistas +{xpBreakdown.conquistas}</li>}
-                  {xpBreakdown.total_bruto > xpBreakdown.aplicado && (
-                    <li className="game-victory__breakdown-cap">
-                      Máx. diário · +{xpBreakdown.aplicado}/{xpBreakdown.total_bruto} XP
-                    </li>
-                  )}
-                </ul>
-              )}
-            </div>
-          )}
-          <GameButton onClick={handleFinish} size="lg" className="mt-6 w-full" disabled={saving}>
-            {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar ao início' : 'Salvar e voltar'}
-          </GameButton>
-        </motion.div>
-
-        <Modal
-          open={showRodadaModal}
-          onClose={handleRodadaManter}
-          variant="bare"
-          panelClassName="w-full max-w-sm"
-          labelledBy="rodada-completa-title"
-          disableDismiss
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="game-victory !p-6"
-          >
-            <h3 id="rodada-completa-title" className="game-victory__title !text-base">
-              Rodada completa!
-            </h3>
-            <p className="mt-2 text-sm font-bold text-stone-600">
-              Você completou todos os ciclos ativos. Quer um novo set de treinos?
-            </p>
-            <div className="mt-5 flex flex-col gap-2">
-              <GameButton
-                variant="secondary"
-                size="lg"
-                className="w-full"
-                onClick={handleRodadaManter}
-              >
-                Manter sugestão atual
-              </GameButton>
-              <GameButton
-                size="lg"
-                className="w-full"
-                disabled={rodadaBusy}
-                onClick={() => void handleRodadaTrocar()}
-              >
-                {rodadaBusy ? 'Sorteando...' : 'Trocar por novo set'}
-              </GameButton>
-            </div>
-          </motion.div>
-        </Modal>
-      </div>
+      <WorkoutVictoryScreen
+        workoutName={workout.treino_nome}
+        xpGained={xpGained}
+        abdoriaGained={abdoriaGained}
+        xpBreakdown={xpBreakdown}
+        streakCelebration={streakCelebration}
+        levelUpCelebration={levelUpCelebration}
+        equippedEffectId={equippedEffectId}
+        saving={saving}
+        onFinish={() => void handleFinish()}
+        showRodadaModal={showRodadaModal}
+        rodadaBusy={rodadaBusy}
+        onRodadaKeep={handleRodadaManter}
+        onRodadaSwap={() => void handleRodadaTrocar()}
+      />
     );
   }
 
@@ -486,32 +387,6 @@ export function PlayerPage() {
           : 0;
 
   const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
-  const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
-
-  const ringCenter =
-    phase === 'resting' ? (
-      <>
-        <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-        <span className="game-timer-ring__sublabel">descanso</span>
-      </>
-    ) : phase === 'working' && current.modo === 'tempo' ? (
-      <>
-        <span className="game-timer-ring__label tabular-nums">{formatTime(secondsLeft)}</span>
-        <span className="game-timer-ring__sublabel">exercício</span>
-      </>
-    ) : phase === 'working' ? (
-      <>
-        <span className="game-timer-ring__label tabular-nums">
-          {seriesIndex + 1}/{totalSeries}
-        </span>
-        <span className="game-timer-ring__sublabel">série</span>
-      </>
-    ) : (
-      <>
-        <Play size={32} className="text-emerald-500" />
-        <span className="game-timer-ring__sublabel mt-1">pronta</span>
-      </>
-    );
 
   const phaseBadge =
     phase === 'resting' ? (
@@ -650,27 +525,14 @@ export function PlayerPage() {
             )}
           </div>
 
-          <div
-            className={`game-timer-ring ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}
-            aria-hidden
-          >
-            <svg className="game-timer-ring__svg -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#e7e5e4" strokeWidth="6" />
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke={ringStroke}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={`${progressPct * 2.83} 283`}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {ringCenter}
-            </div>
-          </div>
+          <WorkoutTimerRing
+            phase={phase}
+            modo={current.modo}
+            secondsLeft={secondsLeft}
+            seriesIndex={seriesIndex}
+            totalSeries={totalSeries}
+            progressPct={progressPct}
+          />
 
           {paused && canTogglePause && (
             <p className="game-player-paused">
@@ -752,46 +614,11 @@ export function PlayerPage() {
         </div>
       </div>
 
-      <Modal
+      <QuitWorkoutModal
         open={showQuitModal}
         onClose={() => setShowQuitModal(false)}
-        variant="bare"
-        panelClassName="w-full max-w-sm"
-        labelledBy="quit-workout-title"
-        role="alertdialog"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="game-victory !p-6"
-        >
-          <h3 id="quit-workout-title" className="game-victory__title !text-base">
-            Desistir do treino?
-          </h3>
-          <p className="mt-2 text-sm font-bold text-stone-600">
-            Se você sair agora, este treino não será contado — nada do que fez até aqui será salvo.
-            Para treinar de novo, volte na aba <strong>Missão</strong> (ícone de haltere) e inicie
-            outro treino.
-          </p>
-          <div className="mt-5 flex flex-col gap-2">
-            <GameButton
-              variant="secondary"
-              size="lg"
-              className="w-full"
-              onClick={() => setShowQuitModal(false)}
-            >
-              Continuar treinando
-            </GameButton>
-            <GameButton
-              size="lg"
-              className="w-full !bg-red-600 hover:!bg-red-700"
-              onClick={quitWorkout}
-            >
-              Sim, desistir
-            </GameButton>
-          </div>
-        </motion.div>
-      </Modal>
+        onQuit={quitWorkout}
+      />
     </div>
   );
 }
