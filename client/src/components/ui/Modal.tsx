@@ -88,8 +88,10 @@ export function Modal({
       : `game-modal ${variant === 'wide' ? 'game-modal--wide' : ''} ${panelClassName}`.trim();
 
   return createPortal(
+    // `game-app` no overlay: o portal renderiza fora da árvore do app, e sem
+    // essa classe os tokens --game-* não resolvem dentro do modal.
     <div
-      className={`game-modal-overlay ${overlayClassName}`.trim()}
+      className={`game-app game-modal-overlay ${overlayClassName}`.trim()}
       role="presentation"
       onClick={disableDismiss ? undefined : onClose}
     >
