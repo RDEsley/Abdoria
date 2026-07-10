@@ -106,14 +106,14 @@ export function DashboardPage() {
         className={`game-quest-card ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
       >
         <span className="game-quest-card__badge">
-          {stats.treino_hoje ? 'CONCLUÍDA' : 'MISSÃO DIÁRIA'}
+          {stats.treino_hoje ? 'Concluída' : 'Missão diária'}
         </span>
         <p className="game-quest-card__status">
-          {stats.treino_hoje ? 'Treino de hoje feito!' : stats.proximo_treino}
+          {stats.treino_hoje ? 'Treino de hoje concluído.' : stats.proximo_treino}
         </p>
         {!stats.treino_hoje && sugerido && (
           <div className="mt-2 space-y-1">
-            <p className="text-xs font-bold text-emerald-700">
+            <p className="text-xs font-bold text-stone-600">
               Ciclo {sugerido.ciclo_id} · {sugerido.total_exercicios} exercícios
             </p>
             {sugerido.exercicios[0] && (
@@ -138,13 +138,13 @@ export function DashboardPage() {
         ))}
         {!stats.treino_hoje && !sugerido && (
           <p className="mt-2 text-xs font-bold text-stone-500">
-            Toque em <strong>Missão</strong> (ícone de haltere) para escolher ou montar um treino.
+            Escolha ou monte um treino na aba <strong>Missão</strong>.
           </p>
         )}
         {!stats.treino_hoje && (
           <Link to={playLink} className="mt-3 block">
             <GameButton className="flex w-full items-center justify-center gap-2">
-              <Play size={14} /> JOGAR
+              <Play size={14} /> Jogar
             </GameButton>
           </Link>
         )}
@@ -163,13 +163,13 @@ export function DashboardPage() {
           icon={<Flame className="text-orange-500" size={22} />}
           title="Recorde"
           value={`${stats.streak_maior}d`}
-          hint="Seu recorde de dias seguidos treinando"
+          hint="Dias seguidos treinando"
         />
         <StatTile
           icon={<Timer className="text-sky-600" size={22} />}
           title="Tempo total"
           value={formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
-          hint="Tempo real somado de todos os treinos"
+          hint="Soma de todos os treinos"
         />
       </motion.div>
 
@@ -213,8 +213,8 @@ export function DashboardPage() {
 
       <motion.section variants={item} className="glass-card p-4">
         <h3 className="game-section-title">Zonas da semana</h3>
-        <p className="mb-4 text-[0.65rem] font-bold leading-relaxed text-stone-500">
-          Regiões do abdômen — volume desta semana por zona.
+        <p className="mb-4 text-xs font-bold leading-relaxed text-stone-500">
+          Volume desta semana por região.
         </p>
         {stats.area_mais_treinada && (
           <div className="mb-4 flex flex-wrap gap-2">

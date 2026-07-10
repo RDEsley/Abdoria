@@ -1,9 +1,10 @@
 /* Stat tiles */
 .game-stat {
-  padding: 0.85rem;
+  padding: var(--space-2);
   background: var(--game-paper);
-  border: 3px solid var(--game-ink);
-  box-shadow: 3px 3px 0 var(--game-ink);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-resting);
 }
 
 .game-stat__head {
@@ -13,24 +14,30 @@
 }
 
 .game-stat__title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(0.58rem, 3vw, 0.72rem);
-  line-height: 1.45;
-  color: var(--game-ink);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: #78716c;
 }
 
 .game-stat__label {
   margin: 0.35rem 0 0;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.38rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
   color: #78716c;
 }
 
 .game-stat__value {
-  margin: 0.45rem 0 0;
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(0.65rem, 3.2vw, 0.82rem);
-  line-height: 1.5;
+  margin: 0.35rem 0 0;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw + 1rem, 2.75rem);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
   color: var(--game-ink);
 }
 

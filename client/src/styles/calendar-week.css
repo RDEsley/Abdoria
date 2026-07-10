@@ -170,10 +170,10 @@
 
 .game-profile-hero-shell {
   position: relative;
-  border-radius: 1rem;
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.15);
-  border: 2px solid rgba(28, 25, 23, 0.12);
+  box-shadow: var(--shadow-raised);
+  border: var(--border-card);
 }
 
 .game-profile-hero-shell--default {

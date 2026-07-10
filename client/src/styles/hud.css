@@ -199,51 +199,63 @@
 }
 
 .game-page-header__eyebrow {
-  margin: 0 0 0.35rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.45rem;
+  margin: 0 0 0.25rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
   color: var(--game-green-dark);
   letter-spacing: 0.04em;
 }
 
 .game-page-header__title {
   margin: 0;
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(0.75rem, 2.8vw, 0.95rem);
-  line-height: 1.55;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.35rem, 3vw + 1rem, 1.75rem);
+  line-height: 1.2;
   color: var(--game-ink);
-  text-shadow: 2px 2px 0 #bbf7d0;
 }
 
 /* Cards de missão / quest */
 .game-quest-card {
   position: relative;
-  padding: 1rem;
-  background: linear-gradient(135deg, #ecfdf5 0%, var(--game-paper) 55%, #fef3c7 100%);
-  border: 3px solid var(--game-ink);
-  box-shadow: var(--game-shadow);
+  padding: var(--space-2);
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.06) 0%,
+    #fff 45%,
+    rgba(217, 119, 6, 0.06) 100%
+  );
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
 }
 
 .game-quest-card__badge {
   display: inline-block;
   margin-bottom: 0.5rem;
-  padding: 0.2rem 0.5rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.38rem;
+  padding: 0.2rem 0.6rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: #fff;
   background: var(--game-green);
-  border: 2px solid var(--game-ink);
+  border-radius: var(--radius-chip);
 }
 
 .game-quest-card__status {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
-  line-height: 1.5;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.35;
   color: var(--game-ink);
 }
 
 .game-quest-card--done {
-  background: linear-gradient(135deg, #d1fae5, var(--game-paper));
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), #fff);
 }
 
 .game-quest-card--done .game-quest-card__badge {

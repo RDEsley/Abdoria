@@ -19,10 +19,10 @@ export function PersonalRecordsPanel() {
   }, [history]);
 
   return (
-    <section className="glass-card rounded-2xl p-4">
+    <section className="glass-card p-4">
       <h3 className="game-section-title">Recordes pessoais</h3>
-      <p className="mb-3 text-[0.65rem] font-bold leading-relaxed text-stone-500">
-        Melhor volume por exercício — série × repetições (reps) ou série × tempo segurado.
+      <p className="mb-3 text-xs font-bold leading-relaxed text-stone-500">
+        Melhor volume por exercício — série × repetições ou série × tempo segurado.
       </p>
       {historyLoading && <p className="text-sm text-stone-500">Carregando recordes...</p>}
       {!historyLoading && records.length === 0 && (

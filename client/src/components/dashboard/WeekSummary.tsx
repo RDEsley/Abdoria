@@ -75,7 +75,7 @@ export function WeekSummary() {
             <span
               className={`h-7 w-7 rounded-lg border-2 ${
                 day.trained
-                  ? 'border-stone-900 bg-emerald-400 shadow-[2px_2px_0_#1c1917]'
+                  ? 'border-emerald-500 bg-emerald-400'
                   : day.isToday
                     ? 'border-dashed border-emerald-600 bg-emerald-50'
                     : day.isFuture
@@ -91,28 +91,20 @@ export function WeekSummary() {
         {totals.workouts} treino{totals.workouts !== 1 ? 's' : ''} nesta semana
       </p>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t-2 border-stone-100 pt-3 text-center">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-3 text-center">
         <div>
-          <p className="font-['Press_Start_2P',monospace] text-sm text-stone-900">
-            {totals.workouts}
-          </p>
-          <p className="mt-1 text-[0.55rem] font-extrabold uppercase tracking-wide text-stone-400">
-            Treinos
-          </p>
+          <p className="stat-number">{totals.workouts}</p>
+          <p className="stat-label mt-1">Treinos</p>
         </div>
         <div>
-          <p className="font-['Press_Start_2P',monospace] text-sm text-stone-900">
+          <p className="stat-number">
             {historyLoading ? '—' : formatTrainingDuration(totals.seconds)}
           </p>
-          <p className="mt-1 text-[0.55rem] font-extrabold uppercase tracking-wide text-stone-400">
-            Tempo
-          </p>
+          <p className="stat-label mt-1">Tempo</p>
         </div>
         <div>
-          <p className="font-['Press_Start_2P',monospace] text-sm text-emerald-700">+{totals.xp}</p>
-          <p className="mt-1 text-[0.55rem] font-extrabold uppercase tracking-wide text-stone-400">
-            XP
-          </p>
+          <p className="stat-number text-emerald-700">+{totals.xp}</p>
+          <p className="stat-label mt-1">XP</p>
         </div>
       </div>
     </section>

@@ -33,7 +33,7 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
 
   return (
-    <section className="game-xp-section glass-card overflow-hidden rounded-2xl">
+    <section className="game-xp-section glass-card overflow-hidden">
       <header className={`${heroClass} !border-b-0`}>
         <button
           type="button"
@@ -58,7 +58,7 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
           <div className="mt-2">
             <XpBar value={xpInLevel} max={xpToNext} showValues={false} />
           </div>
-          <div className="mt-2.5">
+          <div className="mt-2">
             <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
           </div>
         </div>

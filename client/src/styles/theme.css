@@ -1,6 +1,6 @@
 /* ─── App principal — tema jogo RPG 2D ─── */
 .game-app {
-  --game-paper: #fff9e8;
+  --game-paper: #ffffff;
   --game-ink: #1c1917;
   --game-green: #10b981;
   --game-green-dark: #047857;
@@ -8,6 +8,25 @@
   --game-gold-dark: #d97706;
   --game-sky: #7dd3fc;
   --game-shadow: 4px 4px 0 var(--game-ink);
+}
+
+/* Números de destaque (StatTile, WeekSummary) — uma fonte só pros dois. */
+.game-app .stat-number {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw + 1rem, 2.75rem);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: var(--game-ink);
+}
+
+.game-app .stat-label {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #78716c;
 }
 
 .game-app .bg-mesh-app {
@@ -21,15 +40,15 @@
 .game-app .glass-panel,
 .game-app .glass-panel-strong {
   background: var(--game-paper);
-  border: 3px solid var(--game-ink);
-  border-radius: 0;
-  box-shadow: var(--game-shadow);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-resting);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
 .game-app .glass-panel-strong {
-  box-shadow: 5px 5px 0 var(--game-ink);
+  box-shadow: var(--shadow-raised);
 }
 
 .game-logo-pixel {

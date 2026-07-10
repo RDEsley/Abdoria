@@ -61,10 +61,10 @@ export function ProfileProgressPanel({ stats }: Props) {
         showRulesLink
       />
 
-      <section className="glass-card rounded-2xl p-4">
+      <section className="glass-card p-4">
         <h3 className="game-section-title">Zonas da semana</h3>
-        <p className="mb-3 text-[0.65rem] font-bold leading-relaxed text-stone-500">
-          Volume desta semana por região do abdômen.
+        <p className="mb-3 text-xs font-bold leading-relaxed text-stone-500">
+          Volume desta semana por região.
         </p>
         {stats.area_mais_treinada && (
           <div className="mb-3 flex flex-wrap gap-2">

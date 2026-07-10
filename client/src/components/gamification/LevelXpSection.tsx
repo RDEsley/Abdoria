@@ -70,7 +70,7 @@ export function LevelXpSection({
   return (
     <section
       id={id}
-      className="game-xp-section glass-card scroll-mt-28 overflow-hidden rounded-2xl md:scroll-mt-24"
+      className="game-xp-section glass-card scroll-mt-28 overflow-hidden md:scroll-mt-24"
     >
       {!hideHero && (
         <header className={heroClass}>

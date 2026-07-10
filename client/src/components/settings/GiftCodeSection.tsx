@@ -80,7 +80,7 @@ export function GiftCodeSection() {
           </label>
           <input
             id="settings-gift-code"
-            className="game-input mt-2 w-full"
+            className="game-input mt-2 w-full font-mono tracking-wider"
             value={giftCode}
             onChange={(e) => {
               setGiftCode(e.target.value);

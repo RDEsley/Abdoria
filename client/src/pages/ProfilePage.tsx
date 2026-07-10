@@ -115,7 +115,7 @@ export function ProfilePage() {
             <p className="game-profile-hero__level">Nível {xpLevel}</p>
             <p className="game-profile-hero__level break-all">{profile.email}</p>
             {stats && (
-              <div className="mt-1.5">
+              <div className="mt-2">
                 <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
               </div>
             )}
@@ -140,7 +140,7 @@ export function ProfilePage() {
       </div>
 
       {tab === 'dados' && (
-        <form onSubmit={handleSave} className="glass-card flex flex-col gap-4 rounded-2xl p-4">
+        <form onSubmit={handleSave} className="glass-card flex flex-col gap-4 p-4">
           <label className="flex flex-col gap-1 text-sm font-bold text-stone-700">
             Nome
             <input
@@ -240,7 +240,7 @@ export function ProfilePage() {
       )}
 
       {tab === 'progresso' && !stats && (
-        <div className="glass-card rounded-2xl p-4 text-center text-sm font-bold text-stone-500">
+        <div className="glass-card p-4 text-center text-sm font-bold text-stone-500">
           Não foi possível carregar seu progresso. Tente recarregar a página.
         </div>
       )}

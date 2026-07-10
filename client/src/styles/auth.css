@@ -250,10 +250,10 @@
   max-width: 340px;
   padding: 1.75rem 1.5rem 1.5rem;
   text-align: center;
-  background: #fff9e8;
-  border: 4px solid #1c1917;
-  box-shadow: 6px 6px 0 #1c1917;
-  image-rendering: pixelated;
+  background: #fff;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
 }
 
 .game-login__logo {
@@ -278,11 +278,11 @@
 
 .game-login__title {
   margin: 1rem 0 1.25rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(0.85rem, 3.5vw, 1rem);
-  line-height: 1.6;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.15rem, 3.5vw, 1.4rem);
+  line-height: 1.3;
   color: #047857;
-  text-shadow: 2px 2px 0 #a7f3d0;
 }
 
 .game-login__form {
@@ -293,14 +293,16 @@
 
 .game-input {
   width: 100%;
-  padding: 0.75rem 0.65rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
+  padding: 0.75rem 0.85rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
   color: #1c1917;
   background: #fff;
-  border: 3px solid #1c1917;
+  border: 1.5px solid rgba(28, 25, 23, 0.16);
+  border-radius: 0.65rem;
   outline: none;
-  box-shadow: inset 3px 3px 0 #e7e5e4;
+  box-shadow: var(--shadow-resting);
 }
 
 .game-input::placeholder {
@@ -308,8 +310,8 @@
 }
 
 .game-input:focus {
-  background: #ecfdf5;
-  box-shadow: inset 3px 3px 0 #d1fae5;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .game-login__error {
@@ -428,8 +430,6 @@
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.7rem 0.75rem;
-  border-width: 2px;
-  box-shadow: inset 2px 2px 0 #e7e5e4;
   transition:
     border-color 0.15s,
     background 0.15s,
@@ -479,14 +479,11 @@
 .game-auth-field--invalid .game-auth-field__input.game-input {
   border-color: #ef4444;
   background: #fff5f5;
-  box-shadow: inset 2px 2px 0 #fecaca;
 }
 
 .game-auth-field--invalid .game-auth-field__input.game-input:focus {
   background: #fff1f2;
-  box-shadow:
-    inset 2px 2px 0 #fecaca,
-    0 0 0 2px rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
 .game-auth-field__hint {
@@ -548,51 +545,50 @@
 
 .game-btn {
   width: 100%;
-  padding: 0.85rem 0.5rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.65rem;
+  padding: 0.85rem 1rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.875rem;
   line-height: 1.4;
   color: #fff;
   cursor: pointer;
-  border: 3px solid #1c1917;
+  border: none;
+  border-radius: 0.75rem;
   transition:
-    transform 0.08s,
-    box-shadow 0.08s;
+    transform 0.08s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 .game-btn--primary {
   background: #10b981;
-  box-shadow: 0 4px 0 #047857;
+  box-shadow: var(--shadow-resting);
 }
 
 .game-btn--primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #047857;
+  background: #059669;
 }
 
 .game-btn--primary:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #047857;
+  transform: scale(0.98);
 }
 
 .game-btn--secondary {
-  background: #fbbf24;
+  background: #f5f5f4;
   color: #1c1917;
-  box-shadow: 0 4px 0 #d97706;
+  box-shadow: var(--shadow-resting);
 }
 
 .game-btn--secondary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #d97706;
+  background: #e7e5e4;
 }
 
 .game-btn--secondary:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #d97706;
+  transform: scale(0.98);
 }
 
 .game-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -686,16 +682,18 @@
   width: 100%;
   max-width: 320px;
   padding: 1.25rem 1.15rem 1.15rem;
-  background: #fff9e8;
-  border: 4px solid #1c1917;
-  box-shadow: 6px 6px 0 #1c1917;
+  background: #fff;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
 }
 
 .game-modal__title {
   margin: 0 0 0.5rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
-  line-height: 1.5;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.3;
   color: #047857;
 }
 
