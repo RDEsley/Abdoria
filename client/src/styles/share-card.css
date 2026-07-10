@@ -1,0 +1,142 @@
+/* Card de compartilhamento (Fase 10) — proporção 9:16, capturado off-screen via html-to-image.
+   Linguagem de celebração (mesma paleta âmbar do achievement-toast--record), não do design
+   minimalista da base do app — este card é sempre o resultado de uma conquista. */
+.share-card {
+  position: relative;
+  width: 270px;
+  height: 480px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 18px;
+  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: #f8fafc;
+  text-align: center;
+}
+
+.share-card__glow {
+  position: absolute;
+  inset: -20% -30% auto -30%;
+  height: 65%;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.4), transparent 68%);
+  pointer-events: none;
+}
+
+.share-card__brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fde68a;
+}
+
+.share-card__avatar {
+  position: relative;
+  z-index: 1;
+  transform: scale(1.15);
+}
+
+.share-card__badge-icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fde68a 0%, #fbbf24 60%, #d97706 100%);
+  color: #78350f;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.55);
+}
+
+.share-card__title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fde68a;
+}
+
+.share-card__name {
+  position: relative;
+  z-index: 1;
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #f8fafc;
+}
+
+.share-card__value-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.share-card__value {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1.05;
+  color: #fde68a;
+}
+
+.share-card__value-arrow {
+  font-size: 20px;
+  color: #a8a29e;
+}
+
+.share-card__stats {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 18px;
+}
+
+.share-card__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.share-card__stat-value {
+  font-weight: 800;
+  font-size: 20px;
+  color: #f8fafc;
+}
+
+.share-card__stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+}
+
+.share-card__footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(248, 250, 252, 0.6);
+}

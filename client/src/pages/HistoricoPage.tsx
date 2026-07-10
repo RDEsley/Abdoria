@@ -4,6 +4,7 @@ import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { getWorkoutHistoryFeed, getWorkoutHistorySessionDetail } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -91,7 +92,7 @@ export function HistoricoPage() {
       <GamePageHeader eyebrow="Diário de bordo" title="Histórico de treinos" />
 
       {sessions.length === 0 && (
-        <div className="glass-card rounded-2xl p-4 text-center text-sm font-bold text-stone-500">
+        <div className="glass-card p-4 text-center text-sm font-bold text-stone-500">
           Nenhum treino registrado ainda. Complete uma missão pra abrir o primeiro capítulo.
         </div>
       )}
@@ -102,7 +103,7 @@ export function HistoricoPage() {
             <button
               type="button"
               onClick={() => void openSession(session.id)}
-              className="glass-card flex w-full items-center justify-between gap-3 rounded-2xl p-3.5 text-left"
+              className="glass-card flex w-full items-center justify-between gap-3 p-3.5 text-left"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-extrabold text-stone-800">
@@ -160,11 +161,29 @@ export function HistoricoPage() {
                 <p className="mb-1.5 flex items-center gap-1.5 text-xs font-extrabold text-amber-900">
                   <Medal size={14} aria-hidden /> Recordes batidos nesta sessão
                 </p>
-                <ul className="space-y-1 text-xs font-bold text-amber-800">
+                <ul className="space-y-2">
                   {detail.personal_records_hit.map((pr) => (
-                    <li key={pr.slug}>
-                      {pr.nome}: {pr.valor_anterior} → {pr.valor_novo}{' '}
-                      {pr.unidade === 'segundos' ? 's' : 'reps'}
+                    <li
+                      key={pr.slug}
+                      className="flex items-center justify-between gap-2 text-xs font-bold text-amber-800"
+                    >
+                      <span>
+                        {pr.nome}: {pr.valor_anterior} → {pr.valor_novo}{' '}
+                        {pr.unidade === 'segundos' ? 's' : 'reps'}
+                      </span>
+                      <ShareCardTrigger
+                        variant="ghost"
+                        label=""
+                        className="shrink-0 !px-2 !py-1"
+                        data={{
+                          kind: 'record',
+                          exerciseName: pr.nome,
+                          previousValue: pr.valor_anterior,
+                          newValue: pr.valor_novo,
+                          unidade: pr.unidade,
+                          dateLabel: formatSessionDate(detail.session.concluido_em),
+                        }}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -186,6 +205,19 @@ export function HistoricoPage() {
                 </li>
               ))}
             </ul>
+
+            {(detail.session.xp_ganho ?? 0) > 0 && (
+              <ShareCardTrigger
+                className="w-full"
+                label="Compartilhar treino"
+                data={{
+                  kind: 'workout',
+                  workoutName: detail.session.treino_nome,
+                  dateLabel: formatSessionDate(detail.session.concluido_em),
+                  xpGained: detail.session.xp_ganho ?? 0,
+                }}
+              />
+            )}
           </div>
         )}
       </Modal>

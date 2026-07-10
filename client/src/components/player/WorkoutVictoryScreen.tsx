@@ -6,8 +6,17 @@ import { StreakFireCelebration } from '@/components/effects/StreakFireCelebratio
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
+import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { CURRENCY_NAME, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { XpBreakdown } from '@/types';
+
+function todayLabel(): string {
+  return new Date().toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 interface Props {
   workoutName: string;
@@ -99,6 +108,19 @@ export function WorkoutVictoryScreen({
         <GameButton onClick={onFinish} size="lg" className="mt-6 w-full" disabled={saving}>
           {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar ao início' : 'Salvar e voltar'}
         </GameButton>
+
+        {xpGained > 0 && (
+          <ShareCardTrigger
+            className="mt-2 w-full"
+            data={{
+              kind: 'workout',
+              workoutName,
+              dateLabel: todayLabel(),
+              xpGained,
+              streakAtual: streakCelebration ?? undefined,
+            }}
+          />
+        )}
       </motion.div>
 
       <Modal
