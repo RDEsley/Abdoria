@@ -124,7 +124,7 @@ export function TrainPresetSection({
       )}
 
       {(selectedPreset || selectedSavedWorkout) && (
-        <div className="glass-card rounded-2xl p-4">
+        <div className="glass-card p-4">
           {selectedPreset && (
             <>
               <p className="text-[0.65rem] font-bold text-emerald-600">

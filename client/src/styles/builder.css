@@ -222,73 +222,7 @@
   }
 }
 
-/* Builder presets (movido de player-extra.css na Fase 9 — nome do arquivo era enganoso) */
-.game-builder-presets {
-  max-width: 100%;
-}
-
-.game-builder-preset-card {
-  overflow: hidden;
-  position: relative;
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.15s ease;
-}
-
-.game-builder-preset-card--next {
-  border-color: #10b981 !important;
-  box-shadow:
-    0 0 0 2px rgba(16, 185, 129, 0.35),
-    0 4px 14px rgba(16, 185, 129, 0.2);
-}
-
-.game-builder-preset-card--selected {
-  border-color: #f59e0b !important;
-  box-shadow:
-    0 0 0 2px rgba(245, 158, 11, 0.4),
-    0 6px 16px rgba(245, 158, 11, 0.18);
-}
-
-.game-builder-preset-card--next.game-builder-preset-card--selected {
-  border-color: #10b981 !important;
-  box-shadow:
-    0 0 0 2px rgba(16, 185, 129, 0.5),
-    0 0 0 4px rgba(245, 158, 11, 0.25),
-    0 6px 18px rgba(16, 185, 129, 0.28);
-}
-
-.game-builder-preset-card__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem;
-  margin-bottom: 0.35rem;
-}
-
-.game-builder-preset-card__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.12rem 0.35rem;
-  border-radius: 999px;
-  font-size: 0.5rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1.2;
-}
-
-.game-builder-preset-card__badge--next {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
-  box-shadow: 0 1px 4px rgba(5, 150, 105, 0.35);
-}
-
-.game-builder-preset-card__badge--picked {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
-  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.35);
-}
-
+/* Builder — ciclo de treinos (movido de player-extra.css na Fase 9 — nome do arquivo era enganoso) */
 .game-builder-cycle-progress {
   display: flex;
   flex-wrap: wrap;
@@ -379,7 +313,7 @@
 
 .game-builder-next-banner__label {
   font-size: 0.55rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #047857;
@@ -395,10 +329,10 @@
 .game-builder-next-banner__status {
   flex-shrink: 0;
   padding: 0.2rem 0.45rem;
-  border-radius: 999px;
+  border-radius: var(--radius-chip);
   background: #059669;
   font-size: 0.55rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
@@ -407,11 +341,11 @@
 .game-builder-next-banner__action {
   flex-shrink: 0;
   padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-  border: 2px solid #059669;
+  border-radius: var(--radius-chip);
+  border: 1.5px solid #059669;
   background: #fff;
-  font-size: 0.58rem;
-  font-weight: 900;
+  font-size: 0.65rem;
+  font-weight: 700;
   color: #047857;
   cursor: pointer;
 }

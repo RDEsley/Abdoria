@@ -704,7 +704,7 @@ export function BuilderPage() {
 
           {configSection}
 
-          <section id="builder-queue-preview" className="glass-card rounded-2xl p-4">
+          <section id="builder-queue-preview" className="glass-card p-4">
             <h3 className="game-section-title mb-3">Fila do treino</h3>
             <WorkoutQueueList
               queue={activeQueue}
@@ -734,7 +734,7 @@ export function BuilderPage() {
           aria-labelledby="builder-tab-customize"
           className="flex flex-col gap-5"
         >
-          <div className="glass-card rounded-2xl p-4">
+          <div className="glass-card p-4">
             <h3 className="game-section-title !mb-1">Meu Treino</h3>
             <p className="text-xs font-semibold text-stone-500">
               Monte sua fila personalizada: busque exercícios, reordene e ajuste séries/repetições.
@@ -760,7 +760,7 @@ export function BuilderPage() {
 
           {configSection}
 
-          <section id="builder-queue" className="glass-card rounded-2xl p-4">
+          <section id="builder-queue" className="glass-card p-4">
             <h3 className="game-section-title">Ordem dos exercícios</h3>
             <WorkoutQueueList
               queue={activeQueue}
