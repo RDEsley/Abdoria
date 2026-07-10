@@ -19,8 +19,8 @@
   padding: 0.75rem 1rem;
   padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
   background: var(--game-paper);
-  border-bottom: 4px solid var(--game-ink);
-  box-shadow: 0 4px 0 rgba(28, 25, 23, 0.1);
+  border-bottom: var(--border-card);
+  box-shadow: var(--shadow-resting);
 }
 
 .game-timer-ring__svg {
@@ -32,15 +32,16 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(255, 249, 232, 0.92) 18%,
+    rgba(255, 255, 255, 0.92) 18%,
     var(--game-paper) 100%
   );
 }
 
 .game-player-frame {
   overflow: hidden;
-  border: 4px solid var(--game-ink);
-  box-shadow: 6px 6px 0 var(--game-ink);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
   background: #000;
 }
 
@@ -84,22 +85,23 @@
 }
 
 .game-timer-ring--rest .game-timer-ring__label {
-  color: #0369a1;
-  text-shadow: 2px 2px 0 #bae6fd;
+  color: var(--game-sky-dark);
 }
 
 .game-timer-ring__label {
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 6vw, 2rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
   color: var(--game-ink);
-  text-shadow: 2px 2px 0 #bbf7d0;
 }
 
 .game-timer-ring__sublabel {
   margin-top: 0.35rem;
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #78716c;
 }
@@ -109,16 +111,16 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.35rem 0.75rem;
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.03em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  border-radius: 999px;
-  border: 2px solid var(--game-ink);
+  border-radius: var(--radius-chip);
+  border: var(--border-card);
 }
 
 .game-player-phase--ready {
-  color: #047857;
+  color: var(--game-green-dark);
   background: #ecfdf5;
 }
 
@@ -128,7 +130,7 @@
 }
 
 .game-player-phase--rest {
-  color: #0369a1;
+  color: var(--game-sky-dark);
   background: #e0f2fe;
 }
 
@@ -221,4 +223,35 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* Player descanso (movido de player-extra.css na Fase 9) */
+.game-player-rest-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  max-width: 16rem;
+  margin-inline: auto;
+}
+
+.game-player-rest-status__main {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--game-sky-dark);
+}
+
+.game-player-rest-status__timer {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--game-sky-dark);
+}
+
+.game-player-rest-status__next {
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #57534e;
 }

@@ -20,7 +20,7 @@ export function WorkoutTimerRing({
   totalSeries,
   progressPct,
 }: Props) {
-  const ringStroke = phase === 'resting' ? '#0284c7' : '#059669';
+  const ringStroke = phase === 'resting' ? 'var(--game-sky-dark)' : 'var(--game-green-dark)';
 
   const center =
     phase === 'resting' ? (
