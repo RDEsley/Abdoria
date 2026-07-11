@@ -1,5 +1,5 @@
 export type PatrolWeaponKind = 'arco' | 'espada' | 'magia';
-export type PatrolWeaponRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'secreto';
+export type PatrolWeaponRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'mitico' | 'secreto';
 
 export type PatrolWeaponUnlock =
   { tipo: 'gratis' } | { tipo: 'moedas'; preco_moedas: number } | { tipo: 'futuro' };
@@ -358,5 +358,6 @@ export const PATROL_WEAPON_RARITY_LABELS: Record<PatrolWeaponRarity, string> = {
   raro: 'Raro',
   epico: 'Épico',
   lendario: 'Lendário',
+  mitico: 'Mítico',
   secreto: 'Secreto',
 };

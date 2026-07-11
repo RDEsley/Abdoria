@@ -281,7 +281,7 @@ export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'f
 export type CosmeticUnlockType =
   'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo' | 'afk_secreto' | 'golden_slime';
 
-export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'secreto';
+export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'mitico' | 'secreto';
 
 export type DailyRewardRarity = 'comum' | 'incomum' | 'raro' | 'epico';
 
@@ -793,6 +793,7 @@ export const COSMETIC_RARITY_LABELS: Record<CosmeticRarity, string> = {
   raro: 'Raro',
   epico: 'Épico',
   lendario: 'Lendário',
+  mitico: 'Mítico',
   secreto: 'Secret',
 };
 
@@ -801,7 +802,8 @@ export const COSMETIC_RARITY_ORDER: Record<CosmeticRarity, number> = {
   raro: 1,
   epico: 2,
   lendario: 3,
-  secreto: 4,
+  mitico: 4,
+  secreto: 5,
 };
 
 export function sortCosmeticCatalogItems<T extends { raridade: CosmeticRarity; nome: string }>(

@@ -477,6 +477,13 @@
 .game-shop-rarity-label--lendario {
   color: #b45309;
 }
+.game-shop-rarity-label--mitico {
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e, #0ea5e9, #8b5cf6, #ef4444);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
 .game-shop-rarity-label--secreto {
   color: #be185d;
 }
@@ -661,6 +668,30 @@
 .game-shop-row--lendario .game-shop-row__rarity {
   color: #b45309;
   background: rgba(245, 158, 11, 0.18);
+}
+.game-shop-row--mitico .game-shop-row__rarity {
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e, #0ea5e9, #8b5cf6, #ef4444);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Borda por raridade — comum mantém a borda neutra padrão */
+.game-shop-row--raro {
+  border-color: #3b82f6;
+}
+.game-shop-row--epico {
+  border-color: #9333ea;
+}
+.game-shop-row--lendario {
+  border-color: #f59e0b;
+}
+.game-shop-row--mitico {
+  border-color: transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #ef4444, #f59e0b, #22c55e, #0ea5e9, #8b5cf6) border-box;
 }
 
 .game-shop-row__desc {

@@ -16,9 +16,9 @@ export function AfkLootTooltip({ item, onClose }: Props) {
       className={`game-afk-loot-tooltip game-afk-loot-tooltip--${rarity}`}
       role="dialog"
       aria-label={`Detalhes: ${item.ariaLabel}`}
-      initial={{ opacity: 0, y: 8, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 8, scale: 0.9 }}
+      initial={{ opacity: 0, x: '-50%', y: 8, scale: 0.9 }}
+      animate={{ opacity: 1, x: '-50%', y: 0, scale: 1 }}
+      exit={{ opacity: 0, x: '-50%', y: 8, scale: 0.9 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
     >
       <button

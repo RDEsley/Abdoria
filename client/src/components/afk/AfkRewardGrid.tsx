@@ -24,7 +24,7 @@ interface Props {
 
 /** Camada de partículas/luzes por raridade ao redor do ícone do loot. */
 function RewardChipFx({ rarity }: { rarity: AfkRewardItem['rarity'] }) {
-  if (rarity === 'lendario') {
+  if (rarity === 'lendario' || rarity === 'mitico') {
     return (
       <span className="game-afk-reward-chip__orbit" aria-hidden>
         <i />
@@ -69,15 +69,23 @@ function RewardIconGrid({
           item.amount != null &&
           item.amount > 0;
         const rarity = item.rarity ?? 'comum';
-        const isRare = rarity === 'lendario' || rarity === 'secret' || rarity === 'golden_secret';
+        const isRare =
+          rarity === 'lendario' ||
+          rarity === 'mitico' ||
+          rarity === 'secret' ||
+          rarity === 'golden_secret';
         const selected = selectedKey === item.key;
 
         const chipClass = [
           'game-afk-reward-chip',
           `game-afk-reward-chip--${item.kind}`,
+          item.cosmeticId?.startsWith('magia_') ? 'game-afk-reward-chip--spell' : '',
           item.secret || rarity === 'secret' ? 'game-afk-reward-chip--secret' : '',
           rarity === 'golden_secret' ? 'game-afk-reward-chip--golden-secret' : '',
           rarity === 'lendario' ? 'game-afk-reward-chip--legendary' : '',
+          rarity === 'raro' ? 'game-afk-reward-chip--raro' : '',
+          rarity === 'epico' ? 'game-afk-reward-chip--epico' : '',
+          rarity === 'mitico' ? 'game-afk-reward-chip--mitico' : '',
           selected ? 'game-afk-reward-chip--selected' : '',
         ]
           .filter(Boolean)

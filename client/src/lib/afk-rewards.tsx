@@ -41,14 +41,27 @@ export type AfkRewardKind =
   | 'secret'
   | 'weapon';
 
-export type AfkRewardRarity = 'comum' | 'epico' | 'lendario' | 'secret' | 'golden_secret';
+export type AfkRewardRarity =
+  'comum' | 'raro' | 'epico' | 'lendario' | 'mitico' | 'secret' | 'golden_secret';
 
 export const AFK_RARITY_LABEL: Record<AfkRewardRarity, string> = {
   comum: 'Comum',
+  raro: 'Raro',
   epico: 'Épico',
   lendario: 'Lendário',
+  mitico: 'Mítico',
   secret: 'Secret',
   golden_secret: 'Secret Dourado',
+};
+
+const AFK_RARITY_ORDER: Record<AfkRewardRarity, number> = {
+  comum: 0,
+  raro: 1,
+  epico: 2,
+  lendario: 3,
+  mitico: 4,
+  secret: 5,
+  golden_secret: 6,
 };
 
 export interface AfkRewardItem {
@@ -72,12 +85,15 @@ function rarityForItem(item: AfkRewardItem): AfkRewardRarity {
   if (item.kind === 'weapon' && item.cosmeticId) {
     const r = PATROL_WEAPON_BY_ID[item.cosmeticId]?.raridade;
     if (r === 'secreto') return 'secret';
+    if (r === 'mitico') return 'mitico';
     if (r === 'lendario') return 'lendario';
     if (r === 'epico') return 'epico';
+    if (r === 'raro') return 'raro';
     return 'comum';
   }
   // Cosméticos só dropam na Exploração quando são épicos/lendários.
   if (item.kind === 'cosmetic') return 'lendario';
+  if (item.kind === 'route_drink' || item.kind === 'frozen_streak') return 'raro';
   return 'comum';
 }
 
@@ -199,7 +215,10 @@ export function buildAfkRewardItems(pending: AfkPendingReward | null | undefined
     });
   }
 
-  return items.map(withMeta);
+  // Raridade crescente: comuns primeiro, tiers maiores por último (mais à direita).
+  return items
+    .map(withMeta)
+    .sort((a, b) => AFK_RARITY_ORDER[a.rarity ?? 'comum'] - AFK_RARITY_ORDER[b.rarity ?? 'comum']);
 }
 
 export function countAfkRewardItems(pending: AfkPendingReward | null | undefined): number {
