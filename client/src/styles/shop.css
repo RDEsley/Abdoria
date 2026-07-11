@@ -439,18 +439,16 @@
 .game-cosmetic-card {
   display: flex;
   flex-direction: column;
-  border: 3px solid var(--game-ink);
-  border-radius: 0;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
   background: #fff;
-  box-shadow: 3px 3px 0 var(--game-ink);
+  box-shadow: var(--shadow-resting);
   overflow: hidden;
 }
 
 .game-cosmetic-card--equipped {
-  border-color: var(--game-green-dark);
-  box-shadow:
-    0 0 0 2px rgba(16, 185, 129, 0.25),
-    2px 2px 0 var(--game-green-dark);
+  border: 1.5px solid #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .game-cosmetic-card--locked {
@@ -779,12 +777,10 @@
   flex-direction: column;
   min-height: 11rem;
   padding: 0.85rem;
-  border: 3px solid var(--game-ink);
-  border-radius: 1rem;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
   background: linear-gradient(180deg, #fff, #fafaf9);
-  box-shadow:
-    3px 3px 0 rgba(28, 25, 23, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-resting);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
@@ -792,9 +788,7 @@
 
 .game-daily-card:hover:not(.game-daily-card--claimed) {
   transform: translateY(-2px);
-  box-shadow:
-    4px 6px 0 rgba(28, 25, 23, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-raised);
 }
 
 .game-daily-card--comum {

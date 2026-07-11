@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { Lock, Search, X } from 'lucide-react';
 import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { EquipmentPanel } from '@/components/library/EquipmentPanel';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import type { MusculoPrincipal, Prioridade } from '@/types';
-import { MUSCULO_LABELS, MUSCULO_HINTS, PRIORIDADE_LABELS, formatExerciseName } from '@/types';
+import { getLockedExercises } from '@/lib/api/exercises';
+import type { IExerciseDocument, MusculoPrincipal, Prioridade } from '@/types';
+import {
+  EQUIPMENT_CATALOG,
+  MUSCULO_LABELS,
+  MUSCULO_HINTS,
+  PRIORIDADE_LABELS,
+  formatExerciseName,
+} from '@/types';
 
 export function LibraryPage() {
   const {
@@ -22,6 +29,7 @@ export function LibraryPage() {
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
   const [search, setSearch] = useState('');
+  const [lockedExercises, setLockedExercises] = useState<IExerciseDocument[]>([]);
 
   const refreshRecommendations = useCallback(() => {
     void loadRecommendations({ force: true });
@@ -33,6 +41,21 @@ export function LibraryPage() {
   useEffect(() => {
     void ensureExercises();
   }, [ensureExercises]);
+
+  // Bloqueados por equipamento aparecem com cadeado (recarrega quando o catálogo muda).
+  useEffect(() => {
+    let cancelled = false;
+    getLockedExercises()
+      .then((items) => {
+        if (!cancelled) setLockedExercises(items);
+      })
+      .catch(() => {
+        if (!cancelled) setLockedExercises([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [exercises]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -155,6 +178,32 @@ export function LibraryPage() {
               />
             ))}
       </div>
+
+      {lockedExercises.length > 0 && (
+        <section aria-label="Exercícios bloqueados por equipamento">
+          <h3 className="game-section-title">Bloqueados por equipamento</h3>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {lockedExercises.map((exercise) => {
+              const equipmentName =
+                EQUIPMENT_CATALOG.find((item) => item.id === exercise.equipamento)?.nome ??
+                'equipamento';
+              return (
+                <div key={exercise.slug} className="library-locked-card">
+                  <span className="library-locked-card__icon" aria-hidden>
+                    <Lock size={16} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="library-locked-card__name">{formatExerciseName(exercise)}</p>
+                    <p className="library-locked-card__hint">
+                      Requer {equipmentName} — marque em Meus Equipamentos pra liberar.
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

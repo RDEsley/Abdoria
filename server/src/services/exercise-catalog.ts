@@ -60,6 +60,17 @@ export async function findExercisesForUser(
   return [...merged.values()].sort(sortExercises);
 }
 
+/** Exercícios travados por equipamento que o usuário NÃO possui (pra exibir bloqueados). */
+export async function findEquipmentLockedExercises(
+  preferencias?: UserPreferencias | null,
+): Promise<ExerciseDocument[]> {
+  const enabled = new Set(getEnabledEquipmentIds(preferencias));
+  const gated = await Exercise.find({ ativo: false }, { sort: { prioridade: 1, nome: 1 } });
+  return gated
+    .filter((ex) => ex.equipamento && !enabled.has(ex.equipamento as EquipmentId))
+    .sort(sortExercises);
+}
+
 export function filterRowsByAvailableSlugs<T extends { slug: string }>(
   rows: T[],
   available: ExerciseDocument[],

@@ -1,3 +1,40 @@
+/* Exercícios bloqueados por equipamento */
+.library-locked-card {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.7rem 0.8rem;
+  background: #fafaf9;
+  border: 1px dashed rgba(28, 25, 23, 0.18);
+  border-radius: var(--radius-card);
+  opacity: 0.85;
+}
+
+.library-locked-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #e7e5e4;
+  color: #57534e;
+}
+
+.library-locked-card__name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #44403c;
+}
+
+.library-locked-card__hint {
+  margin-top: 0.1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
 /* Calendário estilo grade */
 .workout-calendar__header {
   display: flex;
@@ -267,12 +304,10 @@
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.85rem 0.9rem;
-  border: 3px solid var(--game-ink);
-  border-radius: 0.9rem;
-  background: linear-gradient(180deg, #ecfdf5 0%, var(--game-paper) 100%);
-  box-shadow:
-    3px 3px 0 var(--game-ink),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  background: var(--game-paper);
+  box-shadow: var(--shadow-resting);
 }
 
 .library-equipment__header {
@@ -320,29 +355,22 @@
 }
 
 .library-equipment__item {
-  border: 2px solid var(--game-ink);
-  border-radius: 0.6rem;
+  border: 1.5px solid rgba(28, 25, 23, 0.16);
+  border-radius: 0.75rem;
   background: #fff;
-  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.16);
+  box-shadow: var(--shadow-resting);
   transition:
     border-color 0.15s,
-    box-shadow 0.15s,
-    transform 0.1s;
+    box-shadow 0.15s;
 }
 
 .library-equipment__item:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18);
+  box-shadow: var(--shadow-raised);
 }
 
 .library-equipment__item--owned {
-  border-color: var(--game-green-dark);
+  border-color: rgba(5, 150, 105, 0.45);
   background: #f0fdf4;
-  box-shadow: 2px 2px 0 var(--game-green-dark);
-}
-
-.library-equipment__item--owned:hover {
-  box-shadow: 3px 3px 0 var(--game-green-dark);
 }
 
 .library-equipment__label {
@@ -428,10 +456,9 @@
   gap: 0.3rem;
   margin: 0 0.65rem 0.55rem 2.35rem;
   padding: 0.3rem 0.6rem;
-  border: 2px solid var(--game-ink);
-  border-radius: 0.5rem;
+  border: 1.5px solid rgba(29, 78, 216, 0.35);
+  border-radius: 999px;
   background: #eff6ff;
-  box-shadow: 2px 2px 0 #1d4ed8;
   font-size: 0.62rem;
   font-weight: 800;
   color: #1d4ed8;
