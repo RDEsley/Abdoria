@@ -1,4 +1,4 @@
-import { Medal, Trophy, Zap } from 'lucide-react';
+import { Flame, Medal, Trophy, Zap } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import type { IUserDocument } from '@/types';
 
@@ -19,7 +19,14 @@ export interface RecordShareData {
   dateLabel: string;
 }
 
-export type ShareCardData = WorkoutShareData | RecordShareData;
+export interface StreakShareData {
+  kind: 'streak';
+  streakAtual: number;
+  streakMaior?: number;
+  dateLabel: string;
+}
+
+export type ShareCardData = WorkoutShareData | RecordShareData | StreakShareData;
 
 interface Props {
   data: ShareCardData;
@@ -40,7 +47,32 @@ export function ShareCard({ data, user }: Props) {
         <CosmeticAvatar user={user} size="lg" />
       </div>
 
-      {data.kind === 'workout' ? (
+      {data.kind === 'streak' ? (
+        <>
+          <div className="share-card__badge-icon share-card__badge-icon--flame" aria-hidden>
+            <Flame size={26} />
+          </div>
+          <div>
+            <h2 className="share-card__title">Ofensiva em chamas</h2>
+            <p className="share-card__name">Treinos sem falhar</p>
+          </div>
+          <div className="share-card__value-row">
+            <span className="share-card__value">{data.streakAtual} dias</span>
+          </div>
+          <div className="share-card__stats">
+            <div className="share-card__stat">
+              <span className="share-card__stat-value">{firstName}</span>
+              <span className="share-card__stat-label">Atleta</span>
+            </div>
+            {typeof data.streakMaior === 'number' && data.streakMaior > data.streakAtual && (
+              <div className="share-card__stat">
+                <span className="share-card__stat-value">{data.streakMaior}d</span>
+                <span className="share-card__stat-label">Recorde</span>
+              </div>
+            )}
+          </div>
+        </>
+      ) : data.kind === 'workout' ? (
         <>
           <div className="share-card__badge-icon" aria-hidden>
             <Zap size={26} />

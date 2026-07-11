@@ -58,6 +58,12 @@
   box-shadow: 0 0 24px rgba(251, 191, 36, 0.55);
 }
 
+.share-card__badge-icon--flame {
+  background: radial-gradient(circle, #fed7aa 0%, #f97316 60%, #c2410c 100%);
+  color: #7c2d12;
+  box-shadow: 0 0 24px rgba(249, 115, 22, 0.55);
+}
+
 .share-card__title {
   position: relative;
   z-index: 1;

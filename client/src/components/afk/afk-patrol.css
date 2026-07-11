@@ -8164,6 +8164,19 @@ button.game-afk-reward-chip {
    FAB BUTTON — redesign
    ============================================================ */
 
+/* Some ao rolar; reaparece só no topo (estilo Strava) */
+.game-afk-fab {
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.game-afk-fab--hidden {
+  transform: translateY(1.5rem) scale(0.85);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .game-afk-fab {
   min-width: 3.8rem;
   min-height: 3.8rem;

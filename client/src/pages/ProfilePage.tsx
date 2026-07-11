@@ -7,6 +7,7 @@ import { ProfileIdentityPanel } from '@/components/profile/ProfileIdentityPanel'
 import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
+import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -115,8 +116,25 @@ export function ProfilePage() {
             <p className="game-profile-hero__level">Nível {xpLevel}</p>
             <p className="game-profile-hero__level break-all">{profile.email}</p>
             {stats && (
-              <div className="mt-2">
+              <div className="mt-2 flex items-center gap-2">
                 <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
+                {stats.streak_atual > 0 && (
+                  <ShareCardTrigger
+                    variant="ghost"
+                    label=""
+                    className="!w-auto !px-2 !py-1"
+                    data={{
+                      kind: 'streak',
+                      streakAtual: stats.streak_atual,
+                      streakMaior: profile.gamificacao.streak_maior,
+                      dateLabel: new Date().toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      }),
+                    }}
+                  />
+                )}
               </div>
             )}
           </div>

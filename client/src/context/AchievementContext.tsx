@@ -23,7 +23,8 @@ import {
 import { playAchievementUnlock } from '@/lib/sounds';
 import type { PersonalRecordNotice, UnlockedAchievementNotice } from '@/types';
 
-const MAX_VISIBLE = 3;
+/** Uma conquista por vez, em fila (estilo notificação da Steam). */
+const MAX_VISIBLE = 1;
 
 interface AchievementContextValue {
   triggerAchievement: (payload: TriggerAchievementPayload) => void;
