@@ -32,7 +32,7 @@ Scripts de validação em `scripts/dev/` (ver README para lista completa).
 ## Git — identidade obrigatória (inegociável)
 ```
 user.name  = RDEsley
-user.email = richardesley@gmail.com
+user.email = richardesleyso@gmail.com
 ```
 Claude/Anthropic **nunca** aparece como autor, co-author, contribuidor ou
 trailer de commit/tag. Sem `Co-authored-by: Claude` nem variações.
