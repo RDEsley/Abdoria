@@ -322,6 +322,16 @@ export interface CosmeticDefinition {
   unlock: CosmeticUnlockRule;
 }
 
+/** Molduras de avatar conquistadas por pódio semanal ou itens secretos. */
+export type MolduraId = 'bronze' | 'prata' | 'ouro' | 'especial';
+
+export const MOLDURA_LABELS: Record<MolduraId, string> = {
+  bronze: 'Bronze',
+  prata: 'Prata',
+  ouro: 'Ouro',
+  especial: 'Especial',
+};
+
 export interface Cosmeticos {
   /** Saldo de Dorias. */
   moedas: number;
@@ -333,6 +343,8 @@ export interface Cosmeticos {
   som_equipado: string;
   efeito_equipado: string;
   fundo_equipado: string;
+  /** Moldura do avatar de identidade (null = sem moldura). */
+  moldura_equipada?: MolduraId | null;
   desbloqueados: string[];
   codigos_resgatados: string[];
 }
@@ -1234,8 +1246,13 @@ export interface LeaderboardEntry {
   moedas: number;
   /** Acumulado da semana corrente (rankings semanais de XP/Dorias); null no de streak. */
   week_value?: number | null;
+  /** Foto de perfil; null = círculo com a inicial do nome. */
+  avatar_url?: string | null;
   avatar_equipado: string;
   borda_equipada: string;
+  moldura_equipada?: MolduraId | null;
+  /** Contador sobreposto à moldura (pódios naquela posição). */
+  moldura_count?: number | null;
   is_me?: boolean;
 }
 

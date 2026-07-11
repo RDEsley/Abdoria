@@ -2,9 +2,10 @@ import express, { Router } from 'express';
 import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { NAME_CHANGE_COST, calcImc, suggestNivel } from '../types/index.js';
+import { NAME_CHANGE_COST, calcImc, suggestNivel, type MolduraId } from '../types/index.js';
 import { ensureAbdoriaWallet, readAbdoriaBalance } from '../services/economy.js';
 import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
+import { molduraStatusForUser } from '../services/molduras.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
 import {
@@ -100,6 +101,54 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/users/me error:', error);
     res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+  }
+});
+
+/** Status das molduras de avatar (pódios, itens secretos, desbloqueadas, equipada). */
+usersRouter.get('/me/molduras', async (req: AuthRequest, res) => {
+  try {
+    const user = await loadCurrentUser(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    res.json(await molduraStatusForUser(user));
+  } catch (error) {
+    console.error('GET /api/users/me/molduras error:', error);
+    res.status(500).json({ error: 'Erro ao buscar molduras.' });
+  }
+});
+
+/** Equipa (ou remove, com null) uma moldura desbloqueada. */
+usersRouter.post('/me/moldura', async (req: AuthRequest, res) => {
+  try {
+    const moldura = req.body?.moldura as MolduraId | null | undefined;
+    if (moldura != null && !['bronze', 'prata', 'ouro', 'especial'].includes(moldura)) {
+      res.status(400).json({ error: 'Moldura inválida.' });
+      return;
+    }
+
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    if (moldura != null) {
+      const status = await molduraStatusForUser(user);
+      if (!status.desbloqueadas.includes(moldura)) {
+        res.status(400).json({ error: 'Você ainda não desbloqueou essa moldura.' });
+        return;
+      }
+    }
+
+    user.cosmeticos.moldura_equipada = moldura ?? null;
+    await user.save();
+
+    res.json({ user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('POST /api/users/me/moldura error:', error);
+    res.status(500).json({ error: 'Erro ao equipar moldura.' });
   }
 });
 

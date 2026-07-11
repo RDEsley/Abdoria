@@ -8,7 +8,11 @@ import { readAbdoriaBalance } from '../services/economy.js';
 import { syncAbdoriaBalancesForLeaderboard } from '../services/abdoria-leaderboard.js';
 import { processWeeklyLeaderboardRewardsIfDue } from '../services/weekly-leaderboard-rewards.js';
 import { weeklyMetricValue } from '../services/weekly-stats.js';
-import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
+import {
+  LeaderboardPodiumHistory,
+  type PodiumCounts,
+} from '../repositories/leaderboard-podium-repository.js';
+import type { MolduraId } from '../types/index.js';
 
 export const leaderboardRouter = Router();
 
@@ -34,21 +38,35 @@ function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
   return { 'gamificacao.nivel_xp': -1 };
 }
 
+type EntryUser = {
+  id: string;
+  nome: string;
+  avatar_url?: string | null;
+  gamificacao: { nivel_xp: number; streak_atual: number };
+  cosmeticos?: {
+    moedas?: number | null;
+    avatar_equipado?: string | null;
+    borda_equipada?: string | null;
+    moldura_equipada?: MolduraId | null;
+  } | null;
+};
+
+function molduraCountFor(counts: PodiumCounts | undefined, moldura: MolduraId): number {
+  if (!counts) return 0;
+  if (moldura === 'ouro') return counts.first;
+  if (moldura === 'prata') return counts.second;
+  if (moldura === 'bronze') return counts.third;
+  return 0;
+}
+
 function toEntry(
-  user: {
-    id: string;
-    nome: string;
-    gamificacao: { nivel_xp: number; streak_atual: number };
-    cosmeticos?: {
-      moedas?: number | null;
-      avatar_equipado?: string | null;
-      borda_equipada?: string | null;
-    } | null;
-  },
+  user: EntryUser,
   rank: number,
   isMe: boolean,
   weekValue: number | null = null,
+  podium?: PodiumCounts,
 ) {
+  const moldura = user.cosmeticos?.moldura_equipada ?? null;
   return {
     rank,
     user_id: user.id,
@@ -58,8 +76,13 @@ function toEntry(
     streak_atual: user.gamificacao.streak_atual,
     moedas: readAbdoriaBalance(user),
     week_value: weekValue,
+    avatar_url: user.avatar_url ?? null,
     avatar_equipado: user.cosmeticos?.avatar_equipado ?? 'avatar_inicial',
     borda_equipada: user.cosmeticos?.borda_equipada ?? 'borda_basica',
+    moldura_equipada: moldura,
+    // A moldura especial mostra a contagem de itens secretos — não vem do pódio;
+    // no ranking exibimos só o contador de pódio (especial fica sem número).
+    moldura_count: moldura && moldura !== 'especial' ? molduraCountFor(podium, moldura) : null,
     is_me: isMe,
   };
 }
@@ -87,7 +110,14 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
         sort: metricSort(metric),
         limit,
       });
-      res.json(users.map((user, index) => toEntry(user, index + 1, user.id === req.userId)));
+      const podiums = await LeaderboardPodiumHistory.countsForUsers(
+        users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
+      );
+      res.json(
+        users.map((user, index) =>
+          toEntry(user, index + 1, user.id === req.userId, null, podiums.get(user.id)),
+        ),
+      );
       return;
     }
 
@@ -98,9 +128,13 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
       .slice(0, limit);
 
+    const podiums = await LeaderboardPodiumHistory.countsForUsers(
+      ranked.filter(({ user }) => user.cosmeticos?.moldura_equipada).map(({ user }) => user.id),
+    );
+
     res.json(
       ranked.map(({ user, value }, index) =>
-        toEntry(user, index + 1, user.id === req.userId, value),
+        toEntry(user, index + 1, user.id === req.userId, value, podiums.get(user.id)),
       ),
     );
   } catch (error) {
@@ -134,9 +168,13 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
+    const myPodium = user.cosmeticos?.moldura_equipada
+      ? (await LeaderboardPodiumHistory.countsForUsers([user.id])).get(user.id)
+      : undefined;
+
     if (metric === 'streak') {
       const rank = await User.countLeaderboardRank(user, metric);
-      res.json(toEntry(user, rank, true));
+      res.json(toEntry(user, rank, true, null, myPodium));
       return;
     }
 
@@ -152,7 +190,7 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
         );
       }).length + 1;
 
-    res.json(toEntry(user, rank, true, myValue));
+    res.json(toEntry(user, rank, true, myValue, myPodium));
   } catch (error) {
     console.error('GET /api/leaderboard/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar posição.' });
