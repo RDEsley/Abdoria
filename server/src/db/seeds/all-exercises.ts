@@ -2,6 +2,7 @@ import type { ParteCorpo, RestricaoFisica } from '../../types/index.js';
 import { withCustomParams, withLevelParams } from '../../utils/exercise-params.js';
 import { prioritySExercises } from './priority-s-exercises.js';
 import { equipmentExercises } from './equipment-exercises.js';
+import { bodyweightExercises } from './bodyweight-exercises.js';
 import { EXERCISE_CONTRAINDICACOES, EXERCISE_GRUPOS } from './exercise-groups.js';
 
 const priorityBase = prioritySExercises.map((e) =>
@@ -372,5 +373,6 @@ function withGroupTags<
 export const allExercises = [
   ...priorityBase,
   ...additionalExercises,
+  ...bodyweightExercises,
   ...equipmentExercises,
 ].map(withGroupTags);

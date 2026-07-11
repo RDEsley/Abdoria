@@ -46,6 +46,19 @@ export const EXERCISE_NOME_PT: Record<string, string> = {
   'push-up': 'Flexão',
   'incline-push-up': 'Flexão inclinada',
   'decline-push-up': 'Flexão declinada',
+  'bodyweight-squat': 'Agachamento livre',
+  'sumo-squat': 'Agachamento sumô',
+  lunge: 'Afundo',
+  'reverse-lunge': 'Afundo reverso',
+  'glute-bridge': 'Ponte de glúteos',
+  'single-leg-glute-bridge': 'Ponte de glúteos unilateral',
+  'calf-raise': 'Elevação de panturrilha',
+  'wall-sit': 'Cadeirinha na parede',
+  'squat-jump': 'Agachamento com salto',
+  'chair-dips': 'Mergulho na cadeira',
+  'pike-push-up': 'Flexão pike',
+  superman: 'Superman',
+  'bird-dog': 'Perdigueiro',
 };
 
 export function resolveExerciseNomePt(exercise: {
