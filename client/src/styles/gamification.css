@@ -393,14 +393,14 @@
 .game-item-card {
   padding: 0.65rem;
   background: var(--game-paper);
-  border: 3px solid var(--game-ink);
-  box-shadow: 3px 3px 0 var(--game-ink);
-  transition: transform 0.08s;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-resting);
+  transition: box-shadow 0.15s ease;
 }
 
 .game-item-card:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--game-ink);
+  box-shadow: var(--shadow-raised);
 }
 
 .game-item-card__thumb {
@@ -412,18 +412,22 @@
   justify-content: center;
   overflow: hidden;
   background: #e7e5e4;
-  border: 2px solid var(--game-ink);
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.75rem;
 }
 
 .game-item-card__rarity {
   display: inline-block;
   margin-top: 0.25rem;
-  padding: 0.1rem 0.35rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.32rem;
+  padding: 0.12rem 0.5rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   color: var(--game-green-dark);
   background: #d1fae5;
-  border: 1px solid var(--game-ink);
+  border-radius: var(--radius-chip);
 }
 
 .game-item-card--locked {
