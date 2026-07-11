@@ -619,6 +619,9 @@ export const SHOP_ABDORIA_COST_PER_XP = 5;
 export const ABDORIA_XP_STEP = 10;
 export const CURRENCY_NAME = 'Dorias';
 
+/** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
+export const NAME_CHANGE_COST = 10_000;
+
 export const FROZEN_STREAK_ITEM_ID: InventoryItemId = 'frozen_streak';
 export const FROZEN_STREAK_LABEL = 'Frozen Streak';
 export const FROZEN_STREAK_SHOP_PRICE = 25;
@@ -901,6 +904,10 @@ export interface IUser {
   terms_accepted_at?: string | null;
   muscle_map_reset_at?: string | null;
   is_guest?: boolean;
+  /** Foto de perfil; null/ausente = círculo com a inicial do nome. */
+  avatar_url?: string | null;
+  /** Trocas de nome já feitas (1ª grátis, seguintes pagas). */
+  nome_trocas?: number;
 }
 
 export interface IUserDocument extends IUser {

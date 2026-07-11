@@ -38,6 +38,10 @@ export interface UserRecord {
   muscle_map_reset_at?: Date | string | null;
   is_guest: boolean;
   is_demo_npc: boolean;
+  /** Foto de perfil (Supabase Storage). null = usa a inicial do nome. */
+  avatar_url?: string | null;
+  /** Quantas trocas de nome o usuário já fez (1ª grátis, depois pagas). */
+  nome_trocas?: number;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }

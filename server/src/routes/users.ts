@@ -1,8 +1,10 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { calcImc, suggestNivel } from '../types/index.js';
+import { NAME_CHANGE_COST, calcImc, suggestNivel } from '../types/index.js';
+import { ensureAbdoriaWallet, readAbdoriaBalance } from '../services/economy.js';
+import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
 import {
@@ -43,8 +45,8 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
       return;
     }
 
+    // 'nome' saiu daqui: troca de nome tem rota própria (1ª grátis, depois paga).
     const allowed = [
-      'nome',
       'idade',
       'peso_kg',
       'altura_cm',
@@ -98,6 +100,96 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/users/me error:', error);
     res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+  }
+});
+
+/** Troca de nome: a primeira é grátis, as seguintes custam NAME_CHANGE_COST Dorias. */
+usersRouter.post('/me/name', async (req: AuthRequest, res) => {
+  try {
+    const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : '';
+    if (nome.length < 2 || nome.length > 40) {
+      res.status(400).json({ error: 'Nome deve ter entre 2 e 40 caracteres.' });
+      return;
+    }
+
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    if (nome === user.nome) {
+      res.json({ user: sanitizeUser(user), custo_pago: 0 });
+      return;
+    }
+
+    const trocas = user.nome_trocas ?? 0;
+    let custoPago = 0;
+    if (trocas >= 1) {
+      ensureAbdoriaWallet(user);
+      const saldo = readAbdoriaBalance(user);
+      if (saldo < NAME_CHANGE_COST) {
+        res.status(400).json({
+          error: `Trocar de nome novamente custa ${NAME_CHANGE_COST.toLocaleString('pt-BR')} Dorias — saldo insuficiente.`,
+        });
+        return;
+      }
+      user.cosmeticos.moedas = saldo - NAME_CHANGE_COST;
+      custoPago = NAME_CHANGE_COST;
+    }
+
+    user.nome = nome;
+    user.nome_trocas = trocas + 1;
+    await user.save();
+
+    res.json({ user: sanitizeUser(user), custo_pago: custoPago });
+  } catch (error) {
+    console.error('POST /api/users/me/name error:', error);
+    res.status(500).json({ error: 'Erro ao trocar o nome.' });
+  }
+});
+
+/** Upload da foto de perfil (data URL JPEG/PNG/WebP, já comprimida no client). */
+usersRouter.post('/me/avatar', express.json({ limit: '3mb' }), async (req: AuthRequest, res) => {
+  try {
+    const parsed = parseAvatarDataUrl(req.body?.data_url);
+    if ('error' in parsed) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    user.avatar_url = await uploadAvatar(user.id, parsed);
+    await user.save();
+
+    res.json({ user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('POST /api/users/me/avatar error:', error);
+    res.status(500).json({ error: 'Erro ao enviar a foto de perfil.' });
+  }
+});
+
+usersRouter.delete('/me/avatar', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    await removeAvatar(user.id);
+    user.avatar_url = null;
+    await user.save();
+
+    res.json({ user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('DELETE /api/users/me/avatar error:', error);
+    res.status(500).json({ error: 'Erro ao remover a foto de perfil.' });
   }
 });
 

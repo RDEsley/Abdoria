@@ -50,6 +50,8 @@ type ProfileRow = {
   muscle_map_reset_at?: string | null;
   is_guest: boolean;
   is_demo_npc: boolean;
+  avatar_url?: string | null;
+  nome_trocas?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -170,6 +172,10 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     muscle_map_reset_at: profile.muscle_map_reset_at ?? null,
     is_guest: profile.is_guest,
     is_demo_npc: profile.is_demo_npc,
+    // Presentes só depois da migration profile_identity — undefined mantém o
+    // save omitindo as colunas (não quebra antes de ela ser aplicada).
+    avatar_url: 'avatar_url' in profile ? (profile.avatar_url ?? null) : undefined,
+    nome_trocas: 'nome_trocas' in profile ? (profile.nome_trocas ?? 0) : undefined,
     createdAt: profile.created_at,
     updatedAt: profile.updated_at,
   };
@@ -205,6 +211,8 @@ function userToProfileRow(user: UserRecord): Record<string, unknown> {
     muscle_map_reset_at: user.muscle_map_reset_at ?? null,
     is_guest: user.is_guest,
     is_demo_npc: user.is_demo_npc,
+    ...(user.avatar_url !== undefined ? { avatar_url: user.avatar_url } : {}),
+    ...(user.nome_trocas !== undefined ? { nome_trocas: user.nome_trocas } : {}),
   };
 }
 
@@ -276,6 +284,8 @@ export class UserMutable implements UserRecord {
   muscle_map_reset_at?: Date | string | null;
   is_guest!: boolean;
   is_demo_npc!: boolean;
+  avatar_url?: string | null;
+  nome_trocas?: number;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 
