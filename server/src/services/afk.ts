@@ -12,6 +12,7 @@ import {
 import { rollFrozenStreakForExplorationMinutes } from '../../../shared/afk/frozen-streak-drop.js';
 import { afkKillsForHours, buildAfkMetaFields } from '../../../shared/utils/afk.js';
 import { grantAbdoria } from './economy.js';
+import { addWeeklyXp } from './weekly-stats.js';
 import { addInventoryItem } from './inventory.js';
 import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-repository.js';
 import {
@@ -54,6 +55,7 @@ function applyAfkRewardBundle(
 
   if (claimed.xp > 0) {
     user.gamificacao.nivel_xp += claimed.xp;
+    addWeeklyXp(user, claimed.xp);
   }
   if (claimed.abdoria > 0) {
     grantAbdoria(user, claimed.abdoria);

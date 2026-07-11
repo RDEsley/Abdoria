@@ -7,6 +7,8 @@ import { LEADERBOARD_DISPLAY_LIMIT, xpLevelFromTotal } from '../types/index.js';
 import { readAbdoriaBalance } from '../services/economy.js';
 import { syncAbdoriaBalancesForLeaderboard } from '../services/abdoria-leaderboard.js';
 import { processWeeklyLeaderboardRewardsIfDue } from '../services/weekly-leaderboard-rewards.js';
+import { weeklyMetricValue } from '../services/weekly-stats.js';
+import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
 
 export const leaderboardRouter = Router();
 
@@ -45,6 +47,7 @@ function toEntry(
   },
   rank: number,
   isMe: boolean,
+  weekValue: number | null = null,
 ) {
   return {
     rank,
@@ -54,6 +57,7 @@ function toEntry(
     level: levelFromXp(user.gamificacao.nivel_xp),
     streak_atual: user.gamificacao.streak_atual,
     moedas: readAbdoriaBalance(user),
+    week_value: weekValue,
     avatar_equipado: user.cosmeticos?.avatar_equipado ?? 'avatar_inicial',
     borda_equipada: user.cosmeticos?.borda_equipada ?? 'borda_basica',
     is_me: isMe,
@@ -78,17 +82,41 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     }
     await processWeeklyLeaderboardRewardsIfDue();
 
-    const users = await User.find(leaderboardFilter, {
-      sort: metricSort(metric),
-      limit,
-    });
+    if (metric === 'streak') {
+      const users = await User.find(leaderboardFilter, {
+        sort: metricSort(metric),
+        limit,
+      });
+      res.json(users.map((user, index) => toEntry(user, index + 1, user.id === req.userId)));
+      return;
+    }
 
-    const entries = users.map((user, index) => toEntry(user, index + 1, user.id === req.userId));
+    // XP e Dorias são semanais: ordena pelo acumulado da semana corrente.
+    const all = await User.find(leaderboardFilter);
+    const ranked = all
+      .map((user) => ({ user, value: weeklyMetricValue(user, metric) }))
+      .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
+      .slice(0, limit);
 
-    res.json(entries);
+    res.json(
+      ranked.map(({ user, value }, index) =>
+        toEntry(user, index + 1, user.id === req.userId, value),
+      ),
+    );
   } catch (error) {
     console.error('GET /api/leaderboard error:', error);
     res.status(500).json({ error: 'Erro ao buscar ranking.' });
+  }
+});
+
+/** Quantas vezes o usuário fechou a semana em 1º/2º/3º (base das molduras de perfil). */
+leaderboardRouter.get('/podium/me', async (req: AuthRequest, res) => {
+  try {
+    const counts = await LeaderboardPodiumHistory.countsForUser(req.userId!);
+    res.json(counts);
+  } catch (error) {
+    console.error('GET /api/leaderboard/podium/me error:', error);
+    res.status(500).json({ error: 'Erro ao buscar histórico de pódio.' });
   }
 });
 
@@ -106,8 +134,25 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
-    const rank = await User.countLeaderboardRank(user, metric);
-    res.json(toEntry(user, rank, true));
+    if (metric === 'streak') {
+      const rank = await User.countLeaderboardRank(user, metric);
+      res.json(toEntry(user, rank, true));
+      return;
+    }
+
+    const all = await User.find(leaderboardFilter);
+    const myValue = weeklyMetricValue(user, metric);
+    const rank =
+      all.filter((other) => {
+        if (other.id === user.id) return false;
+        const otherValue = weeklyMetricValue(other, metric);
+        return (
+          otherValue > myValue ||
+          (otherValue === myValue && other.nome.localeCompare(user.nome, 'pt-BR') < 0)
+        );
+      }).length + 1;
+
+    res.json(toEntry(user, rank, true, myValue));
   } catch (error) {
     console.error('GET /api/leaderboard/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar posição.' });

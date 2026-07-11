@@ -26,6 +26,7 @@ export type {
   ExerciseLevelParams,
   ExerciseMedia,
   Gamificacao,
+  WeekStats,
   IExercise,
   IExerciseDocument,
   IUser,

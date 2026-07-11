@@ -23,17 +23,18 @@ const PODIUM_SLOTS = [
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'xp', label: 'Pontos (XP)' },
-  { id: 'streak', label: 'Dias seguidos' },
   { id: 'moedas', label: CURRENCY_NAME },
+  { id: 'streak', label: 'Dias seguidos' },
 ];
 
 function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
   if (metric === 'xp') return `Nv.${entry.level}`;
   if (metric === 'streak') return `${entry.streak_atual}d`;
-  return `${entry.moedas} ${CURRENCY_NAME}`;
+  return `${entry.week_value ?? entry.moedas} ${CURRENCY_NAME}`;
 }
 
-function WeeklyRewardBadge({ rank }: { rank: number }) {
+function WeeklyRewardBadge({ rank, metric }: { rank: number; metric: LeaderboardMetric }) {
+  if (metric === 'streak') return null;
   const reward = weeklyLeaderboardReward(rank);
   if (!reward) return null;
 
@@ -49,10 +50,10 @@ function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: Leaderb
     <span className="game-rank-row__value">
       {metric === 'moedas' && <Coins size={14} aria-hidden />}
       {metric === 'xp'
-        ? `${entry.nivel_xp} XP`
+        ? `${entry.week_value ?? entry.nivel_xp} XP`
         : metric === 'streak'
           ? `${entry.streak_atual}d`
-          : `${entry.moedas} ${CURRENCY_NAME}`}
+          : `${entry.week_value ?? entry.moedas} ${CURRENCY_NAME}`}
     </span>
   );
 }
@@ -72,7 +73,7 @@ function RankRow({
       <LeaderboardUserAvatar entry={entry} size="sm" />
       <div className="game-rank-row__main">
         <span className="game-rank-row__name">{label ?? entry.nome}</span>
-        <WeeklyRewardBadge rank={entry.rank} />
+        <WeeklyRewardBadge rank={entry.rank} metric={metric} />
       </div>
       <RankValue entry={entry} metric={metric} />
     </li>
@@ -111,7 +112,7 @@ export function LeaderboardPage() {
     <div className="flex flex-col gap-5">
       <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
 
-      <LeaderboardResetCountdown />
+      {metric !== 'streak' && <LeaderboardResetCountdown />}
 
       <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
         {METRICS.map(({ id, label }) => (
@@ -163,7 +164,7 @@ export function LeaderboardPage() {
                       className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}
                     >
                       <span className="game-podium__rank">#{entry.rank}</span>
-                      {weeklyLeaderboardReward(entry.rank) && (
+                      {metric !== 'streak' && weeklyLeaderboardReward(entry.rank) && (
                         <span className="game-podium__reward">
                           <Coins size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
                         </span>

@@ -2,6 +2,7 @@ import { Exercise } from '../domain/Exercise.js';
 import { User } from '../domain/User.js';
 import { ABDORIA_XP_STEP } from '../types/index.js';
 import { ensureAbdoriaWallet } from './economy.js';
+import { addWeeklyMoedas } from './weekly-stats.js';
 
 const RETIRED_SLUGS = new Set(['pallof-press']);
 
@@ -38,6 +39,7 @@ export async function syncAllUsersProgressData(): Promise<{
     const gained = Math.max(0, blocks - previous);
     if (gained > 0) {
       user.cosmeticos.moedas += gained;
+      addWeeklyMoedas(user, gained);
       coinsAdjusted += gained;
       dirty = true;
     }

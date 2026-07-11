@@ -258,10 +258,22 @@ export interface XpDiario {
   data_reset: string;
 }
 
+/** Acumuladores da semana corrente pro ranking semanal (reset lazy na virada). */
+export interface WeekStats {
+  /** Chave da semana (domingo âncora, YYYY-MM-DD em SP). */
+  week_key: string;
+  xp: number;
+  moedas: number;
+}
+
 export interface Gamificacao {
   nivel_xp: number;
   streak_atual: number;
   streak_maior: number;
+  /** Semana corrente do ranking semanal. */
+  week_stats?: WeekStats;
+  /** Semana anterior, preservada até o payout de domingo processar. */
+  week_stats_prev?: WeekStats;
   /** Datas (YYYY-MM-DD, SP) em que um Frozen Streak manteve a ofensiva. */
   streak_congelamentos?: string[];
   /** Aviso único para exibir toast de proteção de streak no próximo acesso. */
@@ -1213,6 +1225,8 @@ export interface LeaderboardEntry {
   level: number;
   streak_atual: number;
   moedas: number;
+  /** Acumulado da semana corrente (rankings semanais de XP/Dorias); null no de streak. */
+  week_value?: number | null;
   avatar_equipado: string;
   borda_equipada: string;
   is_me?: boolean;
@@ -1330,13 +1344,13 @@ export function formatExercisePrescription(item: {
   return `${secs}s × ${item.series} séries`;
 }
 
-/** Prêmios semanais de XP (pago todo domingo). */
+/** Prêmios do fechamento semanal dos rankings de XP e Dorias (pago em Dorias). */
 export function weeklyLeaderboardReward(rank: number): number | null {
-  if (rank === 1) return 15;
-  if (rank === 2) return 10;
-  if (rank === 3) return 5;
-  if (rank <= 25) return 3;
-  return null;
+  if (rank < 1) return null;
+  if (rank === 1) return 1000;
+  if (rank === 2) return 700;
+  if (rank === 3) return 300;
+  return 100;
 }
 
 export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]> = {

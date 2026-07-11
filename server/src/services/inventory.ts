@@ -17,6 +17,7 @@ import {
 } from '../types/index.js';
 import { grantPatrolCacheRewards, grantRouteDrinkRewards } from './afk.js';
 import { grantAbdoria } from './economy.js';
+import { addWeeklyXp } from './weekly-stats.js';
 import { hashKillSeed } from './afk-rolls.js';
 
 const LEGACY_ENERGY_DRINK_ID = 'energy_drink';
@@ -203,6 +204,7 @@ export function useExpInstant(
 
   const xpGanho = EXP_INSTANT_XP * useQty;
   user.gamificacao.nivel_xp += xpGanho;
+  addWeeklyXp(user, xpGanho);
   return { ok: true, xp_ganho: xpGanho, quantity_used: useQty };
 }
 

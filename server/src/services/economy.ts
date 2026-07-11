@@ -19,6 +19,7 @@ import {
 } from '../types/index.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
 import { countBestiaryUnlocks } from './bestiario.js';
+import { addWeeklyMoedas, addWeeklyXp } from './weekly-stats.js';
 
 /** Garante carteira Abdoria numérica no documento do usuário. */
 export function ensureAbdoriaWallet(user: UserRecord): void {
@@ -86,6 +87,7 @@ export function awardDailyXp(user: UserRecord, amount: number): number {
 
   user.xp_diario.ganho_hoje += awarded;
   user.gamificacao.nivel_xp += awarded;
+  addWeeklyXp(user, awarded);
   return awarded;
 }
 
@@ -139,6 +141,7 @@ export function awardAbdoriaFromXp(user: UserRecord): number {
   if (gained > 0) {
     user.cosmeticos.moedas += gained;
     user.cosmeticos.moedas_xp_blocos = blocks;
+    addWeeklyMoedas(user, gained);
   }
   return gained;
 }
@@ -147,6 +150,7 @@ export function grantAbdoria(user: UserRecord, amount: number): void {
   if (amount <= 0) return;
   ensureAbdoriaWallet(user);
   user.cosmeticos.moedas += amount;
+  addWeeklyMoedas(user, amount);
 }
 
 export function spendXpForShop(

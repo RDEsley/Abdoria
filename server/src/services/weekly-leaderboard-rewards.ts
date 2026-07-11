@@ -1,52 +1,42 @@
 import type { LeaderboardMetric } from '../types/index.js';
 import { LeaderboardWeekPayout } from '../repositories/leaderboard-payout-repository.js';
+import {
+  LeaderboardPodiumHistory,
+  type PodiumHistoryEntry,
+} from '../repositories/leaderboard-podium-repository.js';
 import { User, type UserMutable } from '../repositories/user-repository.js';
-import { getSaoPauloWeekday, getTodaySaoPaulo } from '../utils/timezone.js';
-import { grantAbdoria } from './economy.js';
+import { ensureAbdoriaWallet } from './economy.js';
+import { getSundayWeekKey, weeklyMetricValue } from './weekly-stats.js';
+
+export { getSundayWeekKey };
 
 const leaderboardFilter = {
   onboarding_completed: true,
   is_guest: { $ne: true },
 };
 
-const WEEKLY_METRICS: LeaderboardMetric[] = ['xp', 'streak', 'moedas'];
-
-/** Chave da semana que termina no domingo (início domingo em SP). */
-export function getSundayWeekKey(date = new Date()): string {
-  const today = getTodaySaoPaulo(date);
-  const weekday = getSaoPauloWeekday(date);
-  const [y, m, d] = today.split('-').map(Number);
-  const anchor = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  anchor.setUTCDate(anchor.getUTCDate() - weekday);
-  const yy = anchor.getUTCFullYear();
-  const mm = String(anchor.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(anchor.getUTCDate()).padStart(2, '0');
-  return `${yy}-${mm}-${dd}`;
-}
+/** Só XP e Dorias fecham semana — o ranking de streak é fixo e sem prêmio. */
+const WEEKLY_METRICS: Exclude<LeaderboardMetric, 'streak'>[] = ['xp', 'moedas'];
 
 function prizeForRank(rank: number): number {
-  if (rank === 1) return 15;
-  if (rank === 2) return 10;
-  if (rank === 3) return 5;
-  if (rank <= 25) return 3;
-  return 0;
-}
-
-function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
-  if (metric === 'streak') return { 'gamificacao.streak_atual': -1 };
-  if (metric === 'moedas') return { 'cosmeticos.moedas': -1 };
-  return { 'gamificacao.nivel_xp': -1 };
+  if (rank === 1) return 1000;
+  if (rank === 2) return 700;
+  if (rank === 3) return 300;
+  return 100;
 }
 
 function payoutKey(weekKey: string, metric: LeaderboardMetric): string {
   return `${weekKey}:${metric}`;
 }
 
-/** Paga prêmios do top 25 na virada de semana (domingo SP). Idempotente por semana e métrica. */
+/**
+ * Fecha a semana anterior dos rankings de XP e Dorias: paga 1000/700/300/100
+ * Dorias por posição e grava o pódio no histórico (base das molduras).
+ * Roda no primeiro acesso ao ranking após a virada (domingo SP) — idempotente
+ * por semana e métrica, então não depende de alguém abrir exatamente no domingo.
+ * O prêmio é creditado direto na carteira, sem contar como ganho da semana nova.
+ */
 export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
-  const weekday = getSaoPauloWeekday();
-  if (weekday !== 0) return 0;
-
   const currentWeek = getSundayWeekKey();
   const runKey = `${currentWeek}:__run__`;
   if (await LeaderboardWeekPayout.findById(runKey)) return 0;
@@ -61,21 +51,38 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
     const key = payoutKey(payoutWeek, metric);
     if (await LeaderboardWeekPayout.findById(key)) continue;
 
-    const topLean = await User.find(leaderboardFilter, {
-      sort: metricSort(metric),
-      limit: 25,
-    });
+    const all = await User.find(leaderboardFilter);
+    const ranked = all
+      .map((user) => ({ user, value: weeklyMetricValue(user, metric, payoutWeek) }))
+      .filter((row) => row.value > 0)
+      .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'));
 
-    for (let i = 0; i < topLean.length; i += 1) {
-      const prize = prizeForRank(i + 1);
-      if (prize <= 0) continue;
-      const user = await User.findById(topLean[i].id);
+    const podium: PodiumHistoryEntry[] = [];
+
+    for (let i = 0; i < ranked.length; i += 1) {
+      const rank = i + 1;
+      const { user: lean } = ranked[i];
+      if (rank <= 3) {
+        podium.push({
+          user_id: lean.id,
+          week_key: payoutWeek,
+          metric,
+          position: rank as 1 | 2 | 3,
+        });
+      }
+      // NPCs demo ocupam posição no ranking mas não recebem prêmio.
+      if (lean.is_demo_npc) continue;
+
+      const prize = prizeForRank(rank);
+      const user = await User.findById(lean.id);
       if (!user) continue;
-      grantAbdoria(user, prize);
+      ensureAbdoriaWallet(user);
+      user.cosmeticos.moedas += prize;
       await user.save();
       paidCount += 1;
     }
 
+    await LeaderboardPodiumHistory.createMany(podium);
     await LeaderboardWeekPayout.create({ _id: key });
   }
 
