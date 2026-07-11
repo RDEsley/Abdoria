@@ -19,6 +19,8 @@ export interface PatrolArmasState {
   desbloqueados: string[];
   arco_equipado: string;
   espada_equipada: string;
+  /** Magia equipada (null = nenhuma — não há magia inicial gratuita). */
+  magia_equipada?: string | null;
 }
 
 export const DEFAULT_ARCO_ID = 'arco_01';
@@ -241,7 +243,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     nome: 'Magia de Água',
     descricao: 'Ondas de água pura que atingem o inimigo do alto, varrendo o campo de batalha.',
     raridade: 'comum',
-    unlock: { tipo: 'futuro' },
+    unlock: { tipo: 'moedas', preco_moedas: 3000 },
     dano_base: 28,
   },
   {
@@ -251,7 +253,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     nome: 'Magia de Terra',
     descricao: 'Pedregulhos surgem do chão e caem sobre o inimigo com força esmagadora.',
     raridade: 'raro',
-    unlock: { tipo: 'futuro' },
+    unlock: { tipo: 'moedas', preco_moedas: 5500 },
     dano_base: 32,
   },
   {
@@ -261,7 +263,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     nome: 'Magia de Gelo',
     descricao: 'Cristais de gelo perfuram o alvo de cima, congelando qualquer resistência.',
     raridade: 'raro',
-    unlock: { tipo: 'futuro' },
+    unlock: { tipo: 'moedas', preco_moedas: 8500 },
     dano_base: 36,
   },
   {
@@ -271,7 +273,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     nome: 'Magia de Fogo',
     descricao: 'Uma bola de fogo incandescente mergulha do céu e explode ao impacto.',
     raridade: 'epico',
-    unlock: { tipo: 'futuro' },
+    unlock: { tipo: 'moedas', preco_moedas: 15000 },
     dano_base: 42,
   },
   {
@@ -281,7 +283,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     nome: 'Magia de Raio',
     descricao: 'Um relâmpago cortante rasga a atmosfera direto para a cabeça do inimigo.',
     raridade: 'epico',
-    unlock: { tipo: 'futuro' },
+    unlock: { tipo: 'moedas', preco_moedas: 24000 },
     dano_base: 48,
   },
   {
@@ -291,7 +293,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     nome: 'Buraco Negro',
     descricao: 'Uma singularidade gravitacional absorve tudo ao redor com força devastadora.',
     raridade: 'lendario',
-    unlock: { tipo: 'futuro' },
+    unlock: { tipo: 'moedas', preco_moedas: 60000 },
     dano_base: 60,
   },
 ];
@@ -324,10 +326,17 @@ export function resolvePatrolArmas(pref?: Partial<PatrolArmasState> | null): Pat
     ? espadaEquipadaRaw
     : DEFAULT_ESPADA_ID;
 
+  const magiaRaw = pref?.magia_equipada ?? null;
+  const magiaEquipada =
+    magiaRaw && desbloqueados.has(magiaRaw) && PATROL_WEAPON_BY_ID[magiaRaw]?.kind === 'magia'
+      ? magiaRaw
+      : null;
+
   return {
     desbloqueados: [...desbloqueados],
     arco_equipado: arcoEquipado,
     espada_equipada: espadaEquipada,
+    magia_equipada: magiaEquipada,
   };
 }
 
@@ -335,8 +344,15 @@ export function patrolWeaponsByKind(kind: PatrolWeaponKind): PatrolWeaponDefinit
   return PATROL_WEAPONS.filter((item) => item.kind === kind);
 }
 
-export function patrolHeroDamage(kind: 'arco' | 'espada', weaponId: string): number {
-  const migrated = migrateWeaponId(weaponId);
+export function patrolHeroDamage(
+  kind: 'arco' | 'espada' | 'magia',
+  weaponId: string | null | undefined,
+): number {
+  if (kind === 'magia') {
+    const def = weaponId ? PATROL_WEAPON_BY_ID[weaponId] : undefined;
+    return def?.kind === 'magia' ? def.dano_base : 0;
+  }
+  const migrated = migrateWeaponId(weaponId ?? '');
   const def = PATROL_WEAPON_BY_ID[migrated];
   if (!def || def.kind !== kind) {
     return kind === 'arco' ? 10 : 12;

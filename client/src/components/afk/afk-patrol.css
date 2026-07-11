@@ -1732,6 +1732,136 @@
   border-color: rgba(186, 230, 253, 0.75);
 }
 
+/* ---- Ataque de magia: feitiço cai do alto sobre o inimigo ---- */
+.game-afk-spell-charge--magia_agua,
+.game-afk-spell-drop--magia_agua,
+.game-afk-spell-burst--magia_agua {
+  --sp1: #7dd3fc;
+  --sp2: #0369a1;
+}
+.game-afk-spell-charge--magia_terra,
+.game-afk-spell-drop--magia_terra,
+.game-afk-spell-burst--magia_terra {
+  --sp1: #d6b28c;
+  --sp2: #713f12;
+}
+.game-afk-spell-charge--magia_gelo,
+.game-afk-spell-drop--magia_gelo,
+.game-afk-spell-burst--magia_gelo {
+  --sp1: #e0f2fe;
+  --sp2: #0284c7;
+}
+.game-afk-spell-charge--magia_fogo,
+.game-afk-spell-drop--magia_fogo,
+.game-afk-spell-burst--magia_fogo {
+  --sp1: #fdba74;
+  --sp2: #b91c1c;
+}
+.game-afk-spell-charge--magia_relampago,
+.game-afk-spell-drop--magia_relampago,
+.game-afk-spell-burst--magia_relampago {
+  --sp1: #fef08a;
+  --sp2: #a16207;
+}
+.game-afk-spell-charge--magia_buraco_negro,
+.game-afk-spell-drop--magia_buraco_negro,
+.game-afk-spell-burst--magia_buraco_negro {
+  --sp1: #8b5cf6;
+  --sp2: #020617;
+}
+
+/* Brilho de conjuração acima do inimigo */
+.game-afk-spell-charge {
+  position: absolute;
+  right: 9%;
+  top: 6%;
+  z-index: 8;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--sp1) 0%, transparent 70%);
+  opacity: 0;
+  animation: game-afk-spell-charge-in 0.35s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes game-afk-spell-charge-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* Orbe caindo do céu até o inimigo */
+.game-afk-spell-drop {
+  position: absolute;
+  right: 10%;
+  top: -12%;
+  z-index: 9;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, var(--sp1) 0%, var(--sp2) 80%);
+  box-shadow:
+    0 0 12px var(--sp1),
+    0 0 22px rgba(255, 255, 255, 0.25);
+  opacity: 0;
+  animation: game-afk-spell-drop-fall 0.62s cubic-bezier(0.5, 0, 0.85, 0.4) forwards;
+  pointer-events: none;
+}
+
+@keyframes game-afk-spell-drop-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(4.6rem) scale(1);
+  }
+}
+
+/* Explosão no impacto */
+.game-afk-spell-burst {
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  z-index: 9;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--sp1) 0%, var(--sp2) 45%, transparent 72%);
+  opacity: 0;
+  animation: game-afk-spell-burst-pop 0.45s ease-out 0.6s forwards;
+  pointer-events: none;
+}
+
+@keyframes game-afk-spell-burst-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
 .game-afk-arrow-impact {
   position: absolute;
   right: 12%;

@@ -92,9 +92,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       setCelebrating(true);
       window.setTimeout(() => setCelebrating(false), 1200);
       showGameToast(`${item.nome} comprado!`, { variant: 'success' });
-      if (item.kind === 'arco' || item.kind === 'espada') {
-        onWeaponChange?.(item.kind);
-      }
+      onWeaponChange?.(item.kind);
       setPurchaseConfirm(null);
       await load();
     } catch (err) {
@@ -120,7 +118,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   };
 
   const handleEquip = async (item: PatrolShopCatalogItem) => {
-    if (item.kind !== 'arco' && item.kind !== 'espada') return;
     setBusyId(item.id);
     try {
       const res = await equipPatrolWeapon(item.kind, item.id);
@@ -146,7 +143,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       ? (catalog?.arcos ?? [])
       : activeTab === 'espada'
         ? (catalog?.espadas ?? [])
-        : [];
+        : (catalog?.magias ?? []);
 
   return createPortal(
     <div
@@ -197,14 +194,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
           <div className="game-patrol-shop-body">
             {loading ? (
               <p className="game-loader">Carregando armas...</p>
-            ) : activeTab === 'magia' ? (
-              <div className="game-patrol-shop-future">
-                <div className="game-patrol-shop-future__icon" aria-hidden>
-                  <Wand2 size={34} strokeWidth={2} />
-                </div>
-                <h3>Futuramente</h3>
-                <p>Magias e feitiços chegarão em uma atualização da exploração. Fique de olho!</p>
-              </div>
             ) : items.length === 0 ? (
               <p className="game-patrol-shop-empty">Nenhum item nesta categoria ainda.</p>
             ) : (

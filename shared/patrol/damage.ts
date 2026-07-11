@@ -35,6 +35,8 @@ export function resolvePatrolCritChancePercent(
   weaponId: string,
   enemyId: AfkEnemyId,
 ): number {
+  if (kind === 'magia') return 0;
+
   const def = PATROL_WEAPON_BY_ID[weaponId];
 
   if (def?.nivel === 10 && isPatrolSpecialTarget(enemyId)) {
@@ -96,7 +98,7 @@ export function resolvePatrolAttackDamage(opts: {
   let damage = resolvePatrolBaseDamage(kind, weaponId, enemyId);
   let nextCritStreak = 0;
 
-  if (isCrit) {
+  if (isCrit && kind !== 'magia') {
     if (kind === 'arco') {
       damage += AFK_CRIT_STREAK_STEP_ARCO * (critStreak + 1);
       nextCritStreak = critStreak + 1;

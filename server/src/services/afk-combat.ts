@@ -158,11 +158,19 @@ export function simulateOfflineKills(user: UserRecord, newMinutes: number): numb
   };
 
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
-  const avgDamage = Math.round(
-    (patrolHeroDamage('arco', armas.arco_equipado) +
-      patrolHeroDamage('espada', armas.espada_equipada)) /
-      2,
-  );
+  const magiaDamage =
+    user.preferencias?.arma_preferida === 'magia'
+      ? patrolHeroDamage('magia', armas.magia_equipada)
+      : 0;
+  // Com magia preferida e equipada, o offline usa o dano dela; senão a média arco/espada.
+  const avgDamage =
+    magiaDamage > 0
+      ? magiaDamage
+      : Math.round(
+          (patrolHeroDamage('arco', armas.arco_equipado) +
+            patrolHeroDamage('espada', armas.espada_equipada)) /
+            2,
+        );
   let applied = 0;
 
   for (let i = 0; i < killsToSimulate; i += 1) {
@@ -192,5 +200,6 @@ export function combatSnapshot(user: UserRecord) {
     ...snap,
     hero_damage_arco: patrolHeroDamage('arco', armas.arco_equipado),
     hero_damage_espada: patrolHeroDamage('espada', armas.espada_equipada),
+    hero_damage_magia: patrolHeroDamage('magia', armas.magia_equipada),
   };
 }

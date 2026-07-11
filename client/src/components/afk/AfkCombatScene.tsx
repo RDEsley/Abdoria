@@ -89,10 +89,11 @@ export function AfkCombatScene({
     };
   }, [localEnemyId, localIsBoss, localIsElite, localKillsUntilBoss, serverSnapshot]);
 
-  const critKind = weapon === 'arco' ? 'arco' : 'espada';
+  const critKind = weapon;
   const damage = resolvePatrolBaseDamage(critKind, weaponId, localEnemyId);
-  const attackInterval = weapon === 'arco' ? 1500 : 1900;
-  const impactDelay = weapon === 'arco' ? 380 : 200;
+  // Magia: ciclo mais lento e impacto tardio — o feitiço cai do alto.
+  const attackInterval = weapon === 'arco' ? 1500 : weapon === 'magia' ? 2400 : 1900;
+  const impactDelay = weapon === 'arco' ? 380 : weapon === 'magia' ? 620 : 200;
   const attacking = phase === 'attack';
   const showSparkles = (hasLoot || capped) && !isMobile;
 
@@ -379,6 +380,26 @@ export function AfkCombatScene({
             <span
               key={`impact-sp2-${attackSeq}`}
               className={`game-afk-sword-impact-spark game-afk-sword-impact-spark--2${attackIsCrit ? ' game-afk-sword-impact-spark--crit' : ''}`}
+              aria-hidden
+            />
+          </>
+        )}
+
+        {weapon === 'magia' && attacking && (
+          <>
+            <span
+              key={`spell-charge-${attackSeq}`}
+              className={`game-afk-spell-charge game-afk-spell-charge--${weaponId}`}
+              aria-hidden
+            />
+            <span
+              key={`spell-drop-${attackSeq}`}
+              className={`game-afk-spell-drop game-afk-spell-drop--${weaponId}`}
+              aria-hidden
+            />
+            <span
+              key={`spell-burst-${attackSeq}`}
+              className={`game-afk-spell-burst game-afk-spell-burst--${weaponId}`}
               aria-hidden
             />
           </>

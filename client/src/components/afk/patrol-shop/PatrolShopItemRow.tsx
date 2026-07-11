@@ -1,4 +1,16 @@
-import { Coins, Lock, Sparkles, Swords, Zap } from 'lucide-react';
+import {
+  CircleDot,
+  Coins,
+  Droplets,
+  Flame,
+  Lock,
+  Mountain,
+  Snowflake,
+  Sparkles,
+  Swords,
+  Zap,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import {
   PatrolBowIcon,
@@ -22,6 +34,15 @@ function rarityFrameClass(raridade: PatrolShopCatalogItem['raridade']) {
   return `game-patrol-shop-row--${raridade}`;
 }
 
+const SPELL_ICONS: Record<string, LucideIcon> = {
+  magia_agua: Droplets,
+  magia_terra: Mountain,
+  magia_gelo: Snowflake,
+  magia_fogo: Flame,
+  magia_relampago: Zap,
+  magia_buraco_negro: CircleDot,
+};
+
 function WeaponThumb({ item }: { item: PatrolShopCatalogItem }) {
   const tier =
     item.raridade === 'lendario' || item.raridade === 'epico'
@@ -42,12 +63,19 @@ function WeaponThumb({ item }: { item: PatrolShopCatalogItem }) {
           variant={item.id}
           style={patrolWeaponIconStyle('arco', item.id)}
         />
-      ) : (
+      ) : item.kind === 'espada' ? (
         <PatrolSwordIcon
           className="game-patrol-shop-row__thumb-svg"
           variant={item.id}
           style={patrolWeaponIconStyle('espada', item.id)}
         />
+      ) : (
+        <span className={`game-patrol-spell-orb game-patrol-spell-orb--${item.id}`} aria-hidden>
+          {(() => {
+            const SpellIcon = SPELL_ICONS[item.id] ?? Sparkles;
+            return <SpellIcon size={22} strokeWidth={2.2} />;
+          })()}
+        </span>
       )}
     </div>
   );

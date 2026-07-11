@@ -1,4 +1,4 @@
-import type { IUserDocument, PatrolShopResponse } from '@/types';
+import type { IUserDocument, PatrolShopResponse, PatrolWeaponKind } from '@/types';
 import { fetchJson } from './client';
 
 export function getPatrolShop(): Promise<PatrolShopResponse> {
@@ -13,7 +13,7 @@ export function purchasePatrolWeapon(id: string): Promise<{
 }
 
 export function equipPatrolWeapon(
-  kind: 'arco' | 'espada',
+  kind: PatrolWeaponKind,
   id: string,
 ): Promise<{ user: IUserDocument }> {
   return fetchJson('/patrol-shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });

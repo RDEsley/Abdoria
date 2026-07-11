@@ -56,10 +56,18 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     }
   }, []);
 
-  const weapon: ArmaPreferida =
+  const preferredWeapon: ArmaPreferida =
     meta?.arma_preferida ?? user?.preferencias?.arma_preferida ?? 'arco';
   const patrolArmas = resolvePatrolArmas(user?.preferencias?.patrol_armas);
-  const weaponId = weapon === 'arco' ? patrolArmas.arco_equipado : patrolArmas.espada_equipada;
+  // Sem magia equipada, o modo magia cai de volta pro arco.
+  const weapon: ArmaPreferida =
+    preferredWeapon === 'magia' && !patrolArmas.magia_equipada ? 'arco' : preferredWeapon;
+  const weaponId =
+    weapon === 'arco'
+      ? patrolArmas.arco_equipado
+      : weapon === 'espada'
+        ? patrolArmas.espada_equipada
+        : (patrolArmas.magia_equipada ?? patrolArmas.arco_equipado);
   const userId = String(user?.id ?? 'guest');
 
   const load = useCallback(async () => {

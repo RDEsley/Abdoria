@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { BowArrow, Sword } from 'lucide-react';
+import { BowArrow, Sword, Wand2 } from 'lucide-react';
 import { updateMetaPreferences } from '@/lib/api';
 import type { ArmaPreferida } from '@/types';
 
 interface Props {
   value: ArmaPreferida;
   onChange: (weapon: ArmaPreferida) => void;
+  /** Habilita o modo magia (só quando alguma magia está equipada). */
+  hasSpell?: boolean;
 }
 
-export function AfkWeaponToggle({ value, onChange }: Props) {
+export function AfkWeaponToggle({ value, onChange, hasSpell = false }: Props) {
   const [saving, setSaving] = useState(false);
 
   const select = async (weapon: ArmaPreferida) => {
@@ -44,6 +46,17 @@ export function AfkWeaponToggle({ value, onChange }: Props) {
         <Sword size={14} aria-hidden />
         Espada
       </button>
+      {hasSpell && (
+        <button
+          type="button"
+          className={`game-afk-weapon-toggle__btn${value === 'magia' ? ' game-afk-weapon-toggle__btn--active' : ''}`}
+          disabled={saving}
+          onClick={() => void select('magia')}
+        >
+          <Wand2 size={14} aria-hidden />
+          Magia
+        </button>
+      )}
     </div>
   );
 }

@@ -58,13 +58,16 @@ export const AFK_CRIT_CHANCE_ARCO_MULTIPLIER = 1.15;
 /** @deprecated Use {@link AFK_CRIT_CHANCE_ESPADA}. */
 export const AFK_CRIT_CHANCE = AFK_CRIT_CHANCE_ESPADA;
 
-export type PatrolWeaponDamageKind = 'arco' | 'espada';
+export type PatrolWeaponDamageKind = 'arco' | 'espada' | 'magia';
 
 export function patrolCritChance(kind: PatrolWeaponDamageKind): number {
+  // Magias têm dano fixo alto e não criticam.
+  if (kind === 'magia') return 0;
   return kind === 'arco' ? AFK_CRIT_CHANCE_ARCO : AFK_CRIT_CHANCE_ESPADA;
 }
 
 export function patrolCritBonus(kind: PatrolWeaponDamageKind): number {
+  if (kind === 'magia') return 0;
   return kind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : AFK_CRIT_BONUS_ESPADA;
 }
 
@@ -73,6 +76,7 @@ export function patrolCritDamage(
   kind: PatrolWeaponDamageKind,
   critStreak = 0,
 ): number {
+  if (kind === 'magia') return baseDamage;
   if (kind === 'arco') {
     return baseDamage + AFK_CRIT_STREAK_STEP_ARCO * (critStreak + 1);
   }

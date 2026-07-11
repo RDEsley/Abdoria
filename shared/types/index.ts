@@ -140,7 +140,7 @@ export interface UserPreferencias {
   equipamentos?: Partial<Record<EquipmentId, boolean>>;
 }
 
-export type ArmaPreferida = 'arco' | 'espada';
+export type ArmaPreferida = 'arco' | 'espada' | 'magia';
 
 export type InventoryItemId =
   'frozen_streak' | 'route_drink' | 'bau_patrulha' | 'exp_instant' | 'doria_bag';
@@ -490,6 +490,7 @@ export interface PatrolShopResponse {
   arma_preferida: ArmaPreferida;
   arcos: PatrolShopCatalogItem[];
   espadas: PatrolShopCatalogItem[];
+  magias: PatrolShopCatalogItem[];
 }
 
 export interface UpdateUserDadosResponse {

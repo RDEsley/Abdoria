@@ -40,7 +40,7 @@ function toCatalogItem(
   def: PatrolWeaponDefinition,
   armas: PatrolArmasState,
   abdoria: number,
-  armaPreferida: 'arco' | 'espada',
+  armaPreferida: PatrolWeaponKind,
 ): PatrolShopCatalogItem {
   const desbloqueada = armas.desbloqueados.includes(def.id);
   const slotEquipped =
@@ -48,20 +48,19 @@ function toCatalogItem(
       ? armas.arco_equipado === def.id
       : def.kind === 'espada'
         ? armas.espada_equipada === def.id
-        : false;
+        : armas.magia_equipada === def.id;
   const equipada = slotEquipped && def.kind === armaPreferida;
   const futuro = def.unlock.tipo === 'futuro';
   const pode_comprar =
     !desbloqueada && !futuro && def.unlock.tipo === 'moedas' && abdoria >= def.unlock.preco_moedas;
-  const weaponKind = def.kind === 'arco' ? 'arco' : 'espada';
-  const dano_total = patrolHeroDamage(weaponKind, def.id);
+  const dano_total = patrolHeroDamage(def.kind, def.id);
   // Armas Secret (nível 10) exibem o crítico especial contra elites/bosses.
   const chance_critico =
-    def.nivel === 10
-      ? weaponKind === 'arco'
+    def.nivel === 10 && def.kind !== 'magia'
+      ? def.kind === 'arco'
         ? AFK_LEVEL10_BOW_CRIT_CHANCE
         : AFK_LEVEL10_SWORD_CRIT_CHANCE
-      : patrolCritChance(weaponKind);
+      : patrolCritChance(def.kind);
 
   return {
     id: def.id,
@@ -79,8 +78,13 @@ function toCatalogItem(
     dano_bonus: def.dano_base,
     dano_base: def.dano_base,
     dano_total,
-    crit_bonus: weaponKind === 'arco' ? AFK_CRIT_STREAK_STEP_ARCO : AFK_CRIT_BONUS_ESPADA,
-    dano_critico: patrolCritDamage(dano_total, weaponKind, 0),
+    crit_bonus:
+      def.kind === 'magia'
+        ? 0
+        : def.kind === 'arco'
+          ? AFK_CRIT_STREAK_STEP_ARCO
+          : AFK_CRIT_BONUS_ESPADA,
+    dano_critico: patrolCritDamage(dano_total, def.kind, 0),
     chance_critico,
   };
 }
@@ -88,7 +92,9 @@ function toCatalogItem(
 export function buildPatrolShopResponse(user: UserRecord): PatrolShopResponse {
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const abdoria = readAbdoriaBalance(user);
-  const armaPreferida = user.preferencias?.arma_preferida === 'espada' ? 'espada' : 'arco';
+  const rawPreferida = user.preferencias?.arma_preferida;
+  const armaPreferida: PatrolWeaponKind =
+    rawPreferida === 'espada' || rawPreferida === 'magia' ? rawPreferida : 'arco';
 
   return {
     abdoria,
@@ -98,6 +104,9 @@ export function buildPatrolShopResponse(user: UserRecord): PatrolShopResponse {
       toCatalogItem(def, armas, abdoria, armaPreferida),
     ),
     espadas: patrolWeaponsByKind('espada').map((def) =>
+      toCatalogItem(def, armas, abdoria, armaPreferida),
+    ),
+    magias: patrolWeaponsByKind('magia').map((def) =>
       toCatalogItem(def, armas, abdoria, armaPreferida),
     ),
   };
@@ -112,7 +121,7 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
 
   const def = PATROL_WEAPON_BY_ID[itemId];
-  if (!def || def.kind === 'magia') {
+  if (!def) {
     return { error: 'Item não encontrado.', status: 404 as const };
   }
   if (def.unlock.tipo === 'futuro') {
@@ -141,6 +150,7 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   armas.desbloqueados.push(itemId);
   if (def.kind === 'arco') armas.arco_equipado = itemId;
   if (def.kind === 'espada') armas.espada_equipada = itemId;
+  if (def.kind === 'magia') armas.magia_equipada = itemId;
   user.preferencias.patrol_armas = armas;
   user.preferencias.arma_preferida = def.kind;
 
@@ -154,7 +164,7 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
 }
 
 export async function equipPatrolWeapon(userId: string, kind: PatrolWeaponKind, itemId: string) {
-  if (kind !== 'arco' && kind !== 'espada') {
+  if (kind !== 'arco' && kind !== 'espada' && kind !== 'magia') {
     return { error: 'Tipo de arma inválido.', status: 400 as const };
   }
 
@@ -172,7 +182,8 @@ export async function equipPatrolWeapon(userId: string, kind: PatrolWeaponKind, 
   }
 
   if (kind === 'arco') armas.arco_equipado = itemId;
-  else armas.espada_equipada = itemId;
+  else if (kind === 'espada') armas.espada_equipada = itemId;
+  else armas.magia_equipada = itemId;
 
   user.preferencias.patrol_armas = armas;
   user.preferencias.arma_preferida = kind;
