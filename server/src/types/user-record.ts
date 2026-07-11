@@ -7,6 +7,8 @@ import type {
   LojaDiaria,
   NivelUsuario,
   Objetivo,
+  PerfilTreino,
+  PlanoTreino,
   SimulacaoDefinicao,
   UserDadosSalvos,
   UserPreferencias,
@@ -42,6 +44,10 @@ export interface UserRecord {
   avatar_url?: string | null;
   /** Quantas trocas de nome o usuário já fez (1ª grátis, depois pagas). */
   nome_trocas?: number;
+  /** Questionário de treino (Grupo H). null = usuário legado. */
+  perfil_treino?: PerfilTreino | null;
+  /** Plano gerado a partir do perfil. null = pipeline de presets. */
+  plano_treino?: PlanoTreino | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }

@@ -106,6 +106,10 @@ export interface IExercise extends ExerciseLevelParams {
   ativo: boolean;
   /** Equipamento necessário — exercício só aparece se o usuário possuir o item. */
   equipamento?: EquipmentId | null;
+  /** Partes do corpo trabalhadas (primeira = principal). Ausente = ['abdomen']. */
+  grupos?: ParteCorpo[];
+  /** Regiões sensíveis que excluem o exercício das recomendações. */
+  contraindicacoes?: RestricaoFisica[];
 }
 
 export interface UserPreferencias {
@@ -141,6 +145,104 @@ export interface UserPreferencias {
 }
 
 export type ArmaPreferida = 'arco' | 'espada' | 'magia';
+
+// —— Perfil de treino (onboarding "personal trainer") ————————————————————————
+
+export type EscopoTreino = 'abdomen' | 'corpo_todo';
+
+export type Foco = 'definicao' | 'forca' | 'resistencia' | 'hipertrofia' | 'saude';
+
+export type ParteCorpo =
+  | 'abdomen'
+  | 'peito'
+  | 'costas'
+  | 'bracos'
+  | 'ombros'
+  | 'pernas'
+  | 'gluteos';
+
+export type RestricaoFisica = 'lombar' | 'joelhos' | 'punhos' | 'ombros' | 'pescoco';
+
+export const ESCOPO_LABELS: Record<EscopoTreino, string> = {
+  abdomen: 'Só abdômen',
+  corpo_todo: 'Corpo todo',
+};
+
+export const FOCO_LABELS: Record<Foco, string> = {
+  definicao: 'Definição',
+  forca: 'Força',
+  resistencia: 'Resistência',
+  hipertrofia: 'Ganho muscular',
+  saude: 'Saúde e condicionamento',
+};
+
+export const FOCO_HINTS: Record<Foco, string> = {
+  definicao: 'Mais repetições, menos descanso — desenhar o músculo.',
+  forca: 'Menos repetições, mais intensidade por série.',
+  resistencia: 'Séries longas para aguentar mais tempo.',
+  hipertrofia: 'Volume médio-alto para crescer o músculo.',
+  saude: 'Ritmo equilibrado para se sentir bem no dia a dia.',
+};
+
+export const PARTE_CORPO_LABELS: Record<ParteCorpo, string> = {
+  abdomen: 'Abdômen',
+  peito: 'Peito',
+  costas: 'Costas',
+  bracos: 'Braços',
+  ombros: 'Ombros',
+  pernas: 'Pernas',
+  gluteos: 'Glúteos',
+};
+
+export const PARTE_CORPO_ORDER: ParteCorpo[] = [
+  'abdomen',
+  'peito',
+  'costas',
+  'bracos',
+  'ombros',
+  'pernas',
+  'gluteos',
+];
+
+export const RESTRICAO_LABELS: Record<RestricaoFisica, string> = {
+  lombar: 'Lombar',
+  joelhos: 'Joelhos',
+  punhos: 'Punhos',
+  ombros: 'Ombros',
+  pescoco: 'Pescoço',
+};
+
+/** Respostas do questionário de treino — coluna própria `profiles.perfil_treino`. */
+export interface PerfilTreino {
+  escopo: EscopoTreino;
+  foco: Foco;
+  /** null = "recomendado": o sistema deriva as partes do foco. */
+  partes: ParteCorpo[] | null;
+  frequencia_semanal: number; // 2..7
+  tempo_por_sessao_min: 10 | 20 | 30 | 45;
+  restricoes: RestricaoFisica[];
+  origem: 'onboarding' | 'reonboarding' | 'skip' | 'settings';
+  atualizado_em: string;
+}
+
+/** Esqueleto do plano gerado — coluna própria `profiles.plano_treino`. */
+export interface PlanoTreino {
+  versao: 1;
+  gerado_em: string;
+  semana_atual: number; // 1..4 (mesociclo)
+  dias: PlanoDia[];
+  dias_completados_rodada: number[];
+}
+
+export interface PlanoDia {
+  indice: number;
+  titulo: string;
+  /** Preenchido no modo só-abdômen (A–E); null no corpo todo. */
+  ciclo_id: TreinoBase | null;
+  grupos: ParteCorpo[];
+  /** Sub-zona abdominal do dia, quando o dia inclui abdômen. */
+  enfase_abs: MusculoPrincipal | null;
+}
 
 export type InventoryItemId =
   'frozen_streak' | 'route_drink' | 'bau_patrulha' | 'exp_instant' | 'doria_bag';
@@ -921,6 +1023,10 @@ export interface IUser {
   avatar_url?: string | null;
   /** Trocas de nome já feitas (1ª grátis, seguintes pagas). */
   nome_trocas?: number;
+  /** Questionário de treino respondido; null/ausente = usuário legado. */
+  perfil_treino?: PerfilTreino | null;
+  /** Plano gerado a partir do perfil; null/ausente = pipeline de presets. */
+  plano_treino?: PlanoTreino | null;
 }
 
 export interface IUserDocument extends IUser {

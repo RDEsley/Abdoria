@@ -24,6 +24,8 @@ export interface ExerciseDocument {
   media: { gif: string; video?: string };
   ativo: boolean;
   equipamento?: string | null;
+  grupos: string[];
+  contraindicacoes: string[];
 }
 
 function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
@@ -59,6 +61,8 @@ function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
     media: row.media as ExerciseDocument['media'],
     ativo: Boolean(row.ativo),
     equipamento: row.equipamento ? String(row.equipamento) : undefined,
+    grupos: Array.isArray(row.grupos) && row.grupos.length > 0 ? (row.grupos as string[]) : ['abdomen'],
+    contraindicacoes: Array.isArray(row.contraindicacoes) ? (row.contraindicacoes as string[]) : [],
   };
 }
 
@@ -86,6 +90,8 @@ function exerciseToRow(ex: Partial<ExerciseDocument>): Record<string, unknown> {
     media: ex.media,
     ativo: ex.ativo ?? true,
     equipamento: ex.equipamento ?? null,
+    grupos: ex.grupos && ex.grupos.length > 0 ? ex.grupos : ['abdomen'],
+    contraindicacoes: ex.contraindicacoes ?? [],
   };
 }
 

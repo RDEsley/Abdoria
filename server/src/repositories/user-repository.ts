@@ -52,6 +52,8 @@ type ProfileRow = {
   is_demo_npc: boolean;
   avatar_url?: string | null;
   nome_trocas?: number | null;
+  perfil_treino?: Record<string, unknown> | null;
+  plano_treino?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 };
@@ -176,6 +178,14 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     // save omitindo as colunas (não quebra antes de ela ser aplicada).
     avatar_url: 'avatar_url' in profile ? (profile.avatar_url ?? null) : undefined,
     nome_trocas: 'nome_trocas' in profile ? (profile.nome_trocas ?? 0) : undefined,
+    perfil_treino:
+      'perfil_treino' in profile
+        ? ((profile.perfil_treino as unknown as UserRecord['perfil_treino']) ?? null)
+        : undefined,
+    plano_treino:
+      'plano_treino' in profile
+        ? ((profile.plano_treino as unknown as UserRecord['plano_treino']) ?? null)
+        : undefined,
     createdAt: profile.created_at,
     updatedAt: profile.updated_at,
   };
@@ -213,6 +223,8 @@ function userToProfileRow(user: UserRecord): Record<string, unknown> {
     is_demo_npc: user.is_demo_npc,
     ...(user.avatar_url !== undefined ? { avatar_url: user.avatar_url } : {}),
     ...(user.nome_trocas !== undefined ? { nome_trocas: user.nome_trocas } : {}),
+    ...(user.perfil_treino !== undefined ? { perfil_treino: user.perfil_treino } : {}),
+    ...(user.plano_treino !== undefined ? { plano_treino: user.plano_treino } : {}),
   };
 }
 
@@ -286,6 +298,8 @@ export class UserMutable implements UserRecord {
   is_demo_npc!: boolean;
   avatar_url?: string | null;
   nome_trocas?: number;
+  perfil_treino?: UserRecord['perfil_treino'];
+  plano_treino?: UserRecord['plano_treino'];
   createdAt?: Date | string;
   updatedAt?: Date | string;
 
