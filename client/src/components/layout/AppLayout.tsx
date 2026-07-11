@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
+import { Dumbbell, Home, Layers, Settings, Trophy } from 'lucide-react';
+import { UserAvatar } from '@/components/profile/UserAvatar';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameToastHost } from '@/components/ui/GameToast';
@@ -20,8 +21,9 @@ const navItems = [
   { to: '/biblioteca', icon: Layers, label: 'Exercícios' },
   { to: '/construtor', icon: Dumbbell, label: 'Missão' },
   { to: '/ranking', icon: Trophy, label: 'Ranking' },
-  { to: '/perfil', icon: User, label: 'Herói' },
-];
+  // Perfil não usa ícone genérico: vira o avatar de identidade (foto/inicial).
+  { to: '/perfil', icon: null, label: 'Herói' },
+] as const;
 
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
@@ -94,7 +96,11 @@ export function AppLayout() {
                   `game-nav-item${isActive ? ' game-nav-item--active' : ''}`
                 }
               >
-                <Icon size={18} strokeWidth={2.5} />
+                {Icon ? (
+                  <Icon size={18} strokeWidth={2.5} />
+                ) : (
+                  <UserAvatar nome={user?.nome ?? 'A'} avatarUrl={user?.avatar_url} size="xs" />
+                )}
                 {label}
               </NavLink>
             ))}
@@ -124,7 +130,11 @@ export function AppLayout() {
                     `game-bottom-nav__item${isActive ? ' game-bottom-nav__item--active' : ''}`
                   }
                 >
-                  <Icon size={20} strokeWidth={2.5} />
+                  {Icon ? (
+                    <Icon size={20} strokeWidth={2.5} />
+                  ) : (
+                    <UserAvatar nome={user?.nome ?? 'A'} avatarUrl={user?.avatar_url} size="xs" />
+                  )}
                   <span>{label}</span>
                 </NavLink>
               ))}

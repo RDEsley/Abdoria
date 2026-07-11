@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Save, Settings } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
+import { ProfileIdentityPanel } from '@/components/profile/ProfileIdentityPanel';
 import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
@@ -76,7 +77,6 @@ export function ProfilePage() {
       const altura = alturaRaw ? Number(alturaRaw) : undefined;
       const idade = idadeRaw ? Number(idadeRaw) : undefined;
       await updateMe({
-        nome: String(form.get('nome')),
         idade,
         peso_kg: peso,
         altura_cm: altura,
@@ -139,16 +139,10 @@ export function ProfilePage() {
         ))}
       </div>
 
+      {tab === 'dados' && <ProfileIdentityPanel profile={profile} onChanged={handleRefresh} />}
+
       {tab === 'dados' && (
         <form onSubmit={handleSave} className="glass-card flex flex-col gap-4 p-4">
-          <label className="flex flex-col gap-1 text-sm font-bold text-stone-700">
-            Nome
-            <input
-              name="nome"
-              defaultValue={profile.nome}
-              className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2 font-medium"
-            />
-          </label>
           <label className="flex flex-col gap-1 text-sm font-bold">
             Idade
             <input

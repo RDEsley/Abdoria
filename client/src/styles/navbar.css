@@ -1,13 +1,11 @@
-/* Top Navbar — estilo Clash Royale */
+/* Top Navbar — base clara minimal; skins cosméticas pintam por cima */
 .top-navbar {
   padding-top: env(safe-area-inset-top, 0px);
-  background: linear-gradient(180deg, rgba(28, 36, 58, 0.94) 0%, rgba(14, 18, 32, 0.92) 100%);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 2px solid rgba(96, 165, 250, 0.22);
-  box-shadow:
-    0 6px 28px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-bottom: var(--border-card);
+  box-shadow: var(--shadow-resting);
 }
 
 .top-navbar__inner {
@@ -90,24 +88,15 @@
 .top-navbar__avatar {
   width: 100%;
   height: 100%;
-  border-radius: 0.7rem;
-  overflow: hidden;
-  background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
-  border: 2px solid rgba(147, 197, 253, 0.55);
-  box-shadow:
-    0 3px 0 rgba(0, 0, 0, 0.35),
-    0 0 12px rgba(59, 130, 246, 0.25);
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.top-navbar__cosmetic-avatar.game-cosmetic-avatar {
+.top-navbar__identity-avatar.user-avatar {
   width: 100%;
   height: 100%;
-  border-radius: inherit;
-  border-color: rgba(147, 197, 253, 0.45);
-  box-shadow: none;
 }
 
 .top-navbar__avatar-img {
@@ -130,27 +119,28 @@
   z-index: 2;
   min-width: 1.35rem;
   height: 1.35rem;
-  padding: 0 0.25rem;
+  padding: 0 0.3rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.45rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.42rem;
+  border-radius: 999px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.62rem;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
-  background: linear-gradient(180deg, #38bdf8 0%, #2563eb 55%, #1d4ed8 100%);
-  border: 2px solid #0f172a;
-  box-shadow:
-    0 2px 0 rgba(0, 0, 0, 0.45),
-    0 0 8px rgba(56, 189, 248, 0.45);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+  background: #10b981;
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-resting);
 }
 
 .top-navbar__name {
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  color: #1c1917;
+}
+
+.top-navbar--skinned .top-navbar__name {
   color: #f8fafc;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
@@ -160,6 +150,10 @@
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  color: #b45309;
+}
+
+.top-navbar--skinned .top-navbar__title {
   color: #fcd34d;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
@@ -171,21 +165,20 @@
 
 .top-navbar__xp-track {
   margin-top: 0.35rem;
-  height: 0.52rem;
+  height: 0.45rem;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  background: #e7e5e4;
+}
+
+.top-navbar--skinned .top-navbar__xp-track {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .top-navbar__xp-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 45%, #7dd3fc 100%);
-  box-shadow:
-    0 0 10px rgba(56, 189, 248, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  background: #10b981;
   transition: width 0.35s ease;
 }
 
@@ -198,9 +191,9 @@
   height: 2.05rem;
   padding: 0 0.35rem 0 1.45rem;
   border-radius: 999px;
-  background: #fff9e8;
-  border: 2.5px solid #1c1917;
-  box-shadow: 0 4px 0 #1c1917;
+  background: #fff;
+  border: var(--border-card);
+  box-shadow: var(--shadow-resting);
 }
 
 .top-navbar__pill-icon {
@@ -214,24 +207,22 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: linear-gradient(145deg, #fcd34d 0%, #f59e0b 55%, #b45309 100%);
-  border: 2.5px solid #1c1917;
-  box-shadow:
-    0 3px 0 #1c1917,
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: #fef3c7;
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-resting);
 }
 
 .top-navbar__coin-icon {
-  color: #1c1917;
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.3));
+  color: #b45309;
 }
 
 .top-navbar__pill-value {
   flex: 1;
   min-width: 0;
   padding: 0 0.15rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.42rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
   color: #1c1917;
   text-align: center;
   white-space: nowrap;
@@ -244,38 +235,32 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #14532d;
-  border-radius: 0.4rem;
+  border: none;
+  border-radius: 999px;
   cursor: pointer;
   color: #fff;
-  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
-  box-shadow: 0 2px 0 #14532d;
+  background: #10b981;
   transition:
-    filter 0.12s ease,
-    transform 0.08s ease,
-    box-shadow 0.08s ease;
+    background 0.15s ease,
+    transform 0.08s ease;
 }
 
 .top-navbar__pill-add:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 0 #14532d;
+  background: #059669;
 }
 
 .top-navbar__pill-add:active {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 #14532d;
-  filter: brightness(0.95);
+  transform: scale(0.94);
 }
 
 .top-navbar__pill-pulse {
   position: absolute;
-  top: -0.15rem;
+  top: -0.35rem;
   right: 1.5rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.38rem;
-  color: #fde047;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #b45309;
   pointer-events: none;
 }
 
@@ -287,7 +272,7 @@
   }
 
   .top-navbar__pill-value {
-    font-size: 0.36rem;
+    font-size: 0.7rem;
   }
 
   .top-navbar__pill-icon {
@@ -326,6 +311,6 @@
   }
 
   .top-navbar__pill-value {
-    font-size: 0.46rem;
+    font-size: 0.82rem;
   }
 }

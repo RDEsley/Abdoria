@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
-import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
+import { UserAvatar } from '@/components/profile/UserAvatar';
 import { TopNavbar } from '@/components/layout/TopNavbar';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
@@ -55,7 +55,15 @@ export function GameHud() {
         doriasAmount={cosmeticos.moedas}
         backgroundClass={backgroundClass}
         backgroundLight={backgroundLight}
-        avatar={<CosmeticAvatar user={user} size="sm" className="top-navbar__cosmetic-avatar" />}
+        avatar={
+          <UserAvatar
+            nome={firstName}
+            avatarUrl={user?.avatar_url}
+            moldura={cosmeticos.moldura_equipada ?? null}
+            size="sm"
+            className="top-navbar__identity-avatar"
+          />
+        }
         userTitle={equippedTitle}
         titleClassName={titleClassName}
         coinsEarnedPulse={coinsEarnedPulse}
