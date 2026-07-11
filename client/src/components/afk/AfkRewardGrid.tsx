@@ -95,6 +95,11 @@ function RewardIconGrid({
         const content = (
           <>
             {isRare && <RewardChipFx rarity={rarity} />}
+            {item.cosmeticId?.startsWith('magia_') && (
+              <span className="game-afk-reward-chip__new" aria-hidden>
+                Nova!
+              </span>
+            )}
             <span className="game-afk-reward-chip__icon">
               <AfkRewardIcon item={item} size={24} />
             </span>

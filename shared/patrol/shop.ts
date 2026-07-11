@@ -21,7 +21,12 @@ export interface PatrolArmasState {
   espada_equipada: string;
   /** Magia equipada (null = nenhuma — não há magia inicial gratuita). */
   magia_equipada?: string | null;
+  /** Dia (YYYY-MM-DD, SP) do último drop de magia — no máximo 1 por dia. */
+  ultimo_drop_magia?: string | null;
 }
+
+/** Dorias creditadas quando um drop de magia acontece com a coleção já completa. */
+export const SPELL_DUPLICATE_DORIAS = 15;
 
 export const DEFAULT_ARCO_ID = 'arco_01';
 export const DEFAULT_ESPADA_ID = 'espada_01';
@@ -337,6 +342,7 @@ export function resolvePatrolArmas(pref?: Partial<PatrolArmasState> | null): Pat
     arco_equipado: arcoEquipado,
     espada_equipada: espadaEquipada,
     magia_equipada: magiaEquipada,
+    ultimo_drop_magia: pref?.ultimo_drop_magia ?? null,
   };
 }
 

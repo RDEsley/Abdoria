@@ -4,8 +4,10 @@ import {
   PATROL_LEGENDARY_WEAPON_IDS,
   PATROL_SECRET_WEAPON_IDS,
   PATROL_SPELL_IDS,
+  SPELL_DUPLICATE_DORIAS,
   resolvePatrolArmas,
 } from '../../../shared/patrol/shop.js';
+import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { AfkEnemyTier } from '../types/index.js';
 import {
   AFK_BOSS_LEGENDARY_WEAPON_ROLL,
@@ -167,9 +169,26 @@ export function rollGoldenSlimeSecretCosmetic(
   pending.drop_count = (pending.drop_count ?? 0) + 1;
 }
 
+function spellDropWeight(id: string): number {
+  if (id === 'magia_agua') return 45;
+  if (id === 'magia_terra') return 20;
+  if (id === 'magia_gelo') return 16;
+  if (id === 'magia_fogo') return 11;
+  if (id === 'magia_relampago') return 6;
+  if (id === 'magia_buraco_negro') return 2;
+  return 1;
+}
+
+/** Peso do "sem drop" — quanto mais raras as magias restantes, menor a chance diária. */
+const SPELL_NO_DROP_WEIGHT = 40;
+
 /**
- * Drop do Coelho Mágico — sempre dropa uma magia, priorizando as que o usuário ainda não tem.
- * Distribuição por raridade: água 45%, terra 20%, gelo 16%, fogo 11%, raio 6%, buraco negro 2%.
+ * Drop do Coelho Mágico. Regras:
+ * - Cada magia só é conquistada uma vez: o pool nunca inclui magias já possuídas
+ *   (nem já pendentes no baú) — progressão real rumo à coleção completa.
+ * - No máximo UMA magia a cada 24h (dia SP), com chance proporcional à raridade
+ *   restante: se só faltam as raras, o drop diário fica difícil de acontecer.
+ * - Coleção completa: todo drop de magia vira SPELL_DUPLICATE_DORIAS automaticamente.
  */
 export function rollMagicRabbitSpell(
   user: UserRecord,
@@ -183,29 +202,31 @@ export function rollMagicRabbitSpell(
     (id) => !unlockedSpells.has(id) && !pending.weapon_ids.includes(id),
   );
 
-  const pool = spellsNotOwned.length > 0 ? spellsNotOwned : [...PATROL_SPELL_IDS];
+  if (spellsNotOwned.length === 0) {
+    pending.abdoria += SPELL_DUPLICATE_DORIAS;
+    pending.drop_count = (pending.drop_count ?? 0) + 1;
+    return;
+  }
 
-  const weights = pool.map((id) => {
-    if (id === 'magia_agua') return 45;
-    if (id === 'magia_terra') return 20;
-    if (id === 'magia_gelo') return 16;
-    if (id === 'magia_fogo') return 11;
-    if (id === 'magia_relampago') return 6;
-    if (id === 'magia_buraco_negro') return 2;
-    return 1;
-  });
+  const today = getTodaySaoPaulo();
+  if (armas.ultimo_drop_magia === today) return;
 
-  const totalWeight = weights.reduce((a, b) => a + b, 0);
-  const roll = hashKillSeed(String(user.id), killIndex + 6666) % totalWeight;
+  const weights = spellsNotOwned.map(spellDropWeight);
+  const totalSpellWeight = weights.reduce((a, b) => a + b, 0);
+  const roll =
+    hashKillSeed(String(user.id), killIndex + 6666) % (totalSpellWeight + SPELL_NO_DROP_WEIGHT);
+  if (roll >= totalSpellWeight) return;
 
   let cumulative = 0;
-  for (let i = 0; i < pool.length; i++) {
+  for (let i = 0; i < spellsNotOwned.length; i++) {
     cumulative += weights[i] ?? 0;
     if (roll < cumulative) {
-      const spellId = pool[i];
-      if (spellId && !pending.weapon_ids.includes(spellId)) {
+      const spellId = spellsNotOwned[i];
+      if (spellId) {
         pending.weapon_ids.push(spellId);
         pending.drop_count = (pending.drop_count ?? 0) + 1;
+        armas.ultimo_drop_magia = today;
+        user.preferencias.patrol_armas = armas;
       }
       return;
     }

@@ -6067,6 +6067,37 @@
   color: #f5f3ff;
 }
 
+/* Magia sempre é conquista inédita (cada uma dropa uma única vez) */
+.game-afk-reward-chip__new {
+  position: absolute;
+  top: -0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 0.08rem 0.35rem;
+  border-radius: 999px;
+  background: #f59e0b;
+  border: 1.5px solid #fff;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  animation: game-afk-reward-new-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes game-afk-reward-new-pulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
 .game-afk-reward-chip--secret {
   border: 2.5px solid transparent;
   background:
