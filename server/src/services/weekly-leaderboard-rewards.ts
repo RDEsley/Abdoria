@@ -5,6 +5,8 @@ import {
   type PodiumHistoryEntry,
 } from '../repositories/leaderboard-podium-repository.js';
 import { User, type UserMutable } from '../repositories/user-repository.js';
+import { Notifications, type NewNotification } from '../repositories/notification-repository.js';
+import { CURRENCY_NAME } from '../types/index.js';
 import { ensureAbdoriaWallet } from './economy.js';
 import { getSundayWeekKey, weeklyMetricValue } from './weekly-stats.js';
 
@@ -58,6 +60,8 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
       .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'));
 
     const podium: PodiumHistoryEntry[] = [];
+    const avisos: NewNotification[] = [];
+    const metricLabel = metric === 'xp' ? 'XP' : CURRENCY_NAME;
 
     for (let i = 0; i < ranked.length; i += 1) {
       const rank = i + 1;
@@ -80,9 +84,21 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
       user.cosmeticos.moedas += prize;
       await user.save();
       paidCount += 1;
+
+      avisos.push({
+        user_id: lean.id,
+        tipo: rank <= 3 ? 'ranking_podio' : 'ranking_premio',
+        titulo:
+          rank <= 3
+            ? `Você fechou a semana em ${rank}º no ranking de ${metricLabel}!`
+            : `Ranking semanal de ${metricLabel} fechou`,
+        corpo: `Posição #${rank} — prêmio de ${prize.toLocaleString('pt-BR')} ${CURRENCY_NAME} creditado.`,
+        payload: { metric, rank, prize, week_key: payoutWeek },
+      });
     }
 
     await LeaderboardPodiumHistory.createMany(podium);
+    await Notifications.createMany(avisos);
     await LeaderboardWeekPayout.create({ _id: key });
   }
 

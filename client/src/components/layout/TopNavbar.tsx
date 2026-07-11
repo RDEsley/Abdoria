@@ -21,6 +21,8 @@ export interface TopNavbarProps {
   backgroundLight?: boolean;
   onProfileClick?: () => void;
   onDoriasAddClick?: () => void;
+  /** Ações extras à direita (ex.: sino de notificações). */
+  actions?: ReactNode;
 }
 
 function formatAmount(value: number): string {
@@ -85,6 +87,7 @@ export function TopNavbar({
   backgroundLight,
   onProfileClick,
   onDoriasAddClick,
+  actions,
 }: TopNavbarProps) {
   const xpPct = xpMax > 0 ? Math.min(100, (userXp / xpMax) * 100) : 0;
   const skinClass = backgroundClass
@@ -147,6 +150,7 @@ export function TopNavbar({
             addAriaLabel={`Comprar mais ${CURRENCY_NAME}`}
             pulse={coinsEarnedPulse}
           />
+          {actions}
         </div>
       </div>
     </header>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
+import { NotificationsBell } from '@/components/notifications/NotificationsBell';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { TopNavbar } from '@/components/layout/TopNavbar';
 import { useApp } from '@/hooks/useApp';
@@ -69,6 +70,7 @@ export function GameHud() {
         coinsEarnedPulse={coinsEarnedPulse}
         onProfileClick={() => setShowCosmetics(true)}
         onDoriasAddClick={() => setShowCosmetics(true)}
+        actions={<NotificationsBell />}
       />
 
       <CosmeticsModal open={showCosmetics} onClose={closeCosmetics} />
