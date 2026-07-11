@@ -11,3 +11,6 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plano_treino JSONB;
 
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS grupos TEXT[] NOT NULL DEFAULT '{abdomen}';
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS contraindicacoes TEXT[] NOT NULL DEFAULT '{}';
+
+-- Dia do plano corpo-todo concluído pelo treino (NULL = treino fora do modo plano).
+ALTER TABLE workout_history ADD COLUMN IF NOT EXISTS plano_dia_indice INTEGER;

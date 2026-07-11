@@ -13,6 +13,7 @@ import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
 import { filterRowsByAvailableSlugs, findExercisesForUserDocument } from './exercise-catalog.js';
+import { isPlanoUser, recommendFromPlano } from './plan-generator.js';
 
 export interface RecommendationAlert {
   id: string;
@@ -28,6 +29,8 @@ export interface RecommendWorkoutOptions {
   excludePresetId?: string | null;
   /** Força um ciclo específico (A–G) em vez de avançar pela sequência automática. */
   forceCiclo?: TreinoBase;
+  /** Força um dia específico do plano corpo-todo (modo plano). */
+  forceDia?: number;
 }
 
 type PresetDoc = {
@@ -274,6 +277,13 @@ export async function getSuggestedWorkout(
   user: UserRecord,
   options: RecommendWorkoutOptions = {},
 ): Promise<TreinoSugerido | null> {
+  if (isPlanoUser(user)) {
+    return recommendFromPlano(user, {
+      allowRepeats: options.allowRepeats,
+      shuffle: options.shuffle,
+      forceDia: options.forceDia,
+    });
+  }
   return recommendWorkout(user, options);
 }
 

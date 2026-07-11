@@ -3,7 +3,7 @@ import { WorkoutPreset } from '../domain/WorkoutPreset.js';
 import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { recommendWorkout, getRecommendedPresetsList } from '../services/recommendation.js';
+import { getSuggestedWorkout, getRecommendedPresetsList } from '../services/recommendation.js';
 import type { TreinoBase } from '../types/index.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 
@@ -42,13 +42,16 @@ presetsRouter.get('/recommend', async (req: AuthRequest, res) => {
       cicloParam && ciclos.includes(cicloParam as TreinoBase)
         ? (cicloParam as TreinoBase)
         : undefined;
+    const diaParam = Number(req.query.dia);
+    const forceDia = Number.isInteger(diaParam) && diaParam >= 0 ? diaParam : undefined;
 
-    const treino = await recommendWorkout(user, {
+    const treino = await getSuggestedWorkout(user, {
       allowRepeats,
       shuffle,
       extraCount: extra,
       excludePresetId,
       forceCiclo,
+      forceDia,
     });
     if (!treino) {
       res.status(404).json({ error: 'Nenhum treino recomendado encontrado.' });

@@ -1060,6 +1060,8 @@ export interface IWorkoutHistory {
   musculos_estimulados: MusculoPrincipal[];
   xp_ganho?: number;
   concluido_em: Date;
+  /** Dia do plano corpo-todo que este treino concluiu (modo plano). */
+  plano_dia_indice?: number;
 }
 
 export interface IWorkoutHistoryDocument extends IWorkoutHistory {
@@ -1082,12 +1084,17 @@ export interface TreinoSugeridoExercicio {
 
 export interface TreinoSugerido {
   preset_id: string;
-  ciclo_id: TreinoBase;
+  /** null quando o treino vem do plano corpo-todo (não há ciclo A–G). */
+  ciclo_id: TreinoBase | null;
   nome: string;
   descricao: string;
   total_exercicios: number;
   exercicios: TreinoSugeridoExercicio[];
   primeiro_exercicio: string | null;
+  /** Presentes só no modo plano (corpo todo). */
+  plano_dia_indice?: number;
+  plano_total_dias?: number;
+  plano_titulo?: string;
 }
 
 export interface RepSchemeRecommendation {

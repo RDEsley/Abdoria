@@ -54,6 +54,7 @@ export type {
   SimulacaoDefinicao,
   TreinoBase,
   TreinoSugerido,
+  TreinoSugeridoExercicio,
   TreinoTipo,
   UserPreferencias,
   SavedWorkoutPreset,

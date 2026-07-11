@@ -10,6 +10,7 @@ export interface WorkoutHistoryDocument {
   musculos_estimulados?: string[];
   xp_ganho: number;
   concluido_em: Date | string;
+  plano_dia_indice?: number | null;
 }
 
 function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
@@ -23,6 +24,7 @@ function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
     musculos_estimulados: (row.musculos_estimulados as string[]) ?? [],
     xp_ganho: Number(row.xp_ganho),
     concluido_em: row.concluido_em as string,
+    plano_dia_indice: row.plano_dia_indice != null ? Number(row.plano_dia_indice) : null,
   };
 }
 
@@ -143,6 +145,7 @@ export const WorkoutHistory = {
       musculos_estimulados: data.musculos_estimulados ?? [],
       xp_ganho: data.xp_ganho,
       concluido_em: data.concluido_em ?? new Date().toISOString(),
+      ...(data.plano_dia_indice != null ? { plano_dia_indice: data.plano_dia_indice } : {}),
     };
     const { data: inserted, error } = await sb
       .from('workout_history')

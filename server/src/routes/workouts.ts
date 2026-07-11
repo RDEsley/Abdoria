@@ -24,6 +24,7 @@ import {
   getRecommendationAlerts,
   markCycleCompleted,
 } from '../services/recommendation.js';
+import { isPlanoUser, markPlanoDayCompleted } from '../services/plan-generator.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
@@ -280,7 +281,8 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { treino_nome, treino_tipo, exercicios, duracao_total_segundos } = req.body;
+    const { treino_nome, treino_tipo, exercicios, duracao_total_segundos, plano_dia_indice } =
+      req.body;
 
     if (!treino_nome || !Array.isArray(exercicios) || exercicios.length === 0) {
       res.status(400).json({ error: 'Dados do treino inválidos.' });
@@ -357,6 +359,11 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       resolvedExercises as WorkoutExerciseEntry[],
     );
 
+    const planoDiaIndice =
+      plano_dia_indice != null && Number.isInteger(Number(plano_dia_indice))
+        ? Number(plano_dia_indice)
+        : null;
+
     const history = await WorkoutHistory.create({
       usuario_id: user.id,
       treino_nome,
@@ -366,9 +373,13 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       musculos_estimulados: musculos,
       concluido_em: new Date(),
       xp_ganho: 0,
+      plano_dia_indice: planoDiaIndice,
     });
 
-    const rodadaCompleta = await markCycleCompleted(user, tipoResolvido);
+    const rodadaCompleta =
+      planoDiaIndice != null && isPlanoUser(user)
+        ? await markPlanoDayCompleted(user, planoDiaIndice)
+        : await markCycleCompleted(user, tipoResolvido);
 
     await syncUserGamification(user.id.toString());
     const updatedUser = await User.findById(user.id);
