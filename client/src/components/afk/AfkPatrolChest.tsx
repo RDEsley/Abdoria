@@ -2,6 +2,7 @@ interface Props {
   open?: boolean;
   opening?: boolean;
   shaking?: boolean;
+  charged?: boolean;
   ready?: boolean;
   empty?: boolean;
   celebrate?: boolean;
@@ -13,6 +14,7 @@ export function AfkPatrolChest({
   open = false,
   opening = false,
   shaking = false,
+  charged = false,
   ready = false,
   empty = false,
   celebrate = false,
@@ -23,11 +25,13 @@ export function AfkPatrolChest({
     ? 'game-afk-chest--open'
     : opening
       ? 'game-afk-chest--opening'
-      : ready
-        ? 'game-afk-chest--ready'
-        : empty
-          ? 'game-afk-chest--empty'
-          : '';
+      : charged
+        ? 'game-afk-chest--charged'
+        : ready
+          ? 'game-afk-chest--ready'
+          : empty
+            ? 'game-afk-chest--empty'
+            : '';
 
   return (
     <div

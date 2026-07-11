@@ -12,19 +12,22 @@ interface Props {
   onClose: () => void;
 }
 
-type ChestPhase = 'closed' | 'shaking' | 'opening' | 'open';
+type ChestPhase = 'closed' | 'shaking' | 'charged' | 'opening' | 'open';
 
 export function AfkRewardCelebration({ claimed, onClose }: Props) {
   const { user } = useAuth();
   const effectId = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp).efeito_equipado;
   const [phase, setPhase] = useState<ChestPhase>('closed');
 
+  // Build-up de tensão: tremor escalonado → carga → pop de abertura → loot.
   useEffect(() => {
-    const shakeTimer = window.setTimeout(() => setPhase('shaking'), 160);
-    const openTimer = window.setTimeout(() => setPhase('opening'), 400);
-    const revealTimer = window.setTimeout(() => setPhase('open'), 900);
+    const shakeTimer = window.setTimeout(() => setPhase('shaking'), 200);
+    const chargeTimer = window.setTimeout(() => setPhase('charged'), 1700);
+    const openTimer = window.setTimeout(() => setPhase('opening'), 2100);
+    const revealTimer = window.setTimeout(() => setPhase('open'), 2700);
     return () => {
       window.clearTimeout(shakeTimer);
+      window.clearTimeout(chargeTimer);
       window.clearTimeout(openTimer);
       window.clearTimeout(revealTimer);
     };
@@ -64,6 +67,7 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
           withChest
           chestCelebrate
           chestShaking={phase === 'shaking'}
+          chestCharged={phase === 'charged'}
           chestOpen={phase === 'open'}
           chestOpening={phase === 'opening'}
         />

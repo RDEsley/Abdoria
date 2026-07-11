@@ -6687,20 +6687,137 @@ button.game-afk-reward-chip {
   }
 }
 
+/* Build-up de tensão (estilo abertura de baú do Clash Royale):
+   tremores em rajadas crescentes com pausas dramáticas entre elas. */
 .game-afk-chest--shaking {
-  animation: game-afk-chest-shake 0.28s ease-in-out 2;
+  animation: game-afk-chest-shake-buildup 1.5s ease-in-out forwards;
 }
 
-@keyframes game-afk-chest-shake {
+@keyframes game-afk-chest-shake-buildup {
   0%,
-  100% {
+  12% {
     transform: rotate(0deg) translateX(0);
   }
-  25% {
-    transform: rotate(-2deg) translateX(-2px);
+  16% {
+    transform: rotate(-1.5deg) translateX(-1px);
   }
-  75% {
-    transform: rotate(2deg) translateX(2px);
+  20% {
+    transform: rotate(1.5deg) translateX(1px);
+  }
+  24%,
+  34% {
+    transform: rotate(0deg) translateX(0);
+  }
+  38% {
+    transform: rotate(-2.5deg) translateX(-2px);
+  }
+  42% {
+    transform: rotate(2.5deg) translateX(2px);
+  }
+  46% {
+    transform: rotate(-2.5deg) translateX(-2px);
+  }
+  50%,
+  56% {
+    transform: rotate(0deg) translateX(0);
+  }
+  60% {
+    transform: rotate(-4deg) translateX(-3px) scale(1.02);
+  }
+  64% {
+    transform: rotate(4deg) translateX(3px) scale(1.02);
+  }
+  68% {
+    transform: rotate(-5deg) translateX(-3px) scale(1.03);
+  }
+  72% {
+    transform: rotate(5deg) translateX(3px) scale(1.03);
+  }
+  76% {
+    transform: rotate(-6deg) translateX(-4px) scale(1.04);
+  }
+  80% {
+    transform: rotate(6deg) translateX(4px) scale(1.05);
+  }
+  84% {
+    transform: rotate(-6deg) translateX(-4px) scale(1.05);
+  }
+  88% {
+    transform: rotate(6deg) translateX(4px) scale(1.06);
+  }
+  100% {
+    transform: rotate(0deg) translateX(0) scale(1.06);
+  }
+}
+
+/* Brilho que cresce atrás do baú durante o tremor */
+.game-afk-chest--shaking::after,
+.game-afk-chest--charged::after {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(253, 224, 71, 0.55) 0%,
+    rgba(251, 191, 36, 0.25) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: -1;
+  animation: game-afk-chest-glow-build 1.5s ease-in forwards;
+}
+
+@keyframes game-afk-chest-glow-build {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Carga: o baú comprime e acumula energia antes do pop */
+.game-afk-chest--charged {
+  animation: game-afk-chest-charge 0.35s ease-in forwards;
+}
+
+.game-afk-chest--charged::after {
+  animation: none;
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+@keyframes game-afk-chest-charge {
+  0% {
+    transform: scale(1.06);
+  }
+  60% {
+    transform: scaleX(1.12) scaleY(0.85) translateY(3px);
+    filter: brightness(1.25);
+  }
+  100% {
+    transform: scaleX(1.1) scaleY(0.87) translateY(3px);
+    filter: brightness(1.35);
+  }
+}
+
+/* Pop de abertura: solta a compressão com overshoot */
+.game-afk-chest--celebrate.game-afk-chest--opening {
+  animation: game-afk-chest-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes game-afk-chest-pop {
+  0% {
+    transform: scaleX(1.1) scaleY(0.87) translateY(3px);
+  }
+  45% {
+    transform: scale(1.12) translateY(-6px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -8152,6 +8269,9 @@ button.game-afk-reward-chip {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* Filho de flex-column com overflow: sem isso a seção é comprimida
+     em vez de gerar scroll, e a última (Especiais) some. */
+  flex-shrink: 0;
 }
 
 /* Reset the index.css separator that stacks on top of gap */

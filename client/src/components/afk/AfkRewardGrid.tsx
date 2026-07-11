@@ -20,6 +20,7 @@ interface Props {
   chestOpening?: boolean;
   chestCelebrate?: boolean;
   chestShaking?: boolean;
+  chestCharged?: boolean;
 }
 
 /** Camada de partículas/luzes por raridade ao redor do ícone do loot. */
@@ -154,6 +155,7 @@ export function AfkRewardGrid({
   chestOpening = false,
   chestCelebrate = false,
   chestShaking = false,
+  chestCharged = false,
 }: Props) {
   const items = buildAfkRewardItems(pending);
   const hasLoot = items.length > 0;
@@ -193,11 +195,12 @@ export function AfkRewardGrid({
           open={chestOpen}
           opening={chestOpening}
           shaking={chestShaking}
+          charged={chestCharged}
           ready={hasLoot && !chestOpen && !chestOpening && !chestCelebrate}
           empty={!hasLoot}
           celebrate={chestCelebrate}
           itemCount={hasLoot && !showLoot ? dropCount : 0}
-          size={chestOpen || chestOpening || chestShaking ? 'lg' : 'sm'}
+          size={chestOpen || chestOpening || chestShaking || chestCharged ? 'lg' : 'sm'}
         />
       </div>
     );
