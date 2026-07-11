@@ -1391,6 +1391,8 @@ export interface OnboardingPayload {
   onboarding_completed?: boolean;
   simulacao_definicao?: SimulacaoDefinicao;
   skip?: boolean;
+  /** Respostas do questionário de treino — o server gera o plano a partir dele. */
+  perfil_treino?: Omit<PerfilTreino, 'atualizado_em'> & { atualizado_em?: string };
 }
 
 /** Rótulos das zonas abdominais (não confundir com peito/costas de musculação). */

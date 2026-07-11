@@ -158,8 +158,7 @@ function toSugeridoExercicio(
     exercise as Parameters<typeof getExerciseParamsForNivel>[0],
     nivel,
   );
-  const modo: ModoExercicio =
-    exercise.modo === 'ambos' ? modoPadrao : params.modo;
+  const modo: ModoExercicio = exercise.modo === 'ambos' ? modoPadrao : params.modo;
   const focoParams = FOCO_PARAMS[foco];
 
   return {
@@ -171,8 +170,7 @@ function toSugeridoExercicio(
     }),
     series: focoParams.series,
     modo,
-    repeticoes:
-      modo === 'reps' ? doseReps(params.repeticoes || 12, foco, semana) : undefined,
+    repeticoes: modo === 'reps' ? doseReps(params.repeticoes || 12, foco, semana) : undefined,
     tempo_seg:
       modo === 'tempo'
         ? doseTempoSeg(params.tempo_seg || exercise.tempo_recomendado || 30, foco, semana)
@@ -206,9 +204,7 @@ export async function recommendFromPlano(
   );
 
   const recent = options.allowRepeats ? new Set<string>() : await recentExerciseSlugs(user.id);
-  const shuffleSeed = options.shuffle
-    ? `${user.id}:${getTodaySaoPaulo()}:${dia.indice}`
-    : null;
+  const shuffleSeed = options.shuffle ? `${user.id}:${getTodaySaoPaulo()}:${dia.indice}` : null;
 
   const target = SESSION_EXERCISE_COUNT[perfil.tempo_por_sessao_min] ?? 6;
 
@@ -221,7 +217,10 @@ export async function recommendFromPlano(
     shuffleSeed,
   );
 
-  let selected = [...pinned, ...selectByGroupQuota(scored, dia, Math.max(target - pinned.length, 0))];
+  let selected = [
+    ...pinned,
+    ...selectByGroupQuota(scored, dia, Math.max(target - pinned.length, 0)),
+  ];
 
   if (selected.length < MIN_EXERCISES) {
     // Pool pequeno: refaz sem penalidade de repetição recente.
@@ -232,7 +231,10 @@ export async function recommendFromPlano(
       false,
       shuffleSeed,
     );
-    selected = [...pinned, ...selectByGroupQuota(relaxed, dia, Math.max(target - pinned.length, 0))];
+    selected = [
+      ...pinned,
+      ...selectByGroupQuota(relaxed, dia, Math.max(target - pinned.length, 0)),
+    ];
   }
 
   if (selected.length === 0) return null;

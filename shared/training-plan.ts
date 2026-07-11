@@ -126,12 +126,7 @@ export const SPLIT_TEMPLATES: Record<number, SplitDayTemplate[]> = {
 };
 
 /** Rotação de ênfase abdominal entre os dias (preserva a lógica dos ciclos A–D). */
-export const ABS_ENFASE_ROTATION: MusculoPrincipal[] = [
-  'superior',
-  'obliquos',
-  'inferior',
-  'core',
-];
+export const ABS_ENFASE_ROTATION: MusculoPrincipal[] = ['superior', 'obliquos', 'inferior', 'core'];
 
 function tituloDoDia(indice: number, grupos: ParteCorpo[]): string {
   const principais = grupos.filter((g) => g !== 'abdomen').slice(0, 2);

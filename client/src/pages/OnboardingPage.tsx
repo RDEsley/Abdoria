@@ -6,6 +6,20 @@ import { AuthLogo } from '@/components/auth/AuthLogo';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { TermsModal } from '@/components/legal/TermsModal';
+import {
+  EquipamentoStep,
+  FocoStep,
+  FrequenciaStep,
+  PartesStep,
+  PlanoPreview,
+  RestricoesStep,
+  ScopeStep,
+} from '@/components/onboarding/training-profile-steps';
+import {
+  DEFAULT_TRAINING_DRAFT,
+  draftToPerfilTreino,
+  type TrainingProfileDraft,
+} from '@/components/onboarding/training-profile-draft';
 import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
 import { digitsOnly, validateBodyMetrics } from '@/lib/utils';
@@ -16,26 +30,28 @@ import {
   CICLOS_OPCIONAIS,
   CURRENCY_NAME,
   NIVEL_LABELS,
-  OBJETIVO_HINTS,
-  OBJETIVO_LABELS,
   normalizeCicloTreinos,
   suggestNivel,
   type ArmaPreferida,
   type NivelUsuario,
-  type Objetivo,
   type TreinoBase,
 } from '@/types';
 
-const STEPS = [
-  'terms',
-  'body',
-  'level',
-  'weapon',
-  'objective',
-  'cycle',
-  'prefs',
-  'tutorial',
-] as const;
+type StepId =
+  | 'terms'
+  | 'body'
+  | 'level'
+  | 'weapon'
+  | 'scope'
+  | 'foco'
+  | 'partes'
+  | 'frequencia'
+  | 'equipamento'
+  | 'restricoes'
+  | 'plano'
+  | 'prefs'
+  | 'tutorial';
+
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 const REP_SCHEMES = [
@@ -59,12 +75,38 @@ export function OnboardingPage() {
   const [altura, setAltura] = useState('');
   const [nivel, setNivel] = useState<NivelUsuario | null>(null);
   const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida>('arco');
-  const [objetivo, setObjetivo] = useState<Objetivo | null>(null);
+  const [draft, setDraft] = useState<TrainingProfileDraft>(DEFAULT_TRAINING_DRAFT);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [descanso, setDescanso] = useState(30);
   const [modo, setModo] = useState<'tempo' | 'reps'>('tempo');
   const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
   const [saving, setSaving] = useState(false);
+  const [skipped, setSkipped] = useState(false);
+
+  const corpoTodo = draft.escopo === 'corpo_todo';
+
+  const steps = useMemo<StepId[]>(
+    () => [
+      'terms',
+      'body',
+      'level',
+      'weapon',
+      'scope',
+      'foco',
+      ...(corpoTodo ? (['partes'] as StepId[]) : []),
+      'frequencia',
+      'equipamento',
+      'restricoes',
+      'plano',
+      'prefs',
+      'tutorial',
+    ],
+    [corpoTodo],
+  );
+  const stepId = steps[Math.min(step, steps.length - 1)];
+
+  const patchDraft = (patch: Partial<TrainingProfileDraft>) =>
+    setDraft((prev) => ({ ...prev, ...patch }));
 
   const bodyMetrics = useMemo(
     () => validateBodyMetrics(idade, peso, altura),
@@ -95,6 +137,7 @@ export function OnboardingPage() {
         terms_accepted: termsAccepted,
         onboarding_completed: true,
         skip,
+        perfil_treino: draftToPerfilTreino(draft, skip || skipped ? 'skip' : 'onboarding'),
         preferencias: {
           descanso_padrao_seg: descanso,
           modo_padrao: modo,
@@ -105,6 +148,7 @@ export function OnboardingPage() {
           sfx_volume: 0.7,
           tutorial_visto: false,
           arma_preferida: armaPreferida,
+          equipamentos: draft.equipamentos,
         },
       };
 
@@ -112,7 +156,6 @@ export function OnboardingPage() {
       if (bodyMetrics.peso_kg !== null) payload.peso_kg = bodyMetrics.peso_kg;
       if (bodyMetrics.altura_cm !== null) payload.altura_cm = bodyMetrics.altura_cm;
       if (nivel) payload.nivel = nivel;
-      if (objetivo) payload.objetivo = objetivo;
 
       const updatedUser = await completeOnboarding(payload);
       applyUser(updatedUser);
@@ -124,11 +167,17 @@ export function OnboardingPage() {
   };
 
   const validateCurrentStep = (): string | null => {
-    if (step === 0 && !termsAccepted) return 'Aceite os termos para continuar.';
-    if (step === 1) return bodyMetrics.error;
-    if (step === 2 && !nivel) return 'Selecione seu nível de treino.';
-    if (step === 4 && !objetivo) return 'Selecione seu objetivo.';
-    if (step === 5 && ciclo.length < 2) return 'Escolha pelo menos 2 ciclos de treino.';
+    if (stepId === 'terms' && !termsAccepted) return 'Aceite os termos para continuar.';
+    if (stepId === 'body') return bodyMetrics.error;
+    if (stepId === 'level' && !nivel) return 'Selecione seu nível de treino.';
+    if (stepId === 'scope' && !draft.escopo) return 'Escolha o alcance da sua missão.';
+    if (stepId === 'foco' && !draft.foco) return 'Selecione seu foco.';
+    if (stepId === 'partes' && draft.partes !== null && draft.partes.length === 0) {
+      return 'Escolha pelo menos uma parte do corpo, ou use o Recomendado.';
+    }
+    if (stepId === 'plano' && !corpoTodo && ciclo.length < 2) {
+      return 'Escolha pelo menos 2 ciclos de treino.';
+    }
     return null;
   };
 
@@ -138,12 +187,13 @@ export function OnboardingPage() {
       showGameToast(error, { variant: 'warn' });
       return;
     }
-    if (step < STEPS.length - 1) setStep((s) => s + 1);
+    if (step < steps.length - 1) setStep((s) => s + 1);
     else void saveAndFinish(false);
   };
 
   const skipStep = () => {
-    if (step < STEPS.length - 1) setStep((s) => s + 1);
+    if (stepId !== 'terms' && stepId !== 'tutorial') setSkipped(true);
+    if (step < steps.length - 1) setStep((s) => s + 1);
     else void saveAndFinish(true);
   };
 
@@ -174,7 +224,7 @@ export function OnboardingPage() {
 
         <div className="mb-6 flex items-center justify-between">
           <p className="text-sm font-bold text-teal-700">
-            Passo {step + 1} / {STEPS.length}
+            Passo {step + 1} / {steps.length}
           </p>
           <button
             type="button"
@@ -188,23 +238,24 @@ export function OnboardingPage() {
         <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-stone-200">
           <motion.div
             className="h-full bg-teal-600"
-            animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+            animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
           />
         </div>
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={step}
+            key={stepId}
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -30 }}
             className="rounded-2xl border border-stone-200 bg-white p-6 shadow-md"
           >
-            {step === 0 && (
+            {stepId === 'terms' && (
               <>
                 <h2 className="text-2xl font-extrabold text-stone-900">Olá, {firstName}!</h2>
                 <p className="mt-2 text-stone-600">
-                  Vamos personalizar seus treinos. Aceite os termos para continuar.
+                  Vamos montar seu plano de treino como um personal faria. Aceite os termos para
+                  continuar.
                 </p>
                 {!termsAccepted && (
                   <button
@@ -218,7 +269,7 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 1 && (
+            {stepId === 'body' && (
               <>
                 <h2 className="text-2xl font-extrabold">Seus dados</h2>
                 <p className="mt-1 text-sm text-stone-500">
@@ -264,9 +315,9 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 2 && (
+            {stepId === 'level' && (
               <>
-                <h2 className="text-2xl font-extrabold">Seu nível</h2>
+                <h2 className="text-2xl font-extrabold">Classe do herói</h2>
                 {nivelSugerido && (
                   <p className="mt-1 text-sm text-stone-500">
                     Sugestão com base nos seus dados: {NIVEL_LABELS[nivelSugerido]}
@@ -291,7 +342,7 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 3 && (
+            {stepId === 'weapon' && (
               <>
                 <h2 className="text-2xl font-extrabold">Sua arma</h2>
                 <p className="mt-1 text-sm text-stone-500">
@@ -322,33 +373,25 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 4 && (
+            {stepId === 'scope' && <ScopeStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'foco' && <FocoStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'partes' && <PartesStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'frequencia' && <FrequenciaStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'equipamento' && <EquipamentoStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'restricoes' && <RestricoesStep draft={draft} onChange={patchDraft} />}
+
+            {stepId === 'plano' && corpoTodo && (
               <>
-                <h2 className="text-2xl font-extrabold">Seu objetivo</h2>
+                <h2 className="text-2xl font-extrabold">Sua Campanha</h2>
                 <p className="mt-1 text-sm text-stone-500">
-                  O que você quer alcançar com os treinos?
+                  {draft.frequencia} missões por semana, montadas pro seu foco. Dá pra ajustar
+                  depois nas configurações.
                 </p>
-                <div className="mt-4 flex flex-col gap-2">
-                  {(['definicao', 'resistencia', 'forca', 'manutencao'] as Objetivo[]).map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      onClick={() => setObjetivo(o)}
-                      className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
-                        objetivo === o ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                      }`}
-                    >
-                      <span className="font-bold">{OBJETIVO_LABELS[o]}</span>
-                      <span className="mt-0.5 block text-xs font-medium text-stone-500">
-                        {OBJETIVO_HINTS[o]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                <PlanoPreview draft={draft} />
               </>
             )}
 
-            {step === 5 && (
+            {stepId === 'plano' && !corpoTodo && (
               <>
                 <h2 className="text-2xl font-extrabold">Seu ciclo de treinos</h2>
                 <p className="mt-1 text-sm text-stone-500">
@@ -383,7 +426,7 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 6 && (
+            {stepId === 'prefs' && (
               <>
                 <h2 className="text-2xl font-extrabold">Preferências</h2>
                 <label className="mt-4 block text-sm font-semibold">
@@ -437,11 +480,11 @@ export function OnboardingPage() {
               </>
             )}
 
-            {step === 7 && (
+            {stepId === 'tutorial' && (
               <>
                 <h2 className="text-2xl font-extrabold">Bem-vindo ao Abdoria!</h2>
                 <p className="mt-2 text-sm font-semibold text-emerald-700">
-                  Sua jornada começa agora — passo 8/8
+                  Sua jornada começa agora — passo {steps.length}/{steps.length}
                 </p>
                 <ul className="mt-4 space-y-3 text-sm text-stone-700">
                   <li>
@@ -453,8 +496,10 @@ export function OnboardingPage() {
                     loja de cosméticos.
                   </li>
                   <li>
-                    <strong>Treinos:</strong> Monte ou escolha sugestões no Construtor. Ciclos A–E
-                    alternam foco muscular.
+                    <strong>Treinos:</strong>{' '}
+                    {corpoTodo
+                      ? 'Sua Campanha sugere a missão do dia; monte variações no Construtor.'
+                      : 'Monte ou escolha sugestões no Construtor. Ciclos A–E alternam foco muscular.'}
                   </li>
                   <li>
                     <strong>Ranking semanal:</strong> Top 25 ganham {CURRENCY_NAME} todo domingo.
@@ -484,7 +529,7 @@ export function OnboardingPage() {
                 className="flex flex-1 items-center justify-center gap-2"
                 size="lg"
               >
-                {step === STEPS.length - 1 ? (saving ? 'Salvando...' : 'Começar!') : 'Continuar'}
+                {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Começar!') : 'Continuar'}
                 <ChevronRight size={20} />
               </GameButton>
             </div>

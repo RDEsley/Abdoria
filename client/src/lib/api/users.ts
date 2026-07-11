@@ -2,6 +2,7 @@ import type {
   IUserDocument,
   MolduraId,
   OnboardingPayload,
+  PerfilTreino,
   UpdateUserDadosResponse,
   UserDadosSalvos,
 } from '@/types';
@@ -30,6 +31,19 @@ export function updateUserDados(data: Partial<UserDadosSalvos>): Promise<UpdateU
 
 export function completeOnboarding(data: OnboardingPayload): Promise<IUserDocument> {
   return fetchJson('/users/me/onboarding', { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function updateTrainingProfile(
+  perfil: Omit<PerfilTreino, 'atualizado_em'>,
+): Promise<IUserDocument> {
+  return fetchJson('/users/me/training-profile', {
+    method: 'PUT',
+    body: JSON.stringify({ perfil_treino: perfil }),
+  });
+}
+
+export function regenerateTrainingPlan(): Promise<IUserDocument> {
+  return fetchJson('/users/me/training-plan/regenerate', { method: 'POST' });
 }
 
 export function changeName(nome: string): Promise<{ user: IUserDocument; custo_pago: number }> {

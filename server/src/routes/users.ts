@@ -7,6 +7,8 @@ import { ensureAbdoriaWallet, readAbdoriaBalance } from '../services/economy.js'
 import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
 import { molduraStatusForUser } from '../services/molduras.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
+import { focoToObjetivo, sanitizePerfilTreino } from '../utils/training-profile.js';
+import { buildPlanoTreino } from '../../../shared/training-plan.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
 import {
   awardAbdoriaFromXp,
@@ -308,7 +310,24 @@ usersRouter.patch('/me/onboarding', async (req: AuthRequest, res) => {
     }
 
     if (body.preferencias !== undefined) {
-      update.preferencias = mergePreferencias(current.preferencias, body.preferencias);
+      const mergedPrefs = mergePreferencias(current.preferencias, body.preferencias);
+      update.preferencias = mergedPrefs;
+
+      // Equipamento coletado no onboarding precisa liberar os exercícios gated
+      // (mesmo sync do PATCH /me).
+      const mutable = await User.findById(req.userId!);
+      if (mutable) {
+        syncEquipmentExerciseUnlocks(mutable, mergedPrefs);
+        update.dados_salvos = mutable.dados_salvos;
+      }
+    }
+
+    const perfilTreino = sanitizePerfilTreino(body.perfil_treino);
+    if (perfilTreino) {
+      update.perfil_treino = perfilTreino;
+      update.plano_treino = buildPlanoTreino(perfilTreino, new Date().toISOString());
+      // Mantém a coluna objetivo coerente pro tiered-match de presets.
+      update.objetivo = focoToObjetivo(perfilTreino.foco);
     }
 
     if (body.simulacao_definicao !== undefined) {
@@ -345,5 +364,64 @@ usersRouter.patch('/me/onboarding', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/users/me/onboarding error:', error);
     res.status(500).json({ error: 'Erro no onboarding.' });
+  }
+});
+
+/** Regrava o perfil de treino inteiro (re-onboarding/Configurações) e regenera o plano. */
+usersRouter.put('/me/training-profile', async (req: AuthRequest, res) => {
+  try {
+    const perfilTreino = sanitizePerfilTreino(req.body?.perfil_treino ?? req.body);
+    if (!perfilTreino) {
+      res.status(400).json({ error: 'Perfil de treino inválido.' });
+      return;
+    }
+
+    const update: Record<string, unknown> = {
+      perfil_treino: perfilTreino,
+      plano_treino: buildPlanoTreino(perfilTreino, new Date().toISOString()),
+      objetivo: focoToObjetivo(perfilTreino.foco),
+    };
+
+    const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    res.json(sanitizeUser(user));
+  } catch (error) {
+    console.error('PUT /api/users/me/training-profile error:', error);
+    res.status(500).json({ error: 'Erro ao salvar perfil de treino.' });
+  }
+});
+
+/** Re-roll manual do plano gerado (mantém o perfil, redistribui os dias). */
+usersRouter.post('/me/training-plan/regenerate', async (req: AuthRequest, res) => {
+  try {
+    const current = await loadCurrentUser(req.userId!);
+    if (!current) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    if (!current.perfil_treino) {
+      res.status(400).json({ error: 'Nenhum perfil de treino configurado.' });
+      return;
+    }
+
+    const plano = buildPlanoTreino(current.perfil_treino, new Date().toISOString());
+    const user = await User.findByIdAndUpdate(
+      req.userId!,
+      { $set: { plano_treino: plano } },
+      { new: true },
+    );
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    res.json(sanitizeUser(user));
+  } catch (error) {
+    console.error('POST /api/users/me/training-plan/regenerate error:', error);
+    res.status(500).json({ error: 'Erro ao regenerar plano.' });
   }
 });
