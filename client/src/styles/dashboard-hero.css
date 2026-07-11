@@ -33,6 +33,7 @@
    especificidade mais alta de .game-app .glass-card), aplicada junto no JSX. */
 .game-xp-section {
   padding: 0;
+  overflow: hidden;
 }
 
 .game-xp-section__hero {
@@ -53,7 +54,7 @@
 .game-xp-section__hero--skinned::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   background: rgba(10, 12, 20, 0.5);
   pointer-events: none;
   z-index: 0;
@@ -95,7 +96,7 @@
 .game-xp-section__hero--skinned-light::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   background: rgba(255, 255, 255, 0.24);
   pointer-events: none;
   z-index: 0;

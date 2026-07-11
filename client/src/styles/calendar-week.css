@@ -183,7 +183,7 @@
 .game-profile-hero-shell--skinned::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: inherit;
   background: rgba(12, 10, 9, 0.42);
   pointer-events: none;
@@ -226,7 +226,7 @@
 .game-profile-hero-shell--skinned-light::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: inherit;
   background: rgba(255, 255, 255, 0.28);
   pointer-events: none;

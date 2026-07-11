@@ -279,64 +279,6 @@
   pointer-events: none;
 }
 
-.top-navbar__bag-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  padding: 0;
-  border: 2.5px solid #fbbf24;
-  border-radius: 0.65rem;
-  cursor: pointer;
-  color: #fbbf24;
-  background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
-  box-shadow:
-    0 4px 0 #92400e,
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  transition:
-    transform 0.08s ease,
-    box-shadow 0.08s ease,
-    filter 0.12s ease;
-  filter: drop-shadow(0 1px 3px rgba(251, 191, 36, 0.18));
-}
-
-.top-navbar__bag-btn:hover {
-  filter: brightness(1.15) drop-shadow(0 2px 6px rgba(251, 191, 36, 0.3));
-  transform: translateY(-1px);
-  box-shadow:
-    0 5px 0 #92400e,
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-
-.top-navbar__bag-btn:active {
-  transform: translateY(3px);
-  box-shadow:
-    0 1px 0 #92400e,
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  filter: brightness(0.95);
-}
-
-.top-navbar__bag-badge {
-  position: absolute;
-  top: -0.4rem;
-  right: -0.4rem;
-  min-width: 1.2rem;
-  height: 1.2rem;
-  padding: 0 0.2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.36rem;
-  color: #fff;
-  background: #ef4444;
-  border: 2px solid #1e293b;
-  box-shadow: 0 2px 0 #7f1d1d;
-}
-
 @media (max-width: 380px) {
   .top-navbar__pill {
     min-width: 4.1rem;
@@ -362,11 +304,6 @@
     width: 2.85rem;
     height: 2.85rem;
   }
-
-  .top-navbar__bag-btn {
-    width: 2.45rem;
-    height: 2.45rem;
-  }
 }
 
 @media (min-width: 640px) {
@@ -390,10 +327,5 @@
 
   .top-navbar__pill-value {
     font-size: 0.46rem;
-  }
-
-  .top-navbar__bag-btn {
-    width: 3rem;
-    height: 3rem;
   }
 }

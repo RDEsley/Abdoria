@@ -30,6 +30,30 @@
   border: 2px solid var(--game-ink);
 }
 
+/* Botão de ícone (configurações, notificações, ações de header) */
+.game-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem;
+  color: var(--game-ink);
+  background: #fff;
+  border: var(--border-card);
+  border-radius: var(--radius-chip);
+  box-shadow: var(--shadow-resting);
+  transition:
+    background 0.15s ease,
+    transform 0.08s ease;
+}
+
+.game-icon-btn:hover {
+  background: #f5f5f4;
+}
+
+.game-icon-btn:active {
+  transform: scale(0.96);
+}
+
 /* Botões globais extras */
 .game-btn--ghost {
   background: transparent;

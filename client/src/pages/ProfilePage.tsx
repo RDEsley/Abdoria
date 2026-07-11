@@ -101,8 +101,8 @@ export function ProfilePage() {
     <div className="flex flex-col gap-5">
       <header className="flex items-start justify-between gap-3">
         <GamePageHeader eyebrow="Ficha do herói" title="Perfil" />
-        <Link to="/configuracoes" className="game-nav-item shrink-0 !p-3">
-          <Settings size={20} />
+        <Link to="/configuracoes" className="game-icon-btn shrink-0" aria-label="Configurações">
+          <Settings size={20} aria-hidden />
         </Link>
       </header>
 

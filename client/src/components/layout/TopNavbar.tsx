@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Backpack, Coins, Plus } from 'lucide-react';
+import { Coins, Plus } from 'lucide-react';
 import { CURRENCY_NAME } from '@/types';
 
 export interface TopNavbarProps {
@@ -9,8 +9,6 @@ export interface TopNavbarProps {
   userXp: number;
   xpMax: number;
   doriasAmount: number;
-  /** Total de itens no inventário (badge na mochila). */
-  inventoryItemCount?: number;
   avatarUrl?: string | null;
   /** Sobrescreve avatarUrl quando presente (ex.: CosmeticAvatar). */
   avatar?: ReactNode;
@@ -23,7 +21,6 @@ export interface TopNavbarProps {
   backgroundLight?: boolean;
   onProfileClick?: () => void;
   onDoriasAddClick?: () => void;
-  onInventoryClick?: () => void;
 }
 
 function formatAmount(value: number): string {
@@ -79,7 +76,6 @@ export function TopNavbar({
   userXp,
   xpMax,
   doriasAmount,
-  inventoryItemCount = 0,
   avatarUrl,
   avatar,
   userTitle,
@@ -89,7 +85,6 @@ export function TopNavbar({
   backgroundLight,
   onProfileClick,
   onDoriasAddClick,
-  onInventoryClick,
 }: TopNavbarProps) {
   const xpPct = xpMax > 0 ? Math.min(100, (userXp / xpMax) * 100) : 0;
   const skinClass = backgroundClass
@@ -152,22 +147,6 @@ export function TopNavbar({
             addAriaLabel={`Comprar mais ${CURRENCY_NAME}`}
             pulse={coinsEarnedPulse}
           />
-          {onInventoryClick && (
-            <button
-              type="button"
-              className="top-navbar__bag-btn"
-              onClick={onInventoryClick}
-              aria-label="Abrir inventário"
-              title="Inventário"
-            >
-              <Backpack size={24} strokeWidth={2.2} aria-hidden />
-              {inventoryItemCount > 0 && (
-                <span className="top-navbar__bag-badge tabular-nums" aria-hidden>
-                  {inventoryItemCount > 99 ? '99+' : inventoryItemCount}
-                </span>
-              )}
-            </button>
-          )}
         </div>
       </div>
     </header>

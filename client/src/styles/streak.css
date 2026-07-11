@@ -3,11 +3,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.65rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.45rem;
-  border: 2px solid var(--game-ink);
-  box-shadow: 2px 2px 0 var(--game-ink);
+  padding: 0.35rem 0.75rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: var(--border-card);
+  border-radius: var(--radius-chip);
+  box-shadow: var(--shadow-resting);
 }
 
 .game-streak--hot {
@@ -36,8 +39,7 @@
   position: relative;
   color: #0c4a6e;
   background: #e0f2fe;
-  border-color: #38bdf8;
-  box-shadow: 2px 2px 0 #0284c7;
+  border: 1px solid #7dd3fc;
   overflow: hidden;
   animation: streak-ice-pulse 2.4s ease-in-out infinite;
 }
@@ -108,13 +110,11 @@
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 2px 2px 0 #0284c7;
+    box-shadow: var(--shadow-resting);
   }
   50% {
     transform: scale(1.035);
-    box-shadow:
-      2px 2px 0 #38bdf8,
-      0 0 10px rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
   }
 }
 
