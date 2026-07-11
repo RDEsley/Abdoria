@@ -33,6 +33,11 @@ const ConsistencyHeatmap = lazy(() =>
     default: m.ConsistencyHeatmap,
   })),
 );
+const FollowSuggestions = lazy(() =>
+  import('@/components/social/FollowSuggestions').then((m) => ({
+    default: m.FollowSuggestions,
+  })),
+);
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -198,6 +203,12 @@ export function DashboardPage() {
         <h3 className="game-section-title">Mapa de campanha</h3>
         <Suspense fallback={<PageLoader />}>
           <ConsistencyHeatmap />
+        </Suspense>
+      </motion.section>
+
+      <motion.section variants={item}>
+        <Suspense fallback={null}>
+          <FollowSuggestions />
         </Suspense>
       </motion.section>
 
