@@ -29,11 +29,6 @@ import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 const ActivityCalendar = lazy(() =>
   import('@/components/dashboard/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })),
 );
-const ConsistencyHeatmap = lazy(() =>
-  import('@/components/dashboard/ConsistencyHeatmap').then((m) => ({
-    default: m.ConsistencyHeatmap,
-  })),
-);
 const FollowSuggestions = lazy(() =>
   import('@/components/social/FollowSuggestions').then((m) => ({
     default: m.FollowSuggestions,
@@ -212,9 +207,6 @@ export function DashboardPage() {
 
       <motion.section variants={item} className="glass-card p-4">
         <h3 className="game-section-title">Mapa de campanha</h3>
-        <Suspense fallback={<PageLoader />}>
-          <ConsistencyHeatmap />
-        </Suspense>
         <Suspense fallback={null}>
           <CampaignFeed />
         </Suspense>
