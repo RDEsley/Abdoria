@@ -15,7 +15,7 @@ import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
 import { TrainPresetSection } from '@/components/builder/TrainPresetSection';
 import { WorkoutConfigPanel } from '@/components/builder/WorkoutConfigPanel';
 import { WorkoutQueueList } from '@/components/builder/WorkoutQueueList';
-import { presetToQueue } from '@/components/builder/queue-utils';
+import { presetToQueue, sugeridoToQueue } from '@/components/builder/queue-utils';
 import {
   filterSimilarPresets,
   filterSimilarSavedWorkouts,
@@ -43,6 +43,7 @@ import type {
   SavedWorkoutPreset,
   StoredRepScheme,
   TreinoBase,
+  TreinoSugerido,
   WorkoutQueueItem,
 } from '@/types';
 import {
@@ -131,6 +132,15 @@ export function BuilderPage() {
     authUser?.preferencias?.ciclos_completados_rodada ??
     {};
 
+  // Modo plano (corpo todo): o sugerido vem do gerador, não de presets.
+  const planoTreino = user?.plano_treino ?? authUser?.plano_treino ?? null;
+  const [planOverride, setPlanOverride] = useState<TreinoSugerido | null>(null);
+  const activePlanWorkout =
+    planOverride ?? (suggestedWorkout?.plano_dia_indice != null ? suggestedWorkout : null);
+  const isPlanSelected =
+    typeof selectedPresetId === 'string' && selectedPresetId.startsWith('plano-dia-');
+  const selectedPlanWorkout = isPlanSelected ? activePlanWorkout : null;
+
   const xpCapReached = useMemo(() => {
     if (!stats) return false;
     return stats.xp_hoje >= stats.xp_diario_limite;
@@ -186,6 +196,18 @@ export function BuilderPage() {
     setActiveTab('train');
   }, [suggestedPresetId, allPresets, presetFromUrl, fixedWorkoutIds.length]);
 
+  // Auto-seleção no modo plano — o preset_id do plano não existe em allPresets.
+  useEffect(() => {
+    if (!activePlanWorkout) return;
+    if (presetFromUrl && !presetFromUrl.startsWith('plano-dia-')) return;
+    if (lastSyncedSuggestedRef.current === activePlanWorkout.preset_id) return;
+    lastSyncedSuggestedRef.current = activePlanWorkout.preset_id;
+    setSelectedPresetId(activePlanWorkout.preset_id);
+    setDraftQueue(null);
+    setCustomizedIndices(new Set());
+    setActiveTab('train');
+  }, [activePlanWorkout, presetFromUrl]);
+
   useEffect(() => {
     setSelectedSchemeId(resolveSelectedRepSchemeId(persistedSchemeId, schemes));
   }, [nivel, persistedSchemeId, schemes]);
@@ -207,9 +229,18 @@ export function BuilderPage() {
   const baseQueue = useMemo(() => {
     if (selectedPresetId === 'custom') return customWorkout;
     if (selectedSavedWorkout) return selectedSavedWorkout.queue;
+    if (selectedPlanWorkout) return sugeridoToQueue(selectedPlanWorkout, exerciseMap);
     if (!selectedPreset) return [];
     return presetToQueue(selectedPreset, exerciseMap, nivel);
-  }, [selectedPresetId, selectedSavedWorkout, selectedPreset, customWorkout, exerciseMap, nivel]);
+  }, [
+    selectedPresetId,
+    selectedSavedWorkout,
+    selectedPlanWorkout,
+    selectedPreset,
+    customWorkout,
+    exerciseMap,
+    nivel,
+  ]);
 
   const activeQueue = draftQueue ?? baseQueue;
   const sortableIds = activeQueue.map((item, i) => `${item.slug}-${i}`);
@@ -343,6 +374,24 @@ export function BuilderPage() {
       showGameToast(`Ciclo ${ciclo} — ${CICLO_LABELS[ciclo]}`, { variant: 'info' });
     },
     [allPresets, nivel, objetivo],
+  );
+
+  const handleSelectDia = useCallback(
+    async (indice: number) => {
+      try {
+        const treino = await getRecommendWorkout({ dia: indice, shuffle: false });
+        setPlanOverride(treino);
+        lastSyncedSuggestedRef.current = treino.preset_id;
+        setSelectedPresetId(treino.preset_id);
+        setDraftQueue(null);
+        setCustomizedIndices(new Set());
+        setActiveTab('train');
+        scrollToSection('builder-queue-preview');
+      } catch {
+        showGameToast('Não foi possível carregar essa missão.', { variant: 'warn' });
+      }
+    },
+    [scrollToSection],
   );
 
   const swapSourceItem = swapExerciseIndex != null ? activeQueue[swapExerciseIndex] : null;
@@ -523,7 +572,8 @@ export function BuilderPage() {
   const proceedToWorkout = () => {
     if (activeQueue.length === 0) return;
     const customName = customWorkoutName.trim() || 'Meu Treino';
-    const treinoNome = selectedPreset?.nome ?? selectedSavedWorkout?.nome ?? customName;
+    const treinoNome =
+      selectedPreset?.nome ?? selectedSavedWorkout?.nome ?? selectedPlanWorkout?.nome ?? customName;
     const treinoTipo: TreinoBase | 'custom' = selectedPreset?.ciclo_id ?? 'custom';
     const payload: ActiveWorkout = {
       treino_nome: treinoNome,
@@ -532,6 +582,7 @@ export function BuilderPage() {
       queue: activeQueue.map((q) => ({ ...q, descanso_seg: q.descanso_seg ?? globalDescanso })),
       config: { descanso_padrao_seg: globalDescanso },
       preset_id: selectedPresetId !== 'custom' ? selectedPresetId : undefined,
+      plano_dia_indice: selectedPlanWorkout?.plano_dia_indice,
     };
     sessionStorage.setItem('abdoria_active_workout', JSON.stringify(payload));
     if (selectedPresetId === 'custom') setCustomWorkout(activeQueue);
@@ -592,6 +643,23 @@ export function BuilderPage() {
   };
 
   const handleSwapWorkout = async () => {
+    if (selectedPlanWorkout?.plano_dia_indice != null) {
+      try {
+        const treino = await getRecommendWorkout({
+          shuffle: true,
+          allowRepeats: true,
+          dia: selectedPlanWorkout.plano_dia_indice,
+        });
+        setPlanOverride(treino);
+        setDraftQueue(null);
+        setCustomizedIndices(new Set());
+        showGameToast('Nova variação da missão sorteada.', { variant: 'success' });
+      } catch {
+        showGameToast('Não foi possível sortear outra variação.', { variant: 'warn' });
+      }
+      return;
+    }
+
     if (similarWorkoutChoices.length >= 2) {
       setShowSimilarWorkout(true);
       return;
@@ -674,6 +742,18 @@ export function BuilderPage() {
             selectedPresetId={selectedPresetId}
             selectedPreset={selectedPreset}
             selectedSavedWorkout={selectedSavedWorkout}
+            selectedPlanWorkout={selectedPlanWorkout}
+            plan={
+              planoTreino && activePlanWorkout
+                ? {
+                    dias: planoTreino.dias,
+                    completados: planoTreino.dias_completados_rodada,
+                    selecionadoIndice: selectedPlanWorkout?.plano_dia_indice ?? null,
+                    sugeridoIndice: suggestedWorkout?.plano_dia_indice ?? null,
+                    onSelectDia: (indice) => void handleSelectDia(indice),
+                  }
+                : null
+            }
             exerciseMap={exerciseMap}
             fixedWorkoutIds={fixedWorkoutIds}
             blockedWorkoutIds={blockedWorkoutIds}

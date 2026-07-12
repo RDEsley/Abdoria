@@ -5,14 +5,25 @@ import { MuscleTagGroup } from '@/components/builder/MuscleTag';
 import { getPresetPrimaryMuscles } from '@/components/builder/builder-muscles';
 import { presetSummary } from '@/components/builder/queue-utils';
 import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
+import { GameButton } from '@/components/ui/GameButton';
 import type {
   IExerciseDocument,
   IWorkoutPresetDocument,
+  PlanoDia,
   SavedWorkoutPreset,
   TreinoBase,
   TreinoSugerido,
 } from '@/types';
-import { CICLO_LABELS } from '@/types';
+import { CICLO_LABELS, PARTE_CORPO_LABELS } from '@/types';
+
+/** Dados do plano corpo-todo — quando presente, os chips viram Missões 1..N. */
+export interface PlanSectionData {
+  dias: PlanoDia[];
+  completados: number[];
+  selecionadoIndice: number | null;
+  sugeridoIndice: number | null;
+  onSelectDia: (indice: number) => void;
+}
 
 interface Props {
   cicloTreinos: TreinoBase[];
@@ -22,6 +33,8 @@ interface Props {
   selectedPresetId: string | 'custom';
   selectedPreset?: IWorkoutPresetDocument;
   selectedSavedWorkout?: SavedWorkoutPreset;
+  selectedPlanWorkout?: TreinoSugerido | null;
+  plan?: PlanSectionData | null;
   exerciseMap: Map<string, IExerciseDocument>;
   fixedWorkoutIds: string[];
   blockedWorkoutIds: string[];
@@ -32,7 +45,7 @@ interface Props {
   onToggleWorkoutBlock: (presetId: string) => void;
 }
 
-/** Aba Treinar: progresso dos ciclos, banner do recomendado e card do treino selecionado. */
+/** Aba Treinar: progresso dos ciclos/missões, banner do recomendado e card do selecionado. */
 export function TrainPresetSection({
   cicloTreinos,
   rodadaDone,
@@ -41,6 +54,8 @@ export function TrainPresetSection({
   selectedPresetId,
   selectedPreset,
   selectedSavedWorkout,
+  selectedPlanWorkout,
+  plan,
   exerciseMap,
   fixedWorkoutIds,
   blockedWorkoutIds,
@@ -59,40 +74,73 @@ export function TrainPresetSection({
           <div
             className="game-builder-cycle-progress mt-1"
             role="tablist"
-            aria-label="Ciclos de treino"
+            aria-label={plan ? 'Missões do plano' : 'Ciclos de treino'}
           >
-            {cicloTreinos.map((c, i) => {
-              const done = !!rodadaDone[c];
-              const isSuggested = suggestedWorkout?.ciclo_id === c;
-              const isActive = selectedPreset?.ciclo_id === c;
-              return (
-                <Fragment key={c}>
-                  {i > 0 && (
-                    <span className="game-builder-cycle-progress__arrow" aria-hidden>
-                      →
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    className={[
-                      'game-builder-cycle-chip',
-                      done ? 'game-builder-cycle-chip--done' : '',
-                      isActive ? 'game-builder-cycle-chip--active' : '',
-                      !isActive && isSuggested ? 'game-builder-cycle-chip--next' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    onClick={() => onSelectCiclo(c)}
-                    title={`Ciclo ${c} — ${CICLO_LABELS[c]}`}
-                  >
-                    {done && <Check size={10} strokeWidth={3} aria-hidden />}
-                    Ciclo {c}
-                  </button>
-                </Fragment>
-              );
-            })}
+            {plan
+              ? plan.dias.map((dia, i) => {
+                  const done = plan.completados.includes(dia.indice);
+                  const isSuggested = plan.sugeridoIndice === dia.indice;
+                  const isActive = plan.selecionadoIndice === dia.indice;
+                  return (
+                    <Fragment key={dia.indice}>
+                      {i > 0 && (
+                        <span className="game-builder-cycle-progress__arrow" aria-hidden>
+                          →
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={[
+                          'game-builder-cycle-chip',
+                          done ? 'game-builder-cycle-chip--done' : '',
+                          isActive ? 'game-builder-cycle-chip--active' : '',
+                          !isActive && isSuggested ? 'game-builder-cycle-chip--next' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        onClick={() => plan.onSelectDia(dia.indice)}
+                        title={dia.titulo}
+                      >
+                        {done && <Check size={10} strokeWidth={3} aria-hidden />}
+                        Dia {dia.indice + 1}
+                      </button>
+                    </Fragment>
+                  );
+                })
+              : cicloTreinos.map((c, i) => {
+                  const done = !!rodadaDone[c];
+                  const isSuggested = suggestedWorkout?.ciclo_id === c;
+                  const isActive = selectedPreset?.ciclo_id === c;
+                  return (
+                    <Fragment key={c}>
+                      {i > 0 && (
+                        <span className="game-builder-cycle-progress__arrow" aria-hidden>
+                          →
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={[
+                          'game-builder-cycle-chip',
+                          done ? 'game-builder-cycle-chip--done' : '',
+                          isActive ? 'game-builder-cycle-chip--active' : '',
+                          !isActive && isSuggested ? 'game-builder-cycle-chip--next' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        onClick={() => onSelectCiclo(c)}
+                        title={`Ciclo ${c} — ${CICLO_LABELS[c]}`}
+                      >
+                        {done && <Check size={10} strokeWidth={3} aria-hidden />}
+                        Ciclo {c}
+                      </button>
+                    </Fragment>
+                  );
+                })}
           </div>
         </div>
       </div>
@@ -109,8 +157,11 @@ export function TrainPresetSection({
           <div className="min-w-0 flex-1">
             <p className="game-builder-next-banner__label">Recomendado agora</p>
             <p className="game-builder-next-banner__title">
-              Ciclo {suggestedWorkout.ciclo_id} —{' '}
-              {suggestedWorkout.nome.split('—')[1]?.trim() ?? suggestedWorkout.nome}
+              {suggestedWorkout.ciclo_id
+                ? `Ciclo ${suggestedWorkout.ciclo_id} — ${
+                    suggestedWorkout.nome.split('—')[1]?.trim() ?? suggestedWorkout.nome
+                  }`
+                : suggestedWorkout.nome}
             </p>
           </div>
           <button
@@ -123,7 +174,7 @@ export function TrainPresetSection({
         </motion.div>
       )}
 
-      {(selectedPreset || selectedSavedWorkout) && (
+      {(selectedPreset || selectedSavedWorkout || selectedPlanWorkout) && (
         <div className="glass-card p-4">
           {selectedPreset && (
             <>
@@ -153,6 +204,37 @@ export function TrainPresetSection({
                 blockAriaLabel="Não recomendar este treino"
                 feedbackKind="workout"
               />
+            </>
+          )}
+          {!selectedPreset && selectedPlanWorkout && (
+            <>
+              <p className="text-[0.65rem] font-bold text-emerald-600">
+                {selectedPlanWorkout.plano_titulo ?? 'Plano de treino'}
+              </p>
+              <p className="text-sm font-extrabold text-stone-900">
+                {selectedPlanWorkout.nome.split('—')[1]?.trim() ?? selectedPlanWorkout.nome}
+              </p>
+              {plan && plan.selecionadoIndice != null && (
+                <p className="mt-2 text-xs font-bold text-stone-600">
+                  {plan.dias
+                    .find((d) => d.indice === plan.selecionadoIndice)
+                    ?.grupos.map((g) => PARTE_CORPO_LABELS[g])
+                    .join(' · ')}
+                </p>
+              )}
+              <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
+                {selectedPlanWorkout.descricao} · {selectedPlanWorkout.total_exercicios} exercícios
+              </p>
+              <div className="game-exercise-actions mt-3">
+                <GameButton
+                  variant="secondary"
+                  size="sm"
+                  className="game-exercise-actions__swap"
+                  onClick={onSwapWorkout}
+                >
+                  Sortear outra variação
+                </GameButton>
+              </div>
             </>
           )}
           {selectedSavedWorkout && (

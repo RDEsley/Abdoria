@@ -11,7 +11,7 @@ import type {
   TreinoSugerido,
   TreinoSugeridoExercicio,
 } from '../types/index.js';
-import { FOCO_LABELS, getExerciseParamsForNivel } from '../types/index.js';
+import { FOCO_LABELS, PARTE_CORPO_LABELS, getExerciseParamsForNivel } from '../types/index.js';
 import {
   FOCO_PARAMS,
   PROGRESSION_WEEKS,
@@ -20,7 +20,7 @@ import {
   doseTempoSeg,
 } from '../../../shared/training-plan.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
-import { getTodaySaoPaulo } from '../utils/timezone.js';
+import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 import { findExercisesForUserDocument } from './exercise-catalog.js';
 
 export interface PlanRecommendOptions {
@@ -257,6 +257,65 @@ export async function recommendFromPlano(
     plano_total_dias: plano.dias.length,
     plano_titulo: `Missão ${dia.indice + 1}/${plano.dias.length}`,
   };
+}
+
+/** Alerta de desbalanceamento por parte do corpo (modo plano, semana corrente). */
+export async function getPlanoAlerts(user: UserRecord): Promise<
+  Array<{
+    id: string;
+    tipo: 'desbalanceamento';
+    titulo: string;
+    mensagem: string;
+  }>
+> {
+  const weekStart = getWeekStartSaoPaulo();
+  const histories = await WorkoutHistory.find(
+    { usuario_id: user.id, concluido_em: { $gte: weekStart } },
+    { sort: { concluido_em: -1 }, limit: 14 },
+  );
+  if (histories.length < 2) return [];
+
+  const slugCounts = new Map<string, number>();
+  for (const h of histories) {
+    for (const ex of h.exercicios ?? []) {
+      const slug = (ex as { slug?: string }).slug;
+      if (slug) slugCounts.set(slug, (slugCounts.get(slug) ?? 0) + 1);
+    }
+  }
+  if (slugCounts.size === 0) return [];
+
+  const catalog = await findExercisesForUserDocument(user);
+  const bySlug = new Map(catalog.map((ex) => [ex.slug, ex]));
+  const volumes = new Map<string, number>();
+  for (const [slug, count] of slugCounts) {
+    const grupos = bySlug.get(slug)?.grupos ?? [];
+    for (const grupo of grupos) {
+      volumes.set(grupo, (volumes.get(grupo) ?? 0) + count);
+    }
+  }
+
+  const alvo = new Set(user.plano_treino?.dias.flatMap((d) => d.grupos) ?? []);
+  const trained = [...volumes.entries()].filter(([g]) => alvo.has(g as never));
+  if (trained.length < 2) return [];
+
+  const avg = trained.reduce((s, [, n]) => s + n, 0) / trained.length;
+  const [dominante, volume] = trained.sort((a, b) => b[1] - a[1])[0];
+  if (volume <= avg * 2) return [];
+
+  const fracos = [...alvo].filter((g) => !volumes.has(g));
+  const labelOf = (g: string) => PARTE_CORPO_LABELS[g as keyof typeof PARTE_CORPO_LABELS] ?? g;
+  return [
+    {
+      id: 'desbalanceamento',
+      tipo: 'desbalanceamento',
+      titulo: 'Treino desbalanceado',
+      mensagem: `Você focou muito em ${labelOf(dominante).toLowerCase()} esta semana.${
+        fracos.length > 0
+          ? ` Que tal trabalhar ${fracos.map((g) => labelOf(g).toLowerCase()).join(', ')}?`
+          : ' Equilibre com os outros grupos do plano.'
+      }`,
+    },
+  ];
 }
 
 /**

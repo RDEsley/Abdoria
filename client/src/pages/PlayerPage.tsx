@@ -280,6 +280,7 @@ export function PlayerPage() {
       const result = await saveWorkout({
         treino_nome: workout.treino_nome,
         treino_tipo: workout.treino_tipo,
+        plano_dia_indice: workout.plano_dia_indice,
         exercicios: workout.queue.map((item) => ({
           exercicio_id: item.exercicio_id ?? '',
           slug: item.slug,

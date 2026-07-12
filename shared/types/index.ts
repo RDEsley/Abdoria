@@ -1215,6 +1215,8 @@ export interface CompleteWorkoutPayload {
   treino_tipo?: TreinoTipo;
   exercicios: WorkoutExerciseEntry[];
   duracao_total_segundos: number;
+  /** Dia do plano corpo-todo que este treino conclui (modo plano). */
+  plano_dia_indice?: number;
 }
 
 export interface WorkoutQueueItem {
@@ -1325,6 +1327,8 @@ export interface ActiveWorkout {
   queue: WorkoutQueueItem[];
   config: ActiveWorkoutConfig;
   preset_id?: string;
+  /** Dia do plano corpo-todo (modo plano) — repassado ao concluir. */
+  plano_dia_indice?: number;
 }
 
 export interface PresetExercise {

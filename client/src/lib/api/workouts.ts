@@ -62,6 +62,7 @@ export function getRecommendWorkout(options?: {
   extra?: number;
   excludePresetId?: string | null;
   ciclo?: TreinoBase;
+  dia?: number;
 }): Promise<TreinoSugerido> {
   const params = new URLSearchParams();
   if (options?.allowRepeats) params.set('allowRepeats', 'true');
@@ -69,6 +70,7 @@ export function getRecommendWorkout(options?: {
   if (options?.extra) params.set('extra', String(options.extra));
   if (options?.excludePresetId) params.set('excludePresetId', options.excludePresetId);
   if (options?.ciclo) params.set('ciclo', options.ciclo);
+  if (options?.dia != null) params.set('dia', String(options.dia));
   const q = params.toString();
   return fetchJson(`/presets/recommend${q ? `?${q}` : ''}`);
 }

@@ -13,7 +13,7 @@ import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
 import { filterRowsByAvailableSlugs, findExercisesForUserDocument } from './exercise-catalog.js';
-import { isPlanoUser, recommendFromPlano } from './plan-generator.js';
+import { getPlanoAlerts, isPlanoUser, recommendFromPlano } from './plan-generator.js';
 
 export interface RecommendationAlert {
   id: string;
@@ -217,6 +217,12 @@ export function resetCycleRound(user: UserMutable): void {
 }
 
 export async function getRecommendationAlerts(user: UserRecord): Promise<RecommendationAlert[]> {
+  // Modo plano: rotação de dias já garante variedade; o alerta relevante é o
+  // desbalanceamento por parte do corpo (não por zona abdominal).
+  if (isPlanoUser(user)) {
+    return getPlanoAlerts(user);
+  }
+
   const alerts: RecommendationAlert[] = [];
   const userId = user.id;
 

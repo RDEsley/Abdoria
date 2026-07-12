@@ -119,7 +119,10 @@ export function DashboardPage() {
         {!stats.treino_hoje && sugerido && (
           <div className="mt-2 space-y-1">
             <p className="text-xs font-bold text-stone-600">
-              Ciclo {sugerido.ciclo_id} · {sugerido.total_exercicios} exercícios
+              {sugerido.ciclo_id
+                ? `Ciclo ${sugerido.ciclo_id}`
+                : (sugerido.plano_titulo ?? 'Plano')}{' '}
+              · {sugerido.total_exercicios} exercícios
             </p>
             {sugerido.exercicios[0] && (
               <p className="text-xs font-extrabold text-stone-700">
