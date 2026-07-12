@@ -76,6 +76,7 @@ $RECYCLE.BIN/
 # Claude Code (config local — não versionar)
 .claudecode
 .claude/
+CLAUDE.md
 
 # Vercel (link local do CLI)
 .vercel/
@@ -97,4 +98,3 @@ supabase/.temp/
 # DOCS
 docs/private
 .private
-
