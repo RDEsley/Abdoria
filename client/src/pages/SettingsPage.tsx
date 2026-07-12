@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, LogOut, Volume2 } from 'lucide-react';
 import { TermsModal } from '@/components/legal/TermsModal';
+import { TrainingProfileModal } from '@/components/onboarding/TrainingProfileModal';
 import { GiftCodeSection } from '@/components/settings/GiftCodeSection';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -14,6 +15,8 @@ import type { TreinoBase } from '@/types';
 import {
   ABDORIA_XP_STEP,
   CICLO_LABELS,
+  ESCOPO_LABELS,
+  FOCO_LABELS,
   CICLOS_OPCIONAIS,
   CURRENCY_NAME,
   formatFrozenStreakDescription,
@@ -37,6 +40,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const [showTerms, setShowTerms] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showTrainingProfile, setShowTrainingProfile] = useState(false);
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
@@ -123,6 +127,22 @@ export function SettingsPage() {
             className="mt-2 w-full cursor-pointer"
           />
         </label>
+      </section>
+
+      <section className="glass-card p-4">
+        <h3 className="game-section-title mb-4">Meu plano de treino</h3>
+        <p className="text-xs font-medium text-stone-500">
+          {user?.perfil_treino
+            ? `${ESCOPO_LABELS[user.perfil_treino.escopo]} · ${FOCO_LABELS[user.perfil_treino.foco]} · ${user.perfil_treino.frequencia_semanal}x por semana`
+            : 'Responda o questionário de treino e receba missões montadas pro seu objetivo.'}
+        </p>
+        <GameButton
+          variant="secondary"
+          className="mt-3 w-full"
+          onClick={() => setShowTrainingProfile(true)}
+        >
+          {user?.perfil_treino ? 'Ajustar plano de treino' : 'Montar meu plano'}
+        </GameButton>
       </section>
 
       <section className="glass-card p-4">
@@ -256,6 +276,10 @@ export function SettingsPage() {
 
       <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
       <TutorialOverlay open={showTutorial} onClose={handleTutorialClose} />
+      <TrainingProfileModal
+        open={showTrainingProfile}
+        onClose={() => setShowTrainingProfile(false)}
+      />
     </div>
   );
 }

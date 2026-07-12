@@ -10,6 +10,7 @@ import { WeeklyChronicle } from '@/components/dashboard/WeeklyChronicle';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { DailyShopPanel } from '@/components/shop/DailyShopPanel';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
+import { TrainingPlanInviteCard } from '@/components/dashboard/TrainingPlanInviteCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
@@ -156,6 +157,10 @@ export function DashboardPage() {
             </GameButton>
           </Link>
         )}
+      </motion.div>
+
+      <motion.div variants={item}>
+        <TrainingPlanInviteCard />
       </motion.div>
 
       <motion.div variants={item}>

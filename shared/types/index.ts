@@ -142,6 +142,8 @@ export interface UserPreferencias {
   ciclos_completados_rodada?: Partial<Record<TreinoBase, boolean>>;
   /** Equipamentos que o usuário possui — desbloqueia exercícios gated. */
   equipamentos?: Partial<Record<EquipmentId, boolean>>;
+  /** Vezes que o convite de re-onboarding foi dispensado (2+ esconde o card). */
+  reonboarding_dispensado?: number;
 }
 
 export type ArmaPreferida = 'arco' | 'espada' | 'magia';
@@ -153,13 +155,7 @@ export type EscopoTreino = 'abdomen' | 'corpo_todo';
 export type Foco = 'definicao' | 'forca' | 'resistencia' | 'hipertrofia' | 'saude';
 
 export type ParteCorpo =
-  | 'abdomen'
-  | 'peito'
-  | 'costas'
-  | 'bracos'
-  | 'ombros'
-  | 'pernas'
-  | 'gluteos';
+  'abdomen' | 'peito' | 'costas' | 'bracos' | 'ombros' | 'pernas' | 'gluteos';
 
 export type RestricaoFisica = 'lombar' | 'joelhos' | 'punhos' | 'ombros' | 'pescoco';
 
