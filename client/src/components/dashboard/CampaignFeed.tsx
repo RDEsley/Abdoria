@@ -22,8 +22,6 @@ import {
 } from '@shared/campaign';
 import { xpLevelFromTotal, type AfkEnemyId } from '@/types';
 
-const PAGE_SIZE = 8;
-
 const EVENT_STYLE: Record<CampaignEventType, { Icon: typeof Swords; className: string }> = {
   horda_contida: { Icon: Swords, className: 'bg-amber-100 text-amber-700' },
   monstro_derrotado: { Icon: Skull, className: 'bg-rose-100 text-rose-700' },
@@ -89,11 +87,14 @@ function PostCard({ post }: { post: CampaignPost }) {
   );
 }
 
-/** Feed narrativo do Mapa da Campanha — posts derivados do histórico. */
+/**
+ * Feed narrativo do Mapa da Campanha — 1 post por sessão de treino (a
+ * "missão do dia"). Só o capítulo mais recente aparece por padrão.
+ */
 export function CampaignFeed() {
   const { history, ensureHistory, historyLoading, exercises, ensureExercises } = useApp();
   const { user } = useAuth();
-  const [visible, setVisible] = useState(PAGE_SIZE);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     void ensureHistory();
@@ -144,18 +145,15 @@ export function CampaignFeed() {
     );
   }
 
+  const visible = showAll ? posts : posts.slice(0, 1);
+
   return (
     <div className="mt-4 flex flex-col gap-2.5">
-      {posts.slice(0, visible).map((post) => (
+      {visible.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}
-      {visible < posts.length && (
-        <GameButton
-          variant="secondary"
-          size="sm"
-          onClick={() => setVisible((v) => v + PAGE_SIZE)}
-          className="mt-1"
-        >
+      {!showAll && posts.length > 1 && (
+        <GameButton variant="secondary" size="sm" onClick={() => setShowAll(true)} className="mt-1">
           Ver capítulos anteriores
         </GameButton>
       )}

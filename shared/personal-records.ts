@@ -10,12 +10,28 @@ export interface ExercisePersonalRecord {
 }
 
 /**
+ * Campos mínimos pra calcular PR — mais estreito que `WorkoutExerciseEntry`
+ * de propósito, pra outros consumidores (ex.: o feed narrativo do Mapa da
+ * Campanha) reusarem o mesmo cálculo sem precisar montar o shape completo.
+ */
+export type PersonalRecordExerciseInput = Pick<
+  WorkoutExerciseEntry,
+  'slug' | 'nome' | 'modo' | 'series' | 'repeticoes_realizadas'
+> & {
+  /** Opcional aqui (WorkoutExerciseEntry exige, mas exercícios em modo reps não têm). */
+  duracao_segundos?: number;
+};
+
+/**
  * Volume da sessão para o exercício: série × repetições (modo reps) ou
  * série × duração do hold (modo tempo). Cresce de verdade com o nível do
  * usuário e o esquema de reps escolhido, mesmo sem input livre de esforço.
  */
 function exerciseVolume(
-  ex: Pick<WorkoutExerciseEntry, 'modo' | 'series' | 'repeticoes_realizadas' | 'duracao_segundos'>,
+  ex: Pick<
+    PersonalRecordExerciseInput,
+    'modo' | 'series' | 'repeticoes_realizadas' | 'duracao_segundos'
+  >,
 ): number {
   const series = ex.series ?? 1;
   if (ex.modo === 'tempo') return series * (ex.duracao_segundos ?? 0);
@@ -23,7 +39,7 @@ function exerciseVolume(
 }
 
 export function computePersonalRecords(
-  histories: Array<{ exercicios: WorkoutExerciseEntry[]; concluido_em: Date | string }>,
+  histories: Array<{ exercicios: PersonalRecordExerciseInput[]; concluido_em: Date | string }>,
 ): Map<string, ExercisePersonalRecord> {
   const records = new Map<string, ExercisePersonalRecord>();
   for (const history of histories) {
@@ -52,7 +68,7 @@ export function computePersonalRecords(
 /** Compara o volume da sessão recém-concluída contra os recordes anteriores (exclui esta sessão). */
 export function diffNewPersonalRecords(
   previous: Map<string, ExercisePersonalRecord>,
-  currentExercises: WorkoutExerciseEntry[],
+  currentExercises: PersonalRecordExerciseInput[],
 ): PersonalRecordNotice[] {
   const sessionBest = new Map<string, { nome: string; modo: ModoExercicio; valor: number }>();
   for (const ex of currentExercises) {

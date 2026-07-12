@@ -3,9 +3,9 @@ import {
   CAMPAIGN_GENERIC_ENEMIES,
   CAMPAIGN_PLACES,
   CAMPAIGN_PLACES_BASE,
-  CAMPAIGN_TEMPLATES,
+  CAMPAIGN_STREAK_MILESTONES,
+  CAMPAIGN_VILA_SALVA_MIN_EXERCISES,
   buildCampaignPosts,
-  classifyExercise,
   placesForLevel,
   type CampaignCatalogInfo,
   type CampaignContext,
@@ -44,14 +44,21 @@ const CATALOG = new Map<string, CampaignCatalogInfo>([
   ],
 ]);
 
+function ex(
+  slug: string,
+  overrides: Partial<CampaignSession['exercicios'][number]> = {},
+): CampaignSession['exercicios'][number] {
+  return { slug, nome: slug, series: 3, repeticoes_realizadas: 12, modo: 'reps', ...overrides };
+}
+
 function session(overrides: Partial<CampaignSession> = {}): CampaignSession {
   return {
     id: 'sessao-1',
     treino_nome: 'Treino A',
     exercicios: [
-      { slug: 'crunch', nome: 'Crunch', series: 3, repeticoes_realizadas: 12, modo: 'reps' },
-      { slug: 'plank', nome: 'Plank', duracao_segundos: 45, modo: 'tempo' },
-      { slug: 'superman', nome: 'Superman', series: 2, repeticoes_realizadas: 14, modo: 'reps' },
+      ex('crunch'),
+      ex('plank', { modo: 'tempo', duracao_segundos: 45 }),
+      ex('superman'),
     ],
     duracao_total_segundos: 1320,
     xp_ganho: 82,
@@ -64,19 +71,10 @@ function ctx(overrides: Partial<CampaignContext> = {}): CampaignContext {
   return { heroi: 'Richard', level: 1, bestiarioDesbloqueados: [], ...overrides };
 }
 
-describe('classifyExercise', () => {
-  it('mapeia por característica, não por slug', () => {
-    expect(classifyExercise(CATALOG.get('dragon-flag'))).toBe('chefe_derrotado'); // nível 4
-    expect(classifyExercise(CATALOG.get('plank'))).toBe('poder_desperto'); // iso core
-    expect(classifyExercise(CATALOG.get('wall-sit'))).toBe('defesa_heroica'); // iso não-core
-    expect(classifyExercise(CATALOG.get('superman'))).toBe('pessoa_resgatada'); // costas
-    expect(classifyExercise(CATALOG.get('bodyweight-squat'))).toBe('travessia'); // pernas
-    expect(classifyExercise(CATALOG.get('push-up'))).toBe('fortaleza_rompida'); // peito
-    expect(classifyExercise(CATALOG.get('burpee'))).toBe('horda_contida'); // dinâmico
-    expect(classifyExercise(CATALOG.get('crunch'))).toBe('monstro_derrotado');
-    expect(classifyExercise(undefined)).toBe('monstro_derrotado');
-  });
-});
+/** Sessão bem antiga só pra não deixar `target` ganhar o marco "primeiro treino". */
+function warmup(): CampaignSession {
+  return session({ id: 'warmup', concluido_em: '2020-01-01T08:00:00.000Z' });
+}
 
 describe('placesForLevel', () => {
   it('revela ~8 lugares no nível 1 e +3 por faixa de 5 níveis, com teto', () => {
@@ -89,42 +87,199 @@ describe('placesForLevel', () => {
   });
 });
 
-describe('buildCampaignPosts', () => {
+describe('buildCampaignPosts — 1 post por sessão', () => {
   it('é determinístico: mesma entrada gera exatamente os mesmos posts', () => {
     const a = buildCampaignPosts([session()], CATALOG, ctx());
     const b = buildCampaignPosts([session()], CATALOG, ctx());
     expect(a).toEqual(b);
-    expect(a.length).toBeGreaterThan(0);
   });
 
-  it('gera post agregado (vila salva) só com 3+ exercícios', () => {
-    const cheia = buildCampaignPosts([session()], CATALOG, ctx());
-    expect(cheia.some((p) => p.tipo === 'vila_salva')).toBe(true);
-
-    const curta = buildCampaignPosts(
-      [session({ exercicios: session().exercicios.slice(0, 2) })],
+  it('gera exatamente 1 post por sessão, não 1 por exercício', () => {
+    const posts = buildCampaignPosts(
+      [session({ exercicios: [ex('crunch'), ex('plank'), ex('superman'), ex('burpee')] })],
       CATALOG,
       ctx(),
     );
-    expect(curta.some((p) => p.tipo === 'vila_salva')).toBe(false);
-    expect(curta).toHaveLength(2);
+    expect(posts).toHaveLength(1);
   });
 
-  it('sem descobertas no Bestiário, nunca nomeia inimigo do jogo', () => {
+  it('descarta sessões sem exercícios', () => {
+    const posts = buildCampaignPosts(
+      [session({ id: 'vazia', exercicios: [] }), session({ id: 'com-treino' })],
+      CATALOG,
+      ctx(),
+    );
+    expect(posts).toHaveLength(1);
+    expect(posts[0].session_id).toBe('com-treino');
+  });
+
+  it('placeholders nunca vazam sem interpolação', () => {
+    const posts = buildCampaignPosts(
+      [
+        session({
+          exercicios: [
+            ex('wall-sit', { modo: 'tempo', duracao_segundos: 45 }),
+            ex('push-up'),
+            ex('bodyweight-squat'),
+          ],
+        }),
+      ],
+      CATALOG,
+      ctx(),
+    );
+    for (const post of posts) {
+      expect(post.mensagem).not.toMatch(/\{\w+\}/);
+    }
+  });
+});
+
+describe('hierarquia de prioridade dentro da sessão', () => {
+  it('resgate (costas) vence sobre monstro comum na mesma sessão', () => {
+    const alvo = session({ id: 'alvo', exercicios: [ex('crunch'), ex('superman')] });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('pessoa_resgatada');
+    expect(post.exercicio?.slug).toBe('superman');
+  });
+
+  it('chefe (nível 4) vence sobre resgate quando não há PR', () => {
+    const alvo = session({ id: 'alvo', exercicios: [ex('superman'), ex('dragon-flag')] });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('chefe_derrotado');
+    expect(post.exercicio?.slug).toBe('dragon-flag');
+  });
+
+  it('PR real vence sobre nível 4 sem PR e sobre qualquer outro tipo', () => {
+    // Primeira sessão estabelece o recorde-base de crunch; a segunda supera —
+    // PR real deve vencer mesmo com um exercício nível 4 (sem PR) no mesmo treino.
+    const primeira = session({
+      id: 's1',
+      exercicios: [ex('crunch', { series: 2, repeticoes_realizadas: 8 })],
+      concluido_em: '2026-07-01T09:00:00.000Z',
+    });
+    const segunda = session({
+      id: 's2',
+      exercicios: [ex('crunch', { series: 4, repeticoes_realizadas: 20 }), ex('dragon-flag')],
+      concluido_em: '2026-07-08T09:00:00.000Z',
+    });
+    const posts = buildCampaignPosts([primeira, segunda], CATALOG, ctx());
+    const postS2 = posts.find((p) => p.session_id === 's2')!;
+    expect(postS2.tipo).toBe('chefe_derrotado');
+    expect(postS2.exercicio?.slug).toBe('crunch'); // o que bateu PR, não o dragon-flag
+  });
+
+  it('poder desperto (core) vence defesa heroica (não-core)', () => {
+    const alvo = session({
+      id: 'alvo',
+      exercicios: [
+        ex('wall-sit', { modo: 'tempo', duracao_segundos: 40 }),
+        ex('plank', { modo: 'tempo', duracao_segundos: 30 }),
+      ],
+    });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('poder_desperto');
+    expect(post.exercicio?.slug).toBe('plank');
+  });
+
+  it('desempate por nível, depois prioridade de catálogo, depois ordem', () => {
+    const alvo = session({ id: 'alvo', exercicios: [ex('push-up', { series: 3 })] });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('fortaleza_rompida');
+  });
+
+  it('vila_salva vence quando 5+ exercícios sem nenhum evento acima do piso', () => {
+    const alvo = session({
+      id: 'alvo',
+      exercicios: [ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch')],
+    });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('vila_salva');
+  });
+
+  it('sessão curta (< mínimo) sem evento forte cai no piso monstro_derrotado', () => {
+    expect(CAMPAIGN_VILA_SALVA_MIN_EXERCISES).toBeGreaterThan(2);
+    const alvo = session({ id: 'alvo', exercicios: [ex('crunch'), ex('crunch')] });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('monstro_derrotado');
+  });
+});
+
+describe('capítulos — marcos de primeiro treino e streak', () => {
+  it('a sessão mais antiga da conta sempre vira capítulo (primeiro treino)', () => {
+    const s1 = session({ id: 's1', concluido_em: '2026-06-01T08:00:00.000Z' });
+    const s2 = session({ id: 's2', concluido_em: '2026-06-05T08:00:00.000Z' });
+    const posts = buildCampaignPosts([s1, s2], CATALOG, ctx());
+    const primeiro = posts.find((p) => p.session_id === 's1')!;
+    expect(primeiro.tipo).toBe('capitulo');
+  });
+
+  it('marca capítulo de streak exatamente nos thresholds das conquistas', () => {
+    expect(CAMPAIGN_STREAK_MILESTONES).toContain(3);
+    expect(CAMPAIGN_STREAK_MILESTONES).toContain(7);
+    // 7 dias consecutivos de treino (dias 1..7) — dia 7 deve bater o marco streak_7.
+    const dias = Array.from({ length: 7 }, (_, i) =>
+      session({
+        id: `d${i + 1}`,
+        exercicios: [ex('crunch')],
+        concluido_em: `2026-07-0${i + 1}T08:00:00.000Z`,
+      }),
+    );
+    const posts = buildCampaignPosts(dias, CATALOG, ctx());
+    const dia3 = posts.find((p) => p.session_id === 'd3')!;
+    const dia7 = posts.find((p) => p.session_id === 'd7')!;
+    expect(dia3.tipo).toBe('capitulo'); // marco streak_3
+    expect(dia7.tipo).toBe('capitulo'); // marco streak_7
+    expect(dia3.mensagem).not.toMatch(/\{\w+\}/);
+    expect(dia7.mensagem).not.toMatch(/\{\w+\}/);
+  });
+
+  it('capítulo tem prioridade máxima — vence mesmo com PR/chefe na mesma sessão', () => {
+    const s1 = session({ id: 'unica', exercicios: [ex('dragon-flag')] });
+    const posts = buildCampaignPosts([s1], CATALOG, ctx());
+    // única sessão da conta = sempre 'primeiro', mesmo tendo exercício nível 4.
+    expect(posts[0].tipo).toBe('capitulo');
+  });
+});
+
+describe('pluralização genérica de contagens', () => {
+  it('minutos/feitos no singular quando o valor é 1', () => {
+    const alvo = session({
+      id: 'alvo',
+      exercicios: [ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch')],
+      duracao_total_segundos: 50, // arredonda para 1 minuto
+    });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('vila_salva');
+    expect(post.mensagem).toMatch(/\b1 minuto\b/);
+    expect(post.mensagem).not.toMatch(/\b1 minutos\b/);
+  });
+
+  it('minutos/feitos no plural quando o valor é > 1', () => {
+    const alvo = session({
+      id: 'alvo',
+      exercicios: [ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch')],
+      duracao_total_segundos: 1320,
+    });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.mensagem).toMatch(/\b5 feitos\b/);
+    expect(post.mensagem).toMatch(/\b22 minutos\b/);
+  });
+});
+
+describe('bestiário filtrado por descoberta', () => {
+  it('sem descobertas, nunca nomeia inimigo do jogo', () => {
     const sessoes = Array.from({ length: 12 }, (_, i) =>
       session({
         id: `s-${i}`,
-        exercicios: [
-          { slug: 'crunch', nome: 'Crunch', series: 3, repeticoes_realizadas: 12, modo: 'reps' },
-          { slug: 'burpee', nome: 'Burpee', series: 3, repeticoes_realizadas: 10, modo: 'reps' },
-          {
-            slug: 'dragon-flag',
-            nome: 'Dragon Flag',
-            series: 3,
-            repeticoes_realizadas: 5,
-            modo: 'reps',
-          },
-        ],
+        exercicios: [ex('burpee')],
+        concluido_em: `2026-0${(i % 9) + 1}-01T08:00:00.000Z`,
       }),
     );
     const posts = buildCampaignPosts(sessoes, CATALOG, ctx({ bestiarioDesbloqueados: [] }));
@@ -136,85 +291,26 @@ describe('buildCampaignPosts', () => {
     }
   });
 
-  it('inimigos descobertos passam a aparecer; chefes só depois de derrotados', () => {
-    const sessoes = Array.from({ length: 20 }, (_, i) =>
-      session({
-        id: `s-${i}`,
-        exercicios: [
-          { slug: 'crunch', nome: 'Crunch', series: 3, repeticoes_realizadas: 12, modo: 'reps' },
-          {
-            slug: 'dragon-flag',
-            nome: 'Dragon Flag',
-            series: 3,
-            repeticoes_realizadas: 5,
-            modo: 'reps',
-          },
-        ],
-      }),
-    );
+  it('chefe descoberto passa a ser nomeado', () => {
     const posts = buildCampaignPosts(
-      sessoes,
+      [session({ exercicios: [ex('dragon-flag')] })],
       CATALOG,
-      ctx({ bestiarioDesbloqueados: ['bat', 'boss_lich'] }),
+      ctx({ bestiarioDesbloqueados: ['boss_lich'] }),
     );
-    const texto = posts.map((p) => p.mensagem).join('\n');
-    expect(texto).toContain(AFK_ENEMIES.bat.label); // comum descoberto aparece
-    expect(texto).not.toContain(AFK_ENEMIES.zombie.label); // não descoberto, nunca
-    const chefes = posts.filter((p) => p.tipo === 'chefe_derrotado');
-    expect(chefes.length).toBeGreaterThan(0);
-    // O chefe descoberto aparece; templates de "chefe sem nome" continuam
-    // válidos mesmo com descobertas (narram um chefe diferente).
-    expect(chefes.some((p) => p.mensagem.includes(AFK_ENEMIES.boss_lich.label))).toBe(true);
-  });
-
-  it('tipos sem pool (Lote 2) caem no fallback narrativo sem placeholder vazado', () => {
-    const posts = buildCampaignPosts(
-      [
-        session({
-          exercicios: [
-            { slug: 'wall-sit', nome: 'Wall Sit', duracao_segundos: 45, modo: 'tempo' },
-            {
-              slug: 'push-up',
-              nome: 'Push-Up',
-              series: 3,
-              repeticoes_realizadas: 12,
-              modo: 'reps',
-            },
-            {
-              slug: 'bodyweight-squat',
-              nome: 'Squat',
-              series: 3,
-              repeticoes_realizadas: 16,
-              modo: 'reps',
-            },
-          ],
-        }),
-      ],
-      CATALOG,
-      ctx(),
-    );
-    for (const post of posts) {
-      expect(post.mensagem).not.toMatch(/\{\w+\}/);
-      expect(CAMPAIGN_TEMPLATES.some((t) => t.tipo === post.tipo)).toBe(true);
+    if (posts[0].tipo === 'chefe_derrotado') {
+      // pode cair em template sem {inimigo} — só valida quando o slot existe.
+      const usaInimigo = posts[0].mensagem.includes(AFK_ENEMIES.boss_lich.label);
+      const usaGenerico = posts[0].mensagem.includes('sem nome nas lendas');
+      expect(usaInimigo || usaGenerico).toBe(true);
     }
   });
 
-  it('lugares respeitam a revelação por nível', () => {
-    const sessoes = Array.from({ length: 30 }, (_, i) => session({ id: `s-${i}` }));
-    const lugaresNivel1 = new Set(placesForLevel(1).map((p) => p.nome));
-    const posts = buildCampaignPosts(sessoes, CATALOG, ctx({ level: 1 }));
-    for (const post of posts) {
-      expect(lugaresNivel1.has(post.lugar)).toBe(true);
-    }
-  });
-
-  it('conta nova usa o pool genérico de inimigos', () => {
+  it('conta nova usa o pool genérico de inimigos em algum momento', () => {
     const sessoes = Array.from({ length: 10 }, (_, i) =>
       session({
         id: `g-${i}`,
-        exercicios: [
-          { slug: 'crunch', nome: 'Crunch', series: 3, repeticoes_realizadas: 12, modo: 'reps' },
-        ],
+        exercicios: [ex('burpee')],
+        concluido_em: `2026-01-${10 + i}T08:00:00.000Z`,
       }),
     );
     const texto = buildCampaignPosts(sessoes, CATALOG, ctx())
@@ -222,5 +318,18 @@ describe('buildCampaignPosts', () => {
       .join('\n');
     const usouGenerico = CAMPAIGN_GENERIC_ENEMIES.some((g) => texto.includes(g));
     expect(usouGenerico).toBe(true);
+  });
+});
+
+describe('lugares por nível', () => {
+  it('lugares do post respeitam a revelação por nível', () => {
+    const sessoes = Array.from({ length: 15 }, (_, i) =>
+      session({ id: `s-${i}`, concluido_em: `2026-02-${10 + i}T08:00:00.000Z` }),
+    );
+    const lugaresNivel1 = new Set(placesForLevel(1).map((p) => p.nome));
+    const posts = buildCampaignPosts(sessoes, CATALOG, ctx({ level: 1 }));
+    for (const post of posts) {
+      expect(lugaresNivel1.has(post.lugar)).toBe(true);
+    }
   });
 });

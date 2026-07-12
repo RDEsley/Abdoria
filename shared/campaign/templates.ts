@@ -1,11 +1,10 @@
 /**
- * Templates narrativos do Mapa da Campanha — Lote 1 (tipos 1–5).
+ * Templates narrativos do Mapa da Campanha (Lotes 1 e 2 — 10 tipos).
  * Placeholders: {heroi} {exercicio} {detalhe} {inimigo}
  *   {lugar} = nome puro · {o_lugar}/{no_lugar}/{do_lugar}/{pelo_lugar} =
  *   contrações com o artigo do lugar (variantes capitalizadas {O_lugar} etc.)
- *   {feitos} {minutos} {xp} — só em vila_salva.
- * Tipos 6–10 (defesa_heroica, travessia, fortaleza_rompida, poder_desperto,
- * capitulo) chegam no Lote 2 — até lá o motor cai no fallback.
+ *   {feitos} {minutos} — contagens JÁ pluralizadas ("1 minuto"/"22 minutos")
+ *   {xp} — só em vila_salva · {dias}/{n_dias} — só em capitulo (marco streak).
  */
 
 export type CampaignEventType =
@@ -38,6 +37,8 @@ export interface CampaignTemplate {
   tipo: CampaignEventType;
   /** Template usa {inimigo} — 'comum' sorteia comuns/elites, 'chefe' sorteia bosses. */
   inimigo?: 'comum' | 'chefe';
+  /** Só em capitulo: qual marco o template narra. */
+  marco?: 'primeiro' | 'streak';
   texto: string;
 }
 
@@ -285,49 +286,49 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     id: 'vila-01',
     tipo: 'vila_salva',
     texto:
-      'Missão cumprida: {feitos} feitos em {minutos} minutos libertaram {o_lugar} do cerco. +{xp} XP e a gratidão eterna dos aldeões.',
+      'Missão cumprida: {feitos} em {minutos} libertaram {o_lugar} do cerco. +{xp} XP e a gratidão eterna dos aldeões.',
   },
   {
     id: 'vila-02',
     tipo: 'vila_salva',
     texto:
-      '{O_lugar} dorme em paz esta noite. {feitos} feitos, {minutos} minutos, +{xp} XP — e mais um capítulo no diário de {heroi}.',
+      '{O_lugar} dorme em paz esta noite. {feitos}, {minutos}, +{xp} XP — e mais um capítulo no diário de {heroi}.',
   },
   {
     id: 'vila-03',
     tipo: 'vila_salva',
     texto:
-      'O conselho {do_lugar} registrou em ata: "{feitos} atos de coragem em {minutos} minutos. Recomenda-se estátua." +{xp} XP.',
+      'O conselho {do_lugar} registrou em ata: "{feitos} de coragem em {minutos}. Recomenda-se estátua." +{xp} XP.',
   },
   {
     id: 'vila-04',
     tipo: 'vila_salva',
     texto:
-      'De porta em porta, a notícia correu {pelo_lugar}: acabou. {feitos} feitos em {minutos} minutos, +{xp} XP, nenhum aldeão ferido.',
+      'De porta em porta, a notícia correu {pelo_lugar}: acabou. {feitos} em {minutos}, +{xp} XP, nenhum aldeão ferido.',
   },
   {
     id: 'vila-05',
     tipo: 'vila_salva',
     texto:
-      'Os sinos {do_lugar} tocaram em festa: {heroi} encerrou a ameaça com {feitos} feitos em {minutos} minutos. +{xp} XP pro épico.',
+      'Os sinos {do_lugar} tocaram em festa: {heroi} encerrou a ameaça com {feitos} em {minutos}. +{xp} XP pro épico.',
   },
   {
     id: 'vila-06',
     tipo: 'vila_salva',
     texto:
-      'A taverna {do_lugar} abriu barril novo em homenagem: {feitos} feitos, {minutos} minutos, +{xp} XP. A primeira rodada é do herói.',
+      'A taverna {do_lugar} abriu barril novo em homenagem: {feitos}, {minutos}, +{xp} XP. A primeira rodada é do herói.',
   },
   {
     id: 'vila-07',
     tipo: 'vila_salva',
     texto:
-      'No mapa da guilda, {o_lugar} ganhou o selo de área segura. Custo da operação: {feitos} feitos e {minutos} minutos de {heroi}. Lucro: +{xp} XP.',
+      'No mapa da guilda, {o_lugar} ganhou o selo de área segura. Custo da operação: {feitos} e {minutos} de {heroi}. Lucro: +{xp} XP.',
   },
   {
     id: 'vila-08',
     tipo: 'vila_salva',
     texto:
-      'Dizem {no_lugar} que foi rápido demais pra ser verdade: {feitos} feitos em só {minutos} minutos. O diário confirma — e soma +{xp} XP.',
+      'Dizem {no_lugar} que foi rápido demais pra ser verdade: {feitos} em só {minutos}. O diário confirma — e soma +{xp} XP.',
   },
 
   // —— pessoa_resgatada (8) ——
@@ -378,5 +379,328 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     tipo: 'pessoa_resgatada',
     texto:
       'A guarda desistiu do resgate {no_lugar} ao meio-dia. {heroi} não — {detalhe} de {exercicio} depois, a família inteira jantou em casa.',
+  },
+
+  // —— defesa_heroica (10) — isometrias ——
+  {
+    id: 'defesa-01',
+    tipo: 'defesa_heroica',
+    texto:
+      'O portão {do_lugar} não podia cair. {heroi} segurou {exercicio} por {detalhe} — e o portão continua de pé.',
+  },
+  {
+    id: 'defesa-02',
+    tipo: 'defesa_heroica',
+    texto:
+      '{detalhe} de {exercicio} entre a horda e os aldeões {do_lugar}. A horda desistiu antes do herói.',
+  },
+  {
+    id: 'defesa-03',
+    tipo: 'defesa_heroica',
+    texto:
+      'A represa {do_lugar} rachou ao entardecer. {heroi} travou a fenda com o próprio corpo — {exercicio}, {detalhe} — até os reforços chegarem.',
+  },
+  {
+    id: 'defesa-04',
+    tipo: 'defesa_heroica',
+    inimigo: 'comum',
+    texto:
+      '{inimigo} testou a paciência de {heroi} {no_lugar} por {detalhe} de {exercicio}. Perdeu no cansaço.',
+  },
+  {
+    id: 'defesa-05',
+    tipo: 'defesa_heroica',
+    texto:
+      'O estandarte {do_lugar} ia cair no vendaval. {heroi} o segurou firme — {detalhe} de {exercicio} — e a bandeira amanheceu no mastro.',
+  },
+  {
+    id: 'defesa-06',
+    tipo: 'defesa_heroica',
+    texto:
+      'Escudo erguido, pés fincados: {detalhe} de {exercicio} na entrada {do_lugar}. Ninguém passou.',
+  },
+  {
+    id: 'defesa-07',
+    tipo: 'defesa_heroica',
+    texto:
+      'Dizem que paciência é virtude. {No_lugar}, virou muralha: {heroi} sustentou {exercicio} por {detalhe} sem ceder um palmo.',
+  },
+  {
+    id: 'defesa-08',
+    tipo: 'defesa_heroica',
+    inimigo: 'comum',
+    texto:
+      'O cerco de {inimigo} contava com a fadiga do defensor. Não contava com {detalhe} de {exercicio}. {O_lugar} agradece.',
+  },
+  {
+    id: 'defesa-09',
+    tipo: 'defesa_heroica',
+    texto:
+      'A ponte levadiça {do_lugar} emperrou aberta. {heroi} virou a corrente humana — {exercicio}, {detalhe} — até o mecanismo voltar.',
+  },
+  {
+    id: 'defesa-10',
+    tipo: 'defesa_heroica',
+    texto:
+      'Três mensageiros imploraram pra {heroi} recuar. A resposta: {detalhe} de {exercicio}, no mesmo lugar, sem tremer. O inimigo recuou primeiro.',
+  },
+
+  // —— travessia (10) — pernas/glúteos ——
+  {
+    id: 'travessia-01',
+    tipo: 'travessia',
+    texto:
+      '{detalhe} de {exercicio} levaram {heroi} pelos degraus {do_lugar}. Do topo, avistou o próximo capítulo.',
+  },
+  {
+    id: 'travessia-02',
+    tipo: 'travessia',
+    texto:
+      'O atalho {pelo_lugar} só existe pra quem tem pernas pra ele. {heroi} tem: {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'travessia-03',
+    tipo: 'travessia',
+    texto:
+      'A balsa {do_lugar} quebrou; a travessia, não. {heroi} contornou a pé — {detalhe} de {exercicio} — e chegou antes da balsa consertada.',
+  },
+  {
+    id: 'travessia-04',
+    tipo: 'travessia',
+    texto:
+      'Cada subida {do_lugar} cobra um preço. {heroi} pagou em {exercicio}: {detalhe}, sem parar pra negociar.',
+  },
+  {
+    id: 'travessia-05',
+    tipo: 'travessia',
+    texto:
+      'O mapa dizia "intransponível" sobre {o_lugar}. {heroi} riscou a palavra depois de {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'travessia-06',
+    tipo: 'travessia',
+    texto:
+      'A neve fechou o passo {no_lugar}. {heroi} abriu trilha nova — {detalhe} de {exercicio} — e os mercadores seguiram atrás.',
+  },
+  {
+    id: 'travessia-07',
+    tipo: 'travessia',
+    texto:
+      'De vale a vale, {pelo_lugar}, sem montaria: {detalhe} de {exercicio}. O cavalo teria atrasado.',
+  },
+  {
+    id: 'travessia-08',
+    tipo: 'travessia',
+    texto:
+      'A mensagem tinha que chegar {no_lugar} antes do anoitecer. Chegou com sol alto — {detalhe} de {exercicio} no ritmo.',
+  },
+  {
+    id: 'travessia-09',
+    tipo: 'travessia',
+    texto:
+      'Dizem que {o_lugar} testa os joelhos de qualquer viajante. Os de {heroi} passaram no teste: {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'travessia-10',
+    tipo: 'travessia',
+    texto:
+      'A trilha {do_lugar} subiu, desceu e subiu de novo. {heroi} também — {detalhe} de {exercicio} — e não reclamou (muito).',
+  },
+
+  // —— fortaleza_rompida (10) — peito/braços/ombros ——
+  {
+    id: 'fortaleza-01',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'As muralhas {do_lugar} não resistiram: {detalhe} de {exercicio} e o portão veio abaixo.',
+  },
+  {
+    id: 'fortaleza-02',
+    tipo: 'fortaleza_rompida',
+    inimigo: 'comum',
+    texto:
+      'O acampamento de {inimigo} {no_lugar} tinha paliçada dupla. Tinha. {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'fortaleza-03',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'A porta do cofre {do_lugar} enferrujou fechada há uma década. {heroi} abriu no braço: {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'fortaleza-04',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'Pedra sobre pedra, a barricada {no_lugar} parecia eterna. {detalhe} de {exercicio} discordaram.',
+  },
+  {
+    id: 'fortaleza-05',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'O aríete quebrou no segundo golpe. {heroi} terminou o serviço no portão {do_lugar} — {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'fortaleza-06',
+    tipo: 'fortaleza_rompida',
+    inimigo: 'comum',
+    texto:
+      '{inimigo} trancou o celeiro {do_lugar} e engoliu a chave. Detalhe irrelevante: {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'fortaleza-07',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'A grade da masmorra {do_lugar} entortou no aperto de {heroi}. {detalhe} de {exercicio} — e os prisioneiros saíram pela porta da frente.',
+  },
+  {
+    id: 'fortaleza-08',
+    tipo: 'fortaleza_rompida',
+    texto: 'Derrubar a torre de cerco {no_lugar} exigia dez homens. Ou {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'fortaleza-09',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'O muro que dividia {o_lugar} em dois caiu hoje. Os pedreiros culpam o tempo; o diário registra {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'fortaleza-10',
+    tipo: 'fortaleza_rompida',
+    texto:
+      'Portões do forte {do_lugar}: reforçados com ferro, orgulho da guarnição. Estado atual: lascas. Causa: {detalhe} de {exercicio}.',
+  },
+
+  // —— poder_desperto (10) — núcleo/isometria profunda ——
+  {
+    id: 'poder-01',
+    tipo: 'poder_desperto',
+    texto:
+      'No silêncio de {detalhe} de {exercicio}, o núcleo de {heroi} brilhou — e os cristais {do_lugar} responderam.',
+  },
+  {
+    id: 'poder-02',
+    tipo: 'poder_desperto',
+    texto:
+      'Os monges {do_lugar} levam anos pra alcançar o centro imóvel. {heroi} o tocou hoje: {exercicio}, {detalhe}.',
+  },
+  {
+    id: 'poder-03',
+    tipo: 'poder_desperto',
+    texto:
+      'A terra tremeu {no_lugar}; {heroi}, não. {detalhe} de {exercicio} — o tremor passou por fora, nunca por dentro.',
+  },
+  {
+    id: 'poder-04',
+    tipo: 'poder_desperto',
+    texto:
+      'Dizem que há um fogo que não queima, guardado no centro do corpo. {No_lugar}, durante {detalhe} de {exercicio}, ele acendeu.',
+  },
+  {
+    id: 'poder-05',
+    tipo: 'poder_desperto',
+    texto:
+      'O vento uivou, a chama da lanterna dançou, e {heroi} não se moveu: {detalhe} de {exercicio} {no_lugar}.',
+  },
+  {
+    id: 'poder-06',
+    tipo: 'poder_desperto',
+    texto:
+      'O amuleto {do_lugar} só desperta perto de um núcleo firme. Hoje ele vibrou — {detalhe} de {exercicio} de proximidade.',
+  },
+  {
+    id: 'poder-07',
+    tipo: 'poder_desperto',
+    texto:
+      'Entre uma respiração e outra, {no_lugar}, {heroi} encontrou o equilíbrio que os livros antigos só descrevem: {exercicio}, {detalhe}.',
+  },
+  {
+    id: 'poder-08',
+    tipo: 'poder_desperto',
+    texto:
+      'A água {do_lugar} espelhou um herói imóvel por {detalhe} de {exercicio}. Nem as rãs ousaram pular.',
+  },
+  {
+    id: 'poder-09',
+    tipo: 'poder_desperto',
+    texto:
+      'Energia antiga corre sob {o_lugar}. {detalhe} de {exercicio} e ela correu por {heroi} também.',
+  },
+  {
+    id: 'poder-10',
+    tipo: 'poder_desperto',
+    texto:
+      'O mestre da guilda sempre diz: força sem centro é ruído. {No_lugar}, {heroi} fez silêncio — {detalhe} de {exercicio}.',
+  },
+
+  // —— capitulo — marcos (primeiro treino / streak) ——
+  {
+    id: 'capitulo-p1',
+    tipo: 'capitulo',
+    marco: 'primeiro',
+    texto:
+      'Capítulo 1 — todo épico começa com um passo. O de {heroi} começou {no_lugar}, e o diário registra a data.',
+  },
+  {
+    id: 'capitulo-p2',
+    tipo: 'capitulo',
+    marco: 'primeiro',
+    texto:
+      'A primeira página do diário de {heroi} foi escrita hoje, {no_lugar}. As próximas dependem só do herói.',
+  },
+  {
+    id: 'capitulo-p3',
+    tipo: 'capitulo',
+    marco: 'primeiro',
+    texto:
+      'Os mapas da guilda ganharam um nome novo: {heroi}. Primeiro feito registrado {no_lugar}. Que venham os capítulos.',
+  },
+  {
+    id: 'capitulo-s1',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      'Capítulo {n_dias} — {dias} de jornada sem falhar. Os mapas da guilda ganham mais uma bandeira com o nome de {heroi}.',
+  },
+  {
+    id: 'capitulo-s2',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      '{dias} seguidos na estrada. As tavernas {do_lugar} já contam a sequência de {heroi} como quem conta lenda.',
+  },
+  {
+    id: 'capitulo-s3',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      'O diário marca {dias} sem pausa. A constância vale mais que qualquer espada — e {heroi} carrega as duas.',
+  },
+  {
+    id: 'capitulo-s4',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      'De sol a sol, {dias} de campanha. {No_lugar}, os batedores usam o nome de {heroi} pra dizer "confiável".',
+  },
+  {
+    id: 'capitulo-s5',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      'A fogueira do acampamento queima há {dias} — e quem a mantém acesa é {heroi}, sem faltar uma noite.',
+  },
+  {
+    id: 'capitulo-s6',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      '{dias} de marcha e a armadura já parece parte do corpo. O reino repara — {no_lugar} e além.',
+  },
+  {
+    id: 'capitulo-s7',
+    tipo: 'capitulo',
+    marco: 'streak',
+    texto:
+      'Os bardos não improvisam mais: a sequência de {dias} de {heroi} virou refrão fixo {no_lugar}.',
   },
 ];

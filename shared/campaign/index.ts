@@ -1,17 +1,24 @@
 /**
- * Motor do Mapa da Campanha narrativo: deriva posts de roleplay do histórico
- * de treinos, deterministicamente (mesma sessão → mesma história). Roda no
- * client; nada é persistido.
+ * Motor do Mapa da Campanha narrativo: deriva UM post por sessão de treino
+ * (não por exercício) — a sessão é a "missão do dia", como uma daily
+ * quest. Roda no client; nada é persistido; determinístico (mesma sessão →
+ * mesma história).
+ *
+ * Quando a sessão tem mais de um feito notável, uma hierarquia de
+ * prioridade (por raridade narrativa) escolhe qual evento vira a história:
+ * capítulo (marco) > chefe (PR real) > chefe (nível 4, sinal secundário) >
+ * resgate > poder desperto > defesa heroica > fortaleza > travessia >
+ * horda > missão cumprida (volume) > monstro (piso).
  *
  * Pools sensíveis a progresso: inimigos nomeados só depois de descobertos no
  * Bestiário (fallback genérico antes disso) e lugares revelados por nível.
- * Quando um pool cresce, posts antigos podem re-sortear — aceito por design
- * (raro e inofensivo; evita persistir narrativa).
  */
 
 import { AFK_ENEMIES, type AfkEnemyId } from '../afk/combat.js';
 import { bestiaryEnemyTier, isBestiaryEnemyId } from '../afk/bestiary.js';
 import { resolveExerciseNomePt } from '../types/exercise-display.js';
+import { computePersonalRecords, diffNewPersonalRecords } from '../personal-records.js';
+import type { ModoExercicio } from '../types/index.js';
 import {
   CAMPAIGN_EVENT_LABELS,
   CAMPAIGN_TEMPLATES,
@@ -24,8 +31,11 @@ export { CAMPAIGN_EVENT_LABELS, CAMPAIGN_TEMPLATES } from './templates.js';
 export type { CampaignEventType, CampaignTemplate } from './templates.js';
 export * from './places.js';
 
-/** Mínimo de exercícios numa sessão pra gerar o post agregado "vila salva". */
-export const CAMPAIGN_SESSION_POST_MIN_EXERCISES = 3;
+/** Mínimo de exercícios pra "missão cumprida" vencer por volume (tier 10). */
+export const CAMPAIGN_VILA_SALVA_MIN_EXERCISES = 5;
+
+/** Marcos de streak que viram "capítulo" — mesmos thresholds das conquistas (streak_N). */
+export const CAMPAIGN_STREAK_MILESTONES = [2, 3, 7, 14, 30, 60, 100, 365];
 
 /** Inimigos genéricos pra conta sem descobertas no Bestiário. */
 export const CAMPAIGN_GENERIC_ENEMIES = [
@@ -43,7 +53,7 @@ export interface CampaignExerciseEntry {
   series?: number;
   repeticoes_realizadas?: number;
   duracao_segundos?: number;
-  modo?: string;
+  modo?: ModoExercicio;
 }
 
 export interface CampaignSession {
@@ -94,45 +104,135 @@ function pick<T>(pool: readonly T[], hash: number): T {
   return pool[hash % pool.length];
 }
 
-/**
- * Classifica o exercício num tipo de evento. Regras por característica do
- * catálogo (não por slug) — exercícios futuros já nascem narráveis.
- */
-export function classifyExercise(info: CampaignCatalogInfo | undefined): CampaignEventType {
-  if (!info) return 'monstro_derrotado';
-  const grupos = info.grupos ?? [];
-  const principal = grupos[0];
-
-  if (info.nivel === 4) return 'chefe_derrotado';
-  if (info.prioridade === 'isometrico') {
-    return info.musculo_principal === 'core' ? 'poder_desperto' : 'defesa_heroica';
-  }
-  if (principal === 'costas') return 'pessoa_resgatada';
-  if (principal === 'pernas' || principal === 'gluteos') return 'travessia';
-  if (principal === 'peito' || principal === 'ombros' || principal === 'bracos') {
-    return 'fortaleza_rompida';
-  }
-  if (info.prioridade === 'dinamico') return 'horda_contida';
-  return 'monstro_derrotado';
+/** Singular/plural simples — toda contagem no feed passa por aqui. */
+function contagem(n: number, singular: string, plural = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : plural}`;
 }
 
-/** Tipos sem pool de templates ainda (Lotes 2+) caem no vizinho narrativo. */
-const TEMPLATE_FALLBACK: Partial<Record<CampaignEventType, CampaignEventType>> = {
-  defesa_heroica: 'monstro_derrotado',
-  poder_desperto: 'monstro_derrotado',
-  travessia: 'horda_contida',
-  fortaleza_rompida: 'horda_contida',
-  capitulo: 'vila_salva',
-};
+// —— Hierarquia de prioridade (menor número = maior prioridade) ————————————
+// Baseada em raridade narrativa: quanto mais raro o feito, mais ele merece
+// ser a história do dia — evita que eventos comuns afoguem os raros.
+const PRIORITY = {
+  CAPITULO: 0,
+  CHEFE_PR: 1,
+  CHEFE_NIVEL4: 2,
+  RESGATE: 3,
+  PODER: 4,
+  DEFESA: 5,
+  FORTALEZA: 6,
+  TRAVESSIA: 7,
+  HORDA: 8,
+  VILA_SALVA: 9,
+  MONSTRO: 10,
+} as const;
 
-function templatesForTipo(tipo: CampaignEventType): {
+const PRIORIDADE_CATALOGO_RANK: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 };
+
+interface ExerciseCandidate {
+  entry: CampaignExerciseEntry;
+  info: CampaignCatalogInfo | undefined;
+  index: number;
+  priority: number;
   tipo: CampaignEventType;
-  pool: CampaignTemplate[];
-} {
+}
+
+/**
+ * Classifica um exercício em (tipo de evento, prioridade), dado se ele bateu
+ * PR real nesta sessão. Não decide sozinho o vencedor — isso é
+ * `pickSessionWinner`, que compara todos os exercícios da sessão.
+ */
+function classifyCandidate(
+  entry: CampaignExerciseEntry,
+  info: CampaignCatalogInfo | undefined,
+  index: number,
+  hitPr: boolean,
+): ExerciseCandidate {
+  if (hitPr) return { entry, info, index, priority: PRIORITY.CHEFE_PR, tipo: 'chefe_derrotado' };
+  if (info?.nivel === 4) {
+    return { entry, info, index, priority: PRIORITY.CHEFE_NIVEL4, tipo: 'chefe_derrotado' };
+  }
+
+  const grupos = info?.grupos ?? [];
+  const principal = grupos[0];
+
+  if (info?.prioridade === 'isometrico') {
+    const tipo = info.musculo_principal === 'core' ? 'poder_desperto' : 'defesa_heroica';
+    const priority = tipo === 'poder_desperto' ? PRIORITY.PODER : PRIORITY.DEFESA;
+    return { entry, info, index, priority, tipo };
+  }
+  if (principal === 'costas') {
+    return { entry, info, index, priority: PRIORITY.RESGATE, tipo: 'pessoa_resgatada' };
+  }
+  if (principal === 'peito' || principal === 'ombros' || principal === 'bracos') {
+    return { entry, info, index, priority: PRIORITY.FORTALEZA, tipo: 'fortaleza_rompida' };
+  }
+  if (principal === 'pernas' || principal === 'gluteos') {
+    return { entry, info, index, priority: PRIORITY.TRAVESSIA, tipo: 'travessia' };
+  }
+  if (info?.prioridade === 'dinamico') {
+    return { entry, info, index, priority: PRIORITY.HORDA, tipo: 'horda_contida' };
+  }
+  return { entry, info, index, priority: PRIORITY.MONSTRO, tipo: 'monstro_derrotado' };
+}
+
+/** Desempate entre candidatos empatados na mesma prioridade. */
+function compareCandidates(a: ExerciseCandidate, b: ExerciseCandidate): number {
+  const nivelDiff = (b.info?.nivel ?? 0) - (a.info?.nivel ?? 0);
+  if (nivelDiff !== 0) return nivelDiff;
+  const rankA = PRIORIDADE_CATALOGO_RANK[a.info?.prioridade ?? ''] ?? 9;
+  const rankB = PRIORIDADE_CATALOGO_RANK[b.info?.prioridade ?? ''] ?? 9;
+  if (rankA !== rankB) return rankA - rankB;
+  return a.index - b.index;
+}
+
+interface SessionWinner {
+  tipo: CampaignEventType;
+  candidate: ExerciseCandidate | null;
+  /** Só em capitulo: qual marco narrar. */
+  marco?: { tipo: 'primeiro' } | { tipo: 'streak'; dias: number };
+}
+
+function pickSessionWinner(
+  session: CampaignSession,
+  catalogBySlug: Map<string, CampaignCatalogInfo>,
+  prSlugs: Set<string>,
+  capituloMarco: SessionWinner['marco'] | undefined,
+): SessionWinner {
+  if (capituloMarco) return { tipo: 'capitulo', candidate: null, marco: capituloMarco };
+
+  const candidates = session.exercicios.map((entry, index) =>
+    classifyCandidate(entry, catalogBySlug.get(entry.slug), index, prSlugs.has(entry.slug)),
+  );
+
+  const best = candidates.reduce<ExerciseCandidate | null>((acc, cur) => {
+    if (!acc) return cur;
+    if (cur.priority !== acc.priority) return cur.priority < acc.priority ? cur : acc;
+    return compareCandidates(cur, acc) < 0 ? cur : acc;
+  }, null);
+
+  if (!best || best.priority === PRIORITY.MONSTRO) {
+    if (session.exercicios.length >= CAMPAIGN_VILA_SALVA_MIN_EXERCISES) {
+      return { tipo: 'vila_salva', candidate: null };
+    }
+  }
+
+  return best
+    ? { tipo: best.tipo, candidate: best }
+    : { tipo: 'monstro_derrotado', candidate: null };
+}
+
+function templatesForTipo(
+  tipo: CampaignEventType,
+  marco?: SessionWinner['marco'],
+): CampaignTemplate[] {
+  if (tipo === 'capitulo') {
+    return CAMPAIGN_TEMPLATES.filter((t) => t.tipo === 'capitulo' && t.marco === marco?.tipo);
+  }
   const direct = CAMPAIGN_TEMPLATES.filter((t) => t.tipo === tipo);
-  if (direct.length > 0) return { tipo, pool: direct };
-  const fallback = TEMPLATE_FALLBACK[tipo] ?? 'monstro_derrotado';
-  return { tipo: fallback, pool: CAMPAIGN_TEMPLATES.filter((t) => t.tipo === fallback) };
+  // Defensivo: tipo sem pool (não deve acontecer com os 10 tipos completos).
+  return direct.length > 0
+    ? direct
+    : CAMPAIGN_TEMPLATES.filter((t) => t.tipo === 'monstro_derrotado');
 }
 
 function enemyPools(ctx: CampaignContext): { comuns: string[]; chefes: string[] } {
@@ -158,14 +258,6 @@ function detalheDoExercicio(entry: CampaignExerciseEntry): string {
   const series = entry.series ?? 3;
   const reps = entry.repeticoes_realizadas ?? 12;
   return `${series}×${reps}`;
-}
-
-function interpolate(texto: string, valores: Record<string, string>): string {
-  return texto.replace(/\{(\w+)\}/g, (raw, chave: string) => valores[chave] ?? raw);
-}
-
-function toIso(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
 const CONTRACOES: Record<CampaignPlace['artigo'], { em: string; de: string; por: string }> = {
@@ -199,6 +291,75 @@ function lugarPlaceholders(place: CampaignPlace): Record<string, string> {
   };
 }
 
+function interpolate(texto: string, valores: Record<string, string>): string {
+  return texto.replace(/\{(\w+)\}/g, (raw, chave: string) => valores[chave] ?? raw);
+}
+
+function toIso(value: string | Date): string {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+/** Chave de dia (YYYY-MM-DD) a partir do ISO — aproximação de calendário local. */
+function dayKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+function addOneDay(key: string): string {
+  const d = new Date(`${key}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Marcos de capítulo por sessão: 'primeiro' pra sessão mais antiga da conta,
+ * 'streak' pro dia em que a sequência de dias-com-treino bate um threshold
+ * das conquistas de streak (2,3,7,14,30,60,100,365). Aproximação por
+ * calendário — não usa proteção de Frozen Streak (cosmético, não afeta jogo).
+ */
+function computeCapituloMarcos(
+  sessionsAscending: CampaignSession[],
+): Map<string, SessionWinner['marco']> {
+  const marcos = new Map<string, SessionWinner['marco']>();
+  if (sessionsAscending.length === 0) return marcos;
+
+  marcos.set(String(sessionsAscending[0].id), { tipo: 'primeiro' });
+
+  const daysWithSession = new Map<string, string>(); // dayKey -> last session id of that day
+  for (const session of sessionsAscending) {
+    daysWithSession.set(dayKey(toIso(session.concluido_em)), String(session.id));
+  }
+  const sortedDays = [...daysWithSession.keys()].sort();
+
+  let streak = 0;
+  let prevDay: string | null = null;
+  for (const day of sortedDays) {
+    streak = prevDay && addOneDay(prevDay) === day ? streak + 1 : 1;
+    prevDay = day;
+    if (CAMPAIGN_STREAK_MILESTONES.includes(streak)) {
+      const sessionId = daysWithSession.get(day)!;
+      // 1º treino já venceu por 'primeiro' — não sobrescreve com streak no mesmo dia.
+      if (!marcos.has(sessionId)) {
+        marcos.set(sessionId, { tipo: 'streak', dias: streak });
+      }
+    }
+  }
+
+  return marcos;
+}
+
+/** PRs batidos em cada sessão, usando o mesmo cálculo de `shared/personal-records.ts`. */
+function computeSessionPrSlugs(sessionsAscending: CampaignSession[]): Map<string, Set<string>> {
+  const bySession = new Map<string, Set<string>>();
+  const seenHistories: CampaignSession[] = [];
+  for (const session of sessionsAscending) {
+    const previousRecords = computePersonalRecords(seenHistories);
+    const notices = diffNewPersonalRecords(previousRecords, session.exercicios);
+    bySession.set(String(session.id), new Set(notices.map((n) => n.slug)));
+    seenHistories.push(session);
+  }
+  return bySession;
+}
+
 /**
  * Escolha determinística que evita repetir os itens recentes: avança no pool
  * a partir do seed até achar candidato fora da lista, sem sorteio real.
@@ -226,7 +387,8 @@ const RECENT_TEMPLATES_WINDOW = 4;
 const RECENT_PLACES_WINDOW = 2;
 
 /**
- * Deriva os posts do feed a partir das sessões (mais recentes primeiro).
+ * Deriva o feed a partir das sessões: exatamente 1 post por sessão de
+ * treino (a "missão do dia"), escolhido pela hierarquia de prioridade.
  * `catalogBySlug` vem do catálogo de exercícios já carregado no client.
  */
 export function buildCampaignPosts(
@@ -234,80 +396,83 @@ export function buildCampaignPosts(
   catalogBySlug: Map<string, CampaignCatalogInfo>,
   ctx: CampaignContext,
 ): CampaignPost[] {
+  const validSessions = sessions.filter((s) => s.exercicios.length > 0);
+  const ascending = [...validSessions].sort(
+    (a, b) => new Date(a.concluido_em).getTime() - new Date(b.concluido_em).getTime(),
+  );
+  const prSlugsBySession = computeSessionPrSlugs(ascending);
+  const capituloMarcos = computeCapituloMarcos(ascending);
+
   const lugares = placesForLevel(ctx.level);
   const inimigos = enemyPools(ctx);
-  const posts: CampaignPost[] = [];
   const recentTemplates: string[] = [];
   const recentPlaces: string[] = [];
 
-  const ordered = [...sessions].sort(
-    (a, b) => new Date(b.concluido_em).getTime() - new Date(a.concluido_em).getTime(),
-  );
+  const descending = [...ascending].reverse();
+  const posts: CampaignPost[] = [];
 
-  for (const session of ordered) {
+  for (const session of descending) {
+    const id = String(session.id);
     const concluidoEm = toIso(session.concluido_em);
-    const sessionHash = hashString(String(session.id));
+    const seed = hashString(id);
 
-    // Post agregado da sessão (vila salva) — abre o "dia" no feed.
-    if (session.exercicios.length >= CAMPAIGN_SESSION_POST_MIN_EXERCISES) {
-      const { tipo, pool } = templatesForTipo('vila_salva');
-      const template = pickAvoiding(pool, sessionHash, recentTemplates, (t) => t.id);
-      const lugarDaSessao = pickAvoiding(lugares, sessionHash, recentPlaces, (p) => p.id);
-      remember(recentTemplates, template.id, RECENT_TEMPLATES_WINDOW);
-      remember(recentPlaces, lugarDaSessao.id, RECENT_PLACES_WINDOW);
-      posts.push({
-        id: `${session.id}:sessao`,
-        tipo,
-        tipo_label: CAMPAIGN_EVENT_LABELS[tipo],
-        lugar: lugarDaSessao.nome,
-        mensagem: interpolate(template.texto, {
-          heroi: ctx.heroi,
-          ...lugarPlaceholders(lugarDaSessao),
-          feitos: String(session.exercicios.length),
-          minutos: String(Math.max(1, Math.round((session.duracao_total_segundos ?? 0) / 60))),
-          xp: String(session.xp_ganho ?? 0),
-        }),
-        xp: session.xp_ganho,
-        concluido_em: concluidoEm,
-        session_id: String(session.id),
-      });
-    }
+    const winner = pickSessionWinner(
+      session,
+      catalogBySlug,
+      prSlugsBySession.get(id) ?? new Set(),
+      capituloMarcos.get(id),
+    );
 
-    session.exercicios.forEach((entry, index) => {
-      const seed = hashString(`${session.id}:${entry.slug}:${index}`);
-      const info = catalogBySlug.get(entry.slug);
-      const { tipo, pool } = templatesForTipo(classifyExercise(info));
-      const template = pickAvoiding(pool, seed, recentTemplates, (t) => t.id);
-      const lugar = pickAvoiding(lugares, seed, recentPlaces, (p) => p.id);
-      remember(recentTemplates, template.id, RECENT_TEMPLATES_WINDOW);
-      remember(recentPlaces, lugar.id, RECENT_PLACES_WINDOW);
+    const pool = templatesForTipo(winner.tipo, winner.marco);
+    const template = pickAvoiding(pool, seed, recentTemplates, (t) => t.id);
+    const lugar = pickAvoiding(lugares, seed, recentPlaces, (p) => p.id);
+    remember(recentTemplates, template.id, RECENT_TEMPLATES_WINDOW);
+    remember(recentPlaces, lugar.id, RECENT_PLACES_WINDOW);
+
+    const valores: Record<string, string> = {
+      heroi: ctx.heroi,
+      ...lugarPlaceholders(lugar),
+    };
+
+    let exercicioInfo: CampaignPost['exercicio'];
+    if (winner.candidate) {
+      const info = winner.candidate.info;
+      const entry = winner.candidate.entry;
       const nome =
         resolveExerciseNomePt({ slug: entry.slug, nome_pt: info?.nome_pt }) ?? entry.nome;
       const detalhe = detalheDoExercicio(entry);
+      valores.exercicio = nome;
+      valores.detalhe = detalhe;
+      exercicioInfo = { slug: entry.slug, nome, detalhe };
 
-      const inimigo =
-        template.inimigo === 'chefe'
-          ? pick(inimigos.chefes, seed)
-          : template.inimigo === 'comum'
-            ? pick(inimigos.comuns, seed)
-            : '';
+      if (template.inimigo === 'chefe') valores.inimigo = pick(inimigos.chefes, seed);
+      else if (template.inimigo === 'comum') valores.inimigo = pick(inimigos.comuns, seed);
+    }
 
-      posts.push({
-        id: `${session.id}:${index}`,
-        tipo,
-        tipo_label: CAMPAIGN_EVENT_LABELS[tipo],
-        lugar: lugar.nome,
-        mensagem: interpolate(template.texto, {
-          heroi: ctx.heroi,
-          exercicio: nome,
-          detalhe,
-          inimigo,
-          ...lugarPlaceholders(lugar),
-        }),
-        exercicio: { slug: entry.slug, nome, detalhe },
-        concluido_em: concluidoEm,
-        session_id: String(session.id),
-      });
+    if (winner.tipo === 'vila_salva') {
+      valores.feitos = contagem(session.exercicios.length, 'feito');
+      valores.minutos = contagem(
+        Math.max(1, Math.round((session.duracao_total_segundos ?? 0) / 60)),
+        'minuto',
+      );
+      valores.xp = String(session.xp_ganho ?? 0);
+    }
+
+    if (winner.tipo === 'capitulo' && winner.marco?.tipo === 'streak') {
+      valores.dias = contagem(winner.marco.dias, 'dia');
+      valores.n_dias = String(winner.marco.dias);
+    }
+
+    posts.push({
+      id,
+      tipo: winner.tipo,
+      tipo_label: CAMPAIGN_EVENT_LABELS[winner.tipo],
+      lugar: lugar.nome,
+      mensagem: interpolate(template.texto, valores),
+      exercicio: exercicioInfo,
+      xp: winner.tipo === 'vila_salva' ? session.xp_ganho : undefined,
+      concluido_em: concluidoEm,
+      session_id: id,
     });
   }
 
