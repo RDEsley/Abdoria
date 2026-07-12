@@ -126,6 +126,46 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     texto:
       'A muralha aguentaria a noite; os nervos dos guardas, não. {heroi} saiu do portão {do_lugar}, fez {detalhe} de {exercicio}, e a horda de {inimigo} virou estatística.',
   },
+  {
+    id: 'horda-13',
+    tipo: 'horda_contida',
+    inimigo: 'comum',
+    texto:
+      'O alarme {do_lugar} tocou duas vezes seguidas — nunca tinha acontecido. {inimigo} não durou {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'horda-14',
+    tipo: 'horda_contida',
+    texto:
+      'Ninguém soube dizer quantos vultos cruzaram {o_lugar} naquela madrugada. {heroi} soube: {detalhe} de {exercicio}, e nenhum voltou.',
+  },
+  {
+    id: 'horda-15',
+    tipo: 'horda_contida',
+    inimigo: 'comum',
+    texto:
+      'A colheita {do_lugar} atraiu {inimigo} de todo canto. {detalhe} de {exercicio} depois, os grãos ficaram só pros fazendeiros.',
+  },
+  {
+    id: 'horda-16',
+    tipo: 'horda_contida',
+    inimigo: 'comum',
+    texto:
+      'O eco {no_lugar} ainda carrega o barulho da retirada de {inimigo} — {detalhe} de {exercicio} foi o suficiente pra virar história local.',
+  },
+  {
+    id: 'horda-17',
+    tipo: 'horda_contida',
+    texto:
+      'Três batedores voltaram correndo {do_lugar} sem fôlego pra avisar. Chegaram tarde: {detalhe} de {exercicio} já tinham resolvido tudo.',
+  },
+  {
+    id: 'horda-18',
+    tipo: 'horda_contida',
+    inimigo: 'comum',
+    texto:
+      'A feira {do_lugar} quase fechou as portas com {inimigo} nas bancas. Reabriu em {detalhe} de {exercicio}.',
+  },
 
   // —— monstro_derrotado (12) ——
   {
@@ -209,6 +249,59 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     inimigo: 'comum',
     texto:
       'No registro da guilda, mais uma linha: "{inimigo} — neutralizado {no_lugar}, técnica: {exercicio}, {detalhe}. Sem baixas. De novo."',
+  },
+  {
+    id: 'monstro-13',
+    tipo: 'monstro_derrotado',
+    inimigo: 'comum',
+    texto:
+      'A pousada {do_lugar} recusava hóspedes desde que {inimigo} apareceu no telhado. {heroi} resolveu em {detalhe} de {exercicio} — quarto liberado.',
+  },
+  {
+    id: 'monstro-14',
+    tipo: 'monstro_derrotado',
+    texto:
+      'Ninguém viu o rosto da sombra que rondava {o_lugar}. {heroi} viu — de perto, por {detalhe} de {exercicio}, até ela desistir de ter rosto.',
+  },
+  {
+    id: 'monstro-15',
+    tipo: 'monstro_derrotado',
+    inimigo: 'comum',
+    texto:
+      'O poço {do_lugar} tinha fama de amaldiçoado. Tinha, na verdade, {inimigo}. {detalhe} de {exercicio} resolveram os dois problemas.',
+  },
+  {
+    id: 'monstro-16',
+    tipo: 'monstro_derrotado',
+    inimigo: 'comum',
+    texto:
+      'A patrulha {do_lugar} evitava aquele trecho havia meses. {heroi} passou uma vez — {detalhe} de {exercicio} — e {inimigo} deixou de ser motivo.',
+  },
+  {
+    id: 'monstro-17',
+    tipo: 'monstro_derrotado',
+    texto:
+      'Contam {no_lugar} que um viajante desapareceu ali. {heroi} não desapareceu: {detalhe} de {exercicio} e voltou com a explicação.',
+  },
+  {
+    id: 'monstro-18',
+    tipo: 'monstro_derrotado',
+    inimigo: 'comum',
+    texto:
+      'O selo antigo {do_lugar} rachou ao meio-dia, e {inimigo} saiu por ele. {detalhe} de {exercicio} o mandaram de volta.',
+  },
+  {
+    id: 'monstro-19',
+    tipo: 'monstro_derrotado',
+    texto:
+      'A trilha de pegadas {no_lugar} sumia numa moita — e reaparecia do outro lado, sem dono. {detalhe} de {exercicio} encerraram a charada.',
+  },
+  {
+    id: 'monstro-20',
+    tipo: 'monstro_derrotado',
+    inimigo: 'comum',
+    texto:
+      'O sino de alarme {do_lugar} é velho e cansado; hoje quase não tocou. {inimigo} não deu tempo — {detalhe} de {exercicio} antes do segundo toque.',
   },
 
   // —— chefe_derrotado (10) ——
@@ -444,6 +537,43 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     texto:
       'Três mensageiros imploraram pra {heroi} recuar. A resposta: {detalhe} de {exercicio}, no mesmo lugar, sem tremer. O inimigo recuou primeiro.',
   },
+  {
+    id: 'defesa-11',
+    tipo: 'defesa_heroica',
+    texto:
+      'O poço de fogo {do_lugar} precisava de alguém parado bem na beirada, sem vacilar. {detalhe} de {exercicio} — {heroi} nem piscou.',
+  },
+  {
+    id: 'defesa-12',
+    tipo: 'defesa_heroica',
+    texto:
+      'A viga rachada {do_lugar} ia ceder com o peso de todos. {heroi} a substituiu — {exercicio}, {detalhe} — até o último aldeão atravessar.',
+  },
+  {
+    id: 'defesa-13',
+    tipo: 'defesa_heroica',
+    inimigo: 'comum',
+    texto:
+      '{inimigo} apostou que cansaria primeiro. {No_lugar}, depois de {detalhe} de {exercicio}, descobriu que não.',
+  },
+  {
+    id: 'defesa-14',
+    tipo: 'defesa_heroica',
+    texto:
+      'O sino de socorro {do_lugar} não parava de tocar. {heroi} segurou a posição — {detalhe} de {exercicio} — até o som virar silêncio de alívio.',
+  },
+  {
+    id: 'defesa-15',
+    tipo: 'defesa_heroica',
+    texto:
+      'Comportas abertas, água subindo: alguém precisava travar a manivela {no_lugar}. {detalhe} de {exercicio} e a enchente desistiu.',
+  },
+  {
+    id: 'defesa-16',
+    tipo: 'defesa_heroica',
+    texto:
+      'A tocha mais alta {do_lugar} ia apagar no vento. {heroi} fez de escudo o próprio corpo — {exercicio}, {detalhe} — e a chama resistiu.',
+  },
 
   // —— travessia (10) — pernas/glúteos ——
   {
@@ -630,6 +760,42 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     tipo: 'poder_desperto',
     texto:
       'O mestre da guilda sempre diz: força sem centro é ruído. {No_lugar}, {heroi} fez silêncio — {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'poder-11',
+    tipo: 'poder_desperto',
+    texto:
+      'O oráculo {do_lugar} só responde a quem chega com o centro quieto. {heroi} chegou assim, depois de {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'poder-12',
+    tipo: 'poder_desperto',
+    texto:
+      'Nem o sino {do_lugar} conseguiu quebrar a concentração de {heroi} — {detalhe} de {exercicio}, e o badalo bateu em vão.',
+  },
+  {
+    id: 'poder-13',
+    tipo: 'poder_desperto',
+    texto:
+      'A runa gravada na pedra {do_lugar} só acende sob presença estável. Acendeu: {detalhe} de {exercicio} foi a chave.',
+  },
+  {
+    id: 'poder-14',
+    tipo: 'poder_desperto',
+    texto:
+      'Enquanto o mundo girava lá fora, {no_lugar} havia um ponto fixo: {heroi}, {detalhe} de {exercicio}, imóvel por dentro e por fora.',
+  },
+  {
+    id: 'poder-15',
+    tipo: 'poder_desperto',
+    texto:
+      'Diz a tradição {do_lugar} que o corpo é o primeiro templo. {heroi} rezou à sua moda: {detalhe} de {exercicio}.',
+  },
+  {
+    id: 'poder-16',
+    tipo: 'poder_desperto',
+    texto:
+      'A lâmpada de óleo {do_lugar} não tremeu uma vez sequer enquanto {heroi} sustentou {exercicio} por {detalhe}. Nem o ar ousou se mover.',
   },
 
   // —— capitulo — marcos (primeiro treino / streak) ——

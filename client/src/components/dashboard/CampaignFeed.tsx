@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Castle,
   Crown,
@@ -51,7 +52,14 @@ function PostCard({ post }: { post: CampaignPost }) {
   const style = EVENT_STYLE[post.tipo] ?? EVENT_STYLE.monstro_derrotado;
   const { Icon } = style;
   return (
-    <article className="game-campaign-post rounded-xl border border-stone-200 bg-white/70 p-3">
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="game-campaign-post rounded-xl border border-stone-200 bg-white/70 p-3"
+    >
       <header className="flex items-center gap-2">
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${style.className}`}
@@ -83,7 +91,7 @@ function PostCard({ post }: { post: CampaignPost }) {
           )}
         </footer>
       )}
-    </article>
+    </motion.article>
   );
 }
 
@@ -149,9 +157,11 @@ export function CampaignFeed() {
 
   return (
     <div className="mt-4 flex flex-col gap-2.5">
-      {visible.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
+      <AnimatePresence initial={false}>
+        {visible.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </AnimatePresence>
       {!showAll && posts.length > 1 && (
         <GameButton variant="secondary" size="sm" onClick={() => setShowAll(true)} className="mt-1">
           Ver capítulos anteriores
