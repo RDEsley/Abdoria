@@ -17,38 +17,43 @@ function fakeUser(overrides: Partial<UserRecord['gamificacao']> = {}): UserRecor
   } as unknown as UserRecord;
 }
 
+// Chaves dinâmicas: addWeeklyXp/addWeeklyMoedas acumulam na semana REAL
+// corrente — chaves fixas quebravam o teste na primeira virada de semana.
+const CURRENT_WEEK = getSundayWeekKey();
+const PREVIOUS_WEEK = getSundayWeekKey(new Date(Date.now() - 7 * 86_400_000));
+
 describe('weekly-stats', () => {
   it('cria acumuladores zerados na primeira semana', () => {
     const user = fakeUser();
-    const stats = ensureWeekStats(user, '2026-07-05');
-    expect(stats).toEqual({ week_key: '2026-07-05', xp: 0, moedas: 0 });
+    const stats = ensureWeekStats(user, CURRENT_WEEK);
+    expect(stats).toEqual({ week_key: CURRENT_WEEK, xp: 0, moedas: 0 });
   });
 
   it('acumula ganhos de XP e Dorias na semana corrente', () => {
     const user = fakeUser();
-    ensureWeekStats(user, '2026-07-05');
+    ensureWeekStats(user, CURRENT_WEEK);
     addWeeklyXp(user, 40);
     addWeeklyXp(user, 10);
     addWeeklyMoedas(user, 7);
-    expect(weeklyMetricValue(user, 'xp', '2026-07-05')).toBe(50);
-    expect(weeklyMetricValue(user, 'moedas', '2026-07-05')).toBe(7);
+    expect(weeklyMetricValue(user, 'xp', CURRENT_WEEK)).toBe(50);
+    expect(weeklyMetricValue(user, 'moedas', CURRENT_WEEK)).toBe(7);
   });
 
   it('vira a semana preservando a anterior em week_stats_prev', () => {
     const user = fakeUser();
-    ensureWeekStats(user, '2026-07-05');
-    addWeeklyXp(user, 120);
-    ensureWeekStats(user, '2026-07-12');
+    ensureWeekStats(user, PREVIOUS_WEEK);
+    user.gamificacao.week_stats!.xp = 120;
+    ensureWeekStats(user, CURRENT_WEEK);
 
-    expect(user.gamificacao.week_stats).toEqual({ week_key: '2026-07-12', xp: 0, moedas: 0 });
+    expect(user.gamificacao.week_stats).toEqual({ week_key: CURRENT_WEEK, xp: 0, moedas: 0 });
     expect(user.gamificacao.week_stats_prev).toEqual({
-      week_key: '2026-07-05',
+      week_key: PREVIOUS_WEEK,
       xp: 120,
       moedas: 0,
     });
     // O payout da semana fechada ainda enxerga o valor antigo.
-    expect(weeklyMetricValue(user, 'xp', '2026-07-05')).toBe(120);
-    expect(weeklyMetricValue(user, 'xp', '2026-07-12')).toBe(0);
+    expect(weeklyMetricValue(user, 'xp', PREVIOUS_WEEK)).toBe(120);
+    expect(weeklyMetricValue(user, 'xp', CURRENT_WEEK)).toBe(0);
   });
 
   it('retorna zero pra semanas sem registro', () => {
