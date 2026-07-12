@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useApp } from '@/hooks/useApp';
 import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
+import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
@@ -25,14 +26,10 @@ export function WeekSummary() {
   }, [ensureHistory]);
 
   const { days, totals } = useMemo(() => {
-    const now = new Date();
-    const todayKey = toLocalDateKey(now);
-    const mondayOffset = (now.getDay() + 6) % 7;
-    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
+    const todayKey = toLocalDateKey(new Date());
+    const monday = getWeekStartSaoPaulo();
 
-    const weekKeys = Array.from({ length: 7 }, (_, i) =>
-      toLocalDateKey(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)),
-    );
+    const weekKeys = Array.from({ length: 7 }, (_, i) => addDaysSaoPaulo(monday, i));
     const weekSet = new Set(weekKeys);
 
     const trainedDays = new Set<string>();

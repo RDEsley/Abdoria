@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '@/hooks/useApp';
 import { toLocalDateKey } from '@/lib/utils';
+import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 
 const WEEKS = 53;
 const MONTH_LABELS = [
@@ -17,10 +18,6 @@ const MONTH_LABELS = [
   'Nov',
   'Dez',
 ];
-
-function addDays(date: Date, days: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-}
 
 interface DayCell {
   key: string;
@@ -41,11 +38,9 @@ export function ConsistencyHeatmap() {
   }, [ensureHistory]);
 
   const { columns, activeDays, totalWorkouts } = useMemo(() => {
-    const now = new Date();
-    const todayKey = toLocalDateKey(now);
-    const mondayOffset = (now.getDay() + 6) % 7;
-    const currentMonday = addDays(now, -mondayOffset);
-    const startMonday = addDays(currentMonday, -(WEEKS - 1) * 7);
+    const todayKey = toLocalDateKey(new Date());
+    const currentMonday = getWeekStartSaoPaulo();
+    const startMonday = addDaysSaoPaulo(currentMonday, -(WEEKS - 1) * 7);
 
     const dayCounts = new Map<string, number>();
     for (const entry of history) {
@@ -56,17 +51,17 @@ export function ConsistencyHeatmap() {
     let lastMonth = -1;
     const columns: DayCell[][] = [];
     for (let w = 0; w < WEEKS; w += 1) {
-      const weekStart = addDays(startMonday, w * 7);
+      const weekStart = addDaysSaoPaulo(startMonday, w * 7);
       const days: DayCell[] = Array.from({ length: 7 }, (_, d) => {
-        const date = addDays(weekStart, d);
-        const key = toLocalDateKey(date);
+        const key = addDaysSaoPaulo(weekStart, d);
         const count = dayCounts.get(key) ?? 0;
-        const month = date.getMonth();
+        const [, monthStr, dayStr] = key.split('-');
+        const month = Number(monthStr) - 1;
         const monthLabel = d === 0 && month !== lastMonth ? MONTH_LABELS[month] : null;
         if (d === 0) lastMonth = month;
         return {
           key,
-          day: date.getDate(),
+          day: Number(dayStr),
           level: Math.min(count, 4),
           count,
           isFuture: key > todayKey,

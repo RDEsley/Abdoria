@@ -2,18 +2,15 @@ import { useEffect, useMemo } from 'react';
 import { Minus, ScrollText, TrendingDown, TrendingUp } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { toLocalDateKey } from '@/lib/utils';
+import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 
 interface WeekTotals {
   workouts: number;
   xp: number;
 }
 
-function weekDayKeys(monday: Date): Set<string> {
-  return new Set(
-    Array.from({ length: 7 }, (_, i) =>
-      toLocalDateKey(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)),
-    ),
-  );
+function weekDayKeys(mondayKey: string): Set<string> {
+  return new Set(Array.from({ length: 7 }, (_, i) => addDaysSaoPaulo(mondayKey, i)));
 }
 
 /** Card narrativo comparando XP e treinos desta semana com a semana anterior. */
@@ -25,14 +22,8 @@ export function WeeklyChronicle() {
   }, [ensureHistory]);
 
   const { current, previous } = useMemo(() => {
-    const now = new Date();
-    const mondayOffset = (now.getDay() + 6) % 7;
-    const currentMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
-    const previousMonday = new Date(
-      currentMonday.getFullYear(),
-      currentMonday.getMonth(),
-      currentMonday.getDate() - 7,
-    );
+    const currentMonday = getWeekStartSaoPaulo();
+    const previousMonday = addDaysSaoPaulo(currentMonday, -7);
 
     const currentKeys = weekDayKeys(currentMonday);
     const previousKeys = weekDayKeys(previousMonday);

@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
+import { getTodaySaoPaulo } from '@shared/utils/timezone';
 
 const MONTH_NAMES = [
   'Janeiro',
@@ -27,8 +28,8 @@ function pad2(n: number) {
 export function ActivityCalendar() {
   const { history, ensureHistory, historyLoading } = useApp();
   const [visibleMonth, setVisibleMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
+    const [y, m] = getTodaySaoPaulo().split('-').map(Number);
+    return new Date(y, m - 1, 1);
   });
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
@@ -45,9 +46,9 @@ export function ActivityCalendar() {
     const dayMeta = new Map<string, { count: number; minutes: number; workouts: string[] }>();
 
     for (const entry of history) {
-      const date = new Date(entry.concluido_em);
-      if (date.getFullYear() !== year || date.getMonth() !== monthIndex) continue;
       const key = toLocalDateKey(entry.concluido_em);
+      const [keyYear, keyMonth] = key.split('-').map(Number);
+      if (keyYear !== year || keyMonth - 1 !== monthIndex) continue;
       const prev = dayMeta.get(key) ?? { count: 0, minutes: 0, workouts: [] };
       dayMeta.set(key, {
         count: prev.count + 1,

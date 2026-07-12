@@ -1,3 +1,5 @@
+import { getTodaySaoPaulo } from '@shared/utils/timezone';
+
 /** Duração padrão de trabalho e descanso (segundos) quando o exercício não define valores. */
 export const WORK_SECONDS = 30;
 export const REST_SECONDS = 15;
@@ -22,13 +24,20 @@ export function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-/** Chave `YYYY-MM-DD` no fuso local do navegador (calendário de atividade). */
+/**
+ * Chave `YYYY-MM-DD` do dia civil em America/Sao_Paulo — mesmo fuso usado
+ * pelo resto do jogo (reset de XP, streak, virada de ranking). Antes usava
+ * o fuso local do navegador/dispositivo, o que descolava treinos feitos
+ * perto da meia-noite pro dia civil errado nos calendários do Dashboard
+ * quando o aparelho não estava no fuso de SP.
+ *
+ * Só serve pra converter um INSTANTE real (timestamp) — não construa uma
+ * data "sintética" via `new Date(y, m, d)` e passe aqui; para aritmética de
+ * calendário (somar dias, achar a segunda-feira da semana) use
+ * `addDaysSaoPaulo`/`getWeekStartSaoPaulo` de `shared/utils/timezone`.
+ */
 export function toLocalDateKey(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return getTodaySaoPaulo(typeof date === 'string' ? new Date(date) : date);
 }
 
 /** Início do dia civil local (00:00:00) para comparações de data. */
