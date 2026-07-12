@@ -29,7 +29,6 @@ interface Props {
   emptyMessage: string;
   onDragEnd: (event: DragEndEvent) => void;
   onSwapExercise: (index: number) => void;
-  onChangeTempo: (index: number, seconds: number) => void;
   onRemove?: (index: number) => void;
   /** Presente = mostra pin/block por exercício (aba Treinar). */
   preferences?: ExercisePreferences;
@@ -43,7 +42,6 @@ export function WorkoutQueueList({
   emptyMessage,
   onDragEnd,
   onSwapExercise,
-  onChangeTempo,
   onRemove,
   preferences,
 }: Props) {
@@ -69,7 +67,6 @@ export function WorkoutQueueList({
               exercise={exerciseMap.get(item.slug)}
               showSwapExercise
               onSwapExercise={() => onSwapExercise(index)}
-              onChangeTempo={(sec) => onChangeTempo(index, sec)}
               onRemove={onRemove ? () => onRemove(index) : undefined}
               showPreferences={Boolean(preferences)}
               isPinned={preferences?.fixedExerciseSlugs.includes(item.slug)}

@@ -106,17 +106,27 @@ export function WorkoutConfigPanel({
                     max={10}
                     onChange={(series) => onUpdateItem(idx, { series })}
                   />
-                  <WheelNumberPicker
-                    label="Repetições"
-                    value={item.repeticoes ?? 12}
-                    min={1}
-                    max={50}
-                    disabled={item.modo === 'tempo'}
-                    placeholder="Por tempo"
-                    onChange={(repeticoes) =>
-                      onUpdateItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })
-                    }
-                  />
+                  {item.modo === 'tempo' ? (
+                    <WheelNumberPicker
+                      label="Duração"
+                      value={item.tempo_seg ?? item.tempo_recomendado ?? 30}
+                      min={10}
+                      max={180}
+                      step={5}
+                      suffix="s"
+                      onChange={(tempo_seg) => onUpdateItem(idx, { tempo_seg })}
+                    />
+                  ) : (
+                    <WheelNumberPicker
+                      label="Repetições"
+                      value={item.repeticoes ?? 12}
+                      min={1}
+                      max={50}
+                      onChange={(repeticoes) =>
+                        onUpdateItem(idx, { repeticoes, modo: 'reps' as ModoExercicio })
+                      }
+                    />
+                  )}
                   <WheelNumberPicker
                     label="Descanso (s)"
                     value={item.descanso_seg ?? globalDescanso}

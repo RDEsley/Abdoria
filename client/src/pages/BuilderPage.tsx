@@ -308,17 +308,6 @@ export function BuilderPage() {
     [selectedPresetId, setCustomWorkout],
   );
 
-  const handleChangeTempo = useCallback(
-    (idx: number, seconds: number) => {
-      const next = activeQueue.map((item, i) =>
-        i === idx ? { ...item, tempo_seg: seconds } : item,
-      );
-      setDraftQueue(next);
-      persistDraftIfCustom(next);
-    },
-    [activeQueue, persistDraftIfCustom],
-  );
-
   const handleSelectScheme = (scheme: StoredRepScheme) => {
     lastAppliedQueueKeyRef.current = '';
     applyRepScheme(scheme, 'all', { force: true });
@@ -795,7 +784,6 @@ export function BuilderPage() {
               }
               onDragEnd={handleDragEnd}
               onSwapExercise={setSwapExerciseIndex}
-              onChangeTempo={handleChangeTempo}
               preferences={{
                 fixedExerciseSlugs,
                 blockedExerciseSlugs,
@@ -851,7 +839,6 @@ export function BuilderPage() {
               }
               onDragEnd={handleDragEnd}
               onSwapExercise={setSwapExerciseIndex}
-              onChangeTempo={handleChangeTempo}
               onRemove={removeExercise}
             />
           </section>
