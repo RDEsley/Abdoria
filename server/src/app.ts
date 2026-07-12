@@ -22,9 +22,13 @@ export function createApp() {
 
   app.get('/api/health', async (_req, res) => {
     const probe = await probeDatabase();
+    if (probe.status === 'disconnected') {
+      console.error('Health check: Supabase probe failed:', probe.error);
+    }
     res.json({
       status: 'ok',
       database: probe.status,
+      ...(probe.error ? { database_error: probe.error } : {}),
       timestamp: new Date().toISOString(),
     });
   });

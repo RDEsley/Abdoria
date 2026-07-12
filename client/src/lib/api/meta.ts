@@ -11,6 +11,8 @@ import { fetchJson } from './client';
 export interface HealthResponse {
   status: string;
   database: 'connected' | 'disconnected';
+  /** Mensagem real do erro de conexão, presente só quando `database` falha. */
+  database_error?: string;
   timestamp: string;
 }
 
