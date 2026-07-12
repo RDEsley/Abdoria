@@ -134,6 +134,41 @@ describe('buildCampaignPosts — 1 post por sessão', () => {
   });
 });
 
+describe('outros_exercicios — lista secundária, não influencia a narrativa', () => {
+  it('exclui só o índice do exercício vencedor, mesmo com slug repetido', () => {
+    const alvo = session({
+      id: 'alvo',
+      exercicios: [ex('crunch'), ex('superman'), ex('crunch')],
+    });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('pessoa_resgatada');
+    expect(post.exercicio?.slug).toBe('superman');
+    // os DOIS crunch (índices 0 e 2) devem sobrar — não some um deles por causa do slug repetido.
+    expect(post.outros_exercicios).toHaveLength(2);
+    expect(post.outros_exercicios.every((e) => e.slug === 'crunch')).toBe(true);
+  });
+
+  it('capítulo e missão cumprida (sem exercício-destaque) listam todos como secundários', () => {
+    const alvo = session({
+      id: 'alvo',
+      exercicios: [ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch'), ex('crunch')],
+    });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.tipo).toBe('vila_salva');
+    expect(post.exercicio).toBeUndefined();
+    expect(post.outros_exercicios).toHaveLength(5);
+  });
+
+  it('sessão de 1 exercício não tem secundários', () => {
+    const alvo = session({ id: 'alvo', exercicios: [ex('superman')] });
+    const posts = buildCampaignPosts([warmup(), alvo], CATALOG, ctx());
+    const post = posts.find((p) => p.session_id === 'alvo')!;
+    expect(post.outros_exercicios).toHaveLength(0);
+  });
+});
+
 describe('hierarquia de prioridade dentro da sessão', () => {
   it('resgate (costas) vence sobre monstro comum na mesma sessão', () => {
     const alvo = session({ id: 'alvo', exercicios: [ex('crunch'), ex('superman')] });

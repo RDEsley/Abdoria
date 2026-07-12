@@ -89,13 +89,21 @@ export interface CampaignContext {
   bestiarioDesbloqueados: AfkEnemyId[];
 }
 
+export interface CampaignExerciseSummary {
+  slug: string;
+  nome: string;
+  detalhe: string;
+}
+
 export interface CampaignPost {
   id: string;
   tipo: CampaignEventType;
   tipo_label: string;
   lugar: string;
   mensagem: string;
-  exercicio?: { slug: string; nome: string; detalhe: string };
+  exercicio?: CampaignExerciseSummary;
+  /** Demais exercícios da sessão (todos, exceto `exercicio`) — exibição secundária/discreta. */
+  outros_exercicios: CampaignExerciseSummary[];
   xp?: number;
   concluido_em: string;
   session_id: string;
@@ -460,6 +468,19 @@ export function buildCampaignPosts(
       else if (template.inimigo === 'comum') valores.inimigo = pick(inimigos.comuns, seed);
     }
 
+    // Demais exercícios da sessão (exclui só o índice do vencedor, se houver um
+    // exercício-destaque) — puramente informativo, não influencia a narrativa.
+    const winnerIndex = winner.candidate?.index;
+    const outrosExercicios: CampaignExerciseSummary[] = session.exercicios
+      .map((entry, idx) => ({ entry, idx }))
+      .filter(({ idx }) => idx !== winnerIndex)
+      .map(({ entry }) => {
+        const info = catalogBySlug.get(entry.slug);
+        const nome =
+          resolveExerciseNomePt({ slug: entry.slug, nome_pt: info?.nome_pt }) ?? entry.nome;
+        return { slug: entry.slug, nome, detalhe: detalheDoExercicio(entry) };
+      });
+
     if (winner.tipo === 'vila_salva') {
       valores.feitos = contagem(session.exercicios.length, 'feito');
       valores.minutos = contagem(
@@ -481,6 +502,7 @@ export function buildCampaignPosts(
       lugar: lugar.nome,
       mensagem: interpolate(template.texto, valores),
       exercicio: exercicioInfo,
+      outros_exercicios: outrosExercicios,
       xp: winner.tipo === 'vila_salva' ? session.xp_ganho : undefined,
       concluido_em: concluidoEm,
       session_id: id,

@@ -91,6 +91,12 @@ function PostCard({ post }: { post: CampaignPost }) {
           )}
         </footer>
       )}
+      {post.outros_exercicios.length > 0 && (
+        <p className="mt-1.5 truncate text-[0.6rem] font-semibold text-stone-400">
+          Também na sessão:{' '}
+          {post.outros_exercicios.map((ex) => `${ex.nome} (${ex.detalhe})`).join(' · ')}
+        </p>
+      )}
     </motion.article>
   );
 }
@@ -162,9 +168,14 @@ export function CampaignFeed() {
           <PostCard key={post.id} post={post} />
         ))}
       </AnimatePresence>
-      {!showAll && posts.length > 1 && (
-        <GameButton variant="secondary" size="sm" onClick={() => setShowAll(true)} className="mt-1">
-          Ver capítulos anteriores
+      {posts.length > 1 && (
+        <GameButton
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowAll((v) => !v)}
+          className="mt-1"
+        >
+          {showAll ? 'Ver menos' : 'Ver capítulos anteriores'}
         </GameButton>
       )}
     </div>
