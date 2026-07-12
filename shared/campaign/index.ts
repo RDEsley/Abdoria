@@ -34,8 +34,17 @@ export * from './places.js';
 /** Mínimo de exercícios pra "missão cumprida" vencer por volume (tier 10). */
 export const CAMPAIGN_VILA_SALVA_MIN_EXERCISES = 5;
 
-/** Marcos de streak que viram "capítulo" — mesmos thresholds das conquistas (streak_N). */
+/** Todos os marcos de streak — mesmos thresholds das conquistas (streak_N), intocado. */
 export const CAMPAIGN_STREAK_MILESTONES = [2, 3, 7, 14, 30, 60, 100, 365];
+
+/**
+ * Piso pra um marco de streak virar "capítulo" (prioridade máxima) na
+ * Campanha. Marcos abaixo disso (2, 3) já são celebrados pelo sistema de
+ * conquistas (toast/XP) e cedem a narrativa do dia pro treino em si — a
+ * primeira semana de conta nova é o período mais importante pra mostrar
+ * variedade, não virar contador de dias.
+ */
+export const CAMPAIGN_STREAK_NARRATIVE_MIN = 7;
 
 /** Inimigos genéricos pra conta sem descobertas no Bestiário. */
 export const CAMPAIGN_GENERIC_ENEMIES = [
@@ -311,10 +320,12 @@ function addOneDay(key: string): string {
 }
 
 /**
- * Marcos de capítulo por sessão: 'primeiro' pra sessão mais antiga da conta,
- * 'streak' pro dia em que a sequência de dias-com-treino bate um threshold
- * das conquistas de streak (2,3,7,14,30,60,100,365). Aproximação por
- * calendário — não usa proteção de Frozen Streak (cosmético, não afeta jogo).
+ * Marcos de capítulo por sessão: 'primeiro' pra sessão mais antiga da conta
+ * (sempre), 'streak' pro dia em que a sequência de dias-com-treino bate um
+ * marco de conquista >= CAMPAIGN_STREAK_NARRATIVE_MIN (marcos menores, 2 e
+ * 3, competem normalmente na hierarquia — já são celebrados por outro
+ * sistema). Aproximação por calendário — não usa proteção de Frozen Streak
+ * (cosmético, não afeta jogo).
  */
 function computeCapituloMarcos(
   sessionsAscending: CampaignSession[],
@@ -335,7 +346,7 @@ function computeCapituloMarcos(
   for (const day of sortedDays) {
     streak = prevDay && addOneDay(prevDay) === day ? streak + 1 : 1;
     prevDay = day;
-    if (CAMPAIGN_STREAK_MILESTONES.includes(streak)) {
+    if (streak >= CAMPAIGN_STREAK_NARRATIVE_MIN && CAMPAIGN_STREAK_MILESTONES.includes(streak)) {
       const sessionId = daysWithSession.get(day)!;
       // 1º treino já venceu por 'primeiro' — não sobrescreve com streak no mesmo dia.
       if (!marcos.has(sessionId)) {

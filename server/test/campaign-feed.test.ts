@@ -4,6 +4,7 @@ import {
   CAMPAIGN_PLACES,
   CAMPAIGN_PLACES_BASE,
   CAMPAIGN_STREAK_MILESTONES,
+  CAMPAIGN_STREAK_NARRATIVE_MIN,
   CAMPAIGN_VILA_SALVA_MIN_EXERCISES,
   buildCampaignPosts,
   placesForLevel,
@@ -218,9 +219,25 @@ describe('capítulos — marcos de primeiro treino e streak', () => {
     expect(primeiro.tipo).toBe('capitulo');
   });
 
-  it('marca capítulo de streak exatamente nos thresholds das conquistas', () => {
+  it('marcos pequenos (2, 3) NÃO viram capítulo — competem normalmente na hierarquia', () => {
+    expect(CAMPAIGN_STREAK_MILESTONES).toContain(2);
     expect(CAMPAIGN_STREAK_MILESTONES).toContain(3);
-    expect(CAMPAIGN_STREAK_MILESTONES).toContain(7);
+    expect(CAMPAIGN_STREAK_NARRATIVE_MIN).toBe(7);
+    const dias = Array.from({ length: 3 }, (_, i) =>
+      session({
+        id: `d${i + 1}`,
+        exercicios: [ex('superman')], // resgate — vence sobre monstro, prova que narra o treino
+        concluido_em: `2026-07-0${i + 1}T08:00:00.000Z`,
+      }),
+    );
+    const posts = buildCampaignPosts(dias, CATALOG, ctx());
+    const dia2 = posts.find((p) => p.session_id === 'd2')!;
+    const dia3 = posts.find((p) => p.session_id === 'd3')!;
+    expect(dia2.tipo).toBe('pessoa_resgatada'); // streak_2 não força capítulo
+    expect(dia3.tipo).toBe('pessoa_resgatada'); // streak_3 não força capítulo
+  });
+
+  it('marco >= CAMPAIGN_STREAK_NARRATIVE_MIN (streak_7) vira capítulo', () => {
     // 7 dias consecutivos de treino (dias 1..7) — dia 7 deve bater o marco streak_7.
     const dias = Array.from({ length: 7 }, (_, i) =>
       session({
@@ -230,11 +247,8 @@ describe('capítulos — marcos de primeiro treino e streak', () => {
       }),
     );
     const posts = buildCampaignPosts(dias, CATALOG, ctx());
-    const dia3 = posts.find((p) => p.session_id === 'd3')!;
     const dia7 = posts.find((p) => p.session_id === 'd7')!;
-    expect(dia3.tipo).toBe('capitulo'); // marco streak_3
     expect(dia7.tipo).toBe('capitulo'); // marco streak_7
-    expect(dia3.mensagem).not.toMatch(/\{\w+\}/);
     expect(dia7.mensagem).not.toMatch(/\{\w+\}/);
   });
 
