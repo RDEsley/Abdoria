@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Valida catálogo de armas, dano/crítico e drops de boss.
  * Rode: npx tsx scripts/dev/verify-patrol-weapons.ts
  */
@@ -8,7 +8,7 @@ import {
   AFK_CRIT_CHANCE_ARCO,
   AFK_CRIT_CHANCE_ESPADA,
   AFK_CRIT_STREAK_STEP_ARCO,
-  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_MOEDA_BONUS,
   AFK_GOLDEN_SLIME_CHANCE,
   AFK_LEGENDARY_ROLL_BOSS,
   AFK_LEGENDARY_ROLL_NORMAL,
@@ -39,7 +39,7 @@ assert.equal(AFK_CRIT_CHANCE_ARCO, 18);
 assert.equal(AFK_CRIT_CHANCE_ESPADA, 6);
 assert.equal(AFK_CRIT_STREAK_STEP_ARCO, 4);
 assert.equal(AFK_GOLDEN_SLIME_CHANCE, 5000);
-assert.equal(AFK_GOLDEN_SLIME_ABDORIA, 99);
+assert.equal(AFK_GOLDEN_SLIME_MOEDA_BONUS, 99);
 assert.equal(AFK_BOSS_LEGENDARY_WEAPON_ROLL, 9987);
 
 assert.equal(patrolWeaponsByKind('arco').length, 10);
@@ -160,7 +160,7 @@ console.log(
         ((1 / ((10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 10000)) * 100) / 8 / 60,
       ),
       golden_slime_chance: `1/${AFK_GOLDEN_SLIME_CHANCE}`,
-      golden_slime_abdoria: AFK_GOLDEN_SLIME_ABDORIA,
+      golden_slime_abdoria: AFK_GOLDEN_SLIME_MOEDA_BONUS,
       bow_crit_pct: AFK_CRIT_CHANCE_ARCO,
       sword_crit_pct: AFK_CRIT_CHANCE_ESPADA,
       bow_crit_streak_step: AFK_CRIT_STREAK_STEP_ARCO,

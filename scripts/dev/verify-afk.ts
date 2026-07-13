@@ -1,11 +1,11 @@
-/**
+﻿/**
  * Valida regras da Exploração AFK (drops por kill, cap 24h, combate/boss).
  * Rode: npx tsx scripts/dev/verify-afk.ts
  */
 import assert from 'node:assert/strict';
 import {
   AFK_KILLS_PER_MINUTE,
-  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_MOEDA_BONUS,
   AFK_LEGENDARY_ROLL_BOSS,
   AFK_LEGENDARY_ROLL_NORMAL,
   advanceKillsUntilBoss,
@@ -63,11 +63,11 @@ function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}):
       moedas: 0,
       moedas_xp_blocos: 0,
       avatar_equipado: 'avatar_inicial',
-      borda_equipada: 'borda_basica',
+      moldura_loja_equipada: 'borda_basica',
       titulo_equipado: null,
       som_equipado: 'som_classico',
       efeito_equipado: 'efeito_padrao',
-      fundo_equipado: 'fundo_padrao',
+      banner_equipado: 'fundo_padrao',
       desbloqueados: ['avatar_inicial'],
       codigos_resgatados: [],
     },
@@ -176,7 +176,7 @@ const goldenPending = { ...EMPTY_AFK_PENDING };
 defeatCurrentEnemy(uGoldenDefeat, goldenPending);
 assert.equal(
   goldenPending.abdoria,
-  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_MOEDA_BONUS,
   'defeatCurrentEnemy golden slime bonus',
 );
 assert.equal(goldenPending.drop_count, 1, 'defeatCurrentEnemy golden slime drop event');

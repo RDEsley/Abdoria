@@ -21,7 +21,7 @@ const SIZE_CLASS = {
 export function CosmeticAvatar({ user, size = 'md', className = '', avatarId, borderId }: Props) {
   const cosmeticos = resolveCosmeticos(user?.cosmeticos);
   const resolvedAvatarId = avatarId ?? cosmeticos.avatar_equipado;
-  const resolvedBorderId = borderId ?? cosmeticos.borda_equipada;
+  const resolvedBorderId = borderId ?? cosmeticos.moldura_loja_equipada;
   const avatarDef = COSMETIC_BY_ID[resolvedAvatarId];
   const borderDef = COSMETIC_BY_ID[resolvedBorderId];
   const firstName = user?.nome?.split(' ')[0] ?? 'A';

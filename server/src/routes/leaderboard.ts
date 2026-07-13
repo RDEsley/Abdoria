@@ -1,11 +1,11 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { LeaderboardMetric } from '../types/index.js';
 import { LEADERBOARD_DISPLAY_LIMIT, xpLevelFromTotal } from '../types/index.js';
-import { readAbdoriaBalance } from '../services/economy.js';
-import { syncAbdoriaBalancesForLeaderboard } from '../services/abdoria-leaderboard.js';
+import { readMoedaBalance } from '../services/economy.js';
+import { syncMoedaBalancesForLeaderboard } from '../services/moeda-leaderboard.js';
 import { processWeeklyLeaderboardRewardsIfDue } from '../services/weekly-leaderboard-rewards.js';
 import { weeklyMetricValue } from '../services/weekly-stats.js';
 import {
@@ -46,7 +46,7 @@ type EntryUser = {
   cosmeticos?: {
     moedas?: number | null;
     avatar_equipado?: string | null;
-    borda_equipada?: string | null;
+    moldura_loja_equipada?: string | null;
     moldura_equipada?: MolduraId | null;
   } | null;
 };
@@ -74,11 +74,11 @@ function toEntry(
     nivel_xp: user.gamificacao.nivel_xp,
     level: levelFromXp(user.gamificacao.nivel_xp),
     streak_atual: user.gamificacao.streak_atual,
-    moedas: readAbdoriaBalance(user),
+    moedas: readMoedaBalance(user),
     week_value: weekValue,
     avatar_url: user.avatar_url ?? null,
     avatar_equipado: user.cosmeticos?.avatar_equipado ?? 'avatar_inicial',
-    borda_equipada: user.cosmeticos?.borda_equipada ?? 'borda_basica',
+    moldura_loja_equipada: user.cosmeticos?.moldura_loja_equipada ?? 'borda_basica',
     moldura_equipada: moldura,
     // A moldura especial mostra a contagem de itens secretos — não vem do pódio;
     // no ranking exibimos só o contador de pódio (especial fica sem número).
@@ -101,7 +101,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     );
 
     if (metric === 'moedas') {
-      await syncAbdoriaBalancesForLeaderboard();
+      await syncMoedaBalancesForLeaderboard();
     }
     await processWeeklyLeaderboardRewardsIfDue();
 
@@ -159,7 +159,7 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
     const metric = parseMetric(req.query.metric as string | undefined);
 
     if (metric === 'moedas') {
-      await syncAbdoriaBalancesForLeaderboard();
+      await syncMoedaBalancesForLeaderboard();
     }
 
     const user = await User.findById(req.userId!, { lean: true });

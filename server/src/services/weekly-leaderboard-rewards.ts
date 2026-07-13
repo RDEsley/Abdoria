@@ -1,4 +1,4 @@
-import type { LeaderboardMetric } from '../types/index.js';
+﻿import type { LeaderboardMetric } from '../types/index.js';
 import { LeaderboardWeekPayout } from '../repositories/leaderboard-payout-repository.js';
 import {
   LeaderboardPodiumHistory,
@@ -7,7 +7,7 @@ import {
 import { User, type UserMutable } from '../repositories/user-repository.js';
 import { Notifications, type NewNotification } from '../repositories/notification-repository.js';
 import { CURRENCY_NAME } from '../types/index.js';
-import { ensureAbdoriaWallet } from './economy.js';
+import { ensureMoedaWallet } from './economy.js';
 import { getSundayWeekKey, weeklyMetricValue } from './weekly-stats.js';
 
 export { getSundayWeekKey };
@@ -80,7 +80,7 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
       const prize = prizeForRank(rank);
       const user = await User.findById(lean.id);
       if (!user) continue;
-      ensureAbdoriaWallet(user);
+      ensureMoedaWallet(user);
       user.cosmeticos.moedas += prize;
       await user.save();
       paidCount += 1;

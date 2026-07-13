@@ -1,9 +1,9 @@
-import bcrypt from 'bcryptjs';
+﻿import bcrypt from 'bcryptjs';
 import { User } from '../domain/User.js';
-import { ABDORIA_XP_STEP } from '../types/index.js';
+import { MOEDA_XP_STEP } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { DEMO_USERS } from '../db/seeds/demo-users.js';
-import { buildNpcCosmeticos } from '../services/abdoria-leaderboard.js';
+import { buildNpcCosmeticos } from '../services/moeda-leaderboard.js';
 
 /** Cria ou atualiza jogadores fictícios para ranking (idempotente). */
 export async function seedDemoUsers(): Promise<void> {
@@ -11,7 +11,7 @@ export async function seedDemoUsers(): Promise<void> {
   const today = getTodaySaoPaulo();
 
   for (const demo of DEMO_USERS) {
-    const moedas = Math.floor(demo.gamificacao.nivel_xp / ABDORIA_XP_STEP) + 12;
+    const moedas = Math.floor(demo.gamificacao.nivel_xp / MOEDA_XP_STEP) + 12;
     await User.findOneAndUpdate(
       { email: demo.email },
       {

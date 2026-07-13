@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
@@ -24,7 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
 import { digitsOnly, validateBodyMetrics } from '@/lib/utils';
 import {
-  ABDORIA_XP_STEP,
+  MOEDA_XP_STEP,
   calcImc,
   CICLO_LABELS,
   CICLOS_OPCIONAIS,
@@ -492,7 +492,7 @@ export function OnboardingPage() {
                     base + bônus por nível e Bestiário. Reseta à meia-noite (SP).
                   </li>
                   <li>
-                    <strong>{CURRENCY_NAME}:</strong> 1 a cada {ABDORIA_XP_STEP} XP ganhos — use na
+                    <strong>{CURRENCY_NAME}:</strong> 1 a cada {MOEDA_XP_STEP} XP ganhos — use na
                     loja de cosméticos.
                   </li>
                   <li>

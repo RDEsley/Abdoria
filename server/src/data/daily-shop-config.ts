@@ -1,11 +1,11 @@
-import type {
+﻿import type {
   DailyRewardRarity,
   DailyRewardType,
   DailyShopPaidOfferKind,
   DailyShopSlotKind,
   LojaDiariaSlot,
 } from '../types/index.js';
-import { abdoriaCostForXpReward, xpCostForAbdoriaReward } from '../types/index.js';
+import { moedaCostForXpReward, xpCostForMoedaReward } from '../types/index.js';
 
 export const DAILY_RARITY_WEIGHTS: Record<DailyRewardRarity, number> = {
   comum: 45,
@@ -67,8 +67,8 @@ export function paidOfferAbdoriaCost(
   raridade: DailyRewardRarity,
 ): number {
   const config = PAID_OFFER_CONFIG[offerKind][raridade];
-  if (offerKind === 'surto_xp') return abdoriaCostForXpReward(config.xp ?? 0);
-  if (offerKind === 'pacote_misto') return abdoriaCostForXpReward(config.bonus_xp ?? 0);
+  if (offerKind === 'surto_xp') return moedaCostForXpReward(config.xp ?? 0);
+  if (offerKind === 'pacote_misto') return moedaCostForXpReward(config.bonus_xp ?? 0);
   return 0;
 }
 
@@ -77,8 +77,8 @@ export function paidOfferXpCost(
   raridade: DailyRewardRarity,
 ): number {
   const config = PAID_OFFER_CONFIG[offerKind][raridade];
-  if (offerKind === 'bolsa_abdoria') return xpCostForAbdoriaReward(config.abdoria ?? 0);
-  if (offerKind === 'pacote_misto') return xpCostForAbdoriaReward(config.bonus_abdoria ?? 0);
+  if (offerKind === 'bolsa_abdoria') return xpCostForMoedaReward(config.abdoria ?? 0);
+  if (offerKind === 'pacote_misto') return xpCostForMoedaReward(config.bonus_abdoria ?? 0);
   return 0;
 }
 

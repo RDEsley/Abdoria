@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Save, Settings } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
@@ -52,13 +52,13 @@ export function ProfilePage() {
       : cosmeticos.titulo_equipado === 'titulo_secreto'
         ? 'game-profile-hero__title cosmetic-title--secreto'
         : 'game-profile-hero__title';
-  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
   const heroShellClass =
     fundoKey === 'padrao'
       ? 'game-profile-hero-shell game-profile-hero-shell--default'
       : fundoKey === 'praia'
-        ? `game-profile-hero-shell game-profile-hero-shell--skinned-light game-card-fundo--${fundoKey}`
-        : `game-profile-hero-shell game-profile-hero-shell--skinned game-card-fundo--${fundoKey}`;
+        ? `game-profile-hero-shell game-profile-hero-shell--skinned-light game-card-banner--${fundoKey}`
+        : `game-profile-hero-shell game-profile-hero-shell--skinned game-card-banner--${fundoKey}`;
   const xpLevel = xpProgressFromTotal(profile.gamificacao.nivel_xp).level;
 
   const handleRefresh = async () => {

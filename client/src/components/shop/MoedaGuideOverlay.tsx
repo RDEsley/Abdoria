@@ -1,24 +1,24 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Coins, Gift, Store, Trophy, X, Zap } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import {
-  ABDORIA_XP_STEP,
+  MOEDA_XP_STEP,
   CURRENCY_NAME,
-  SHOP_ABDORIA_COST_PER_XP,
-  SHOP_XP_COST_PER_ABDORIA,
+  SHOP_MOEDA_COST_PER_XP,
+  SHOP_XP_COST_PER_MOEDA,
 } from '@/types';
 
 const SLIDES = [
   {
     icon: Zap,
     title: 'Ganhe treinando',
-    body: `Cada ${ABDORIA_XP_STEP} XP que você ganha vira 1 ${CURRENCY_NAME} automaticamente. Complete treinos, mantenha o streak e suba de nível para acumular mais.`,
+    body: `Cada ${MOEDA_XP_STEP} XP que você ganha vira 1 ${CURRENCY_NAME} automaticamente. Complete treinos, mantenha o streak e suba de nível para acumular mais.`,
   },
   {
     icon: Store,
     title: 'Loja diária',
-    body: `Na tela principal, use a Loja diária para trocar ${SHOP_XP_COST_PER_ABDORIA} XP do seu nível por 1 ${CURRENCY_NAME}. Você também pode converter ${SHOP_ABDORIA_COST_PER_XP} ${CURRENCY_NAME} em 1 XP quando precisar.`,
+    body: `Na tela principal, use a Loja diária para trocar ${SHOP_XP_COST_PER_MOEDA} XP do seu nível por 1 ${CURRENCY_NAME}. Você também pode converter ${SHOP_MOEDA_COST_PER_XP} ${CURRENCY_NAME} em 1 XP quando precisar.`,
   },
   {
     icon: Trophy,
@@ -37,7 +37,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function AbdoriaCoinsGuideOverlay({ open, onClose }: Props) {
+export function MoedaGuideOverlay({ open, onClose }: Props) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {

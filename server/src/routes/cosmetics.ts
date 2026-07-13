@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -58,7 +58,7 @@ cosmeticsRouter.patch('/equip', async (req: AuthRequest, res) => {
     const kind = req.body?.kind as CosmeticKind;
     const cosmeticId = String(req.body?.id ?? '');
 
-    if (kind !== 'avatar' && kind !== 'borda') {
+    if (kind !== 'avatar' && kind !== 'moldura_loja') {
       res.status(400).json({ error: 'Tipo de item inválido.' });
       return;
     }

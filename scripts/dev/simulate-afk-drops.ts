@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Simula drops da Exploração AFK (mesma lógica do servidor).
  * Uso: npx tsx scripts/dev/simulate-afk-drops.ts
  */
@@ -22,7 +22,7 @@ import {
 } from '../../server/src/services/afk-rolls.js';
 import { PATROL_LEGENDARY_WEAPON_IDS, PATROL_SECRET_WEAPON_IDS } from '../../shared/patrol/shop.js';
 import {
-  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_MOEDA_BONUS,
   AFK_KILLS_PER_MINUTE,
   AFK_ROUTE_DRINK_DROP_THRESHOLD,
   DORIA_BAG_MAX,
@@ -72,7 +72,7 @@ function defeatEnemy(user: MockUser, combat: AfkCombatState, pending: AfkPending
   combat.kills_until_boss = advanceKillsUntilBoss(combat.kills_until_boss, wasBoss);
 
   if (wasGolden) {
-    pending.abdoria += AFK_GOLDEN_SLIME_ABDORIA;
+    pending.abdoria += AFK_GOLDEN_SLIME_MOEDA_BONUS;
     pending.drop_count = (pending.drop_count ?? 0) + 1;
     rollGoldenSlimeSecretCosmetic(user as never, combat.kills_total, pending);
   } else {
@@ -150,7 +150,7 @@ for (const r of results) {
   );
   console.log(`  XP: ${r.pending.xp}`);
   console.log(`  Dorias (loot): ${r.pending.abdoria}`);
-  console.log(`  Dorias (golden): ${r.tierKills.golden * AFK_GOLDEN_SLIME_ABDORIA}`);
+  console.log(`  Dorias (golden): ${r.tierKills.golden * AFK_GOLDEN_SLIME_MOEDA_BONUS}`);
   console.log(`  Frozen Streaks: ${r.pending.frozen_streaks}`);
   console.log(
     `  EXP Instantâneo: ${r.pending.exp_instant} (=${r.pending.exp_instant * EXP_INSTANT_XP} XP se usar)`,

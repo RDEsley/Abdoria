@@ -1,4 +1,4 @@
-/** Metadados locais espelhando o catálogo do servidor (ícones e bordas no HUD). */
+/** Metadados locais espelhando o catálogo do servidor (ícones e molduras no HUD). */
 import type { CosmeticRarity } from '@/types';
 
 export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: string }> = {
@@ -82,7 +82,7 @@ export const COSMETIC_DISPLAY: Record<
   },
   borda_aurum_slime: {
     nome: 'Aurum do Slime',
-    descricao: 'Borda pulsante forjada no ouro líquido do Golden Slime.',
+    descricao: 'Moldura pulsante forjada no ouro líquido do Golden Slime.',
     icon: 'crown',
     raridade: 'secreto',
   },

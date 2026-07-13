@@ -1,7 +1,7 @@
-import type { UserRecord } from '../domain/User.js';
+﻿import type { UserRecord } from '../domain/User.js';
 import {
   AFK_KILLS_PER_MINUTE,
-  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_MOEDA_BONUS,
   DEFAULT_AFK_COMBAT,
   type AfkCombatState,
   type AfkEnemyTier,
@@ -91,7 +91,7 @@ function onEnemyDefeated(
   combat.kills_until_boss = advanceKillsUntilBoss(combat.kills_until_boss, wasBoss);
 
   if (wasGolden) {
-    pending.abdoria += AFK_GOLDEN_SLIME_ABDORIA;
+    pending.abdoria += AFK_GOLDEN_SLIME_MOEDA_BONUS;
     pending.drop_count = (pending.drop_count ?? 0) + 1;
     rollGoldenSlimeSecretCosmetic(user, combat.kills_total, pending);
   } else if (wasMagicRabbit) {

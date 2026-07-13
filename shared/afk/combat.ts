@@ -1,4 +1,4 @@
-export type AfkEnemyTier = 'common' | 'elite' | 'boss';
+﻿export type AfkEnemyTier = 'common' | 'elite' | 'boss';
 
 export type AfkEnemyId =
   | 'bat'
@@ -91,7 +91,7 @@ export const AFK_KILLS_PER_MINUTE = 8;
 export const AFK_BOSS_INTERVAL = 100;
 export const AFK_ELITE_CHANCE = 12;
 export const AFK_GOLDEN_SLIME_CHANCE = 5000;
-export const AFK_GOLDEN_SLIME_ABDORIA = 99;
+export const AFK_GOLDEN_SLIME_MOEDA_BONUS = 99;
 export const AFK_LEGENDARY_ROLL_NORMAL = 9995;
 export const AFK_LEGENDARY_ROLL_BOSS = 9991;
 /**

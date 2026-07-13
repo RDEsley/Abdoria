@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+﻿import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart2, Flame, Sun, Zap } from 'lucide-react';
 import { XpBar } from '@/components/ui/XpBar';
@@ -31,13 +31,13 @@ export function LevelXpSection({
 }: Props) {
   const { user } = useAuth();
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
   const heroClass =
     fundoKey === 'padrao'
       ? 'game-xp-section__hero'
       : fundoKey === 'praia'
-        ? `game-xp-section__hero game-xp-section__hero--skinned-light game-card-fundo--${fundoKey}`
-        : `game-xp-section__hero game-xp-section__hero--skinned game-card-fundo--${fundoKey}`;
+        ? `game-xp-section__hero game-xp-section__hero--skinned-light game-card-banner--${fundoKey}`
+        : `game-xp-section__hero game-xp-section__hero--skinned game-card-banner--${fundoKey}`;
 
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
   const prevLevelRef = useRef(level);

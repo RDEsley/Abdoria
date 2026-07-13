@@ -1,20 +1,16 @@
-import express, { Router } from 'express';
+﻿import express, { Router } from 'express';
 import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { NAME_CHANGE_COST, calcImc, suggestNivel, type MolduraId } from '../types/index.js';
-import { ensureAbdoriaWallet, readAbdoriaBalance } from '../services/economy.js';
+import { ensureMoedaWallet, readMoedaBalance } from '../services/economy.js';
 import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
 import { molduraStatusForUser } from '../services/molduras.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
 import { focoToObjetivo, sanitizePerfilTreino } from '../utils/training-profile.js';
 import { buildPlanoTreino } from '../../../shared/training-plan.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
-import {
-  awardAbdoriaFromXp,
-  awardSkillUnlockXp,
-  countNewSkillUnlocks,
-} from '../services/economy.js';
+import { awardMoedaFromXp, awardSkillUnlockXp, countNewSkillUnlocks } from '../services/economy.js';
 import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
 
@@ -177,8 +173,8 @@ usersRouter.post('/me/name', async (req: AuthRequest, res) => {
     const trocas = user.nome_trocas ?? 0;
     let custoPago = 0;
     if (trocas >= 1) {
-      ensureAbdoriaWallet(user);
-      const saldo = readAbdoriaBalance(user);
+      ensureMoedaWallet(user);
+      const saldo = readMoedaBalance(user);
       if (saldo < NAME_CHANGE_COST) {
         res.status(400).json({
           error: `Trocar de nome novamente custa ${NAME_CHANGE_COST.toLocaleString('pt-BR')} Dorias — saldo insuficiente.`,
@@ -261,7 +257,7 @@ usersRouter.patch('/me/dados', async (req: AuthRequest, res) => {
     let xpGanhoHabilidades = 0;
     if (newUnlockCount > 0) {
       xpGanhoHabilidades = awardSkillUnlockXp(user, newUnlockCount);
-      awardAbdoriaFromXp(user);
+      awardMoedaFromXp(user);
     }
 
     await user.save();

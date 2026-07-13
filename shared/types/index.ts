@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tipos de domínio compartilhados entre client e server.
  * Mantém contratos de API, exercícios, usuário e gamificação alinhados.
  */
@@ -324,7 +324,7 @@ export {
   patrolCritBonus,
   patrolCritDamage,
   formatPatrolCritChancePercent,
-  AFK_GOLDEN_SLIME_ABDORIA,
+  AFK_GOLDEN_SLIME_MOEDA_BONUS,
   AFK_GOLDEN_SLIME_CHANCE,
   AFK_HERO_DAMAGE_ARCO,
   AFK_HERO_DAMAGE_ESPADA,
@@ -386,7 +386,7 @@ export interface Gamificacao {
   >;
 }
 
-export type CosmeticKind = 'avatar' | 'borda' | 'titulo' | 'som' | 'efeito' | 'fundo';
+export type CosmeticKind = 'avatar' | 'moldura_loja' | 'titulo' | 'som' | 'efeito' | 'banner';
 
 export type CosmeticUnlockType =
   'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo' | 'afk_secreto' | 'golden_slime';
@@ -436,11 +436,11 @@ export interface Cosmeticos {
   /** Blocos de XP já convertidos em Dorias. */
   moedas_xp_blocos: number;
   avatar_equipado: string;
-  borda_equipada: string;
+  moldura_loja_equipada: string;
   titulo_equipado: string | null;
   som_equipado: string;
   efeito_equipado: string;
-  fundo_equipado: string;
+  banner_equipado: string;
   /** Moldura do avatar de identidade (null = sem moldura). */
   moldura_equipada?: MolduraId | null;
   desbloqueados: string[];
@@ -498,17 +498,17 @@ export interface ShopResponse {
   /** Dorias passivas a cada N XP totais. */
   abdoria_por_xp: number;
   avatar_equipado: string;
-  borda_equipada: string;
+  moldura_loja_equipada: string;
   titulo_equipado: string | null;
   som_equipado: string;
   efeito_equipado: string;
-  fundo_equipado: string;
+  banner_equipado: string;
   avatares: ShopCatalogItem[];
-  bordas: ShopCatalogItem[];
+  molduras_loja: ShopCatalogItem[];
   titulos: ShopCatalogItem[];
   sons: ShopCatalogItem[];
   efeitos: ShopCatalogItem[];
-  fundos: ShopCatalogItem[];
+  banners: ShopCatalogItem[];
   loja_diaria: LojaDiaria;
 }
 
@@ -723,11 +723,11 @@ export const XP_WORKOUT_BASE = 0;
 export const XP_PER_EXERCISE = XP_DAILY_PER_EXERCISE;
 export const XP_PER_SKILL_UNLOCK = 1;
 /** Loja: comprar 1 Doria custa N XP (progresso do nível). */
-export const SHOP_XP_COST_PER_ABDORIA = 25;
+export const SHOP_XP_COST_PER_MOEDA = 25;
 /** Loja: comprar 1 XP custa N Dorias. */
-export const SHOP_ABDORIA_COST_PER_XP = 5;
+export const SHOP_MOEDA_COST_PER_XP = 5;
 /** Dorias passivas: 1 moeda a cada N XP totais ganhos. */
-export const ABDORIA_XP_STEP = 10;
+export const MOEDA_XP_STEP = 10;
 export const CURRENCY_NAME = 'Dorias';
 
 /** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
@@ -847,24 +847,24 @@ export const DEFAULT_XP_DIARIO: XpDiario = {
   data_reset: '',
 };
 
-/** @deprecated Use SHOP_XP_COST_PER_ABDORIA */
-export const XP_TO_ABDORIA_RATE = SHOP_XP_COST_PER_ABDORIA;
-/** @deprecated Use SHOP_ABDORIA_COST_PER_XP */
-export const ABDORIA_TO_XP_RATE = SHOP_ABDORIA_COST_PER_XP;
+/** @deprecated Use SHOP_XP_COST_PER_MOEDA */
+export const XP_TO_MOEDA_RATE = SHOP_XP_COST_PER_MOEDA;
+/** @deprecated Use SHOP_MOEDA_COST_PER_XP */
+export const MOEDA_TO_XP_RATE = SHOP_MOEDA_COST_PER_XP;
 
-/** @deprecated Use ABDORIA_XP_STEP */
-export const COINS_PER_LEVEL = ABDORIA_XP_STEP;
+/** @deprecated Use MOEDA_XP_STEP */
+export const COINS_PER_LEVEL = MOEDA_XP_STEP;
 
-export function abdoriaCostForXpReward(xpAmount: number): number {
-  return Math.max(1, Math.ceil(xpAmount * SHOP_ABDORIA_COST_PER_XP));
+export function moedaCostForXpReward(xpAmount: number): number {
+  return Math.max(1, Math.ceil(xpAmount * SHOP_MOEDA_COST_PER_XP));
 }
 
-export function xpCostForAbdoriaReward(abdoriaAmount: number): number {
-  return Math.max(1, Math.ceil(abdoriaAmount * SHOP_XP_COST_PER_ABDORIA));
+export function xpCostForMoedaReward(abdoriaAmount: number): number {
+  return Math.max(1, Math.ceil(abdoriaAmount * SHOP_XP_COST_PER_MOEDA));
 }
 
 /** Estima Dorias restantes após gastar XP na loja (conversão passiva por blocos). */
-export function projectedAbdoriaAfterXpSpend(
+export function projectedMoedaAfterXpSpend(
   nivelXp: number,
   moedas: number,
   moedasXpBlocos: number,
@@ -872,7 +872,7 @@ export function projectedAbdoriaAfterXpSpend(
 ): number {
   if (xpCost <= 0) return moedas;
   const nextTotal = Math.max(0, nivelXp - xpCost);
-  const newBlocks = Math.floor(nextTotal / ABDORIA_XP_STEP);
+  const newBlocks = Math.floor(nextTotal / MOEDA_XP_STEP);
   const clawback = Math.max(0, moedasXpBlocos - newBlocks);
   return Math.max(0, moedas - clawback);
 }
@@ -899,11 +899,11 @@ export const DEFAULT_COSMETICOS: Cosmeticos = {
   moedas: 0,
   moedas_xp_blocos: 0,
   avatar_equipado: 'avatar_inicial',
-  borda_equipada: 'borda_basica',
+  moldura_loja_equipada: 'borda_basica',
   titulo_equipado: null,
   som_equipado: 'som_classico',
   efeito_equipado: 'efeito_padrao',
-  fundo_equipado: 'fundo_padrao',
+  banner_equipado: 'fundo_padrao',
   desbloqueados: [
     'avatar_inicial',
     'borda_basica',
@@ -971,7 +971,7 @@ export function resolveCosmeticos(
   };
 
   if (merged.moedas_xp_blocos === 0 && nivelXp > 0 && !cosmeticos?.moedas_xp_blocos) {
-    merged.moedas_xp_blocos = Math.floor(nivelXp / ABDORIA_XP_STEP);
+    merged.moedas_xp_blocos = Math.floor(nivelXp / MOEDA_XP_STEP);
   }
 
   return merged;
@@ -1363,7 +1363,7 @@ export interface LeaderboardEntry {
   /** Foto de perfil; null = círculo com a inicial do nome. */
   avatar_url?: string | null;
   avatar_equipado: string;
-  borda_equipada: string;
+  moldura_loja_equipada: string;
   moldura_equipada?: MolduraId | null;
   /** Contador sobreposto à moldura (pódios naquela posição). */
   moldura_count?: number | null;

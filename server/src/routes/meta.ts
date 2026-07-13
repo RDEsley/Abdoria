@@ -1,8 +1,8 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { awardAbdoriaFromXp } from '../services/economy.js';
+import { awardMoedaFromXp } from '../services/economy.js';
 import {
   claimAfkRewards,
   afkResponsePayload,
@@ -63,7 +63,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       return;
     }
     const { claimed, overflow_to_dorias } = claimAfkRewards(user);
-    awardAbdoriaFromXp(user);
+    awardMoedaFromXp(user);
     await user.save();
     res.json({
       user: sanitizeUser(user),
@@ -119,7 +119,7 @@ metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
       res.status(400).json({ error: result.error });
       return;
     }
-    awardAbdoriaFromXp(user);
+    awardMoedaFromXp(user);
     await user.save();
     res.json({
       user: sanitizeUser(user),
@@ -149,7 +149,7 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
       res.status(400).json({ error: result.error });
       return;
     }
-    awardAbdoriaFromXp(user);
+    awardMoedaFromXp(user);
     await user.save();
     res.json({
       user: sanitizeUser(user),

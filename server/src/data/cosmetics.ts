@@ -1,6 +1,6 @@
-import type { CosmeticDefinition } from '../types/index.js';
+﻿import type { CosmeticDefinition } from '../types/index.js';
 
-/** Catálogo de avatares e bordas desbloqueáveis por nível, conquista ou moedas. */
+/** Catálogo de avatares e molduras desbloqueáveis por nível, conquista ou moedas. */
 export const COSMETICS: CosmeticDefinition[] = [
   {
     id: 'avatar_inicial',
@@ -94,16 +94,16 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_basica',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Básica',
-    descricao: 'Borda padrão verde do Abdoria.',
+    descricao: 'Moldura padrão verde do Abdoria.',
     icon: 'shield',
     raridade: 'comum',
     unlock: { tipo: 'gratis' },
   },
   {
     id: 'borda_bronze',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Bronze',
     descricao: 'Primeiro upgrade ao atingir o nível 3.',
     icon: 'medal',
@@ -112,7 +112,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_prata',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Prata',
     descricao: 'Brilho prateado a partir do nível 7.',
     icon: 'star',
@@ -121,7 +121,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_ouro',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Ouro',
     descricao: 'Para veteranos de nível 12 ou superior.',
     icon: 'crown',
@@ -130,7 +130,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_esmeralda',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Esmeralda',
     descricao: 'Compre com moedas na loja de customização.',
     icon: 'gem',
@@ -139,7 +139,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_ametista',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Ametista',
     descricao: 'Roxo intenso — item premium da loja.',
     icon: 'moon',
@@ -148,7 +148,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_fogo',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Fogo',
     descricao: 'Conquista difícil: 14 dias de streak.',
     icon: 'flame',
@@ -157,7 +157,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_lendario',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Lendária',
     descricao: 'Alcance a conquista Lenda do core (nível 10).',
     icon: 'gem',
@@ -166,7 +166,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'borda_imparavel',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Imparável',
     descricao: '60 dias de streak — quase impossível.',
     icon: 'shield',
@@ -516,16 +516,16 @@ export const COSMETICS: CosmeticDefinition[] = [
 
   {
     id: 'borda_aurum_slime',
-    kind: 'borda',
+    kind: 'moldura_loja',
     nome: 'Aurum do Slime',
-    descricao: 'Borda pulsante forjada no ouro líquido do Golden Slime.',
+    descricao: 'Moldura pulsante forjada no ouro líquido do Golden Slime.',
     icon: 'crown',
     raridade: 'secreto',
     unlock: { tipo: 'golden_slime' },
   },
   {
     id: 'fundo_ouro_liquido',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Ouro Líquido',
     descricao: 'Rio de ouro derretido — brilho eterno do Golden Slime.',
     icon: 'gem',
@@ -554,16 +554,16 @@ export const COSMETICS: CosmeticDefinition[] = [
 
   {
     id: 'fundo_padrao',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Padrão',
-    descricao: 'Fundo clássico do card de jogador.',
+    descricao: 'Banner clássico do card de jogador.',
     icon: 'star',
     raridade: 'comum',
     unlock: { tipo: 'gratis' },
   },
   {
     id: 'fundo_aurora',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Aurora',
     descricao: 'Aurora boreal sobre montanhas noturnas.',
     icon: 'gem',
@@ -572,7 +572,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_vulcao',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Vulcão',
     descricao: 'Vulcão em erupção com rios de lava.',
     icon: 'flame',
@@ -581,7 +581,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_galaxia',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Galáxia',
     descricao: 'Cosmos profundo — oferta especial da loja diária.',
     icon: 'moon',
@@ -590,7 +590,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_dojo',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Dojo',
     descricao: 'Tatame iluminado por janelas de shoji.',
     icon: 'shield',
@@ -599,7 +599,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_floresta',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Floresta',
     descricao: 'Trilha entre árvores ao entardecer.',
     icon: 'gem',
@@ -608,7 +608,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_praia',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Praia',
     descricao: 'Areia, mar e palmeiras em pixel art.',
     icon: 'star',
@@ -617,7 +617,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_templo',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Templo',
     descricao: 'Ruínas antigas sob o luar.',
     icon: 'moon',
@@ -626,7 +626,7 @@ export const COSMETICS: CosmeticDefinition[] = [
   },
   {
     id: 'fundo_neon',
-    kind: 'fundo',
+    kind: 'banner',
     nome: 'Neon City',
     descricao: 'Cidade cyberpunk com letreiros brilhantes.',
     icon: 'zap',

@@ -1,8 +1,8 @@
-import type { CosmeticDefinition } from '../types/index.js';
+﻿import type { CosmeticDefinition } from '../types/index.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import { COSMETICS } from '../data/cosmetics.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
-import { ABDORIA_XP_STEP } from '../types/index.js';
+import { MOEDA_XP_STEP } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
 const ALL_COSMETIC_IDS = COSMETICS.map((item: CosmeticDefinition) => item.id);
@@ -37,13 +37,13 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
     },
     cosmeticos: {
       moedas: 99_999,
-      moedas_xp_blocos: Math.floor(nivelXp / ABDORIA_XP_STEP),
+      moedas_xp_blocos: Math.floor(nivelXp / MOEDA_XP_STEP),
       avatar_equipado: 'avatar_coroa',
-      borda_equipada: 'borda_lendario',
+      moldura_loja_equipada: 'borda_lendario',
       titulo_equipado: 'titulo_dono_do_jogo',
       som_equipado: 'som_epico',
       efeito_equipado: 'efeito_glitch',
-      fundo_equipado: 'fundo_galaxia',
+      banner_equipado: 'fundo_galaxia',
       desbloqueados: ALL_COSMETIC_IDS,
       codigos_resgatados: ['abdoria'],
     },

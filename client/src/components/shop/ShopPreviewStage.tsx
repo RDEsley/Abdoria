@@ -1,4 +1,4 @@
-import { Eye, RotateCcw } from 'lucide-react';
+﻿import { Eye, RotateCcw } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { EffectPreview } from '@/components/shop/EffectPreview';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
@@ -7,9 +7,9 @@ import { resolveCosmeticos } from '@/types';
 
 interface PreviewState {
   avatar?: string;
-  borda?: string;
+  moldura_loja?: string;
   titulo?: string;
-  fundo?: string;
+  banner?: string;
   som?: string;
   efeito?: string;
 }
@@ -31,18 +31,20 @@ export function ShopPreviewStage({
 }: Props) {
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const avatarId = preview.avatar ?? cosmeticos.avatar_equipado;
-  const borderId = preview.borda ?? cosmeticos.borda_equipada;
+  const borderId = preview.moldura_loja ?? cosmeticos.moldura_loja_equipada;
   const titleId = preview.titulo ?? cosmeticos.titulo_equipado;
-  const fundoId = preview.fundo ?? cosmeticos.fundo_equipado;
+  const bannerId = preview.banner ?? cosmeticos.banner_equipado;
   const effectId = preview.efeito ?? cosmeticos.efeito_equipado;
 
   const titleName = titleId ? COSMETIC_BY_ID[titleId]?.nome : null;
 
   const previewFlags: Partial<Record<CosmeticKind, boolean>> = {
     avatar: Boolean(preview.avatar && preview.avatar !== cosmeticos.avatar_equipado),
-    borda: Boolean(preview.borda && preview.borda !== cosmeticos.borda_equipada),
+    moldura_loja: Boolean(
+      preview.moldura_loja && preview.moldura_loja !== cosmeticos.moldura_loja_equipada,
+    ),
     titulo: Boolean(preview.titulo && preview.titulo !== (cosmeticos.titulo_equipado ?? '')),
-    fundo: Boolean(preview.fundo && preview.fundo !== cosmeticos.fundo_equipado),
+    banner: Boolean(preview.banner && preview.banner !== cosmeticos.banner_equipado),
     efeito: Boolean(preview.efeito && preview.efeito !== cosmeticos.efeito_equipado),
   };
 
@@ -53,7 +55,9 @@ export function ShopPreviewStage({
 
   return (
     <aside className="game-shop-preview">
-      <div className={`game-shop-preview__frame game-card-fundo--${fundoId.replace('fundo_', '')}`}>
+      <div
+        className={`game-shop-preview__frame game-card-banner--${bannerId.replace('fundo_', '')}`}
+      >
         <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--tl" />
         <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--tr" />
         <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--bl" />
@@ -82,9 +86,11 @@ export function ShopPreviewStage({
 
         <div className="game-shop-preview__tags">
           {previewFlags.avatar && <span className="game-shop-preview__tag">Ícone teste</span>}
-          {previewFlags.borda && <span className="game-shop-preview__tag">Borda teste</span>}
+          {previewFlags.moldura_loja && (
+            <span className="game-shop-preview__tag">Moldura teste</span>
+          )}
           {previewFlags.titulo && <span className="game-shop-preview__tag">Título teste</span>}
-          {previewFlags.fundo && <span className="game-shop-preview__tag">Fundo teste</span>}
+          {previewFlags.banner && <span className="game-shop-preview__tag">Banner teste</span>}
           {previewFlags.efeito && <span className="game-shop-preview__tag">Efeito teste</span>}
         </div>
       </div>

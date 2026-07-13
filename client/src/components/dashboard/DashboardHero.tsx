@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+﻿import type { CSSProperties } from 'react';
 import { XpBar } from '@/components/ui/XpBar';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { useAuth } from '@/context/AuthContext';
@@ -22,13 +22,13 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
   const { user } = useAuth();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
+  const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
   const heroClass =
     fundoKey === 'padrao'
       ? 'game-xp-section__hero'
       : fundoKey === 'praia'
-        ? `game-xp-section__hero game-xp-section__hero--skinned-light game-card-fundo--${fundoKey}`
-        : `game-xp-section__hero game-xp-section__hero--skinned game-card-fundo--${fundoKey}`;
+        ? `game-xp-section__hero game-xp-section__hero--skinned-light game-card-banner--${fundoKey}`
+        : `game-xp-section__hero game-xp-section__hero--skinned game-card-banner--${fundoKey}`;
 
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
 

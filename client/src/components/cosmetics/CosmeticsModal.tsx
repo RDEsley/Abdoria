@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Coins, Crown, Frame, Image, Music, UserRound, Wand2 } from 'lucide-react';
 import { ShopItemRow } from '@/components/shop/ShopItemRow';
-import { AbdoriaCoinsGuideOverlay } from '@/components/shop/AbdoriaCoinsGuideOverlay';
+import { MoedaGuideOverlay } from '@/components/shop/MoedaGuideOverlay';
 import { ShopPreviewStage } from '@/components/shop/ShopPreviewStage';
 import {
   PurchaseConfirmDialog,
@@ -30,7 +30,12 @@ interface Props {
 }
 
 type ShopSectionId =
-  'shop-avatares' | 'shop-bordas' | 'shop-titulos' | 'shop-fundos' | 'shop-sons' | 'shop-efeitos';
+  | 'shop-avatares'
+  | 'shop-moldura-loja'
+  | 'shop-titulos'
+  | 'shop-banners'
+  | 'shop-sons'
+  | 'shop-efeitos';
 
 type PreviewState = Partial<Record<CosmeticKind, string>>;
 
@@ -41,9 +46,9 @@ const SECTIONS: {
   icon: typeof UserRound;
 }[] = [
   { id: 'shop-avatares', kind: 'avatar', label: 'Ícones', icon: UserRound },
-  { id: 'shop-bordas', kind: 'borda', label: 'Bordas', icon: Frame },
+  { id: 'shop-moldura-loja', kind: 'moldura_loja', label: 'Molduras', icon: Frame },
   { id: 'shop-titulos', kind: 'titulo', label: 'Títulos', icon: Crown },
-  { id: 'shop-fundos', kind: 'fundo', label: 'Fundos', icon: Image },
+  { id: 'shop-banners', kind: 'banner', label: 'Banners', icon: Image },
   { id: 'shop-sons', kind: 'som', label: 'Sons', icon: Music },
   { id: 'shop-efeitos', kind: 'efeito', label: 'Efeitos', icon: Wand2 },
 ];
@@ -51,9 +56,9 @@ const SECTIONS: {
 function catalogByKind(catalog: ShopResponse, kind: CosmeticKind): ShopCatalogItem[] {
   const map: Record<CosmeticKind, ShopCatalogItem[]> = {
     avatar: catalog.avatares,
-    borda: catalog.bordas,
+    moldura_loja: catalog.molduras_loja,
     titulo: catalog.titulos,
-    fundo: catalog.fundos ?? [],
+    banner: catalog.banners ?? [],
     som: catalog.sons,
     efeito: catalog.efeitos,
   };
@@ -86,10 +91,11 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const hasPreviewOverrides = useMemo(() => {
     return (
       (preview.avatar !== undefined && preview.avatar !== cosmeticos.avatar_equipado) ||
-      (preview.borda !== undefined && preview.borda !== cosmeticos.borda_equipada) ||
+      (preview.moldura_loja !== undefined &&
+        preview.moldura_loja !== cosmeticos.moldura_loja_equipada) ||
       (preview.titulo !== undefined &&
         preview.titulo !== (cosmeticos.titulo_equipado ?? undefined)) ||
-      (preview.fundo !== undefined && preview.fundo !== cosmeticos.fundo_equipado) ||
+      (preview.banner !== undefined && preview.banner !== cosmeticos.banner_equipado) ||
       (preview.efeito !== undefined && preview.efeito !== cosmeticos.efeito_equipado)
     );
   }, [preview, cosmeticos]);
@@ -392,7 +398,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
         </div>
       </div>
 
-      <AbdoriaCoinsGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
+      <MoedaGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
 
       <PurchaseConfirmDialog
         open={!!purchaseConfirm}

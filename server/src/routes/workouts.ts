@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import crypto from 'crypto';
 import { Exercise } from '../domain/Exercise.js';
 import { User, sanitizeUser } from '../domain/User.js';
@@ -13,7 +13,7 @@ import {
   syncUserGamification,
 } from '../services/gamification.js';
 import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
-import { awardAbdoriaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
+import { awardMoedaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
 import {
   applyWorkoutXpBreakdown,
   calculateWorkoutXpBreakdown,
@@ -401,7 +401,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
     const levelUp =
       levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null;
-    const abdoriaGanha = awardAbdoriaFromXpProgress(updatedUser);
+    const abdoriaGanha = awardMoedaFromXpProgress(updatedUser);
     syncShopUnlocks(updatedUser);
 
     await WorkoutHistory.updateById(history.id, { xp_ganho: xpAwarded });

@@ -1,4 +1,4 @@
-/* Cosmetics */
+﻿/* Cosmetics */
 .game-cosmetic-avatar {
   position: relative;
   display: flex;
@@ -1499,9 +1499,9 @@
   color: #94a3b8;
 }
 
-/* Prévia ao vivo com fundos claros — contraste legível */
-.game-shop-preview__frame.game-card-fundo--padrao,
-.game-shop-preview__frame.game-card-fundo--praia {
+/* Prévia ao vivo com banners claros — contraste legível */
+.game-shop-preview__frame.game-card-banner--padrao,
+.game-shop-preview__frame.game-card-banner--praia {
   border: 3px solid var(--game-ink);
   box-shadow:
     inset 0 0 20px rgba(255, 255, 255, 0.45),
@@ -1509,47 +1509,47 @@
   color: #0f172a;
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao {
+.game-shop-preview__frame.game-card-banner--padrao {
   background:
     radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.42), transparent 42%),
     radial-gradient(circle at 82% 78%, rgba(52, 211, 153, 0.38), transparent 48%),
     linear-gradient(145deg, #dbeafe 0%, #a7f3d0 48%, #bae6fd 100%);
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__eyebrow,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__eyebrow {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__eyebrow,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__eyebrow {
   color: #047857;
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__reset,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__reset {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__reset,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__reset {
   color: #0f172a;
   background: rgba(255, 255, 255, 0.55);
   border-color: rgba(5, 150, 105, 0.35);
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__frame-corner,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__frame-corner {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__frame-corner,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__frame-corner {
   border-color: #059669;
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__name,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__name {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__name,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__name {
   color: #0f172a;
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__title,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__title {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__title,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__title {
   color: #047857;
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__title--preview,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__title--preview {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__title--preview,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__title--preview {
   color: #0369a1;
 }
 
-.game-shop-preview__frame.game-card-fundo--padrao .game-shop-preview__stage,
-.game-shop-preview__frame.game-card-fundo--praia .game-shop-preview__stage {
+.game-shop-preview__frame.game-card-banner--padrao .game-shop-preview__stage,
+.game-shop-preview__frame.game-card-banner--praia .game-shop-preview__stage {
   background:
     radial-gradient(circle at 50% 58%, rgba(255, 255, 255, 0.55), transparent 68%),
     radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.12), transparent 55%);

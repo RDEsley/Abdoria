@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Gift, Sparkles } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
@@ -34,9 +34,9 @@ import {
   CURRENCY_NAME,
   DAILY_LUCK_LABELS,
   DAILY_RARITY_LABELS,
-  projectedAbdoriaAfterXpSpend,
-  SHOP_ABDORIA_COST_PER_XP,
-  SHOP_XP_COST_PER_ABDORIA,
+  projectedMoedaAfterXpSpend,
+  SHOP_MOEDA_COST_PER_XP,
+  SHOP_XP_COST_PER_MOEDA,
   resolveCosmeticos,
 } from '@/types';
 
@@ -55,7 +55,7 @@ function canAffordSlot(
   const abdoriaCost = slot.preco_abdoria ?? 0;
   const xpCost = slot.preco_xp ?? 0;
   if (xpCost > spendableXp) return false;
-  const abdoriaAfterXp = projectedAbdoriaAfterXpSpend(
+  const abdoriaAfterXp = projectedMoedaAfterXpSpend(
     nivelXp,
     abdoriaBalance,
     moedasXpBlocos,
@@ -116,8 +116,8 @@ export function DailyShopPanel() {
   const moedasXpBlocos = cosmeticos.moedas_xp_blocos;
   const nivelXp = user?.gamificacao.nivel_xp ?? 0;
   const spendableXp = shopMeta?.spendable_xp ?? 0;
-  const xpPerAbdoria = shopMeta?.shop_xp_cost_per_abdoria ?? SHOP_XP_COST_PER_ABDORIA;
-  const abdoriaPerXp = shopMeta?.shop_abdoria_cost_per_xp ?? SHOP_ABDORIA_COST_PER_XP;
+  const xpPerAbdoria = shopMeta?.shop_xp_cost_per_abdoria ?? SHOP_XP_COST_PER_MOEDA;
+  const abdoriaPerXp = shopMeta?.shop_abdoria_cost_per_xp ?? SHOP_MOEDA_COST_PER_XP;
   const effectId = shopMeta?.efeito_equipado ?? cosmeticos.efeito_equipado;
 
   const load = useCallback(async () => {

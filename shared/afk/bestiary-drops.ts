@@ -1,4 +1,4 @@
-import { AFK_ENEMIES, AFK_GOLDEN_SLIME_ABDORIA, type AfkEnemyId } from './combat.js';
+﻿import { AFK_ENEMIES, AFK_GOLDEN_SLIME_MOEDA_BONUS, type AfkEnemyId } from './combat.js';
 import {
   PATROL_LEGENDARY_WEAPON_IDS,
   PATROL_SECRET_WEAPON_IDS,
@@ -95,7 +95,7 @@ export function buildBestiaryDropCatalog(
   return {
     xp: def('xp', '+1 XP'),
     abdoria: def('abdoria', `+1 ${currencyName}`),
-    abdoria_golden: def('abdoria_golden', `+${AFK_GOLDEN_SLIME_ABDORIA} ${currencyName}`),
+    abdoria_golden: def('abdoria_golden', `+${AFK_GOLDEN_SLIME_MOEDA_BONUS} ${currencyName}`),
     doria_bag: def('doria_bag', 'Bolsa de Dorias'),
     exp_instant: def('exp_instant', 'EXP Instantâneo'),
     frozen_streak: def('frozen_streak', 'Frozen Streak'),

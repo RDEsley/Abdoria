@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, LogOut, Volume2 } from 'lucide-react';
 import { TermsModal } from '@/components/legal/TermsModal';
@@ -13,7 +13,7 @@ import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
 import {
-  ABDORIA_XP_STEP,
+  MOEDA_XP_STEP,
   CICLO_LABELS,
   ESCOPO_LABELS,
   FOCO_LABELS,
@@ -222,7 +222,7 @@ export function SettingsPage() {
           <p className="mb-2 font-bold text-stone-700">{CURRENCY_NAME}</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{ABDORIA_XP_STEP} XP</strong> totais
+              <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong> totais
               ganhos (conversão automática).
             </li>
           </ul>

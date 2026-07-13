@@ -1,7 +1,7 @@
-import { Exercise } from '../domain/Exercise.js';
+﻿import { Exercise } from '../domain/Exercise.js';
 import { User } from '../domain/User.js';
-import { ABDORIA_XP_STEP } from '../types/index.js';
-import { ensureAbdoriaWallet } from './economy.js';
+import { MOEDA_XP_STEP } from '../types/index.js';
+import { ensureMoedaWallet } from './economy.js';
 import { addWeeklyMoedas } from './weekly-stats.js';
 
 const RETIRED_SLUGS = new Set(['pallof-press']);
@@ -33,8 +33,8 @@ export async function syncAllUsersProgressData(): Promise<{
       dirty = true;
     }
 
-    ensureAbdoriaWallet(user);
-    const blocks = Math.floor(user.gamificacao.nivel_xp / ABDORIA_XP_STEP);
+    ensureMoedaWallet(user);
+    const blocks = Math.floor(user.gamificacao.nivel_xp / MOEDA_XP_STEP);
     const previous = user.cosmeticos.moedas_xp_blocos ?? 0;
     const gained = Math.max(0, blocks - previous);
     if (gained > 0) {

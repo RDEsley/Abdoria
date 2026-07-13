@@ -1,4 +1,4 @@
-import { Check, Coins, Eye, Lock, Sparkles, Volume2 } from 'lucide-react';
+﻿import { Check, Coins, Eye, Lock, Sparkles, Volume2 } from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { GameButton } from '@/components/ui/GameButton';
 import { COSMETIC_RARITY_LABELS, type ShopCatalogItem } from '@/types';
@@ -18,16 +18,16 @@ function rarityFrameClass(raridade: ShopCatalogItem['raridade']) {
 }
 
 function ItemThumb({ item, letter }: { item: ShopCatalogItem; letter: string }) {
-  if (item.kind === 'fundo') {
+  if (item.kind === 'banner') {
     return (
       <div
-        className={`game-shop-row__thumb-fundo game-card-fundo--${item.id.replace('fundo_', '')}`}
+        className={`game-shop-row__thumb-banner game-card-banner--${item.id.replace('fundo_', '')}`}
         aria-hidden
       />
     );
   }
 
-  if (item.kind === 'borda') {
+  if (item.kind === 'moldura_loja') {
     return (
       <div
         className={`game-shop-row__thumb-ring game-cosmetic-avatar--border-${item.id.replace('borda_', '')}`}
@@ -62,9 +62,9 @@ export function ShopItemRow({
   const canPreview =
     item.desbloqueada ||
     item.kind === 'avatar' ||
-    item.kind === 'borda' ||
+    item.kind === 'moldura_loja' ||
     item.kind === 'titulo' ||
-    item.kind === 'fundo' ||
+    item.kind === 'banner' ||
     item.kind === 'som' ||
     item.kind === 'efeito';
 

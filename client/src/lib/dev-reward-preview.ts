@@ -17,7 +17,7 @@ export function buildDevSecretPreviewItem(
           kind: 'cosmetic',
           rarity: 'secreto',
           name: 'Aurum Slime',
-          description: 'Borda exclusiva do Golden Slime.',
+          description: 'Moldura exclusiva do Golden Slime.',
           cosmeticId: 'borda_aurum_slime',
           icon: 'gem',
           secretReveal: true,

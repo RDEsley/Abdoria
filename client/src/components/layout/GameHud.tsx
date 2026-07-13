@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
 import { NotificationsBell } from '@/components/notifications/NotificationsBell';
 import { UserAvatar } from '@/components/profile/UserAvatar';
@@ -42,8 +42,8 @@ export function GameHud() {
         ? 'cosmetic-title--secreto'
         : undefined;
 
-  const fundoKey = cosmeticos.fundo_equipado.replace('fundo_', '');
-  const backgroundClass = fundoKey === 'padrao' ? undefined : `game-card-fundo--${fundoKey}`;
+  const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
+  const backgroundClass = fundoKey === 'padrao' ? undefined : `game-card-banner--${fundoKey}`;
   const backgroundLight = fundoKey === 'praia';
 
   return (

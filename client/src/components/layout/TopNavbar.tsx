@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Coins, Plus } from 'lucide-react';
 import { CURRENCY_NAME } from '@/types';
@@ -15,9 +15,9 @@ export interface TopNavbarProps {
   userTitle?: string | null;
   titleClassName?: string;
   coinsEarnedPulse?: number | null;
-  /** Classe do fundo cosmético equipado (ex.: `game-card-fundo--vulcao`). */
+  /** Classe do fundo cosmético equipado (ex.: `game-card-banner--vulcao`). */
   backgroundClass?: string;
-  /** Fundo claro (ex.: praia) — usa overlay claro + texto escuro. */
+  /** Banner claro (ex.: praia) — usa overlay claro + texto escuro. */
   backgroundLight?: boolean;
   onProfileClick?: () => void;
   onDoriasAddClick?: () => void;

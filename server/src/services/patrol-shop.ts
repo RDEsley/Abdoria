@@ -1,4 +1,4 @@
-import {
+﻿import {
   AFK_CRIT_BONUS_ESPADA,
   AFK_CRIT_STREAK_STEP_ARCO,
   AFK_LEVEL10_BOW_CRIT_CHANCE,
@@ -21,7 +21,7 @@ import {
 import type { UserMutable } from '../repositories/user-repository.js';
 import type { UserRecord } from '../types/user-record.js';
 import { User } from '../domain/User.js';
-import { readAbdoriaBalance } from './economy.js';
+import { readMoedaBalance } from './economy.js';
 
 function ensurePatrolArmas(user: UserMutable): PatrolArmasState {
   const resolved = resolvePatrolArmas(user.preferencias.patrol_armas);
@@ -91,7 +91,7 @@ function toCatalogItem(
 
 export function buildPatrolShopResponse(user: UserRecord): PatrolShopResponse {
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
-  const abdoria = readAbdoriaBalance(user);
+  const abdoria = readMoedaBalance(user);
   const rawPreferida = user.preferencias?.arma_preferida;
   const armaPreferida: PatrolWeaponKind =
     rawPreferida === 'espada' || rawPreferida === 'magia' ? rawPreferida : 'arco';

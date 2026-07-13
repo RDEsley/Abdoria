@@ -118,6 +118,25 @@ function normalizePending(raw: unknown): AfkPendingReward {
   };
 }
 
+/** Lê `moldura_loja_equipada`/`banner_equipado` com fallback pros nomes antigos (`borda_equipada`/`fundo_equipado`) já persistidos em contas existentes. */
+function resolveLegacyCosmeticFields(raw: Record<string, unknown>): UserRecord['cosmeticos'] {
+  const legacy = raw as { borda_equipada?: string; fundo_equipado?: string };
+  const merged = {
+    ...DEFAULT_COSMETICOS,
+    ...(raw as unknown as UserRecord['cosmeticos']),
+  };
+  if (
+    merged.moldura_loja_equipada === DEFAULT_COSMETICOS.moldura_loja_equipada &&
+    legacy.borda_equipada
+  ) {
+    merged.moldura_loja_equipada = legacy.borda_equipada;
+  }
+  if (merged.banner_equipado === DEFAULT_COSMETICOS.banner_equipado && legacy.fundo_equipado) {
+    merged.banner_equipado = legacy.fundo_equipado;
+  }
+  return merged;
+}
+
 function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = false): UserRecord {
   const pending = normalizePending(afk?.pending);
   const afkState: AfkState & { pending: AfkPendingReward } = {
@@ -138,10 +157,7 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     nivel: profile.nivel as UserRecord['nivel'],
     objetivo: profile.objetivo as UserRecord['objetivo'],
     gamificacao: profile.gamificacao as unknown as UserRecord['gamificacao'],
-    cosmeticos: {
-      ...DEFAULT_COSMETICOS,
-      ...(profile.cosmeticos as unknown as UserRecord['cosmeticos']),
-    },
+    cosmeticos: resolveLegacyCosmeticFields(profile.cosmeticos),
     loja_diaria: profile.loja_diaria as unknown as UserRecord['loja_diaria'],
     simulacao_definicao:
       profile.simulacao_definicao as unknown as UserRecord['simulacao_definicao'],

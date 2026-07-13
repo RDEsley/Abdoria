@@ -1,4 +1,4 @@
-import type { UserRecord } from '../domain/User.js';
+﻿import type { UserRecord } from '../domain/User.js';
 import {
   DORIA_BAG_ITEM_ID,
   DORIA_BAG_MAX,
@@ -16,7 +16,7 @@ import {
   type AfkPendingReward,
 } from '../types/index.js';
 import { grantPatrolCacheRewards, grantRouteDrinkRewards } from './afk.js';
-import { grantAbdoria } from './economy.js';
+import { grantMoeda } from './economy.js';
 import { addWeeklyXp } from './weekly-stats.js';
 import { hashKillSeed } from './afk-rolls.js';
 
@@ -108,7 +108,7 @@ function addInventoryItemInternal(
   }
 
   if (overflow > 0) {
-    grantAbdoria(user, overflow);
+    grantMoeda(user, overflow);
   }
 
   return { added, overflow_to_dorias: overflow };
@@ -234,7 +234,7 @@ export function useDoriaBag(
     rolls.push(amount);
     total += amount;
   }
-  grantAbdoria(user, total);
+  grantMoeda(user, total);
   return { ok: true, abdoria_ganha: total, rolls, quantity_used: quantity };
 }
 
