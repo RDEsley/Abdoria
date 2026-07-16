@@ -35,6 +35,14 @@ import { resolveUserDadosSalvos } from '@/types';
 
 const PERSIST_DEBOUNCE_MS = 450;
 
+/** Toast único de Frozen Streak — a notificação persistida (sino) é o registro durável. */
+function notifyIfStreakFrozen(stats: DashboardStats): void {
+  if (!stats.streak_frozen_notice) return;
+  showGameToast('Você não treinou ontem, mas um Frozen Streak salvou sua ofensiva!', {
+    variant: 'info',
+  });
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IUserDocument | null>(null);
   const [exercises, setExercises] = useState<IExerciseDocument[]>([]);
@@ -80,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (result.xp_ganho_habilidades > 0) {
         const statsRes = await getDashboardStats();
         setStats(statsRes);
+        notifyIfStreakFrozen(statsRes);
         recommendationsLoaded.current = false;
       }
     } catch (err) {
@@ -180,11 +189,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (statsRes.status === 'fulfilled') {
       setStats(statsRes.value);
-      if (statsRes.value.streak_frozen_notice) {
-        showGameToast('Você não treinou ontem, mas um Frozen Streak salvou sua ofensiva!', {
-          variant: 'info',
-        });
-      }
+      notifyIfStreakFrozen(statsRes.value);
     } else
       errors.push(
         statsRes.reason instanceof Error
@@ -444,6 +449,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               }
             : {}),
         });
+        notifyIfStreakFrozen(statsRes.value);
         recommendationsLoaded.current = !!rec;
       }
       if (historyRes.status === 'fulfilled') {

@@ -99,31 +99,43 @@ function computeLongestStreakFromWorkouts(
 }
 
 /**
- * Detecta se ontem foi perdido e pode ser coberto por Frozen Streak (exatamente 1 dia).
- * Funciona como "ponte": continua detectando o dia perdido mesmo que o usuário já tenha
- * treinado hoje na volta — para o freeze preservar a corrente anteontem→hoje.
+ * Detecta quantos dias consecutivos (a partir de ontem, andando pra trás) precisam de
+ * Frozen Streak pra reconectar com o último treino real — até o limite de itens
+ * disponíveis (`maxFreezes`). Funciona como "ponte": continua detectando os dias perdidos
+ * mesmo que o usuário já tenha treinado hoje na volta, pra preservar a corrente antiga→hoje.
+ *
+ * Só retorna dias se a ponte realmente fecha dentro do limite de itens — um buraco maior
+ * que `maxFreezes` não é parcialmente coberto (mesma regra do Duolingo: sem item suficiente,
+ * a corrente quebra).
  */
-export function findStreakMissedDayForFreeze(
+export function findStreakMissedDaysForFreeze(
   histories: StreakWorkoutDay[],
   frozenDates: string[] = [],
-): string | null {
+  maxFreezes: number,
+): string[] {
+  if (maxFreezes <= 0) return [];
+
   const today = getTodaySaoPaulo();
   const yesterday = addDaysSaoPaulo(today, -1);
-
-  if (frozenDates.includes(yesterday)) return null;
-
   const workoutKeys = new Set(uniqueWorkoutDayKeys(histories));
-  if (workoutKeys.has(yesterday)) return null; // ontem teve treino: nada a cobrir
+  if (workoutKeys.has(yesterday)) return []; // ontem teve treino: nada a cobrir
 
-  // Último treino ANTES de ontem (ignora um eventual treino feito hoje na volta).
-  const beforeYesterday = uniqueWorkoutDayKeys(histories)
-    .filter((key) => key < yesterday)
-    .sort()
-    .reverse();
+  const frozenSet = new Set(frozenDates);
+  const missedDays: string[] = [];
+  let cursor = yesterday;
 
-  const lastBefore = beforeYesterday[0];
-  if (!lastBefore) return null;
-  if (dayDiff(lastBefore, yesterday) !== 1) return null; // buraco de exatamente 1 dia
+  // Limite de segurança: nunca existe motivo real pra uma ponte de congelamento
+  // ultrapassar um ano — evita loop infinito se `frozenDates` vier corrompido/sem fim.
+  for (let guard = 0; guard < 365; guard += 1) {
+    if (workoutKeys.has(cursor)) return missedDays; // achou o treino real que fecha a ponte
+    if (frozenSet.has(cursor)) {
+      cursor = addDaysSaoPaulo(cursor, -1); // já congelado antes, não conta contra o limite
+      continue;
+    }
+    if (missedDays.length >= maxFreezes) return []; // buraco maior que os itens disponíveis
+    missedDays.push(cursor);
+    cursor = addDaysSaoPaulo(cursor, -1);
+  }
 
-  return yesterday;
+  return [];
 }

@@ -10,9 +10,10 @@ import {
 } from '../types/index.js';
 import {
   computeStreakWithFrozenDays,
-  findStreakMissedDayForFreeze,
+  findStreakMissedDaysForFreeze,
 } from '../../../shared/streak/protection.js';
 import { consumeInventoryItem, getItemCount } from './inventory.js';
+import { Notifications } from '../repositories/notification-repository.js';
 import { User, type UserRecord } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
@@ -64,42 +65,37 @@ function computeStreakFromHistories(
   return computeStreakWithFrozenDays(histories, frozenDates);
 }
 
-export async function computeStreak(userId: string): Promise<{ atual: number; maior: number }> {
-  const histories = await WorkoutHistory.find(
-    { usuario_id: userId },
-    { sort: { concluido_em: -1 } },
-  );
-
-  return computeStreakFromHistories(histories as HistorySummary[]);
-}
-
-/** Tenta consumir Frozen Streak para cobrir exatamente 1 dia perdido. */
+/**
+ * Tenta consumir Frozen Streak para cobrir dias perdidos (1 ou mais consecutivos, até o
+ * limite de itens no inventário). Retorna as datas efetivamente congeladas nesta chamada
+ * (vazio se nenhum congelamento foi aplicado) — usado pelo chamador pra gerar a notificação.
+ */
 export function applyStreakFreezeProtection(
   user: UserRecord,
   histories: HistorySummary[],
-): boolean {
+): string[] {
   if (!user.gamificacao.streak_congelamentos) {
     user.gamificacao.streak_congelamentos = [];
   }
 
-  const missedDay = findStreakMissedDayForFreeze(histories, user.gamificacao.streak_congelamentos);
-  if (!missedDay) return false;
-
   const frozenDates = user.gamificacao.streak_congelamentos;
+  const maxFreezes = getItemCount(user, FROZEN_STREAK_ITEM_ID);
+  const missedDays = findStreakMissedDaysForFreeze(histories, frozenDates, maxFreezes);
+  if (missedDays.length === 0) return [];
+
   const streakWithoutFreeze = computeStreakWithFrozenDays(histories, frozenDates);
   const streakWithPendingFreeze = computeStreakWithFrozenDays(histories, [
     ...frozenDates,
-    missedDay,
+    ...missedDays,
   ]);
 
-  // Só consome o item se o congelamento realmente estende a ofensiva (faz a ponte).
+  // Só consome os itens se o congelamento realmente estende a ofensiva (faz a ponte).
   // Cobre tanto "streak iria a 0" quanto "treinou hoje mas perderia a corrente longa".
-  if (streakWithPendingFreeze.atual <= streakWithoutFreeze.atual) return false;
+  if (streakWithPendingFreeze.atual <= streakWithoutFreeze.atual) return [];
 
-  if (getItemCount(user, FROZEN_STREAK_ITEM_ID) < 1) return false;
-  if (!consumeInventoryItem(user, FROZEN_STREAK_ITEM_ID, 1)) return false;
+  if (!consumeInventoryItem(user, FROZEN_STREAK_ITEM_ID, missedDays.length)) return [];
 
-  user.gamificacao.streak_congelamentos.push(missedDay);
+  user.gamificacao.streak_congelamentos.push(...missedDays);
   user.gamificacao.streak_freeze_notice_pending = true;
   user.gamificacao.streak_atual = streakWithPendingFreeze.atual;
   user.gamificacao.streak_maior = Math.max(
@@ -107,7 +103,7 @@ export function applyStreakFreezeProtection(
     streakWithPendingFreeze.maior,
   );
 
-  return true;
+  return missedDays;
 }
 
 function hasWeekendWarrior(histories: HistorySummary[]): boolean {
@@ -292,7 +288,7 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
 
   const totalSeconds = histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
 
-  applyStreakFreezeProtection(user, histories);
+  const frozenDays = applyStreakFreezeProtection(user, histories);
 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
   const streakAfterFreeze = computeStreakFromHistories(histories, frozenDates);
@@ -303,7 +299,25 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
   user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
 
   await user.save();
+
+  if (frozenDays.length > 0) {
+    await notifyStreakFrozen(userId, frozenDays);
+  }
+
   return user;
+}
+
+async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise<void> {
+  const dayLabel = frozenDays.length === 1 ? 'dia perdido' : `${frozenDays.length} dias perdidos`;
+  await Notifications.createMany([
+    {
+      user_id: userId,
+      tipo: 'streak_frozen',
+      titulo: 'Frozen Streak salvou sua ofensiva!',
+      corpo: `Você não treinou, mas ${dayLabel} foram protegidos e sua sequência continua.`,
+      payload: { frozen_days: frozenDays },
+    },
+  ]);
 }
 
 export function calculateWorkoutXp(

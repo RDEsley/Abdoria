@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Bell, Coins, Medal, Sparkles } from 'lucide-react';
+import { Bell, Coins, Medal, Snowflake, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -12,6 +12,7 @@ import {
 function iconForTipo(tipo: string) {
   if (tipo === 'ranking_podio') return <Medal size={16} aria-hidden />;
   if (tipo === 'ranking_premio') return <Coins size={16} aria-hidden />;
+  if (tipo === 'streak_frozen') return <Snowflake size={16} aria-hidden />;
   return <Sparkles size={16} aria-hidden />;
 }
 
