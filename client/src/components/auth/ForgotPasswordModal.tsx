@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { AuthAlert } from '@/components/auth/AuthAlert';
 import { AuthField } from '@/components/auth/AuthField';
 import { Modal } from '@/components/ui/Modal';
+import { GameAlertBanner } from '@/components/ui/GameToast';
 import { requestPasswordReset } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { validateEmail } from '@/lib/auth-validation';
@@ -77,9 +77,11 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
         />
 
         {error && (
-          <AuthAlert variant="error" title="Não foi possível enviar" message={error} live />
+          <GameAlertBanner variant="error" title="Não foi possível enviar" message={error} live />
         )}
-        {message && <AuthAlert variant="success" title="Verifique seu email" message={message} />}
+        {message && (
+          <GameAlertBanner variant="success" title="Verifique seu email" message={message} />
+        )}
 
         <button type="submit" disabled={loading} className="game-btn game-btn--primary">
           {loading ? 'Enviando…' : 'Enviar link'}

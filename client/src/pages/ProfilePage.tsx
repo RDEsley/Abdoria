@@ -1,7 +1,8 @@
 ﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Save, Settings } from 'lucide-react';
+import { Save, Settings, Shirt } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
+import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { ProfileIdentityPanel } from '@/components/profile/ProfileIdentityPanel';
 import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
@@ -35,6 +36,7 @@ export function ProfilePage() {
   const profile = user ?? appUser;
   const [tab, setTab] = useState<Tab>('dados');
   const [saving, setSaving] = useState(false);
+  const [showCosmetics, setShowCosmetics] = useState(false);
   if (!profile) {
     return <PageLoader />;
   }
@@ -102,10 +104,22 @@ export function ProfilePage() {
     <div className="flex flex-col gap-5">
       <header className="flex items-start justify-between gap-3">
         <GamePageHeader eyebrow="Ficha do herói" title="Perfil" />
-        <Link to="/configuracoes" className="game-icon-btn shrink-0" aria-label="Configurações">
-          <Settings size={20} aria-hidden />
-        </Link>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            className="game-icon-btn"
+            aria-label="Cosméticos e loja"
+            onClick={() => setShowCosmetics(true)}
+          >
+            <Shirt size={20} aria-hidden />
+          </button>
+          <Link to="/configuracoes" className="game-icon-btn" aria-label="Configurações">
+            <Settings size={20} aria-hidden />
+          </Link>
+        </div>
       </header>
+
+      <CosmeticsModal open={showCosmetics} onClose={() => setShowCosmetics(false)} />
 
       <div className={heroShellClass}>
         <div className="game-profile-hero">

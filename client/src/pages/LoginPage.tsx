@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AuthAlert } from '@/components/auth/AuthAlert';
 import { AuthField } from '@/components/auth/AuthField';
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
+import { GameAlertBanner } from '@/components/ui/GameToast';
 import { getHealth } from '@/lib/api';
 import {
   DATABASE_BANNER,
@@ -112,7 +112,6 @@ export function LoginPage() {
   return (
     <GameAuthScene>
       <GameAuthPanel
-        title="ABDORIA"
         footer={
           <Link to="/register" className="game-login__link">
             Novo jogador?
@@ -120,7 +119,7 @@ export function LoginPage() {
         }
       >
         {registerState?.accountCreated && (
-          <AuthAlert
+          <GameAlertBanner
             variant="success"
             title="Conta criada!"
             message="Faça login com seu email e senha para começar a aventura."
@@ -128,12 +127,16 @@ export function LoginPage() {
         )}
 
         {showSystemAlert && (
-          <div className="game-auth-alerts">
+          <div className="game-toast-banners">
             {apiOnline === false && (
-              <AuthAlert variant="warn" title="Sem conexão" message={OFFLINE_BANNER} />
+              <GameAlertBanner variant="warn" title="Sem conexão" message={OFFLINE_BANNER} />
             )}
             {apiOnline === true && dbOnline === false && (
-              <AuthAlert variant="warn" title="Dados indisponíveis" message={DATABASE_BANNER} />
+              <GameAlertBanner
+                variant="warn"
+                title="Dados indisponíveis"
+                message={DATABASE_BANNER}
+              />
             )}
           </div>
         )}
@@ -208,7 +211,7 @@ export function LoginPage() {
           </button>
 
           {submitError && (
-            <AuthAlert
+            <GameAlertBanner
               id="login-submit-error"
               variant="error"
               title="Não foi possível entrar"

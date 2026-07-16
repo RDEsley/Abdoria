@@ -61,7 +61,8 @@ function GameBush({ className }: { className: string }) {
 }
 
 interface GameAuthPanelProps {
-  title: string;
+  /** Omitido quando a logo já traz o nome por extenso (ex.: tela de login). */
+  title?: string;
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
@@ -71,7 +72,7 @@ export function GameAuthPanel({ title, children, footer, className }: GameAuthPa
   return (
     <main className={`game-login__panel${className ? ` ${className}` : ''}`}>
       <BrandMark size={112} alt="Abdoria" className="game-login__logo" />
-      <h1 className="game-login__title">{title}</h1>
+      {title && <h1 className="game-login__title">{title}</h1>}
       {children}
       {footer}
     </main>
@@ -82,6 +83,8 @@ export function GameAuthScene({ children }: { children: ReactNode }) {
   return (
     <div className="game-login">
       <div className="game-login__sky" aria-hidden>
+        <div className="game-login__moon" />
+
         <div className="game-login__clouds game-login__clouds--far">
           <span className="game-cloud game-cloud--f1" />
           <span className="game-cloud game-cloud--f2" />

@@ -1,5 +1,5 @@
-﻿import { useCallback, useEffect, useState } from 'react';
-import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
+﻿import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NotificationsBell } from '@/components/notifications/NotificationsBell';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { TopNavbar } from '@/components/layout/TopNavbar';
@@ -9,13 +9,11 @@ import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import { resolveCosmeticos, xpProgressFromTotal } from '@/types';
 
 export function GameHud() {
+  const navigate = useNavigate();
   const { stats, user: appUser } = useApp();
   const { user: authUser } = useAuth();
   const user = appUser ?? authUser;
-  const [showCosmetics, setShowCosmetics] = useState(false);
   const [coinsEarnedPulse, setCoinsEarnedPulse] = useState<number | null>(null);
-
-  const closeCosmetics = useCallback(() => setShowCosmetics(false), []);
 
   useEffect(() => {
     const onCoinsEarned = (event: Event) => {
@@ -42,38 +40,27 @@ export function GameHud() {
         ? 'cosmetic-title--secreto'
         : undefined;
 
-  const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
-  const backgroundClass = fundoKey === 'padrao' ? undefined : `game-card-banner--${fundoKey}`;
-  const backgroundLight = fundoKey === 'praia';
-
   return (
-    <>
-      <TopNavbar
-        userName={firstName}
-        userLevel={level}
-        userXp={xpInLevel}
-        xpMax={xpToNext}
-        doriasAmount={cosmeticos.moedas}
-        backgroundClass={backgroundClass}
-        backgroundLight={backgroundLight}
-        avatar={
-          <UserAvatar
-            nome={firstName}
-            avatarUrl={user?.avatar_url}
-            moldura={cosmeticos.moldura_equipada ?? null}
-            size="sm"
-            className="top-navbar__identity-avatar"
-          />
-        }
-        userTitle={equippedTitle}
-        titleClassName={titleClassName}
-        coinsEarnedPulse={coinsEarnedPulse}
-        onProfileClick={() => setShowCosmetics(true)}
-        onDoriasAddClick={() => setShowCosmetics(true)}
-        actions={<NotificationsBell />}
-      />
-
-      <CosmeticsModal open={showCosmetics} onClose={closeCosmetics} />
-    </>
+    <TopNavbar
+      userName={firstName}
+      userLevel={level}
+      userXp={xpInLevel}
+      xpMax={xpToNext}
+      doriasAmount={cosmeticos.moedas}
+      avatar={
+        <UserAvatar
+          nome={firstName}
+          avatarUrl={user?.avatar_url}
+          moldura={cosmeticos.moldura_equipada ?? null}
+          size="sm"
+          className="top-navbar__identity-avatar"
+        />
+      }
+      userTitle={equippedTitle}
+      titleClassName={titleClassName}
+      coinsEarnedPulse={coinsEarnedPulse}
+      onProfileClick={() => navigate('/perfil')}
+      actions={<NotificationsBell />}
+    />
   );
 }

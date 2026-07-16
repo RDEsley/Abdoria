@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthAlert } from '@/components/auth/AuthAlert';
 import { AuthField } from '@/components/auth/AuthField';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
+import { GameAlertBanner } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import {
   validateEmail,
@@ -149,7 +149,7 @@ export function RegisterPage() {
           />
 
           {submitError && (
-            <AuthAlert
+            <GameAlertBanner
               variant="error"
               title="Não foi possível criar a conta"
               message={submitError}

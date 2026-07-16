@@ -1,4 +1,4 @@
-/* Top Navbar — base clara minimal; skins cosméticas pintam por cima */
+/* Top Navbar — fixa, sem skin cosmética (Rodada 4, Grupo 3) */
 .top-navbar {
   padding-top: env(safe-area-inset-top, 0px);
   background: rgba(255, 255, 255, 0.92);
@@ -10,55 +10,6 @@
 
 .top-navbar__inner {
   min-height: 5.15rem;
-}
-
-/* Skin: navbar fixa pintada com o fundo cosmético equipado */
-.top-navbar--skinned {
-  border-bottom-color: rgba(28, 25, 23, 0.55);
-}
-
-.top-navbar--skinned::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 12, 20, 0.58);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.top-navbar--skinned > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Skin claro (fundos claros como praia) — overlay claro + nome escuro */
-.top-navbar--skinned-light {
-  border-bottom-color: rgba(28, 25, 23, 0.32);
-}
-
-.top-navbar--skinned-light::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.26);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.top-navbar--skinned-light > * {
-  position: relative;
-  z-index: 1;
-}
-
-.top-navbar--skinned-light .top-navbar__name {
-  color: #0f172a;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
-}
-
-.top-navbar--skinned-light
-  .top-navbar__title:not(.cosmetic-title--dono-do-jogo):not(.cosmetic-title--secreto) {
-  color: #b45309;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 .top-navbar__profile {
@@ -140,22 +91,12 @@
   color: #1c1917;
 }
 
-.top-navbar--skinned .top-navbar__name {
-  color: #f8fafc;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-}
-
 .top-navbar__title {
   font-size: 0.52rem;
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: #b45309;
-}
-
-.top-navbar--skinned .top-navbar__title {
-  color: #fcd34d;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .top-navbar__title.cosmetic-title--dono-do-jogo,
@@ -169,10 +110,6 @@
   border-radius: 999px;
   overflow: hidden;
   background: #e7e5e4;
-}
-
-.top-navbar--skinned .top-navbar__xp-track {
-  background: rgba(255, 255, 255, 0.25);
 }
 
 .top-navbar__xp-fill {
@@ -226,31 +163,6 @@
   color: #1c1917;
   text-align: center;
   white-space: nowrap;
-}
-
-.top-navbar__pill-add {
-  flex-shrink: 0;
-  width: 1.45rem;
-  height: 1.45rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  color: #fff;
-  background: #10b981;
-  transition:
-    background 0.15s ease,
-    transform 0.08s ease;
-}
-
-.top-navbar__pill-add:hover {
-  background: #059669;
-}
-
-.top-navbar__pill-add:active {
-  transform: scale(0.94);
 }
 
 .top-navbar__pill-pulse {

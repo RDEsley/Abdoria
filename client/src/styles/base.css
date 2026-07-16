@@ -14,13 +14,10 @@
 
   --color-brand-glow: rgba(13, 148, 136, 0.12);
   --color-warm-glow: rgba(234, 88, 12, 0.08);
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.85);
-  --glass-shadow: 0 8px 32px rgba(28, 25, 23, 0.06), 0 2px 8px rgba(28, 25, 23, 0.04);
   --top-navbar-height: calc(5.15rem + env(safe-area-inset-top, 0px));
 
   /* Fase 8 — tokens de design system, em :root (não .game-app) pra resolver
-     também fora do app logado (Login/Register não têm a classe .game-app). */
+     também fora do app logado (Login/Registro não têm a classe .game-app). */
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;
@@ -194,33 +191,23 @@ body {
   background-size: 128px 128px;
 }
 
-.glass-panel {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+/* Definição única (Rodada 4, Grupo 3) — antes havia uma versão translúcida
+   aqui e uma sólida em `.game-app .glass-card` (theme.css) que sempre vencia
+   por especificidade dentro do app logado. Consolidado num só resultado,
+   válido dentro e fora de `.game-app` (Login/Registro incluídos). */
+.glass-panel,
+.glass-card {
+  background: var(--game-paper, var(--color-stone-100));
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-resting);
 }
 
 .glass-panel-strong {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 12px 40px rgba(28, 25, 23, 0.08),
-    0 0 0 1px rgba(28, 25, 23, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 4px 20px rgba(28, 25, 23, 0.06),
-    0 1px 3px rgba(28, 25, 23, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--game-paper, var(--color-stone-100));
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
 }
 
 button,

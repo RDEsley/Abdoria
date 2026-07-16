@@ -1,4 +1,4 @@
-/* Login — estilo jogo 2D */
+/* Login — cenário noturno (Rodada 4, Grupo 3) */
 .game-login {
   position: relative;
   display: flex;
@@ -13,8 +13,63 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 90% 50% at 50% -10%, #fff 0%, transparent 45%),
-    linear-gradient(180deg, #38bdf8 0%, #7dd3fc 28%, #bae6fd 55%, #e0f2fe 100%);
+    radial-gradient(circle 1.5px at 8% 15%, #fff, transparent),
+    radial-gradient(circle 1px at 22% 9%, #fff, transparent),
+    radial-gradient(circle 1.5px at 35% 20%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(circle 1px at 48% 6%, #fff, transparent),
+    radial-gradient(circle 1.5px at 61% 16%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(circle 1px at 18% 28%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(circle 1.5px at 40% 32%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(circle 1px at 6% 24%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(ellipse 70% 40% at 78% 8%, rgba(191, 219, 254, 0.14) 0%, transparent 60%),
+    linear-gradient(180deg, #060a16 0%, #0b1130 32%, #172352 62%, #223269 100%);
+}
+
+.game-login__moon {
+  position: absolute;
+  top: 7%;
+  right: 12%;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #fefce8 0%, #fde68a 55%, #fcd34d 100%);
+  box-shadow:
+    0 0 32px 8px rgba(253, 230, 138, 0.35),
+    0 0 80px 26px rgba(253, 230, 138, 0.12);
+  animation: game-moon-glow 5s ease-in-out infinite;
+}
+
+.game-login__moon::before,
+.game-login__moon::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(217, 119, 6, 0.16);
+}
+
+.game-login__moon::before {
+  top: 14px;
+  left: 11px;
+  width: 13px;
+  height: 13px;
+}
+
+.game-login__moon::after {
+  top: 32px;
+  left: 30px;
+  width: 8px;
+  height: 8px;
+}
+
+@keyframes game-moon-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
 }
 
 .game-login__clouds {
@@ -24,24 +79,24 @@
 }
 
 .game-login__clouds--far .game-cloud {
-  opacity: 0.55;
+  opacity: 0.3;
   filter: blur(0.5px);
   animation-name: game-cloud-drift-slow;
 }
 
 .game-login__clouds--near .game-cloud {
-  opacity: 0.92;
+  opacity: 0.55;
   animation-name: game-cloud-drift;
 }
 
 .game-cloud {
   position: absolute;
-  background: #fff;
+  background: #94a3b8;
   border-radius: 999px;
   box-shadow:
-    10px 0 0 #fff,
-    20px 3px 0 #fff,
-    -10px 3px 0 #fff;
+    10px 0 0 #94a3b8,
+    20px 3px 0 #94a3b8,
+    -10px 3px 0 #94a3b8;
   animation: game-cloud-drift 28s linear infinite;
 }
 
@@ -135,7 +190,7 @@
   }
 }
 
-/* Pássaros */
+/* Pássaros — silhueta noturna */
 .game-bird {
   position: absolute;
   z-index: 1;
@@ -149,7 +204,7 @@
   top: 4px;
   width: 9px;
   height: 3px;
-  background: #1c1917;
+  background: #0f172a;
   border-radius: 2px;
   animation: game-bird-flap 0.45s ease-in-out infinite;
 }
@@ -314,19 +369,8 @@
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
-.game-login__error {
-  margin: 0;
-  padding: 0.5rem;
-  font-size: 0.5rem;
-  font-family: 'Press Start 2P', monospace;
-  line-height: 1.5;
-  color: #b91c1c;
-  background: #fee2e2;
-  border: 2px solid #b91c1c;
-}
-
 /* Alertas de autenticação — legíveis, com hierarquia clara */
-.game-auth-alerts {
+.game-toast-banners {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -334,7 +378,7 @@
   text-align: left;
 }
 
-.game-auth-alert {
+.game-toast-banner {
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
@@ -345,16 +389,16 @@
   box-shadow: 0 2px 0 rgba(28, 25, 23, 0.08);
 }
 
-.game-auth-alert__icon {
+.game-toast-banner__icon {
   flex-shrink: 0;
   margin-top: 0.1rem;
 }
 
-.game-auth-alert__body {
+.game-toast-banner__body {
   min-width: 0;
 }
 
-.game-auth-alert__title {
+.game-toast-banner__title {
   margin: 0 0 0.2rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -362,50 +406,50 @@
   letter-spacing: 0.01em;
 }
 
-.game-auth-alert__message {
+.game-toast-banner__message {
   margin: 0;
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.45;
 }
 
-.game-auth-alert--error {
+.game-toast-banner--error {
   color: #991b1b;
   background: linear-gradient(180deg, #fef2f2, #fee2e2);
   border-color: #f87171;
 }
 
-.game-auth-alert--error .game-auth-alert__icon {
+.game-toast-banner--error .game-toast-banner__icon {
   color: #dc2626;
 }
 
-.game-auth-alert--warn {
+.game-toast-banner--warn {
   color: #92400e;
   background: linear-gradient(180deg, #fffbeb, #fef3c7);
   border-color: #fbbf24;
 }
 
-.game-auth-alert--warn .game-auth-alert__icon {
+.game-toast-banner--warn .game-toast-banner__icon {
   color: #d97706;
 }
 
-.game-auth-alert--success {
+.game-toast-banner--success {
   color: #166534;
   background: linear-gradient(180deg, #f0fdf4, #dcfce7);
   border-color: #4ade80;
 }
 
-.game-auth-alert--success .game-auth-alert__icon {
+.game-toast-banner--success .game-toast-banner__icon {
   color: #16a34a;
 }
 
-.game-auth-alert--info {
+.game-toast-banner--info {
   color: #1e40af;
   background: linear-gradient(180deg, #eff6ff, #dbeafe);
   border-color: #60a5fa;
 }
 
-.game-auth-alert--info .game-auth-alert__icon {
+.game-toast-banner--info .game-toast-banner__icon {
   color: #2563eb;
 }
 
@@ -524,23 +568,13 @@
   border-radius: 999px;
 }
 
-.game-login__form .game-auth-alert {
+.game-login__form .game-toast-banner {
   margin-top: 0.15rem;
 }
 
-.game-login__panel > .game-auth-alert {
+.game-login__panel > .game-toast-banner {
   margin-top: 0.75rem;
   text-align: left;
-}
-
-.game-login__error--warn {
-  color: #92400e;
-  background: #fef3c7;
-  border-color: #d97706;
-}
-
-.game-login__error strong {
-  font-weight: 700;
 }
 
 .game-btn {
@@ -737,17 +771,6 @@
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-.game-modal__success {
-  margin: 0;
-  padding: 0.5rem;
-  font-size: 0.45rem;
-  font-family: 'Press Start 2P', monospace;
-  line-height: 1.5;
-  color: #047857;
-  background: #ecfdf5;
-  border: 2px solid #10b981;
-}
-
 .game-modal__close {
   display: block;
   width: 100%;
@@ -837,7 +860,7 @@
   pointer-events: none;
 }
 
-/* Árvores — estilo 2D arredondado */
+/* Árvores — silhueta moonlit */
 .game-tree {
   position: absolute;
   bottom: 0;
@@ -850,8 +873,8 @@
   width: 11px;
   height: 24px;
   margin-top: -2px;
-  background: linear-gradient(90deg, #6b4423 0%, #8b5a2b 40%, #6b4423 100%);
-  border: 2px solid #3f2a14;
+  background: linear-gradient(90deg, #402a15 0%, #573a1e 40%, #402a15 100%);
+  border: 2px solid #241708;
   border-radius: 0 0 3px 3px;
 }
 
@@ -870,10 +893,10 @@
   position: relative;
   width: 54px;
   height: 48px;
-  background: radial-gradient(circle at 35% 30%, #86efac 0%, #22c55e 45%, #15803d 100%);
-  border: 3px solid #14532d;
+  background: radial-gradient(circle at 35% 30%, #4ade80 0%, #16a34a 45%, #0f3d21 100%);
+  border: 3px solid #0b2e18;
   border-radius: 50% 50% 46% 46%;
-  box-shadow: 3px 3px 0 rgba(20, 83, 45, 0.35);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
 }
 
 .game-tree__shine {
@@ -882,7 +905,7 @@
   left: 11px;
   width: 14px;
   height: 10px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(191, 219, 254, 0.25);
   border-radius: 50%;
 }
 
@@ -896,7 +919,7 @@
 .game-tree__blob {
   position: absolute;
   bottom: 0;
-  border: 3px solid #14532d;
+  border: 3px solid #0b2e18;
   border-radius: 50%;
 }
 
@@ -905,7 +928,7 @@
   bottom: 4px;
   width: 34px;
   height: 34px;
-  background: radial-gradient(circle at 40% 35%, #4ade80, #16a34a);
+  background: radial-gradient(circle at 40% 35%, #22c55e, #0f6b32);
 }
 
 .game-tree__blob--c {
@@ -913,7 +936,7 @@
   transform: translateX(-50%);
   width: 42px;
   height: 42px;
-  background: radial-gradient(circle at 38% 32%, #86efac, #22c55e);
+  background: radial-gradient(circle at 38% 32%, #4ade80, #16a34a);
   z-index: 1;
 }
 
@@ -922,15 +945,15 @@
   bottom: 2px;
   width: 30px;
   height: 30px;
-  background: radial-gradient(circle at 40% 35%, #4ade80, #15803d);
+  background: radial-gradient(circle at 40% 35%, #22c55e, #0f5c2b);
 }
 
 /* Muda */
 .game-tree__sapling-top {
   width: 22px;
   height: 22px;
-  background: #4ade80;
-  border: 2px solid #14532d;
+  background: #22c55e;
+  border: 2px solid #0b2e18;
   border-radius: 50%;
 }
 
@@ -938,8 +961,8 @@
   width: 16px;
   height: 16px;
   margin-top: -6px;
-  background: #22c55e;
-  border: 2px solid #14532d;
+  background: #16a34a;
+  border: 2px solid #0b2e18;
   border-radius: 50%;
 }
 
@@ -968,9 +991,9 @@
 .game-bush__leaf {
   position: absolute;
   bottom: 0;
-  border: 2px solid #14532d;
+  border: 2px solid #0b2e18;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #86efac, #22c55e);
+  background: radial-gradient(circle at 35% 30%, #4ade80, #16a34a);
 }
 
 .game-bush__leaf--1 {
@@ -986,7 +1009,7 @@
   width: 26px;
   height: 26px;
   z-index: 1;
-  background: radial-gradient(circle at 35% 30%, #bbf7d0, #16a34a);
+  background: radial-gradient(circle at 35% 30%, #6ee7b7, #0f6b32);
 }
 
 .game-bush__leaf--3 {
@@ -994,7 +1017,7 @@
   width: 20px;
   height: 20px;
   bottom: 1px;
-  background: radial-gradient(circle at 35% 30%, #4ade80, #15803d);
+  background: radial-gradient(circle at 35% 30%, #22c55e, #0f5c2b);
 }
 
 .game-bush--1 {
@@ -1025,8 +1048,8 @@
 .game-rock {
   position: absolute;
   bottom: 2px;
-  background: #78716c;
-  border: 2px solid #44403c;
+  background: #44403c;
+  border: 2px solid #221f1c;
   border-radius: 4px;
 }
 
@@ -1034,14 +1057,14 @@
   left: 42%;
   width: 14px;
   height: 10px;
-  box-shadow: 3px 2px 0 #57534e;
+  box-shadow: 3px 2px 0 #2a2724;
 }
 
 .game-rock--2 {
   right: 14%;
   width: 10px;
   height: 8px;
-  background: #a8a29e;
+  background: #57534e;
 }
 
 .game-login__dirt {
@@ -1053,15 +1076,15 @@
   height: 28px;
   background: repeating-linear-gradient(
     90deg,
-    #92400e 0px,
-    #92400e 8px,
-    #a16207 8px,
-    #a16207 16px,
-    #78350f 16px,
-    #78350f 24px
+    #2e1505 0px,
+    #2e1505 8px,
+    #45210a 8px,
+    #45210a 16px,
+    #200e03 16px,
+    #200e03 24px
   );
-  border-top: 3px solid #451a03;
-  box-shadow: inset 0 4px 0 rgba(0, 0, 0, 0.12);
+  border-top: 3px solid #150a02;
+  box-shadow: inset 0 4px 0 rgba(0, 0, 0, 0.3);
 }
 
 .game-login__grass {
@@ -1073,17 +1096,17 @@
   height: 52px;
   background: repeating-linear-gradient(
     90deg,
-    #4ade80 0px,
-    #4ade80 6px,
+    #22c55e 0px,
     #22c55e 6px,
-    #22c55e 12px,
+    #16a34a 6px,
     #16a34a 12px,
-    #16a34a 18px
+    #0f6b32 12px,
+    #0f6b32 18px
   );
-  border-top: 4px solid #1c1917;
+  border-top: 4px solid #0b0a08;
   box-shadow:
-    inset 0 10px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -6px 0 #15803d;
+    inset 0 10px 0 rgba(191, 219, 254, 0.12),
+    inset 0 -6px 0 #0b4a24;
 }
 
 .game-login__grass::before {
@@ -1097,12 +1120,12 @@
     90deg,
     transparent 0px,
     transparent 14px,
-    #22c55e 14px,
-    #22c55e 16px,
+    #16a34a 14px,
+    #16a34a 16px,
     transparent 16px,
     transparent 28px,
-    #16a34a 28px,
-    #16a34a 30px
+    #0b4a24 28px,
+    #0b4a24 30px
   );
   clip-path: polygon(
     0% 100%,

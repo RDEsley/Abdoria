@@ -37,21 +37,6 @@
     linear-gradient(180deg, #7dd3fc 0%, #bae6fd 35%, #e0f2fe 68%, #ecfdf5 100%);
 }
 
-.game-app .glass-card,
-.game-app .glass-panel,
-.game-app .glass-panel-strong {
-  background: var(--game-paper);
-  border: var(--border-card);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-resting);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.game-app .glass-panel-strong {
-  box-shadow: var(--shadow-raised);
-}
-
 .game-logo-pixel {
   filter: drop-shadow(2px 2px 0 rgba(28, 25, 23, 0.35));
   image-rendering: pixelated;

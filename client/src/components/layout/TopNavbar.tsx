@@ -1,7 +1,6 @@
 ﻿import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Coins, Plus } from 'lucide-react';
-import { CURRENCY_NAME } from '@/types';
+import { Coins } from 'lucide-react';
 
 export interface TopNavbarProps {
   userName: string;
@@ -15,12 +14,7 @@ export interface TopNavbarProps {
   userTitle?: string | null;
   titleClassName?: string;
   coinsEarnedPulse?: number | null;
-  /** Classe do fundo cosmético equipado (ex.: `game-card-banner--vulcao`). */
-  backgroundClass?: string;
-  /** Banner claro (ex.: praia) — usa overlay claro + texto escuro. */
-  backgroundLight?: boolean;
   onProfileClick?: () => void;
-  onDoriasAddClick?: () => void;
   /** Ações extras à direita (ex.: sino de notificações). */
   actions?: ReactNode;
 }
@@ -34,28 +28,16 @@ function formatAmount(value: number): string {
 interface ResourcePillProps {
   icon: ReactNode;
   amount: number;
-  onAdd?: () => void;
-  addAriaLabel: string;
   pulse?: number | null;
 }
 
-function ResourcePill({ icon, amount, onAdd, addAriaLabel, pulse }: ResourcePillProps) {
+function ResourcePill({ icon, amount, pulse }: ResourcePillProps) {
   return (
     <div className="top-navbar__pill">
       <div className="top-navbar__pill-icon" aria-hidden>
         {icon}
       </div>
       <span className="top-navbar__pill-value">{formatAmount(amount)}</span>
-      {onAdd && (
-        <button
-          type="button"
-          className="top-navbar__pill-add"
-          onClick={onAdd}
-          aria-label={addAriaLabel}
-        >
-          <Plus size={13} strokeWidth={3} />
-        </button>
-      )}
       <AnimatePresence>
         {pulse != null && pulse > 0 && (
           <motion.span
@@ -83,16 +65,10 @@ export function TopNavbar({
   userTitle,
   titleClassName,
   coinsEarnedPulse,
-  backgroundClass,
-  backgroundLight,
   onProfileClick,
-  onDoriasAddClick,
   actions,
 }: TopNavbarProps) {
   const xpPct = xpMax > 0 ? Math.min(100, (userXp / xpMax) * 100) : 0;
-  const skinClass = backgroundClass
-    ? `${backgroundLight ? 'top-navbar--skinned-light' : 'top-navbar--skinned'} ${backgroundClass}`
-    : '';
 
   const avatarNode =
     avatar ??
@@ -103,15 +79,13 @@ export function TopNavbar({
     ));
 
   return (
-    <header
-      className={`top-navbar fixed top-0 right-0 left-0 z-50 md:left-64${skinClass ? ` ${skinClass}` : ''}`}
-    >
+    <header className="top-navbar fixed top-0 right-0 left-0 z-50 md:left-64">
       <div className="top-navbar__inner flex items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
         <button
           type="button"
           className="top-navbar__profile flex min-w-0 flex-1 items-center gap-2.5 text-left sm:gap-3"
           onClick={onProfileClick}
-          aria-label="Abrir loja e personalizar perfil"
+          aria-label="Ver perfil"
         >
           <div className="top-navbar__avatar-wrap shrink-0">
             <div className="top-navbar__avatar">{avatarNode}</div>
@@ -146,8 +120,6 @@ export function TopNavbar({
           <ResourcePill
             icon={<Coins size={20} strokeWidth={2.5} className="top-navbar__coin-icon" />}
             amount={doriasAmount}
-            onAdd={onDoriasAddClick}
-            addAriaLabel={`Comprar mais ${CURRENCY_NAME}`}
             pulse={coinsEarnedPulse}
           />
           {actions}
