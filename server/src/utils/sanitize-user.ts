@@ -1,5 +1,6 @@
 import type { UserRecord } from '../types/user-record.js';
-import { DEFAULT_PREFERENCIAS, resolveCosmeticos } from '../types/index.js';
+import { DEFAULT_PREFERENCIAS, resolveCosmeticos, xpLevelFromTotal } from '../types/index.js';
+import type { PublicProfile } from '../types/index.js';
 import { resolveDadosSalvosForUser } from './user-dados.js';
 
 /** Resposta JSON segura do usuário para o client (sem senha). */
@@ -51,6 +52,29 @@ export function sanitizeUser(user: UserRecord | Record<string, unknown>) {
   }
 
   return raw;
+}
+
+/** Perfil público de outro usuário (ranking, futuro social) — whitelist positiva, nunca
+    email/idade/peso/preferências/dados_salvos/inventário/afk/perfil ou plano de treino. */
+export function sanitizePublicProfile(
+  user: UserRecord,
+  podio: { first: number; second: number; third: number },
+): PublicProfile {
+  const cosmeticos = resolveCosmeticos(user.cosmeticos, user.gamificacao.nivel_xp);
+  return {
+    user_id: user.id,
+    nome: user.nome,
+    avatar_url: user.avatar_url ?? null,
+    level: xpLevelFromTotal(user.gamificacao.nivel_xp),
+    streak_atual: user.gamificacao.streak_atual,
+    avatar_equipado: cosmeticos.avatar_equipado,
+    moldura_loja_equipada: cosmeticos.moldura_loja_equipada,
+    moldura_equipada: cosmeticos.moldura_equipada ?? null,
+    titulo_equipado: cosmeticos.titulo_equipado,
+    banner_equipado: cosmeticos.banner_equipado,
+    podio,
+    tempo_jogo_minutos: user.gamificacao.total_minutos,
+  };
 }
 
 export function toIdString(value: unknown): string | undefined {

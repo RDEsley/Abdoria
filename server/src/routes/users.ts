@@ -13,6 +13,8 @@ import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados
 import { awardMoedaFromXp, awardSkillUnlockXp, countNewSkillUnlocks } from '../services/economy.js';
 import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
+import { sanitizePublicProfile } from '../utils/sanitize-user.js';
+import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
 
 export const usersRouter = Router();
 
@@ -33,6 +35,22 @@ usersRouter.get('/me', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('GET /api/users/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
+  }
+});
+
+/** Perfil público de outro usuário (ranking, futuro social) — whitelist positiva. */
+usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(String(req.params.id), { lean: true });
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const podio = await LeaderboardPodiumHistory.countsForUser(user.id);
+    res.json(sanitizePublicProfile(user, podio));
+  } catch (error) {
+    console.error('GET /api/users/:id/public error:', error);
+    res.status(500).json({ error: 'Erro ao buscar perfil.' });
   }
 });
 

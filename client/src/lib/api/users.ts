@@ -3,6 +3,7 @@ import type {
   MolduraId,
   OnboardingPayload,
   PerfilTreino,
+  PublicProfile,
   UpdateUserDadosResponse,
   UserDadosSalvos,
 } from '@/types';
@@ -19,6 +20,10 @@ export interface MolduraStatusResponse {
 
 export function getMe(): Promise<IUserDocument> {
   return fetchJson('/users/me');
+}
+
+export function getPublicProfile(userId: string): Promise<PublicProfile> {
+  return fetchJson(`/users/${userId}/public`);
 }
 
 export function updateMe(data: Partial<IUserDocument>): Promise<IUserDocument> {

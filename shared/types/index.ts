@@ -1376,6 +1376,22 @@ export type LeaderboardMetric = 'xp' | 'streak' | 'moedas';
 
 export const LEADERBOARD_DISPLAY_LIMIT = 25;
 
+/** Perfil público de outro usuário — whitelist positiva, nunca dados sensíveis. */
+export interface PublicProfile {
+  user_id: string;
+  nome: string;
+  avatar_url: string | null;
+  level: number;
+  streak_atual: number;
+  avatar_equipado: string;
+  moldura_loja_equipada: string;
+  moldura_equipada: MolduraId | null;
+  titulo_equipado: string | null;
+  banner_equipado: string;
+  podio: { first: number; second: number; third: number };
+  tempo_jogo_minutos: number;
+}
+
 export interface AuthResponse {
   token: string;
   user: IUserDocument;

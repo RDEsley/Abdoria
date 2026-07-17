@@ -81,6 +81,7 @@
   PatrolShopResponse,
   PatrolWeaponDefinition,
   PatrolWeaponKind,
+  PublicProfile,
 } from '../../../shared/types/index.js';
 
 export {
