@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Lock, Search, X } from 'lucide-react';
+import { Lock, Search, Sparkles, X } from 'lucide-react';
 import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { EquipmentPanel } from '@/components/library/EquipmentPanel';
+import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
@@ -82,6 +83,24 @@ export function LibraryPage() {
     [filtered, isUnlocked],
   );
 
+  const lockedInView = useMemo(
+    () => filtered.filter((ex) => !isUnlocked(ex.slug)),
+    [filtered, isUnlocked],
+  );
+
+  const [revealDelays, setRevealDelays] = useState<Record<string, number>>({});
+
+  const handleUnlockAll = useCallback(() => {
+    const UNLOCK_ALL_STAGGER_MS = 120;
+    setRevealDelays((prev) => {
+      const next = { ...prev };
+      lockedInView.forEach((ex, i) => {
+        next[ex.slug] = i * UNLOCK_ALL_STAGGER_MS;
+      });
+      return next;
+    });
+  }, [lockedInView]);
+
   return (
     <div className="flex flex-col gap-5">
       <GamePageHeader eyebrow="Inventário" title="Biblioteca" />
@@ -156,11 +175,18 @@ export function LibraryPage() {
 
       <EquipmentPanel onEquipmentChange={refreshRecommendations} />
 
-      <p className="text-xs font-bold text-stone-500">
-        {exercisesLoading
-          ? 'Carregando itens...'
-          : `${filtered.length} habilidade(s) · ${filteredUnlockedCount} desbloqueada(s)`}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-bold text-stone-500">
+          {exercisesLoading
+            ? 'Carregando itens...'
+            : `${filtered.length} habilidade(s) · ${filteredUnlockedCount} desbloqueada(s)`}
+        </p>
+        {!exercisesLoading && lockedInView.length > 0 && (
+          <GameButton size="sm" onClick={handleUnlockAll} className="shrink-0">
+            <Sparkles size={14} /> Desbloquear tudo ({lockedInView.length})
+          </GameButton>
+        )}
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {exercisesLoading
@@ -175,6 +201,7 @@ export function LibraryPage() {
                 isBlocked={blockedExerciseSlugs.includes(exercise.slug)}
                 onTogglePin={toggleExercisePin}
                 onToggleBlock={toggleExerciseBlock}
+                autoRevealDelayMs={revealDelays[exercise.slug]}
               />
             ))}
       </div>
