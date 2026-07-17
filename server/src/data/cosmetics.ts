@@ -1,97 +1,7 @@
 ﻿import type { CosmeticDefinition } from '../types/index.js';
 
-/** Catálogo de avatares e molduras desbloqueáveis por nível, conquista ou moedas. */
+/** Catálogo de molduras e demais cosméticos desbloqueáveis por nível, conquista ou moedas. */
 export const COSMETICS: CosmeticDefinition[] = [
-  {
-    id: 'avatar_inicial',
-    kind: 'avatar',
-    nome: 'Inicial',
-    descricao: 'Sua inicial no estilo clássico do Abdoria — simples e direto.',
-    icon: 'letter',
-    raridade: 'comum',
-    unlock: { tipo: 'gratis' },
-  },
-  {
-    id: 'avatar_portal',
-    kind: 'avatar',
-    nome: 'Portal',
-    descricao: 'Portal de aventura na selva — luz dourada e vibe de missão épica.',
-    icon: 'star',
-    raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 45 },
-  },
-  {
-    id: 'avatar_chama',
-    kind: 'avatar',
-    nome: 'Chama',
-    descricao: 'Um dragãozinho cuspindo fogo no vulcão. Desbloqueie no nível 3.',
-    icon: 'flame',
-    raridade: 'comum',
-    unlock: { tipo: 'nivel', nivel_min: 3 },
-  },
-  {
-    id: 'avatar_estrela',
-    kind: 'avatar',
-    nome: 'Estrela',
-    descricao: 'Blob alienígena perdido na nebulosa. Nível 5.',
-    icon: 'star',
-    raridade: 'raro',
-    unlock: { tipo: 'nivel', nivel_min: 5 },
-  },
-  {
-    id: 'avatar_trofeu',
-    kind: 'avatar',
-    nome: 'Troféu',
-    descricao: 'Pato campeão erguendo o troféu dourado. 7 dias de streak.',
-    icon: 'trophy',
-    raridade: 'raro',
-    unlock: { tipo: 'conquista', conquista_id: 'streak_7' },
-  },
-  {
-    id: 'avatar_haltere',
-    kind: 'avatar',
-    nome: 'Haltere',
-    descricao: 'Hamster fortão levantando peso absurdamente pesado.',
-    icon: 'dumbbell',
-    raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 35 },
-  },
-  {
-    id: 'avatar_coracao',
-    kind: 'avatar',
-    nome: 'Coração',
-    descricao: 'Sapo-coroa romântico feito de corações. Puro amor pelo core.',
-    icon: 'heart',
-    raridade: 'epico',
-    unlock: { tipo: 'moedas', preco_moedas: 55 },
-  },
-  {
-    id: 'avatar_coroa',
-    kind: 'avatar',
-    nome: 'Coroa',
-    descricao: 'Dragão real com coroa de ouro no cosmos. Nível 10.',
-    icon: 'crown',
-    raridade: 'lendario',
-    unlock: { tipo: 'nivel', nivel_min: 10 },
-  },
-  {
-    id: 'avatar_foguete',
-    kind: 'avatar',
-    nome: 'Foguete',
-    descricao: 'Pato astronauta decolando no foguete retrô. Lendário!',
-    icon: 'rocket',
-    raridade: 'lendario',
-    unlock: { tipo: 'conquista', conquista_id: 'xp_mestre' },
-  },
-  {
-    id: 'avatar_escudo',
-    kind: 'avatar',
-    nome: 'Escudo',
-    descricao: 'Capivara cavaleira com armadura esmeralda. 30 dias de streak.',
-    icon: 'shield',
-    raridade: 'epico',
-    unlock: { tipo: 'conquista', conquista_id: 'streak_30' },
-  },
   {
     id: 'borda_basica',
     kind: 'moldura_loja',
@@ -639,5 +549,4 @@ export const COSMETIC_BY_ID = Object.fromEntries(
   COSMETICS.map((item) => [item.id, item]),
 ) as Record<string, CosmeticDefinition>;
 
-export const DEFAULT_AVATAR_ID = 'avatar_inicial';
 export const DEFAULT_BORDA_ID = 'borda_basica';

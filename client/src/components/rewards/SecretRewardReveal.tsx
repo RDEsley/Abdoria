@@ -69,11 +69,7 @@ export function SecretRewardReveal({ item, golden = false, onContinue }: Props) 
         <div className={`reward-secret-frame${golden ? ' reward-secret-frame--golden' : ''}`}>
           <div className="reward-secret-frame__inner">
             {item.kind === 'cosmetic' || item.kind === 'secret_title' ? (
-              <CosmeticIcon
-                icon={(item.icon ?? 'star') as never}
-                avatarId={item.cosmeticId?.startsWith('avatar_') ? item.cosmeticId : undefined}
-                size={72}
-              />
+              <CosmeticIcon icon={(item.icon ?? 'star') as never} size={72} />
             ) : (
               <span className="reward-secret-frame__icon">
                 <AfkRewardIcon item={afkItem} size={48} />

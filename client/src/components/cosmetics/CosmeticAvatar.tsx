@@ -1,4 +1,3 @@
-import { AvatarPortrait } from '@/components/cosmetics/AvatarPortrait';
 import { CosmeticAvatarBorderFx } from '@/components/cosmetics/CosmeticAvatarBorderFx';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import { resolveCosmeticos } from '@/types';
@@ -8,7 +7,6 @@ interface Props {
   user: IUserDocument | null;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  avatarId?: string;
   borderId?: string;
 }
 
@@ -18,25 +16,34 @@ const SIZE_CLASS = {
   lg: 'game-cosmetic-avatar--lg',
 } as const;
 
-export function CosmeticAvatar({ user, size = 'md', className = '', avatarId, borderId }: Props) {
+/** Retrato de identidade: foto enviada pelo usuário ou a inicial do nome, com a
+    moldura de loja equipada. Não há mais skins de avatar — só foto ou inicial. */
+export function CosmeticAvatar({ user, size = 'md', className = '', borderId }: Props) {
   const cosmeticos = resolveCosmeticos(user?.cosmeticos);
-  const resolvedAvatarId = avatarId ?? cosmeticos.avatar_equipado;
   const resolvedBorderId = borderId ?? cosmeticos.moldura_loja_equipada;
-  const avatarDef = COSMETIC_BY_ID[resolvedAvatarId];
   const borderDef = COSMETIC_BY_ID[resolvedBorderId];
   const firstName = user?.nome?.split(' ')[0] ?? 'A';
   const borderClass = borderDef
     ? `game-cosmetic-avatar--border-${borderDef.id.replace('borda_', '')}`
     : '';
-  const initialClass = resolvedAvatarId === 'avatar_inicial' ? 'game-cosmetic-avatar--inicial' : '';
 
   return (
-    <div
-      className={`game-cosmetic-avatar ${SIZE_CLASS[size]} ${borderClass} ${initialClass} ${className}`.trim()}
-      title={avatarDef?.nome}
-    >
+    <div className={`game-cosmetic-avatar ${SIZE_CLASS[size]} ${borderClass} ${className}`.trim()}>
       {borderDef && <CosmeticAvatarBorderFx borderId={borderDef.id} />}
-      <AvatarPortrait avatarId={resolvedAvatarId} letter={firstName} title={avatarDef?.nome} />
+      {user?.avatar_url ? (
+        <span className="game-avatar-portrait">
+          <img
+            src={user.avatar_url}
+            alt=""
+            className="game-avatar-portrait__img"
+            draggable={false}
+          />
+        </span>
+      ) : (
+        <span className="game-avatar-initial-letter" aria-hidden>
+          {firstName.charAt(0).toUpperCase() || 'A'}
+        </span>
+      )}
     </div>
   );
 }

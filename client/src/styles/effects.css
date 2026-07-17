@@ -589,16 +589,12 @@
   border: 2px solid rgba(28, 25, 23, 0.12);
 }
 
-.game-shop-row__thumb-inner--avatar {
+.game-shop-row__thumb-inner--badge {
   padding: 0;
   overflow: hidden;
   background: #0f172a;
   border: 2px solid rgba(28, 25, 23, 0.2);
   box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.15);
-}
-
-.game-shop-row__thumb-inner--avatar:has(.game-avatar-initial-letter) {
-  background: #38bdf8;
 }
 
 .game-shop-row__thumb-ring {

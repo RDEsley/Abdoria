@@ -386,7 +386,7 @@ export interface Gamificacao {
   >;
 }
 
-export type CosmeticKind = 'avatar' | 'moldura_loja' | 'titulo' | 'som' | 'efeito' | 'banner';
+export type CosmeticKind = 'moldura_loja' | 'titulo' | 'som' | 'efeito' | 'banner';
 
 export type CosmeticUnlockType =
   'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo' | 'afk_secreto' | 'golden_slime';
@@ -401,8 +401,6 @@ export type DailyShopPaidOfferKind = 'surto_xp' | 'bolsa_abdoria' | 'pacote_mist
 
 export type DailyShopSlotKind = 'recompensa_diaria' | 'oferta';
 
-export type CosmeticAvatarIcon = AchievementIcon | 'letter';
-
 export interface CosmeticUnlockRule {
   tipo: CosmeticUnlockType;
   nivel_min?: number;
@@ -415,7 +413,7 @@ export interface CosmeticDefinition {
   kind: CosmeticKind;
   nome: string;
   descricao: string;
-  icon: CosmeticAvatarIcon;
+  icon: AchievementIcon;
   raridade: CosmeticRarity;
   unlock: CosmeticUnlockRule;
 }
@@ -435,7 +433,6 @@ export interface Cosmeticos {
   moedas: number;
   /** Blocos de XP já convertidos em Dorias. */
   moedas_xp_blocos: number;
-  avatar_equipado: string;
   moldura_loja_equipada: string;
   titulo_equipado: string | null;
   som_equipado: string;
@@ -497,13 +494,11 @@ export interface ShopResponse {
   abdoria_to_xp_rate: number;
   /** Dorias passivas a cada N XP totais. */
   abdoria_por_xp: number;
-  avatar_equipado: string;
   moldura_loja_equipada: string;
   titulo_equipado: string | null;
   som_equipado: string;
   efeito_equipado: string;
   banner_equipado: string;
-  avatares: ShopCatalogItem[];
   molduras_loja: ShopCatalogItem[];
   titulos: ShopCatalogItem[];
   sons: ShopCatalogItem[];
@@ -898,19 +893,12 @@ export const DAILY_PAID_OFFER_LABELS: Record<DailyShopPaidOfferKind, string> = {
 export const DEFAULT_COSMETICOS: Cosmeticos = {
   moedas: 0,
   moedas_xp_blocos: 0,
-  avatar_equipado: 'avatar_inicial',
   moldura_loja_equipada: 'borda_basica',
   titulo_equipado: null,
   som_equipado: 'som_classico',
   efeito_equipado: 'efeito_padrao',
   banner_equipado: 'fundo_padrao',
-  desbloqueados: [
-    'avatar_inicial',
-    'borda_basica',
-    'som_classico',
-    'efeito_padrao',
-    'fundo_padrao',
-  ],
+  desbloqueados: ['borda_basica', 'som_classico', 'efeito_padrao', 'fundo_padrao'],
   codigos_resgatados: [],
 };
 
@@ -1362,7 +1350,6 @@ export interface LeaderboardEntry {
   week_value?: number | null;
   /** Foto de perfil; null = círculo com a inicial do nome. */
   avatar_url?: string | null;
-  avatar_equipado: string;
   moldura_loja_equipada: string;
   moldura_equipada?: MolduraId | null;
   /** Contador sobreposto à moldura (pódios naquela posição). */
@@ -1383,7 +1370,6 @@ export interface PublicProfile {
   avatar_url: string | null;
   level: number;
   streak_atual: number;
-  avatar_equipado: string;
   moldura_loja_equipada: string;
   moldura_equipada: MolduraId | null;
   titulo_equipado: string | null;

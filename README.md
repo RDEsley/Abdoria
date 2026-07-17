@@ -80,7 +80,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
   - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
 
 ### Personalizar e recompensar
-- **Loja Abdoria** — avatares, bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
+- **Loja Abdoria** — bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
 - **Loja da Exploração** — arcos compráveis com Dorias; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
 - **Inventário** — Energy Drinks, cosméticos, itens da exploração e gestão de **overflow** (itens além do limite)
 - **Loja diária** — recompensa grátis + ofertas que renovam todo dia

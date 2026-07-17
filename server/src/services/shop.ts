@@ -18,12 +18,7 @@ import {
   isGiftCodeExpired,
   type GiftCodeDefinition,
 } from '../data/gift-codes.js';
-import {
-  COSMETIC_BY_ID,
-  COSMETICS,
-  DEFAULT_AVATAR_ID,
-  DEFAULT_BORDA_ID,
-} from '../data/cosmetics.js';
+import { COSMETIC_BY_ID, COSMETICS, DEFAULT_BORDA_ID } from '../data/cosmetics.js';
 import { User } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import type {
@@ -187,8 +182,6 @@ export function syncShopUnlocks(user: UserDoc): void {
 
   user.cosmeticos.desbloqueados = [...unlocked];
 
-  if (!unlocked.has(user.cosmeticos.avatar_equipado))
-    user.cosmeticos.avatar_equipado = DEFAULT_AVATAR_ID;
   if (!unlocked.has(user.cosmeticos.moldura_loja_equipada))
     user.cosmeticos.moldura_loja_equipada = DEFAULT_BORDA_ID;
   if (!unlocked.has(user.cosmeticos.som_equipado)) user.cosmeticos.som_equipado = DEFAULT_SOM_ID;
@@ -566,8 +559,6 @@ function regenerateDailyShop(loja: ReturnType<typeof ensureLojaDiaria>, today: s
 
 function isEquipped(user: UserDoc, item: CosmeticDefinition): boolean {
   switch (item.kind) {
-    case 'avatar':
-      return user.cosmeticos.avatar_equipado === item.id;
     case 'moldura_loja':
       return user.cosmeticos.moldura_loja_equipada === item.id;
     case 'titulo':
@@ -624,13 +615,11 @@ export function buildShopResponse(user: UserDoc): ShopResponse {
     xp_to_abdoria_rate: SHOP_XP_COST_PER_MOEDA,
     abdoria_to_xp_rate: SHOP_MOEDA_COST_PER_XP,
     abdoria_por_xp: MOEDA_XP_STEP,
-    avatar_equipado: user.cosmeticos.avatar_equipado,
     moldura_loja_equipada: user.cosmeticos.moldura_loja_equipada,
     titulo_equipado: user.cosmeticos.titulo_equipado ?? null,
     som_equipado: user.cosmeticos.som_equipado,
     efeito_equipado: user.cosmeticos.efeito_equipado,
     banner_equipado: user.cosmeticos.banner_equipado,
-    avatares: byKind('avatar'),
     molduras_loja: byKind('moldura_loja'),
     titulos: byKind('titulo'),
     sons: byKind('som'),
@@ -690,9 +679,6 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
   }
 
   switch (kind) {
-    case 'avatar':
-      user.cosmeticos.avatar_equipado = item.id;
-      break;
     case 'moldura_loja':
       user.cosmeticos.moldura_loja_equipada = item.id;
       break;

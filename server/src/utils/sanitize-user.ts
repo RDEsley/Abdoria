@@ -67,7 +67,6 @@ export function sanitizePublicProfile(
     avatar_url: user.avatar_url ?? null,
     level: xpLevelFromTotal(user.gamificacao.nivel_xp),
     streak_atual: user.gamificacao.streak_atual,
-    avatar_equipado: cosmeticos.avatar_equipado,
     moldura_loja_equipada: cosmeticos.moldura_loja_equipada,
     moldura_equipada: cosmeticos.moldura_equipada ?? null,
     titulo_equipado: cosmeticos.titulo_equipado,

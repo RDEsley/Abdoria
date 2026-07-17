@@ -38,7 +38,6 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
     cosmeticos: {
       moedas: 99_999,
       moedas_xp_blocos: Math.floor(nivelXp / MOEDA_XP_STEP),
-      avatar_equipado: 'avatar_coroa',
       moldura_loja_equipada: 'borda_lendario',
       titulo_equipado: 'titulo_dono_do_jogo',
       som_equipado: 'som_epico',

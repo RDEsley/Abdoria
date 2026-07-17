@@ -58,7 +58,7 @@ cosmeticsRouter.patch('/equip', async (req: AuthRequest, res) => {
     const kind = req.body?.kind as CosmeticKind;
     const cosmeticId = String(req.body?.id ?? '');
 
-    if (kind !== 'avatar' && kind !== 'moldura_loja') {
+    if (kind !== 'moldura_loja') {
       res.status(400).json({ error: 'Tipo de item inválido.' });
       return;
     }

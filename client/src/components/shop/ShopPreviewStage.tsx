@@ -6,7 +6,6 @@ import type { CosmeticKind, IUserDocument } from '@/types';
 import { resolveCosmeticos } from '@/types';
 
 interface PreviewState {
-  avatar?: string;
   moldura_loja?: string;
   titulo?: string;
   banner?: string;
@@ -30,7 +29,6 @@ export function ShopPreviewStage({
   onResetPreview,
 }: Props) {
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const avatarId = preview.avatar ?? cosmeticos.avatar_equipado;
   const borderId = preview.moldura_loja ?? cosmeticos.moldura_loja_equipada;
   const titleId = preview.titulo ?? cosmeticos.titulo_equipado;
   const bannerId = preview.banner ?? cosmeticos.banner_equipado;
@@ -39,7 +37,6 @@ export function ShopPreviewStage({
   const titleName = titleId ? COSMETIC_BY_ID[titleId]?.nome : null;
 
   const previewFlags: Partial<Record<CosmeticKind, boolean>> = {
-    avatar: Boolean(preview.avatar && preview.avatar !== cosmeticos.avatar_equipado),
     moldura_loja: Boolean(
       preview.moldura_loja && preview.moldura_loja !== cosmeticos.moldura_loja_equipada,
     ),
@@ -76,7 +73,7 @@ export function ShopPreviewStage({
 
         <div className="game-shop-preview__stage">
           <EffectPreview effectId={effectId} />
-          <CosmeticAvatar user={user} size="lg" avatarId={avatarId} borderId={borderId} />
+          <CosmeticAvatar user={user} size="lg" borderId={borderId} />
         </div>
 
         <div className="game-shop-preview__meta">
@@ -85,7 +82,6 @@ export function ShopPreviewStage({
         </div>
 
         <div className="game-shop-preview__tags">
-          {previewFlags.avatar && <span className="game-shop-preview__tag">Ícone teste</span>}
           {previewFlags.moldura_loja && (
             <span className="game-shop-preview__tag">Moldura teste</span>
           )}

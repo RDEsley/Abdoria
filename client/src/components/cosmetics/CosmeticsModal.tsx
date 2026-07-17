@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Coins, Crown, Frame, Image, Music, UserRound, Wand2 } from 'lucide-react';
+import { Coins, Crown, Frame, Image, Music, Wand2 } from 'lucide-react';
 import { ShopItemRow } from '@/components/shop/ShopItemRow';
 import { MoedaGuideOverlay } from '@/components/shop/MoedaGuideOverlay';
 import { ShopPreviewStage } from '@/components/shop/ShopPreviewStage';
@@ -30,12 +30,7 @@ interface Props {
 }
 
 type ShopSectionId =
-  | 'shop-avatares'
-  | 'shop-moldura-loja'
-  | 'shop-titulos'
-  | 'shop-banners'
-  | 'shop-sons'
-  | 'shop-efeitos';
+  'shop-moldura-loja' | 'shop-titulos' | 'shop-banners' | 'shop-sons' | 'shop-efeitos';
 
 type PreviewState = Partial<Record<CosmeticKind, string>>;
 
@@ -43,9 +38,8 @@ const SECTIONS: {
   id: ShopSectionId;
   kind: CosmeticKind;
   label: string;
-  icon: typeof UserRound;
+  icon: typeof Frame;
 }[] = [
-  { id: 'shop-avatares', kind: 'avatar', label: 'Ícones', icon: UserRound },
   { id: 'shop-moldura-loja', kind: 'moldura_loja', label: 'Molduras', icon: Frame },
   { id: 'shop-titulos', kind: 'titulo', label: 'Títulos', icon: Crown },
   { id: 'shop-banners', kind: 'banner', label: 'Banners', icon: Image },
@@ -55,7 +49,6 @@ const SECTIONS: {
 
 function catalogByKind(catalog: ShopResponse, kind: CosmeticKind): ShopCatalogItem[] {
   const map: Record<CosmeticKind, ShopCatalogItem[]> = {
-    avatar: catalog.avatares,
     moldura_loja: catalog.molduras_loja,
     titulo: catalog.titulos,
     banner: catalog.banners ?? [],
@@ -74,7 +67,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const observerPausedRef = useRef(false);
   const observerResumeTimer = useRef<number | null>(null);
 
-  const [activeSection, setActiveSection] = useState<ShopSectionId>('shop-avatares');
+  const [activeSection, setActiveSection] = useState<ShopSectionId>('shop-moldura-loja');
   const [preview, setPreview] = useState<PreviewState>({});
   const [catalog, setCatalog] = useState<ShopResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -90,7 +83,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
 
   const hasPreviewOverrides = useMemo(() => {
     return (
-      (preview.avatar !== undefined && preview.avatar !== cosmeticos.avatar_equipado) ||
       (preview.moldura_loja !== undefined &&
         preview.moldura_loja !== cosmeticos.moldura_loja_equipada) ||
       (preview.titulo !== undefined &&
@@ -115,7 +107,7 @@ export function CosmeticsModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
     setPreview({});
-    setActiveSection('shop-avatares');
+    setActiveSection('shop-moldura-loja');
     setCoinsGuideOpen(false);
     void loadCatalog();
     const onKeyDown = (e: KeyboardEvent) => {
@@ -356,7 +348,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
                                 <ShopItemRow
                                   key={item.id}
                                   item={item}
-                                  letter={firstName}
                                   busy={busyId === item.id}
                                   isPreviewing={isPreviewingItem(item)}
                                   onPreview={() => handlePreview(item)}

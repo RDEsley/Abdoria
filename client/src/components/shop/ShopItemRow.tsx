@@ -5,7 +5,6 @@ import { COSMETIC_RARITY_LABELS, type ShopCatalogItem } from '@/types';
 
 interface Props {
   item: ShopCatalogItem;
-  letter: string;
   busy: boolean;
   isPreviewing: boolean;
   onPreview: () => void;
@@ -17,7 +16,7 @@ function rarityFrameClass(raridade: ShopCatalogItem['raridade']) {
   return `game-shop-row--${raridade}`;
 }
 
-function ItemThumb({ item, letter }: { item: ShopCatalogItem; letter: string }) {
+function ItemThumb({ item }: { item: ShopCatalogItem }) {
   if (item.kind === 'banner') {
     return (
       <div
@@ -38,30 +37,15 @@ function ItemThumb({ item, letter }: { item: ShopCatalogItem; letter: string }) 
   }
 
   return (
-    <div className="game-shop-row__thumb-inner game-shop-row__thumb-inner--avatar">
-      <CosmeticIcon
-        icon={item.icon}
-        avatarId={item.id}
-        letter={letter}
-        size={18}
-        unlocked={item.desbloqueada}
-      />
+    <div className="game-shop-row__thumb-inner game-shop-row__thumb-inner--badge">
+      <CosmeticIcon icon={item.icon} size={18} unlocked={item.desbloqueada} />
     </div>
   );
 }
 
-export function ShopItemRow({
-  item,
-  letter,
-  busy,
-  isPreviewing,
-  onPreview,
-  onEquip,
-  onPurchase,
-}: Props) {
+export function ShopItemRow({ item, busy, isPreviewing, onPreview, onEquip, onPurchase }: Props) {
   const canPreview =
     item.desbloqueada ||
-    item.kind === 'avatar' ||
     item.kind === 'moldura_loja' ||
     item.kind === 'titulo' ||
     item.kind === 'banner' ||
@@ -76,7 +60,7 @@ export function ShopItemRow({
       <div className="game-shop-row__ornament game-shop-row__ornament--right" aria-hidden />
 
       <div className="game-shop-row__thumb">
-        <ItemThumb item={item} letter={letter} />
+        <ItemThumb item={item} />
         {!item.desbloqueada && (
           <span className="game-shop-row__lock">
             <Lock size={12} />

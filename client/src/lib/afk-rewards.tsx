@@ -25,8 +25,8 @@ import {
   FROZEN_STREAK_LABEL,
   PATROL_WEAPON_BY_ID,
   isGoldenSlimeSecretCosmetic,
+  type AchievementIcon,
   type AfkPendingReward,
-  type CosmeticAvatarIcon,
 } from '@/types';
 import { countAfkDropEvents } from '@shared/utils/afk';
 
@@ -69,7 +69,7 @@ export interface AfkRewardItem {
   kind: AfkRewardKind;
   amount?: number;
   cosmeticId?: string;
-  cosmeticIcon?: CosmeticAvatarIcon;
+  cosmeticIcon?: AchievementIcon;
   secret?: boolean;
   rarity?: AfkRewardRarity;
   description?: string;
@@ -186,7 +186,7 @@ export function buildAfkRewardItems(pending: AfkPendingReward | null | undefined
   }
   (pending.cosmetic_ids ?? []).forEach((id) => {
     const meta = COSMETIC_BY_ID[id];
-    const icon = (meta?.icon ?? 'star') as CosmeticAvatarIcon;
+    const icon = (meta?.icon ?? 'star') as AchievementIcon;
     items.push({
       key: id,
       kind: 'cosmetic',
@@ -258,13 +258,7 @@ export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?:
     );
   }
   if (item.cosmeticIcon) {
-    return (
-      <CosmeticIcon
-        icon={item.cosmeticIcon}
-        avatarId={item.cosmeticId?.startsWith('avatar_') ? item.cosmeticId : undefined}
-        size={size}
-      />
-    );
+    return <CosmeticIcon icon={item.cosmeticIcon} size={size} />;
   }
   return <Sparkles size={size} aria-hidden />;
 }

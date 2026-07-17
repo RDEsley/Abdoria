@@ -2,16 +2,6 @@
 import type { CosmeticRarity } from '@/types';
 
 export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: string }> = {
-  avatar_inicial: { id: 'avatar_inicial', nome: 'Inicial', icon: 'letter' },
-  avatar_portal: { id: 'avatar_portal', nome: 'Portal', icon: 'star' },
-  avatar_chama: { id: 'avatar_chama', nome: 'Chama', icon: 'flame' },
-  avatar_estrela: { id: 'avatar_estrela', nome: 'Estrela', icon: 'star' },
-  avatar_trofeu: { id: 'avatar_trofeu', nome: 'Troféu', icon: 'trophy' },
-  avatar_haltere: { id: 'avatar_haltere', nome: 'Haltere', icon: 'dumbbell' },
-  avatar_coracao: { id: 'avatar_coracao', nome: 'Coração', icon: 'heart' },
-  avatar_coroa: { id: 'avatar_coroa', nome: 'Coroa', icon: 'crown' },
-  avatar_foguete: { id: 'avatar_foguete', nome: 'Foguete', icon: 'rocket' },
-  avatar_escudo: { id: 'avatar_escudo', nome: 'Escudo', icon: 'shield' },
   borda_basica: { id: 'borda_basica', nome: 'Básica', icon: 'shield' },
   borda_bronze: { id: 'borda_bronze', nome: 'Bronze', icon: 'medal' },
   borda_prata: { id: 'borda_prata', nome: 'Prata', icon: 'star' },

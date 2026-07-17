@@ -45,7 +45,6 @@ type EntryUser = {
   gamificacao: { nivel_xp: number; streak_atual: number };
   cosmeticos?: {
     moedas?: number | null;
-    avatar_equipado?: string | null;
     moldura_loja_equipada?: string | null;
     moldura_equipada?: MolduraId | null;
   } | null;
@@ -77,7 +76,6 @@ function toEntry(
     moedas: readMoedaBalance(user),
     week_value: weekValue,
     avatar_url: user.avatar_url ?? null,
-    avatar_equipado: user.cosmeticos?.avatar_equipado ?? 'avatar_inicial',
     moldura_loja_equipada: user.cosmeticos?.moldura_loja_equipada ?? 'borda_basica',
     moldura_equipada: moldura,
     // A moldura especial mostra a contagem de itens secretos — não vem do pódio;

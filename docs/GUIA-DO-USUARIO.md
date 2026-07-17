@@ -80,7 +80,7 @@ No painel você vê **dois indicadores**: um amarelo (diário) e um roxo (extra)
 
 ### Loja Abdoria
 Abra pelo seu **avatar** no topo. Lá você:
-- Testa avatares, bordas, títulos, sons e efeitos antes de comprar
+- Testa bordas, títulos, sons e efeitos antes de comprar
 - Gasta **Dorias** em itens premium
 - Desbloqueia itens por nível ou conquista
 
