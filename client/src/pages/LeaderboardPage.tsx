@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Coins, Trophy } from 'lucide-react';
+import { Coins, Locate, Trophy } from 'lucide-react';
+import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
@@ -15,22 +15,26 @@ import {
   type LeaderboardMetric,
 } from '@/types';
 
-const PODIUM_SLOTS = [
-  { entryIndex: 1, medal: 'silver', height: 'h-28' },
-  { entryIndex: 0, medal: 'gold', height: 'h-36' },
-  { entryIndex: 2, medal: 'bronze', height: 'h-24' },
-] as const;
-
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'xp', label: 'Pontos (XP)' },
   { id: 'moedas', label: CURRENCY_NAME },
   { id: 'streak', label: 'Dias seguidos' },
 ];
 
-function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
-  if (metric === 'xp') return `Nv.${entry.level}`;
-  if (metric === 'streak') return `${entry.streak_atual}d`;
-  return `${entry.week_value ?? entry.moedas} ${CURRENCY_NAME}`;
+// Faixa aproximada pra quem está fora do top 25 — só entra em jogo se o total de
+// participantes realmente justificar (senão "Top 250" com 40 usuários é ruído, não sinal).
+const RANK_BANDS = [250, 500, 1000] as const;
+
+function formatRankBand(rank: number, total: number | null | undefined): string | undefined {
+  if (!total || rank <= 25) return undefined;
+  for (const band of RANK_BANDS) {
+    if (total > band && rank <= band) return `Top ${band}`;
+  }
+  return total > 1000 ? '1000+' : undefined;
+}
+
+function scrollToMyPosition() {
+  document.getElementById('my-rank-row')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function WeeklyRewardBadge({ rank, metric }: { rank: number; metric: LeaderboardMetric }) {
@@ -62,14 +66,19 @@ function RankRow({
   entry,
   metric,
   label,
+  rankLabel,
 }: {
   entry: LeaderboardEntry;
   metric: LeaderboardMetric;
   label?: string;
+  rankLabel?: string;
 }) {
   return (
-    <li className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}>
-      <span className="game-rank-row__rank">#{entry.rank}</span>
+    <li
+      id={entry.is_me ? 'my-rank-row' : undefined}
+      className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}
+    >
+      <span className="game-rank-row__rank">{rankLabel ?? `#${entry.rank}`}</span>
       <LeaderboardUserAvatar entry={entry} size="sm" />
       <div className="game-rank-row__main">
         <span className="game-rank-row__name">{label ?? entry.nome}</span>
@@ -110,7 +119,19 @@ export function LeaderboardPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
+      <div className="flex items-start justify-between gap-3">
+        <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
+        {me != null && (
+          <button
+            type="button"
+            className="game-btn game-btn--ghost game-btn--sm shrink-0"
+            onClick={scrollToMyPosition}
+          >
+            <Locate size={14} aria-hidden />
+            Minha posição
+          </button>
+        )}
+      </div>
 
       {metric !== 'streak' && <LeaderboardResetCountdown />}
 
@@ -140,45 +161,7 @@ export function LeaderboardPage() {
         <PageLoader />
       ) : (
         <>
-          {top3.length > 0 && (
-            <div className="game-podium">
-              {PODIUM_SLOTS.map((slot, visualIdx) => {
-                const entry = top3[slot.entryIndex];
-                if (!entry) return null;
-
-                return (
-                  <motion.div
-                    key={entry.user_id}
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: visualIdx * 0.1 }}
-                    className={`game-podium__slot game-podium__slot--${slot.medal}`}
-                  >
-                    <LeaderboardUserAvatar
-                      entry={entry}
-                      size="md"
-                      className="game-podium__avatar"
-                    />
-                    <p className="game-podium__name">{entry.nome}</p>
-                    <div
-                      className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}
-                    >
-                      <span className="game-podium__rank">#{entry.rank}</span>
-                      {metric !== 'streak' && weeklyLeaderboardReward(entry.rank) && (
-                        <span className="game-podium__reward">
-                          <Coins size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
-                        </span>
-                      )}
-                    </div>
-                    <p className="game-podium__detail">
-                      {metric === 'moedas' && <Coins size={10} aria-hidden className="inline" />}
-                      {formatPodiumDetail(entry, metric)}
-                    </p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+          <LeaderboardPodium top3={top3} metric={metric} />
 
           {rest.length > 0 && (
             <ul className="game-rank-list">
@@ -192,7 +175,12 @@ export function LeaderboardPage() {
             <>
               <p className="game-rank-list__divider">• • •</p>
               <ul className="game-rank-list">
-                <RankRow entry={me} metric={metric} label="Você" />
+                <RankRow
+                  entry={me}
+                  metric={metric}
+                  label="Você"
+                  rankLabel={formatRankBand(me.rank, me.total)}
+                />
               </ul>
             </>
           )}
