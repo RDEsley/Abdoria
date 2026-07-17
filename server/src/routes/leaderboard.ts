@@ -87,9 +87,12 @@ function toEntry(
   };
 }
 
+// `find`/`countDocuments` só reconhecem comparação estrita (`is_guest === false`);
+// `{ $ne: true }` não batia com nenhum dos dois e nunca filtrou nada de fato — os
+// 21 convidados onboarded do banco vinham entrando na semanal de XP/Dorias.
 const leaderboardFilter = {
   onboarding_completed: true,
-  is_guest: { $ne: true },
+  is_guest: false,
 };
 
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
@@ -173,8 +176,11 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       : undefined;
 
     if (metric === 'streak') {
-      const rank = await User.countLeaderboardRank(user, metric);
-      res.json(toEntry(user, rank, true, null, myPodium));
+      const [rank, total] = await Promise.all([
+        User.countLeaderboardRank(user, metric),
+        User.countDocuments(leaderboardFilter),
+      ]);
+      res.json({ ...toEntry(user, rank, true, null, myPodium), total });
       return;
     }
 
@@ -190,7 +196,7 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
         );
       }).length + 1;
 
-    res.json(toEntry(user, rank, true, myValue, myPodium));
+    res.json({ ...toEntry(user, rank, true, myValue, myPodium), total: all.length });
   } catch (error) {
     console.error('GET /api/leaderboard/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar posição.' });

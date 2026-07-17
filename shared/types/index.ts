@@ -1368,6 +1368,8 @@ export interface LeaderboardEntry {
   /** Contador sobreposto à moldura (pódios naquela posição). */
   moldura_count?: number | null;
   is_me?: boolean;
+  /** Total de participantes elegíveis no ranking — só vem em GET /leaderboard/me. */
+  total?: number | null;
 }
 
 export type LeaderboardMetric = 'xp' | 'streak' | 'moedas';
