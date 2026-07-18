@@ -36,7 +36,7 @@ export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
     id: 'pull_up_bar',
     nome: 'Barra Fixa',
     descricao: 'Puxadas, chin-ups e suspensão isométrica para costas e grip.',
-    exerciseSlugs: ['pull-up', 'chin-up', 'dead-hang'],
+    exerciseSlugs: ['dead-hang', 'scapular-pull-up', 'pull-up', 'chin-up'],
   },
   {
     id: 'ab_wheel',

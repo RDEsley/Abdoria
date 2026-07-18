@@ -215,6 +215,25 @@ export const equipmentExercises: IExercise[] = [
   ),
   withCustomParams(
     {
+      slug: 'scapular-pull-up',
+      nome: 'Scapular Pull-Up',
+      nome_pt: 'Barra fixa — Escapular',
+      nivel: 2,
+      musculo_principal: 'superior',
+      musculos_secundarios: ['core'],
+      tempo_recomendado: 30,
+      prioridade: 'A',
+      modo: 'reps',
+      descricao:
+        'Pendurado na barra com braços estendidos, puxe só as escápulas para baixo e para trás (sem dobrar os cotovelos). Ponte entre a suspensão e a barra completa.',
+      media: { gif: 'hanging-knee-raise.gif' },
+      ativo: false,
+      equipamento: 'pull_up_bar',
+    },
+    { repeticoes_iniciante: 5, repeticoes_intermediario: 8, repeticoes_avancado: 12 },
+  ),
+  withCustomParams(
+    {
       slug: 'dead-hang',
       nome: 'Dead Hang',
       nome_pt: 'Suspensão isométrica',
