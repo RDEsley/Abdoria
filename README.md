@@ -37,7 +37,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 |--------|------------------|
 | **Iniciante** | Treinos sugeridos, exercícios explicados e progressão suave |
 | **Quem treina em casa** | Biblioteca de exercícios, montagem de treino e player guiado |
-| **Quem gosta de metas** | XP, streak, conquistas, loja diária e ranking |
+| **Quem gosta de metas** | XP, streak, conquistas e ranking |
 | **Quem quer constância** | Calendário de treinos, exploração AFK e recompensas diárias |
 
 ---
@@ -62,8 +62,8 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
 ### Evoluir e se motivar
 - **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
-- **Teto diário** — **100 XP + 1 por nível** (+ **1 XP** por inimigo único no bestiário)
-- **XP extra** — streak, conquistas, loja e habilidades desbloqueadas (sem limite diário)
+- **Máx. diário** — **100 XP + 1 por nível** (+ **1 XP** por inimigo único no bestiário)
+- **XP extra** — streak, conquistas e habilidades desbloqueadas (sem limite diário)
 - **Exploração AFK** — herói em combate automático enquanto você está fora (máx. **24h** de exploração)
   - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
   - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
@@ -78,12 +78,13 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Dorias)
   - Abas de critério em **largura total** com **recompensas semanais** em Dorias para o top 10
   - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
+  - **Sua posição fixada** — se sua linha está fora da tela, ela aparece fixa embaixo; toque para rolar até ela
+  - **Amigos** — ranking entre quem você segue (level, streak e foto), com **perfil público** ao tocar em alguém
 
 ### Personalizar e recompensar
 - **Loja Abdoria** — bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
 - **Loja da Exploração** — arcos compráveis com Dorias; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
 - **Inventário** — Energy Drinks, cosméticos, itens da exploração e gestão de **overflow** (itens além do limite)
-- **Loja diária** — recompensa grátis + ofertas que renovam todo dia
 - **Código presente** — resgate em **Opções**
 - **Toasts de feedback** — notificações globais ao fixar/bloquear exercícios ou treinos, salvar treino, comprar itens, resgatar códigos e equipar cosméticos
 - **Perfil do herói** — abas **Dados**, **Progresso** (estatísticas e zonas musculares) e **Definição** (simulador educativo)
@@ -97,10 +98,10 @@ Pense em **dois tipos de pontos**:
 
 | Tipo | O que é | Limite |
 |------|---------|--------|
-| **XP diário** | Pontos dos exercícios do treino | Teto = **100 + 1 × nível** (+ **1** por inimigo no bestiário) |
-| **XP extra** | Bônus de streak, conquistas, loja, habilidades (+1 XP por habilidade nova) | Sem teto diário |
+| **XP diário** | Pontos dos exercícios do treino | Máx. = **100 + 1 × nível** (+ **1** por inimigo no bestiário) |
+| **XP extra** | Bônus de streak, conquistas, habilidades (+1 XP por habilidade nova) | Sem máx. diário |
 
-A moeda **Dorias** você usa na loja de cosméticos e na loja diária. Você ganha **1 Doria a cada 10 XP** totais acumulados (conversão passiva ao longo do progresso).
+A moeda **Dorias** você usa na loja de cosméticos e na loja da exploração. Você ganha **1 Doria a cada 10 XP** totais acumulados (conversão passiva ao longo do progresso).
 
 Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 

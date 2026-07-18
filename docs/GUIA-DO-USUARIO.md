@@ -17,7 +17,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 
 | Tela | Para que serve |
 |------|----------------|
-| **Painel** | Resumo do dia, XP, streak, loja diária e mapa de treinos |
+| **Painel** | Resumo do dia, XP, streak e mapa de treinos |
 | **Montar treino** | Escolher exercícios, salvar treinos e usar presets |
 | **Biblioteca** | Ver todos os exercícios e desbloquear novos |
 | **Player** | Executar o treino com timer e descanso |
@@ -58,7 +58,6 @@ O app monta sugestões com base no seu **ciclo** (A, B, C…) e no histórico. B
 Não entra no limite de 100. Exemplos:
 - Dias seguidos treinando (**streak**)
 - Conquistas novas
-- Loja diária
 - Desbloquear exercícios na biblioteca
 - Códigos presente
 
@@ -68,11 +67,8 @@ No painel você vê **dois indicadores**: um amarelo (diário) e um roxo (extra)
 
 ## Dorias (moeda)
 
-- Moeda do jogo para a **Loja Abdoria** (visual do perfil).
-- Você também ganha Dorias passivamente conforme sobe de XP total.
-- Na **loja diária** dá para trocar XP por Dorias e vice-versa, com taxas fixas:
-  - **25 XP** → **1 Doria**
-  - **5 Dorias** → **1 XP** (usa XP do progresso do nível, não o diário de exercícios)
+- Moeda do jogo para a **Loja Abdoria** (visual do perfil) e a **Loja da Exploração**.
+- Você ganha Dorias passivamente conforme sobe de XP total (**1 Doria a cada 10 XP**).
 
 ---
 
@@ -83,11 +79,6 @@ Abra pelo seu **avatar** no topo. Lá você:
 - Testa bordas, títulos, sons e efeitos antes de comprar
 - Gasta **Dorias** em itens premium
 - Desbloqueia itens por nível ou conquista
-
-### Loja diária
-No painel, todo dia:
-1. **Recompensa grátis** (primeiro card)
-2. Duas **ofertas pagas** com XP ou Dorias
 
 ### Código presente
 Em **Opções → Código presente**, digite um código promocional (se tiver um).
