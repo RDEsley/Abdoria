@@ -1,6 +1,6 @@
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
-import { RouteDrinkIcon } from '@/lib/daily-shop-display';
+import { RouteDrinkIcon } from '@/lib/item-icons';
 import { ROUTE_DRINK_HOURS, ROUTE_DRINK_LABEL } from '@/types';
 
 interface Props {

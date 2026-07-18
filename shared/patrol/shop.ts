@@ -37,7 +37,7 @@ export const PATROL_LEGENDARY_WEAPON_IDS = ['arco_09', 'espada_09'] as const;
 /** Armas Secret (nível 10) dropáveis na Exploração — taxa menor que título Secret. */
 export const PATROL_SECRET_WEAPON_IDS = ['arco_10', 'espada_10'] as const;
 
-/** Magias dropáveis exclusivamente do Coelho Mágico — não compráveis na loja. */
+/** Magias dropáveis exclusivamente do Slime Mágico — não compráveis na loja. */
 export const PATROL_SPELL_IDS = [
   'magia_agua',
   'magia_terra',

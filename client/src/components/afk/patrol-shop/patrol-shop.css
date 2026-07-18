@@ -279,12 +279,6 @@
   box-shadow: 2px 2px 0 rgba(4, 120, 87, 0.25);
 }
 
-.game-patrol-shop-nav__icon {
-  width: 1.15rem;
-  height: auto;
-  flex-shrink: 0;
-}
-
 .game-patrol-shop-nav__btn--arco.game-patrol-shop-nav__btn--active {
   border-color: #059669;
   background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);

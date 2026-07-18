@@ -13,6 +13,7 @@ import {
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
 import { AfkEnemySprite } from '@/components/afk/AfkEnemySprite';
+import { AfkSpellEffect } from '@/components/afk/AfkSpellEffect';
 import {
   AfkCombatHud,
   AfkBossProgressPanel,
@@ -91,9 +92,11 @@ export function AfkCombatScene({
 
   const critKind = weapon;
   const damage = resolvePatrolBaseDamage(critKind, weaponId, localEnemyId);
-  // Magia: ciclo mais lento e impacto tardio — o feitiço cai do alto.
+  // Magia: ciclo mais lento, impacto tardio e cauda longa — as animações de
+  // feitiço (nuvem, dragão, cristal...) precisam terminar antes do próximo ciclo.
   const attackInterval = weapon === 'arco' ? 1500 : weapon === 'magia' ? 2400 : 1900;
   const impactDelay = weapon === 'arco' ? 380 : weapon === 'magia' ? 620 : 200;
+  const attackTail = weapon === 'magia' ? 1500 : 420;
   const attacking = phase === 'attack';
   const showSparkles = (hasLoot || capped) && !isMobile;
 
@@ -222,7 +225,7 @@ export function AfkCombatScene({
       schedule(() => {
         setEnemyHit(false);
         setPhase('idle');
-      }, impactDelay + 420);
+      }, impactDelay + attackTail);
     };
 
     runAttack();
@@ -234,6 +237,7 @@ export function AfkCombatScene({
     };
   }, [
     attackInterval,
+    attackTail,
     clearTimers,
     damage,
     impactDelay,
@@ -386,23 +390,9 @@ export function AfkCombatScene({
         )}
 
         {weapon === 'magia' && attacking && (
-          <>
-            <span
-              key={`spell-charge-${attackSeq}`}
-              className={`game-afk-spell-charge game-afk-spell-charge--${weaponId}`}
-              aria-hidden
-            />
-            <span
-              key={`spell-drop-${attackSeq}`}
-              className={`game-afk-spell-drop game-afk-spell-drop--${weaponId}`}
-              aria-hidden
-            />
-            <span
-              key={`spell-burst-${attackSeq}`}
-              className={`game-afk-spell-burst game-afk-spell-burst--${weaponId}`}
-              aria-hidden
-            />
-          </>
+          <span key={`spell-${attackSeq}`} className="contents">
+            <AfkSpellEffect spellId={weaponId} />
+          </span>
         )}
 
         <AfkEnemySprite

@@ -226,7 +226,7 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
   const lvl = weaponLevel(variant);
 
   return (
-    <svg viewBox="0 0 64 48" className={className} style={style} aria-hidden>
+    <svg viewBox="0 0 64 64" className={className} style={style} aria-hidden>
       <defs>
         <linearGradient id={`${uid}-limb`} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={p.limbA} />
@@ -243,6 +243,9 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
           </radialGradient>
         )}
       </defs>
+
+      {/* Arco desenhado deitado — o grupo levanta ele em pé, apontando para a direita. */}
+      <g transform="translate(32 32) rotate(90) translate(-32 -24)">
 
       {p.glow && <ellipse cx="32" cy="24" rx="28" ry="20" fill={`url(#${uid}-glow)`} />}
 
@@ -388,6 +391,7 @@ export function PatrolBowIcon({ className, variant, style }: IconProps) {
           opacity="0.95"
         />
       )}
+      </g>
     </svg>
   );
 }
@@ -399,7 +403,7 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
   const lvl = weaponLevel(variant);
 
   return (
-    <svg viewBox="0 0 48 64" className={className} style={style} aria-hidden>
+    <svg viewBox="0 0 64 64" className={className} style={style} aria-hidden>
       <defs>
         <linearGradient id={`${uid}-blade`} x1="50%" y1="0%" x2="50%" y2="100%">
           <stop offset="0%" stopColor={p.edge} />
@@ -418,6 +422,9 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
           </radialGradient>
         )}
       </defs>
+
+      {/* Espada desenhada em pé — o grupo inclina a lâmina na diagonal, para a direita. */}
+      <g transform="translate(32 32) rotate(45) scale(0.82) translate(-24 -32)">
 
       {p.glow && <ellipse cx="24" cy="22" rx="18" ry="24" fill={`url(#${uid}-glow)`} />}
 
@@ -549,17 +556,9 @@ export function PatrolSwordIcon({ className, variant, style }: IconProps) {
           opacity="0.95"
         />
       )}
+      </g>
     </svg>
   );
-}
-
-/** Ícone compacto para abas e placas — delega ao arco/espada padrão da categoria. */
-export function PatrolBowTabIcon({ className }: { className?: string }) {
-  return <PatrolBowIcon className={className} variant="arco_03" />;
-}
-
-export function PatrolSwordTabIcon({ className }: { className?: string }) {
-  return <PatrolSwordIcon className={className} variant="espada_03" />;
 }
 
 export function patrolWeaponIconStyle(

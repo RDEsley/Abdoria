@@ -10,7 +10,7 @@ import {
   RouteDrinkIcon,
   ExpInstantIcon,
   DoriaBagIcon,
-} from '@/lib/daily-shop-display';
+} from '@/lib/item-icons';
 import { getInventory, consumeExpInstant, consumeDoriaBag, consumeRouteDrink } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { overflowToastMessage } from '@/lib/inventory-overflow';

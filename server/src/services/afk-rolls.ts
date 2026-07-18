@@ -183,7 +183,7 @@ function spellDropWeight(id: string): number {
 const SPELL_NO_DROP_WEIGHT = 40;
 
 /**
- * Drop do Coelho Mágico. Regras:
+ * Drop do Slime Mágico. Regras:
  * - Cada magia só é conquistada uma vez: o pool nunca inclui magias já possuídas
  *   (nem já pendentes no baú) — progressão real rumo à coleção completa.
  * - No máximo UMA magia a cada 24h (dia SP), com chance proporcional à raridade

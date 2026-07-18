@@ -4,6 +4,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { awardMoedaFromXp } from '../services/economy.js';
 import {
+  activateAfk,
   claimAfkRewards,
   afkResponsePayload,
   hasAfkRewardsToClaim,
@@ -32,6 +33,8 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
+    // Abrir a tela de Exploração é o que liga o timer AFK da conta.
+    activateAfk(user);
     const bestiario_novos = syncAfkRewards(user);
     await user.save();
     res.json(
@@ -248,11 +251,6 @@ metaRouter.patch('/preferences', async (req: AuthRequest, res) => {
     }
     if (req.body?.ocultar_aviso_xp_diario !== undefined) {
       user.preferencias.ocultar_aviso_xp_diario = Boolean(req.body.ocultar_aviso_xp_diario);
-    }
-    if (req.body?.coletar_loja_diaria_automatico !== undefined) {
-      user.preferencias.coletar_loja_diaria_automatico = Boolean(
-        req.body.coletar_loja_diaria_automatico,
-      );
     }
     if (req.body?.arma_preferida === 'arco' || req.body?.arma_preferida === 'espada') {
       user.preferencias.arma_preferida = req.body.arma_preferida;

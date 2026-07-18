@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Coins, Store, Wand2 } from 'lucide-react';
+import { Coins, Store } from 'lucide-react';
 import {
   PurchaseConfirmDialog,
   type PurchaseConfirmDetails,
@@ -8,10 +8,6 @@ import {
 import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
-import {
-  PatrolBowTabIcon,
-  PatrolSwordTabIcon,
-} from '@/components/afk/patrol-shop/PatrolWeaponIcons';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { equipPatrolWeapon, getPatrolShop, purchasePatrolWeapon } from '@/lib/api';
@@ -183,9 +179,6 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
                 className={`game-patrol-shop-nav__btn game-patrol-shop-nav__btn--${kind}${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
                 onClick={() => setActiveTab(id)}
               >
-                {kind === 'arco' && <PatrolBowTabIcon className="game-patrol-shop-nav__icon" />}
-                {kind === 'espada' && <PatrolSwordTabIcon className="game-patrol-shop-nav__icon" />}
-                {kind === 'magia' && <Wand2 size={14} aria-hidden />}
                 {label}
               </button>
             ))}

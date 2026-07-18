@@ -85,6 +85,7 @@ function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}):
       last_seen_at: new Date().toISOString(),
       minutos_acumulados: minutos,
       pending: { ...EMPTY_AFK_PENDING, ...pending },
+      iniciado: true,
     },
     onboarding_completed: true,
     is_guest: false,
@@ -112,6 +113,13 @@ const u1 = mockUser(0);
 u1.afk.last_seen_at = t0.toISOString();
 syncAfkRewards(u1, new Date(t0.getTime() + 15 * 60_000));
 assert.equal(u1.afk.minutos_acumulados, 15);
+
+// Conta que nunca abriu a tela de Exploração não acumula tempo.
+const uNaoIniciado = mockUser(0);
+uNaoIniciado.afk.iniciado = false;
+uNaoIniciado.afk.last_seen_at = t0.toISOString();
+syncAfkRewards(uNaoIniciado, new Date(t0.getTime() + 30 * 60_000));
+assert.equal(uNaoIniciado.afk.minutos_acumulados, 0, 'AFK só acumula depois da primeira visita');
 assert.ok(u1.afk.combat && u1.afk.combat.kills_total >= 1, 'offline kills simulated');
 const expectedKills15 = Math.floor(15 * AFK_KILLS_PER_MINUTE);
 assert.ok(u1.afk.combat!.kills_total >= expectedKills15 - 2, `~${expectedKills15} kills in 15 min`);

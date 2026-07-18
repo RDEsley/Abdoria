@@ -425,12 +425,14 @@
 }
 
 /* ---- Top bar (novo layout): título à esquerda, ações à direita ---- */
+/* Topbar sem wrap: as ações (e principalmente o X) ficam SEMPRE no canto
+   superior direito, em qualquer largura de tela. */
 .game-afk-modal__topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
   padding-bottom: 0.4rem;
 }
 
@@ -438,14 +440,30 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  flex: 1;
   min-width: 0;
+}
+
+.game-afk-modal__title-group .game-afk-modal__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-afk-modal__toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.4rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 420px) {
+  .game-afk-modal__toolbar .game-afk-modal__shop-btn--icon {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
 }
 
 /* Botões de ação só com ícone (economia de espaço) */
@@ -1732,133 +1750,620 @@
   border-color: rgba(186, 230, 253, 0.75);
 }
 
-/* ---- Ataque de magia: feitiço cai do alto sobre o inimigo ---- */
-.game-afk-spell-charge--magia_agua,
-.game-afk-spell-drop--magia_agua,
-.game-afk-spell-burst--magia_agua {
-  --sp1: #7dd3fc;
-  --sp2: #0369a1;
-}
-.game-afk-spell-charge--magia_terra,
-.game-afk-spell-drop--magia_terra,
-.game-afk-spell-burst--magia_terra {
-  --sp1: #d6b28c;
-  --sp2: #713f12;
-}
-.game-afk-spell-charge--magia_gelo,
-.game-afk-spell-drop--magia_gelo,
-.game-afk-spell-burst--magia_gelo {
-  --sp1: #e0f2fe;
-  --sp2: #0284c7;
-}
-.game-afk-spell-charge--magia_fogo,
-.game-afk-spell-drop--magia_fogo,
-.game-afk-spell-burst--magia_fogo {
-  --sp1: #fdba74;
-  --sp2: #b91c1c;
-}
-.game-afk-spell-charge--magia_relampago,
-.game-afk-spell-drop--magia_relampago,
-.game-afk-spell-burst--magia_relampago {
-  --sp1: #fef08a;
-  --sp2: #a16207;
-}
-.game-afk-spell-charge--magia_buraco_negro,
-.game-afk-spell-drop--magia_buraco_negro,
-.game-afk-spell-burst--magia_buraco_negro {
-  --sp1: #8b5cf6;
-  --sp2: #020617;
+/* ---- Magias: cada feitiço tem sua própria encenação ---- */
+
+/* Buraco negro — orbe nasce no slime, engole meia tela e implode */
+.game-afk-spell-blackhole {
+  position: absolute;
+  right: calc(10% - 6.5rem);
+  top: calc(52% - 6.5rem);
+  z-index: 10;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    #000 0%,
+    #020617 26%,
+    rgba(30, 27, 75, 0.94) 50%,
+    rgba(91, 33, 182, 0.55) 72%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: scale(0.04);
+  animation: game-afk-spell-blackhole 2s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+  pointer-events: none;
 }
 
-/* Brilho de conjuração acima do inimigo */
-.game-afk-spell-charge {
+.game-afk-spell-blackhole__swirl {
   position: absolute;
-  right: 9%;
-  top: 6%;
-  z-index: 8;
-  width: 2.2rem;
+  inset: 6%;
+  display: block;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 70deg,
+    rgba(167, 139, 250, 0.5) 92deg,
+    transparent 118deg 240deg,
+    rgba(196, 181, 253, 0.35) 262deg,
+    transparent 288deg 360deg
+  );
+  animation: game-afk-spell-blackhole-swirl 0.9s linear infinite;
+}
+
+@keyframes game-afk-spell-blackhole {
+  0% {
+    opacity: 0;
+    transform: scale(0.04);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(0.14);
+  }
+  42% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.22);
+  }
+}
+
+@keyframes game-afk-spell-blackhole-swirl {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Relâmpago — nuvem é invocada, o raio cai no slime e a nuvem some por último */
+.game-afk-spell-cloud {
+  position: absolute;
+  right: calc(11% - 2.6rem);
+  top: 7%;
+  z-index: 10;
+  width: 5.2rem;
+  height: 2.7rem;
+  opacity: 0;
+  transform: scale(0.15);
+  transform-origin: center;
+  filter: drop-shadow(0 4px 8px rgba(15, 23, 42, 0.35));
+  animation:
+    game-afk-spell-cloud-summon 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) forwards,
+    game-afk-spell-cloud-fade 0.4s ease-in 1.7s forwards;
+  pointer-events: none;
+}
+
+.game-afk-spell-cloud__puff {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #94a3b8 0%, #475569 78%, #334155 100%);
+}
+
+.game-afk-spell-cloud__puff--a {
+  left: 0;
+  bottom: 0;
+  width: 2.7rem;
+  height: 1.8rem;
+}
+
+.game-afk-spell-cloud__puff--b {
+  left: 1.2rem;
+  top: 0;
+  width: 2.8rem;
   height: 2.2rem;
-  border-radius: 999px;
-  background: radial-gradient(circle, var(--sp1) 0%, transparent 70%);
-  opacity: 0;
-  animation: game-afk-spell-charge-in 0.35s ease-out forwards;
-  pointer-events: none;
 }
 
-@keyframes game-afk-spell-charge-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-  60% {
-    opacity: 0.9;
-    transform: scale(1.15);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-}
-
-/* Orbe caindo do céu até o inimigo */
-.game-afk-spell-drop {
-  position: absolute;
-  right: 10%;
-  top: -12%;
-  z-index: 9;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 999px;
-  background: radial-gradient(circle at 35% 30%, var(--sp1) 0%, var(--sp2) 80%);
-  box-shadow:
-    0 0 12px var(--sp1),
-    0 0 22px rgba(255, 255, 255, 0.25);
-  opacity: 0;
-  animation: game-afk-spell-drop-fall 0.62s cubic-bezier(0.5, 0, 0.85, 0.4) forwards;
-  pointer-events: none;
-}
-
-@keyframes game-afk-spell-drop-fall {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.7);
-  }
-  15% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(4.6rem) scale(1);
-  }
-}
-
-/* Explosão no impacto */
-.game-afk-spell-burst {
-  position: absolute;
-  right: 8%;
-  top: 50%;
-  z-index: 9;
+.game-afk-spell-cloud__puff--c {
+  right: 0;
+  bottom: 0.05rem;
   width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 999px;
-  background: radial-gradient(circle, var(--sp1) 0%, var(--sp2) 45%, transparent 72%);
+  height: 1.6rem;
+}
+
+@keyframes game-afk-spell-cloud-summon {
+  0% {
+    opacity: 0;
+    transform: scale(0.15) translateY(0.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes game-afk-spell-cloud-fade {
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-0.4rem);
+  }
+}
+
+.game-afk-spell-bolt {
+  position: absolute;
+  right: calc(11% - 0.9rem);
+  top: 15%;
+  z-index: 9;
+  width: 1.8rem;
+  height: 6.8rem;
+  background: linear-gradient(180deg, #fefce8 0%, #fde047 45%, #facc15 100%);
+  clip-path: polygon(
+    52% 0%,
+    76% 0%,
+    46% 34%,
+    68% 34%,
+    34% 68%,
+    52% 68%,
+    18% 100%,
+    38% 62%,
+    20% 62%,
+    46% 28%,
+    30% 28%
+  );
   opacity: 0;
-  animation: game-afk-spell-burst-pop 0.45s ease-out 0.6s forwards;
+  transform-origin: top center;
+  filter: drop-shadow(0 0 8px rgba(253, 224, 71, 0.85));
+  animation: game-afk-spell-bolt-strike 0.4s ease-out 0.42s forwards;
   pointer-events: none;
 }
 
-@keyframes game-afk-spell-burst-pop {
+@keyframes game-afk-spell-bolt-strike {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.1);
+  }
+  18% {
+    opacity: 1;
+    transform: scaleY(1.02);
+  }
+  38% {
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1);
+  }
+}
+
+.game-afk-spell-bolt-flash {
+  position: absolute;
+  right: calc(11% - 2.2rem);
+  top: calc(56% - 2.2rem);
+  z-index: 8;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(254, 252, 232, 0.95) 0%, rgba(253, 224, 71, 0.5) 45%, transparent 72%);
+  opacity: 0;
+  animation: game-afk-spell-bolt-flash 0.42s ease-out 0.58s forwards;
+  pointer-events: none;
+}
+
+@keyframes game-afk-spell-bolt-flash {
   0% {
     opacity: 0;
     transform: scale(0.3);
   }
-  35% {
+  30% {
     opacity: 1;
-    transform: scale(1.25);
+    transform: scale(1.15);
   }
   100% {
     opacity: 0;
-    transform: scale(1.8);
+    transform: scale(1.5);
+  }
+}
+
+/* Fogo — labaredas nascem debaixo do slime e crescem em frames */
+.game-afk-spell-fire {
+  position: absolute;
+  right: calc(11% - 2.75rem);
+  top: calc(66% - 4.2rem);
+  z-index: 8;
+  width: 5.5rem;
+  height: 4.2rem;
+  pointer-events: none;
+}
+
+.game-afk-spell-fire__flame {
+  position: absolute;
+  bottom: 0;
+  display: block;
+  border-radius: 50% 50% 22% 22%;
+  background: linear-gradient(
+    to top,
+    #7f1d1d 0%,
+    #dc2626 28%,
+    #f97316 58%,
+    #fde047 88%,
+    rgba(254, 249, 195, 0.4) 100%
+  );
+  transform-origin: bottom center;
+  transform: scaleY(0);
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.5));
+  animation:
+    game-afk-spell-fire-grow 0.5s ease-out forwards,
+    game-afk-spell-fire-flicker 0.34s steps(3, end) 0.5s infinite,
+    game-afk-spell-fire-die 0.5s ease-in 1.55s forwards;
+}
+
+.game-afk-spell-fire__flame--1 {
+  left: 0.1rem;
+  width: 1.1rem;
+  height: 2.1rem;
+  animation-delay: 0.28s, 0.78s, 1.55s;
+}
+
+.game-afk-spell-fire__flame--2 {
+  left: 1.1rem;
+  width: 1.4rem;
+  height: 3.1rem;
+  animation-delay: 0.16s, 0.66s, 1.55s;
+}
+
+.game-afk-spell-fire__flame--3 {
+  left: 2.2rem;
+  width: 1.5rem;
+  height: 3.9rem;
+  animation-delay: 0.08s, 0.58s, 1.55s;
+}
+
+.game-afk-spell-fire__flame--4 {
+  left: 3.4rem;
+  width: 1.3rem;
+  height: 3rem;
+  animation-delay: 0.22s, 0.72s, 1.55s;
+}
+
+.game-afk-spell-fire__flame--5 {
+  left: 4.4rem;
+  width: 1rem;
+  height: 2rem;
+  animation-delay: 0.34s, 0.84s, 1.55s;
+}
+
+@keyframes game-afk-spell-fire-grow {
+  0% {
+    transform: scaleY(0) scaleX(0.7);
+  }
+  60% {
+    transform: scaleY(1.12) scaleX(1);
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+  }
+}
+
+@keyframes game-afk-spell-fire-flicker {
+  0% {
+    transform: scaleY(1) scaleX(1);
+  }
+  33% {
+    transform: scaleY(1.14) scaleX(0.92);
+  }
+  66% {
+    transform: scaleY(0.9) scaleX(1.06);
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+  }
+}
+
+@keyframes game-afk-spell-fire-die {
+  to {
+    transform: scaleY(0) scaleX(0.6);
+    opacity: 0;
+  }
+}
+
+/* Gelo — cristal cresce congelando o slime inteiro */
+.game-afk-spell-ice {
+  position: absolute;
+  right: calc(12% - 2.9rem);
+  top: calc(60% - 5.4rem);
+  z-index: 10;
+  width: 5.8rem;
+  height: 6rem;
+  pointer-events: none;
+}
+
+.game-afk-spell-ice__crystal,
+.game-afk-spell-ice__facet {
+  position: absolute;
+  inset: 0;
+  display: block;
+  clip-path: polygon(50% 0%, 82% 16%, 97% 54%, 78% 97%, 22% 97%, 3% 54%, 18% 16%);
+  transform-origin: bottom center;
+  transform: scaleY(0);
+  animation:
+    game-afk-spell-ice-freeze 0.55s cubic-bezier(0.3, 1.2, 0.5, 1) 0.25s forwards,
+    game-afk-spell-ice-melt 0.45s ease-in 1.6s forwards;
+}
+
+.game-afk-spell-ice__crystal {
+  background: linear-gradient(
+    165deg,
+    rgba(240, 249, 255, 0.95) 0%,
+    rgba(125, 211, 252, 0.72) 45%,
+    rgba(2, 132, 199, 0.7) 100%
+  );
+}
+
+.game-afk-spell-ice__facet {
+  background:
+    linear-gradient(115deg, transparent 44%, rgba(255, 255, 255, 0.75) 47%, transparent 52%),
+    linear-gradient(65deg, transparent 60%, rgba(255, 255, 255, 0.55) 63%, transparent 68%),
+    linear-gradient(0deg, transparent 70%, rgba(224, 242, 254, 0.5) 100%);
+}
+
+.game-afk-spell-ice__glint {
+  position: absolute;
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  background: #fff;
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  opacity: 0;
+  animation: game-afk-spell-ice-glint 0.5s ease-out forwards;
+}
+
+.game-afk-spell-ice__glint--a {
+  left: 22%;
+  top: 30%;
+  animation-delay: 0.95s;
+}
+
+.game-afk-spell-ice__glint--b {
+  right: 18%;
+  top: 52%;
+  width: 0.4rem;
+  height: 0.4rem;
+  animation-delay: 1.25s;
+}
+
+@keyframes game-afk-spell-ice-freeze {
+  0% {
+    opacity: 0.4;
+    transform: scaleY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes game-afk-spell-ice-melt {
+  to {
+    opacity: 0;
+    transform: scaleY(1.04);
+  }
+}
+
+@keyframes game-afk-spell-ice-glint {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(18deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(30deg);
+  }
+}
+
+/* Terra — uma montanha nasce debaixo do slime e depois afunda */
+.game-afk-spell-mountain {
+  position: absolute;
+  right: calc(11% - 3.4rem);
+  top: calc(68% - 5rem);
+  z-index: 8;
+  width: 6.8rem;
+  height: 5rem;
+  pointer-events: none;
+}
+
+.game-afk-spell-mountain__peak {
+  position: absolute;
+  inset: 0;
+  display: block;
+  clip-path: polygon(50% 0%, 76% 42%, 100% 100%, 0% 100%, 24% 42%);
+  background:
+    linear-gradient(105deg, transparent 48%, rgba(255, 255, 255, 0.18) 50%, transparent 58%),
+    linear-gradient(180deg, #fafaf9 0%, #fafaf9 11%, #a8a29e 12%, #78716c 38%, #57534e 100%);
+  transform-origin: bottom center;
+  transform: translateY(102%);
+  animation:
+    game-afk-spell-mountain-rise 0.5s cubic-bezier(0.3, 1.15, 0.55, 1) 0.15s forwards,
+    game-afk-spell-mountain-sink 0.5s ease-in 1.5s forwards;
+}
+
+.game-afk-spell-mountain__dust {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -0.2rem;
+  display: block;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(168, 162, 158, 0.85) 0%, transparent 70%);
+  opacity: 0;
+  animation: game-afk-spell-mountain-dust 0.7s ease-out 0.2s forwards;
+}
+
+@keyframes game-afk-spell-mountain-rise {
+  0% {
+    transform: translateY(102%);
+  }
+  80% {
+    transform: translateY(-3%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes game-afk-spell-mountain-sink {
+  to {
+    transform: translateY(102%);
+  }
+}
+
+@keyframes game-afk-spell-mountain-dust {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+  35% {
+    opacity: 1;
+    transform: scaleX(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1.5);
+  }
+}
+
+/* Água — dragão d'água sai do herói, serpenteia até o slime e se desfaz */
+.game-afk-spell-dragon {
+  position: absolute;
+  left: 10%;
+  top: 42%;
+  z-index: 9;
+  width: 7.5rem;
+  height: 3.2rem;
+  opacity: 0;
+  animation: game-afk-spell-dragon-fly 0.78s cubic-bezier(0.4, 0.1, 0.6, 0.9) 0.02s forwards;
+  pointer-events: none;
+}
+
+.game-afk-spell-dragon__svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.55));
+}
+
+.game-afk-spell-dragon__foam {
+  animation: game-afk-spell-dragon-foam 0.35s linear infinite;
+}
+
+.game-afk-spell-dragon__drop {
+  position: absolute;
+  display: block;
+  width: 0.4rem;
+  height: 0.55rem;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: #7dd3fc;
+  opacity: 0;
+  animation: game-afk-spell-dragon-drop 0.55s ease-in infinite;
+}
+
+.game-afk-spell-dragon__drop--a {
+  left: 18%;
+  top: 68%;
+  animation-delay: 0.12s;
+}
+
+.game-afk-spell-dragon__drop--b {
+  left: 44%;
+  top: 20%;
+  animation-delay: 0.28s;
+}
+
+.game-afk-spell-dragon__drop--c {
+  left: 66%;
+  top: 62%;
+  animation-delay: 0.42s;
+}
+
+@keyframes game-afk-spell-dragon-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.55);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(1rem, -0.2rem) scale(0.8);
+  }
+  35% {
+    transform: translate(3.4rem, -0.55rem) scale(1);
+  }
+  60% {
+    transform: translate(6.4rem, 0.35rem) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translate(9.2rem, -0.1rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10.6rem, 0.1rem) scale(0.85);
+  }
+}
+
+@keyframes game-afk-spell-dragon-foam {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+@keyframes game-afk-spell-dragon-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0.9rem);
+  }
+}
+
+.game-afk-spell-splash {
+  position: absolute;
+  right: calc(11% - 2.4rem);
+  top: calc(56% - 2.4rem);
+  z-index: 9;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(125, 211, 252, 0.85) 0 12%, transparent 16%),
+    radial-gradient(circle at 70% 65%, rgba(125, 211, 252, 0.8) 0 10%, transparent 14%),
+    radial-gradient(circle at 50% 30%, rgba(186, 230, 253, 0.85) 0 11%, transparent 15%),
+    radial-gradient(circle, rgba(224, 242, 254, 0.9) 0%, rgba(56, 189, 248, 0.45) 45%, transparent 70%);
+  opacity: 0;
+  animation: game-afk-spell-splash 0.5s ease-out 0.6s forwards;
+  pointer-events: none;
+}
+
+@keyframes game-afk-spell-splash {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
   }
 }
 
@@ -4445,7 +4950,7 @@
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* wizard-hat — chapéu de mágico do Coelho Mágico */
+/* wizard-hat — chapéu de mágico do Slime Mágico */
 .game-afk-slime__wizard-hat {
   position: absolute;
   top: -18%;
@@ -4484,7 +4989,7 @@
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
-/* wand — varinha mágica do Coelho Mágico (lateral direita) */
+/* wand — varinha mágica do Slime Mágico (lateral direita) */
 .game-afk-slime__wand {
   position: absolute;
   right: 2%;

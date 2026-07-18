@@ -160,7 +160,6 @@ export function getBestiary(): Promise<BestiaryResponse> {
 
 export function updateMetaPreferences(data: {
   ocultar_aviso_xp_diario?: boolean;
-  coletar_loja_diaria_automatico?: boolean;
   arma_preferida?: ArmaPreferida;
 }): Promise<IUserDocument> {
   return fetchJson('/meta/preferences', { method: 'PATCH', body: JSON.stringify(data) });

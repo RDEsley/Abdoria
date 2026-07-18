@@ -48,8 +48,9 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<AchievementToastItem[]>([]);
   const queueRef = useRef<AchievementToastItem[]>([]);
 
+  const playedRef = useRef<Set<string>>(new Set());
+
   const enqueue = useCallback((payload: TriggerAchievementPayload) => {
-    playAchievementUnlock(payload.customSoundUrl);
     const item = createToastItem(payload);
 
     setItems((current) => {
@@ -60,6 +61,17 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
       return current;
     });
   }, []);
+
+  // O som toca quando o toast APARECE (não ao enfileirar) — vários unlocks de
+  // uma vez não sobrepõem áudio: cada um soa na sua vez, como na Steam.
+  useEffect(() => {
+    for (const item of items) {
+      if (!playedRef.current.has(item.id)) {
+        playedRef.current.add(item.id);
+        playAchievementUnlock(item.customSoundUrl);
+      }
+    }
+  }, [items]);
 
   const handleDismiss = useCallback((id: string) => {
     setItems((current) => {

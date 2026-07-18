@@ -16,7 +16,7 @@ import {
   RouteDrinkIcon,
   ExpInstantIcon,
   DoriaBagIcon,
-} from '@/lib/daily-shop-display';
+} from '@/lib/item-icons';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import {
   CURRENCY_NAME,

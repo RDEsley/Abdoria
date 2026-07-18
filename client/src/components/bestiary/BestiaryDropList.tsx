@@ -4,7 +4,7 @@ import {
   FrozenStreakIcon,
   ExpInstantIcon,
   RouteDrinkIcon,
-} from '@/lib/daily-shop-display';
+} from '@/lib/item-icons';
 import { PatrolBowIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
 import type { BestiaryDropEntry } from '@/lib/api';
 

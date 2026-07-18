@@ -153,25 +153,30 @@ export function playUnlock() {
 export function playAchievementUnlock(customSoundUrl?: string) {
   if (!enabled) return;
 
-  const playEpicDefault = () => {
-    playSequence(PACKS.som_epico.levelUp, 'triangle');
-    setTimeout(() => playSequence(PACKS.som_epico.unlock.slice(0, 4), 'square'), 380);
+  // Chime curto e suave (estilo notificação da Steam) — sem fanfarra estourada.
+  const playDefaultChime = () => {
+    playTone(659.25, 0.16, 'sine', 0.04, 2);
+    setTimeout(() => playTone(987.77, 0.26, 'sine', 0.035, 2), 140);
   };
 
   const playUserPack = () => {
-    playSequence(getPack().levelUp, 'triangle');
-    setTimeout(() => playSequence(getPack().unlock.slice(-2), 'triangle'), 420);
+    playSequence(
+      getPack()
+        .unlock.slice(-2)
+        .map((step) => ({ ...step, gain: Math.min(step.gain ?? 0.05, 0.05) })),
+      'triangle',
+    );
   };
 
   if (customSoundUrl) {
-    void playSafeHtmlAudio(customSoundUrl, playEpicDefault);
+    void playSafeHtmlAudio(customSoundUrl, playDefaultChime);
     return;
   }
 
   if (sfxPack !== 'som_classico') {
     playUserPack();
   } else {
-    playEpicDefault();
+    playDefaultChime();
   }
 }
 

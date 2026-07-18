@@ -17,10 +17,6 @@ describe('scripts de verificação (scripts/dev)', () => {
     await import('../../scripts/dev/verify-patrol-weapons.ts');
   });
 
-  it('verify-daily-shop-claim: resgate grátis persiste após sync no mesmo dia', async () => {
-    await import('../../scripts/dev/verify-daily-shop-claim.ts');
-  });
-
   it('verify-equipment-filter: equipamento marcado + slug bloqueado nas recomendações', async () => {
     await import('../../scripts/dev/verify-equipment-filter.ts');
   });

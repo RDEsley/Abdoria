@@ -111,7 +111,7 @@ export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
   storm_slime: { id: 'storm_slime', tier: 'elite', maxHp: 580, label: 'Slime Trovão' },
   slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 620, label: 'Slime Cavaleiro' },
   golden_slime: { id: 'golden_slime', tier: 'common', maxHp: 10000, label: 'Golden Slime' },
-  magic_rabbit: { id: 'magic_rabbit', tier: 'common', maxHp: 8000, label: 'Coelho Mágico' },
+  magic_rabbit: { id: 'magic_rabbit', tier: 'common', maxHp: 8000, label: 'Slime Mágico' },
   boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 1050, label: 'Rei Slime' },
   boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 1250, label: 'Slime Lich' },
   boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 1450, label: 'Hidra Slime' },
