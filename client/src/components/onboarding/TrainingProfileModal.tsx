@@ -34,6 +34,8 @@ export function TrainingProfileModal({ open, onClose }: Props) {
   const { user, refreshUser, applyUser } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [invalid, setInvalid] = useState(false);
+  const [shakeNonce, setShakeNonce] = useState(0);
   const [draft, setDraft] = useState<TrainingProfileDraft>(() =>
     user?.perfil_treino
       ? perfilToDraft(user.perfil_treino, user.preferencias?.equipamentos ?? {})
@@ -43,11 +45,11 @@ export function TrainingProfileModal({ open, onClose }: Props) {
   const corpoTodo = draft.escopo === 'corpo_todo';
   const steps = useMemo<StepId[]>(
     () => [
+      'equipamento',
       'scope',
       'foco',
       ...(corpoTodo ? (['partes'] as StepId[]) : []),
       'frequencia',
-      'equipamento',
       'restricoes',
       ...(corpoTodo ? (['plano'] as StepId[]) : []),
     ],
@@ -59,10 +61,13 @@ export function TrainingProfileModal({ open, onClose }: Props) {
     setDraft((prev) => ({ ...prev, ...patch }));
 
   const validate = (): string | null => {
-    if (stepId === 'scope' && !draft.escopo) return 'Escolha o alcance da sua missão.';
+    if (stepId === 'scope' && !draft.escopo) return 'Escolha a sua missão.';
     if (stepId === 'foco' && !draft.foco) return 'Selecione seu foco.';
     if (stepId === 'partes' && draft.partes !== null && draft.partes.length === 0) {
       return 'Escolha pelo menos uma parte do corpo, ou use o Recomendado.';
+    }
+    if (stepId === 'frequencia' && draft.diasSemana.length < 2) {
+      return 'Escolha pelo menos 2 dias de treino.';
     }
     return null;
   };
@@ -93,9 +98,12 @@ export function TrainingProfileModal({ open, onClose }: Props) {
   const next = () => {
     const error = validate();
     if (error) {
+      setInvalid(true);
+      setShakeNonce((n) => n + 1);
       showGameToast(error, { variant: 'warn' });
       return;
     }
+    setInvalid(false);
     if (step < steps.length - 1) setStep((s) => s + 1);
     else void save();
   };
@@ -122,6 +130,7 @@ export function TrainingProfileModal({ open, onClose }: Props) {
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
+          className={invalid ? 'onb-invalid' : undefined}
         >
           {stepId === 'scope' && <ScopeStep draft={draft} onChange={patchDraft} />}
           {stepId === 'foco' && <FocoStep draft={draft} onChange={patchDraft} />}
@@ -146,20 +155,30 @@ export function TrainingProfileModal({ open, onClose }: Props) {
           <GameButton
             type="button"
             variant="secondary"
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => {
+              setInvalid(false);
+              setStep((s) => s - 1);
+            }}
             className="flex items-center gap-1"
           >
             <ChevronLeft size={18} /> Voltar
           </GameButton>
         )}
-        <GameButton
-          onClick={next}
-          disabled={saving}
-          className="flex flex-1 items-center justify-center gap-2"
+        <motion.div
+          key={shakeNonce}
+          className="flex-1"
+          animate={shakeNonce > 0 ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : undefined}
+          transition={{ duration: 0.4 }}
         >
-          {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Ativar plano') : 'Continuar'}
-          <ChevronRight size={18} />
-        </GameButton>
+          <GameButton
+            onClick={next}
+            disabled={saving}
+            className="flex w-full items-center justify-center gap-2"
+          >
+            {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Ativar plano') : 'Continuar'}
+            <ChevronRight size={18} />
+          </GameButton>
+        </motion.div>
       </div>
     </Modal>
   );

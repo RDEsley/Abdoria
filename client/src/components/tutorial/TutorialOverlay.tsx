@@ -6,28 +6,23 @@ import { GameButton } from '@/components/ui/GameButton';
 const SLIDES = [
   {
     icon: Zap,
-    title: 'Ganhe pontos (XP)',
-    body: 'Complete séries e treinos para ganhar pontos. Você pode ganhar até 100 pontos por dia; o contador zera à meia-noite.',
+    title: 'Treine e ganhe XP',
+    body: 'Cada treino vale XP. O contador zera à meia-noite.',
   },
   {
     icon: Target,
-    title: 'Tipos de treino',
-    body: 'Escolha treinos prontos ou monte o seu: abdômen superior, oblíquos, inferior, core ou completo. As sugestões seguem o seu nível.',
+    title: 'Sua missão diária',
+    body: 'A Home sugere o treino do dia. Toque em Jogar e siga o ritmo.',
   },
   {
     icon: Play,
-    title: 'Durante o treino',
-    body: 'Você começa cada série quando estiver pronto e marca quando terminar. Alguns exercícios são por repetições, outros por tempo.',
+    title: 'No seu tempo',
+    body: 'Comece cada série quando quiser: por repetições ou por tempo.',
   },
   {
     icon: Trophy,
-    title: 'Classificação',
-    body: 'Veja como você está em relação a outros atletas na aba Arena, por pontos ou por dias seguidos treinando.',
-  },
-  {
-    icon: Zap,
-    title: 'Conquistas',
-    body: 'Desbloqueie medalhas quando mantiver a rotina, treinar com frequência e variar os músculos trabalhados.',
+    title: 'Suba no ranking',
+    body: 'Dispute a Arena semanal e mantenha sua sequência de dias.',
   },
 ];
 

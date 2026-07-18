@@ -8,13 +8,13 @@ import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { WeekSummary } from '@/components/dashboard/WeekSummary';
 import { WeeklyChronicle } from '@/components/dashboard/WeeklyChronicle';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
-import { DailyShopPanel } from '@/components/shop/DailyShopPanel';
 import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { TrainingPlanInviteCard } from '@/components/dashboard/TrainingPlanInviteCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatTrainingDuration } from '@/lib/utils';
+import { buildRestDayWarmup, isRestDay } from '@shared/training-plan';
 import { useApp } from '@/hooks/useApp';
 import {
   MUSCULO_LABELS,
@@ -29,11 +29,6 @@ import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 const ActivityCalendar = lazy(() =>
   import('@/components/dashboard/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })),
 );
-const FollowSuggestions = lazy(() =>
-  import('@/components/social/FollowSuggestions').then((m) => ({
-    default: m.FollowSuggestions,
-  })),
-);
 const CampaignFeed = lazy(() =>
   import('@/components/dashboard/CampaignFeed').then((m) => ({ default: m.CampaignFeed })),
 );
@@ -42,7 +37,7 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } 
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 export function DashboardPage() {
-  const { stats, loading, refresh, loadRecommendations } = useApp();
+  const { stats, loading, refresh, loadRecommendations, user } = useApp();
   const [streakCelebrate, setStreakCelebrate] = useState(false);
   const prevStreak = useRef<number | null>(null);
 
@@ -84,6 +79,11 @@ export function DashboardPage() {
   const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
+  const perfilTreino = user?.perfil_treino ?? null;
+  const hoje = new Date().getDay();
+  const diaDescanso = !stats.treino_hoje && isRestDay(perfilTreino, hoje);
+  const aquecimento = diaDescanso && perfilTreino ? buildRestDayWarmup(perfilTreino, hoje) : null;
+
   return (
     <motion.div
       variants={container}
@@ -110,12 +110,26 @@ export function DashboardPage() {
         className={`game-quest-card ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
       >
         <span className="game-quest-card__badge">
-          {stats.treino_hoje ? 'Concluída' : 'Missão diária'}
+          {stats.treino_hoje ? 'Concluída' : diaDescanso ? 'Dia de descanso' : 'Missão diária'}
         </span>
         <p className="game-quest-card__status">
-          {stats.treino_hoje ? 'Treino de hoje concluído.' : stats.proximo_treino}
+          {stats.treino_hoje
+            ? 'Treino de hoje concluído.'
+            : diaDescanso
+              ? (aquecimento?.descricao ?? 'Hoje é dia de recuperar.')
+              : stats.proximo_treino}
         </p>
-        {!stats.treino_hoje && sugerido && (
+        {aquecimento && (
+          <div className="mt-2 space-y-1">
+            {aquecimento.exercicios.map((ex) => (
+              <p key={ex.slug} className="text-xs font-bold text-stone-600">
+                {formatExerciseName({ nome: ex.slug, slug: ex.slug })} ·{' '}
+                {ex.tempo_seg ? `${ex.series} × ${ex.tempo_seg}s` : `${ex.series} × ${ex.repeticoes}`}
+              </p>
+            ))}
+          </div>
+        )}
+        {!stats.treino_hoje && !diaDescanso && sugerido && (
           <div className="mt-2 space-y-1">
             <p className="text-xs font-bold text-stone-600">
               {sugerido.ciclo_id
@@ -143,15 +157,15 @@ export function DashboardPage() {
             <strong>{alerta.titulo}:</strong> {alerta.mensagem}
           </p>
         ))}
-        {!stats.treino_hoje && !sugerido && (
+        {!stats.treino_hoje && !diaDescanso && !sugerido && (
           <p className="mt-2 text-xs font-bold text-stone-500">
             Escolha ou monte um treino na aba <strong>Missão</strong>.
           </p>
         )}
         {!stats.treino_hoje && (
-          <Link to={playLink} className="mt-3 block">
+          <Link to={diaDescanso ? '/construtor' : playLink} className="mt-3 block">
             <GameButton className="flex w-full items-center justify-center gap-2">
-              <Play size={14} /> Jogar
+              <Play size={14} /> {diaDescanso ? 'Fazer aquecimento leve' : 'Jogar'}
             </GameButton>
           </Link>
         )}
@@ -212,12 +226,6 @@ export function DashboardPage() {
         </Suspense>
       </motion.section>
 
-      <motion.section variants={item}>
-        <Suspense fallback={null}>
-          <FollowSuggestions />
-        </Suspense>
-      </motion.section>
-
       <motion.section variants={item} className="glass-card p-4">
         <h3 className="game-section-title">Mapa de treinos</h3>
         <Suspense fallback={<PageLoader />}>
@@ -247,10 +255,6 @@ export function DashboardPage() {
         )}
         <MuscleBarChart muscles={stats.musculos_semana} />
       </motion.section>
-
-      <motion.div variants={item}>
-        <DailyShopPanel />
-      </motion.div>
     </motion.div>
   );
 }

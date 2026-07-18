@@ -47,11 +47,20 @@ export function sanitizePerfilTreino(raw: unknown): PerfilTreino | null {
   const tempo = TEMPOS.find((t) => t === Number(p.tempo_por_sessao_min)) ?? 20;
   const origem = ORIGENS.find((o) => o === p.origem) ?? 'onboarding';
 
+  const diasSemana = Array.isArray(p.dias_semana)
+    ? [...new Set((p.dias_semana as unknown[]).map(Number).filter((d) => d >= 0 && d <= 6))].sort(
+        (a, b) => a - b,
+      )
+    : null;
+
   return {
     escopo,
     foco,
     partes: partes && partes.length > 0 ? partes : null,
-    frequencia_semanal: clampFrequencia(Number(p.frequencia_semanal)),
+    frequencia_semanal: clampFrequencia(
+      diasSemana && diasSemana.length > 0 ? diasSemana.length : Number(p.frequencia_semanal),
+    ),
+    dias_semana: diasSemana && diasSemana.length > 0 ? diasSemana : null,
     tempo_por_sessao_min: tempo,
     restricoes,
     origem,

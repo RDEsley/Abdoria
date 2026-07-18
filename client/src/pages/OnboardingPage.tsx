@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
@@ -61,6 +61,66 @@ const REP_SCHEMES = [
   { id: '15x5', series: 5, repeticoes: 15, label: '15 × 5' },
 ] as const;
 
+/** Esquema derivado do nível — mesmo critério das recomendações da Missão. */
+const SCHEME_BY_NIVEL: Record<NivelUsuario, (typeof REP_SCHEMES)[number]['id']> = {
+  iniciante: '12x3',
+  intermediario: '14x3',
+  avancado: '15x3',
+};
+
+/** Ciclos sugeridos por foco — a rotação genérica que o sistema monta sozinho. */
+const CICLOS_POR_FOCO: Record<string, TreinoBase[]> = {
+  definicao: ['A', 'B', 'C'],
+  forca: ['A', 'C', 'D'],
+  resistencia: ['B', 'D', 'E'],
+  hipertrofia: ['A', 'B', 'C'],
+  saude: ['D', 'E'],
+};
+
+const CONFETTI_COLORS = ['#10b981', '#fbbf24', '#38bdf8', '#f472b6', '#a78bfa', '#f97316'];
+
+interface ConfettiPiece {
+  left: number;
+  delay: number;
+  duration: number;
+  color: string;
+  rotate: number;
+  size: number;
+}
+
+/** Confete de conclusão — queda com rotação, roda uma vez ao montar. */
+function OnboardingConfetti() {
+  const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
+
+  useEffect(() => {
+    setPieces(
+      Array.from({ length: 28 }, (_, i) => ({
+        left: Math.random() * 100,
+        delay: Math.random() * 0.6,
+        duration: 1.6 + Math.random() * 1.4,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        rotate: Math.random() * 720 - 360,
+        size: 6 + Math.random() * 6,
+      })),
+    );
+  }, []);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      {pieces.map((p, i) => (
+        <motion.span
+          key={i}
+          className="absolute top-0 block rounded-sm"
+          style={{ left: `${p.left}%`, width: p.size, height: p.size, background: p.color }}
+          initial={{ y: -24, opacity: 1, rotate: 0 }}
+          animate={{ y: 480, opacity: [1, 1, 0], rotate: p.rotate }}
+          transition={{ duration: p.duration, delay: p.delay, ease: 'easeIn' }}
+        />
+      ))}
+    </div>
+  );
+}
+
 const inputClass =
   'rounded-xl border border-stone-300 bg-white px-4 py-3 font-medium text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20';
 
@@ -77,9 +137,14 @@ export function OnboardingPage() {
   const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida>('arco');
   const [draft, setDraft] = useState<TrainingProfileDraft>(DEFAULT_TRAINING_DRAFT);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
+  const [cicloRecomendado, setCicloRecomendado] = useState(false);
   const [descanso, setDescanso] = useState(30);
   const [modo, setModo] = useState<'tempo' | 'reps'>('tempo');
   const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
+  const [esquemaRecomendado, setEsquemaRecomendado] = useState(true);
+  const [tempoHold, setTempoHold] = useState(30);
+  const [invalid, setInvalid] = useState(false);
+  const [shakeNonce, setShakeNonce] = useState(0);
   const [saving, setSaving] = useState(false);
   const [skipped, setSkipped] = useState(false);
 
@@ -91,11 +156,11 @@ export function OnboardingPage() {
       'body',
       'level',
       'weapon',
+      'equipamento',
       'scope',
       'foco',
       ...(corpoTodo ? (['partes'] as StepId[]) : []),
       'frequencia',
-      'equipamento',
       'restricoes',
       'plano',
       'prefs',
@@ -132,7 +197,8 @@ export function OnboardingPage() {
   const saveAndFinish = async (skip = false) => {
     setSaving(true);
     try {
-      const scheme = REP_SCHEMES.find((s) => s.id === repSchemeId) ?? REP_SCHEMES[0];
+      const schemeId = esquemaRecomendado ? SCHEME_BY_NIVEL[nivel ?? 'iniciante'] : repSchemeId;
+      const scheme = REP_SCHEMES.find((s) => s.id === schemeId) ?? REP_SCHEMES[0];
       const payload: Parameters<typeof completeOnboarding>[0] = {
         terms_accepted: termsAccepted,
         onboarding_completed: true,
@@ -143,6 +209,8 @@ export function OnboardingPage() {
           modo_padrao: modo,
           reps_series_padrao: scheme.series,
           reps_repeticoes_padrao: scheme.repeticoes,
+          esquema_recomendado: esquemaRecomendado,
+          ...(esquemaRecomendado ? {} : { tempo_exercicio_padrao_seg: tempoHold }),
           ciclo_treinos: normalizeCicloTreinos(ciclo),
           som_habilitado: true,
           sfx_volume: 0.7,
@@ -170,13 +238,16 @@ export function OnboardingPage() {
     if (stepId === 'terms' && !termsAccepted) return 'Aceite os termos para continuar.';
     if (stepId === 'body') return bodyMetrics.error;
     if (stepId === 'level' && !nivel) return 'Selecione seu nível de treino.';
-    if (stepId === 'scope' && !draft.escopo) return 'Escolha o alcance da sua missão.';
+    if (stepId === 'scope' && !draft.escopo) return 'Escolha a sua missão.';
     if (stepId === 'foco' && !draft.foco) return 'Selecione seu foco.';
     if (stepId === 'partes' && draft.partes !== null && draft.partes.length === 0) {
       return 'Escolha pelo menos uma parte do corpo, ou use o Recomendado.';
     }
+    if (stepId === 'frequencia' && draft.diasSemana.length < 2) {
+      return 'Escolha pelo menos 2 dias de treino.';
+    }
     if (stepId === 'plano' && !corpoTodo && ciclo.length < 2) {
-      return 'Escolha pelo menos 2 ciclos de treino.';
+      return 'Escolha pelo menos 2 ciclos de treino, ou use o Recomendado.';
     }
     return null;
   };
@@ -184,26 +255,37 @@ export function OnboardingPage() {
   const next = () => {
     const error = validateCurrentStep();
     if (error) {
+      setInvalid(true);
+      setShakeNonce((n) => n + 1);
       showGameToast(error, { variant: 'warn' });
       return;
     }
+    setInvalid(false);
     if (step < steps.length - 1) setStep((s) => s + 1);
     else void saveAndFinish(false);
   };
 
   const skipStep = () => {
+    setInvalid(false);
     if (stepId !== 'terms' && stepId !== 'tutorial') setSkipped(true);
     if (step < steps.length - 1) setStep((s) => s + 1);
     else void saveAndFinish(true);
   };
 
   const prev = () => {
+    setInvalid(false);
     if (step > 0) setStep((s) => s - 1);
   };
 
   const toggleCiclo = (c: TreinoBase) => {
     if (CICLOS_OPCIONAIS.includes(c)) return;
+    setCicloRecomendado(false);
     setCiclo((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+  };
+
+  const usarCicloRecomendado = () => {
+    setCicloRecomendado(true);
+    setCiclo(CICLOS_POR_FOCO[draft.foco ?? 'definicao'] ?? ['A', 'B', 'C']);
   };
 
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
@@ -248,7 +330,7 @@ export function OnboardingPage() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -30 }}
-            className="rounded-2xl border border-stone-200 bg-white p-6 shadow-md"
+            className={`relative rounded-2xl border border-stone-200 bg-white p-6 shadow-md${invalid ? ' onb-invalid' : ''}`}
           >
             {stepId === 'terms' && (
               <>
@@ -397,7 +479,20 @@ export function OnboardingPage() {
                 <p className="mt-1 text-sm text-stone-500">
                   Escolha pelo menos 2 ciclos ativos (A–E). F e G chegam em breve.
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={usarCicloRecomendado}
+                  className={`mt-4 w-full cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
+                    cicloRecomendado ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                  }`}
+                >
+                  <span className="font-bold">⭐ Recomendado</span>
+                  <span className="mt-0.5 block text-xs font-medium text-stone-500">
+                    A gente monta a rotação ideal pro seu foco — treinos genéricos que evoluem com
+                    você.
+                  </span>
+                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
                   {CICLOS.map((c) => {
                     const optional = CICLOS_OPCIONAIS.includes(c);
                     const active = ciclo.includes(c);
@@ -428,36 +523,52 @@ export function OnboardingPage() {
 
             {stepId === 'prefs' && (
               <>
-                <h2 className="text-2xl font-extrabold">Preferências</h2>
-                <label className="mt-4 block text-sm font-semibold">
-                  Descanso padrão: {descanso}s
-                  <input
-                    type="range"
-                    min={10}
-                    max={90}
-                    value={descanso}
-                    onChange={(e) => setDescanso(Number(e.target.value))}
-                    className="mt-2 w-full cursor-pointer"
-                  />
-                </label>
-                <div className="mt-4 flex gap-2">
-                  {(['tempo', 'reps'] as const).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setModo(m)}
-                      className={`flex-1 cursor-pointer rounded-xl border-2 py-3 font-bold ${
-                        modo === m ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                      }`}
-                    >
-                      {m === 'tempo' ? 'Por tempo' : 'Por repetições'}
-                    </button>
-                  ))}
-                </div>
-                {modo === 'reps' && (
+                <h2 className="text-2xl font-extrabold">Ajustes finos</h2>
+                <p className="mt-1 text-sm text-stone-500">
+                  Exercícios de segurar (prancha, barra fixa) usam segundos; os demais usam
+                  repetições. Deixe no Recomendado que a gente ajusta pelo seu nível.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setEsquemaRecomendado(true)}
+                  className={`mt-4 w-full cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
+                    esquemaRecomendado ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                  }`}
+                >
+                  <span className="font-bold">⭐ Recomendado</span>
+                  <span className="mt-0.5 block text-xs font-medium text-stone-500">
+                    Repetições e tempos na medida do nível{' '}
+                    {nivel ? NIVEL_LABELS[nivel].toLowerCase() : 'iniciante'}. Dá pra mudar depois.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEsquemaRecomendado(false)}
+                  className={`mt-2 w-full cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
+                    !esquemaRecomendado ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                  }`}
+                >
+                  <span className="font-bold">Personalizar</span>
+                  <span className="mt-0.5 block text-xs font-medium text-stone-500">
+                    Escolha você mesmo os tempos e repetições.
+                  </span>
+                </button>
+                {!esquemaRecomendado && (
                   <div className="mt-4">
-                    <p className="mb-2 text-sm font-bold text-stone-700">
-                      Esquema de repetições padrão
+                    <label className="block text-sm font-semibold">
+                      Tempo nos exercícios de segurar: {tempoHold}s
+                      <input
+                        type="range"
+                        min={10}
+                        max={90}
+                        step={5}
+                        value={tempoHold}
+                        onChange={(e) => setTempoHold(Number(e.target.value))}
+                        className="mt-2 w-full cursor-pointer"
+                      />
+                    </label>
+                    <p className="mt-4 mb-2 text-sm font-bold text-stone-700">
+                      Repetições por série
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {REP_SCHEMES.map((scheme) => (
@@ -475,40 +586,83 @@ export function OnboardingPage() {
                         </button>
                       ))}
                     </div>
+                    <label className="mt-4 block text-sm font-semibold">
+                      Descanso entre séries: {descanso}s
+                      <input
+                        type="range"
+                        min={10}
+                        max={90}
+                        value={descanso}
+                        onChange={(e) => setDescanso(Number(e.target.value))}
+                        className="mt-2 w-full cursor-pointer"
+                      />
+                    </label>
+                    <div className="mt-4 flex gap-2">
+                      {(['tempo', 'reps'] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setModo(m)}
+                          className={`flex-1 cursor-pointer rounded-xl border-2 py-3 font-bold ${
+                            modo === m ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
+                          }`}
+                        >
+                          {m === 'tempo' ? 'Prefiro tempo' : 'Prefiro repetições'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
             )}
 
             {stepId === 'tutorial' && (
-              <>
-                <h2 className="text-2xl font-extrabold">Bem-vindo ao Abdoria!</h2>
-                <p className="mt-2 text-sm font-semibold text-emerald-700">
-                  Sua jornada começa agora — passo {steps.length}/{steps.length}
-                </p>
-                <ul className="mt-4 space-y-3 text-sm text-stone-700">
+              <div className="relative text-center">
+                <OnboardingConfetti />
+                <motion.img
+                  src={
+                    armaPreferida === 'espada'
+                      ? '/assets/patrol-mascot-espada.png'
+                      : '/assets/patrol-mascot-arco.png'
+                  }
+                  alt=""
+                  className="mx-auto h-32 w-32 object-contain drop-shadow-lg"
+                  initial={{ scale: 0, rotate: -12 }}
+                  animate={{ scale: 1, rotate: 0, y: [0, -8, 0] }}
+                  transition={{
+                    scale: { type: 'spring', bounce: 0.55, duration: 0.8 },
+                    y: { repeat: Infinity, duration: 2.2, ease: 'easeInOut', delay: 0.8 },
+                  }}
+                />
+                <motion.h2
+                  className="mt-3 text-2xl font-extrabold"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  Boas-vindas, {firstName}!
+                </motion.h2>
+                <motion.p
+                  className="mt-2 text-sm font-semibold text-emerald-700"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.45 }}
+                >
+                  Seu plano está pronto. A jornada começa agora!
+                </motion.p>
+                <motion.ul
+                  className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-stone-700"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <li>💪 Treine e ganhe XP todo dia.</li>
                   <li>
-                    <strong>XP diário:</strong> {20} XP por exercício (mín. 3 no treino). Máx. = 100
-                    base + bônus por nível e Bestiário. Reseta à meia-noite (SP).
+                    🪙 A cada {MOEDA_XP_STEP} XP, 1 {CURRENCY_NAME} pra personalizar seu perfil.
                   </li>
-                  <li>
-                    <strong>{CURRENCY_NAME}:</strong> 1 a cada {MOEDA_XP_STEP} XP ganhos — use na
-                    loja de cosméticos.
-                  </li>
-                  <li>
-                    <strong>Treinos:</strong>{' '}
-                    {corpoTodo
-                      ? 'Sua Campanha sugere a missão do dia; monte variações no Construtor.'
-                      : 'Monte ou escolha sugestões no Construtor. Ciclos A–E alternam foco muscular.'}
-                  </li>
-                  <li>
-                    <strong>Ranking semanal:</strong> Top 25 ganham {CURRENCY_NAME} todo domingo.
-                  </li>
-                  <li>
-                    <strong>Streak & conquistas:</strong> XP extra no treino, dentro do máx. diário.
-                  </li>
-                </ul>
-              </>
+                  <li>🔥 Mantenha a sequência — nos dias de descanso, um aquecimento leve conta.</li>
+                </motion.ul>
+              </div>
             )}
 
             <div className="mt-6 flex gap-3">
@@ -523,15 +677,22 @@ export function OnboardingPage() {
                   <ChevronLeft size={18} /> Voltar
                 </GameButton>
               )}
-              <GameButton
-                onClick={next}
-                disabled={saving}
-                className="flex flex-1 items-center justify-center gap-2"
-                size="lg"
+              <motion.div
+                key={shakeNonce}
+                className="flex-1"
+                animate={shakeNonce > 0 ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : undefined}
+                transition={{ duration: 0.4 }}
               >
-                {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Começar!') : 'Continuar'}
-                <ChevronRight size={20} />
-              </GameButton>
+                <GameButton
+                  onClick={next}
+                  disabled={saving}
+                  className="flex w-full items-center justify-center gap-2"
+                  size="lg"
+                >
+                  {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Começar!') : 'Continuar'}
+                  <ChevronRight size={20} />
+                </GameButton>
+              </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>

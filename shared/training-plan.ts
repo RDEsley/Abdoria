@@ -11,6 +11,7 @@ import type {
   PerfilTreino,
   PlanoDia,
   PlanoTreino,
+  RestricaoFisica,
 } from './types/index.js';
 import { PARTE_CORPO_LABELS } from './types/index.js';
 
@@ -140,6 +141,86 @@ function tituloDoDia(indice: number, grupos: ParteCorpo[]): string {
 /** Frequência aceita pelo gerador (fora disso, aproxima pro limite). */
 export function clampFrequencia(frequencia: number): number {
   return Math.min(Math.max(Math.round(frequencia || 3), 2), 7);
+}
+
+/** True quando o dia (0=Dom..6=Sáb) é de descanso segundo os dias fixos do perfil. */
+export function isRestDay(perfil: PerfilTreino | null | undefined, dow: number): boolean {
+  const dias = perfil?.dias_semana;
+  if (!dias || dias.length === 0) return false;
+  return !dias.includes(dow);
+}
+
+export interface WarmupExercise {
+  slug: string;
+  series: number;
+  repeticoes?: number;
+  tempo_seg?: number;
+  descanso_seg: number;
+}
+
+export interface RestDayWarmup {
+  titulo: string;
+  descricao: string;
+  exercicios: WarmupExercise[];
+}
+
+interface WarmupCandidate {
+  slug: string;
+  /** Região que o movimento acorda — usada pra fugir da ênfase do dia anterior. */
+  regiao: MusculoPrincipal;
+  contraindicacoes: RestricaoFisica[];
+  reps?: number;
+  tempo_seg?: number;
+}
+
+/** Movimentos leves de mobilidade/ativação — nada aqui compromete o descanso. */
+const WARMUP_POOL: WarmupCandidate[] = [
+  { slug: 'dead-bug', regiao: 'core', contraindicacoes: [], reps: 8 },
+  { slug: 'heel-touches', regiao: 'obliquos', contraindicacoes: [], reps: 10 },
+  { slug: 'plank', regiao: 'core', contraindicacoes: ['punhos', 'ombros'], tempo_seg: 20 },
+  { slug: 'toe-touches', regiao: 'superior', contraindicacoes: ['pescoco'], reps: 10 },
+  { slug: 'reverse-crunch', regiao: 'inferior', contraindicacoes: ['lombar'], reps: 8 },
+  { slug: 'side-plank', regiao: 'obliquos', contraindicacoes: ['ombros', 'punhos'], tempo_seg: 15 },
+  { slug: 'crunch', regiao: 'superior', contraindicacoes: ['pescoco'], reps: 10 },
+];
+
+/**
+ * Aquecimento leve pro dia de descanso: 3 movimentos suaves que mantêm a
+ * sequência sem atrapalhar a recuperação. Evita a ênfase abdominal do dia
+ * anterior e respeita as restrições físicas do perfil.
+ */
+export function buildRestDayWarmup(
+  perfil: PerfilTreino,
+  dow: number,
+  enfaseAnterior: MusculoPrincipal | null = null,
+): RestDayWarmup {
+  const restricoes = new Set(perfil.restricoes);
+  const disponiveis = WARMUP_POOL.filter((c) =>
+    c.contraindicacoes.every((r) => !restricoes.has(r)),
+  );
+  const pool = disponiveis.length >= 3 ? disponiveis : WARMUP_POOL;
+
+  const preferidos = pool.filter((c) => c.regiao !== enfaseAnterior);
+  const base = preferidos.length >= 3 ? preferidos : pool;
+
+  const escolhidos = [base[dow % base.length], base[(dow + 2) % base.length]];
+  for (const c of base) {
+    if (escolhidos.length >= 3) break;
+    if (!escolhidos.includes(c)) escolhidos.push(c);
+  }
+
+  const suave = perfil.foco === 'saude' || perfil.foco === 'resistencia';
+  return {
+    titulo: 'Aquecimento leve',
+    descricao: 'Dia de descanso — 3 movimentos suaves mantêm sua sequência sem atrapalhar a recuperação.',
+    exercicios: escolhidos.map((c) => ({
+      slug: c.slug,
+      series: suave ? 1 : 2,
+      ...(c.reps ? { repeticoes: c.reps } : {}),
+      ...(c.tempo_seg ? { tempo_seg: c.tempo_seg } : {}),
+      descanso_seg: 20,
+    })),
+  };
 }
 
 /**

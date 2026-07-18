@@ -31,17 +31,42 @@ const ESCOPO_HINTS: Record<EscopoTreino, string> = {
 };
 
 export function ScopeStep({ draft, onChange }: StepProps) {
+  const areasSelecionadas = draft.escopo === 'corpo_todo' && draft.partes !== null;
+  const toggleArea = (parte: ParteCorpo) => {
+    const current = areasSelecionadas ? (draft.partes ?? []) : [];
+    const next = current.includes(parte) ? current.filter((p) => p !== parte) : [...current, parte];
+    onChange({
+      escopo: next.length > 0 ? 'corpo_todo' : null,
+      partes: next.length > 0 ? next : null,
+      missaoRecomendada: false,
+    });
+  };
+
   return (
     <>
       <h2 className="text-2xl font-extrabold">Qual é a sua missão?</h2>
-      <p className="mt-1 text-sm text-stone-500">Dá pra mudar depois, nas configurações.</p>
+      <p className="mt-1 text-sm text-stone-500">
+        As missões usam só exercícios possíveis com o equipamento que você marcou.
+      </p>
       <div className="mt-4 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => onChange({ escopo: 'abdomen', partes: null, missaoRecomendada: true })}
+          className={cardClass(draft.missaoRecomendada)}
+        >
+          <span className="font-bold">⭐ Recomendado</span>
+          <span className="mt-0.5 block text-xs font-medium text-stone-500">
+            Core em primeiro lugar — o caminho clássico do Abdoria.
+          </span>
+        </button>
         {(['abdomen', 'corpo_todo'] as EscopoTreino[]).map((escopo) => (
           <button
             key={escopo}
             type="button"
-            onClick={() => onChange({ escopo })}
-            className={cardClass(draft.escopo === escopo)}
+            onClick={() => onChange({ escopo, partes: null, missaoRecomendada: false })}
+            className={cardClass(
+              !draft.missaoRecomendada && draft.escopo === escopo && !areasSelecionadas,
+            )}
           >
             <span className="font-bold">{ESCOPO_LABELS[escopo]}</span>
             <span className="mt-0.5 block text-xs font-medium text-stone-500">
@@ -50,6 +75,26 @@ export function ScopeStep({ draft, onChange }: StepProps) {
           </button>
         ))}
       </div>
+      <p className="mt-4 mb-2 text-sm font-bold text-stone-700">Ou escolha as áreas que quer treinar</p>
+      <div className="flex flex-wrap gap-2">
+        {PARTE_CORPO_ORDER.filter((p) => p !== 'abdomen').map((parte) => (
+          <button
+            key={parte}
+            type="button"
+            onClick={() => toggleArea(parte)}
+            className={`cursor-pointer rounded-xl border-2 px-4 py-2 font-bold ${
+              areasSelecionadas && draft.partes?.includes(parte)
+                ? 'border-emerald-500 bg-emerald-50'
+                : 'border-stone-200'
+            }`}
+          >
+            {PARTE_CORPO_LABELS[parte]}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-stone-400">
+        O abdômen entra em toda missão. Dá pra mudar depois, nas configurações.
+      </p>
     </>
   );
 }
@@ -126,26 +171,54 @@ export function PartesStep({ draft, onChange }: StepProps) {
 
 const TEMPOS: PerfilTreino['tempo_por_sessao_min'][] = [10, 20, 30, 45];
 
+const DIA_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+/** Seg, Qua, Sex e Sáb — 4 treinos com descanso entre eles. */
+const DIAS_RECOMENDADOS = [1, 3, 5, 6];
+
+const sameDays = (a: number[], b: number[]) =>
+  a.length === b.length && [...a].sort().every((d, i) => d === [...b].sort()[i]);
+
 export function FrequenciaStep({ draft, onChange }: StepProps) {
+  const toggleDia = (dia: number) => {
+    const next = draft.diasSemana.includes(dia)
+      ? draft.diasSemana.filter((d) => d !== dia)
+      : [...draft.diasSemana, dia];
+    onChange({ diasSemana: next, frequencia: Math.max(2, next.length) });
+  };
+
   return (
     <>
       <h2 className="text-2xl font-extrabold">Sua rotina</h2>
       <p className="mt-1 text-sm text-stone-500">
-        Quantas missões por semana cabem na sua vida real?
+        Em quais dias da semana você vai treinar? Nos outros, a gente sugere um aquecimento leve
+        pra manter a sequência sem atrapalhar o descanso.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {[2, 3, 4, 5, 6, 7].map((freq) => (
+      <button
+        type="button"
+        onClick={() =>
+          onChange({ diasSemana: [...DIAS_RECOMENDADOS], frequencia: DIAS_RECOMENDADOS.length })
+        }
+        className={`mt-4 w-full ${cardClass(sameDays(draft.diasSemana, DIAS_RECOMENDADOS))}`}
+      >
+        <span className="font-bold">⭐ Recomendado — 4 dias</span>
+        <span className="mt-0.5 block text-xs font-medium text-stone-500">
+          Seg · Qua · Sex · Sáb — treino e descanso bem distribuídos.
+        </span>
+      </button>
+      <div className="mt-3 grid grid-cols-7 gap-1.5">
+        {DIA_LABELS.map((label, dia) => (
           <button
-            key={freq}
+            key={label}
             type="button"
-            onClick={() => onChange({ frequencia: freq })}
-            className={`h-12 w-12 rounded-xl border-2 font-bold ${
-              draft.frequencia === freq
-                ? 'cursor-pointer border-emerald-500 bg-emerald-50'
-                : 'cursor-pointer border-stone-200'
+            aria-pressed={draft.diasSemana.includes(dia)}
+            onClick={() => toggleDia(dia)}
+            className={`h-12 rounded-xl border-2 text-xs font-bold ${
+              draft.diasSemana.includes(dia)
+                ? 'cursor-pointer border-emerald-500 bg-emerald-50 text-emerald-800'
+                : 'cursor-pointer border-stone-200 text-stone-600'
             }`}
           >
-            {freq}
+            {label}
           </button>
         ))}
       </div>
@@ -231,13 +304,13 @@ export function RestricoesStep({ draft, onChange }: StepProps) {
         >
           <span className="font-bold">Nenhuma</span>
         </button>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {(Object.keys(RESTRICAO_LABELS) as RestricaoFisica[]).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => toggle(r)}
-              className={`rounded-xl border-2 px-4 py-2 font-bold ${
+              className={`rounded-xl border-2 px-3 py-3 text-center font-bold ${
                 draft.restricoes.includes(r)
                   ? 'cursor-pointer border-emerald-500 bg-emerald-50'
                   : 'cursor-pointer border-stone-200'
