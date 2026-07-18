@@ -4,8 +4,6 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   buildShopResponse,
-  claimDailyShopSlot,
-  claimFreeDailyShopRewards,
   equipShopItem,
   loadUserForShop,
   purchaseShopItem,
@@ -85,52 +83,6 @@ shopRouter.patch('/equip', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/shop/equip error:', error);
     res.status(500).json({ error: 'Erro ao equipar item.' });
-  }
-});
-
-shopRouter.post('/daily/claim', async (req: AuthRequest, res) => {
-  try {
-    const slot = Number(req.body?.slot);
-    if (!Number.isInteger(slot) || slot < 0 || slot > 2) {
-      res.status(400).json({ error: 'Oferta inválida.' });
-      return;
-    }
-
-    const result = await claimDailyShopSlot(req.userId!, slot);
-    if ('error' in result) {
-      res.status(result.status ?? 400).json({ error: result.error });
-      return;
-    }
-
-    res.json({
-      user: sanitizeUser(result.user),
-      slot: result.slot,
-      loja_diaria: result.loja_diaria,
-      overflow_to_dorias: result.overflow_to_dorias,
-    });
-  } catch (error) {
-    console.error('POST /api/shop/daily/claim error:', error);
-    res.status(500).json({ error: 'Erro ao resgatar oferta diária.' });
-  }
-});
-
-shopRouter.post('/daily/claim-free', async (req: AuthRequest, res) => {
-  try {
-    const result = await claimFreeDailyShopRewards(req.userId!);
-    if ('error' in result) {
-      res.status(result.status ?? 400).json({ error: result.error });
-      return;
-    }
-
-    res.json({
-      user: sanitizeUser(result.user),
-      claimed: result.claimed,
-      loja_diaria: result.loja_diaria,
-      overflow_to_dorias: result.overflow_to_dorias,
-    });
-  } catch (error) {
-    console.error('POST /api/shop/daily/claim-free error:', error);
-    res.status(500).json({ error: 'Erro ao coletar recompensas diárias.' });
   }
 });
 

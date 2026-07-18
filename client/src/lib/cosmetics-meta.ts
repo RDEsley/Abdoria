@@ -96,7 +96,7 @@ export const COSMETIC_DISPLAY: Record<
   },
   fundo_galaxia: {
     nome: 'Galáxia',
-    descricao: 'Cosmos profundo — oferta especial da loja diária.',
+    descricao: 'Cosmos profundo com estrelas cintilantes.',
     icon: 'moon',
     raridade: 'lendario',
   },

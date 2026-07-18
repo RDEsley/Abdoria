@@ -1,9 +1,9 @@
-﻿import { Eye, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import { EffectPreview } from '@/components/shop/EffectPreview';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
-import type { CosmeticKind, IUserDocument } from '@/types';
-import { resolveCosmeticos } from '@/types';
+import type { IUserDocument } from '@/types';
+import { resolveCosmeticos, xpProgressFromTotal } from '@/types';
 
 interface PreviewState {
   moldura_loja?: string;
@@ -21,6 +21,7 @@ interface Props {
   onResetPreview: () => void;
 }
 
+/** Prévia com o mesmo visual do hero do perfil — é lá que os cosméticos aparecem. */
 export function ShopPreviewStage({
   user,
   firstName,
@@ -32,62 +33,48 @@ export function ShopPreviewStage({
   const borderId = preview.moldura_loja ?? cosmeticos.moldura_loja_equipada;
   const titleId = preview.titulo ?? cosmeticos.titulo_equipado;
   const bannerId = preview.banner ?? cosmeticos.banner_equipado;
-  const effectId = preview.efeito ?? cosmeticos.efeito_equipado;
 
   const titleName = titleId ? COSMETIC_BY_ID[titleId]?.nome : null;
-
-  const previewFlags: Partial<Record<CosmeticKind, boolean>> = {
-    moldura_loja: Boolean(
-      preview.moldura_loja && preview.moldura_loja !== cosmeticos.moldura_loja_equipada,
-    ),
-    titulo: Boolean(preview.titulo && preview.titulo !== (cosmeticos.titulo_equipado ?? '')),
-    banner: Boolean(preview.banner && preview.banner !== cosmeticos.banner_equipado),
-    efeito: Boolean(preview.efeito && preview.efeito !== cosmeticos.efeito_equipado),
-  };
+  const xpLevel = user ? xpProgressFromTotal(user.gamificacao.nivel_xp).level : 1;
 
   const titleClass =
     titleId === 'titulo_dono_do_jogo'
-      ? 'game-shop-preview__title cosmetic-title--dono-do-jogo'
-      : `game-shop-preview__title${previewFlags.titulo ? ' game-shop-preview__title--preview' : ''}`;
+      ? 'game-profile-hero__title cosmetic-title--dono-do-jogo'
+      : titleId === 'titulo_secreto'
+        ? 'game-profile-hero__title cosmetic-title--secreto'
+        : 'game-profile-hero__title';
+
+  const fundoKey = bannerId.replace('fundo_', '');
+  const shellClass =
+    fundoKey === 'padrao'
+      ? 'game-profile-hero-shell game-profile-hero-shell--default'
+      : fundoKey === 'praia'
+        ? `game-profile-hero-shell game-profile-hero-shell--skinned-light game-card-banner--${fundoKey}`
+        : `game-profile-hero-shell game-profile-hero-shell--skinned game-card-banner--${fundoKey}`;
 
   return (
     <aside className="game-shop-preview">
-      <div
-        className={`game-shop-preview__frame game-card-banner--${bannerId.replace('fundo_', '')}`}
-      >
-        <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--tl" />
-        <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--tr" />
-        <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--bl" />
-        <div className="game-shop-preview__frame-corner game-shop-preview__frame-corner--br" />
-
-        <div className="game-shop-preview__head">
-          <span className="game-shop-preview__eyebrow">
-            <Eye size={12} /> Prévia ao vivo
+      <div className={`${shellClass} game-shop-preview__hero`}>
+        <i className="game-profile-hero-shell__ring" aria-hidden />
+        {hasPreviewOverrides && (
+          <button type="button" className="game-shop-preview__reset" onClick={onResetPreview}>
+            <RotateCcw size={12} /> Equipado
+          </button>
+        )}
+        <div className="game-profile-hero">
+          <span className="game-profile-hero__avatar-wrap">
+            {preview.efeito && <EffectPreview effectId={preview.efeito} />}
+            <CosmeticAvatar user={user} size="lg" borderId={borderId} />
+            <span className="game-profile-hero__level-badge" aria-label={`Nível ${xpLevel}`}>
+              {xpLevel}
+            </span>
           </span>
-          {hasPreviewOverrides && (
-            <button type="button" className="game-shop-preview__reset" onClick={onResetPreview}>
-              <RotateCcw size={12} /> Equipado
-            </button>
-          )}
-        </div>
-
-        <div className="game-shop-preview__stage">
-          <EffectPreview effectId={effectId} />
-          <CosmeticAvatar user={user} size="lg" borderId={borderId} />
-        </div>
-
-        <div className="game-shop-preview__meta">
-          <p className="game-shop-preview__name">{firstName}</p>
-          {titleName && <p className={titleClass}>{titleName}</p>}
-        </div>
-
-        <div className="game-shop-preview__tags">
-          {previewFlags.moldura_loja && (
-            <span className="game-shop-preview__tag">Moldura teste</span>
-          )}
-          {previewFlags.titulo && <span className="game-shop-preview__tag">Título teste</span>}
-          {previewFlags.banner && <span className="game-shop-preview__tag">Banner teste</span>}
-          {previewFlags.efeito && <span className="game-shop-preview__tag">Efeito teste</span>}
+          <div className="game-profile-hero__meta min-w-0">
+            <p className="game-profile-hero__name-row">
+              <span className="game-profile-hero__name truncate">{firstName}</span>
+              {titleName && <span className={titleClass}>{titleName}</span>}
+            </p>
+          </div>
         </div>
       </div>
     </aside>

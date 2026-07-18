@@ -2,12 +2,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Coins, Gift, Store, Trophy, X, Zap } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import {
-  MOEDA_XP_STEP,
-  CURRENCY_NAME,
-  SHOP_MOEDA_COST_PER_XP,
-  SHOP_XP_COST_PER_MOEDA,
-} from '@/types';
+import { MOEDA_XP_STEP, CURRENCY_NAME } from '@/types';
 
 const SLIDES = [
   {
@@ -17,8 +12,8 @@ const SLIDES = [
   },
   {
     icon: Store,
-    title: 'Loja diária',
-    body: `Na tela principal, use a Loja diária para trocar ${SHOP_XP_COST_PER_MOEDA} XP do seu nível por 1 ${CURRENCY_NAME}. Você também pode converter ${SHOP_MOEDA_COST_PER_XP} ${CURRENCY_NAME} em 1 XP quando precisar.`,
+    title: 'Exploração AFK',
+    body: `Derrote inimigos na Exploração AFK: cada patrulha rende ${CURRENCY_NAME}, itens e até cosméticos raros.`,
   },
   {
     icon: Trophy,

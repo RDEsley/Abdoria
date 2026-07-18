@@ -326,17 +326,19 @@
 }
 
 .game-shop-nav__btn {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
   padding: 0.45rem 0.65rem;
   font-size: 0.62rem;
   font-weight: 800;
   color: #44403c;
   background: #fff;
-  border: 2px solid #d6d3d1;
-  border-radius: 0;
+  border: 2px solid var(--game-ink);
+  border-radius: 999px;
   cursor: pointer;
   transition:
     transform 0.12s ease,

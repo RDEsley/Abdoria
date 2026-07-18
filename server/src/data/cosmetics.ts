@@ -493,7 +493,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     id: 'fundo_galaxia',
     kind: 'banner',
     nome: 'Galáxia',
-    descricao: 'Cosmos profundo — oferta especial da loja diária.',
+    descricao: 'Cosmos profundo com estrelas cintilantes.',
     icon: 'moon',
     raridade: 'lendario',
     unlock: { tipo: 'moedas', preco_moedas: 743 },
