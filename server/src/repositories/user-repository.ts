@@ -51,6 +51,8 @@ type ProfileRow = {
   is_guest: boolean;
   is_demo_npc: boolean;
   avatar_url?: string | null;
+  tag?: string | null;
+  descricao?: string | null;
   nome_trocas?: number | null;
   perfil_treino?: Record<string, unknown> | null;
   plano_treino?: Record<string, unknown> | null;
@@ -193,6 +195,8 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     // Presentes só depois da migration profile_identity — undefined mantém o
     // save omitindo as colunas (não quebra antes de ela ser aplicada).
     avatar_url: 'avatar_url' in profile ? (profile.avatar_url ?? null) : undefined,
+    tag: 'tag' in profile ? (profile.tag ?? null) : undefined,
+    descricao: 'descricao' in profile ? (profile.descricao ?? null) : undefined,
     nome_trocas: 'nome_trocas' in profile ? (profile.nome_trocas ?? 0) : undefined,
     perfil_treino:
       'perfil_treino' in profile
@@ -238,6 +242,8 @@ function userToProfileRow(user: UserRecord): Record<string, unknown> {
     is_guest: user.is_guest,
     is_demo_npc: user.is_demo_npc,
     ...(user.avatar_url !== undefined ? { avatar_url: user.avatar_url } : {}),
+    ...(user.tag !== undefined ? { tag: user.tag } : {}),
+    ...(user.descricao !== undefined ? { descricao: user.descricao } : {}),
     ...(user.nome_trocas !== undefined ? { nome_trocas: user.nome_trocas } : {}),
     ...(user.perfil_treino !== undefined ? { perfil_treino: user.perfil_treino } : {}),
     ...(user.plano_treino !== undefined ? { plano_treino: user.plano_treino } : {}),
@@ -313,6 +319,8 @@ export class UserMutable implements UserRecord {
   is_guest!: boolean;
   is_demo_npc!: boolean;
   avatar_url?: string | null;
+  tag?: string | null;
+  descricao?: string | null;
   nome_trocas?: number;
   perfil_treino?: UserRecord['perfil_treino'];
   plano_treino?: UserRecord['plano_treino'];
@@ -434,6 +442,27 @@ export const User = {
     if (options?.limit) query = query.limit(options.limit);
 
     const { data, error } = await query;
+    if (error || !data) return [];
+
+    const profiles = data as ProfileRow[];
+    const afkMap = await fetchAfkBatch(profiles.map((p) => p.id));
+    return profiles.map((p) => rowToUser(p, afkMap.get(p.id) ?? null));
+  },
+
+  /** Busca por nome (case-insensitive, parcial) — contas reais e onboarded. */
+  async searchByName(query: string, excludeId: string, limit = 10): Promise<UserLean[]> {
+    const sanitized = query.replace(/[%_\\]/g, '').trim();
+    if (!sanitized) return [];
+
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('profiles')
+      .select('*')
+      .ilike('nome', `%${sanitized}%`)
+      .eq('onboarding_completed', true)
+      .eq('is_guest', false)
+      .neq('id', excludeId)
+      .limit(limit);
     if (error || !data) return [];
 
     const profiles = data as ProfileRow[];

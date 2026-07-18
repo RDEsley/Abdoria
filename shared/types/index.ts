@@ -19,12 +19,23 @@ export type TreinoBase = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 
 export const CICLO_LABELS: Record<TreinoBase, string> = {
   A: 'Abdômen superior',
-  B: 'Oblíquos',
+  B: 'Laterais da cintura',
   C: 'Abdômen inferior',
-  D: 'Estabilidade',
+  D: 'Prancha e equilíbrio',
   E: 'Corpo inteiro',
-  F: 'HIIT',
-  G: 'Mobilidade',
+  F: 'Queima rápida',
+  G: 'Alongar e soltar',
+};
+
+/** Explicação curta de cada ciclo — usada nas Opções e no onboarding. */
+export const CICLO_HINTS: Record<TreinoBase, string> = {
+  A: 'Parte de cima da barriga',
+  B: 'Oblíquos — os músculos do lado da barriga',
+  C: 'Parte de baixo da barriga',
+  D: 'Pranchas e exercícios de sustentação',
+  E: 'Abdômen junto com o resto do corpo',
+  F: 'Curto e intenso, com pouco descanso',
+  G: 'Movimentos leves para soltar o corpo',
 };
 
 /** Ciclos extras — disponíveis nas configurações, fora do padrão inicial. */
@@ -120,16 +131,18 @@ export interface UserPreferencias {
   modo_padrao: ModoExercicio;
   reps_series_padrao?: number;
   reps_repeticoes_padrao?: number;
+  /** Segundos padrão nos exercícios de tempo (prancha, suspensão na barra). */
+  tempo_exercicio_padrao_seg?: number;
+  /** true = usuário deixou reps/tempo no "Recomendado" (deriva do nível). */
+  esquema_recomendado?: boolean;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
   /** Estilo de combate na Exploração AFK. */
   arma_preferida?: ArmaPreferida | null;
   /** Arcos e espadas desbloqueados na loja da exploração. */
   patrol_armas?: import('../patrol/shop.js').PatrolArmasState;
-  /** Não exibir aviso de teto diário de XP ao iniciar treino. */
+  /** Não exibir aviso de máx. diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
-  /** Resgatar recompensas grátis da loja diária ao abrir o app. */
-  coletar_loja_diaria_automatico?: boolean;
   /** Slugs sempre incluídos nos treinos sugeridos. */
   exercicios_fixos?: string[];
   /** Slugs excluídos das recomendações. */
@@ -215,6 +228,8 @@ export interface PerfilTreino {
   /** null = "recomendado": o sistema deriva as partes do foco. */
   partes: ParteCorpo[] | null;
   frequencia_semanal: number; // 2..7
+  /** Dias fixos de treino (0=Dom..6=Sáb); null = sem dias fixos (legado). */
+  dias_semana?: number[] | null;
   tempo_por_sessao_min: 10 | 20 | 30 | 45;
   restricoes: RestricaoFisica[];
   origem: 'onboarding' | 'reonboarding' | 'skip' | 'settings';
@@ -397,8 +412,6 @@ export type DailyRewardRarity = 'comum' | 'incomum' | 'raro' | 'epico';
 
 export type DailyRewardType = 'xp' | 'abdoria' | 'pacote' | 'item';
 
-export type DailyShopPaidOfferKind = 'surto_xp' | 'bolsa_abdoria' | 'pacote_misto';
-
 export type DailyShopSlotKind = 'recompensa_diaria' | 'oferta';
 
 export interface CosmeticUnlockRule {
@@ -504,7 +517,6 @@ export interface ShopResponse {
   sons: ShopCatalogItem[];
   efeitos: ShopCatalogItem[];
   banners: ShopCatalogItem[];
-  loja_diaria: LojaDiaria;
 }
 
 export interface CosmeticsResponse extends ShopResponse {
@@ -872,24 +884,6 @@ export function projectedMoedaAfterXpSpend(
   return Math.max(0, moedas - clawback);
 }
 
-export const DAILY_RARITY_LABELS: Record<DailyRewardRarity, string> = {
-  comum: 'Comum',
-  incomum: 'Incomum',
-  raro: 'Raro',
-  epico: 'Épico',
-};
-
-export const DAILY_LUCK_LABELS: Partial<Record<DailyRewardRarity, string>> = {
-  raro: 'Sorte grande!',
-  epico: 'Jackpot! Sorte épica!',
-};
-
-export const DAILY_PAID_OFFER_LABELS: Record<DailyShopPaidOfferKind, string> = {
-  surto_xp: 'Surto de XP',
-  bolsa_abdoria: 'Bolsa de Dorias',
-  pacote_misto: 'Pacote misto',
-};
-
 export const DEFAULT_COSMETICOS: Cosmeticos = {
   moedas: 0,
   moedas_xp_blocos: 0,
@@ -1005,6 +999,10 @@ export interface IUser {
   is_guest?: boolean;
   /** Foto de perfil; null/ausente = círculo com a inicial do nome. */
   avatar_url?: string | null;
+  /** Tag única (#A7K2) — nomes de exibição podem repetir, a tag não. */
+  tag?: string | null;
+  /** Bio curta exibida no perfil (inclusive no público). */
+  descricao?: string | null;
   /** Trocas de nome já feitas (1ª grátis, seguintes pagas). */
   nome_trocas?: number;
   /** Questionário de treino respondido; null/ausente = usuário legado. */
@@ -1363,11 +1361,28 @@ export type LeaderboardMetric = 'xp' | 'streak' | 'moedas';
 
 export const LEADERBOARD_DISPLAY_LIMIT = 25;
 
+/** Recorde exibido no perfil público (top 3 por volume). */
+export interface PublicProfileRecord {
+  slug: string;
+  nome: string;
+  melhor_valor: number;
+  unidade: 'reps' | 'segundos';
+}
+
+/** Conquista em destaque no perfil público. */
+export interface PublicProfileConquista {
+  id: string;
+  titulo: string;
+  icon: AchievementIcon;
+  dificuldade: AchievementDifficulty;
+}
+
 /** Perfil público de outro usuário — whitelist positiva, nunca dados sensíveis. */
 export interface PublicProfile {
   user_id: string;
   nome: string;
   avatar_url: string | null;
+  descricao: string | null;
   level: number;
   streak_atual: number;
   moldura_loja_equipada: string;
@@ -1376,6 +1391,15 @@ export interface PublicProfile {
   banner_equipado: string;
   podio: { first: number; second: number; third: number };
   tempo_jogo_minutos: number;
+  records_top: PublicProfileRecord[];
+  conquistas: {
+    desbloqueadas: number;
+    total: number;
+    destaque: PublicProfileConquista[];
+  };
+  social: { followers: number; following: number; amigos: number };
+  /** Relação do usuário logado com este perfil. */
+  relacao: { seguindo: boolean; segue_voce: boolean; amigo: boolean };
 }
 
 export interface AuthResponse {
@@ -1575,7 +1599,6 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   tutorial_visto: false,
   arma_preferida: null,
   ocultar_aviso_xp_diario: false,
-  coletar_loja_diaria_automatico: false,
   exercicios_fixos: [],
   exercicios_nao_recomendar: [],
   treinos_fixos: [],

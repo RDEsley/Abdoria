@@ -15,6 +15,15 @@ import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
 import { sanitizePublicProfile } from '../utils/sanitize-user.js';
 import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
+import { WorkoutHistory } from '../repositories/workout-history-repository.js';
+import { Follows } from '../repositories/follow-repository.js';
+import { ACHIEVEMENTS } from '../data/achievements.js';
+import {
+  computePersonalRecords,
+  type PersonalRecordExerciseInput,
+} from '../../../shared/personal-records.js';
+import { censorProfanity } from '../../../shared/utils/profanity.js';
+import { ensureUserTag } from '../services/user-tag.js';
 
 export const usersRouter = Router();
 
@@ -31,6 +40,7 @@ usersRouter.get('/me', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
+    await ensureUserTag(user);
     res.json(sanitizeUser(user));
   } catch (error) {
     console.error('GET /api/users/me error:', error);
@@ -38,7 +48,9 @@ usersRouter.get('/me', async (req: AuthRequest, res) => {
   }
 });
 
-/** Perfil público de outro usuário (ranking, futuro social) — whitelist positiva. */
+const ACHIEVEMENT_HIGHLIGHT_ORDER = { lendaria: 0, dificil: 1, media: 2, facil: 3 } as const;
+
+/** Perfil público de outro usuário (ranking, amigos) — whitelist positiva. */
 usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
   try {
     const user = await User.findById(String(req.params.id), { lean: true });
@@ -46,8 +58,57 @@ usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
-    const podio = await LeaderboardPodiumHistory.countsForUser(user.id);
-    res.json(sanitizePublicProfile(user, podio));
+
+    const [podio, history, targetFollowing, targetFollowers, meFollowing] = await Promise.all([
+      LeaderboardPodiumHistory.countsForUser(user.id),
+      WorkoutHistory.find({ usuario_id: user.id }),
+      Follows.followingIds(user.id),
+      Follows.followerIds(user.id),
+      Follows.followingIds(req.userId!),
+    ]);
+
+    const records_top = [
+      ...computePersonalRecords(
+        history.map((h) => ({
+          exercicios: h.exercicios as unknown as PersonalRecordExerciseInput[],
+          concluido_em: h.concluido_em,
+        })),
+      ).values(),
+    ]
+      .sort((a, b) => b.melhor_valor - a.melhor_valor)
+      .slice(0, 3)
+      .map(({ slug, nome, melhor_valor, unidade }) => ({ slug, nome, melhor_valor, unidade }));
+
+    const unlocked = new Set(user.gamificacao.conquistas);
+    const destaque = ACHIEVEMENTS.filter((a) => unlocked.has(a.id))
+      .sort(
+        (a, b) =>
+          ACHIEVEMENT_HIGHLIGHT_ORDER[a.dificuldade] - ACHIEVEMENT_HIGHLIGHT_ORDER[b.dificuldade],
+      )
+      .slice(0, 6)
+      .map(({ id, titulo, icon, dificuldade }) => ({ id, titulo, icon, dificuldade }));
+
+    const targetFollowerSet = new Set(targetFollowers);
+    const amigos = targetFollowing.filter((id) => targetFollowerSet.has(id)).length;
+    const seguindo = meFollowing.includes(user.id);
+    const segueVoce = targetFollowing.includes(req.userId!);
+
+    res.json(
+      sanitizePublicProfile(user, podio, {
+        records_top,
+        conquistas: {
+          desbloqueadas: unlocked.size,
+          total: ACHIEVEMENTS.length,
+          destaque,
+        },
+        social: {
+          followers: targetFollowers.length,
+          following: targetFollowing.length,
+          amigos,
+        },
+        relacao: { seguindo, segue_voce: segueVoce, amigo: seguindo && segueVoce },
+      }),
+    );
   } catch (error) {
     console.error('GET /api/users/:id/public error:', error);
     res.status(500).json({ error: 'Erro ao buscar perfil.' });
@@ -76,6 +137,14 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
 
     for (const key of allowed) {
       if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+
+    if (req.body.descricao !== undefined) {
+      const descricao =
+        typeof req.body.descricao === 'string'
+          ? censorProfanity(req.body.descricao.trim().slice(0, 160))
+          : '';
+      update.descricao = descricao || null;
     }
 
     if (req.body.preferencias !== undefined) {

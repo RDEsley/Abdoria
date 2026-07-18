@@ -1,20 +1,21 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Save, Settings, Shirt } from 'lucide-react';
-import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
+import { Palette, Pencil, Save, Settings, Share2, Users } from 'lucide-react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
+import { UserAvatar } from '@/components/profile/UserAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
-import { ProfileIdentityPanel } from '@/components/profile/ProfileIdentityPanel';
+import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
-import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { showGameToast } from '@/components/ui/GameToast';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
+import { getMySocial } from '@/lib/api/social';
 import { playTabSwitch } from '@/lib/sounds';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import {
@@ -34,12 +35,48 @@ export function ProfilePage() {
   const { user: appUser, stats, refresh } = useApp();
   const { user, refreshUser } = useAuth();
   const profile = user ?? appUser;
-  const [tab, setTab] = useState<Tab>('dados');
+  const [tab, setTab] = useState<Tab>('progresso');
   const [saving, setSaving] = useState(false);
   const [showCosmetics, setShowCosmetics] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [social, setSocial] = useState<{
+    followers: number;
+    following: number;
+    amigos: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMySocial()
+      .then((data) => {
+        if (!cancelled) setSocial(data);
+      })
+      .catch(() => {
+        /* contadores sociais são opcionais */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   if (!profile) {
     return <PageLoader />;
   }
+
+  const shareProfile = async () => {
+    const url = `${window.location.origin}/perfil/${profile.id}`;
+    const text = `Vem ver meu perfil no Abdoria — nível ${xpProgressFromTotal(profile.gamificacao.nivel_xp).level}, bora treinar junto!`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Abdoria · Core Quest', text, url });
+        return;
+      }
+    } catch {
+      return; // usuário cancelou o share
+    }
+    await navigator.clipboard.writeText(url);
+    showGameToast('Link do perfil copiado!', { variant: 'success' });
+  };
 
   const imc =
     profile.imc ??
@@ -95,8 +132,8 @@ export function ProfilePage() {
   };
 
   const tabs: { id: Tab; label: string }[] = [
+    { id: 'progresso', label: 'Meu Perfil' },
     { id: 'dados', label: 'Dados' },
-    { id: 'progresso', label: 'Progresso' },
     { id: 'definicao', label: 'Definição' },
   ];
 
@@ -108,10 +145,21 @@ export function ProfilePage() {
           <button
             type="button"
             className="game-icon-btn"
-            aria-label="Cosméticos e loja"
+            aria-label="Compartilhar perfil"
+            onClick={() => void shareProfile()}
+          >
+            <Share2 size={20} aria-hidden />
+          </button>
+          <Link to="/amigos" className="game-icon-btn" aria-label="Amigos">
+            <Users size={20} aria-hidden />
+          </Link>
+          <button
+            type="button"
+            className="game-icon-btn"
+            aria-label="Personalizar perfil"
             onClick={() => setShowCosmetics(true)}
           >
-            <Shirt size={20} aria-hidden />
+            <Palette size={20} aria-hidden />
           </button>
           <Link to="/configuracoes" className="game-icon-btn" aria-label="Configurações">
             <Settings size={20} aria-hidden />
@@ -120,39 +168,69 @@ export function ProfilePage() {
       </header>
 
       <CosmeticsModal open={showCosmetics} onClose={() => setShowCosmetics(false)} />
+      <ProfileEditModal
+        open={showEdit}
+        profile={profile}
+        onClose={() => setShowEdit(false)}
+        onChanged={handleRefresh}
+      />
 
       <div className={heroShellClass}>
+        <i className="game-profile-hero-shell__ring" aria-hidden />
+        <button
+          type="button"
+          className="game-profile-hero__edit"
+          aria-label="Editar perfil"
+          onClick={() => setShowEdit(true)}
+        >
+          <Pencil size={14} aria-hidden />
+        </button>
         <div className="game-profile-hero">
-          <CosmeticAvatar user={profile} size="lg" />
+          <span className="game-profile-hero__avatar-wrap">
+            <UserAvatar
+              nome={profile.nome}
+              avatarUrl={profile.avatar_url}
+              moldura={cosmeticos.moldura_equipada ?? null}
+              size="lg"
+            />
+            <span className="game-profile-hero__level-badge" aria-label={`Nível ${xpLevel}`}>
+              {xpLevel}
+            </span>
+          </span>
           <div className="game-profile-hero__meta min-w-0">
-            <p className="game-profile-hero__name">{profile.nome}</p>
-            {equippedTitle && <p className={titleClass}>{equippedTitle}</p>}
-            <p className="game-profile-hero__level">Nível {xpLevel}</p>
-            <p className="game-profile-hero__level break-all">{profile.email}</p>
+            <p className="game-profile-hero__name-row">
+              <span className="game-profile-hero__name truncate">{profile.nome}</span>
+              {equippedTitle && <span className={titleClass}>{equippedTitle}</span>}
+            </p>
+            {profile.descricao ? (
+              <p className="game-profile-hero__bio">{profile.descricao}</p>
+            ) : (
+              <p className="game-profile-hero__bio game-profile-hero__bio--hint">
+                Toque no lápis e escreva sua descrição.
+              </p>
+            )}
             {stats && (
               <div className="mt-2 flex items-center gap-2">
                 <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
-                {stats.streak_atual > 0 && (
-                  <ShareCardTrigger
-                    variant="ghost"
-                    label=""
-                    className="!w-auto !px-2 !py-1"
-                    data={{
-                      kind: 'streak',
-                      streakAtual: stats.streak_atual,
-                      streakMaior: profile.gamificacao.streak_maior,
-                      dateLabel: new Date().toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      }),
-                    }}
-                  />
-                )}
               </div>
             )}
           </div>
         </div>
+
+        <nav className="profile-counts" aria-label="Sua rede">
+          <Link to="/amigos" className="profile-counts__item">
+            <strong>{social?.amigos ?? '—'}</strong>
+            <span>amigos</span>
+          </Link>
+          <Link to="/amigos?tab=seguidores" className="profile-counts__item">
+            <strong>{social?.followers ?? '—'}</strong>
+            <span>seguidores</span>
+          </Link>
+          <Link to="/amigos?tab=seguindo" className="profile-counts__item">
+            <strong>{social?.following ?? '—'}</strong>
+            <span>seguindo</span>
+          </Link>
+        </nav>
       </div>
 
       <div className="flex gap-2">
@@ -170,8 +248,6 @@ export function ProfilePage() {
           </button>
         ))}
       </div>
-
-      {tab === 'dados' && <ProfileIdentityPanel profile={profile} onChanged={handleRefresh} />}
 
       {tab === 'dados' && (
         <form onSubmit={handleSave} className="glass-card flex flex-col gap-4 p-4">

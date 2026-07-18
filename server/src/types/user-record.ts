@@ -42,6 +42,10 @@ export interface UserRecord {
   is_demo_npc: boolean;
   /** Foto de perfil (Supabase Storage). null = usa a inicial do nome. */
   avatar_url?: string | null;
+  /** Tag única (#A7K2) — permite nomes repetidos sem conflito. */
+  tag?: string | null;
+  /** Bio curta do perfil (visível no perfil público). */
+  descricao?: string | null;
   /** Quantas trocas de nome o usuário já fez (1ª grátis, depois pagas). */
   nome_trocas?: number;
   /** Questionário de treino (Grupo H). null = usuário legado. */

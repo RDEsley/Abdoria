@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Coins, Locate, Trophy } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Coins, Trophy } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
@@ -17,7 +19,7 @@ import {
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'xp', label: 'Pontos (XP)' },
-  { id: 'moedas', label: CURRENCY_NAME },
+  { id: 'moedas', label: 'Coins' },
   { id: 'streak', label: 'Dias seguidos' },
 ];
 
@@ -31,10 +33,6 @@ function formatRankBand(rank: number, total: number | null | undefined): string 
     if (total > band && rank <= band) return `Top ${band}`;
   }
   return total > 1000 ? '1000+' : undefined;
-}
-
-function scrollToMyPosition() {
-  document.getElementById('my-rank-row')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function WeeklyRewardBadge({ rank, metric }: { rank: number; metric: LeaderboardMetric }) {
@@ -67,16 +65,29 @@ function RankRow({
   metric,
   label,
   rankLabel,
+  onOpen,
+  pinned = false,
 }: {
   entry: LeaderboardEntry;
   metric: LeaderboardMetric;
   label?: string;
   rankLabel?: string;
+  onOpen?: () => void;
+  pinned?: boolean;
 }) {
   return (
     <li
-      id={entry.is_me ? 'my-rank-row' : undefined}
-      className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}
+      id={entry.is_me && !pinned ? 'my-rank-row' : undefined}
+      className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}${onOpen ? ' game-rank-row--link' : ''}`}
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (onOpen && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
     >
       <span className="game-rank-row__rank">{rankLabel ?? `#${entry.rank}`}</span>
       <LeaderboardUserAvatar entry={entry} size="sm" />
@@ -90,10 +101,13 @@ function RankRow({
 }
 
 export function LeaderboardPage() {
+  const navigate = useNavigate();
   const [metric, setMetric] = useState<LeaderboardMetric>('xp');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [myRowVisible, setMyRowVisible] = useState(false);
+  const listWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -112,26 +126,52 @@ export function LeaderboardPage() {
       .finally(() => setLoading(false));
   }, [metric]);
 
+  const meInPodium = entries.slice(0, 3).some((entry) => entry.is_me);
+  const meInList = entries.slice(3).some((entry) => entry.is_me);
+  const isMeInTop = me != null && (meInPodium || meInList);
+
+  // A linha fixa embaixo só aparece enquanto a posição real do usuário está fora da tela.
+  useEffect(() => {
+    if (loading || !isMeInTop) {
+      setMyRowVisible(false);
+      return;
+    }
+    const target = meInList
+      ? document.getElementById('my-rank-row')
+      : document.getElementById('rank-podium');
+    if (!target) {
+      setMyRowVisible(false);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([observed]) => setMyRowVisible(observed?.isIntersecting ?? false),
+      { threshold: meInList ? 0.6 : 0.3 },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loading, isMeInTop, meInList, entries]);
+
+  const scrollToMyRow = () => {
+    const target = meInList
+      ? document.getElementById('my-rank-row')
+      : document.getElementById('rank-podium');
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const openProfile = (entry: LeaderboardEntry) => {
+    navigate(entry.is_me ? '/perfil' : `/perfil/${entry.user_id}`);
+  };
+
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
-  const isMeInTop = me != null && entries.some((entry) => entry.is_me);
-  const showMeAtBottom = me != null && !isMeInTop;
+  const showPinnedMe = me != null && !loading && (!isMeInTop || !myRowVisible);
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-start justify-between gap-3">
-        <GamePageHeader eyebrow="Comunidade Abdoria" title="Classificação" />
-        {me != null && (
-          <button
-            type="button"
-            className="game-btn game-btn--ghost game-btn--sm shrink-0"
-            onClick={scrollToMyPosition}
-          >
-            <Locate size={14} aria-hidden />
-            Minha posição
-          </button>
-        )}
-      </div>
+      <GamePageHeader
+        eyebrow="Comunidade Abdoria"
+        title={metric === 'streak' ? 'Classificação' : 'Classificação Semanal'}
+      />
 
       {metric !== 'streak' && <LeaderboardResetCountdown />}
 
@@ -160,39 +200,55 @@ export function LeaderboardPage() {
       {loading ? (
         <PageLoader />
       ) : (
-        <>
-          <LeaderboardPodium top3={top3} metric={metric} />
+        <div ref={listWrapRef} className="flex flex-col gap-5">
+          <div id="rank-podium">
+            <LeaderboardPodium top3={top3} metric={metric} onOpen={openProfile} />
+          </div>
 
           {rest.length > 0 && (
             <ul className="game-rank-list">
               {rest.map((entry) => (
-                <RankRow key={entry.user_id} entry={entry} metric={metric} />
+                <RankRow
+                  key={entry.user_id}
+                  entry={entry}
+                  metric={metric}
+                  onOpen={() => openProfile(entry)}
+                />
               ))}
             </ul>
           )}
 
-          {showMeAtBottom && me && (
-            <>
-              <p className="game-rank-list__divider">• • •</p>
-              <ul className="game-rank-list">
-                <RankRow
-                  entry={me}
-                  metric={metric}
-                  label="Você"
-                  rankLabel={formatRankBand(me.rank, me.total)}
-                />
-              </ul>
-            </>
-          )}
-
-          {entries.length === 0 && !showMeAtBottom && (
+          {entries.length === 0 && (
             <p className="text-center text-sm font-bold text-stone-500">
               <Trophy size={16} className="mr-1 inline" />
               Nenhum guerreiro no ranking ainda.
             </p>
           )}
-        </>
+        </div>
       )}
+
+      <AnimatePresence>
+        {showPinnedMe && me && (
+          <motion.div
+            className="game-rank-pinned"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          >
+            <ul className="game-rank-list">
+              <RankRow
+                entry={me}
+                metric={metric}
+                label="Você"
+                rankLabel={isMeInTop ? undefined : formatRankBand(me.rank, me.total)}
+                onOpen={isMeInTop ? scrollToMyRow : undefined}
+                pinned
+              />
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

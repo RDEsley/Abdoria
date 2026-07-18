@@ -1,0 +1,805 @@
+/* Perfil (edição) + páginas sociais (amigos, perfil público, ranking fixado) */
+
+/* Lápis de edição — fixo no canto superior direito do card */
+.game-profile-hero__edit {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(28, 25, 23, 0.1);
+  color: #1c1917;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.game-profile-hero__edit:hover {
+  background: rgba(28, 25, 23, 0.18);
+}
+
+.game-profile-hero-shell--skinned .game-profile-hero__edit {
+  background: rgba(255, 255, 255, 0.22);
+  color: #f8fafc;
+}
+
+.game-profile-hero-shell--skinned .game-profile-hero__edit:hover {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+/* Avatar do hero com badge de nível na borda (igual à top-navbar) */
+.game-profile-hero__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.game-profile-hero__level-badge {
+  position: absolute;
+  left: -0.35rem;
+  bottom: -0.35rem;
+  z-index: 2;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding: 0 0.32rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.66rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #fff;
+  background: #10b981;
+  border: 2px solid #fff;
+}
+
+/* Nome + título na mesma linha (igual à top-navbar) */
+.game-profile-hero__name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.game-profile-hero__name-row .game-profile-hero__title {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.game-profile-hero__bio {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.45;
+  opacity: 0.92;
+  overflow-wrap: anywhere;
+}
+
+.game-profile-hero__bio--hint {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* Modal de edição de perfil */
+.profile-edit-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(26rem, calc(100vw - 2rem));
+  max-height: min(85vh, 40rem);
+  overflow: hidden;
+}
+
+.profile-edit-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.15rem 0.75rem;
+}
+
+.profile-edit-modal__head h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.profile-edit-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #78716c;
+  cursor: pointer;
+}
+
+.profile-edit-modal__close:hover {
+  background: #f5f5f4;
+}
+
+.profile-edit-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.25rem 1.15rem 1rem;
+  overflow-y: auto;
+}
+
+.profile-edit-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.profile-edit-photo__btn {
+  position: relative;
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.profile-edit-photo__btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.profile-edit-photo__badge {
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.15rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: #1c1917;
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+.profile-edit-photo__remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: none;
+  background: none;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #a8a29e;
+  cursor: pointer;
+}
+
+.profile-edit-photo__remove:hover {
+  color: #dc2626;
+}
+
+.profile-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.profile-edit-field__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #57534e;
+}
+
+.profile-edit-field__input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-weight: 600;
+  color: #1c1917;
+  background: #fafaf9;
+  border: 1px solid #d6d3d1;
+  border-radius: 0.75rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.profile-edit-field__input:focus {
+  border-color: #10b981;
+}
+
+.profile-edit-field__input--area {
+  resize: none;
+  line-height: 1.45;
+}
+
+.profile-edit-field__hint {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #a8a29e;
+}
+
+.profile-edit-field__hint--count {
+  align-self: flex-end;
+}
+
+.profile-edit-molduras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.profile-edit-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.15rem 1rem;
+  border-top: 1px solid rgba(28, 25, 23, 0.08);
+}
+
+/* Ranking — linha do usuário fixada embaixo */
+.game-rank-pinned {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.6rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(calc(100vw - 2rem), 30rem);
+  z-index: 40;
+  filter: drop-shadow(0 6px 14px rgba(28, 25, 23, 0.25));
+}
+
+@media (min-width: 768px) {
+  .game-rank-pinned {
+    left: calc(50% + 8rem);
+    bottom: 1.25rem;
+    width: min(calc(100vw - 18rem), 46rem);
+  }
+}
+
+.game-rank-row--link {
+  cursor: pointer;
+}
+
+/* Espaço pro lápis no canto — o nome não passa por baixo dele */
+.game-profile-hero {
+  padding-right: 2.9rem;
+}
+
+/* Contadores estilo Instagram no card do perfil */
+.profile-counts {
+  display: flex;
+  border-top: 1px solid rgba(28, 25, 23, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.game-profile-hero-shell--skinned .profile-counts {
+  border-top-color: rgba(255, 255, 255, 0.22);
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.profile-counts__item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  padding: 0.55rem 0.25rem;
+  text-decoration: none;
+  color: #1c1917;
+}
+
+.game-profile-hero-shell--skinned .profile-counts__item {
+  color: #f8fafc;
+}
+
+.profile-counts__item strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.profile-counts__item span {
+  font-size: 0.6rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+a.profile-counts__item:hover strong {
+  text-decoration: underline;
+}
+
+/* Listas sociais (amigos/seguindo/seguidores) */
+.friends-rank-row {
+  cursor: pointer;
+}
+
+.friends-rank-row__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.friends-rank-row__streak {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #c2410c;
+  background: #ffedd5;
+  border: 1px solid #fdba74;
+  border-radius: 999px;
+}
+
+.friends-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #57534e;
+  background: #f5f5f4;
+  border: 1px solid #d6d3d1;
+  border-radius: 999px;
+}
+
+.friends-chip--friend {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
+
+.friends-remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #a8a29e;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.friends-remove:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.follow-card__btn--friend {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+
+/* Perfil público — conquistas em destaque */
+.public-profile-achievements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-profile-achievements__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.3rem 0.6rem 0.3rem 0.35rem;
+  border: 1.5px solid rgba(28, 25, 23, 0.14);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #44403c;
+}
+
+.public-profile-achievements__item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Opções — focos do treino */
+.settings-cycle {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border: 1.5px solid rgba(28, 25, 23, 0.14);
+  border-radius: 0.85rem;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.settings-cycle--on {
+  border-color: rgba(5, 150, 105, 0.5);
+  background: #f0fdf4;
+}
+
+.settings-cycle__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.5rem;
+  background: #fafaf9;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #57534e;
+}
+
+.settings-cycle--on .settings-cycle__badge {
+  background: #10b981;
+  color: #fff;
+  border-color: var(--game-green-dark);
+}
+
+.settings-cycle__text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.settings-cycle__text strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.settings-cycle__optional {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #f5f5f4;
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716c;
+}
+
+.settings-cycle__text small {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
+.settings-cycle__check {
+  flex-shrink: 0;
+  color: #059669;
+}
+
+/* Ajuste de foto (crop estilo WhatsApp) */
+.photo-cropper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 1.15rem;
+}
+
+.photo-cropper__title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.photo-cropper__hint {
+  margin: 0.15rem 0 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
+.photo-cropper__viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 2px solid var(--game-ink);
+  background: #1c1917;
+  touch-action: none;
+  cursor: grab;
+}
+
+.photo-cropper__viewport:active {
+  cursor: grabbing;
+}
+
+.photo-cropper__img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  user-select: none;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.photo-cropper__mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 49.5%, rgba(12, 10, 9, 0.62) 50%);
+}
+
+.photo-cropper__mask::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+}
+
+.photo-cropper__zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 0.85rem;
+  color: #78716c;
+}
+
+.photo-cropper__zoom input {
+  flex: 1;
+  cursor: pointer;
+  accent-color: #10b981;
+}
+
+.photo-cropper__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
+/* Opções — tag do usuário */
+.settings-user-tag {
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border: 1.5px solid rgba(28, 25, 23, 0.2);
+  border-radius: 999px;
+  background: #f5f5f4;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #57534e;
+}
+
+.settings-tag-copy {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1.5px solid rgba(28, 25, 23, 0.2);
+  border-radius: 999px;
+  background: #fff;
+  color: #57534e;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.settings-tag-copy:hover {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+/* Opções — pacotes de som */
+.settings-sound {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.55rem;
+  border: 1.5px solid rgba(28, 25, 23, 0.14);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.settings-sound__preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.5rem;
+  background: #fafaf9;
+  color: #047857;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.settings-sound__preview:hover {
+  background: #ecfdf5;
+}
+
+.settings-sound__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #44403c;
+}
+
+.settings-sound__equipped {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #047857;
+}
+
+.settings-sound__action {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.28rem 0.7rem;
+  border: 1.5px solid var(--game-ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #1c1917;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.settings-sound__action:hover:not(:disabled) {
+  background: #f0fdf4;
+}
+
+.settings-sound__action--buy {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #d97706;
+}
+
+.settings-sound__locked {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #a8a29e;
+}
+
+/* Opções — seção recolhível */
+.settings-collapse__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-collapse__chevron {
+  flex-shrink: 0;
+  color: #78716c;
+  transition: transform 0.2s ease;
+}
+
+.settings-collapse__chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Opções — barra fixa de salvar (só com alterações pendentes) */
+.settings-savebar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.6rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(calc(100vw - 2rem), 30rem);
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+  border: 2px solid var(--game-ink);
+  border-radius: 1rem;
+  background: var(--game-paper, #fffdf7);
+  box-shadow: 3px 3px 0 var(--game-ink);
+}
+
+@media (min-width: 768px) {
+  .settings-savebar {
+    left: calc(50% + 8rem);
+    bottom: 1.25rem;
+  }
+}
+
+.settings-savebar__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #57534e;
+}
+
+.settings-savebar__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* Perfil público — cartões de estatística */
+.public-profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.85rem 0.5rem;
+  background: #fff;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-resting);
+  text-align: center;
+}
+
+.public-profile-stat strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.public-profile-stat span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #78716c;
+}

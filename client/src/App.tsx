@@ -29,6 +29,12 @@ const LeaderboardPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
+const PublicProfilePage = lazy(() =>
+  import('@/pages/PublicProfilePage').then((m) => ({ default: m.PublicProfilePage })),
+);
+const FriendsPage = lazy(() =>
+  import('@/pages/FriendsPage').then((m) => ({ default: m.FriendsPage })),
+);
 const SettingsPage = lazy(() =>
   import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
@@ -119,6 +125,22 @@ export default function App() {
                     element={
                       <LazyPage>
                         <ProfilePage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="perfil/:userId"
+                    element={
+                      <LazyPage>
+                        <PublicProfilePage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="amigos"
+                    element={
+                      <LazyPage>
+                        <FriendsPage />
                       </LazyPage>
                     }
                   />

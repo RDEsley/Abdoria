@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Dumbbell, Home, Layers, Settings, Trophy, User } from 'lucide-react';
+import { Castle, Dumbbell, Layers, Settings, Trophy, User } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameToastHost } from '@/components/ui/GameToast';
@@ -16,7 +16,7 @@ import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Início' },
+  { to: '/', icon: Castle, label: 'Início' },
   { to: '/biblioteca', icon: Layers, label: 'Exercícios' },
   { to: '/construtor', icon: Dumbbell, label: 'Missão' },
   { to: '/ranking', icon: Trophy, label: 'Ranking' },

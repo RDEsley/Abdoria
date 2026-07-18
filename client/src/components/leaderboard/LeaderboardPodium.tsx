@@ -23,9 +23,12 @@ function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric):
 export function LeaderboardPodium({
   top3,
   metric,
+  onOpen,
 }: {
   top3: LeaderboardEntry[];
   metric: LeaderboardMetric;
+  /** Abre o perfil público do jogador ao tocar no slot. */
+  onOpen?: (entry: LeaderboardEntry) => void;
 }) {
   if (top3.length === 0) return null;
 
@@ -42,7 +45,20 @@ export function LeaderboardPodium({
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: visualIdx * 0.1 }}
-            className={`game-podium__slot game-podium__slot--${slot.medal}`}
+            className={`game-podium__slot game-podium__slot--${slot.medal}${onOpen ? ' game-podium__slot--link' : ''}`}
+            role={onOpen ? 'button' : undefined}
+            tabIndex={onOpen ? 0 : undefined}
+            onClick={onOpen ? () => onOpen(entry) : undefined}
+            onKeyDown={
+              onOpen
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onOpen(entry);
+                    }
+                  }
+                : undefined
+            }
           >
             <LeaderboardUserAvatar entry={entry} size="md" className="game-podium__avatar" />
             <p className="game-podium__name">{entry.nome}</p>

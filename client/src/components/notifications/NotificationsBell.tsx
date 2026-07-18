@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Bell, Coins, Medal, Snowflake, Sparkles } from 'lucide-react';
+import { Bell, Coins, Medal, Snowflake, Sparkles, Trash2, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import {
+  clearAllNotifications,
+  dismissNotification,
   getNotifications,
   markAllNotificationsRead,
   type AppNotification,
@@ -33,6 +35,32 @@ export function NotificationsBell() {
   const [items, setItems] = useState<AppNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const handleDismiss = async (id: string) => {
+    setBusyId(id);
+    try {
+      await dismissNotification(id);
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível remover.'), { variant: 'error' });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setBusyId('all');
+    try {
+      await clearAllNotifications();
+      setItems([]);
+      setUnread(0);
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível limpar.'), { variant: 'error' });
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const refresh = useCallback(async () => {
     try {
@@ -90,9 +118,22 @@ export function NotificationsBell() {
         variant="wide"
         labelledBy="notifications-title"
       >
-        <h2 id="notifications-title" className="text-base font-extrabold text-stone-800">
-          Notificações
-        </h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="notifications-title" className="text-base font-extrabold text-stone-800">
+            Notificações
+          </h2>
+          {items.length > 0 && (
+            <button
+              type="button"
+              className="notifications-clear"
+              disabled={busyId === 'all'}
+              onClick={() => void handleClearAll()}
+            >
+              <Trash2 size={13} aria-hidden />
+              Limpar tudo
+            </button>
+          )}
+        </div>
         {loading ? (
           <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
         ) : items.length === 0 ? (
@@ -107,11 +148,21 @@ export function NotificationsBell() {
                 className={`notifications-item${item.lida_em ? '' : ' notifications-item--unread'}`}
               >
                 <span className="notifications-item__icon">{iconForTipo(item.tipo)}</span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="notifications-item__title">{item.titulo}</p>
                   {item.corpo && <p className="notifications-item__body">{item.corpo}</p>}
                   <p className="notifications-item__when">{formatWhen(item.criada_em)}</p>
                 </div>
+                <button
+                  type="button"
+                  className="notifications-item__dismiss"
+                  aria-label="Remover notificação"
+                  title="Remover"
+                  disabled={busyId === item.id}
+                  onClick={() => void handleDismiss(item.id)}
+                >
+                  <X size={14} aria-hidden />
+                </button>
               </li>
             ))}
           </ul>

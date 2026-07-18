@@ -9,6 +9,9 @@
   background: linear-gradient(160deg, #10b981 0%, #047857 100%);
   color: #fff;
   overflow: visible;
+  /* Mantém os anéis das molduras (::before/::after com z-index -1) visíveis
+     mesmo dentro de botões/cards com fundo próprio. */
+  isolation: isolate;
 }
 
 .user-avatar--xs {
@@ -79,21 +82,61 @@
   background: conic-gradient(from 45deg, #fde047, #f59e0b, #b45309, #fbbf24, #fde047);
 }
 
-/* Especial: preto e branco com traço animado */
+/* Especial: anel preto sólido com brilhos brancos orbitando */
 .user-avatar--frame-especial::before {
   content: '';
   position: absolute;
   inset: -5px;
   border-radius: inherit;
-  border: 3px dashed #1c1917;
+  border: 3px solid #1c1917;
   background: #fff;
   z-index: -1;
-  animation: user-avatar-dash-spin 10s linear infinite;
 }
 
-@keyframes user-avatar-dash-spin {
+.user-avatar--frame-especial::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 24deg,
+    rgba(255, 255, 255, 0.95) 30deg,
+    transparent 36deg 128deg,
+    rgba(255, 255, 255, 0.75) 134deg,
+    transparent 140deg 236deg,
+    rgba(255, 255, 255, 0.9) 244deg,
+    transparent 252deg 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  animation:
+    user-avatar-sparkle-orbit 4s linear infinite,
+    user-avatar-sparkle-twinkle 1.6s ease-in-out infinite;
+}
+
+@keyframes user-avatar-sparkle-orbit {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes user-avatar-sparkle-twinkle {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
   }
 }
 

@@ -65,4 +65,14 @@ export const Notifications = {
       .eq('user_id', userId)
       .is('lida_em', null);
   },
+
+  async deleteOne(userId: string, id: string): Promise<void> {
+    const sb = getSupabase();
+    await sb.from('notifications').delete().eq('user_id', userId).eq('id', id);
+  },
+
+  async deleteAllForUser(userId: string): Promise<void> {
+    const sb = getSupabase();
+    await sb.from('notifications').delete().eq('user_id', userId);
+  },
 };

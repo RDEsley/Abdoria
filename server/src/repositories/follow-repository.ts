@@ -22,6 +22,12 @@ export const Follows = {
     return (data ?? []).map((row) => row.followed_id as string);
   },
 
+  async followerIds(userId: string): Promise<string[]> {
+    const sb = getSupabase();
+    const { data } = await sb.from('follows').select('follower_id').eq('followed_id', userId);
+    return (data ?? []).map((row) => row.follower_id as string);
+  },
+
   async counts(userId: string): Promise<{ followers: number; following: number }> {
     const sb = getSupabase();
     const [{ count: followers }, { count: following }] = await Promise.all([

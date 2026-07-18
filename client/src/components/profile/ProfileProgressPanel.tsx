@@ -1,10 +1,9 @@
 import { Dumbbell, Flame, Timer, Trophy } from 'lucide-react';
+import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
-import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatTrainingDuration } from '@/lib/utils';
 import {
-  MUSCULO_LABELS,
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
   dailyFullExercisesForCap,
@@ -61,25 +60,11 @@ export function ProfileProgressPanel({ stats }: Props) {
         showRulesLink
       />
 
-      <section className="glass-card p-4">
-        <h3 className="game-section-title">Zonas da semana</h3>
-        <p className="mb-3 text-xs font-bold leading-relaxed text-stone-500">
-          Volume desta semana por região.
-        </p>
-        {stats.area_mais_treinada && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            <span className="game-profile-progress__zone-chip game-profile-progress__zone-chip--plus">
-              + {MUSCULO_LABELS[stats.area_mais_treinada]}
-            </span>
-            {stats.area_menos_treinada && (
-              <span className="game-profile-progress__zone-chip game-profile-progress__zone-chip--minus">
-                − {MUSCULO_LABELS[stats.area_menos_treinada]}
-              </span>
-            )}
-          </div>
-        )}
-        <MuscleBarChart muscles={stats.musculos_semana} />
-      </section>
+      <AchievementsPreview
+        conquistas={stats.conquistas}
+        unlockedCount={unlockedAchievements}
+        total={stats.conquistas.length}
+      />
     </div>
   );
 }

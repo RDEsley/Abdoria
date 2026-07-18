@@ -54,17 +54,21 @@ export function sanitizeUser(user: UserRecord | Record<string, unknown>) {
   return raw;
 }
 
-/** Perfil público de outro usuário (ranking, futuro social) — whitelist positiva, nunca
+type PublicProfileExtras = Pick<PublicProfile, 'records_top' | 'conquistas' | 'social' | 'relacao'>;
+
+/** Perfil público de outro usuário (ranking, amigos) — whitelist positiva, nunca
     email/idade/peso/preferências/dados_salvos/inventário/afk/perfil ou plano de treino. */
 export function sanitizePublicProfile(
   user: UserRecord,
   podio: { first: number; second: number; third: number },
+  extras: PublicProfileExtras,
 ): PublicProfile {
   const cosmeticos = resolveCosmeticos(user.cosmeticos, user.gamificacao.nivel_xp);
   return {
     user_id: user.id,
     nome: user.nome,
     avatar_url: user.avatar_url ?? null,
+    descricao: user.descricao ?? null,
     level: xpLevelFromTotal(user.gamificacao.nivel_xp),
     streak_atual: user.gamificacao.streak_atual,
     moldura_loja_equipada: cosmeticos.moldura_loja_equipada,
@@ -73,6 +77,7 @@ export function sanitizePublicProfile(
     banner_equipado: cosmeticos.banner_equipado,
     podio,
     tempo_jogo_minutos: user.gamificacao.total_minutos,
+    ...extras,
   };
 }
 
