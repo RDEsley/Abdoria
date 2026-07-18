@@ -523,9 +523,9 @@
   color: #57534e;
   cursor: pointer;
   background: var(--game-paper);
-  border: var(--border-card);
+  border: 2px solid var(--game-ink);
   border-radius: 0.65rem;
-  box-shadow: var(--shadow-resting);
+  box-shadow: 2px 2px 0 var(--game-ink);
   transition:
     background 0.12s ease,
     color 0.12s ease,
@@ -535,7 +535,8 @@
 .game-tab--active {
   color: #fff;
   background: var(--game-green);
-  box-shadow: var(--shadow-resting);
+  border-color: var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-green-dark);
 }
 
 .game-tab--scroll {

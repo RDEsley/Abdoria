@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Coins, Crown, Gift, Sparkles, Ticket, Zap } from 'lucide-react';
-import { DailyShopPurchaseCelebration } from '@/components/shop/DailyShopPurchaseCelebration';
+import { CelebrationBurst } from '@/components/effects/CelebrationBurst';
 import { GameButton } from '@/components/ui/GameButton';
 import type { GiftCodeRewardLine, RedeemCodeResponse } from '@/types';
 import { CURRENCY_NAME } from '@/types';
@@ -54,7 +54,7 @@ export function GiftCodeRewardReveal({ result, effectId, onClose }: Props) {
       aria-labelledby="gift-reward-title"
       onClick={onClose}
     >
-      <DailyShopPurchaseCelebration effectId={effectId} fullscreen />
+      <CelebrationBurst effectId={effectId} fullscreen />
 
       <motion.div
         className="game-gift-reward-card"

@@ -7,7 +7,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function validateEmail(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed) return 'Informe seu email.';
-  if (!EMAIL_PATTERN.test(trimmed)) return 'Email inválido. Confira o endereço e tente de novo.';
+  if (!EMAIL_PATTERN.test(trimmed)) return 'Email inválido.';
   return undefined;
 }
 
@@ -19,7 +19,7 @@ export function validatePassword(value: string, minLength = 6): string | undefin
 
 export function validateRegisterNome(value: string): string | undefined {
   const trimmed = value.trim();
-  if (!trimmed) return 'Informe como quer ser chamado no jogo.';
+  if (!trimmed) return 'Informe seu nome.';
   if (trimmed.length < 2) return 'O nome precisa ter pelo menos 2 caracteres.';
   if (trimmed.length > 40) return 'Use um nome com até 40 caracteres.';
   return undefined;

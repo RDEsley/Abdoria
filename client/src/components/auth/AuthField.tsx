@@ -49,7 +49,18 @@ export function AuthField({
           <button
             type="button"
             className="game-auth-field__password-toggle"
-            onClick={() => setPasswordVisible((v) => !v)}
+            onClick={() =>
+              setPasswordVisible((v) => {
+                const next = !v;
+                // O sol/lua da cena fecha os olhos enquanto a senha estiver visível.
+                window.dispatchEvent(
+                  new CustomEvent('abdoria:password-visibility', {
+                    detail: { id: fieldId, visible: next },
+                  }),
+                );
+                return next;
+              })
+            }
             aria-pressed={passwordVisible}
             aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
             tabIndex={-1}

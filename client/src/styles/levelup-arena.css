@@ -134,6 +134,15 @@
   padding-top: 0.5rem;
 }
 
+.game-podium__slot--link {
+  cursor: pointer;
+}
+
+.game-podium__slot--link:hover {
+  transform: translateY(-2px);
+  transition: transform 0.12s ease;
+}
+
 .game-podium__slot {
   display: flex;
   width: min(7.5rem, 28vw);

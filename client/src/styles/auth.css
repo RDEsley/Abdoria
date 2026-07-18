@@ -25,50 +25,332 @@
     linear-gradient(180deg, #060a16 0%, #0b1130 32%, #172352 62%, #223269 100%);
 }
 
-.game-login__moon {
+/* ---- Céu de dia (login) — o padrão do arquivo é a noite (cadastro) ---- */
+.game-login--day .game-login__sky {
+  background:
+    radial-gradient(ellipse 70% 45% at 20% 0%, rgba(255, 255, 255, 0.5) 0%, transparent 60%),
+    linear-gradient(180deg, #60a5fa 0%, #7dd3fc 35%, #bae6fd 70%, #e0f2fe 100%);
+}
+
+.game-login--day .game-cloud {
+  filter: brightness(1.25);
+}
+
+/* ---- Sol/Lua com rosto ---- */
+.game-celestial {
   position: absolute;
   top: 7%;
-  right: 12%;
   z-index: 1;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
+}
+
+/* Sol nasce à direita (o form fica no centro): entra vindo do lado da lua. */
+.game-celestial--sun {
+  right: 12%;
+  background: radial-gradient(circle at 38% 32%, #fef9c3 0%, #fde047 55%, #f59e0b 100%);
+  box-shadow:
+    0 0 36px 10px rgba(253, 224, 71, 0.45),
+    0 0 90px 30px rgba(253, 224, 71, 0.16);
+  animation:
+    game-celestial-cross-right 1.2s cubic-bezier(0.3, 1.05, 0.5, 1) both,
+    game-celestial-glow 5s ease-in-out 1.2s infinite;
+}
+
+/* Lua nasce à esquerda — lado oposto ao sol. */
+.game-celestial--moon {
+  left: 12%;
   background: radial-gradient(circle at 35% 32%, #fefce8 0%, #fde68a 55%, #fcd34d 100%);
   box-shadow:
     0 0 32px 8px rgba(253, 230, 138, 0.35),
     0 0 80px 26px rgba(253, 230, 138, 0.12);
-  animation: game-moon-glow 5s ease-in-out infinite;
+  animation:
+    game-celestial-cross-left 1.2s cubic-bezier(0.3, 1.05, 0.5, 1) both,
+    game-celestial-glow 5s ease-in-out 1.2s infinite;
 }
 
-.game-login__moon::before,
-.game-login__moon::after {
+.game-celestial--moon::before,
+.game-celestial--moon::after {
   content: '';
   position: absolute;
   border-radius: 50%;
   background: rgba(217, 119, 6, 0.16);
 }
 
-.game-login__moon::before {
+.game-celestial--moon::before {
+  top: 10px;
+  left: 10px;
+  width: 12px;
+  height: 12px;
+}
+
+.game-celestial--moon::after {
   top: 14px;
-  left: 11px;
-  width: 13px;
-  height: 13px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
 }
 
-.game-login__moon::after {
-  top: 32px;
-  left: 30px;
-  width: 8px;
+.game-celestial__rays {
+  position: absolute;
+  inset: -16px;
+  display: block;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(253, 224, 71, 0.55) 0deg 7deg,
+    transparent 7deg 30deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 54%, #fff 56% 74%, transparent 76%);
+  mask: radial-gradient(circle, transparent 54%, #fff 56% 74%, transparent 76%);
+  animation: game-celestial-spin 26s linear infinite;
+}
+
+.game-celestial__face {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 1;
+}
+
+.game-celestial__eye {
+  position: absolute;
+  top: 38%;
+  display: block;
+  width: 7px;
+  height: 10px;
+  border-radius: 999px;
+  background: #78350f;
+  transition:
+    height 0.18s ease,
+    transform 0.18s ease;
+}
+
+.game-celestial__eye--l {
+  left: 28%;
+}
+
+.game-celestial__eye--r {
+  right: 28%;
+}
+
+.game-celestial:not(.game-celestial--sleep) .game-celestial__eye {
+  animation: game-celestial-blink 5.5s ease-in-out infinite;
+}
+
+.game-celestial__mouth {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  display: block;
+  width: 15px;
   height: 8px;
+  margin-left: -7.5px;
+  border: 2.5px solid #78350f;
+  border-top: none;
+  border-radius: 0 0 999px 999px;
+  transition: height 0.18s ease;
 }
 
-@keyframes game-moon-glow {
+/* Senha visível: olhos fechados (soneca educada) */
+.game-celestial--sleep .game-celestial__eye {
+  height: 2.5px;
+  transform: translateY(4px);
+  animation: none;
+}
+
+.game-celestial--sleep .game-celestial__mouth {
+  height: 4px;
+}
+
+@keyframes game-celestial-cross-right {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-76vw + 24%), 52px) scale(0.5);
+  }
+  30% {
+    opacity: 1;
+  }
+  65% {
+    transform: translate(-16vw, -16px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes game-celestial-cross-left {
+  0% {
+    opacity: 0;
+    transform: translate(calc(76vw - 24%), 52px) scale(0.5);
+  }
+  30% {
+    opacity: 1;
+  }
+  65% {
+    transform: translate(16vw, -16px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes game-celestial-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes game-celestial-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes game-celestial-glow {
   0%,
   100% {
     filter: brightness(1);
   }
   50% {
     filter: brightness(1.08);
+  }
+}
+
+/* O form acompanha a troca de lado do astro */
+.game-login--day .game-login__panel {
+  animation: game-panel-slide-left 0.7s cubic-bezier(0.3, 1.05, 0.5, 1) both;
+}
+
+.game-login--night .game-login__panel {
+  animation: game-panel-slide-right 0.7s cubic-bezier(0.3, 1.05, 0.5, 1) both;
+}
+
+@keyframes game-panel-slide-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes game-panel-slide-right {
+  0% {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ---- Bioma: balanço suave das copas + flores (dia) e vaga-lumes (noite) ---- */
+.game-tree__foliage,
+.game-tree__crown {
+  animation: game-tree-sway 6.5s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.game-tree--2 .game-tree__crown {
+  animation-delay: -2.2s;
+}
+
+.game-tree--3 .game-tree__sapling-top {
+  animation: game-tree-sway 5s ease-in-out -1s infinite;
+  transform-origin: 50% 100%;
+}
+
+@keyframes game-tree-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+.game-flower {
+  position: absolute;
+  bottom: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #fbbf24 0 2.4px, transparent 2.6px),
+    radial-gradient(circle at 50% 14%, #f9a8d4 0 2.6px, transparent 3px),
+    radial-gradient(circle at 86% 50%, #f9a8d4 0 2.6px, transparent 3px),
+    radial-gradient(circle at 50% 86%, #f9a8d4 0 2.6px, transparent 3px),
+    radial-gradient(circle at 14% 50%, #f9a8d4 0 2.6px, transparent 3px);
+}
+
+.game-flower--1 {
+  left: 14%;
+}
+
+.game-flower--2 {
+  left: 46%;
+  bottom: 8px;
+  transform: scale(0.85);
+}
+
+.game-flower--3 {
+  right: 18%;
+}
+
+.game-firefly {
+  position: absolute;
+  bottom: 26px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fde047;
+  box-shadow: 0 0 8px 3px rgba(253, 224, 71, 0.55);
+  animation: game-firefly-float 5.2s ease-in-out infinite;
+}
+
+.game-firefly--1 {
+  left: 18%;
+}
+
+.game-firefly--2 {
+  left: 52%;
+  animation-delay: -1.8s;
+}
+
+.game-firefly--3 {
+  right: 16%;
+  animation-delay: -3.4s;
+}
+
+@keyframes game-firefly-float {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translate(0, 0);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(6px, -14px);
+  }
+  60% {
+    opacity: 0.6;
+    transform: translate(-5px, -24px);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(3px, -8px);
   }
 }
 
@@ -586,8 +868,9 @@
   line-height: 1.4;
   color: #fff;
   cursor: pointer;
-  border: none;
+  border: 2px solid var(--game-ink, #1c1917);
   border-radius: 0.75rem;
+  box-shadow: 2px 2px 0 var(--game-ink, #1c1917);
   transition:
     transform 0.08s ease,
     box-shadow 0.15s ease,
@@ -596,29 +879,34 @@
 
 .game-btn--primary {
   background: #10b981;
-  box-shadow: var(--shadow-resting);
+  box-shadow: 2px 2px 0 var(--game-green-dark, #047857);
 }
 
 .game-btn--primary:hover:not(:disabled) {
   background: #059669;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--game-green-dark, #047857);
 }
 
 .game-btn--primary:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--game-green-dark, #047857);
 }
 
 .game-btn--secondary {
-  background: #f5f5f4;
+  background: #fff;
   color: #1c1917;
-  box-shadow: var(--shadow-resting);
 }
 
 .game-btn--secondary:hover:not(:disabled) {
-  background: #e7e5e4;
+  background: #f5f5f4;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--game-ink, #1c1917);
 }
 
 .game-btn--secondary:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--game-ink, #1c1917);
 }
 
 .game-btn:disabled {
@@ -1163,4 +1451,32 @@
     96% 100%,
     100% 100%
   );
+}
+
+/* Onboarding — pergunta obrigatória sem resposta: risco varrendo sob o título */
+.onb-invalid h2 {
+  position: relative;
+  display: inline-block;
+}
+
+.onb-invalid h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  transform-origin: left;
+  animation: onb-line-sweep 0.45s ease-out forwards;
+}
+
+@keyframes onb-line-sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }

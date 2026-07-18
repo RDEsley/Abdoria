@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Play, Sparkles } from 'lucide-react';
+import { Check, Play, Swords } from 'lucide-react';
 import { MuscleTagGroup } from '@/components/builder/MuscleTag';
 import { getPresetPrimaryMuscles } from '@/components/builder/builder-muscles';
 import { presetSummary } from '@/components/builder/queue-utils';
@@ -67,9 +67,11 @@ export function TrainPresetSection({
 }: Props) {
   return (
     <section id="builder-presets">
-      <div className="mb-2 flex items-center gap-2">
-        <Sparkles size={18} className="text-amber-500" />
-        <div>
+      <div className="game-train-head mb-3">
+        <span className="game-train-head__icon" aria-hidden>
+          <Swords size={16} />
+        </span>
+        <div className="min-w-0 flex-1">
           <h3 className="game-section-title !mb-0">Treino do dia</h3>
           <div
             className="game-builder-cycle-progress mt-1"

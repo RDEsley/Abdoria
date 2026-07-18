@@ -147,7 +147,7 @@ export function LevelXpSection({
             <div>
               <p className="game-xp-section__panel-title">XP de hoje</p>
               <p className="game-xp-section__panel-desc">
-                {stats.xp_hoje} / {stats.xp_diario_limite} XP · {dailyPct}% do teto
+                {stats.xp_hoje} / {stats.xp_diario_limite} XP · {dailyPct}% do máx.
               </p>
             </div>
             <span
@@ -164,7 +164,7 @@ export function LevelXpSection({
             showValues={false}
           />
           <p className="game-xp-section__panel-hint game-xp-section__panel-hint--cap">
-            Teto: {capBreakdown}
+            Máx.: {capBreakdown}
           </p>
           {dailyXpHint && <p className="game-xp-section__panel-hint">{dailyXpHint}</p>}
         </article>
@@ -185,7 +185,7 @@ export function LevelXpSection({
 
         {showRulesLink && (
           <p className="game-xp-section__footnote">
-            Streak, conquistas e treino compartilham o mesmo teto diário. Nível e Bestiário aumentam
+            Streak, conquistas e treino compartilham o mesmo máx. diário. Nível e Bestiário aumentam
             o máx. permanentemente.{' '}
             <Link to="/configuracoes#regras-xp" className="game-xp-section__link">
               Ver regras de XP

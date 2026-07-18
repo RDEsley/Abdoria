@@ -1,5 +1,23 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { BrandMark } from '@/components/brand/BrandMark';
+
+/** Sol (dia) ou lua (noite) com rosto — fecha os olhos quando alguma senha está visível. */
+function GameCelestial({ variant, eyesClosed }: { variant: 'day' | 'night'; eyesClosed: boolean }) {
+  const kind = variant === 'day' ? 'sun' : 'moon';
+  return (
+    <span
+      className={`game-celestial game-celestial--${kind}${eyesClosed ? ' game-celestial--sleep' : ''}`}
+      aria-hidden
+    >
+      {variant === 'day' && <span className="game-celestial__rays" />}
+      <span className="game-celestial__face">
+        <span className="game-celestial__eye game-celestial__eye--l" />
+        <span className="game-celestial__eye game-celestial__eye--r" />
+        <span className="game-celestial__mouth" />
+      </span>
+    </span>
+  );
+}
 
 function GameBird({ className }: { className: string }) {
   return (
@@ -79,11 +97,35 @@ export function GameAuthPanel({ title, children, footer, className }: GameAuthPa
   );
 }
 
-export function GameAuthScene({ children }: { children: ReactNode }) {
+interface GameAuthSceneProps {
+  children: ReactNode;
+  /** Login vive de dia (sol), cadastro à noite (lua). */
+  variant?: 'day' | 'night';
+}
+
+export function GameAuthScene({ children, variant = 'night' }: GameAuthSceneProps) {
+  const [eyesClosed, setEyesClosed] = useState(false);
+  const visibleFields = useRef(new Set<string>());
+
+  // Campos de senha avisam quando ficam visíveis — o sol/lua fecha os olhos.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: string; visible: boolean }>).detail;
+      if (!detail) return;
+      if (detail.visible) visibleFields.current.add(detail.id);
+      else visibleFields.current.delete(detail.id);
+      setEyesClosed(visibleFields.current.size > 0);
+    };
+    window.addEventListener('abdoria:password-visibility', handler);
+    return () => window.removeEventListener('abdoria:password-visibility', handler);
+  }, []);
+
+  const isDay = variant === 'day';
+
   return (
-    <div className="game-login">
+    <div className={`game-login game-login--${variant}`}>
       <div className="game-login__sky" aria-hidden>
-        <div className="game-login__moon" />
+        <GameCelestial variant={variant} eyesClosed={eyesClosed} />
 
         <div className="game-login__clouds game-login__clouds--far">
           <span className="game-cloud game-cloud--f1" />
@@ -119,6 +161,19 @@ export function GameAuthScene({ children }: { children: ReactNode }) {
           <GameBush className="game-bush--5" />
           <span className="game-rock game-rock--1" />
           <span className="game-rock game-rock--2" />
+          {isDay ? (
+            <>
+              <span className="game-flower game-flower--1" />
+              <span className="game-flower game-flower--2" />
+              <span className="game-flower game-flower--3" />
+            </>
+          ) : (
+            <>
+              <span className="game-firefly game-firefly--1" />
+              <span className="game-firefly game-firefly--2" />
+              <span className="game-firefly game-firefly--3" />
+            </>
+          )}
         </div>
         <div className="game-login__dirt" />
         <div className="game-login__grass" />

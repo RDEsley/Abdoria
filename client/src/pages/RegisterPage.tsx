@@ -54,7 +54,7 @@ export function RegisterPage() {
   };
 
   return (
-    <GameAuthScene>
+    <GameAuthScene variant="night">
       <GameAuthPanel
         title="NOVO JOGADOR"
         className="game-login__panel--register"

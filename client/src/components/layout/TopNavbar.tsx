@@ -2,12 +2,39 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Coins } from 'lucide-react';
 
+/** Gema azul pontuda cristalizada — moeda premium (ainda sem forma de ganhar). */
+export function GemIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className="top-navbar__gem-icon" aria-hidden>
+      <defs>
+        <linearGradient id="gem-body" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7dd3fc" />
+          <stop offset="45%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0369a1" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M12 1.5 L18.5 7 L21 12 L12 22.5 L3 12 L5.5 7 Z"
+        fill="url(#gem-body)"
+        stroke="#0c4a6e"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M12 1.5 L9.5 7 L12 22.5 L14.5 7 Z" fill="rgba(224, 242, 254, 0.45)" />
+      <path d="M5.5 7 L18.5 7" stroke="rgba(12, 74, 110, 0.45)" strokeWidth="1" />
+      <path d="M7 5.2 L9.8 3.6" stroke="#e0f2fe" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export interface TopNavbarProps {
   userName: string;
   userLevel: number;
   userXp: number;
   xpMax: number;
   doriasAmount: number;
+  /** Gemas azuis (moeda premium) — ainda sem fonte de ganho, só exibição. */
+  gemsAmount?: number;
   avatarUrl?: string | null;
   /** Sobrescreve avatarUrl quando presente (ex.: CosmeticAvatar). */
   avatar?: ReactNode;
@@ -22,7 +49,7 @@ export interface TopNavbarProps {
 function formatAmount(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
   if (value >= 10_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-  return value.toLocaleString('pt-BR');
+  return String(value);
 }
 
 interface ResourcePillProps {
@@ -60,6 +87,7 @@ export function TopNavbar({
   userXp,
   xpMax,
   doriasAmount,
+  gemsAmount = 0,
   avatarUrl,
   avatar,
   userTitle,
@@ -122,6 +150,7 @@ export function TopNavbar({
             amount={doriasAmount}
             pulse={coinsEarnedPulse}
           />
+          <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} />
           {actions}
         </div>
       </div>

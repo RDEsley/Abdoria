@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Minus, ScrollText, TrendingDown, TrendingUp } from 'lucide-react';
+import { Dumbbell, Minus, ScrollText, TrendingDown, TrendingUp, Zap } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { toLocalDateKey } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
@@ -56,43 +56,75 @@ export function WeeklyChronicle() {
 
   let headline: string;
   let TrendIcon = Minus;
+  let trendTone = 'bg-stone-100 text-stone-600';
   if (!hasPrevious) {
     headline =
       current.workouts > 0 ? 'Capítulo de estreia da sua jornada!' : 'Uma nova crônica começa';
+    trendTone = 'bg-sky-100 text-sky-700';
   } else if (xpDeltaPct === null || xpDeltaPct === 0) {
-    headline = 'Ritmo constante em relação à semana passada';
+    headline = 'Ritmo constante';
   } else if (xpDeltaPct > 0) {
-    headline = 'Crônica em ascensão';
+    headline = 'Semana em ascensão';
     TrendIcon = TrendingUp;
+    trendTone = 'bg-emerald-100 text-emerald-700';
   } else {
     headline = 'Semana mais tranquila';
     TrendIcon = TrendingDown;
+    trendTone = 'bg-amber-100 text-amber-700';
   }
 
-  const xpLine = !hasPrevious
-    ? `+${current.xp} XP nesta semana — sem semana anterior pra comparar`
-    : xpDeltaPct === null || xpDeltaPct === 0
-      ? `+${current.xp} XP · mesmo ritmo da semana passada`
-      : `+${current.xp} XP · ${xpDeltaPct > 0 ? '+' : ''}${xpDeltaPct}% vs. semana passada`;
-
-  const workoutsLine = !hasPrevious
-    ? `${current.workouts} treino(s)`
-    : workoutsDelta === 0
-      ? `${current.workouts} treino(s) · igual à semana passada`
-      : `${current.workouts} treino(s) · ${workoutsDelta > 0 ? '+' : ''}${workoutsDelta} vs. semana passada`;
+  const deltaChip = (delta: number | null, suffix: string) => {
+    if (!hasPrevious || delta === null) return null;
+    if (delta === 0) {
+      return (
+        <span className="ml-auto shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-[0.6rem] font-extrabold text-stone-500">
+          = semana passada
+        </span>
+      );
+    }
+    const up = delta > 0;
+    return (
+      <span
+        className={`ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[0.6rem] font-extrabold ${up ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
+      >
+        {up ? <TrendingUp size={11} aria-hidden /> : <TrendingDown size={11} aria-hidden />}
+        {up ? '+' : ''}
+        {delta}
+        {suffix}
+      </span>
+    );
+  };
 
   return (
     <section className="glass-card p-4">
-      <h3 className="game-section-title flex items-center gap-1.5">
-        <ScrollText size={16} aria-hidden /> Crônica da semana
-      </h3>
-      <p className="mt-2 flex items-center gap-1.5 text-sm font-extrabold text-stone-800">
-        <TrendIcon size={16} aria-hidden className="shrink-0" />
-        {headline}
-      </p>
-      <ul className="mt-3 space-y-1 text-xs font-bold text-stone-500">
-        <li>{xpLine}</li>
-        <li>{workoutsLine}</li>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="game-section-title !mb-0 flex items-center gap-1.5">
+          <ScrollText size={16} aria-hidden /> Crônica da semana
+        </h3>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[0.62rem] font-extrabold ${trendTone}`}
+        >
+          <TrendIcon size={12} aria-hidden />
+          {headline}
+        </span>
+      </div>
+      <ul className="mt-3 flex flex-col gap-2">
+        <li className="flex items-center gap-2 rounded-xl border-2 border-stone-100 bg-stone-50 px-3 py-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+            <Zap size={14} aria-hidden />
+          </span>
+          <span className="text-xs font-extrabold text-stone-700">+{current.xp} XP</span>
+          {deltaChip(xpDeltaPct, '%')}
+        </li>
+        <li className="flex items-center gap-2 rounded-xl border-2 border-stone-100 bg-stone-50 px-3 py-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+            <Dumbbell size={14} aria-hidden />
+          </span>
+          <span className="text-xs font-extrabold text-stone-700">
+            {current.workouts} treino{current.workouts !== 1 ? 's' : ''}
+          </span>
+          {deltaChip(hasPrevious ? workoutsDelta : null, '')}
+        </li>
       </ul>
     </section>
   );

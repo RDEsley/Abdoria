@@ -24,7 +24,13 @@ export function LoginPage() {
   const { login, loginAsGuest } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const registerState = location.state as { accountCreated?: boolean; email?: string } | null;
+  const registerState = location.state as {
+    accountCreated?: boolean;
+    email?: string;
+    from?: { pathname?: string };
+  } | null;
+  // Links de convite (ex.: /perfil/:id) voltam pro destino original após o login.
+  const redirectTo = registerState?.from?.pathname ?? '/';
   const [email, setEmail] = useState(() => registerState?.email ?? getSavedEmail() ?? '');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(() => getRememberMePreference());
@@ -84,7 +90,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password, rememberMe);
-      navigate('/');
+      navigate(redirectTo);
     } catch (err) {
       setSubmitError(getErrorMessage(err));
       setCredentialsInvalid(isLoginCredentialsError(err));
@@ -110,7 +116,7 @@ export function LoginPage() {
   const showSystemAlert = apiOnline === false || (apiOnline === true && dbOnline === false);
 
   return (
-    <GameAuthScene>
+    <GameAuthScene variant="day">
       <GameAuthPanel
         footer={
           <Link to="/register" className="game-login__link">

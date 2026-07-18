@@ -153,6 +153,11 @@
   color: #b45309;
 }
 
+.top-navbar__gem-icon {
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 0 rgba(12, 74, 110, 0.25));
+}
+
 .top-navbar__pill-value {
   flex: 1;
   min-width: 0;

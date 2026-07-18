@@ -28,7 +28,7 @@
   content: '';
   position: absolute;
   inset: -6px;
-  border-radius: calc(0.75rem + 5px);
+  border-radius: 999px;
   pointer-events: none;
   z-index: -1;
 }
@@ -44,7 +44,6 @@
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   animation: game-border-ouro-rotate 6s linear infinite;
 }
 
@@ -59,26 +58,6 @@
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  clip-path: polygon(
-    50% 0%,
-    58% 14%,
-    72% 8%,
-    76% 24%,
-    92% 30%,
-    80% 44%,
-    90% 60%,
-    72% 64%,
-    68% 84%,
-    50% 76%,
-    32% 84%,
-    28% 64%,
-    10% 60%,
-    20% 44%,
-    8% 30%,
-    24% 24%,
-    28% 8%,
-    42% 14%
-  );
   animation: game-border-lendario-rotate 5s linear infinite;
 }
 
@@ -94,7 +73,6 @@
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
   animation: game-border-fogo-ring 1.6s ease-in-out infinite;
 }
 

@@ -1,4 +1,4 @@
-import { Dumbbell, Sparkles } from 'lucide-react';
+import { Dumbbell, Swords } from 'lucide-react';
 
 export type BuilderTab = 'train' | 'customize';
 
@@ -19,7 +19,7 @@ export function BuilderTabs({ active, onChange }: Props) {
         className={`game-tab flex items-center justify-center gap-2${active === 'train' ? ' game-tab--active' : ''}`}
         onClick={() => onChange('train')}
       >
-        <Sparkles size={16} aria-hidden />
+        <Swords size={16} aria-hidden />
         Treinar agora
       </button>
       <button

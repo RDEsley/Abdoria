@@ -754,7 +754,7 @@ export function BuilderPage() {
           />
 
           <section>
-            <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-stone-500">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-stone-800">
               Esquemas recomendados ({NIVEL_LABELS[nivel]})
             </p>
             <RepSchemeCarousel
@@ -765,10 +765,6 @@ export function BuilderPage() {
               onDelete={handleDeleteScheme}
               onCreateClick={() => setShowCreateScheme(true)}
             />
-            <p className="mt-2 text-[0.65rem] font-bold text-stone-400">
-              O esquema define valores iniciais. Você pode ajustar cada exercício individualmente
-              sem perder o vínculo.
-            </p>
           </section>
 
           {configSection}

@@ -1,5 +1,4 @@
-import { Play } from 'lucide-react';
-import { GameButton } from '@/components/ui/GameButton';
+import { Dumbbell, Play, Timer } from 'lucide-react';
 
 interface Props {
   exerciseCount: number;
@@ -9,10 +8,7 @@ interface Props {
 }
 
 export function BuilderStickyBar({ exerciseCount, estimatedMinutes, disabled, onStart }: Props) {
-  const timeLabel =
-    estimatedMinutes !== null && exerciseCount > 0
-      ? `Tempo estimado: ~${estimatedMinutes} min`
-      : 'Tempo estimado: -- min';
+  const hasTime = estimatedMinutes !== null && exerciseCount > 0;
 
   return (
     <div
@@ -21,18 +17,27 @@ export function BuilderStickyBar({ exerciseCount, estimatedMinutes, disabled, on
     >
       <div className="pointer-events-auto mx-auto max-w-lg border-t border-stone-200/80 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:max-w-3xl">
         <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 text-xs font-bold leading-snug text-stone-500">
-            {timeLabel}
-          </p>
-          <GameButton
-            size="lg"
-            className="flex shrink-0 items-center justify-center gap-2 px-5"
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            <span className="builder-start-pill builder-start-pill--time">
+              <Timer size={13} aria-hidden />
+              {hasTime ? `~${estimatedMinutes} min` : '-- min'}
+            </span>
+            <span className="builder-start-pill builder-start-pill--count">
+              <Dumbbell size={13} aria-hidden />
+              {exerciseCount} exercício{exerciseCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="builder-start-btn"
             onClick={onStart}
             disabled={disabled}
           >
-            <Play size={20} fill="currentColor" aria-hidden />
-            Iniciar ({exerciseCount})
-          </GameButton>
+            <span className="builder-start-btn__icon" aria-hidden>
+              <Play size={18} fill="currentColor" />
+            </span>
+            Iniciar
+          </button>
         </div>
       </div>
     </div>
