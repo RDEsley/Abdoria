@@ -314,3 +314,55 @@
     transform: rotate(2deg) scaleX(0.96);
   }
 }
+
+/* Contador das últimas 5h antes do reset da streak */
+.streak-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 2px solid;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.streak-countdown__time {
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.streak-countdown__hint {
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.streak-countdown--danger {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.streak-countdown--danger .streak-countdown__time {
+  color: #dc2626;
+  animation: streak-countdown-pulse 1s ease-in-out infinite;
+}
+
+.streak-countdown--frozen {
+  color: #0369a1;
+  border-color: #7dd3fc;
+  background: #f0f9ff;
+}
+
+@keyframes streak-countdown-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.06);
+  }
+}

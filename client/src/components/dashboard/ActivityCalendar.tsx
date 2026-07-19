@@ -26,7 +26,11 @@ function pad2(n: number) {
 }
 
 export function ActivityCalendar() {
-  const { history, ensureHistory, historyLoading } = useApp();
+  const { history, ensureHistory, historyLoading, user } = useApp();
+  const frozenSet = useMemo(
+    () => new Set(user?.gamificacao?.streak_congelamentos ?? []),
+    [user?.gamificacao?.streak_congelamentos],
+  );
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const [y, m] = getTodaySaoPaulo().split('-').map(Number);
     return new Date(y, m - 1, 1);
@@ -134,20 +138,39 @@ export function ActivityCalendar() {
           }
           const meta = dayMeta.get(cell.date);
           const isSelected = selectedDay === cell.date;
+          const frozen = !meta && frozenSet.has(cell.date);
           return (
             <button
               key={cell.date}
               type="button"
-              className={`workout-calendar__cell workout-calendar__cell--l${cell.level} ${isSelected ? 'workout-calendar__cell--selected' : ''}`}
+              className={`workout-calendar__cell workout-calendar__cell--l${cell.level} ${frozen ? 'workout-calendar__cell--frozen' : ''} ${isSelected ? 'workout-calendar__cell--selected' : ''}`}
               onClick={() => setSelectedDay(cell.date)}
-              title={meta ? `${meta.count} treino(s) · ${meta.minutes} min` : 'Sem treinos'}
+              title={
+                frozen
+                  ? 'Dia congelado — um Frozen Streak manteve a sequência (sem aumentar)'
+                  : meta
+                    ? `${meta.count} treino(s) · ${meta.minutes} min`
+                    : 'Sem treinos'
+              }
             >
               <span className="workout-calendar__day">{cell.day}</span>
               {cell.level > 0 && <span className="workout-calendar__dot" aria-hidden />}
+              {frozen && <span className="workout-calendar__dot workout-calendar__dot--frozen" aria-hidden />}
             </button>
           );
         })}
       </div>
+
+      {!selectedMeta && selectedDay && frozenSet.has(selectedDay) && (
+        <div className="workout-calendar__detail">
+          <p className="workout-calendar__detail-title">
+            {selectedDay.split('-').reverse().join('/')} · Dia congelado ❄️
+          </p>
+          <p className="workout-calendar__detail-list">
+            Um Frozen Streak foi usado: a sequência não zerou, mas também não aumentou.
+          </p>
+        </div>
+      )}
 
       {selectedMeta && selectedDay && (
         <div className="workout-calendar__detail">

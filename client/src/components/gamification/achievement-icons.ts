@@ -1,0 +1,43 @@
+import type { AchievementIcon } from '@/types';
+import {
+  Calendar,
+  Clock,
+  Crown,
+  Droplet,
+  Dumbbell,
+  Flame,
+  Gem,
+  Heart,
+  Medal,
+  Moon,
+  Rocket,
+  Shield,
+  Sparkles,
+  Star,
+  Sun,
+  Target,
+  Trophy,
+  Zap,
+} from 'lucide-react';
+
+/** Mapa único de ícone → componente Lucide — fonte compartilhada por conquistas e cosméticos. */
+export const ACHIEVEMENT_ICON_COMPONENTS: Record<AchievementIcon, typeof Medal> = {
+  medal: Medal,
+  flame: Flame,
+  trophy: Trophy,
+  zap: Zap,
+  star: Star,
+  target: Target,
+  crown: Crown,
+  sun: Sun,
+  moon: Moon,
+  calendar: Calendar,
+  clock: Clock,
+  gem: Gem,
+  rocket: Rocket,
+  dumbbell: Dumbbell,
+  heart: Heart,
+  shield: Shield,
+  droplet: Droplet,
+  sparkles: Sparkles,
+};

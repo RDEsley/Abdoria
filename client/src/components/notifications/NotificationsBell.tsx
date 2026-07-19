@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Bell, Coins, Medal, Snowflake, Sparkles, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Bell, Coins, Dumbbell, Medal, Snowflake, Sparkles, TimerReset, Trash2, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
+import { useApp } from '@/hooks/useApp';
+import {
+  buildLocalNotices,
+  dismissLocalNotice,
+  isLocalNotice,
+} from '@/lib/local-notifications';
 import {
   clearAllNotifications,
   dismissNotification,
@@ -14,7 +20,9 @@ import {
 function iconForTipo(tipo: string) {
   if (tipo === 'ranking_podio') return <Medal size={16} aria-hidden />;
   if (tipo === 'ranking_premio') return <Coins size={16} aria-hidden />;
-  if (tipo === 'streak_frozen') return <Snowflake size={16} aria-hidden />;
+  if (tipo === 'streak_frozen' || tipo === 'frozen_baixo') return <Snowflake size={16} aria-hidden />;
+  if (tipo === 'streak_reset') return <TimerReset size={16} aria-hidden />;
+  if (tipo === 'lembrete_treino') return <Dumbbell size={16} aria-hidden />;
   return <Sparkles size={16} aria-hidden />;
 }
 
@@ -31,13 +39,28 @@ function formatWhen(iso: string): string {
 
 /** Sino da navbar: badge de não lidas + painel com as notificações persistentes. */
 export function NotificationsBell() {
+  const { stats } = useApp();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<AppNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [localDismissTick, setLocalDismissTick] = useState(0);
+
+  const localNotices = useMemo(
+    () => buildLocalNotices(stats),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tick invalida após dispensar
+    [stats, localDismissTick],
+  );
+  const allItems = useMemo(() => [...localNotices, ...items], [localNotices, items]);
+  const urgentLocalCount = localNotices.filter((notice) => notice.lida_em === null).length;
 
   const handleDismiss = async (id: string) => {
+    if (isLocalNotice(id)) {
+      dismissLocalNotice(id);
+      setLocalDismissTick((tick) => tick + 1);
+      return;
+    }
     setBusyId(id);
     try {
       await dismissNotification(id);
@@ -52,6 +75,8 @@ export function NotificationsBell() {
   const handleClearAll = async () => {
     setBusyId('all');
     try {
+      for (const notice of localNotices) dismissLocalNotice(notice.id);
+      setLocalDismissTick((tick) => tick + 1);
       await clearAllNotifications();
       setItems([]);
       setUnread(0);
@@ -102,12 +127,16 @@ export function NotificationsBell() {
         type="button"
         className="notifications-bell"
         onClick={() => void handleOpen()}
-        aria-label={unread > 0 ? `Notificações — ${unread} não lidas` : 'Notificações'}
+        aria-label={
+          unread + urgentLocalCount > 0
+            ? `Notificações — ${unread + urgentLocalCount} não lidas`
+            : 'Notificações'
+        }
       >
         <Bell size={20} strokeWidth={2.2} aria-hidden />
-        {unread > 0 && (
+        {unread + urgentLocalCount > 0 && (
           <span className="notifications-bell__badge tabular-nums" aria-hidden>
-            {unread > 99 ? '99+' : unread}
+            {unread + urgentLocalCount > 99 ? '99+' : unread + urgentLocalCount}
           </span>
         )}
       </button>
@@ -122,7 +151,7 @@ export function NotificationsBell() {
           <h2 id="notifications-title" className="text-base font-extrabold text-stone-800">
             Notificações
           </h2>
-          {items.length > 0 && (
+          {allItems.length > 0 && (
             <button
               type="button"
               className="notifications-clear"
@@ -136,13 +165,13 @@ export function NotificationsBell() {
         </div>
         {loading ? (
           <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
-        ) : items.length === 0 ? (
+        ) : allItems.length === 0 ? (
           <p className="mt-3 text-sm font-bold text-stone-500">
             Nada por aqui ainda. Feche a semana no ranking pra começar a receber novidades.
           </p>
         ) : (
           <ul className="mt-3 flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
-            {items.map((item) => (
+            {allItems.map((item) => (
               <li
                 key={item.id}
                 className={`notifications-item${item.lida_em ? '' : ' notifications-item--unread'}`}

@@ -1,41 +1,7 @@
 import type { AchievementIcon } from '@/types';
-import {
-  Calendar,
-  Clock,
-  Crown,
-  Dumbbell,
-  Flame,
-  Gem,
-  Heart,
-  Medal,
-  Moon,
-  Rocket,
-  Shield,
-  Star,
-  Sun,
-  Target,
-  Trophy,
-  Zap,
-} from 'lucide-react';
+import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
 
-const ICONS: Record<AchievementIcon, typeof Medal> = {
-  medal: Medal,
-  flame: Flame,
-  trophy: Trophy,
-  zap: Zap,
-  star: Star,
-  target: Target,
-  crown: Crown,
-  sun: Sun,
-  moon: Moon,
-  calendar: Calendar,
-  clock: Clock,
-  gem: Gem,
-  rocket: Rocket,
-  dumbbell: Dumbbell,
-  heart: Heart,
-  shield: Shield,
-};
+const ICONS = ACHIEVEMENT_ICON_COMPONENTS;
 
 const ICON_TONE: Partial<Record<AchievementIcon, string>> = {
   medal: 'text-amber-600',
@@ -54,6 +20,8 @@ const ICON_TONE: Partial<Record<AchievementIcon, string>> = {
   dumbbell: 'text-stone-700',
   heart: 'text-pink-500',
   shield: 'text-emerald-700',
+  droplet: 'text-sky-500',
+  sparkles: 'text-fuchsia-500',
 };
 
 interface Props {
@@ -63,7 +31,7 @@ interface Props {
 }
 
 export function AchievementBadge({ icon, unlocked = false, size = 18 }: Props) {
-  const Icon = ICONS[icon] ?? Medal;
+  const Icon = ICONS[icon] ?? ICONS.medal;
   const tone = unlocked ? (ICON_TONE[icon] ?? 'text-emerald-600') : 'text-stone-300';
 
   return (

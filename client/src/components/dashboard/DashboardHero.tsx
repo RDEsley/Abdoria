@@ -1,6 +1,7 @@
 ﻿import type { CSSProperties } from 'react';
 import { XpBar } from '@/components/ui/XpBar';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
+import { StreakCountdown } from '@/components/gamification/StreakCountdown';
 import { useAuth } from '@/context/AuthContext';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
 import { resolveCosmeticos, type DashboardStats } from '@/types';
@@ -58,8 +59,13 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
           <div className="mt-2">
             <XpBar value={xpInLevel} max={xpToNext} showValues={false} />
           </div>
-          <div className="mt-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
+            <StreakCountdown
+              treinoHoje={stats.treino_hoje}
+              streak={stats.streak_atual}
+              frozenCount={stats.frozen_streak_count}
+            />
           </div>
         </div>
       </header>

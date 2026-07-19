@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { useApp } from '@/hooks/useApp';
+import { showGameToast } from '@/components/ui/GameToast';
 import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
+import { FROZEN_STREAK_LABEL } from '@/types';
 
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
@@ -10,6 +12,7 @@ interface DayCell {
   key: string;
   label: string;
   trained: boolean;
+  frozen: boolean;
   isToday: boolean;
   isFuture: boolean;
 }
@@ -19,7 +22,8 @@ interface DayCell {
  * treinos, tempo e XP. Base do resumo semanal completo planejado na Fase 7.
  */
 export function WeekSummary() {
-  const { history, ensureHistory, historyLoading } = useApp();
+  const { history, ensureHistory, historyLoading, user } = useApp();
+  const frozenDays = user?.gamificacao?.streak_congelamentos;
 
   useEffect(() => {
     void ensureHistory();
@@ -46,40 +50,59 @@ export function WeekSummary() {
       xp += entry.xp_ganho ?? 0;
     }
 
+    const frozenSet = new Set(frozenDays ?? []);
     const days: DayCell[] = weekKeys.map((key, i) => ({
       key,
       label: DAY_LABELS[i],
       trained: trainedDays.has(key),
+      frozen: !trainedDays.has(key) && frozenSet.has(key),
       isToday: key === todayKey,
       isFuture: key > todayKey,
     }));
 
     return { days, totals: { workouts, seconds, xp } };
-  }, [history]);
+  }, [history, frozenDays]);
 
   return (
     <section className="glass-card p-4">
       <h3 className="game-section-title">Sua semana</h3>
 
-      <div className="mt-3 flex items-center justify-between gap-1" aria-hidden>
+      <div className="mt-3 flex items-center justify-between gap-1">
         {days.map((day) => (
           <div key={day.key} className="flex flex-1 flex-col items-center gap-1">
             <span
               className={`text-[0.55rem] font-extrabold ${day.isToday ? 'text-emerald-700' : 'text-stone-400'}`}
+              aria-hidden
             >
               {day.label}
             </span>
-            <span
-              className={`h-7 w-7 rounded-lg border-2 ${
-                day.trained
-                  ? 'border-emerald-500 bg-emerald-400'
-                  : day.isToday
-                    ? 'border-dashed border-emerald-600 bg-emerald-50'
-                    : day.isFuture
-                      ? 'border-stone-200 bg-transparent'
-                      : 'border-stone-200 bg-stone-100'
-              }`}
-            />
+            {day.frozen ? (
+              <button
+                type="button"
+                className="h-7 w-7 cursor-pointer rounded-lg border-2 border-sky-400 bg-sky-300"
+                title={`Dia congelado — um ${FROZEN_STREAK_LABEL} foi usado`}
+                aria-label={`Dia congelado por ${FROZEN_STREAK_LABEL}`}
+                onClick={() =>
+                  showGameToast(
+                    `Um ${FROZEN_STREAK_LABEL} foi usado neste dia: a sequência não zerou, mas também não aumentou.`,
+                    { variant: 'info' },
+                  )
+                }
+              />
+            ) : (
+              <span
+                aria-hidden
+                className={`h-7 w-7 rounded-lg border-2 ${
+                  day.trained
+                    ? 'border-emerald-500 bg-emerald-400'
+                    : day.isToday
+                      ? 'border-dashed border-emerald-600 bg-emerald-50'
+                      : day.isFuture
+                        ? 'border-stone-200 bg-transparent'
+                        : 'border-stone-200 bg-stone-100'
+                }`}
+              />
+            )}
           </div>
         ))}
       </div>
