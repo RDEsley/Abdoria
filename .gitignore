@@ -98,3 +98,5 @@ supabase/.temp/
 # DOCS
 docs/private
 .private
+NOTES.md
+entregas.md
