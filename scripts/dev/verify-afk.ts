@@ -27,6 +27,7 @@ import {
   countAfkDropEvents,
 } from '../../shared/utils/afk.ts';
 import {
+  activateAfk,
   grantPatrolCacheRewards,
   syncAfkRewards,
   claimAfkRewards,
@@ -85,7 +86,6 @@ function mockUser(minutos = 0, pending: Partial<typeof EMPTY_AFK_PENDING> = {}):
       last_seen_at: new Date().toISOString(),
       minutos_acumulados: minutos,
       pending: { ...EMPTY_AFK_PENDING, ...pending },
-      iniciado: true,
     },
     onboarding_completed: true,
     is_guest: false,
@@ -114,12 +114,28 @@ u1.afk.last_seen_at = t0.toISOString();
 syncAfkRewards(u1, new Date(t0.getTime() + 15 * 60_000));
 assert.equal(u1.afk.minutos_acumulados, 15);
 
-// Conta que nunca abriu a tela de Exploração não acumula tempo.
+// Conta que nunca abriu a tela de Exploração (last_seen_at null) não acumula tempo.
 const uNaoIniciado = mockUser(0);
-uNaoIniciado.afk.iniciado = false;
-uNaoIniciado.afk.last_seen_at = t0.toISOString();
+uNaoIniciado.afk.last_seen_at = null;
 syncAfkRewards(uNaoIniciado, new Date(t0.getTime() + 30 * 60_000));
 assert.equal(uNaoIniciado.afk.minutos_acumulados, 0, 'AFK só acumula depois da primeira visita');
+assert.equal(uNaoIniciado.afk.last_seen_at, null, 'sync não inicia o timer sozinho');
+
+// activateAfk liga o timer na primeira visita; reabrir a tela depois NÃO reseta o progresso
+// acumulado (era o bug: last_seen_at voltava pra "agora" a cada reabertura da tela).
+const uPrimeiraVisita = mockUser(0);
+uPrimeiraVisita.afk.last_seen_at = null;
+activateAfk(uPrimeiraVisita, t0);
+assert.equal(uPrimeiraVisita.afk.last_seen_at, t0.toISOString(), 'primeira visita liga o timer');
+syncAfkRewards(uPrimeiraVisita, new Date(t0.getTime() + 10 * 60_000));
+assert.equal(uPrimeiraVisita.afk.minutos_acumulados, 10, '10min acumulados desde a ativação');
+// Reabrir a tela de exploração (activateAfk de novo) não deve resetar last_seen_at nem o timer.
+activateAfk(uPrimeiraVisita, new Date(t0.getTime() + 10 * 60_000 + 5_000));
+assert.equal(
+  uPrimeiraVisita.afk.last_seen_at,
+  new Date(t0.getTime() + 10 * 60_000).toISOString(),
+  'reabrir a tela não reseta o timer já iniciado',
+);
 assert.ok(u1.afk.combat && u1.afk.combat.kills_total >= 1, 'offline kills simulated');
 const expectedKills15 = Math.floor(15 * AFK_KILLS_PER_MINUTE);
 assert.ok(u1.afk.combat!.kills_total >= expectedKills15 - 2, `~${expectedKills15} kills in 15 min`);

@@ -30,8 +30,6 @@ interface AfkState {
   last_seen_at: Date | string | null;
   minutos_acumulados: number;
   pending: AfkPendingReward;
-  /** true depois da primeira visita à tela de Exploração — só então o timer corre. */
-  iniciado?: boolean;
 }
 
 function ensureAfk(user: UserRecord): AfkState {
@@ -47,20 +45,21 @@ function ensureAfk(user: UserRecord): AfkState {
   return user.afk as AfkState;
 }
 
-/** Contas antigas (que já exploravam antes da flag existir) continuam ativas. */
+/**
+ * `last_seen_at` é a própria coluna persistida — null enquanto a conta nunca
+ * abriu a Exploração. Reaproveitá-la como sinal de "já começou" evita um
+ * flag em memória que se perderia a cada request (era o bug: o timer
+ * parecia resetar toda vez que a tela era reaberta).
+ */
 function afkStarted(afk: AfkState): boolean {
-  return afk.iniciado === true || afk.minutos_acumulados > 0;
+  return afk.last_seen_at != null;
 }
 
 /** Primeira abertura da tela de Exploração AFK: liga o timer a partir de agora. */
-export function activateAfk(user: UserRecord): void {
+export function activateAfk(user: UserRecord, now = new Date()): void {
   const afk = ensureAfk(user);
-  if (afkStarted(afk)) {
-    afk.iniciado = true;
-    return;
-  }
-  afk.iniciado = true;
-  afk.last_seen_at = new Date().toISOString();
+  if (afkStarted(afk)) return;
+  afk.last_seen_at = now.toISOString();
 }
 
 function applyAfkRewardBundle(
@@ -156,18 +155,13 @@ function grantExplorationHourRewards(
 export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[] {
   const before = new Set(ensureBestiario(user));
   const afk = ensureAfk(user);
-  const lastSeen = afk.last_seen_at ? new Date(afk.last_seen_at) : now;
 
   // O timer só corre depois da primeira visita à tela de Exploração.
   if (!afkStarted(afk)) {
     return collectNewBestiaryUnlocks(before, user);
   }
 
-  if (!afk.last_seen_at) {
-    afk.last_seen_at = now.toISOString();
-    return collectNewBestiaryUnlocks(before, user);
-  }
-
+  const lastSeen = new Date(afk.last_seen_at!);
   const already = afk.minutos_acumulados ?? 0;
 
   if (already >= AFK_MAX_MINUTES) {
