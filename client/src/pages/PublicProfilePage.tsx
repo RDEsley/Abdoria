@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, Flame, Medal, Timer, Trophy, UserPlus } from 'lucide-react';
+import { ArrowLeft, Check, Flame, Gavel, Medal, Timer, Trophy, UserPlus } from 'lucide-react';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
+import { ModerationModal } from '@/components/admin/ModerationModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -27,6 +28,8 @@ export function PublicProfilePage() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
+  const [showModeration, setShowModeration] = useState(false);
+  const isStaff = me?.role === 'admin' || me?.role === 'moderador';
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -112,6 +115,17 @@ export function PublicProfilePage() {
           <ArrowLeft size={20} aria-hidden />
         </button>
         <div className="flex items-center gap-2">
+          {isStaff && userId && (
+            <button
+              type="button"
+              className="game-icon-btn"
+              aria-label={`Moderar ${profile.nome}`}
+              title="Moderação (banir/suspender)"
+              onClick={() => setShowModeration(true)}
+            >
+              <Gavel size={18} aria-hidden />
+            </button>
+          )}
           {relacao.segue_voce && !relacao.amigo && (
             <span className="friends-chip">segue você</span>
           )}
@@ -237,6 +251,17 @@ export function PublicProfilePage() {
           </ul>
         )}
       </section>
+
+      {isStaff && userId && (
+        <ModerationModal
+          open={showModeration}
+          userId={userId}
+          userName={profile.nome}
+          banimento={null}
+          onClose={() => setShowModeration(false)}
+          onChanged={() => undefined}
+        />
+      )}
     </div>
   );
 }

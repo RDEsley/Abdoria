@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { User, sanitizeUser } from '../domain/User.js';
 import { signToken } from '../middleware/auth.js';
-import { DEFAULT_PREFERENCIAS, DEFAULT_XP_DIARIO } from '../types/index.js';
+import { DEFAULT_PREFERENCIAS, DEFAULT_XP_DIARIO, isBanimentoAtivo } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
 export const authRouter = Router();
@@ -73,6 +73,18 @@ authRouter.post('/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       res.status(401).json({ error: 'Credenciais inválidas.' });
+      return;
+    }
+
+    if (isBanimentoAtivo(user.banimento)) {
+      const ban = user.banimento!;
+      res.status(403).json({
+        error:
+          ban.tipo === 'ban'
+            ? `Conta banida: ${ban.motivo}`
+            : `Conta suspensa até ${new Date(ban.ate!).toLocaleDateString('pt-BR')}: ${ban.motivo}`,
+        banimento: ban,
+      });
       return;
     }
 

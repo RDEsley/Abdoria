@@ -81,11 +81,15 @@
   PatrolWeaponDefinition,
   PatrolWeaponKind,
   PublicProfile,
+  UserRole,
+  Banimento,
+  AppRatingEntry,
 } from '../../../shared/types/index.js';
 
 export {
   ACHIEVEMENT_DIFFICULTY_LABELS,
   ACHIEVEMENT_DIFFICULTY_ORDER,
+  isBanimentoAtivo,
   calcImc,
   MOEDA_XP_STEP,
   SHOP_MOEDA_COST_PER_XP,

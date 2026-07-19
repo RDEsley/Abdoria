@@ -2,7 +2,14 @@
 import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { NAME_CHANGE_COST, calcImc, suggestNivel, type MolduraId } from '../types/index.js';
+import {
+  NAME_CHANGE_COST,
+  calcImc,
+  isBanimentoAtivo,
+  suggestNivel,
+  type MolduraId,
+} from '../types/index.js';
+import { Ratings } from '../repositories/rating-repository.js';
 import { ensureMoedaWallet, readMoedaBalance } from '../services/economy.js';
 import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
 import { molduraStatusForUser } from '../services/molduras.js';
@@ -40,11 +47,42 @@ usersRouter.get('/me', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
+    if (isBanimentoAtivo(user.banimento)) {
+      res.status(403).json({ error: 'Conta suspensa ou banida.', banimento: user.banimento });
+      return;
+    }
     await ensureUserTag(user);
     res.json(sanitizeUser(user));
   } catch (error) {
     console.error('GET /api/users/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
+  }
+});
+
+/** Avaliação do app (popup de 3 dias de streak) — uma por conta, reenvio substitui. */
+usersRouter.post('/me/rating', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const { estrelas, comentario } = req.body as { estrelas?: number; comentario?: string };
+    const stars = Math.round(Number(estrelas));
+    if (!Number.isFinite(stars) || stars < 1 || stars > 5) {
+      res.status(400).json({ error: 'Avaliação deve ser de 1 a 5 estrelas.' });
+      return;
+    }
+    const texto = String(comentario ?? '')
+      .trim()
+      .slice(0, 500);
+    await Ratings.upsert(user.id, stars, texto ? censorProfanity(texto) : null);
+    user.preferencias = { ...user.preferencias, avaliacao_respondida: true };
+    await user.save();
+    res.json({ ok: true, user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('POST /api/users/me/rating error:', error);
+    res.status(500).json({ error: 'Erro ao salvar avaliação.' });
   }
 });
 

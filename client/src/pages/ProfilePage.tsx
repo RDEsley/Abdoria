@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Palette, Pencil, Save, Settings, Share2, Users } from 'lucide-react';
+import { Palette, Pencil, Save, Settings, Share2, ShieldCheck, Users } from 'lucide-react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
@@ -142,6 +142,11 @@ export function ProfilePage() {
       <header className="flex items-start justify-between gap-3">
         <GamePageHeader eyebrow="Ficha do herói" title="Perfil" />
         <div className="flex shrink-0 gap-2">
+          {user?.role === 'admin' && (
+            <Link to="/admin" className="game-icon-btn" aria-label="Administração">
+              <ShieldCheck size={20} aria-hidden />
+            </Link>
+          )}
           <button
             type="button"
             className="game-icon-btn"

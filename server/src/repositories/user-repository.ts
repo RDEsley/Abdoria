@@ -54,6 +54,9 @@ type ProfileRow = {
   tag?: string | null;
   descricao?: string | null;
   nome_trocas?: number | null;
+  role?: string | null;
+  gems?: number | null;
+  banimento?: Record<string, unknown> | null;
   perfil_treino?: Record<string, unknown> | null;
   plano_treino?: Record<string, unknown> | null;
   created_at: string;
@@ -198,6 +201,12 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     tag: 'tag' in profile ? (profile.tag ?? null) : undefined,
     descricao: 'descricao' in profile ? (profile.descricao ?? null) : undefined,
     nome_trocas: 'nome_trocas' in profile ? (profile.nome_trocas ?? 0) : undefined,
+    role: 'role' in profile ? ((profile.role as UserRecord['role']) ?? 'user') : undefined,
+    gems: 'gems' in profile ? (profile.gems ?? 0) : undefined,
+    banimento:
+      'banimento' in profile
+        ? ((profile.banimento as unknown as UserRecord['banimento']) ?? null)
+        : undefined,
     perfil_treino:
       'perfil_treino' in profile
         ? ((profile.perfil_treino as unknown as UserRecord['perfil_treino']) ?? null)
@@ -245,6 +254,11 @@ function userToProfileRow(user: UserRecord): Record<string, unknown> {
     ...(user.tag !== undefined ? { tag: user.tag } : {}),
     ...(user.descricao !== undefined ? { descricao: user.descricao } : {}),
     ...(user.nome_trocas !== undefined ? { nome_trocas: user.nome_trocas } : {}),
+    ...(user.role !== undefined ? { role: user.role } : {}),
+    ...(user.gems !== undefined ? { gems: user.gems } : {}),
+    ...(user.banimento !== undefined
+      ? { banimento: user.banimento as unknown as Record<string, unknown> | null }
+      : {}),
     ...(user.perfil_treino !== undefined ? { perfil_treino: user.perfil_treino } : {}),
     ...(user.plano_treino !== undefined ? { plano_treino: user.plano_treino } : {}),
   };
@@ -322,6 +336,9 @@ export class UserMutable implements UserRecord {
   tag?: string | null;
   descricao?: string | null;
   nome_trocas?: number;
+  role?: UserRecord['role'];
+  gems?: number | null;
+  banimento?: UserRecord['banimento'];
   perfil_treino?: UserRecord['perfil_treino'];
   plano_treino?: UserRecord['plano_treino'];
   createdAt?: Date | string;

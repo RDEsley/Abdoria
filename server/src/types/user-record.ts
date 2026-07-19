@@ -1,6 +1,7 @@
 import type {
   AfkPendingReward,
   AfkState,
+  Banimento,
   Cosmeticos,
   Gamificacao,
   Inventario,
@@ -12,6 +13,7 @@ import type {
   SimulacaoDefinicao,
   UserDadosSalvos,
   UserPreferencias,
+  UserRole,
   XpDiario,
 } from './index.js';
 
@@ -48,6 +50,12 @@ export interface UserRecord {
   descricao?: string | null;
   /** Quantas trocas de nome o usuário já fez (1ª grátis, depois pagas). */
   nome_trocas?: number;
+  /** Papel na moderação (user/moderador/admin). undefined = coluna não migrada. */
+  role?: UserRole | null;
+  /** Moeda premium. undefined = coluna não migrada. */
+  gems?: number | null;
+  /** Banimento/suspensão ativa. undefined = coluna não migrada. */
+  banimento?: Banimento | null;
   /** Questionário de treino (Grupo H). null = usuário legado. */
   perfil_treino?: PerfilTreino | null;
   /** Plano gerado a partir do perfil. null = pipeline de presets. */

@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import { connectDB, probeDatabase } from './db.js';
+import { adminRouter } from './routes/admin.js';
 import { authRouter } from './routes/auth.js';
 import { cosmeticsRouter } from './routes/cosmetics.js';
 import { shopRouter } from './routes/shop.js';
@@ -55,6 +56,7 @@ export function createApp() {
   app.use('/api/social', socialRouter);
   app.use('/api/meta', metaRouter);
   app.use('/api/patrol-shop', patrolShopRouter);
+  app.use('/api/admin', adminRouter);
 
   return app;
 }
