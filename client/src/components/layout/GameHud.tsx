@@ -47,6 +47,7 @@ export function GameHud() {
       userXp={xpInLevel}
       xpMax={xpToNext}
       doriasAmount={cosmeticos.moedas}
+      gemsAmount={user?.gems ?? 0}
       avatar={
         <UserAvatar
           nome={firstName}

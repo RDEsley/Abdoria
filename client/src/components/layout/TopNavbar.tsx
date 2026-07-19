@@ -144,7 +144,7 @@ export function TopNavbar({
           </div>
         </button>
 
-        <div className="top-navbar__resources flex shrink-0 items-center gap-2 sm:gap-2.5">
+        <div className="top-navbar__resources flex shrink-0 items-center gap-2.5 sm:gap-3">
           <ResourcePill
             icon={<Coins size={20} strokeWidth={2.5} className="top-navbar__coin-icon" />}
             amount={doriasAmount}

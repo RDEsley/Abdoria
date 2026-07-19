@@ -123,8 +123,11 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  flex-shrink: 1;
   gap: 0.15rem;
-  min-width: 4.85rem;
+  min-width: 3.4rem;
+  width: 4.85rem;
+  max-width: 4.85rem;
   height: 2.05rem;
   padding: 0 0.35rem 0 1.45rem;
   border-radius: 999px;
@@ -182,14 +185,21 @@
 }
 
 @media (max-width: 380px) {
+  .top-navbar__resources {
+    gap: 0.4rem !important;
+  }
+
   .top-navbar__pill {
-    min-width: 4.1rem;
+    min-width: 3rem;
+    width: 4.1rem;
+    max-width: 4.1rem;
     height: 1.85rem;
     padding-left: 1.25rem;
   }
 
   .top-navbar__pill-value {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+    padding: 0 0.05rem;
   }
 
   .top-navbar__pill-icon {
@@ -205,6 +215,32 @@
   .top-navbar__avatar-wrap {
     width: 2.85rem;
     height: 2.85rem;
+  }
+}
+
+/* Telas bem estreitas (ex.: iPhone SE): mais um degrau de compactação nas
+   pills de Coins/Gems pra caber junto do sino de notificações sem cortar
+   o nome do jogador. */
+@media (max-width: 340px) {
+  .top-navbar__resources {
+    gap: 0.3rem !important;
+  }
+
+  .top-navbar__pill {
+    min-width: 2.5rem;
+    width: 3.4rem;
+    max-width: 3.4rem;
+    padding-left: 1.1rem;
+  }
+
+  .top-navbar__pill-value {
+    font-size: 0.62rem;
+  }
+
+  .top-navbar__pill-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    left: -0.36rem;
   }
 }
 
