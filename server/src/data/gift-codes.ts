@@ -7,6 +7,10 @@ export interface GiftCodeDefinition {
   desbloqueia: string[];
   titulo_equipar?: string;
   mensagem: string;
+  /** Frozen Streaks concedidos direto no inventário. */
+  frozen_streaks?: number;
+  /** Gemas (moeda premium) concedidas direto na conta. */
+  gems?: number;
   /** Se false, o código não pode mais ser resgatado. */
   active?: boolean;
   /** Data limite ISO (America/Sao_Paulo, inclusive até o fim do dia). */
@@ -22,6 +26,17 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     mensagem: `Código Abdoria resgatado! Você recebeu 999 ${CURRENCY_NAME}.`,
     active: true,
   },
+  {
+    code: 'discord',
+    xp: 0,
+    abdoria: 1000,
+    frozen_streaks: 7,
+    gems: 1,
+    desbloqueia: ['titulo_membro_familia'],
+    titulo_equipar: 'titulo_membro_familia',
+    mensagem: 'Bem-vindo à família Abdoria! Recompensa exclusiva do Discord resgatada.',
+    active: true,
+  },
 ];
 
 export const GIFT_CODE_BY_KEY = Object.fromEntries(
@@ -34,5 +49,11 @@ export function isGiftCodeExpired(definition: GiftCodeDefinition, todaySaoPaulo:
 }
 
 export function hasGiftCodeRewards(definition: GiftCodeDefinition): boolean {
-  return definition.xp > 0 || definition.abdoria > 0 || definition.desbloqueia.length > 0;
+  return (
+    definition.xp > 0 ||
+    definition.abdoria > 0 ||
+    definition.desbloqueia.length > 0 ||
+    (definition.frozen_streaks ?? 0) > 0 ||
+    (definition.gems ?? 0) > 0
+  );
 }
