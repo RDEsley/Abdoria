@@ -25,6 +25,10 @@ export function PhotoCropper({ file, onCancel, onConfirm }: Props) {
   const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(
     null,
   );
+  /** true durante e logo após um arraste — evita que o "click" fantasma que
+      o navegador dispara no fundo (quando o release termina fora do
+      viewport) seja lido como "cancelar". */
+  const draggedRef = useRef(false);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -53,19 +57,38 @@ export function PhotoCropper({ file, onCancel, onConfirm }: Props) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    draggedRef.current = false;
     dragRef.current = { startX: e.clientX, startY: e.clientY, baseX: offset.x, baseY: offset.y };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     const drag = dragRef.current;
     if (!drag) return;
-    setOffset(
-      clampOffset(drag.baseX + (e.clientX - drag.startX), drag.baseY + (e.clientY - drag.startY)),
-    );
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) draggedRef.current = true;
+    setOffset(clampOffset(drag.baseX + dx, drag.baseY + dy));
   };
 
   const onPointerUp = () => {
     dragRef.current = null;
+    // O click fantasma (se houver) chega em seguida, ainda síncrono — zera a
+    // flag só depois, num timeout, pra não travar um cancelar de verdade.
+    window.setTimeout(() => {
+      draggedRef.current = false;
+    }, 0);
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Nunca deixa o clique escapar pro modal pai (ProfileEditModal) — cancelar
+    // o recorte não pode fechar a edição de perfil inteira (bug de bubbling
+    // via árvore React entre portais aninhados).
+    e.stopPropagation();
+    if (draggedRef.current) {
+      draggedRef.current = false;
+      return;
+    }
+    onCancel();
   };
 
   const handleConfirm = () => {
@@ -86,7 +109,7 @@ export function PhotoCropper({ file, onCancel, onConfirm }: Props) {
   };
 
   return createPortal(
-    <div className="game-modal-overlay" role="presentation" onClick={onCancel}>
+    <div className="game-modal-overlay" role="presentation" onClick={handleBackdropClick}>
       <div
         className="game-modal photo-cropper"
         role="dialog"

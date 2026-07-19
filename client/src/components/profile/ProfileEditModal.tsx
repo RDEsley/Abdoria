@@ -77,7 +77,14 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
       cancelled = true;
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [open, profile.nome, profile.descricao, onClose]);
+    // Só reinicializa o rascunho na transição fechado→aberto. `onClose` é uma
+    // arrow function inline no pai (nova referência a cada render) e
+    // `profile` pode mudar em segundo plano (polling/social) — incluí-los
+    // aqui faria o efeito rodar de novo com o modal já aberto e apagar o que
+    // o usuário está digitando (bug: descrição "não salvava" na 1ª tentativa
+    // porque o rascunho voltava pro valor antigo antes do clique em Salvar).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
