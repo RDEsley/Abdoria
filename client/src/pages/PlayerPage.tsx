@@ -5,6 +5,12 @@ import { Check, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X } from 'luc
 import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
+import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
+import {
+  buildCampaignPosts,
+  type CampaignCatalogInfo,
+  type CampaignPost,
+} from '@shared/campaign';
 import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
@@ -37,6 +43,8 @@ import {
   formatExerciseName,
   formatExercisePrescription,
   resolveCosmeticos,
+  xpLevelFromTotal,
+  type AfkEnemyId,
   type LevelUpCelebration as LevelUpData,
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
@@ -59,7 +67,7 @@ function readActiveWorkout(): ActiveWorkout | null {
 
 export function PlayerPage() {
   const navigate = useNavigate();
-  const { saveWorkout } = useApp();
+  const { saveWorkout, exercises, ensureExercises } = useApp();
   const { user: authUser } = useAuth();
   const [workout] = useState<ActiveWorkout | null>(readActiveWorkout);
   const [exerciseIndex, setExerciseIndex] = useState(0);
@@ -78,6 +86,9 @@ export function PlayerPage() {
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showRodadaModal, setShowRodadaModal] = useState(false);
   const [rodadaBusy, setRodadaBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [storyPost, setStoryPost] = useState<CampaignPost | null>(null);
+  const [showStory, setShowStory] = useState(false);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const mutedRef = useRef(muted);
   const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
@@ -266,6 +277,69 @@ export function PlayerPage() {
     navigate('/construtor', { replace: true });
   };
 
+  /** Só admins (testes): pula direto pra tela de missão completa. */
+  const skipAllForTests = () => {
+    endTimeRef.current = Date.now();
+    persistWorkoutEndedAt(endTimeRef.current);
+    playWorkoutComplete();
+    setPhase('done');
+  };
+
+  /** Capítulo de campanha gerado pela missão recém-concluída (mesma lógica do feed). */
+  const buildStoryPost = (xpGanho: number, duracao: number): CampaignPost | null => {
+    if (!workout || !authUser) return null;
+    const catalogBySlug = new Map<string, CampaignCatalogInfo>(
+      exercises.map((ex) => [
+        ex.slug,
+        {
+          nivel: ex.nivel,
+          prioridade: ex.prioridade,
+          musculo_principal: ex.musculo_principal,
+          grupos: ex.grupos,
+          nome_pt: ex.nome_pt,
+        },
+      ]),
+    );
+    const posts = buildCampaignPosts(
+      [
+        {
+          id: `sessao-${Date.now()}`,
+          treino_nome: workout.treino_nome,
+          exercicios: workout.queue.map((item) => ({
+            exercicio_id: item.exercicio_id ?? '',
+            slug: item.slug,
+            nome: item.nome,
+            duracao_segundos:
+              item.modo === 'tempo'
+                ? (item.tempo_seg ?? item.tempo_recomendado)
+                : (item.repeticoes ?? 12) * 3,
+            musculo_principal: item.musculo_principal,
+            series: item.series,
+            repeticoes_realizadas: item.modo === 'reps' ? item.repeticoes : undefined,
+            modo: item.modo,
+            descanso_seg: item.descanso_seg,
+          })),
+          duracao_total_segundos: duracao,
+          xp_ganho: xpGanho,
+          concluido_em: new Date().toISOString(),
+        },
+      ],
+      catalogBySlug,
+      {
+        heroi: authUser.nome?.split(' ')[0] ?? 'O herói',
+        level: xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
+        bestiarioDesbloqueados: (authUser.gamificacao?.bestiario_desbloqueados ??
+          []) as AfkEnemyId[],
+      },
+    );
+    return posts[0] ?? null;
+  };
+
+  useEffect(() => {
+    // Catálogo pronto pra montar o capítulo de campanha no fim da missão.
+    void ensureExercises();
+  }, [ensureExercises]);
+
   const handleFinish = async () => {
     if (!workout || saving) return;
     setSaving(true);
@@ -308,10 +382,10 @@ export function PlayerPage() {
       }
       sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
       clearWorkoutDurationSession();
+      setSaved(true);
+      setStoryPost(buildStoryPost(result.xp_ganho ?? 0, Math.max(duration, 1)));
       if (result.rodada_completa) {
         setShowRodadaModal(true);
-      } else {
-        setTimeout(() => navigate('/'), 2500);
       }
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível salvar seu treino. Tente novamente.'), {
@@ -324,7 +398,11 @@ export function PlayerPage() {
 
   const handleRodadaManter = () => {
     setShowRodadaModal(false);
-    navigate('/');
+  };
+
+  const handleVictoryContinue = () => {
+    if (storyPost) setShowStory(true);
+    else navigate('/');
   };
 
   const handleRodadaTrocar = async () => {
@@ -347,6 +425,9 @@ export function PlayerPage() {
   if (!workout || !current) return null;
 
   if (phase === 'done') {
+    if (showStory && storyPost) {
+      return <CampaignStoryScreen post={storyPost} onContinue={() => navigate('/')} />;
+    }
     return (
       <WorkoutVictoryScreen
         workoutName={workout.treino_nome}
@@ -357,7 +438,9 @@ export function PlayerPage() {
         levelUpCelebration={levelUpCelebration}
         equippedEffectId={equippedEffectId}
         saving={saving}
+        saved={saved}
         onFinish={() => void handleFinish()}
+        onContinue={handleVictoryContinue}
         showRodadaModal={showRodadaModal}
         rodadaBusy={rodadaBusy}
         onRodadaKeep={handleRodadaManter}
@@ -442,18 +525,30 @@ export function PlayerPage() {
             Exercício {exerciseIndex + 1}/{workout.queue.length}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            const next = !muted;
-            setMuted(next);
-            setSoundSettings(!next, authUser?.preferencias?.sfx_volume ?? 0.7);
-          }}
-          className="cursor-pointer text-stone-600"
-          aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
-        >
-          {muted ? <VolumeX size={24} /> : <Volume2 size={24} />}
-        </button>
+        <div className="flex items-center gap-3">
+          {authUser?.role === 'admin' && (
+            <button
+              type="button"
+              onClick={skipAllForTests}
+              className="cursor-pointer rounded-full border-2 border-purple-300 bg-purple-50 px-2 py-0.5 text-[0.6rem] font-black uppercase text-purple-700"
+              title="Pular direto pro fim do treino (só admins, para testes)"
+            >
+              Skip ADM
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const next = !muted;
+              setMuted(next);
+              setSoundSettings(!next, authUser?.preferencias?.sfx_volume ?? 0.7);
+            }}
+            className="cursor-pointer text-stone-600"
+            aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
+          >
+            {muted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+          </button>
+        </div>
       </header>
 
       <div

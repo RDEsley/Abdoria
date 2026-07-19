@@ -1,40 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Castle,
-  Crown,
-  Flag,
-  HeartHandshake,
-  Mountain,
-  ScrollText,
-  Shield,
-  Skull,
-  Sparkles,
-  Swords,
-} from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
+import { CAMPAIGN_EVENT_STYLE } from '@/components/campaign/campaign-style';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import {
   buildCampaignPosts,
   type CampaignCatalogInfo,
-  type CampaignEventType,
   type CampaignPost,
 } from '@shared/campaign';
 import { xpLevelFromTotal, type AfkEnemyId } from '@/types';
-
-const EVENT_STYLE: Record<CampaignEventType, { Icon: typeof Swords; className: string }> = {
-  horda_contida: { Icon: Swords, className: 'bg-amber-100 text-amber-700' },
-  monstro_derrotado: { Icon: Skull, className: 'bg-rose-100 text-rose-700' },
-  chefe_derrotado: { Icon: Crown, className: 'bg-purple-100 text-purple-700' },
-  vila_salva: { Icon: Flag, className: 'bg-emerald-100 text-emerald-700' },
-  pessoa_resgatada: { Icon: HeartHandshake, className: 'bg-sky-100 text-sky-700' },
-  defesa_heroica: { Icon: Shield, className: 'bg-slate-200 text-slate-700' },
-  travessia: { Icon: Mountain, className: 'bg-orange-100 text-orange-800' },
-  fortaleza_rompida: { Icon: Castle, className: 'bg-orange-100 text-orange-700' },
-  poder_desperto: { Icon: Sparkles, className: 'bg-cyan-100 text-cyan-700' },
-  capitulo: { Icon: ScrollText, className: 'bg-yellow-100 text-yellow-800' },
-};
 
 function relativeDate(iso: string): string {
   const date = new Date(iso);
@@ -49,7 +24,7 @@ function relativeDate(iso: string): string {
 }
 
 function PostCard({ post }: { post: CampaignPost }) {
-  const style = EVENT_STYLE[post.tipo] ?? EVENT_STYLE.monstro_derrotado;
+  const style = CAMPAIGN_EVENT_STYLE[post.tipo] ?? CAMPAIGN_EVENT_STYLE.monstro_derrotado;
   const { Icon } = style;
   return (
     <motion.article
@@ -58,7 +33,7 @@ function PostCard({ post }: { post: CampaignPost }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="game-campaign-post rounded-xl border border-stone-200 bg-white/70 p-3"
+      className="game-campaign-post game-campaign-card-bg rounded-xl p-3"
     >
       <header className="flex items-center gap-2">
         <span

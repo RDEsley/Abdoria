@@ -1,14 +1,19 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Coins, Zap } from 'lucide-react';
+import { ChevronRight, Coins, Flame, Snowflake, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
-import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
+import { useApp } from '@/hooks/useApp';
+import { toLocalDateKey } from '@/lib/utils';
+import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { CURRENCY_NAME, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { XpBreakdown } from '@/types';
+
+const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('pt-BR', {
@@ -27,14 +32,19 @@ interface Props {
   levelUpCelebration: LevelUpData | null;
   equippedEffectId: string;
   saving: boolean;
+  saved: boolean;
   onFinish: () => void;
+  onContinue: () => void;
   showRodadaModal: boolean;
   rodadaBusy: boolean;
   onRodadaKeep: () => void;
   onRodadaSwap: () => void;
 }
 
-/** Tela de missão completa: celebrações, recompensas e o gate de rodada completa. */
+/**
+ * Tela única de missão completa: semana com foguinhos de streak, XP ganho e
+ * compartilhamento. Só sai daqui quando o jogador toca em Continuar.
+ */
 export function WorkoutVictoryScreen({
   workoutName,
   xpGained,
@@ -44,41 +54,105 @@ export function WorkoutVictoryScreen({
   levelUpCelebration,
   equippedEffectId,
   saving,
+  saved,
   onFinish,
+  onContinue,
   showRodadaModal,
   rodadaBusy,
   onRodadaKeep,
   onRodadaSwap,
 }: Props) {
+  const { history, stats, user } = useApp();
+
+  const week = useMemo(() => {
+    const todayKey = toLocalDateKey(new Date());
+    const monday = getWeekStartSaoPaulo();
+    const trained = new Set<string>();
+    for (const entry of history) trained.add(toLocalDateKey(entry.concluido_em));
+    if (saved) trained.add(todayKey);
+    const frozen = new Set(user?.gamificacao?.streak_congelamentos ?? []);
+    return Array.from({ length: 7 }, (_, i) => {
+      const key = addDaysSaoPaulo(monday, i);
+      return {
+        key,
+        label: DAY_LABELS[i],
+        trained: trained.has(key),
+        frozen: !trained.has(key) && frozen.has(key),
+        isToday: key === todayKey,
+        isFuture: key > todayKey,
+      };
+    });
+  }, [history, saved, user?.gamificacao?.streak_congelamentos]);
+
+  const streakShown = streakCelebration ?? stats?.streak_atual ?? 0;
+
   return (
     <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
       <AnimatedBackground variant="player" />
-      <CompletionCelebration effectId={equippedEffectId} />
+      {saved && <CompletionCelebration effectId={equippedEffectId} />}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="game-victory relative z-10"
       >
-        {streakCelebration !== null ? (
-          <StreakFireCelebration streak={streakCelebration} />
-        ) : levelUpCelebration ? (
-          <LevelUpCelebration
-            level={levelUpCelebration.level_novo}
-            previousLevel={levelUpCelebration.level_anterior}
-          />
-        ) : (
-          <div className="game-level-badge mx-auto mb-4">✓</div>
-        )}
+        <div className="game-level-badge mx-auto mb-4">✓</div>
         <h2 className="game-victory__title">MISSÃO COMPLETA!</h2>
-        {levelUpCelebration && streakCelebration !== null && (
+        <p className="mt-2 text-sm font-bold text-stone-600">{workoutName}</p>
+
+        {levelUpCelebration && (
           <LevelUpCelebration
             compact
             level={levelUpCelebration.level_novo}
             previousLevel={levelUpCelebration.level_anterior}
           />
         )}
-        <p className="mt-2 text-sm font-bold text-stone-600">{workoutName}</p>
-        {xpGained > 0 && (
+
+        {saved && (
+          <div className="game-victory-week">
+            <p className="game-victory-week__streak">
+              <Flame size={14} aria-hidden />
+              {streakShown} dia{streakShown === 1 ? '' : 's'} de sequência
+            </p>
+            <div className="game-victory-week__days">
+              {week.map((day, i) => (
+                <div key={day.key} className="game-victory-week__col">
+                  <span className="game-victory-week__label" aria-hidden>
+                    {day.label}
+                  </span>
+                  <motion.span
+                    className={`game-victory-week__cell${
+                      day.trained
+                        ? ' game-victory-week__cell--fire'
+                        : day.frozen
+                          ? ' game-victory-week__cell--frozen'
+                          : day.isFuture
+                            ? ' game-victory-week__cell--future'
+                            : ''
+                    }${day.isToday ? ' game-victory-week__cell--today' : ''}`}
+                    initial={day.isToday ? { scale: 0 } : false}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', bounce: 0.6, delay: 0.3 + i * 0.04 }}
+                    aria-label={
+                      day.trained
+                        ? 'Dia treinado'
+                        : day.frozen
+                          ? 'Dia congelado por Frozen Streak'
+                          : 'Sem treino'
+                    }
+                  >
+                    {day.trained ? (
+                      <Flame size={15} aria-hidden />
+                    ) : day.frozen ? (
+                      <Snowflake size={14} aria-hidden />
+                    ) : null}
+                  </motion.span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {saved && (
           <div className="game-victory__rewards">
             <p className="game-victory__xp">
               <Zap size={14} aria-hidden /> +{xpGained} XP
@@ -105,21 +179,31 @@ export function WorkoutVictoryScreen({
             )}
           </div>
         )}
-        <GameButton onClick={onFinish} size="lg" className="mt-6 w-full" disabled={saving}>
-          {saving ? 'Salvando...' : xpGained > 0 ? 'Voltar ao início' : 'Salvar e voltar'}
-        </GameButton>
 
-        {xpGained > 0 && (
-          <ShareCardTrigger
-            className="mt-2 w-full"
-            data={{
-              kind: 'workout',
-              workoutName,
-              dateLabel: todayLabel(),
-              xpGained,
-              streakAtual: streakCelebration ?? undefined,
-            }}
-          />
+        {!saved ? (
+          <GameButton onClick={onFinish} size="lg" className="mt-6 w-full" disabled={saving}>
+            {saving ? 'Salvando...' : 'Concluir missão'}
+          </GameButton>
+        ) : (
+          <>
+            <ShareCardTrigger
+              className="mt-5 w-full"
+              data={{
+                kind: 'workout',
+                workoutName,
+                dateLabel: todayLabel(),
+                xpGained,
+                streakAtual: streakShown || undefined,
+              }}
+            />
+            <GameButton
+              onClick={onContinue}
+              size="lg"
+              className="mt-2 flex w-full items-center justify-center gap-2"
+            >
+              Continuar <ChevronRight size={18} />
+            </GameButton>
+          </>
         )}
       </motion.div>
 
