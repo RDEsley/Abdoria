@@ -12,6 +12,7 @@ import type { CosmeticDefinition, CosmeticKind, ShopCatalogItem, ShopResponse } 
 import {
   MOEDA_XP_STEP,
   CURRENCY_NAME,
+  FROZEN_STREAK_ITEM_ID,
   SHOP_HIDDEN_COSMETIC_IDS,
   DEFAULT_COSMETICOS,
   SHOP_MOEDA_COST_PER_XP,
@@ -34,6 +35,7 @@ import {
   grantMoeda,
   readMoedaBalance,
 } from './economy.js';
+import { addInventoryItem } from './inventory.js';
 
 export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
 
@@ -67,15 +69,21 @@ function ensureCosmeticos(user: UserDoc): void {
   user.cosmeticos = resolved as typeof user.cosmeticos;
 }
 
+/**
+ * Sons continuam à venda por Dorias (aba Áudio das Opções). Os demais
+ * cosméticos com regra legada `moedas` (Personalização do Perfil) saíram
+ * de venda — decisão de produto de 2026-07-18: passam a ser obtidos por
+ * conquistas, códigos e eventos, sem preço exposto na interface.
+ */
 function moedasUnlockLabel(item: CosmeticDefinition): string {
-  const price = item.unlock.preco_moedas ?? 0;
-  const base = `${price} ${CURRENCY_NAME}`;
-
-  if (item.raridade === 'lendario' || item.raridade === 'epico') {
-    return `${base} — ou drop raro na Exploração AFK`;
+  if (item.kind === 'som') {
+    const price = item.unlock.preco_moedas ?? 0;
+    return `${price} ${CURRENCY_NAME}`;
   }
-
-  return base;
+  if (item.raridade === 'lendario' || item.raridade === 'epico') {
+    return 'Drop raro na Exploração AFK';
+  }
+  return 'Em breve — nova forma de desbloquear';
 }
 
 export function buildUnlockLabel(item: CosmeticDefinition): string {
@@ -159,8 +167,11 @@ function toCatalogItem(item: CosmeticDefinition, user: UserDoc): ShopCatalogItem
   const unlocked = new Set(user.cosmeticos.desbloqueados);
   const desbloqueada = unlocked.has(item.id);
   const equipada = isEquipped(user, item);
+  // Só sons continuam compráveis por moedas — Personalização do Perfil saiu
+  // de venda (itens agora vêm de conquistas, códigos e eventos).
   const pode_comprar =
     !desbloqueada &&
+    item.kind === 'som' &&
     item.unlock.tipo === 'moedas' &&
     (item.unlock.preco_moedas ?? 0) <= readMoedaBalance(user);
 
@@ -230,6 +241,12 @@ export async function purchaseShopItem(userId: string, itemId: string) {
   if (!item) return { error: 'Item não encontrado.', status: 404 as const };
   if (item.unlock.tipo !== 'moedas')
     return { error: 'Este item não está à venda.', status: 400 as const };
+  if (item.kind !== 'som') {
+    return {
+      error: 'Este item não está mais à venda — desbloqueie por conquistas, códigos ou eventos.',
+      status: 400 as const,
+    };
+  }
 
   const price = item.unlock.preco_moedas ?? 0;
   const unlocked = new Set(user.cosmeticos.desbloqueados);
@@ -314,6 +331,14 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
   grantMoeda(user, definition.abdoria);
   syncGiftCodeAbdoriaBlocks(user);
 
+  if (definition.frozen_streaks && definition.frozen_streaks > 0) {
+    addInventoryItem(user, FROZEN_STREAK_ITEM_ID, definition.frozen_streaks);
+  }
+  // Coluna gems pode não existir ainda em contas cuja migração não foi aplicada.
+  if (definition.gems && definition.gems > 0 && user.gems !== undefined) {
+    user.gems = (user.gems ?? 0) + definition.gems;
+  }
+
   const unlocked = new Set(user.cosmeticos.desbloqueados);
   for (const itemId of definition.desbloqueia) {
     if (!COSMETIC_BY_ID[itemId]) continue;
@@ -354,7 +379,7 @@ function buildGiftCodeRewardLines(
   abdoria_ganha: number,
 ) {
   const lines: Array<{
-    tipo: 'xp' | 'abdoria' | 'cosmetico';
+    tipo: 'xp' | 'abdoria' | 'cosmetico' | 'frozen_streak' | 'gems';
     valor?: number;
     nome?: string;
     item_id?: string;
@@ -362,6 +387,12 @@ function buildGiftCodeRewardLines(
 
   if (xp_ganho > 0) lines.push({ tipo: 'xp', valor: xp_ganho });
   if (abdoria_ganha > 0) lines.push({ tipo: 'abdoria', valor: abdoria_ganha });
+  if (definition.frozen_streaks && definition.frozen_streaks > 0) {
+    lines.push({ tipo: 'frozen_streak', valor: definition.frozen_streaks });
+  }
+  if (definition.gems && definition.gems > 0) {
+    lines.push({ tipo: 'gems', valor: definition.gems });
+  }
 
   for (const itemId of definition.desbloqueia) {
     const item = COSMETIC_BY_ID[itemId];

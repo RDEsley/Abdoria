@@ -863,6 +863,16 @@
   background: linear-gradient(180deg, #faf5ff, #fff);
 }
 
+.game-gift-reward-list__item--frozen_streak {
+  border-color: rgba(2, 132, 199, 0.35);
+  background: linear-gradient(180deg, #f0f9ff, #fff);
+}
+
+.game-gift-reward-list__item--gems {
+  border-color: rgba(3, 105, 161, 0.35);
+  background: linear-gradient(180deg, #ecfeff, #fff);
+}
+
 .game-gift-reward-list__icon {
   display: inline-flex;
   align-items: center;
@@ -886,6 +896,14 @@
 
 .game-gift-reward-list__item--cosmetico .game-gift-reward-list__icon {
   background: linear-gradient(180deg, #c084fc, #9333ea);
+}
+
+.game-gift-reward-list__item--frozen_streak .game-gift-reward-list__icon {
+  background: linear-gradient(180deg, #7dd3fc, #0284c7);
+}
+
+.game-gift-reward-list__item--gems .game-gift-reward-list__icon {
+  background: linear-gradient(180deg, #67e8f9, #0369a1);
 }
 
 .game-gift-reward-list__value {

@@ -1,4 +1,4 @@
-﻿import { Check, Coins, Eye, Lock, Sparkles, Volume2 } from 'lucide-react';
+﻿import { Check, Eye, Lock, Volume2 } from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { GameButton } from '@/components/ui/GameButton';
 import { COSMETIC_RARITY_LABELS, type ShopCatalogItem } from '@/types';
@@ -9,7 +9,6 @@ interface Props {
   isPreviewing: boolean;
   onPreview: () => void;
   onEquip: () => void;
-  onPurchase: () => void;
 }
 
 function rarityFrameClass(raridade: ShopCatalogItem['raridade']) {
@@ -36,14 +35,10 @@ function ItemThumb({ item }: { item: ShopCatalogItem }) {
     );
   }
 
-  return (
-    <div className="game-shop-row__thumb-inner game-shop-row__thumb-inner--badge">
-      <CosmeticIcon icon={item.icon} size={18} unlocked={item.desbloqueada} />
-    </div>
-  );
+  return <CosmeticIcon icon={item.icon} size={20} unlocked={item.desbloqueada} raridade={item.raridade} />;
 }
 
-export function ShopItemRow({ item, busy, isPreviewing, onPreview, onEquip, onPurchase }: Props) {
+export function ShopItemRow({ item, busy, isPreviewing, onPreview, onEquip }: Props) {
   const canPreview =
     item.desbloqueada ||
     item.kind === 'moldura_loja' ||
@@ -89,10 +84,6 @@ export function ShopItemRow({ item, busy, isPreviewing, onPreview, onEquip, onPu
             ) : (
               <span className="game-shop-row__status">Desbloqueado</span>
             )
-          ) : item.unlock.tipo === 'moedas' ? (
-            <span className="game-shop-row__unlock-hint">
-              <Coins size={12} aria-hidden /> {item.unlock_label}
-            </span>
           ) : (
             <span className="game-shop-row__unlock-hint game-shop-row__unlock-hint--quest">
               Como conseguir: {item.unlock_label}
@@ -132,17 +123,9 @@ export function ShopItemRow({ item, busy, isPreviewing, onPreview, onEquip, onPu
           >
             {item.equipada ? 'Em uso' : 'Equipar'}
           </GameButton>
-        ) : item.pode_comprar ? (
-          <GameButton size="sm" className="game-shop-row__btn" disabled={busy} onClick={onPurchase}>
-            <Coins size={14} /> {item.unlock.preco_moedas}
-          </GameButton>
-        ) : item.unlock.tipo === 'moedas' ? (
-          <GameButton size="sm" variant="secondary" className="game-shop-row__btn" disabled>
-            <Coins size={14} /> {item.unlock.preco_moedas}
-          </GameButton>
         ) : (
           <GameButton size="sm" variant="secondary" className="game-shop-row__btn" disabled>
-            <Sparkles size={14} /> Bloqueado
+            <Lock size={14} /> Bloqueado
           </GameButton>
         )}
       </div>

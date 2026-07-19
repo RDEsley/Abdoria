@@ -1,23 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Coins, Crown, Frame, Image, Wand2 } from 'lucide-react';
+import { Crown, Frame, Image, Wand2 } from 'lucide-react';
 import { ShopItemRow } from '@/components/shop/ShopItemRow';
-import { MoedaGuideOverlay } from '@/components/shop/MoedaGuideOverlay';
 import { ShopPreviewStage } from '@/components/shop/ShopPreviewStage';
-import {
-  PurchaseConfirmDialog,
-  type PurchaseConfirmDetails,
-} from '@/components/shop/PurchaseConfirmDialog';
 import { GameButton } from '@/components/ui/GameButton';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
-import { equipShopItem, getShop, purchaseShopItem } from '@/lib/api';
+import { equipShopItem, getShop } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { playEquip, playPurchase, playTabSwitch, previewSfxPack, setSfxPack } from '@/lib/sounds';
+import { playEquip, playTabSwitch, previewSfxPack, setSfxPack } from '@/lib/sounds';
 import type { CosmeticKind, ShopCatalogItem, ShopResponse } from '@/types';
-import { CURRENCY_NAME, resolveCosmeticos } from '@/types';
+import { resolveCosmeticos } from '@/types';
 
 interface Props {
   open: boolean;
@@ -60,11 +55,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
   const [catalog, setCatalog] = useState<ShopResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [coinsGuideOpen, setCoinsGuideOpen] = useState(false);
-  const [purchaseConfirm, setPurchaseConfirm] = useState<{
-    item: ShopCatalogItem;
-    details: PurchaseConfirmDetails;
-  } | null>(null);
 
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
@@ -94,7 +84,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
     if (!open) return;
     setPreview({});
     setActiveTab('moldura_loja');
-    setCoinsGuideOpen(false);
     void loadCatalog();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -129,36 +118,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
   };
 
   const resetPreview = () => setPreview({});
-
-  const handlePurchase = async (item: ShopCatalogItem) => {
-    setBusyId(item.id);
-    try {
-      const res = await purchaseShopItem(item.id);
-      await syncUser(res.user);
-      playPurchase();
-      setPurchaseConfirm(null);
-      showGameToast(`${item.nome} desbloqueado!`, { variant: 'success' });
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível desbloquear este item.'), {
-        variant: 'error',
-      });
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const requestPurchase = (item: ShopCatalogItem) => {
-    if (item.unlock.tipo !== 'moedas') return;
-    setPurchaseConfirm({
-      item,
-      details: {
-        itemName: item.nome,
-        itemDescription: item.descricao,
-        priceLabel: `${item.unlock.preco_moedas} ${CURRENCY_NAME}`,
-        balanceHint: catalog ? `Saldo atual: ${catalog.abdoria} ${CURRENCY_NAME}` : undefined,
-      },
-    });
-  };
 
   const handleEquip = async (item: ShopCatalogItem) => {
     setBusyId(item.id);
@@ -205,15 +164,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
                 </h2>
                 <p className="game-shop-header__subtitle">Deixe o perfil com a sua cara</p>
               </div>
-              <button
-                type="button"
-                className="game-shop-header__coins"
-                onClick={() => setCoinsGuideOpen(true)}
-                aria-label={`${catalog?.abdoria ?? cosmeticos.moedas} ${CURRENCY_NAME}. Toque para ver como ganhar mais`}
-              >
-                <Coins size={16} aria-hidden /> {catalog?.abdoria ?? cosmeticos.moedas}{' '}
-                {CURRENCY_NAME}
-              </button>
             </header>
 
             <ShopPreviewStage
@@ -263,7 +213,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
                         isPreviewing={isPreviewingItem(item)}
                         onPreview={() => handlePreview(item)}
                         onEquip={() => void handleEquip(item)}
-                        onPurchase={() => requestPurchase(item)}
                       />
                     ))}
                   </div>
@@ -283,18 +232,6 @@ export function CosmeticsModal({ open, onClose }: Props) {
           </footer>
         </div>
       </div>
-
-      <MoedaGuideOverlay open={coinsGuideOpen} onClose={() => setCoinsGuideOpen(false)} />
-
-      <PurchaseConfirmDialog
-        open={!!purchaseConfirm}
-        details={purchaseConfirm?.details ?? null}
-        busy={!!purchaseConfirm && busyId === purchaseConfirm.item.id}
-        onConfirm={() => purchaseConfirm && void handlePurchase(purchaseConfirm.item)}
-        onCancel={() => {
-          if (!busyId) setPurchaseConfirm(null);
-        }}
-      />
     </>,
     document.body,
   );

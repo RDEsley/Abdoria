@@ -202,6 +202,15 @@ export const COSMETICS: CosmeticDefinition[] = [
     raridade: 'raro',
     unlock: { tipo: 'conquista', conquista_id: 'night_owl' },
   },
+  {
+    id: 'titulo_membro_familia',
+    kind: 'titulo',
+    nome: 'Membro da Família',
+    descricao: 'Exclusivo de quem entrou no Discord do Abdoria.',
+    icon: 'heart',
+    raridade: 'raro',
+    unlock: { tipo: 'codigo' },
+  },
 
   // —— Sons ——
   {
@@ -400,7 +409,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     kind: 'efeito',
     nome: 'Onda Azul',
     descricao: 'Chuva de pixels aquáticos no perfil.',
-    icon: 'star',
+    icon: 'droplet',
     raridade: 'raro',
     unlock: { tipo: 'moedas', preco_moedas: 85 },
   },
@@ -409,7 +418,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     kind: 'efeito',
     nome: 'Quebra de Tela',
     descricao: 'Glitch pixelado de alta raridade.',
-    icon: 'zap',
+    icon: 'sparkles',
     raridade: 'lendario',
     unlock: { tipo: 'moedas', preco_moedas: 180 },
   },
