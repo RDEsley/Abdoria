@@ -51,29 +51,35 @@ export const SwipeScroll = forwardRef<HTMLDivElement, SwipeScrollProps>(function
 
   return (
     <div className={wrapClass}>
-      {canScrollLeft && (
-        <button
-          type="button"
-          className="game-swipe-scroll__arrow game-swipe-scroll__arrow--prev"
-          aria-label={prevLabel}
-          onClick={scrollPrev}
-        >
-          <ChevronLeft size={18} strokeWidth={3} aria-hidden />
-        </button>
-      )}
+      {/* Sempre montadas (nunca somem/aparecem abruptamente) — a visibilidade
+          é uma transição CSS de opacidade/posição, não um mount/unmount. */}
+      <button
+        type="button"
+        className={`game-swipe-scroll__arrow game-swipe-scroll__arrow--prev${
+          canScrollLeft ? ' game-swipe-scroll__arrow--visible' : ''
+        }`}
+        aria-label={prevLabel}
+        aria-hidden={!canScrollLeft}
+        tabIndex={canScrollLeft ? 0 : -1}
+        onClick={scrollPrev}
+      >
+        <ChevronLeft size={18} strokeWidth={3} aria-hidden />
+      </button>
 
       {scrollable}
 
-      {canScrollRight && (
-        <button
-          type="button"
-          className="game-swipe-scroll__arrow game-swipe-scroll__arrow--next"
-          aria-label={nextLabel}
-          onClick={scrollNext}
-        >
-          <ChevronRight size={18} strokeWidth={3} aria-hidden />
-        </button>
-      )}
+      <button
+        type="button"
+        className={`game-swipe-scroll__arrow game-swipe-scroll__arrow--next${
+          canScrollRight ? ' game-swipe-scroll__arrow--visible' : ''
+        }`}
+        aria-label={nextLabel}
+        aria-hidden={!canScrollRight}
+        tabIndex={canScrollRight ? 0 : -1}
+        onClick={scrollNext}
+      >
+        <ChevronRight size={18} strokeWidth={3} aria-hidden />
+      </button>
     </div>
   );
 });

@@ -245,11 +245,29 @@
   cursor: pointer;
 }
 
+.game-scheme-card__values {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding-right: 1.25rem;
+}
+
 .game-scheme-card__label {
   font-size: 0.95rem;
   font-weight: 900;
   color: var(--game-ink);
-  padding-right: 1.25rem;
+}
+
+.game-scheme-card__tempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-left: 0.45rem;
+  border-left: 2px solid rgba(28, 25, 23, 0.14);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0369a1;
+  white-space: nowrap;
 }
 
 .game-scheme-card__hint {
@@ -301,6 +319,27 @@
   max-width: 16rem;
   min-height: 6.5rem;
   margin-top: 0.5rem;
+}
+
+.game-scheme-limit-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 9rem;
+  min-height: 5.5rem;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #92400e;
+  background: linear-gradient(180deg, #fffbeb, #fff);
+  border: 2px dashed #d97706;
+  border-radius: 0.5rem;
+  scroll-snap-align: start;
 }
 
 .game-scheme-empty {

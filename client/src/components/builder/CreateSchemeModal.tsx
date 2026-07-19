@@ -17,6 +17,7 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
   const recommendations = REP_SCHEME_BY_NIVEL[nivel];
   const [series, setSeries] = useState(3);
   const [repeticoes, setRepeticoes] = useState(15);
+  const [tempoSeg, setTempoSeg] = useState(30);
 
   if (!open) return null;
 
@@ -28,10 +29,12 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
       label: schemeLabel,
       series,
       repeticoes,
+      tempo_seg: tempoSeg,
       descricao: 'Esquema personalizado',
     });
     setSeries(3);
     setRepeticoes(15);
+    setTempoSeg(30);
     onClose();
   };
 
@@ -92,9 +95,11 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
           <span>ou crie o seu</span>
         </div>
 
-        <p className="text-center text-sm font-extrabold text-stone-800">{schemeLabel}</p>
+        <p className="text-center text-sm font-extrabold text-stone-800">
+          {schemeLabel} <span className="font-bold text-sky-700">· {tempoSeg}s</span>
+        </p>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-3 gap-3">
           <WheelNumberPicker
             label="Repetições"
             value={repeticoes}
@@ -103,7 +108,19 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
             onChange={setRepeticoes}
           />
           <WheelNumberPicker label="Séries" value={series} min={1} max={10} onChange={setSeries} />
+          <WheelNumberPicker
+            label="Tempo (s)"
+            value={tempoSeg}
+            min={5}
+            max={120}
+            step={5}
+            onChange={setTempoSeg}
+          />
         </div>
+        <p className="mt-2 text-center text-[0.65rem] font-semibold text-stone-500">
+          O tempo vale para os exercícios de segurar (prancha, isometrias); os demais usam as
+          repetições.
+        </p>
 
         <GameButton
           className="!w-full mt-4 flex items-center justify-center gap-2"

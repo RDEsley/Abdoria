@@ -38,9 +38,6 @@ export const CICLO_HINTS: Record<TreinoBase, string> = {
   G: 'Movimentos leves para soltar o corpo',
 };
 
-/** Ciclos extras — disponíveis nas configurações, fora do padrão inicial. */
-export const CICLOS_OPCIONAIS: TreinoBase[] = ['F', 'G'];
-
 /** Ordem canônica dos ciclos (A → G). */
 export const CICLO_ORDER: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
@@ -71,7 +68,9 @@ export type AchievementIcon =
   | 'rocket'
   | 'dumbbell'
   | 'heart'
-  | 'shield';
+  | 'shield'
+  | 'droplet'
+  | 'sparkles';
 
 export type AchievementDifficulty = 'facil' | 'media' | 'dificil' | 'lendaria';
 
@@ -123,6 +122,34 @@ export interface IExercise extends ExerciseLevelParams {
   contraindicacoes?: RestricaoFisica[];
 }
 
+export type UserRole = 'user' | 'moderador' | 'admin';
+
+/** Banimento ou suspensão aplicada por moderação (modelo Discord). */
+export interface Banimento {
+  tipo: 'ban' | 'suspensao';
+  motivo: string;
+  /** ISO de término da suspensão; null = banimento permanente. */
+  ate: string | null;
+  aplicado_por: string;
+  aplicado_em: string;
+}
+
+/** True enquanto o banimento/suspensão ainda vale. */
+export function isBanimentoAtivo(banimento?: Banimento | null, now = new Date()): boolean {
+  if (!banimento) return false;
+  if (banimento.tipo === 'ban' || !banimento.ate) return true;
+  return new Date(banimento.ate).getTime() > now.getTime();
+}
+
+export interface AppRatingEntry {
+  id: string;
+  user_id: string;
+  nome: string;
+  estrelas: number;
+  comentario: string | null;
+  criada_em: string;
+}
+
 export interface UserPreferencias {
   descanso_padrao_seg: number;
   som_habilitado: boolean;
@@ -157,6 +184,10 @@ export interface UserPreferencias {
   equipamentos?: Partial<Record<EquipmentId, boolean>>;
   /** Vezes que o convite de re-onboarding foi dispensado (2+ esconde o card). */
   reonboarding_dispensado?: number;
+  /** true = já avaliou o app ou pediu pra não perguntar de novo. */
+  avaliacao_respondida?: boolean;
+  /** true = não voltar a oferecer o opt-in de notificações. */
+  notificacoes_opt_out?: boolean;
 }
 
 export type ArmaPreferida = 'arco' | 'espada' | 'magia';
@@ -616,7 +647,7 @@ export interface XpBreakdown {
 }
 
 export interface GiftCodeRewardLine {
-  tipo: 'xp' | 'abdoria' | 'cosmetico';
+  tipo: 'xp' | 'abdoria' | 'cosmetico' | 'frozen_streak' | 'gems';
   valor?: number;
   nome?: string;
   item_id?: string;
@@ -1001,6 +1032,12 @@ export interface IUser {
   avatar_url?: string | null;
   /** Tag única (#A7K2) — nomes de exibição podem repetir, a tag não. */
   tag?: string | null;
+  /** Papel na moderação — 'user' por padrão; colunas novas podem estar ausentes. */
+  role?: UserRole;
+  /** Moeda premium (sem forma de ganhar in-game ainda, além de códigos). */
+  gems?: number;
+  /** Banimento/suspensão ativa (null/undefined = conta em dia). */
+  banimento?: Banimento | null;
   /** Bio curta exibida no perfil (inclusive no público). */
   descricao?: string | null;
   /** Trocas de nome já feitas (1ª grátis, seguintes pagas). */
@@ -1084,6 +1121,8 @@ export interface RepSchemeRecommendation {
   label: string;
   series: number;
   repeticoes: number;
+  /** Segundos aplicados aos exercícios de tempo (prancha, isometrias). */
+  tempo_seg?: number;
   descricao: string;
 }
 
@@ -1311,6 +1350,8 @@ export interface ActiveWorkout {
   preset_id?: string;
   /** Dia do plano corpo-todo (modo plano) — repassado ao concluir. */
   plano_dia_indice?: number;
+  /** Sessão leve de dia de descanso — mantém a streak sem contar como treino pleno. */
+  aquecimento?: boolean;
 }
 
 export interface PresetExercise {
@@ -1528,6 +1569,7 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '12 × 3',
       series: 3,
       repeticoes: 12,
+      tempo_seg: 20,
       descricao: 'Volume clássico — ideal para começar',
     },
     {
@@ -1535,6 +1577,7 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '10 × 3',
       series: 3,
       repeticoes: 10,
+      tempo_seg: 15,
       descricao: 'Controle e forma antes da carga',
     },
     {
@@ -1542,6 +1585,7 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '15 × 3',
       series: 3,
       repeticoes: 15,
+      tempo_seg: 25,
       descricao: 'Resistência com volume equilibrado',
     },
   ],
@@ -1551,6 +1595,7 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '14 × 3',
       series: 3,
       repeticoes: 14,
+      tempo_seg: 30,
       descricao: 'Volume moderado-alto',
     },
     {
@@ -1558,6 +1603,7 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '12 × 4',
       series: 4,
       repeticoes: 12,
+      tempo_seg: 30,
       descricao: 'Mais séries, mesmo volume por série',
     },
     {
@@ -1565,16 +1611,25 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '16 × 3',
       series: 3,
       repeticoes: 16,
+      tempo_seg: 35,
       descricao: 'Foco em resistência muscular',
     },
   ],
   avancado: [
-    { id: 'for-8x4', label: '8 × 4', series: 4, repeticoes: 8, descricao: 'Força e densidade' },
+    {
+      id: 'for-8x4',
+      label: '8 × 4',
+      series: 4,
+      repeticoes: 8,
+      tempo_seg: 40,
+      descricao: 'Força e densidade',
+    },
     {
       id: 'for-10x5',
       label: '10 × 5',
       series: 5,
       repeticoes: 10,
+      tempo_seg: 45,
       descricao: 'Alto volume total por exercício',
     },
     {
@@ -1582,6 +1637,7 @@ export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]
       label: '12 × 3',
       series: 3,
       repeticoes: 12,
+      tempo_seg: 40,
       descricao: 'Manutenção técnica com volume',
     },
   ],

@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Flame, Play, Timer } from 'lucide-react';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
@@ -8,12 +8,14 @@ import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { WeekSummary } from '@/components/dashboard/WeekSummary';
 import { WeeklyChronicle } from '@/components/dashboard/WeeklyChronicle';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
-import { StreakFireCelebration } from '@/components/effects/StreakFireCelebration';
+import { RatingPrompt } from '@/components/dashboard/RatingPrompt';
+import { NotificationOptInPrompt } from '@/components/dashboard/NotificationOptInPrompt';
 import { TrainingPlanInviteCard } from '@/components/dashboard/TrainingPlanInviteCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatTrainingDuration } from '@/lib/utils';
+import { getExercises } from '@/lib/api';
 import { buildRestDayWarmup, isRestDay } from '@shared/training-plan';
 import { useApp } from '@/hooks/useApp';
 import {
@@ -23,6 +25,8 @@ import {
   dailyFullExercisesForCap,
   formatExerciseName,
   xpProgressFromTotal,
+  type ActiveWorkout,
+  type WorkoutQueueItem,
 } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 
@@ -37,25 +41,14 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } 
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 export function DashboardPage() {
-  const { stats, loading, refresh, loadRecommendations, user } = useApp();
-  const [streakCelebrate, setStreakCelebrate] = useState(false);
-  const prevStreak = useRef<number | null>(null);
+  const { stats, loading, refresh, loadRecommendations, user, exercises } = useApp();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && stats) {
       void loadRecommendations();
     }
   }, [loading, stats, loadRecommendations]);
-
-  useEffect(() => {
-    if (!stats) return;
-    if (prevStreak.current !== null && stats.streak_atual > prevStreak.current) {
-      setStreakCelebrate(true);
-      const t = window.setTimeout(() => setStreakCelebrate(false), 2200);
-      return () => clearTimeout(t);
-    }
-    prevStreak.current = stats.streak_atual;
-  }, [stats?.streak_atual, stats]);
 
   if (loading) {
     return <PageLoader />;
@@ -81,8 +74,48 @@ export function DashboardPage() {
 
   const perfilTreino = user?.perfil_treino ?? null;
   const hoje = new Date().getDay();
-  const diaDescanso = !stats.treino_hoje && isRestDay(perfilTreino, hoje);
+  // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
+  const diaDescanso =
+    !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
   const aquecimento = diaDescanso && perfilTreino ? buildRestDayWarmup(perfilTreino, hoje) : null;
+
+  const startWarmup = async () => {
+    if (!aquecimento) return;
+    let list = exercises;
+    if (list.length === 0) {
+      try {
+        list = await getExercises();
+      } catch {
+        /* segue com fallback pelos slugs */
+      }
+    }
+    const catalog = new Map(list.map((e) => [e.slug, e]));
+    const queue: WorkoutQueueItem[] = aquecimento.exercicios.map((ex) => {
+      const ref = catalog.get(ex.slug);
+      return {
+        slug: ex.slug,
+        nome: ref?.nome ?? ex.slug,
+        nome_pt: ref?.nome_pt,
+        exercicio_id: ref?.id,
+        musculo_principal: ref?.musculo_principal ?? 'core',
+        tempo_recomendado: ex.tempo_seg ?? 30,
+        modo: ex.tempo_seg ? 'tempo' : 'reps',
+        series: ex.series,
+        repeticoes: ex.repeticoes,
+        tempo_seg: ex.tempo_seg,
+        descanso_seg: ex.descanso_seg,
+      };
+    });
+    const payload: ActiveWorkout = {
+      treino_nome: 'Aquecimento leve',
+      treino_tipo: 'custom',
+      queue,
+      config: { descanso_padrao_seg: 20 },
+      aquecimento: true,
+    };
+    sessionStorage.setItem('abdoria_active_workout', JSON.stringify(payload));
+    navigate('/player');
+  };
 
   return (
     <motion.div
@@ -91,9 +124,8 @@ export function DashboardPage() {
       animate="show"
       className="relative flex flex-col gap-5"
     >
-      {streakCelebrate && stats.streak_atual > 0 && (
-        <StreakFireCelebration streak={stats.streak_atual} />
-      )}
+      <RatingPrompt />
+      {stats.streak_atual < 3 && <NotificationOptInPrompt />}
 
       <motion.div variants={item}>
         <DashboardHero
@@ -162,10 +194,18 @@ export function DashboardPage() {
             Escolha ou monte um treino na aba <strong>Missão</strong>.
           </p>
         )}
-        {!stats.treino_hoje && (
-          <Link to={diaDescanso ? '/construtor' : playLink} className="mt-3 block">
+        {!stats.treino_hoje && diaDescanso && (
+          <GameButton
+            className="mt-3 flex w-full items-center justify-center gap-2"
+            onClick={() => void startWarmup()}
+          >
+            <Play size={14} /> Fazer aquecimento leve
+          </GameButton>
+        )}
+        {!stats.treino_hoje && !diaDescanso && (
+          <Link to={playLink} className="mt-3 block">
             <GameButton className="flex w-full items-center justify-center gap-2">
-              <Play size={14} /> {diaDescanso ? 'Fazer aquecimento leve' : 'Jogar'}
+              <Play size={14} /> Jogar
             </GameButton>
           </Link>
         )}

@@ -1,6 +1,11 @@
-import { Plus, X } from 'lucide-react';
+import { Plus, Timer, TriangleAlert, X } from 'lucide-react';
 import { SwipeScroll } from '@/components/ui/SwipeScroll';
 import type { StoredRepScheme } from '@/types';
+
+/** Máximo de esquemas salvos por nível — mantém o carrossel e as 3+3 pills
+    por exercício em uma grade previsível. */
+export const MAX_REP_SCHEMES = 6;
+
 interface Props {
   schemes: StoredRepScheme[];
   selectedId: string | null;
@@ -18,6 +23,7 @@ export function RepSchemeCarousel({
   onDelete,
   onCreateClick,
 }: Props) {
+  const atLimit = schemes.length >= MAX_REP_SCHEMES;
   if (schemes.length === 0) {
     return (
       <div className="game-scheme-empty">
@@ -70,7 +76,17 @@ export function RepSchemeCarousel({
               className="game-scheme-card__body"
               onClick={() => onSelect(scheme)}
             >
-              <span className="game-scheme-card__label">{scheme.label}</span>
+              <span className="game-scheme-card__values">
+                <span className="game-scheme-card__label">{scheme.label}</span>
+                {scheme.tempo_seg != null && (
+                  <span
+                    className="game-scheme-card__tempo"
+                    title="Tempo nos exercícios de segurar"
+                  >
+                    <Timer size={11} aria-hidden /> {scheme.tempo_seg}s
+                  </span>
+                )}
+              </span>
               <span className="game-scheme-card__hint">{scheme.descricao}</span>
               {active && <span className="game-scheme-card__badge">Em uso</span>}
             </button>
@@ -78,10 +94,17 @@ export function RepSchemeCarousel({
         );
       })}
 
-      <button type="button" className="game-scheme-create-card" onClick={onCreateClick}>
-        <Plus size={22} />
-        <span>Criar um</span>
-      </button>
+      {atLimit ? (
+        <div className="game-scheme-limit-card" role="note" aria-live="polite">
+          <TriangleAlert size={18} aria-hidden />
+          <span>Máx. de {MAX_REP_SCHEMES} esquemas — remova um pra criar outro</span>
+        </div>
+      ) : (
+        <button type="button" className="game-scheme-create-card" onClick={onCreateClick}>
+          <Plus size={22} />
+          <span>Criar um</span>
+        </button>
+      )}
     </SwipeScroll>
   );
 }

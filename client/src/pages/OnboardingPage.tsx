@@ -1,8 +1,10 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
+import Lottie from 'lottie-react';
 import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
+import { useLottieAsset } from '@/hooks/useLottieAsset';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { TermsModal } from '@/components/legal/TermsModal';
@@ -24,10 +26,8 @@ import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
 import { digitsOnly, validateBodyMetrics } from '@/lib/utils';
 import {
-  MOEDA_XP_STEP,
   calcImc,
   CICLO_LABELS,
-  CICLOS_OPCIONAIS,
   CURRENCY_NAME,
   NIVEL_LABELS,
   normalizeCicloTreinos,
@@ -77,47 +77,47 @@ const CICLOS_POR_FOCO: Record<string, TreinoBase[]> = {
   saude: ['D', 'E'],
 };
 
-const CONFETTI_COLORS = ['#10b981', '#fbbf24', '#38bdf8', '#f472b6', '#a78bfa', '#f97316'];
+const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
+const CHARACTER_LOTTIE_URL = '/assets/character-welcome.json';
 
-interface ConfettiPiece {
-  left: number;
-  delay: number;
-  duration: number;
-  color: string;
-  rotate: number;
-  size: number;
+/** Formato intuitivo: segundos abaixo de 1min, min+seg a partir daí (ex.: "1min 30s", "5min"). */
+function formatHoldDuration(totalSeconds: number): string {
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds === 0 ? `${minutes}min` : `${minutes}min ${seconds}s`;
 }
 
-/** Confete de conclusão — queda com rotação, roda uma vez ao montar. */
+/** Confete de conclusão — Lottie, roda uma vez ao montar o passo final. */
 function OnboardingConfetti() {
-  const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
-
-  useEffect(() => {
-    setPieces(
-      Array.from({ length: 28 }, (_, i) => ({
-        left: Math.random() * 100,
-        delay: Math.random() * 0.6,
-        duration: 1.6 + Math.random() * 1.4,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        rotate: Math.random() * 720 - 360,
-        size: 6 + Math.random() * 6,
-      })),
-    );
-  }, []);
-
+  const data = useLottieAsset(CONFETTI_LOTTIE_URL);
+  if (!data) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {pieces.map((p, i) => (
-        <motion.span
-          key={i}
-          className="absolute top-0 block rounded-sm"
-          style={{ left: `${p.left}%`, width: p.size, height: p.size, background: p.color }}
-          initial={{ y: -24, opacity: 1, rotate: 0 }}
-          animate={{ y: 480, opacity: [1, 1, 0], rotate: p.rotate }}
-          transition={{ duration: p.duration, delay: p.delay, ease: 'easeIn' }}
-        />
-      ))}
+      <Lottie animationData={data} loop={false} className="mx-auto h-full max-w-md" />
     </div>
+  );
+}
+
+/** Personagem animado de boas-vindas no passo final (Lottie) — cai pra um
+    selo estático se o arquivo ainda não carregou. */
+function OnboardingWelcomeCharacter() {
+  const data = useLottieAsset(CHARACTER_LOTTIE_URL);
+  return (
+    <motion.div
+      className="relative z-10 mx-auto h-32 w-32"
+      initial={{ scale: 0, rotate: -12 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: 'spring', bounce: 0.55, duration: 0.8 }}
+    >
+      {data ? (
+        <Lottie animationData={data} loop className="h-full w-full drop-shadow-lg" />
+      ) : (
+        <span className="game-level-badge flex h-full w-full items-center justify-center text-3xl">
+          🎉
+        </span>
+      )}
+    </motion.div>
   );
 }
 
@@ -147,6 +147,19 @@ export function OnboardingPage() {
   const [shakeNonce, setShakeNonce] = useState(0);
   const [saving, setSaving] = useState(false);
   const [skipped, setSkipped] = useState(false);
+  // Controles imperativos (não a prop `animate` declarativa): o botão Continuar
+  // é remontado a cada troca de etapa (fica dentro do motion.div key={stepId}),
+  // e um `animate` declarativo replaya o shake nesse remount mesmo sem nova
+  // falha de validação. Com controles + useEffect guardado por ref, o shake
+  // só dispara quando shakeNonce realmente muda — nunca por causa do remount.
+  const shakeControls = useAnimationControls();
+  const lastShakeNonceRef = useRef(shakeNonce);
+
+  useEffect(() => {
+    if (shakeNonce === lastShakeNonceRef.current) return;
+    lastShakeNonceRef.current = shakeNonce;
+    void shakeControls.start({ x: [0, -8, 8, -6, 6, -3, 3, 0], transition: { duration: 0.4 } });
+  }, [shakeNonce, shakeControls]);
 
   const corpoTodo = draft.escopo === 'corpo_todo';
 
@@ -278,7 +291,6 @@ export function OnboardingPage() {
   };
 
   const toggleCiclo = (c: TreinoBase) => {
-    if (CICLOS_OPCIONAIS.includes(c)) return;
     setCicloRecomendado(false);
     setCiclo((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
   };
@@ -477,7 +489,8 @@ export function OnboardingPage() {
               <>
                 <h2 className="text-2xl font-extrabold">Seu ciclo de treinos</h2>
                 <p className="mt-1 text-sm text-stone-500">
-                  Escolha pelo menos 2 ciclos ativos (A–E). F e G chegam em breve.
+                  Escolha pelo menos 2 ciclos ativos (A–G). Os treinos sugeridos alternam entre
+                  eles.
                 </p>
                 <button
                   type="button"
@@ -494,26 +507,17 @@ export function OnboardingPage() {
                 </button>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {CICLOS.map((c) => {
-                    const optional = CICLOS_OPCIONAIS.includes(c);
                     const active = ciclo.includes(c);
                     return (
                       <button
                         key={c}
                         type="button"
-                        disabled={optional}
                         onClick={() => toggleCiclo(c)}
-                        className={`rounded-xl border-2 px-4 py-3 font-bold ${
-                          optional
-                            ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                            : active
-                              ? 'cursor-pointer border-emerald-500 bg-emerald-50'
-                              : 'cursor-pointer border-stone-200'
+                        className={`cursor-pointer rounded-xl border-2 px-4 py-3 font-bold ${
+                          active ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
                         }`}
                       >
                         {c} — {CICLO_LABELS[c]}
-                        {optional && (
-                          <span className="ml-1 text-[0.65rem] font-semibold">(em breve)</span>
-                        )}
                       </button>
                     );
                   })}
@@ -556,11 +560,11 @@ export function OnboardingPage() {
                 {!esquemaRecomendado && (
                   <div className="mt-4">
                     <label className="block text-sm font-semibold">
-                      Tempo nos exercícios de segurar: {tempoHold}s
+                      Tempo nos exercícios de segurar: {formatHoldDuration(tempoHold)}
                       <input
                         type="range"
                         min={10}
-                        max={90}
+                        max={300}
                         step={5}
                         value={tempoHold}
                         onChange={(e) => setTempoHold(Number(e.target.value))}
@@ -619,21 +623,7 @@ export function OnboardingPage() {
             {stepId === 'tutorial' && (
               <div className="relative text-center">
                 <OnboardingConfetti />
-                <motion.img
-                  src={
-                    armaPreferida === 'espada'
-                      ? '/assets/patrol-mascot-espada.png'
-                      : '/assets/patrol-mascot-arco.png'
-                  }
-                  alt=""
-                  className="mx-auto h-32 w-32 object-contain drop-shadow-lg"
-                  initial={{ scale: 0, rotate: -12 }}
-                  animate={{ scale: 1, rotate: 0, y: [0, -8, 0] }}
-                  transition={{
-                    scale: { type: 'spring', bounce: 0.55, duration: 0.8 },
-                    y: { repeat: Infinity, duration: 2.2, ease: 'easeInOut', delay: 0.8 },
-                  }}
-                />
+                <OnboardingWelcomeCharacter />
                 <motion.h2
                   className="mt-3 text-2xl font-extrabold"
                   initial={{ opacity: 0, y: 12 }}
@@ -643,12 +633,12 @@ export function OnboardingPage() {
                   Boas-vindas, {firstName}!
                 </motion.h2>
                 <motion.p
-                  className="mt-2 text-sm font-semibold text-emerald-700"
+                  className="mt-2 truncate text-sm font-semibold text-emerald-700"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.45 }}
                 >
-                  Seu plano está pronto. A jornada começa agora!
+                  Sua jornada começa agora!
                 </motion.p>
                 <motion.ul
                   className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-stone-700"
@@ -657,9 +647,7 @@ export function OnboardingPage() {
                   transition={{ delay: 0.6 }}
                 >
                   <li>💪 Treine e ganhe XP todo dia.</li>
-                  <li>
-                    🪙 A cada {MOEDA_XP_STEP} XP, 1 {CURRENCY_NAME} pra personalizar seu perfil.
-                  </li>
+                  <li>🪙 Ganhe {CURRENCY_NAME} treinando e suba no ranking semanal.</li>
                   <li>🔥 Mantenha a sequência — nos dias de descanso, um aquecimento leve conta.</li>
                 </motion.ul>
               </div>
@@ -677,12 +665,7 @@ export function OnboardingPage() {
                   <ChevronLeft size={18} /> Voltar
                 </GameButton>
               )}
-              <motion.div
-                key={shakeNonce}
-                className="flex-1"
-                animate={shakeNonce > 0 ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : undefined}
-                transition={{ duration: 0.4 }}
-              >
+              <motion.div className="flex-1" animate={shakeControls}>
                 <GameButton
                   onClick={next}
                   disabled={saving}

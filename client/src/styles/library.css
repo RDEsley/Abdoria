@@ -394,3 +394,14 @@
   font-weight: 600;
   color: #a8a29e;
 }
+
+/* Dia congelado por Frozen Streak — azul, distinto do verde de treino */
+.workout-calendar__cell--frozen {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.workout-calendar__dot--frozen {
+  background: #0284c7;
+}

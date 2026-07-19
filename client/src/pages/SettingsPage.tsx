@@ -36,7 +36,6 @@ import {
   CICLO_LABELS,
   ESCOPO_LABELS,
   FOCO_LABELS,
-  CICLOS_OPCIONAIS,
   CURRENCY_NAME,
   formatFrozenStreakDescription,
   FROZEN_STREAK_LABEL,
@@ -220,7 +219,6 @@ export function SettingsPage() {
         <div className="flex flex-col gap-2">
           {CICLOS.map((c) => {
             const active = ciclo.includes(c);
-            const optional = CICLOS_OPCIONAIS.includes(c);
             return (
               <button
                 key={c}
@@ -233,10 +231,7 @@ export function SettingsPage() {
                   {c}
                 </span>
                 <span className="settings-cycle__text">
-                  <strong>
-                    {CICLO_LABELS[c]}
-                    {optional && <em className="settings-cycle__optional">extra</em>}
-                  </strong>
+                  <strong>{CICLO_LABELS[c]}</strong>
                   <small>{CICLO_HINTS[c]}</small>
                 </span>
                 {active && <Check size={16} className="settings-cycle__check" aria-hidden />}

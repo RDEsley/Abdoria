@@ -72,21 +72,23 @@ export function WorkoutConfigPanel({
             />
             {queue.map((item, idx) => (
               <div key={sortableIds[idx]} className="mt-3 border-t border-stone-100 pt-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <span className="text-sm font-bold">{formatExerciseName(item)}</span>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold">
+                      {formatExerciseName(item)}
+                    </span>
                     <p className="text-[0.65rem] font-bold text-stone-500">
                       {formatExercisePrescription(item)}
                     </p>
                   </div>
                   {item.modo === 'reps' && (
-                    <div className="flex flex-wrap gap-1">
-                      {schemes.map((scheme) => (
+                    <div className="grid w-[8.25rem] shrink-0 grid-cols-3 gap-1">
+                      {schemes.slice(0, 6).map((scheme) => (
                         <button
                           key={`${item.slug}-${scheme.id}`}
                           type="button"
                           onClick={() => onApplySchemeToItem(scheme, idx)}
-                          className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold ${
+                          className={`truncate rounded-md border px-1 py-0.5 text-[0.58rem] font-extrabold ${
                             selectedSchemeId === scheme.id && !customizedIndices.has(idx)
                               ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
                               : 'border-stone-200 bg-white text-stone-600 hover:border-emerald-400'

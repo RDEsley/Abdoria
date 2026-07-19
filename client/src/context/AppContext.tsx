@@ -68,6 +68,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [userDados]);
 
   const applyUserDados = useCallback((next: UserDadosSalvos, syncedUser?: IUserDocument) => {
+    // Ref atualizada de forma síncrona: leitores (getRepSchemes etc.) que rodam
+    // durante o MESMO render disparado por este set já enxergam o valor novo.
+    userDadosRef.current = next;
     setUserDados(next);
     if (syncedUser) {
       setUser(syncedUser);

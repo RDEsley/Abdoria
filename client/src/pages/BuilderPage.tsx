@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, GraduationCap } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
-import { RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
+import { MAX_REP_SCHEMES, RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
 import { SimilarWorkoutModal } from '@/components/builder/SimilarWorkoutModal';
 import { SimilarExerciseModal } from '@/components/builder/SimilarExerciseModal';
 import { ExercisePicker } from '@/components/builder/ExercisePicker';
@@ -54,6 +54,7 @@ import {
   getExerciseParamsForNivel,
   isSavedPresetId,
   normalizeCicloTreinos,
+  REP_SCHEME_BY_NIVEL,
   toSavedPresetId,
 } from '@/types';
 
@@ -69,6 +70,7 @@ export function BuilderPage() {
     setCustomWorkoutName,
     saveWorkoutPreset,
     getRepSchemes,
+    saveRepSchemes,
     addRepScheme,
     removeRepScheme,
     selectedRepSchemeIds,
@@ -227,11 +229,17 @@ export function BuilderPage() {
   }, []);
 
   const baseQueue = useMemo(() => {
-    if (selectedPresetId === 'custom') return customWorkout;
-    if (selectedSavedWorkout) return selectedSavedWorkout.queue;
-    if (selectedPlanWorkout) return sugeridoToQueue(selectedPlanWorkout, exerciseMap);
-    if (!selectedPreset) return [];
-    return presetToQueue(selectedPreset, exerciseMap, nivel);
+    const raw = (() => {
+      if (selectedPresetId === 'custom') return customWorkout;
+      if (selectedSavedWorkout) return selectedSavedWorkout.queue;
+      if (selectedPlanWorkout) return sugeridoToQueue(selectedPlanWorkout, exerciseMap);
+      if (!selectedPreset) return [];
+      return presetToQueue(selectedPreset, exerciseMap, nivel);
+    })();
+    // O descanso padrão do usuário prevalece sobre o descanso gravado no preset.
+    return raw.map((item) =>
+      item.descanso_seg === globalDescanso ? item : { ...item, descanso_seg: globalDescanso },
+    );
   }, [
     selectedPresetId,
     selectedSavedWorkout,
@@ -240,6 +248,7 @@ export function BuilderPage() {
     customWorkout,
     exerciseMap,
     nivel,
+    globalDescanso,
   ]);
 
   const activeQueue = draftQueue ?? baseQueue;
@@ -258,8 +267,12 @@ export function BuilderPage() {
 
       const next = base.map((item, idx) => {
         if (scope !== 'all' && idx !== scope) return item;
-        if (item.modo === 'tempo') return item;
         if (scope === 'all' && !force && customizedIndices.has(idx)) return item;
+        if (item.modo === 'tempo') {
+          // Exercícios de segurar acompanham o esquema pelo tempo, não pelas reps.
+          if (!scheme.tempo_seg) return item;
+          return { ...item, series: scheme.series, tempo_seg: scheme.tempo_seg };
+        }
         return {
           ...item,
           series: scheme.series,
@@ -313,6 +326,16 @@ export function BuilderPage() {
     applyRepScheme(scheme, 'all', { force: true });
   };
 
+  // Descanso padrão manda: sobrescreve o descanso de TODOS os exercícios da fila.
+  const handleChangeGlobalDescanso = (value: number) => {
+    setGlobalDescanso(value);
+    const base = draftQueue ?? baseQueue;
+    if (base.length === 0) return;
+    const next = base.map((item) => ({ ...item, descanso_seg: value }));
+    setDraftQueue(next);
+    persistDraftIfCustom(next);
+  };
+
   const handleDeleteScheme = (schemeId: string) => {
     const next = removeRepScheme(nivel, schemeId);
     if (selectedSchemeId === schemeId) {
@@ -323,7 +346,37 @@ export function BuilderPage() {
     }
   };
 
+  const [schemeLevel, setSchemeLevel] = useState<NivelUsuario>(nivel);
+
+  /** Troca os esquemas pelos 3 recomendados de outro nível — sobrescreve os salvos. */
+  const cycleSchemeLevel = () => {
+    const order: NivelUsuario[] = ['iniciante', 'intermediario', 'avancado'];
+    const nextLevel = order[(order.indexOf(schemeLevel) + 1) % order.length];
+    setSchemeLevel(nextLevel);
+    const recommended: StoredRepScheme[] = REP_SCHEME_BY_NIVEL[nextLevel].map((scheme) => ({
+      ...scheme,
+      isCustom: false,
+    }));
+    saveRepSchemes(nivel, recommended);
+    lastAppliedQueueKeyRef.current = '';
+    const first = recommended[0];
+    if (first) {
+      setSelectedSchemeId(first.id);
+      setSelectedRepSchemeId(nivel, first.id);
+      applyRepScheme(first, 'all', { force: true });
+    }
+    showGameToast(`Esquemas de ${NIVEL_LABELS[nextLevel].toLowerCase()} aplicados.`, {
+      variant: 'info',
+    });
+  };
+
   const handleCreateScheme = (scheme: RepSchemeRecommendation) => {
+    if (schemes.length >= MAX_REP_SCHEMES) {
+      showGameToast(`Máx. de ${MAX_REP_SCHEMES} esquemas — remova um pra criar outro.`, {
+        variant: 'warn',
+      });
+      return;
+    }
     const next = addRepScheme(nivel, { ...scheme, isCustom: true });
     lastAppliedQueueKeyRef.current = '';
     const created = next[0];
@@ -423,6 +476,10 @@ export function BuilderPage() {
 
       const params = getExerciseParamsForNivel(ex, nivel);
       const useReps = current.modo === 'reps' && ex.modo === 'reps';
+      // O esquema escolhido prevalece sobre os padrões do exercício novo.
+      const scheme = selectedSchemeId
+        ? (schemes.find((entry) => entry.id === selectedSchemeId) ?? null)
+        : null;
 
       const replacement: WorkoutQueueItem = {
         slug: ex.slug,
@@ -432,20 +489,30 @@ export function BuilderPage() {
         musculo_principal: ex.musculo_principal,
         tempo_recomendado: params.tempo_seg || ex.tempo_recomendado || 30,
         modo: useReps ? 'reps' : params.modo,
-        series: current.series,
-        repeticoes: useReps ? (current.repeticoes ?? params.repeticoes) : params.repeticoes,
-        tempo_seg: useReps ? undefined : (current.tempo_seg ?? params.tempo_seg),
+        series: scheme?.series ?? current.series,
+        repeticoes: useReps
+          ? (scheme?.repeticoes ?? current.repeticoes ?? params.repeticoes)
+          : params.repeticoes,
+        tempo_seg: useReps ? undefined : (scheme?.tempo_seg ?? current.tempo_seg ?? params.tempo_seg),
         descanso_seg: current.descanso_seg ?? globalDescanso,
       };
 
       const next = activeQueue.map((item, i) => (i === swapExerciseIndex ? replacement : item));
       setDraftQueue(next);
       persistDraftIfCustom(next);
-      setCustomizedIndices((prev) => new Set(prev).add(swapExerciseIndex));
       setSwapExerciseIndex(null);
       showGameToast(`Trocado por ${formatExerciseName(replacement)}.`, { variant: 'success' });
     },
-    [swapExerciseIndex, exerciseMap, activeQueue, nivel, globalDescanso, persistDraftIfCustom],
+    [
+      swapExerciseIndex,
+      exerciseMap,
+      activeQueue,
+      nivel,
+      globalDescanso,
+      persistDraftIfCustom,
+      selectedSchemeId,
+      schemes,
+    ],
   );
 
   const handleTabChange = (tab: BuilderTab) => {
@@ -699,7 +766,7 @@ export function BuilderPage() {
       queue={activeQueue}
       sortableIds={sortableIds}
       globalDescanso={globalDescanso}
-      onChangeGlobalDescanso={setGlobalDescanso}
+      onChangeGlobalDescanso={handleChangeGlobalDescanso}
       schemes={schemes}
       selectedSchemeId={selectedSchemeId}
       customizedIndices={customizedIndices}
@@ -754,13 +821,24 @@ export function BuilderPage() {
           />
 
           <section>
-            <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-stone-800">
-              Esquemas recomendados ({NIVEL_LABELS[nivel]})
-            </p>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-extrabold uppercase tracking-wide text-stone-800">
+                Esquemas recomendados ({NIVEL_LABELS[schemeLevel]})
+              </p>
+              <button
+                type="button"
+                className="game-icon-btn !h-8 !w-8 shrink-0"
+                aria-label="Trocar nível dos esquemas recomendados"
+                title={`Trocar para esquemas de outro nível (atual: ${NIVEL_LABELS[schemeLevel]})`}
+                onClick={cycleSchemeLevel}
+              >
+                <GraduationCap size={15} aria-hidden />
+              </button>
+            </div>
             <RepSchemeCarousel
               schemes={schemes}
               selectedId={selectedSchemeId}
-              nivelLabel={NIVEL_LABELS[nivel]}
+              nivelLabel={NIVEL_LABELS[schemeLevel]}
               onSelect={handleSelectScheme}
               onDelete={handleDeleteScheme}
               onCreateClick={() => setShowCreateScheme(true)}
