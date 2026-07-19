@@ -7096,36 +7096,39 @@ button.game-afk-reward-chip {
   height: 4.25rem;
 }
 
+/* ── Baú pixel-art (referência: docs/private/design-references/bau-abdoria-imagem.jpg)
+   Corpo vermelho emoldurado em ouro, tampa em domo dourado com painéis
+   vermelhos e placa de fechadura dourada central. Anéis de box-shadow
+   reproduzem as camadas do pixel art: contorno preto → ouro → sombra do
+   ouro → vermelho escuro → vermelho vivo. ── */
 .game-afk-chest__body {
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   height: 2.05rem;
-  background:
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 0.62rem),
-    linear-gradient(180deg, #fbbf24 0%, #d97706 55%, #92400e 100%);
-  border: 2.5px solid #1c1917;
-  border-radius: 0.18rem 0.18rem 0.45rem 0.45rem;
+  background: linear-gradient(180deg, #e8324a 0%, #d5253d 55%, #b01e30 100%);
+  border: 2.5px solid #191210;
+  border-radius: 0.14rem 0.14rem 0.3rem 0.3rem;
   box-shadow:
-    inset 0 3px 0 rgba(255, 230, 170, 0.35),
-    inset 0 -5px 0 rgba(0, 0, 0, 0.2),
-    0 5px 6px -3px rgba(28, 25, 23, 0.4);
+    inset 0 0 0 0.26rem #f2b418,
+    inset 0 0 0 0.34rem #8a5c08,
+    inset 0 0 0 0.46rem #8c1626,
+    0 5px 6px -3px rgba(20, 14, 10, 0.45);
 }
 
-/* Tira/cinta vertical dourada central do baú */
+/* Base/plinto dourado do baú */
 .game-afk-chest__body::after {
   content: '';
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 0.34rem;
-  margin-left: -0.17rem;
-  background: linear-gradient(180deg, #fde047, #f59e0b 60%, #b45309);
-  border-left: 1.5px solid #1c1917;
-  border-right: 1.5px solid #1c1917;
+  right: -0.12rem;
+  bottom: -0.1rem;
+  left: -0.12rem;
+  height: 0.3rem;
   z-index: 1;
+  background: linear-gradient(180deg, #ffd94a, #f2b418 55%, #b97e0c);
+  border: 2px solid #191210;
+  border-radius: 0.1rem;
 }
 
 .game-afk-chest--lg .game-afk-chest__body {
@@ -7133,47 +7136,42 @@ button.game-afk-reward-chip {
 }
 
 .game-afk-chest__band {
-  position: absolute;
-  top: 36%;
-  right: -0.05rem;
-  left: -0.05rem;
-  z-index: 2;
-  height: 0.34rem;
-  background: linear-gradient(180deg, #fde047, #f59e0b 60%, #b45309);
-  border-top: 2px solid #1c1917;
-  border-bottom: 2px solid #1c1917;
+  display: none;
 }
 
+/* Placa da fechadura — oval dourada com buraco de chave */
 .game-afk-chest__lock {
   position: absolute;
-  top: 28%;
+  top: 26%;
   left: 50%;
-  z-index: 3;
-  width: 0.9rem;
-  height: 0.8rem;
-  margin-left: -0.45rem;
-  border: 2.25px solid #1c1917;
-  border-radius: 0.2rem;
-  background: radial-gradient(circle at 50% 30%, #fffbe6, #fde047 45%, #d97706 100%);
+  z-index: 4;
+  width: 0.95rem;
+  height: 1.25rem;
+  margin-left: -0.475rem;
+  border: 2.25px solid #191210;
+  border-radius: 45% / 40%;
+  background:
+    radial-gradient(circle at 38% 28%, #fff3c4 0%, #ffd94a 34%, #f2b418 62%, #b97e0c 100%);
   box-shadow:
-    inset 0 -2px 0 rgba(0, 0, 0, 0.25),
-    0 0 6px rgba(251, 191, 36, 0.55);
+    inset 0 -2px 0 rgba(90, 55, 5, 0.45),
+    0 0 6px rgba(251, 191, 36, 0.5);
   transition:
     opacity 0.25s ease,
     transform 0.35s ease;
 }
 
-/* Buraco da fechadura */
+/* Buraco da fechadura: círculo + haste */
 .game-afk-chest__lock::after {
   content: '';
   position: absolute;
-  top: 52%;
+  top: 26%;
   left: 50%;
-  width: 0.18rem;
-  height: 0.25rem;
-  margin: -0.075rem 0 0 -0.09rem;
-  border-radius: 999px 999px 0 0;
-  background: #1c1917;
+  width: 0.26rem;
+  height: 0.26rem;
+  margin-left: -0.13rem;
+  border-radius: 999px;
+  background: #191210;
+  box-shadow: 0 0.24rem 0 -0.04rem #191210;
 }
 
 .game-afk-chest__count-badge {
@@ -7224,17 +7222,7 @@ button.game-afk-reward-chip {
 }
 
 .game-afk-chest__lock::before {
-  content: '';
-  position: absolute;
-  top: -0.5rem;
-  left: 50%;
-  width: 0.58rem;
-  height: 0.58rem;
-  margin-left: -0.29rem;
-  border: 2.75px solid #1c1917;
-  border-bottom: none;
-  border-radius: 999px 999px 0 0;
-  background: transparent;
+  content: none;
 }
 
 .game-afk-chest__lid-wrap {
@@ -7255,27 +7243,45 @@ button.game-afk-reward-chip {
   height: 1.35rem;
 }
 
+/* Tampa: domo dourado com painel vermelho interno (arco) */
 .game-afk-chest__lid {
   position: absolute;
   inset: 0;
-  background:
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 0.62rem),
-    linear-gradient(180deg, #ef4444 0%, #dc2626 60%, #991b1b 100%);
-  border: 2.5px solid #1c1917;
-  border-radius: 0.7rem 0.7rem 0.1rem 0.1rem;
-  box-shadow: inset 0 3px 0 rgba(255, 200, 190, 0.35);
+  background: linear-gradient(180deg, #ffd94a 0%, #f2b418 60%, #d99b10 100%);
+  border: 2.5px solid #191210;
+  border-radius: 1rem 1rem 0.1rem 0.1rem;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 246, 200, 0.7),
+    inset 0 -2px 0 rgba(138, 92, 8, 0.55);
+  overflow: hidden;
 }
 
+/* Painel vermelho do domo, emoldurado pelo ouro */
+.game-afk-chest__lid::after {
+  content: '';
+  position: absolute;
+  top: 0.26rem;
+  right: 0.3rem;
+  bottom: 0;
+  left: 0.3rem;
+  background: linear-gradient(160deg, #f4536d 0%, #d5253d 55%, #a01b2e 100%);
+  border: 2px solid #191210;
+  border-bottom: none;
+  border-radius: 0.75rem 0.75rem 0 0;
+  box-shadow: inset 0 0 0 0.14rem #8c1626;
+}
+
+/* Aro dourado na boca da tampa */
 .game-afk-chest__lid-rim {
   position: absolute;
-  right: -0.05rem;
+  right: -0.12rem;
   bottom: -0.14rem;
-  left: -0.05rem;
-  height: 0.26rem;
-  background: linear-gradient(180deg, #fde047, #f59e0b 60%, #b45309);
-  border: 2px solid #1c1917;
-  border-top: none;
-  border-radius: 0 0 0.18rem 0.18rem;
+  left: -0.12rem;
+  height: 0.3rem;
+  z-index: 2;
+  background: linear-gradient(180deg, #ffd94a, #f2b418 55%, #b97e0c);
+  border: 2px solid #191210;
+  border-radius: 0.1rem;
 }
 
 .game-afk-chest--ready .game-afk-chest__body,
