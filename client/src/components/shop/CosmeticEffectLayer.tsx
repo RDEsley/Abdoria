@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 
 export interface CosmeticEffectLayerProps {
   effectId: string;
@@ -52,7 +53,10 @@ export function CosmeticEffectLayer({
   preview = false,
   className = '',
 }: CosmeticEffectLayerProps) {
+  const { user } = useAuth();
+  const confettiEnabled = user?.preferencias?.confetti_animacoes_habilitadas ?? true;
   if (!active) return null;
+  if (effectId === 'efeito_confete' && !confettiEnabled) return null;
 
   const loop = repeat(mode);
   const rootClass = [

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
-import Lottie from 'lottie-react';
+import { useLottie } from 'lottie-react';
 import {
   BicepsFlexed,
   Cake,
@@ -116,6 +116,14 @@ const WEAPONS: {
 const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
 const CHARACTER_LOTTIE_URL = '/assets/character-welcome.json';
 
+function LottieView({ data, loop }: { data: unknown | null; loop: boolean }) {
+  const { View } = useLottie(
+    { animationData: data ?? undefined, loop },
+    { width: '100%', height: '100%' },
+  );
+  return View;
+}
+
 /** Formato intuitivo: segundos abaixo de 1min, min+seg a partir daí (ex.: "1min 30s", "5min"). */
 function formatHoldDuration(totalSeconds: number): string {
   if (totalSeconds < 60) return `${totalSeconds}s`;
@@ -140,11 +148,13 @@ function formatAlturaMask(digits: string): string {
  * a tela toda.
  */
 function OnboardingConfetti() {
+  const { user } = useAuth();
   const data = useLottieAsset(CONFETTI_LOTTIE_URL);
   if (!data || typeof document === 'undefined') return null;
+  if (!(user?.preferencias?.confetti_animacoes_habilitadas ?? true)) return null;
   return createPortal(
     <div className="pointer-events-none fixed inset-0 z-[70] overflow-hidden" aria-hidden>
-      <Lottie animationData={data} loop={false} className="mx-auto h-full max-w-lg" />
+      <LottieView data={data} loop={false} />
     </div>,
     document.body,
   );
@@ -163,12 +173,7 @@ function OnboardingWelcomeCharacter() {
     >
       <span className="onb-welcome-medal__ring" aria-hidden />
       {data ? (
-        <Lottie
-          animationData={data}
-          loop
-          className="onb-welcome-medal__lottie"
-          rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
-        />
+        <LottieView data={data} loop />
       ) : (
         <PartyPopper size={40} className="onb-welcome-medal__icon" aria-hidden />
       )}
@@ -395,7 +400,7 @@ export function OnboardingPage() {
       />
 
       <div className="mx-auto max-w-lg">
-        <AuthLogo size="sm" className="mb-6" />
+        <AuthLogo size="xl" showLabel={false} className="mb-6" />
 
         <div className="mb-6 flex items-center justify-between">
           <p className="text-sm font-bold text-teal-700">

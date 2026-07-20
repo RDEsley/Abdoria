@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import Lottie from 'lottie-react';
+import { useLottie } from 'lottie-react';
 import { ChevronRight, Coins, Flame, ListChecks, Snowflake, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
@@ -20,6 +20,14 @@ const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
 const SUCESSO_LOTTIE_URL = '/assets/Sucesso.json';
 
+function LottieView({ data, loop }: { data: unknown | null; loop: boolean }) {
+  const { View } = useLottie(
+    { animationData: data ?? undefined, loop },
+    { width: '100%', height: '100%' },
+  );
+  return View;
+}
+
 function todayLabel(): string {
   return new Date().toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -30,11 +38,13 @@ function todayLabel(): string {
 
 /** Confete de missão completa — some sozinho, não faz loop. */
 function VictoryConfetti() {
+  const { user } = useApp();
   const data = useLottieAsset(CONFETTI_LOTTIE_URL);
   if (!data) return null;
+  if (!(user?.preferencias?.confetti_animacoes_habilitadas ?? true)) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-      <Lottie animationData={data} loop={false} className="mx-auto h-full max-w-lg" />
+      <LottieView data={data} loop={false} />
     </div>
   );
 }
@@ -45,7 +55,7 @@ function VictoryCheck() {
   if (!data) return <div className="game-level-badge mx-auto mb-4">✓</div>;
   return (
     <div className="game-victory__check mx-auto mb-4" aria-hidden>
-      <Lottie animationData={data} loop={false} />
+      <LottieView data={data} loop={false} />
     </div>
   );
 }

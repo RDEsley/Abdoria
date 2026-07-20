@@ -87,6 +87,7 @@ async function seed() {
           descanso_padrao_seg: 25,
           som_habilitado: true,
           sfx_volume: 0.7,
+          confetti_animacoes_habilitadas: true,
           ciclo_treinos: ['A', 'B', 'C', 'D', 'E'],
           modo_padrao: 'tempo',
           tutorial_visto: true,

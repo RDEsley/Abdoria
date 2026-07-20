@@ -154,6 +154,8 @@ export interface UserPreferencias {
   descanso_padrao_seg: number;
   som_habilitado: boolean;
   sfx_volume: number;
+  /** Desativa animações de confete e celebrações com partículas. */
+  confetti_animacoes_habilitadas?: boolean;
   /** Contagem 3-2-1 antes de exercícios de tempo, pra dar tempo de se posicionar. Default: true. */
   contagem_regressiva_habilitada?: boolean;
   ciclo_treinos: TreinoBase[];
@@ -1668,6 +1670,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   descanso_padrao_seg: 30,
   som_habilitado: true,
   sfx_volume: 0.7,
+  confetti_animacoes_habilitadas: true,
   ciclo_treinos: ['A', 'B', 'C'],
   modo_padrao: 'tempo',
   reps_series_padrao: 3,

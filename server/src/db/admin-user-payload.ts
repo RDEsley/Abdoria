@@ -51,6 +51,7 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
       descanso_padrao_seg: 25,
       som_habilitado: true,
       sfx_volume: 0.7,
+      confetti_animacoes_habilitadas: true,
       ciclo_treinos: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
       modo_padrao: 'reps',
       reps_series_padrao: 3,

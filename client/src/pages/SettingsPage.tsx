@@ -11,6 +11,7 @@ import {
   HelpCircle,
   LogOut,
   PlayCircle,
+  Sparkles,
   ScrollText,
   UserRound,
   Volume2,
@@ -75,6 +76,9 @@ export function SettingsPage() {
   }, [location.hash]);
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
+  const [confetti, setConfetti] = useState(
+    user?.preferencias?.confetti_animacoes_habilitadas ?? true,
+  );
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
   const [ciclo, setCiclo] = useState<TreinoBase[]>(
     normalizeCicloTreinos(user?.preferencias?.ciclo_treinos),
@@ -88,15 +92,17 @@ export function SettingsPage() {
     return (
       som !== (prefs?.som_habilitado ?? true) ||
       volume !== (prefs?.sfx_volume ?? 0.7) ||
+      confetti !== (prefs?.confetti_animacoes_habilitadas ?? true) ||
       descanso !== (prefs?.descanso_padrao_seg ?? 30) ||
       normalizeCicloTreinos(ciclo).join('') !==
         normalizeCicloTreinos(prefs?.ciclo_treinos).join('')
     );
-  }, [user, som, volume, descanso, ciclo]);
+  }, [user, som, volume, confetti, descanso, ciclo]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
+    setConfetti(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
     setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
     setCiclo(normalizeCicloTreinos(user?.preferencias?.ciclo_treinos));
   };
@@ -109,6 +115,7 @@ export function SettingsPage() {
           ...user!.preferencias,
           som_habilitado: som,
           sfx_volume: volume,
+          confetti_animacoes_habilitadas: confetti,
           descanso_padrao_seg: descanso,
           ciclo_treinos: normalizeCicloTreinos(ciclo),
         },
@@ -269,6 +276,30 @@ export function SettingsPage() {
           />
         </label>
         <SoundPackSection />
+      </section>
+
+      <section className="glass-card p-4">
+        <h3 className="game-section-title mb-3 flex items-center gap-2">
+          <Sparkles size={14} /> Celebrações
+        </h3>
+        <GameButton
+          type="button"
+          variant={confetti ? 'secondary' : 'ghost'}
+          className="flex w-full items-center justify-between gap-3"
+          onClick={() => setConfetti((value) => !value)}
+          aria-pressed={!confetti}
+        >
+          <span className="flex items-center gap-2 text-left">
+            <Sparkles size={16} aria-hidden />
+            {confetti ? 'Desativar animações de confete' : 'Ativar animações de confete'}
+          </span>
+          <span className="text-xs font-extrabold uppercase tracking-wide text-stone-500">
+            {confetti ? 'Ligadas' : 'Desligadas'}
+          </span>
+        </GameButton>
+        <p className="mt-2 text-xs font-medium text-stone-500">
+          Isso afeta missões, vitórias e recompensas. O restante das animações continua ativo.
+        </p>
       </section>
 
       <section className="glass-card p-4">

@@ -35,6 +35,7 @@ export async function seedDemoUsers(): Promise<void> {
             descanso_padrao_seg: 25,
             som_habilitado: true,
             sfx_volume: 0.7,
+            confetti_animacoes_habilitadas: true,
             ciclo_treinos: ['A', 'B', 'C'],
             modo_padrao: 'tempo',
             tutorial_visto: true,
