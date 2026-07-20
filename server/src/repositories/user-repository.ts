@@ -5,12 +5,16 @@ import {
   DEFAULT_PREFERENCIAS,
   DEFAULT_XP_DIARIO,
   DEFAULT_AFK_COMBAT,
+  FROZEN_STREAK_ITEM_ID,
   type AfkCombatState,
   type AfkEnemyId,
   type AfkPendingReward,
   type AfkState,
   getEnemyMaxHp,
 } from '../types/index.js';
+
+/** Todo jogador novo começa com 3 Frozen Streak — colchão inicial contra falhar a streak. */
+const DEFAULT_NEW_USER_INVENTARIO = { itens: [{ item_id: FROZEN_STREAK_ITEM_ID, quantidade: 3 }] };
 import type { UserRecord, UserLean } from '../types/user-record.js';
 
 const EMPTY_AFK_PENDING: AfkPendingReward = {
@@ -555,7 +559,7 @@ export const User = {
       preferencias: { ...DEFAULT_PREFERENCIAS, ...(data.preferencias ?? {}) },
       dados_salvos: data.dados_salvos ?? DEFAULT_USER_DADOS_SALVOS,
       xp_diario: data.xp_diario ?? DEFAULT_XP_DIARIO,
-      inventario: data.inventario ?? { itens: [] },
+      inventario: data.inventario ?? DEFAULT_NEW_USER_INVENTARIO,
       onboarding_completed: data.onboarding_completed ?? false,
       is_guest: data.is_guest ?? false,
       is_demo_npc: data.is_demo_npc ?? false,
