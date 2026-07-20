@@ -17,6 +17,7 @@ export type CampaignEventType =
   | 'travessia'
   | 'fortaleza_rompida'
   | 'poder_desperto'
+  | 'missao_pessoal'
   | 'capitulo';
 
 export const CAMPAIGN_EVENT_LABELS: Record<CampaignEventType, string> = {
@@ -29,6 +30,7 @@ export const CAMPAIGN_EVENT_LABELS: Record<CampaignEventType, string> = {
   travessia: 'Travessia',
   fortaleza_rompida: 'Fortaleza rompida',
   poder_desperto: 'Poder desperto',
+  missao_pessoal: 'Missão pessoal',
   capitulo: 'Capítulo',
 };
 
@@ -868,5 +870,55 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     marco: 'streak',
     texto:
       'Os bardos não improvisam mais: a sequência de {dias} de {heroi} virou refrão fixo {no_lugar}.',
+  },
+
+  // —— missao_pessoal (dia de descanso — Atividades, não combate) ——
+  {
+    id: 'pessoal-01',
+    tipo: 'missao_pessoal',
+    texto:
+      'Nem toda missão é batalha. {heroi} passou o dia {no_lugar} em {exercicio} ({detalhe}) — e voltou mais inteiro do que saiu.',
+  },
+  {
+    id: 'pessoal-02',
+    tipo: 'missao_pessoal',
+    texto:
+      '{O_lugar} descansou hoje, e {heroi} também: {detalhe} de {exercicio}, sem pressa nenhuma. Até heróis precisam de um dia assim.',
+  },
+  {
+    id: 'pessoal-03',
+    tipo: 'missao_pessoal',
+    texto:
+      'Armadura guardada, escudo na parede. {heroi} dedicou {detalhe} a {exercicio} {no_lugar} — a força de amanhã se constrói em dias como este.',
+  },
+  {
+    id: 'pessoal-04',
+    tipo: 'missao_pessoal',
+    texto:
+      'Os monstros esperam. Hoje quem venceu foi o cansaço: {heroi} cuidou de si com {exercicio} ({detalhe}) {no_lugar}, e a sequência de dias segue firme.',
+  },
+  {
+    id: 'pessoal-05',
+    tipo: 'missao_pessoal',
+    texto:
+      'Uma pausa também é estratégia. {detalhe} de {exercicio} {pelo_lugar}, e {heroi} volta pra próxima missão com a cabeça mais leve.',
+  },
+  {
+    id: 'pessoal-06',
+    tipo: 'missao_pessoal',
+    texto:
+      '{No_lugar}, {heroi} trocou a espada por {exercicio} — {detalhe} depois, ficou claro: recarregar energia também é coragem.',
+  },
+  {
+    id: 'pessoal-07',
+    tipo: 'missao_pessoal',
+    texto:
+      'Sem trombetas, sem glória visível — só {heroi}, {detalhe} de {exercicio} e {o_lugar} em silêncio. Foi o suficiente.',
+  },
+  {
+    id: 'pessoal-08',
+    tipo: 'missao_pessoal',
+    texto:
+      'O reino não precisa de heróis todos os dias no campo de batalha. Hoje {heroi} escolheu {exercicio} ({detalhe}) {no_lugar} — e isso também conta pra lenda.',
   },
 ];

@@ -3,6 +3,7 @@ import {
   Crown,
   Flag,
   HeartHandshake,
+  Leaf,
   Mountain,
   ScrollText,
   Shield,
@@ -26,5 +27,6 @@ export const CAMPAIGN_EVENT_STYLE: Record<
   travessia: { Icon: Mountain, className: 'bg-orange-100 text-orange-800' },
   fortaleza_rompida: { Icon: Castle, className: 'bg-orange-100 text-orange-700' },
   poder_desperto: { Icon: Sparkles, className: 'bg-cyan-100 text-cyan-700' },
+  missao_pessoal: { Icon: Leaf, className: 'bg-teal-100 text-teal-700' },
   capitulo: { Icon: ScrollText, className: 'bg-yellow-100 text-yellow-800' },
 };

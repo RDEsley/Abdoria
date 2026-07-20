@@ -8,7 +8,11 @@ import {
   buildCampaignPosts,
   type CampaignCatalogInfo,
   type CampaignPost,
+  type CampaignSession,
 } from '@shared/campaign';
+import { isAtividadeHistory } from '@shared/atividades';
+import { toLocalDateKey } from '@/lib/utils';
+import { formatMetricas } from '@/lib/atividade-format';
 import { xpLevelFromTotal, type AfkEnemyId } from '@/types';
 
 function relativeDate(iso: string): string {
@@ -56,7 +60,8 @@ function PostCard({ post }: { post: CampaignPost }) {
         <footer className="mt-2 flex flex-wrap items-center gap-1.5">
           {post.exercicio && (
             <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[0.65rem] font-bold text-stone-600">
-              ⚔ {post.exercicio.nome} · {post.exercicio.detalhe}
+              {post.tipo === 'missao_pessoal' ? '✦' : '⚔'} {post.exercicio.nome}
+              {post.exercicio.detalhe ? ` · ${post.exercicio.detalhe}` : ''}
             </span>
           )}
           {post.xp != null && post.xp > 0 && (
@@ -69,7 +74,9 @@ function PostCard({ post }: { post: CampaignPost }) {
       {post.outros_exercicios.length > 0 && (
         <p className="mt-1.5 truncate text-[0.6rem] font-semibold text-stone-400">
           Também na sessão:{' '}
-          {post.outros_exercicios.map((ex) => `${ex.nome} (${ex.detalhe})`).join(' · ')}
+          {post.outros_exercicios
+            .map((ex) => (ex.detalhe ? `${ex.nome} (${ex.detalhe})` : ex.nome))
+            .join(' · ')}
         </p>
       )}
     </motion.article>
@@ -104,15 +111,56 @@ export function CampaignFeed() {
         },
       ]),
     );
-    return buildCampaignPosts(
-      history.map((entry) => ({
+    // Sessões de treino entram 1:1; sessões de Atividade (sem exercícios pra
+    // narrar como combate) são agrupadas por dia — vira 1 "missão pessoal" por
+    // dia, igual ao treino, em vez de 1 post por atividade concluída.
+    const treinoSessions: CampaignSession[] = [];
+    const atividadesPorDia = new Map<string, typeof history>();
+    for (const entry of history) {
+      if (isAtividadeHistory(entry.treino_nome) && entry.atividade) {
+        const dia = toLocalDateKey(entry.concluido_em);
+        const grupo = atividadesPorDia.get(dia) ?? [];
+        grupo.push(entry);
+        atividadesPorDia.set(dia, grupo);
+        continue;
+      }
+      treinoSessions.push({
         id: entry.id,
         treino_nome: entry.treino_nome,
         exercicios: entry.exercicios ?? [],
         duracao_total_segundos: entry.duracao_total_segundos,
         xp_ganho: entry.xp_ganho,
         concluido_em: entry.concluido_em,
-      })),
+      });
+    }
+
+    const atividadeSessions: CampaignSession[] = [...atividadesPorDia.entries()].map(
+      ([dia, entries]) => {
+        const ordenadas = [...entries].sort(
+          (a, b) => new Date(a.concluido_em).getTime() - new Date(b.concluido_em).getTime(),
+        );
+        const ultima = ordenadas[ordenadas.length - 1];
+        return {
+          id: `atividades-${dia}`,
+          treino_nome: 'Atividades',
+          exercicios: [],
+          duracao_total_segundos: ordenadas.reduce(
+            (acc, e) => acc + (e.duracao_total_segundos ?? 0),
+            0,
+          ),
+          xp_ganho: ordenadas.reduce((acc, e) => acc + (e.xp_ganho ?? 0), 0),
+          concluido_em: ultima.concluido_em,
+          isAtividade: true,
+          atividadesFeitas: ordenadas.map((e) => ({
+            nome: e.atividade!.nome,
+            detalhe: formatMetricas(e.atividade!.metricas),
+          })),
+        };
+      },
+    );
+
+    return buildCampaignPosts(
+      [...treinoSessions, ...atividadeSessions],
       catalogBySlug,
       {
         heroi: user.nome?.split(' ')[0] ?? 'O herói',

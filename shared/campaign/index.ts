@@ -72,6 +72,10 @@ export interface CampaignSession {
   duracao_total_segundos?: number;
   xp_ganho?: number;
   concluido_em: string | Date;
+  /** true = dia de Atividades (sem exercícios) — narrado como missão pessoal, não combate. */
+  isAtividade?: boolean;
+  /** Só quando isAtividade: nome + detalhe de cada atividade feita naquele dia. */
+  atividadesFeitas?: { nome: string; detalhe: string }[];
 }
 
 /** Recorte do catálogo usado pra classificar o exercício. */
@@ -410,12 +414,60 @@ const RECENT_PLACES_WINDOW = 2;
  * treino (a "missão do dia"), escolhido pela hierarquia de prioridade.
  * `catalogBySlug` vem do catálogo de exercícios já carregado no client.
  */
+/** Post de um dia de Atividades — sem exercícios pra classificar, então não
+    passa pela hierarquia de combate: vai direto pro pool `missao_pessoal`. */
+function buildAtividadePost(
+  session: CampaignSession,
+  ctx: CampaignContext,
+  lugares: readonly CampaignPlace[],
+  recentTemplates: string[],
+  recentPlaces: string[],
+): CampaignPost {
+  const id = String(session.id);
+  const seed = hashString(id);
+  const pool = CAMPAIGN_TEMPLATES.filter((t) => t.tipo === 'missao_pessoal');
+  const template = pickAvoiding(pool, seed, recentTemplates, (t) => t.id);
+  const lugar = pickAvoiding(lugares, seed, recentPlaces, (p) => p.id);
+  remember(recentTemplates, template.id, RECENT_TEMPLATES_WINDOW);
+  remember(recentPlaces, lugar.id, RECENT_PLACES_WINDOW);
+
+  const feitas = session.atividadesFeitas ?? [];
+  const principal = feitas[0];
+  const valores: Record<string, string> = {
+    heroi: ctx.heroi,
+    ...lugarPlaceholders(lugar),
+    exercicio: principal?.nome ?? 'atividades pessoais',
+    detalhe: principal?.detalhe ?? '',
+  };
+
+  const outrosExercicios: CampaignExerciseSummary[] = feitas.slice(1).map((a, i) => ({
+    slug: `atividade-${i}`,
+    nome: a.nome,
+    detalhe: a.detalhe,
+  }));
+
+  return {
+    id,
+    tipo: 'missao_pessoal',
+    tipo_label: CAMPAIGN_EVENT_LABELS.missao_pessoal,
+    lugar: lugar.nome,
+    mensagem: interpolate(template.texto, valores),
+    exercicio: principal
+      ? { slug: 'atividade-principal', nome: principal.nome, detalhe: principal.detalhe }
+      : undefined,
+    outros_exercicios: outrosExercicios,
+    xp: session.xp_ganho,
+    concluido_em: toIso(session.concluido_em),
+    session_id: id,
+  };
+}
+
 export function buildCampaignPosts(
   sessions: CampaignSession[],
   catalogBySlug: Map<string, CampaignCatalogInfo>,
   ctx: CampaignContext,
 ): CampaignPost[] {
-  const validSessions = sessions.filter((s) => s.exercicios.length > 0);
+  const validSessions = sessions.filter((s) => s.exercicios.length > 0 || s.isAtividade);
   const ascending = [...validSessions].sort(
     (a, b) => new Date(a.concluido_em).getTime() - new Date(b.concluido_em).getTime(),
   );
@@ -432,6 +484,16 @@ export function buildCampaignPosts(
 
   for (const session of descending) {
     const id = String(session.id);
+
+    // Dia de Atividades sem marco de capítulo: não passa pela hierarquia de
+    // combate (não tem `exercicios` pra classificar) — vira missão pessoal.
+    // Com marco (primeiro dia da conta / streak), o capítulo prevalece
+    // normalmente, já que essa classificação não depende de `exercicios`.
+    if (session.isAtividade && !capituloMarcos.get(id)) {
+      posts.push(buildAtividadePost(session, ctx, lugares, recentTemplates, recentPlaces));
+      continue;
+    }
+
     const concluidoEm = toIso(session.concluido_em);
     const seed = hashString(id);
 
