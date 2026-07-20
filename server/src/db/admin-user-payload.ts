@@ -28,6 +28,7 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
     terms_accepted_at: new Date(),
     is_guest: false,
     is_demo_npc: false,
+    role: 'admin' as const,
     gamificacao: {
       nivel_xp: nivelXp,
       streak_atual: 365,

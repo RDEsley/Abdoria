@@ -15,176 +15,212 @@ export interface DemoUserSeed {
   };
 }
 
-/** Jogadores fictícios para ranking e sensação de comunidade ativa (números alcançáveis). */
-export const DEMO_USERS: DemoUserSeed[] = [
-  {
-    email: 'diego.npc@abdoria.local',
-    nome: 'Diego Lima',
-    idade: 27,
-    nivel: 'intermediario',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 680,
-      streak_atual: 11,
-      streak_maior: 14,
-      total_minutos: 94,
-      conquistas: ['primeiro_treino', 'streak_2', 'streak_3', 'treinos_5'],
-    },
-  },
-  {
-    email: 'henrique.npc@abdoria.local',
-    nome: 'Henrique Alves',
-    idade: 31,
-    nivel: 'intermediario',
-    objetivo: 'forca',
-    gamificacao: {
-      nivel_xp: 590,
-      streak_atual: 9,
-      streak_maior: 12,
-      total_minutos: 81,
-      conquistas: ['primeiro_treino', 'streak_2', 'streak_3', 'treinos_5'],
-    },
-  },
-  {
-    email: 'marco.npc@abdoria.local',
-    nome: 'Marco Antônio',
-    idade: 24,
-    nivel: 'intermediario',
-    objetivo: 'resistencia',
-    gamificacao: {
-      nivel_xp: 520,
-      streak_atual: 8,
-      streak_maior: 10,
-      total_minutos: 73,
-      conquistas: ['primeiro_treino', 'streak_2', 'streak_3'],
-    },
-  },
-  {
-    email: 'bruno.npc@abdoria.local',
-    nome: 'Bruno Costa',
-    idade: 29,
-    nivel: 'intermediario',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 450,
-      streak_atual: 7,
-      streak_maior: 9,
-      total_minutos: 66,
-      conquistas: ['primeiro_treino', 'streak_2', 'streak_3', 'treinos_5'],
-    },
-  },
-  {
-    email: 'joao.npc@abdoria.local',
-    nome: 'João Pedro',
-    idade: 22,
-    nivel: 'iniciante',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 380,
-      streak_atual: 6,
-      streak_maior: 8,
-      total_minutos: 57,
-      conquistas: ['primeiro_treino', 'streak_2', 'streak_3'],
-    },
-  },
-  {
-    email: 'felipe.npc@abdoria.local',
-    nome: 'Felipe Souza',
-    idade: 26,
-    nivel: 'iniciante',
-    objetivo: 'manutencao',
-    gamificacao: {
-      nivel_xp: 320,
-      streak_atual: 5,
-      streak_maior: 7,
-      total_minutos: 51,
-      conquistas: ['primeiro_treino', 'streak_2', 'treinos_5'],
-    },
-  },
-  {
-    email: 'ana.npc@abdoria.local',
-    nome: 'Ana Silva',
-    idade: 28,
-    nivel: 'iniciante',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 275,
-      streak_atual: 5,
-      streak_maior: 6,
-      total_minutos: 47,
-      conquistas: ['primeiro_treino', 'streak_2', 'streak_3'],
-    },
-  },
-  {
-    email: 'larissa.npc@abdoria.local',
-    nome: 'Larissa Campos',
-    idade: 23,
-    nivel: 'iniciante',
-    objetivo: 'resistencia',
-    gamificacao: {
-      nivel_xp: 210,
-      streak_atual: 4,
-      streak_maior: 5,
-      total_minutos: 38,
-      conquistas: ['primeiro_treino', 'streak_2'],
-    },
-  },
-  {
-    email: 'giulia.npc@abdoria.local',
-    nome: 'Giulia Ferreira',
-    idade: 21,
-    nivel: 'iniciante',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 165,
-      streak_atual: 3,
-      streak_maior: 4,
-      total_minutos: 31,
-      conquistas: ['primeiro_treino', 'streak_2'],
-    },
-  },
-  {
-    email: 'carla.npc@abdoria.local',
-    nome: 'Carla Mendes',
-    idade: 34,
-    nivel: 'iniciante',
-    objetivo: 'manutencao',
-    gamificacao: {
-      nivel_xp: 130,
-      streak_atual: 3,
-      streak_maior: 3,
-      total_minutos: 27,
-      conquistas: ['primeiro_treino'],
-    },
-  },
-  {
-    email: 'isabela.npc@abdoria.local',
-    nome: 'Isabela Nunes',
-    idade: 19,
-    nivel: 'iniciante',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 85,
-      streak_atual: 2,
-      streak_maior: 2,
-      total_minutos: 18,
-      conquistas: ['primeiro_treino'],
-    },
-  },
-  {
-    email: 'elena.npc@abdoria.local',
-    nome: 'Elena Rocha',
-    idade: 25,
-    nivel: 'iniciante',
-    objetivo: 'definicao',
-    gamificacao: {
-      nivel_xp: 45,
-      streak_atual: 1,
-      streak_maior: 1,
-      total_minutos: 12,
-      conquistas: ['primeiro_treino'],
-    },
-  },
+/** RNG determinística (mulberry32) — a seed sempre gera a mesma comunidade. */
+function makeRng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const NOMES = [
+  'Diego Lima',
+  'Henrique Alves',
+  'Marco Antônio',
+  'Bruno Costa',
+  'João Pedro',
+  'Felipe Souza',
+  'Ana Beatriz',
+  'Larissa Campos',
+  'Giulia Ferreira',
+  'Carla Mendes',
+  'Rafael Torres',
+  'Gustavo Ramos',
+  'Thiago Barbosa',
+  'Camila Duarte',
+  'Fernanda Reis',
+  'Lucas Martins',
+  'Vinícius Prado',
+  'Beatriz Moraes',
+  'Amanda Farias',
+  'Rodrigo Pires',
+  'Caio Nogueira',
+  'Juliana Castro',
+  'Patrícia Vieira',
+  'Leonardo Dias',
+  'Matheus Cardoso',
+  'Renata Lopes',
+  'André Fonseca',
+  'Paulo Henrique',
+  'Débora Nunes',
+  'Sérgio Batista',
+  'Vitor Hugo',
+  'Natália Freitas',
+  'Eduardo Teixeira',
+  'Priscila Ramos',
+  'Fábio Cunha',
+  'Igor Machado',
+  'Sabrina Rocha',
+  'Otávio Neves',
+  'Letícia Andrade',
+  'Marcelo Pinto',
+  'Gabriel Moura',
+  'Tatiane Correia',
+  'Wesley Cardozo',
+  'Aline Bezerra',
+  'Douglas Freire',
+  'Cristiano Melo',
+  'Simone Araújo',
+  'Roberto Guedes',
+  'Bianca Sales',
+  'Emerson Tavares',
+  'Yasmin Cavalcante',
+  'Ricardo Aguiar',
+  'Bruna Siqueira',
+  'Alexandre Brito',
+  'Michele Santana',
+  'Everton Braga',
+  'Kaique Monteiro',
+  'Vanessa Peixoto',
+  'Anderson Rezende',
+  'Priscilla Gomes',
+  'Nathan Xavier',
+  'Larissa Amaral',
+  'Josué Carvalho',
+  'Elias Ribeiro',
+  'Milena Barros',
+  'Diego Fontes',
+  'Adriano Leal',
+  'Cauã Bernardes',
+  'Rebeca Furtado',
+  'Guilherme Sá',
+  'Danilo Rocha',
+  'Sofia Vidal',
+  'Renan Coelho',
+  'Ítalo Nascimento',
+  'Manuela Paiva',
+  'Wallace Cordeiro',
+  'Heitor Assunção',
+  'Luana Quaresma',
+  'Breno Sampaio',
+  'Isaac Verissimo',
+  'Talita Macedo',
+  'Cléber Antunes',
+  'Rogério Valente',
+  'Karina Bastos',
+  'Murilo Guerra',
+  'Ferdinando Rios',
+  'Denise Camargo',
+  'Fabrício Lemos',
+  'Jonas Medeiros',
+  'Tainá Pontes',
+  'Otacílio Braz',
+  'Wagner Solano',
+  'Célia Bittencourt',
+  'Osvaldo Franco',
+  'Nicolas Aires',
+  'Sueli Cardoso',
+  'Benedito Rangel',
+  'Cátia Marques',
+  'Valdir Nogueira',
+  'Marta Espíndola',
+  'Silvana Torres',
 ];
+
+const OBJETIVOS: Objetivo[] = ['definicao', 'forca', 'resistencia', 'manutencao'];
+
+const CONQUISTAS_POR_MARCO: { minXp: number; ids: string[] }[] = [
+  { minXp: 0, ids: ['primeiro_treino'] },
+  { minXp: 40, ids: ['streak_2'] },
+  { minXp: 90, ids: ['streak_3'] },
+  { minXp: 150, ids: ['treinos_5', 'minutos_60'] },
+  { minXp: 260, ids: ['streak_7', 'exercicios_50'] },
+  { minXp: 420, ids: ['nivel_3', 'ciclo_ab'] },
+  { minXp: 620, ids: ['streak_14', 'treino_completo'] },
+  { minXp: 900, ids: ['nivel_5', 'exercicios_100', 'treinos_25'] },
+  { minXp: 1400, ids: ['streak_30', 'ciclo_completo', 'minutos_500'] },
+  { minXp: 2200, ids: ['nivel_10', 'streak_60', 'semana_perfeita'] },
+  { minXp: 3400, ids: ['treinos_100', 'exercicios_500'] },
+  { minXp: 5200, ids: ['streak_100', 'xp_mestre'] },
+];
+
+function conquistasFor(nivelXp: number, streakMaior: number): string[] {
+  const ids = new Set<string>();
+  for (const marco of CONQUISTAS_POR_MARCO) {
+    if (nivelXp >= marco.minXp) marco.ids.forEach((id) => ids.add(id));
+  }
+  if (streakMaior >= 7) ids.add('streak_7');
+  if (streakMaior >= 14) ids.add('streak_14');
+  if (streakMaior >= 30) ids.add('streak_30');
+  if (streakMaior >= 60) ids.add('streak_60');
+  if (streakMaior >= 100) ids.add('streak_100');
+  if (streakMaior >= 365) ids.add('streak_365');
+  return [...ids];
+}
+
+function nivelFor(xp: number): NivelUsuario {
+  if (xp >= 1400) return 'avancado';
+  if (xp >= 500) return 'intermediario';
+  return 'iniciante';
+}
+
+function slugFromNome(nome: string): string {
+  return nome
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z]+/g, '.')
+    .replace(/^\.|\.$/g, '');
+}
+
+/**
+ * Comunidade fictícia realista de 100 jogadores: distribuição em pirâmide
+ * (poucos veteranos com XP/streak altíssimos, maioria intermediária/iniciante),
+ * gerada de forma determinística. Sem os nomes "Isabela"/"Mariana".
+ */
+function buildDemoUsers(): DemoUserSeed[] {
+  const rng = makeRng(20260719);
+  const used = new Set<string>();
+
+  return NOMES.slice(0, 100).map((nome, index) => {
+    // Pirâmide: rank 0 é o topo. XP cai exponencialmente com o rank.
+    const rankFactor = 1 - index / 100;
+    const jitter = 0.75 + rng() * 0.5;
+    const nivelXp = Math.max(30, Math.round(Math.pow(rankFactor, 2.4) * 8200 * jitter));
+
+    // Streaks altos concentrados no topo; alguns outliers com sequência enorme.
+    const streakBase = Math.round(Math.pow(rankFactor, 1.8) * 90 * (0.6 + rng() * 0.8));
+    const streakMaior = Math.max(1, streakBase + Math.round(rng() * 30 * rankFactor));
+    const streakAtual = Math.max(0, Math.round(streakBase * (0.4 + rng() * 0.6)));
+
+    const totalMinutos = Math.round(nivelXp * (0.6 + rng() * 0.5));
+    const idade = 17 + Math.floor(rng() * 33);
+
+    let slug = slugFromNome(nome);
+    while (used.has(slug)) slug = `${slug}${index}`;
+    used.add(slug);
+
+    return {
+      email: `${slug}.npc@abdoria.local`,
+      nome,
+      idade,
+      nivel: nivelFor(nivelXp),
+      objetivo: OBJETIVOS[Math.floor(rng() * OBJETIVOS.length)],
+      gamificacao: {
+        nivel_xp: nivelXp,
+        streak_atual: streakAtual,
+        streak_maior: streakMaior,
+        total_minutos: totalMinutos,
+        conquistas: conquistasFor(nivelXp, streakMaior),
+      },
+    };
+  });
+}
+
+export const DEMO_USERS: DemoUserSeed[] = buildDemoUsers();
 
 export const DEMO_USER_EMAILS = DEMO_USERS.map((u) => u.email);
