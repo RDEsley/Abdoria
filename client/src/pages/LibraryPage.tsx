@@ -90,16 +90,25 @@ export function LibraryPage() {
 
   const [revealDelays, setRevealDelays] = useState<Record<string, number>>({});
 
+  // "Desbloquear tudo" com dezenas de itens não se sustenta: só os primeiros
+  // ganham a festa (som + animação staggered); o resto desbloqueia direto,
+  // sem empilhar dezenas de sons/animações simultâneas.
   const handleUnlockAll = useCallback(() => {
+    const UNLOCK_ALL_ANIMATED_COUNT = 5;
     const UNLOCK_ALL_STAGGER_MS = 120;
+    const animated = lockedInView.slice(0, UNLOCK_ALL_ANIMATED_COUNT);
+    const instant = lockedInView.slice(UNLOCK_ALL_ANIMATED_COUNT);
+
     setRevealDelays((prev) => {
       const next = { ...prev };
-      lockedInView.forEach((ex, i) => {
+      animated.forEach((ex, i) => {
         next[ex.slug] = i * UNLOCK_ALL_STAGGER_MS;
       });
       return next;
     });
-  }, [lockedInView]);
+
+    instant.forEach((ex) => unlock(ex.slug));
+  }, [lockedInView, unlock]);
 
   return (
     <div className="flex flex-col gap-5">
