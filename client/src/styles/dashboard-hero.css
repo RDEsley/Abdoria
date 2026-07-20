@@ -1078,36 +1078,30 @@
   transition: background 0.25s ease;
 }
 
+/* Paleta única (verde-azulada), aprofundando aos poucos — trocar de cor
+   inteira a cada atividade (verde → roxo → laranja) cansava a vista. */
 .atividades-fila-medidor--tier-1 .atividades-fila-medidor__pip.is-filled {
-  background: linear-gradient(90deg, #34d399, #059669);
+  background: linear-gradient(90deg, #6ee7b7, #34d399);
 }
 
 .atividades-fila-medidor--tier-2 .atividades-fila-medidor__pip.is-filled {
-  background: linear-gradient(90deg, #34d399, #0d9488);
+  background: linear-gradient(90deg, #34d399, #10b981);
 }
 
 .atividades-fila-medidor--tier-3 .atividades-fila-medidor__pip.is-filled {
-  background: linear-gradient(90deg, #22d3ee, #0891b2);
+  background: linear-gradient(90deg, #10b981, #0d9488);
 }
 
 .atividades-fila-medidor--tier-4 .atividades-fila-medidor__pip.is-filled {
-  background: linear-gradient(90deg, #a78bfa, #7c3aed);
+  background: linear-gradient(90deg, #0d9488, #0891b2);
 }
 
 .atividades-fila-medidor--tier-5 .atividades-fila-medidor__pip.is-filled {
-  background: linear-gradient(90deg, #fb923c, #ea580c);
+  background: linear-gradient(90deg, #0891b2, #0369a1);
 }
 
 .atividades-fila-medidor--tier-6 .atividades-fila-medidor__pip.is-filled {
-  background: linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #fb923c, #f472b6);
-  background-size: 250% 100%;
-  animation: atividades-fila-shimmer 1.6s linear infinite;
-}
-
-@keyframes atividades-fila-shimmer {
-  to {
-    background-position: -250% 0;
-  }
+  background: linear-gradient(90deg, #0369a1, #4338ca);
 }
 
 .atividades-fila-mensagem {

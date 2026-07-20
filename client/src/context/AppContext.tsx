@@ -219,8 +219,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const ensureHistory = useCallback(async () => {
-    if (historyLoaded.current) return;
+  const ensureHistory = useCallback(async (options?: { force?: boolean }) => {
+    if (historyLoaded.current && !options?.force) return;
     historyLoaded.current = true;
     setHistoryLoading(true);
     try {

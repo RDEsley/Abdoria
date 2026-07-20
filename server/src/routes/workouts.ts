@@ -19,6 +19,7 @@ import {
   awardDailyXp,
   calculateWorkoutXpBreakdown,
   getDailyXpCapBreakdownForUser,
+  grantMoeda,
 } from '../services/economy.js';
 import {
   getSuggestedWorkout,
@@ -40,8 +41,10 @@ import {
 } from '../../../shared/personal-records.js';
 import { buildFeedPage, parseFeedCursor } from '../services/workout-history-feed.js';
 import {
+  ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_DURACAO_MIN,
   ATIVIDADE_OBS_MAX,
+  ATIVIDADE_XP_POR_UNIDADE,
   ATIVIDADES_MIN_DESCANSO,
   camposParaAtividade,
   findAtividade,
@@ -483,13 +486,14 @@ function sanitizeMetricas(
 /**
  * Conclui uma Atividade da fila do dia.
  *
- * XP/streak (ver CLAUDE.md → Sistema de Atividades):
- * - Dia de DESCANSO: cada atividade vale `Máx. diário / ATIVIDADES_MIN_DESCANSO`,
- *   sempre limitado ao que resta do orçamento — concluir o mínimo de 3 entrega
- *   praticamente o teto do dia. A streak é sustentada a partir da 3ª (regra em
- *   `historiesEligibleForStreak`, em services/gamification.ts).
- * - Dia de TREINO: 0 XP e nenhum efeito na streak; a sessão fica registrada
- *   só pro calendário e pras conquistas.
+ * XP/Coins/streak (ver CLAUDE.md → Sistema de Atividades):
+ * - XP: `ATIVIDADE_XP_POR_UNIDADE` por atividade, em qualquer dia, até
+ *   `ATIVIDADES_MIN_DESCANSO` atividades no dia — da 4ª em diante vira
+ *   `ATIVIDADE_COINS_EXTRA` Coins em vez de XP. Ainda sujeito ao teto diário
+ *   geral de XP (`awardDailyXp` corta se o orçamento do dia já estourou).
+ * - Streak: só em dia de DESCANSO, sustentada a partir da 3ª atividade
+ *   (regra em `historiesEligibleForStreak`, em services/gamification.ts).
+ *   Dia de TREINO: streak vem só do treino, atividade não mexe nela.
  */
 workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
   try {
@@ -565,21 +569,27 @@ workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
       getSaoPauloWeekday(),
     );
 
-    // Em dia de treino a atividade não paga XP: quem remunera o dia é o treino.
-    const cap = getDailyXpCapBreakdownForUser(updatedUser).total;
-    const xpBruto = diaDeTreino ? 0 : Math.floor(cap / ATIVIDADES_MIN_DESCANSO);
+    // Mesma regra em qualquer dia: as primeiras `ATIVIDADES_MIN_DESCANSO` do
+    // dia pagam XP fixo; da próxima em diante, Coins em vez de XP.
+    const atividadesHojeAntes = sessoesHoje.filter((entry) =>
+      isAtividadeHistory(entry.treino_nome),
+    ).length;
+    const dentroDoTetoXp = atividadesHojeAntes < ATIVIDADES_MIN_DESCANSO;
 
     const levelBefore = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
-    const xpAwarded = xpBruto > 0 ? awardDailyXp(updatedUser, xpBruto) : 0;
+    const xpAwarded = dentroDoTetoXp ? awardDailyXp(updatedUser, ATIVIDADE_XP_POR_UNIDADE) : 0;
     const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
-    const abdoriaGanha = xpAwarded > 0 ? awardMoedaFromXpProgress(updatedUser) : 0;
+    let abdoriaGanha = xpAwarded > 0 ? awardMoedaFromXpProgress(updatedUser) : 0;
+    if (!dentroDoTetoXp) {
+      grantMoeda(updatedUser, ATIVIDADE_COINS_EXTRA);
+      abdoriaGanha += ATIVIDADE_COINS_EXTRA;
+    }
     syncShopUnlocks(updatedUser);
 
     if (xpAwarded > 0) await WorkoutHistory.updateById(history.id, { xp_ganho: xpAwarded });
     await updatedUser.save();
 
-    const atividadesHoje =
-      sessoesHoje.filter((entry) => isAtividadeHistory(entry.treino_nome)).length + 1;
+    const atividadesHoje = atividadesHojeAntes + 1;
     const streakAfter = updatedUser.gamificacao.streak_atual;
     const newAchievements = updatedUser.gamificacao.conquistas.filter(
       (a) => !prevAchievements.has(a),

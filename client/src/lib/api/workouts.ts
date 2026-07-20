@@ -49,7 +49,7 @@ export interface CompleteAtividadeResponse {
   atividade: import('@shared/atividades').AtividadeExtra;
   xp_ganho: number;
   abdoria_ganha: number;
-  /** true = hoje é dia de treino, então a atividade não paga XP nem streak. */
+  /** true = hoje é dia de treino agendado — atividade ainda paga XP (até o teto diário), mas não mexe na streak. */
   dia_de_treino: boolean;
   atividades_hoje: number;
   atividades_minimo: number;

@@ -6,6 +6,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
 import {
+  ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_OBS_MAX,
   camposParaAtividade,
   type AtividadeExtra,
@@ -26,7 +27,7 @@ export function AtividadeCompleteModal({
   busy,
   passo,
   totalPassos,
-  daXp,
+  diaDeTreino,
   progressoHoje,
   metaHoje,
   cancelLabel = 'Agora não',
@@ -38,11 +39,11 @@ export function AtividadeCompleteModal({
   /** Posição na fila (1-based) — omitido fora do fluxo sequencial. */
   passo?: number;
   totalPassos?: number;
-  /** false = dia de treino, então a atividade não paga XP. */
-  daXp: boolean;
+  /** true = hoje é dia de treino agendado — só muda a mensagem sobre
+      sequência (streak); XP vale em qualquer dia, até o teto diário. */
+  diaDeTreino: boolean;
   /** Quantas atividades já concluídas hoje — junto de `metaHoje`, mostra o
-      progresso rumo ao mínimo do dia de descanso (substitui a barra fixa
-      que antes ficava sempre visível no card, poluindo a tela). */
+      progresso rumo ao teto diário de XP por atividades. */
   progressoHoje?: number;
   metaHoje?: number;
   /** Some fluxos abortam tudo ao cancelar (ex.: "Fazer mais tarde" no
@@ -81,6 +82,16 @@ export function AtividadeCompleteModal({
     onConfirm({ metricas, obs: obs.trim() || undefined });
   };
 
+  const ganhaXp = metaHoje == null || progressoHoje == null || progressoHoje < metaHoje;
+  const ganhaStreak = !diaDeTreino;
+  const hint = ganhaXp
+    ? ganhaStreak
+      ? 'Marque como concluída só depois de fazer de verdade — vale XP e ajuda a manter sua sequência.'
+      : 'Hoje é dia de treino: a sequência vem só do treino, mas esta atividade ainda te dá XP.'
+    : ganhaStreak
+      ? `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins e ainda ajuda sua sequência.`
+      : `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins (hoje é dia de treino, não mexe na sequência).`;
+
   return (
     <Modal open onClose={onCancel} labelledBy="atividade-complete-title">
       <div className="text-center">
@@ -104,15 +115,15 @@ export function AtividadeCompleteModal({
         {atividade.descricao && (
           <p className="mt-1 text-sm font-medium text-stone-500">{atividade.descricao}</p>
         )}
-        {daXp && metaHoje != null && progressoHoje != null && (
+        {metaHoje != null && progressoHoje != null && (
           <p
             className={`atividade-progresso-dia${progressoHoje >= metaHoje ? ' is-done' : ''}`}
           >
             {progressoHoje >= metaHoje
-              ? 'Meta do dia já batida — essa é só bônus!'
-              : `${progressoHoje}/${metaHoje} concluídas hoje · falta${
+              ? `Teto de XP do dia já batido — essa dá +${ATIVIDADE_COINS_EXTRA} Coins de bônus!`
+              : `${progressoHoje}/${metaHoje} com XP hoje · falta${
                   metaHoje - progressoHoje === 1 ? '' : 'm'
-                } ${metaHoje - progressoHoje} pra garantir XP e sequência`}
+                } ${metaHoje - progressoHoje} pra completar o teto`}
           </p>
         )}
       </div>
@@ -154,9 +165,7 @@ export function AtividadeCompleteModal({
 
       <p className="mt-3 rounded-xl border-2 border-sky-100 bg-sky-50 p-2.5 text-[0.68rem] font-semibold text-sky-800">
         <Sparkles size={11} className="mr-1 inline" aria-hidden />
-        {daXp
-          ? 'Marque como concluída só depois de fazer de verdade — o combinado é com você mesmo.'
-          : 'Hoje é dia de treino: esta atividade não dá XP nem mexe na streak, mas fica registrada e pode liberar conquistas.'}
+        {hint}
       </p>
 
       <GameButton

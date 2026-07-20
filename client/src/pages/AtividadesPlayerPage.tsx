@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, X } from 'lucide-react';
+import { CalendarCheck, ChevronRight, X } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { AtividadeCompleteModal, type AtividadeConclusao } from '@/components/dashboard/AtividadeCompleteModal';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
@@ -53,7 +53,7 @@ export function AtividadesPlayerPage() {
   if (resumoFinal) {
     return (
       <WorkoutVictoryScreen
-        workoutName="Atividades do dia"
+        workoutName="Atividades concluídas"
         xpGained={resumoFinal.xp}
         abdoriaGained={resumoFinal.moedas}
         atividadesConcluidas={resumoFinal.total}
@@ -69,6 +69,11 @@ export function AtividadesPlayerPage() {
         rodadaBusy={false}
         onRodadaKeep={() => {}}
         onRodadaSwap={() => {}}
+        footnote={
+          <>
+            <CalendarCheck size={13} aria-hidden /> Tudo já registrado no seu calendário de hoje.
+          </>
+        }
       />
     );
   }
@@ -86,10 +91,12 @@ export function AtividadesPlayerPage() {
 
   const confirmarEscolhida = async (dados: AtividadeConclusao) => {
     if (!selecionada) return;
+    const nome = selecionada.nome;
     const ok = await flow.concluirEscolhida(selecionada, dados);
     if (!ok) return;
     setSelecionada(null);
     setConcluidasNestaSessao((n) => n + 1);
+    showGameToast(`"${nome}" concluída!`, { variant: 'success' });
   };
 
   const progressoHoje = flow.concluidasHoje.size;
@@ -108,7 +115,7 @@ export function AtividadesPlayerPage() {
           <X size={24} />
         </button>
         <div className="text-center">
-          <p className="game-page-header__eyebrow !mb-0">Dia de descanso</p>
+          <p className="game-page-header__eyebrow !mb-0">Atividades</p>
           <p className="text-xs font-extrabold text-stone-800">
             {flow.filaPendente.length} atividade{flow.filaPendente.length === 1 ? '' : 's'}{' '}
             pendente{flow.filaPendente.length === 1 ? '' : 's'}
@@ -161,7 +168,7 @@ export function AtividadesPlayerPage() {
         <AtividadeCompleteModal
           atividade={selecionada}
           busy={flow.busy}
-          daXp={!flow.diaDeTreino}
+          diaDeTreino={flow.diaDeTreino}
           progressoHoje={progressoHoje}
           metaHoje={ATIVIDADES_MIN_DESCANSO}
           onCancel={() => setSelecionada(null)}

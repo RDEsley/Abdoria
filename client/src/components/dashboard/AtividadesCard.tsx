@@ -130,15 +130,15 @@ function SortableAtividadeItem({
       <button
         type="button"
         className="atividade-item__main"
-        disabled={feita || modoEdicao || busy || bloqueada}
+        disabled={modoEdicao || busy || bloqueada}
         onClick={onToggleFila}
         title={
-          feita
-            ? 'Concluída hoje'
-            : bloqueada
-              ? 'Não agendada para hoje'
-              : naFila
-                ? 'Remover da fila'
+          bloqueada
+            ? 'Não agendada para hoje'
+            : naFila
+              ? 'Remover da fila'
+              : feita
+                ? 'Concluída hoje — toque para fazer de novo'
                 : 'Adicionar à fila'
         }
       >
@@ -147,9 +147,15 @@ function SortableAtividadeItem({
         </span>
         <span className="atividade-item__text">
           <strong>{atividade.nome}</strong>
-          <small>{feita ? 'Concluída hoje' : meta}</small>
+          <small>
+            {feita && naFila
+              ? 'Vai repetir hoje'
+              : feita
+                ? 'Concluída hoje · toque para repetir'
+                : meta}
+          </small>
         </span>
-        {!modoEdicao && !feita && !bloqueada && (
+        {!modoEdicao && !bloqueada && (
           <span className="atividade-item__badge" aria-hidden>
             {naFila ? <X size={13} /> : <Plus size={13} />}
           </span>
@@ -282,7 +288,9 @@ export function AtividadesCard() {
   /* ---------------- fila ---------------- */
 
   const alternarFila = (atividade: AtividadeExtra) => {
-    if (concluidasHoje.has(atividade.nome) || !hojeNaAgenda) return;
+    // Concluída hoje não trava mais a atividade — o usuário pode enfileirar
+    // de novo pra repetir (ex.: outra sessão de leitura no mesmo dia).
+    if (!hojeNaAgenda) return;
     playClick();
     const naFila = fila.includes(atividade.id);
     void salvarFila(naFila ? fila.filter((id) => id !== atividade.id) : [...fila, atividade.id]);

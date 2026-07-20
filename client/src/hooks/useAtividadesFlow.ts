@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { completeAtividade } from '@/lib/api';
+import { completeAtividade, updateMe } from '@/lib/api';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { playCompleteSet } from '@/lib/sounds';
 import { toLocalDateKey } from '@/lib/utils';
+import { formatMetricas } from '@/lib/atividade-format';
 import {
   agendaCobreDia,
   isAtividadeHistory,
@@ -24,6 +25,8 @@ export interface AtividadesFluxoResumo {
   moedas: number;
   streakCelebration: number | null;
   levelUp: LevelUpData | null;
+  /** Nome + detalhe de cada atividade concluída no fluxo — vira o capítulo de campanha. */
+  feitas: { nome: string; detalhe: string }[];
 }
 
 /**
@@ -34,7 +37,7 @@ export interface AtividadesFluxoResumo {
  * celebração final ficam a critério de quem chama).
  */
 export function useAtividadesFlow() {
-  const { user, history, refresh } = useApp();
+  const { user, history, refresh, ensureHistory } = useApp();
   const { applyUser } = useAuth();
 
   const [busy, setBusy] = useState(false);
@@ -46,7 +49,8 @@ export function useAtividadesFlow() {
     total: number;
     streakCelebration: number | null;
     levelUp: LevelUpData | null;
-  }>({ xp: 0, moedas: 0, total: 0, streakCelebration: null, levelUp: null });
+    feitas: { nome: string; detalhe: string }[];
+  }>({ xp: 0, moedas: 0, total: 0, streakCelebration: null, levelUp: null, feitas: [] });
 
   const hoje = getTodaySaoPaulo();
   const atividades = useMemo(() => resolveAtividades(user?.preferencias), [user?.preferencias]);
@@ -71,12 +75,13 @@ export function useAtividadesFlow() {
     return nomes;
   }, [history]);
 
+  // Não filtra mais por `concluidasHoje`: quem tira um id da fila pendente
+  // é a própria conclusão (ver `enviarConclusao`), removendo-o da fila
+  // persistida. Isso é o que permite repetir — o usuário pode adicionar de
+  // volta manualmente uma atividade já concluída hoje, e ela volta a valer.
   const filaPendente = useMemo(
-    () =>
-      fila
-        .map((id) => atividades.find((a) => a.id === id))
-        .filter((a): a is AtividadeExtra => !!a && !concluidasHoje.has(a.nome)),
-    [fila, atividades, concluidasHoje],
+    () => fila.map((id) => atividades.find((a) => a.id === id)).filter((a): a is AtividadeExtra => !!a),
+    [fila, atividades],
   );
 
   const enviarConclusao = async (
@@ -87,12 +92,38 @@ export function useAtividadesFlow() {
     try {
       const res = await completeAtividade(atividade.id, dados);
       applyUser(res.user);
-      await refresh();
+      // `refresh()` não busca o histórico (só usuário/stats) — sem forçar o
+      // reload aqui, `concluidasHoje`/`filaPendente` ficavam presos no
+      // estado de antes da conclusão, como se nada tivesse acontecido.
+      await Promise.all([refresh(), ensureHistory({ force: true })]);
+
+      // Tira da fila persistida assim que conclui — sem isso ela nunca
+      // encolhia (nada mais removia o id de lá) e a tela de atividades
+      // parecia travada. Pra repetir, o usuário adiciona de volta na hora.
+      if (user && fila.includes(atividade.id)) {
+        try {
+          const semAtual = fila.filter((id) => id !== atividade.id);
+          const atualizado = await updateMe({
+            preferencias: { ...user.preferencias, atividades_fila: { data: hoje, ids: semAtual } },
+          });
+          applyUser(atualizado);
+          await refresh();
+        } catch {
+          // A conclusão em si já valeu (XP/streak salvos) — se só a limpeza
+          // da fila falhar, não vale a pena travar o fluxo por isso.
+        }
+      }
+
       acumulado.current.xp += res.xp_ganho;
       acumulado.current.moedas += res.abdoria_ganha;
       acumulado.current.total += 1;
+      acumulado.current.feitas.push({ nome: atividade.nome, detalhe: formatMetricas(dados.metricas) });
       if (res.streak_celebration) acumulado.current.streakCelebration = res.streak_celebration.streak_atual;
-      if (res.level_up) acumulado.current.levelUp = res.level_up;
+      if (res.level_up) {
+        acumulado.current.levelUp = res.level_up;
+        // Mesmo evento global do treino — mesma celebração cinemática pros dois fluxos.
+        window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: res.level_up }));
+      }
       playCompleteSet();
       return true;
     } catch (err) {
@@ -115,7 +146,14 @@ export function useAtividadesFlow() {
   const fecharFluxo = (): AtividadesFluxoResumo => {
     const resumo: AtividadesFluxoResumo = { ...acumulado.current };
     setPassoFila(null);
-    acumulado.current = { xp: 0, moedas: 0, total: 0, streakCelebration: null, levelUp: null };
+    acumulado.current = {
+      xp: 0,
+      moedas: 0,
+      total: 0,
+      streakCelebration: null,
+      levelUp: null,
+      feitas: [],
+    };
     return resumo;
   };
 

@@ -33,6 +33,11 @@ import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
 import type { TreinoBase } from '@/types';
 import {
+  ATIVIDADE_COINS_EXTRA,
+  ATIVIDADE_XP_POR_UNIDADE,
+  ATIVIDADES_MIN_DESCANSO,
+} from '@shared/atividades';
+import {
   MOEDA_XP_STEP,
   CICLO_HINTS,
   CICLO_LABELS,
@@ -369,6 +374,23 @@ export function SettingsPage() {
                     Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
                   </li>
                 </ul>
+                <p className="mb-2 font-bold text-stone-700">Atividades</p>
+                <ul className="mb-3 list-disc space-y-1 pl-5">
+                  <li>
+                    <strong>+{ATIVIDADE_XP_POR_UNIDADE} XP</strong> por atividade concluída, em
+                    qualquer dia — treino ou descanso.
+                  </li>
+                  <li>
+                    Vale pras primeiras <strong>{ATIVIDADES_MIN_DESCANSO}</strong> atividades do dia.
+                    Da próxima em diante, cada atividade extra dá{' '}
+                    <strong>+{ATIVIDADE_COINS_EXTRA} {CURRENCY_NAME}</strong> em vez de XP.
+                  </li>
+                  <li>
+                    Sequência (streak): em dia de descanso, atividades mantêm a sequência a partir da{' '}
+                    {ATIVIDADES_MIN_DESCANSO}ª concluída no dia. Em dia de treino, a sequência vem só
+                    do treino.
+                  </li>
+                </ul>
                 <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>
                 <ul className="mb-3 list-disc space-y-1 pl-5">
                   <li>{formatFrozenStreakDescription()}</li>
@@ -379,6 +401,7 @@ export function SettingsPage() {
                     <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong>{' '}
                     totais ganhos (conversão automática).
                   </li>
+                  <li>Atividades extras do dia também dão {CURRENCY_NAME} diretamente (ver acima).</li>
                 </ul>
               </div>
             </motion.div>

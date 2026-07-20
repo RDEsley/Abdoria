@@ -3,11 +3,15 @@ import type { AchievementIcon, UserPreferencias } from './types/index.js';
 /**
  * Atividades: tarefas de bem-estar que o usuário enfileira na Missão Diária.
  *
- * Regra de negócio (2026-07-19):
- * - Dia de DESCANSO (sem treino agendado): as atividades dão XP e contam
+ * Regra de negócio (2026-07-20, XP revisto — streak intocada desde 2026-07-19):
+ * - XP: toda atividade concluída dá `ATIVIDADE_XP_POR_UNIDADE` XP, em
+ *   QUALQUER dia (treino ou descanso), até `ATIVIDADES_MIN_DESCANSO` por dia
+ *   (`ATIVIDADES_XP_MAX_DIARIO` no total). Atividade extra além desse limite
+ *   não dá XP — dá `ATIVIDADE_COINS_EXTRA` Coins.
+ * - Streak: Dia de DESCANSO (sem treino agendado) — as atividades contam
  *   streak, desde que o usuário conclua no mínimo `ATIVIDADES_MIN_DESCANSO`.
- * - Dia de TREINO: XP e streak vêm só do treino; atividades ficam
- *   registradas (calendário/conquistas) mas valem 0 XP e não mexem na streak.
+ *   Dia de TREINO — streak vem só do treino; atividades ficam registradas
+ *   (calendário/conquistas) mas não mexem na streak.
  *
  * A lista é do usuário: começa como cópia do catálogo padrão e vira uma
  * lista própria e ordenável assim que ele cria/edita/exclui/reordena algo.
@@ -60,8 +64,15 @@ export const ATIVIDADE_DESCRICAO_MAX = 120;
 export const ATIVIDADE_OBS_MAX = 400;
 /** Teto de atividades cadastradas (padrão + criadas pelo usuário). */
 export const ATIVIDADES_MAX = 30;
-/** Mínimo de atividades concluídas pra manter a streak num dia de descanso. */
+/** Mínimo de atividades concluídas pra manter a streak num dia de descanso;
+    também é o teto diário de atividades que pagam XP (ver abaixo). */
 export const ATIVIDADES_MIN_DESCANSO = 3;
+/** XP fixo por atividade concluída, dentro do teto diário. */
+export const ATIVIDADE_XP_POR_UNIDADE = 15;
+/** Teto diário de XP vindo de atividades (3 × 15). */
+export const ATIVIDADES_XP_MAX_DIARIO = ATIVIDADES_MIN_DESCANSO * ATIVIDADE_XP_POR_UNIDADE;
+/** Coins dados por atividade extra do dia, depois de bater o teto de XP. */
+export const ATIVIDADE_COINS_EXTRA = 5;
 
 export const ATIVIDADES_LIMITE_MSG =
   'Você atingiu o limite de atividades. Remova uma ou mais para adicionar outra.';

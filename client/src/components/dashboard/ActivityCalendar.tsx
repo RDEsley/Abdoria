@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
+import { formatMetricas } from '@/lib/atividade-format';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 
 const MONTH_NAMES = [
@@ -23,28 +24,6 @@ const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 function pad2(n: number) {
   return String(n).padStart(2, '0');
-}
-
-/** Rótulos curtos das métricas registradas na conclusão da atividade. */
-const METRICA_UNIDADES: Record<string, string> = {
-  tempo_min: 'min',
-  paginas: 'páginas',
-  km: 'km',
-  metros: 'm',
-  quantidade: '',
-};
-
-/** "30 páginas · 25 min" a partir das métricas salvas no histórico. */
-function formatMetricas(metricas: Record<string, number | string> | undefined): string {
-  if (!metricas) return '';
-  return Object.entries(metricas)
-    .map(([chave, valor]) => {
-      if (typeof valor === 'string') return valor;
-      const unidade = METRICA_UNIDADES[chave];
-      return unidade ? `${valor} ${unidade}` : String(valor);
-    })
-    .filter(Boolean)
-    .join(' · ');
 }
 
 export function ActivityCalendar() {

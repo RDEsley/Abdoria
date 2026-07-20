@@ -37,7 +37,7 @@ export interface AppContextValue {
   refresh: () => Promise<void>;
   loadRecommendations: (options?: { force?: boolean }) => Promise<void>;
   ensureExercises: (options?: { force?: boolean }) => Promise<void>;
-  ensureHistory: () => Promise<void>;
+  ensureHistory: (options?: { force?: boolean }) => Promise<void>;
   setCustomWorkout: (items: WorkoutQueueItem[]) => void;
   setCustomWorkoutName: (nome: string) => void;
   setSelectedRepSchemeId: (nivel: NivelUsuario, schemeId: string) => void;

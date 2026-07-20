@@ -7,7 +7,13 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { updateMe } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { playClick } from '@/lib/sounds';
-import { resolveAgenda, type AtividadesAgendaModo } from '@shared/atividades';
+import {
+  ATIVIDADE_COINS_EXTRA,
+  ATIVIDADE_XP_POR_UNIDADE,
+  ATIVIDADES_MIN_DESCANSO,
+  resolveAgenda,
+  type AtividadesAgendaModo,
+} from '@shared/atividades';
 
 const DIA_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -157,8 +163,9 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
 
       <p className="mt-3 flex items-start gap-2 rounded-xl border-2 border-sky-100 bg-sky-50 p-2.5 text-[0.68rem] font-semibold text-sky-800">
         <Info size={13} className="mt-0.5 shrink-0" aria-hidden />
-        Em dia de treino as atividades não dão XP nem mexem na streak — quem paga o dia é o treino.
-        Elas continuam valendo pro calendário e podem liberar conquistas.
+        Toda atividade dá +{ATIVIDADE_XP_POR_UNIDADE} XP, até {ATIVIDADES_MIN_DESCANSO} por dia — da
+        próxima em diante vira +{ATIVIDADE_COINS_EXTRA} Coins. Em dia de treino, a sequência (streak)
+        continua vindo só do treino; nos outros dias, as atividades também mantêm a sequência.
       </p>
 
       <div className="mt-4 flex gap-2">
