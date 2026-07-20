@@ -4,7 +4,7 @@ export const BRAND_FAVICON = {
   32: '/brand/favicon-32.png',
   48: '/brand/favicon-48.png',
   180: '/brand/favicon-180.png',
-  256: '/brand/favicon-256.png',
+  256: '/brand/logo.png',
 } as const;
 
 /** Ícone principal (telas de auth, prévias grandes). */
