@@ -28,6 +28,7 @@ import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useAtividadesFlow, type AtividadesFluxoResumo } from '@/hooks/useAtividadesFlow';
+import { ATIVIDADES_MIN_DESCANSO } from '@shared/atividades';
 import { exerciseMediaUrl } from '@/lib/media';
 import {
   playBeep,
@@ -589,6 +590,9 @@ export function PlayerPage() {
             passo={passoAtual}
             totalPassos={atividadesFlow.totalFluxo}
             daXp={!atividadesFlow.diaDeTreino}
+            progressoHoje={atividadesFlow.concluidasHoje.size}
+            metaHoje={ATIVIDADES_MIN_DESCANSO}
+            cancelLabel="Fazer mais tarde"
             onCancel={cancelarAtividadesEncadeadas}
             onConfirm={(dados) =>
               void atividadesFlow.concluirPassoFila(dados, handleAtividadesEncadeadasConcluidas)

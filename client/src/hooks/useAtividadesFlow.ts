@@ -40,7 +40,6 @@ export function useAtividadesFlow() {
   const [busy, setBusy] = useState(false);
   const [passoFila, setPassoFila] = useState<number | null>(null);
   const [totalFluxo, setTotalFluxo] = useState(0);
-  const [avulsa, setAvulsa] = useState<AtividadeExtra | null>(null);
   const acumulado = useRef<{
     xp: number;
     moedas: number;
@@ -116,7 +115,6 @@ export function useAtividadesFlow() {
   const fecharFluxo = (): AtividadesFluxoResumo => {
     const resumo: AtividadesFluxoResumo = { ...acumulado.current };
     setPassoFila(null);
-    setAvulsa(null);
     acumulado.current = { xp: 0, moedas: 0, total: 0, streakCelebration: null, levelUp: null };
     return resumo;
   };
@@ -143,15 +141,13 @@ export function useAtividadesFlow() {
     onDone(fecharFluxo());
   };
 
-  const concluirAvulsa = async (
-    dados: AtividadeConclusao,
-    onDone: (resumo: AtividadesFluxoResumo) => void,
-  ) => {
-    if (!avulsa) return;
-    const ok = await enviarConclusao(avulsa, dados);
-    if (!ok) return;
-    onDone(fecharFluxo());
-  };
+  /**
+   * Conclui uma atividade escolhida livremente (fora da ordem estrita da
+   * fila) — não fecha o fluxo sozinha, quem chama decide (deixar aberto pra
+   * escolher outra, ou fechar quando o usuário terminar/sair).
+   */
+  const concluirEscolhida = (atividade: AtividadeExtra, dados: AtividadeConclusao) =>
+    enviarConclusao(atividade, dados);
 
   const atividadeDoPasso = passoFila != null ? filaPendente[passoFila] : null;
 
@@ -166,12 +162,10 @@ export function useAtividadesFlow() {
     filaPendente,
     passoFila,
     totalFluxo,
-    avulsa,
-    setAvulsa,
     atividadeDoPasso,
     iniciarFluxo,
     fecharFluxo,
     concluirPassoFila,
-    concluirAvulsa,
+    concluirEscolhida,
   };
 }

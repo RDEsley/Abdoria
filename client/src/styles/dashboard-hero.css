@@ -1038,38 +1038,22 @@
 /* Atividades (Início)                                                  */
 /* ------------------------------------------------------------------ */
 
-.atividades-progresso {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.75rem;
-}
-
-.atividades-progresso__barra {
-  position: relative;
-  flex: 1;
-  height: 0.5rem;
-  overflow: hidden;
-  background: #e7e5e4;
-  border-radius: 999px;
-}
-
-.atividades-progresso__fill {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #34d399, #059669);
-  border-radius: 999px;
-}
-
-.atividades-progresso__label {
-  flex-shrink: 0;
+/* Progresso do dia (mínimo de descanso) — mostrado só durante a conclusão
+   de uma atividade, não como barra fixa no card (poluía junto do medidor
+   de fila, que já é a barra "de verdade" daquela seção). */
+.atividade-progresso-dia {
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.7rem;
   font-size: 0.68rem;
-  font-weight: 800;
-  color: #78716c;
+  font-weight: 700;
+  color: #57534e;
+  background: #f5f5f4;
+  border-radius: 999px;
 }
 
-.atividades-progresso__label.is-done {
+.atividade-progresso-dia.is-done {
   color: #047857;
+  background: #d1fae5;
 }
 
 /* Altura travada em ~4 linhas e meia: com o teto de 30 atividades, a seção

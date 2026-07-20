@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, useAnimationControls } from 'framer-motion';
 import {
   DndContext,
   closestCenter,
@@ -36,35 +37,32 @@ import { updateMe } from '@/lib/api';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { useAtividadesFlow, type AtividadesFluxoResumo } from '@/hooks/useAtividadesFlow';
+import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
 import { playClick } from '@/lib/sounds';
 import { AtividadeFormModal } from './AtividadeFormModal';
-import { AtividadeCompleteModal } from './AtividadeCompleteModal';
-import { AtividadesCelebration } from './AtividadesCelebration';
 import { AtividadesAgendaModal } from './AtividadesAgendaModal';
 import {
   ATIVIDADES_CATALOGO,
   ATIVIDADES_LIMITE_MSG,
   ATIVIDADES_MAX,
-  ATIVIDADES_MIN_DESCANSO,
   type AtividadeExtra,
 } from '@shared/atividades';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
-import { resolveCosmeticos } from '@/types';
-
-interface Celebracao extends AtividadesFluxoResumo {
-  streak: number;
-}
 
 const FILA_MEDIDOR_MAX = 6;
 
-/** Reforço positivo crescente ao encher a fila — some depois de 6, sem mais nada a comemorar. */
+/**
+ * Reforço positivo crescente ao encher a fila — puramente função de `n`,
+ * então some sozinho se a quantidade cair pra um patamar sem mensagem (ex.:
+ * de 3 pra 1) e volta a aparecer se subir de novo. Nada de exclamação em
+ * excesso — frases curtas, naturais.
+ */
 function mensagemFila(n: number): string | null {
-  if (n === 2) return 'Isso mesmo, coloque mais atividades!';
-  if (n === 3) return 'Isso aí! Continue assim!';
-  if (n === 4) return 'Incrível, você é bem produtivo!';
-  if (n === 5) return 'Wow! Você vai fazer isso tudo?';
-  if (n >= 6) return 'Que incrível!';
+  if (n === 2) return 'Boa, mais uma!';
+  if (n === 3) return 'Isso aí, seguindo forte.';
+  if (n === 4) return 'Você tá com tudo hoje.';
+  if (n === 5) return 'Uau, que fôlego!';
+  if (n >= 6) return 'Lendário — nada te para.';
   return null;
 }
 
@@ -186,40 +184,27 @@ function SortableAtividadeItem({
 
 /**
  * Seção de Atividades do Início: a lista do usuário (criar/editar/excluir/
- * reordenar), a fila do dia e o fluxo sequencial de conclusão. A lógica de
- * negócio do fluxo em si (fila pendente, conclusão passo a passo) vem de
- * `useAtividadesFlow`, reaproveitada também no encadeamento pós-treino do
- * PlayerPage.
+ * reordenar) e a fila do dia. A conclusão em si acontece numa tela cheia
+ * própria (`/atividades-player`, mesma linguagem visual do Player) — este
+ * card só monta a fila e navega pra lá.
  *
  * Regra: em dia de descanso as atividades dão XP e sustentam a streak a
  * partir de `ATIVIDADES_MIN_DESCANSO`; em dia de treino elas só ficam
  * registradas (quem paga o dia é o treino).
  */
 export function AtividadesCard() {
-  const { user, stats, refresh } = useApp();
+  const { user, refresh } = useApp();
   const { applyUser } = useAuth();
+  const navigate = useNavigate();
   const flow = useAtividadesFlow();
 
   const [busy, setBusy] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [editando, setEditando] = useState<AtividadeExtra | 'nova' | null>(null);
   const [mostrarAgenda, setMostrarAgenda] = useState(false);
-  const [celebracao, setCelebracao] = useState<Celebracao | null>(null);
 
-  const {
-    atividades,
-    fila,
-    hojeNaAgenda,
-    diaDeTreino,
-    concluidasHoje,
-    filaPendente,
-    avulsa,
-    atividadeDoPasso,
-    passoFila,
-    totalFluxo,
-  } = flow;
+  const { atividades, fila, hojeNaAgenda, diaDeTreino, concluidasHoje, filaPendente } = flow;
 
-  const efeitoId = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp).efeito_equipado;
   const noLimite = atividades.length >= ATIVIDADES_MAX;
 
   /* ---------------- persistência (CRUD da lista) ---------------- */
@@ -303,34 +288,23 @@ export function AtividadesCard() {
     void salvarFila(naFila ? fila.filter((id) => id !== atividade.id) : [...fila, atividade.id]);
   };
 
-  /* ---------------- fluxo de conclusão ---------------- */
+  /* ---------------- medidor da fila ---------------- */
 
-  const handleFluxoConcluido = (resumo: AtividadesFluxoResumo) => {
-    if (resumo.total === 0) return;
-    setCelebracao({ ...resumo, streak: stats?.streak_atual ?? 0 });
-  };
-
-  const cancelarFluxo = () => {
-    const resumo = flow.fecharFluxo();
-    if (resumo.total > 0) {
-      showGameToast(
-        `${resumo.total} atividade(s) concluída(s). Faltam ${filaPendente.length}.`,
-        { variant: 'success' },
-      );
-    }
-  };
-
-  const cancelarAvulsa = () => {
-    const resumo = flow.fecharFluxo();
-    if (resumo.total > 0) {
-      showGameToast(`${resumo.total} atividade(s) concluída(s).`, { variant: 'success' });
-    }
-  };
+  // Pulso ao mudar a quantidade — imperativo (não `key`), pra nunca remontar
+  // o elemento: um remount por troca de contagem chegava a duplicar visualmente
+  // as barrinhas por uma fração de segundo em alguns navegadores.
+  const medidorControls = useAnimationControls();
+  const filaLenRef = useRef(filaPendente.length);
+  useEffect(() => {
+    if (filaPendente.length === filaLenRef.current) return;
+    filaLenRef.current = filaPendente.length;
+    void medidorControls.start({
+      scale: [0.94, 1],
+      transition: { type: 'spring', stiffness: 500, damping: 20 },
+    });
+  }, [filaPendente.length, medidorControls]);
 
   /* ---------------- render ---------------- */
-
-  const progressoDescanso = concluidasHoje.size;
-  const metaBatida = progressoDescanso >= ATIVIDADES_MIN_DESCANSO;
 
   return (
     <section className="glass-card p-4">
@@ -376,34 +350,15 @@ export function AtividadesCard() {
         {diaDeTreino
           ? 'Hoje é dia de treino: as atividades ficam registradas e podem liberar conquistas, mas o XP e a streak vêm do treino.'
           : hojeNaAgenda
-            ? `Dia de descanso: conclua ${ATIVIDADES_MIN_DESCANSO} atividades pra ganhar XP e manter sua sequência.`
+            ? 'Dia de descanso: escolha atividades pra ganhar XP e manter sua sequência.'
             : 'Atividades não agendadas para hoje — toque no calendário acima pra ajustar os dias.'}
       </p>
-
-      {!diaDeTreino && hojeNaAgenda && (
-        <div className="atividades-progresso" role="status">
-          <div className="atividades-progresso__barra">
-            <motion.span
-              className="atividades-progresso__fill"
-              animate={{
-                width: `${Math.min(100, (progressoDescanso / ATIVIDADES_MIN_DESCANSO) * 100)}%`,
-              }}
-            />
-          </div>
-          <span className={`atividades-progresso__label${metaBatida ? ' is-done' : ''}`}>
-            {metaBatida ? 'Meta do dia batida!' : `${progressoDescanso}/${ATIVIDADES_MIN_DESCANSO}`}
-          </span>
-        </div>
-      )}
 
       {filaPendente.length > 0 && !modoEdicao && hojeNaAgenda && (
         <div className="atividades-fila-cta mt-3">
           <motion.div
-            key={Math.min(filaPendente.length, FILA_MEDIDOR_MAX)}
             className={`atividades-fila-medidor atividades-fila-medidor--tier-${Math.min(filaPendente.length, FILA_MEDIDOR_MAX)}`}
-            initial={{ scale: 0.94 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+            animate={medidorControls}
           >
             {Array.from({ length: FILA_MEDIDOR_MAX }).map((_, i) => (
               <span
@@ -414,14 +369,9 @@ export function AtividadesCard() {
           </motion.div>
 
           {mensagemFila(filaPendente.length) && (
-            <motion.p
-              key={filaPendente.length}
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="atividades-fila-mensagem"
-            >
+            <p className="atividades-fila-mensagem">
               <Sparkles size={12} aria-hidden /> {mensagemFila(filaPendente.length)}
-            </motion.p>
+            </p>
           )}
 
           <GameButton
@@ -429,7 +379,7 @@ export function AtividadesCard() {
             disabled={busy}
             onClick={() => {
               playClick();
-              flow.iniciarFluxo();
+              navigate('/atividades-player');
             }}
           >
             Iniciar {filaPendente.length} atividade{filaPendente.length === 1 ? '' : 's'}
@@ -502,39 +452,6 @@ export function AtividadesCard() {
       )}
 
       {mostrarAgenda && <AtividadesAgendaModal onClose={() => setMostrarAgenda(false)} />}
-
-      {atividadeDoPasso && (
-        <AtividadeCompleteModal
-          atividade={atividadeDoPasso}
-          busy={flow.busy}
-          passo={(passoFila ?? 0) + 1}
-          totalPassos={totalFluxo}
-          daXp={!diaDeTreino}
-          onCancel={cancelarFluxo}
-          onConfirm={(dados) => void flow.concluirPassoFila(dados, handleFluxoConcluido)}
-        />
-      )}
-
-      {avulsa && (
-        <AtividadeCompleteModal
-          atividade={avulsa}
-          busy={flow.busy}
-          daXp={!diaDeTreino}
-          onCancel={cancelarAvulsa}
-          onConfirm={(dados) => void flow.concluirAvulsa(dados, handleFluxoConcluido)}
-        />
-      )}
-
-      {celebracao && (
-        <AtividadesCelebration
-          totalConcluidas={celebracao.total}
-          xpGanho={celebracao.xp}
-          moedasGanhas={celebracao.moedas}
-          streakAtual={celebracao.streak}
-          efeitoId={efeitoId}
-          onClose={() => setCelebracao(null)}
-        />
-      )}
     </section>
   );
 }

@@ -23,6 +23,81 @@
   box-shadow: var(--shadow-resting);
 }
 
+/* Player de Atividades: lista de escolha (o usuário decide qual fazer). */
+.atividades-player-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 28rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.atividades-player-item {
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  background: #fff;
+  border: var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-resting);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.atividades-player-item:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-raised);
+}
+
+.atividades-player-item:active {
+  transform: translate(1px, 1px);
+}
+
+.atividades-player-item__icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 0.75rem;
+}
+
+.atividades-player-item__text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.atividades-player-item__text strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #1c1917;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atividades-player-item__text small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.atividades-player-item__chevron {
+  flex-shrink: 0;
+  color: #a8a29e;
+}
+
 /* Contagem 3-2-1 antes de um exercício de tempo começar */
 .game-countdown-overlay {
   position: absolute;

@@ -27,6 +27,9 @@ export function AtividadeCompleteModal({
   passo,
   totalPassos,
   daXp,
+  progressoHoje,
+  metaHoje,
+  cancelLabel = 'Agora não',
   onCancel,
   onConfirm,
 }: {
@@ -37,6 +40,14 @@ export function AtividadeCompleteModal({
   totalPassos?: number;
   /** false = dia de treino, então a atividade não paga XP. */
   daXp: boolean;
+  /** Quantas atividades já concluídas hoje — junto de `metaHoje`, mostra o
+      progresso rumo ao mínimo do dia de descanso (substitui a barra fixa
+      que antes ficava sempre visível no card, poluindo a tela). */
+  progressoHoje?: number;
+  metaHoje?: number;
+  /** Some fluxos abortam tudo ao cancelar (ex.: "Fazer mais tarde" no
+      encadeamento pós-treino); outros só voltam pra lista de escolha. */
+  cancelLabel?: string;
   onCancel: () => void;
   onConfirm: (dados: AtividadeConclusao) => void;
 }) {
@@ -92,6 +103,17 @@ export function AtividadeCompleteModal({
         </h2>
         {atividade.descricao && (
           <p className="mt-1 text-sm font-medium text-stone-500">{atividade.descricao}</p>
+        )}
+        {daXp && metaHoje != null && progressoHoje != null && (
+          <p
+            className={`atividade-progresso-dia${progressoHoje >= metaHoje ? ' is-done' : ''}`}
+          >
+            {progressoHoje >= metaHoje
+              ? 'Meta do dia já batida — essa é só bônus!'
+              : `${progressoHoje}/${metaHoje} concluídas hoje · falta${
+                  metaHoje - progressoHoje === 1 ? '' : 'm'
+                } ${metaHoje - progressoHoje} pra garantir XP e sequência`}
+          </p>
         )}
       </div>
 
@@ -149,7 +171,7 @@ export function AtividadeCompleteModal({
         className="mt-3 block w-full cursor-pointer text-center text-xs font-bold text-stone-500 hover:text-stone-700"
         onClick={onCancel}
       >
-        Agora não
+        {cancelLabel}
       </button>
     </Modal>
   );
