@@ -96,7 +96,7 @@ export function buildBestiaryDropCatalog(
     xp: def('xp', '+1 XP'),
     abdoria: def('abdoria', `+1 ${currencyName}`),
     abdoria_golden: def('abdoria_golden', `+${AFK_GOLDEN_SLIME_MOEDA_BONUS} ${currencyName}`),
-    doria_bag: def('doria_bag', 'Bolsa de Dorias'),
+    doria_bag: def('doria_bag', 'Bolsa de Coins'),
     exp_instant: def('exp_instant', 'EXP Instantâneo'),
     frozen_streak: def('frozen_streak', 'Frozen Streak'),
     route_drink: def('route_drink', 'Route Drink'),

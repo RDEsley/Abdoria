@@ -12,6 +12,7 @@ import {
   touchAfkPresence,
 } from '../services/afk.js';
 import { readBestiaryResponse } from '../services/bestiario.js';
+import { DORIA_BAG_LABEL } from '../types/index.js';
 import {
   readInventarioSummary,
   usePatrolCache,
@@ -224,7 +225,7 @@ metaRouter.post('/inventory/doria-bag', async (req: AuthRequest, res) => {
     });
   } catch (error) {
     console.error('POST /api/meta/inventory/doria-bag error:', error);
-    res.status(500).json({ error: 'Erro ao usar Bolsa de Dorias.' });
+    res.status(500).json({ error: `Erro ao usar ${DORIA_BAG_LABEL}.` });
   }
 });
 

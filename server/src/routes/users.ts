@@ -3,13 +3,17 @@ import { User, sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
+  ADMIN_MOLDURA_ID,
+  CURRENCY_NAME,
   NAME_CHANGE_COST,
   calcImc,
   isBanimentoAtivo,
   suggestNivel,
   type MolduraId,
 } from '../types/index.js';
+import { syncAdminMoldura } from '../services/shop.js';
 import { Ratings } from '../repositories/rating-repository.js';
+import { Suggestions } from '../repositories/suggestion-repository.js';
 import { ensureMoedaWallet, readMoedaBalance } from '../services/economy.js';
 import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
 import { molduraStatusForUser } from '../services/molduras.js';
@@ -40,6 +44,16 @@ async function loadCurrentUser(userId: string) {
   return User.findById(userId, { lean: true });
 }
 
+/** true quando o estado da moldura de admin não bate com o papel atual. */
+function adminMolduraNeedsSync(user: {
+  role?: string | null;
+  cosmeticos?: { desbloqueados?: string[] } | null;
+}): boolean {
+  if (user.role === undefined) return false;
+  const tem = user.cosmeticos?.desbloqueados?.includes(ADMIN_MOLDURA_ID) ?? false;
+  return user.role === 'admin' ? !tem : tem;
+}
+
 usersRouter.get('/me', async (req: AuthRequest, res) => {
   try {
     const user = await loadCurrentUser(req.userId!);
@@ -52,10 +66,48 @@ usersRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
     await ensureUserTag(user);
+
+    // Promoção/rebaixamento feito direto no Supabase precisa refletir a moldura
+    // de admin já na primeira carga do perfil — reconcilia se estiver defasada.
+    if (adminMolduraNeedsSync(user)) {
+      const mutable = await User.findById(req.userId!);
+      if (mutable) {
+        syncAdminMoldura(mutable);
+        await mutable.save();
+        res.json(sanitizeUser(mutable));
+        return;
+      }
+    }
+
     res.json(sanitizeUser(user));
   } catch (error) {
     console.error('GET /api/users/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
+  }
+});
+
+/** Sugestão/opinião do app (popup de 7 dias de streak) — vai pro painel do ADM. */
+usersRouter.post('/me/suggestion', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const texto = String((req.body as { texto?: string }).texto ?? '')
+      .trim()
+      .slice(0, 800);
+    if (texto.length < 5) {
+      res.status(400).json({ error: 'Escreva pelo menos 5 caracteres.' });
+      return;
+    }
+    await Suggestions.create(user.id, censorProfanity(texto));
+    user.preferencias = { ...user.preferencias, sugestao_respondida: true };
+    await user.save();
+    res.json({ ok: true, user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('POST /api/users/me/suggestion error:', error);
+    res.status(500).json({ error: 'Erro ao enviar sugestão.' });
   }
 });
 
@@ -275,7 +327,7 @@ usersRouter.post('/me/moldura', async (req: AuthRequest, res) => {
   }
 });
 
-/** Troca de nome: a primeira é grátis, as seguintes custam NAME_CHANGE_COST Dorias. */
+/** Troca de nome: a primeira é grátis, as seguintes custam NAME_CHANGE_COST Coins. */
 usersRouter.post('/me/name', async (req: AuthRequest, res) => {
   try {
     const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : '';
@@ -302,7 +354,7 @@ usersRouter.post('/me/name', async (req: AuthRequest, res) => {
       const saldo = readMoedaBalance(user);
       if (saldo < NAME_CHANGE_COST) {
         res.status(400).json({
-          error: `Trocar de nome novamente custa ${NAME_CHANGE_COST.toLocaleString('pt-BR')} Dorias — saldo insuficiente.`,
+          error: `Trocar de nome novamente custa ${NAME_CHANGE_COST.toLocaleString('pt-BR')} ${CURRENCY_NAME} — saldo insuficiente.`,
         });
         return;
       }

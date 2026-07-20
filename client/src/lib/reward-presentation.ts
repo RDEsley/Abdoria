@@ -69,7 +69,7 @@ export function buildRewardPresentationFromAfk(
       kind: 'doria_bag',
       rarity: 'raro',
       name: DORIA_BAG_LABEL,
-      description: '4–21 Dorias ao usar',
+      description: `4–21 ${CURRENCY_NAME} ao usar`,
       amount: pending.doria_bags,
     });
   }

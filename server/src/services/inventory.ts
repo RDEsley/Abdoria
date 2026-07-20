@@ -1,6 +1,7 @@
 ﻿import type { UserRecord } from '../domain/User.js';
 import {
   DORIA_BAG_ITEM_ID,
+  DORIA_BAG_LABEL,
   DORIA_BAG_MAX,
   DORIA_BAG_MIN,
   EXP_INSTANT_ITEM_ID,
@@ -219,7 +220,7 @@ export function useDoriaBag(
 
   const available = getItemCount(user, DORIA_BAG_ITEM_ID);
   if (available < quantity) {
-    return { ok: false, error: 'Você não tem Bolsa de Dorias suficiente.' };
+    return { ok: false, error: `Você não tem ${DORIA_BAG_LABEL} suficiente.` };
   }
 
   if (!consumeInventoryItem(user, DORIA_BAG_ITEM_ID, quantity)) {

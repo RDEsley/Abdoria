@@ -24,6 +24,7 @@ import { useApp } from '@/hooks/useApp';
 import { useRewardPresentation } from '@/context/RewardPresentationContext';
 import type { AfkPendingReward } from '@/types';
 import {
+  CURRENCY_NAME,
   FROZEN_STREAK_LABEL,
   formatFrozenStreakDescription,
   DORIA_BAG_LABEL,
@@ -160,12 +161,12 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
       window.setTimeout(() => setCoinPops([]), 800);
       const label =
         res.quantity_used > 1
-          ? `${res.quantity_used} bolsas abertas · +${res.abdoria_ganha} Dorias!`
-          : `+${res.abdoria_ganha} Dorias da bolsa!`;
+          ? `${res.quantity_used} bolsas abertas · +${res.abdoria_ganha} ${CURRENCY_NAME}!`
+          : `+${res.abdoria_ganha} ${CURRENCY_NAME} da bolsa!`;
       showGameToast(label, { variant: 'success' });
       setSelected(null);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível usar Bolsa de Dorias.'), {
+      showGameToast(getErrorMessage(err, `Não foi possível usar ${DORIA_BAG_LABEL}.`), {
         variant: 'error',
       });
     } finally {
@@ -246,7 +247,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
           </h2>
           <p className="game-modal__text">
             Frozen Streak, Route Drink e EXP Instantâneo acumulam até {stackCap} unidades.
-            Excedentes viram Dorias.
+            Excedentes viram {CURRENCY_NAME}.
           </p>
 
           <div className="game-inventory-grid">
@@ -418,13 +419,13 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               >
                 <h3 className="game-inventory-detail__title">{DORIA_BAG_LABEL}</h3>
                 <p className="game-inventory-detail__desc">
-                  Cada bolsa concede entre {DORIA_BAG_MIN} e {DORIA_BAG_MAX} Dorias aleatórias. Você
-                  tem {doriaBagCount} em estoque.
+                  Cada bolsa concede entre {DORIA_BAG_MIN} e {DORIA_BAG_MAX} {CURRENCY_NAME}{' '}
+                  aleatórias. Você tem {doriaBagCount} em estoque.
                   {doriaBagCount > 1 && (
                     <>
                       {' '}
                       Abrir todas pode render de {doriaBagCount * DORIA_BAG_MIN} a{' '}
-                      {doriaBagCount * DORIA_BAG_MAX} Dorias.
+                      {doriaBagCount * DORIA_BAG_MAX} {CURRENCY_NAME}.
                     </>
                   )}
                 </p>
