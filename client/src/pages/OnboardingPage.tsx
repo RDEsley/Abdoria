@@ -1,14 +1,41 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import Lottie from 'lottie-react';
-import { ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
+import {
+  BicepsFlexed,
+  Cake,
+  Check,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Coins,
+  Compass,
+  Flame,
+  Gauge,
+  ListChecks,
+  PartyPopper,
+  Rocket,
+  Ruler,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
+  SkipForward,
+  SlidersHorizontal,
+  Swords,
+  UserCog,
+  Weight,
+} from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { useLottieAsset } from '@/hooks/useLottieAsset';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
+import { MiniErrorBoundary } from '@/components/ui/MiniErrorBoundary';
 import { TermsModal } from '@/components/legal/TermsModal';
+import { Chip, OptionCard, StepHeader } from '@/components/onboarding/OnboardingUI';
 import {
+  CicloOptionCard,
   EquipamentoStep,
   FocoStep,
   FrequenciaStep,
@@ -24,11 +51,10 @@ import {
 } from '@/components/onboarding/training-profile-draft';
 import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
+import { playClick, playCompleteSet, playSuccess } from '@/lib/sounds';
 import { digitsOnly, validateBodyMetrics } from '@/lib/utils';
 import {
   calcImc,
-  CICLO_LABELS,
-  CURRENCY_NAME,
   NIVEL_LABELS,
   normalizeCicloTreinos,
   suggestNivel,
@@ -77,6 +103,16 @@ const CICLOS_POR_FOCO: Record<string, TreinoBase[]> = {
   saude: ['D', 'E'],
 };
 
+const WEAPONS: {
+  id: ArmaPreferida;
+  label: string;
+  hint: string;
+  img: string;
+}[] = [
+  { id: 'arco', label: 'Arco', hint: 'Ataque à distância', img: '/assets/patrol-mascot-arco.png' },
+  { id: 'espada', label: 'Espada', hint: 'Combate corpo a corpo', img: '/assets/patrol-mascot-espada.png' },
+];
+
 const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
 const CHARACTER_LOTTIE_URL = '/assets/character-welcome.json';
 
@@ -88,41 +124,64 @@ function formatHoldDuration(totalSeconds: number): string {
   return seconds === 0 ? `${minutes}min` : `${minutes}min ${seconds}s`;
 }
 
-/** Confete de conclusão — Lottie, roda uma vez ao montar o passo final. */
+/** Máscara de exibição da altura: injeta o ponto decimal (metros) enquanto digita. */
+function formatAlturaMask(digits: string): string {
+  if (digits.length === 0) return '';
+  if (digits.length === 1) return digits;
+  return `${digits[0]}.${digits.slice(1)}`;
+}
+
+/**
+ * Confete de conclusão — Lottie, roda uma vez ao montar o passo final.
+ * Renderizado via portal em `document.body`: o passo fica dentro de vários
+ * `motion.div` animados (a troca de step usa `x`/`opacity`), e qualquer
+ * ancestral com `transform` ativo vira containing block pra `position:fixed`
+ * — sem o portal, o confete ficava preso ao card do passo em vez de cobrir
+ * a tela toda.
+ */
 function OnboardingConfetti() {
   const data = useLottieAsset(CONFETTI_LOTTIE_URL);
-  if (!data) return null;
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <Lottie animationData={data} loop={false} className="mx-auto h-full max-w-md" />
-    </div>
+  if (!data || typeof document === 'undefined') return null;
+  return createPortal(
+    <div className="pointer-events-none fixed inset-0 z-[70] overflow-hidden" aria-hidden>
+      <Lottie animationData={data} loop={false} className="mx-auto h-full max-w-lg" />
+    </div>,
+    document.body,
   );
 }
 
 /** Personagem animado de boas-vindas no passo final (Lottie) — cai pra um
-    selo estático se o arquivo ainda não carregou. */
+    medalhão ilustrado (não um emoji cru) se o arquivo ainda não carregou. */
 function OnboardingWelcomeCharacter() {
   const data = useLottieAsset(CHARACTER_LOTTIE_URL);
   return (
     <motion.div
-      className="relative z-10 mx-auto h-32 w-32"
+      className="onb-welcome-medal relative z-10 mx-auto"
       initial={{ scale: 0, rotate: -12 }}
       animate={{ scale: 1, rotate: 0 }}
       transition={{ type: 'spring', bounce: 0.55, duration: 0.8 }}
     >
+      <span className="onb-welcome-medal__ring" aria-hidden />
       {data ? (
-        <Lottie animationData={data} loop className="h-full w-full drop-shadow-lg" />
+        <Lottie
+          animationData={data}
+          loop
+          className="onb-welcome-medal__lottie"
+          rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
+        />
       ) : (
-        <span className="game-level-badge flex h-full w-full items-center justify-center text-3xl">
-          🎉
-        </span>
+        <PartyPopper size={40} className="onb-welcome-medal__icon" aria-hidden />
       )}
     </motion.div>
   );
 }
 
-const inputClass =
-  'rounded-xl border border-stone-300 bg-white px-4 py-3 font-medium text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20';
+const WELCOME_FALLBACK = (
+  <span className="onb-welcome-medal onb-welcome-medal--static relative z-10 mx-auto">
+    <span className="onb-welcome-medal__ring" aria-hidden />
+    <PartyPopper size={40} className="onb-welcome-medal__icon" aria-hidden />
+  </span>
+);
 
 export function OnboardingPage() {
   const { user, refreshUser, applyUser } = useAuth();
@@ -134,14 +193,14 @@ export function OnboardingPage() {
   const [peso, setPeso] = useState('');
   const [altura, setAltura] = useState('');
   const [nivel, setNivel] = useState<NivelUsuario | null>(null);
-  const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida>('arco');
+  const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida | null>(null);
   const [draft, setDraft] = useState<TrainingProfileDraft>(DEFAULT_TRAINING_DRAFT);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [cicloRecomendado, setCicloRecomendado] = useState(false);
   const [descanso, setDescanso] = useState(30);
   const [modo, setModo] = useState<'tempo' | 'reps'>('tempo');
   const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
-  const [esquemaRecomendado, setEsquemaRecomendado] = useState(true);
+  const [esquemaEscolha, setEsquemaEscolha] = useState<'recomendado' | 'personalizar' | null>(null);
   const [tempoHold, setTempoHold] = useState(30);
   const [invalid, setInvalid] = useState(false);
   const [shakeNonce, setShakeNonce] = useState(0);
@@ -154,12 +213,22 @@ export function OnboardingPage() {
   // só dispara quando shakeNonce realmente muda — nunca por causa do remount.
   const shakeControls = useAnimationControls();
   const lastShakeNonceRef = useRef(shakeNonce);
+  const progressPulseControls = useAnimationControls();
 
   useEffect(() => {
     if (shakeNonce === lastShakeNonceRef.current) return;
     lastShakeNonceRef.current = shakeNonce;
     void shakeControls.start({ x: [0, -8, 8, -6, 6, -3, 3, 0], transition: { duration: 0.4 } });
   }, [shakeNonce, shakeControls]);
+
+  // Pequeno pulso de reforço na barra de progresso a cada troca de passo —
+  // feedback visual leve (sem som) toda vez que o usuário avança ou volta.
+  useEffect(() => {
+    void progressPulseControls.start({
+      boxShadow: ['0 0 0 0 rgba(13, 148, 136, 0.55)', '0 0 0 6px rgba(13, 148, 136, 0)'],
+      transition: { duration: 0.5 },
+    });
+  }, [step, progressPulseControls]);
 
   const corpoTodo = draft.escopo === 'corpo_todo';
 
@@ -206,6 +275,9 @@ export function OnboardingPage() {
             : 'Obesidade';
 
   const nivelSugerido = bodyMetrics.idade && imc ? suggestNivel(bodyMetrics.idade, imc) : null;
+  // Só "personalizar" explícito muda o comportamento; "Pular" sem escolher
+  // (esquemaEscolha null) cai no automático, igual ao restante do fluxo skip.
+  const esquemaRecomendado = esquemaEscolha !== 'personalizar';
 
   const saveAndFinish = async (skip = false) => {
     setSaving(true);
@@ -228,7 +300,7 @@ export function OnboardingPage() {
           som_habilitado: true,
           sfx_volume: 0.7,
           tutorial_visto: false,
-          arma_preferida: armaPreferida,
+          arma_preferida: armaPreferida ?? 'arco',
           equipamentos: draft.equipamentos,
         },
       };
@@ -251,16 +323,20 @@ export function OnboardingPage() {
     if (stepId === 'terms' && !termsAccepted) return 'Aceite os termos para continuar.';
     if (stepId === 'body') return bodyMetrics.error;
     if (stepId === 'level' && !nivel) return 'Selecione seu nível de treino.';
+    if (stepId === 'weapon' && !armaPreferida) return 'Escolha seu estilo de combate.';
     if (stepId === 'scope' && !draft.escopo) return 'Escolha a sua missão.';
     if (stepId === 'foco' && !draft.foco) return 'Selecione seu foco.';
     if (stepId === 'partes' && draft.partes !== null && draft.partes.length === 0) {
-      return 'Escolha pelo menos uma parte do corpo, ou use o Recomendado.';
+      return 'Escolha pelo menos uma área, ou use a Distribuição automática.';
     }
     if (stepId === 'frequencia' && draft.diasSemana.length < 2) {
       return 'Escolha pelo menos 2 dias de treino.';
     }
     if (stepId === 'plano' && !corpoTodo && ciclo.length < 2) {
-      return 'Escolha pelo menos 2 ciclos de treino, ou use o Recomendado.';
+      return 'Escolha pelo menos 2 ciclos de treino, ou use a rotação recomendada.';
+    }
+    if (stepId === 'prefs' && esquemaEscolha === null) {
+      return 'Escolha uma opção pra continuar.';
     }
     return null;
   };
@@ -274,8 +350,13 @@ export function OnboardingPage() {
       return;
     }
     setInvalid(false);
-    if (step < steps.length - 1) setStep((s) => s + 1);
-    else void saveAndFinish(false);
+    if (step < steps.length - 1) {
+      playCompleteSet();
+      setStep((s) => s + 1);
+    } else {
+      playSuccess();
+      void saveAndFinish(false);
+    }
   };
 
   const skipStep = () => {
@@ -329,12 +410,15 @@ export function OnboardingPage() {
           </button>
         </div>
 
-        <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-stone-200">
+        <motion.div
+          className="mb-4 h-1.5 overflow-hidden rounded-full bg-stone-200"
+          animate={progressPulseControls}
+        >
           <motion.div
             className="h-full bg-teal-600"
             animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
           />
-        </div>
+        </motion.div>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -346,58 +430,72 @@ export function OnboardingPage() {
           >
             {stepId === 'terms' && (
               <>
-                <h2 className="text-2xl font-extrabold text-stone-900">Olá, {firstName}!</h2>
-                <p className="mt-2 text-stone-600">
-                  Vamos montar seu plano de treino como um personal faria. Aceite os termos para
-                  continuar.
-                </p>
-                {!termsAccepted && (
-                  <button
-                    type="button"
-                    onClick={() => setShowTerms(true)}
-                    className="mt-4 cursor-pointer text-sm font-bold text-emerald-600 underline"
-                  >
-                    Ler termos
-                  </button>
-                )}
+                <StepHeader
+                  icon={<Rocket size={22} />}
+                  title={`Bem-vindo, ${firstName}!`}
+                  subtitle="Vamos montar seu plano de treino em poucos passos — como se um personal trainer tivesse te avaliado. Leva menos de 2 minutos."
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowTerms(true)}
+                  className="mt-4 cursor-pointer text-sm font-bold text-emerald-600 underline"
+                >
+                  Ver termos e condições
+                </button>
               </>
             )}
 
             {stepId === 'body' && (
               <>
-                <h2 className="text-2xl font-extrabold">Seus dados</h2>
-                <p className="mt-1 text-sm text-stone-500">
-                  Opcional — ajuda a calcular IMC e sugerir treinos.
-                </p>
+                <StepHeader
+                  icon={<Ruler size={22} />}
+                  title="Seus dados"
+                  subtitle="Opcional — ajuda a calcular seu IMC e sugerir o nível de treino ideal."
+                />
                 <div className="mt-4 flex flex-col gap-3">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={idade}
-                    onChange={(e) => setIdade(digitsOnly(e.target.value))}
-                    placeholder="Idade (anos)"
-                    className={inputClass}
-                    maxLength={3}
-                  />
+                  <label className="onb-field">
+                    <span className="onb-field__icon" aria-hidden>
+                      <Cake size={16} />
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={idade}
+                      onChange={(e) => setIdade(digitsOnly(e.target.value))}
+                      placeholder="Idade"
+                      maxLength={3}
+                    />
+                    <span className="onb-field__suffix">anos</span>
+                  </label>
                   <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={peso}
-                      onChange={(e) => setPeso(digitsOnly(e.target.value))}
-                      placeholder="Peso (kg)"
-                      className={inputClass}
-                      maxLength={3}
-                    />
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={altura}
-                      onChange={(e) => setAltura(digitsOnly(e.target.value))}
-                      placeholder="Altura (cm)"
-                      className={inputClass}
-                      maxLength={3}
-                    />
+                    <label className="onb-field">
+                      <span className="onb-field__icon" aria-hidden>
+                        <Weight size={16} />
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={peso}
+                        onChange={(e) => setPeso(digitsOnly(e.target.value))}
+                        placeholder="Peso"
+                        maxLength={3}
+                      />
+                      <span className="onb-field__suffix">kg</span>
+                    </label>
+                    <label className="onb-field">
+                      <span className="onb-field__icon" aria-hidden>
+                        <Ruler size={16} />
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={formatAlturaMask(altura)}
+                        onChange={(e) => setAltura(digitsOnly(e.target.value).slice(0, 3))}
+                        placeholder="1.75"
+                        maxLength={4}
+                      />
+                      <span className="onb-field__suffix">m</span>
+                    </label>
                   </div>
                   {imc !== null && (
                     <div className="rounded-xl bg-emerald-50 p-4">
@@ -411,56 +509,72 @@ export function OnboardingPage() {
 
             {stepId === 'level' && (
               <>
-                <h2 className="text-2xl font-extrabold">Classe do herói</h2>
-                {nivelSugerido && (
-                  <p className="mt-1 text-sm text-stone-500">
-                    Sugestão com base nos seus dados: {NIVEL_LABELS[nivelSugerido]}
-                  </p>
-                )}
+                <StepHeader
+                  icon={<BicepsFlexed size={22} />}
+                  title="Seu nível de treino"
+                  subtitle={
+                    nivelSugerido
+                      ? `Sugestão com base nos seus dados: ${NIVEL_LABELS[nivelSugerido]}.`
+                      : 'Isso ajusta a intensidade das missões à capacidade do seu corpo hoje.'
+                  }
+                />
                 <div className="mt-4 flex flex-col gap-2">
-                  {(['iniciante', 'intermediario', 'avancado'] as NivelUsuario[]).map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setNivel(n)}
-                      className={`cursor-pointer rounded-xl border-2 px-4 py-3 text-left font-bold ${
-                        nivel === n
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                          : 'border-stone-200'
-                      }`}
-                    >
-                      {NIVEL_LABELS[n]}
-                    </button>
-                  ))}
+                  <OptionCard
+                    selected={nivel === 'iniciante'}
+                    onClick={() => setNivel('iniciante')}
+                    icon={<SignalLow size={18} />}
+                    title={NIVEL_LABELS.iniciante}
+                    subtitle="Pouca experiência ou voltando depois de um tempo parado — começamos leve."
+                  />
+                  <OptionCard
+                    selected={nivel === 'intermediario'}
+                    onClick={() => setNivel('intermediario')}
+                    icon={<SignalMedium size={18} />}
+                    title={NIVEL_LABELS.intermediario}
+                    subtitle="Já treina com regularidade e aguenta um ritmo mais puxado."
+                  />
+                  <OptionCard
+                    selected={nivel === 'avancado'}
+                    onClick={() => setNivel('avancado')}
+                    icon={<SignalHigh size={18} />}
+                    title={NIVEL_LABELS.avancado}
+                    subtitle="Treino é rotina — pode encarar cargas e intensidade máximas desde já."
+                  />
                 </div>
               </>
             )}
 
             {stepId === 'weapon' && (
               <>
-                <h2 className="text-2xl font-extrabold">Sua arma</h2>
-                <p className="mt-1 text-sm text-stone-500">
-                  Escolha o estilo de combate na Exploração AFK.
-                </p>
+                <StepHeader
+                  icon={<Swords size={22} />}
+                  title="Escolha seu estilo de combate"
+                  subtitle="Usado na Exploração AFK — sua patrulha luta sozinha nesse estilo enquanto você treina de verdade aqui fora."
+                />
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'arco' as const, label: 'Arco', hint: 'Ataque à distância' },
-                    { id: 'espada' as const, label: 'Espada', hint: 'Combate corpo a corpo' },
-                  ].map((weapon) => (
+                  {WEAPONS.map((weapon) => (
                     <button
                       key={weapon.id}
                       type="button"
-                      onClick={() => setArmaPreferida(weapon.id)}
-                      className={`cursor-pointer rounded-xl border-2 px-4 py-4 text-left font-bold ${
-                        armaPreferida === weapon.id
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                          : 'border-stone-200'
-                      }`}
+                      onClick={() => {
+                        playClick();
+                        setArmaPreferida(weapon.id);
+                      }}
+                      className={`onb-weapon-card${armaPreferida === weapon.id ? ' onb-weapon-card--selected' : ''}`}
                     >
-                      {weapon.label}
-                      <span className="mt-1 block text-xs font-medium text-stone-500">
-                        {weapon.hint}
-                      </span>
+                      <img
+                        src={weapon.img}
+                        alt=""
+                        className="onb-weapon-card__img"
+                        draggable={false}
+                      />
+                      <span className="onb-weapon-card__label">{weapon.label}</span>
+                      <span className="onb-weapon-card__hint">{weapon.hint}</span>
+                      {armaPreferida === weapon.id && (
+                        <span className="onb-weapon-card__check" aria-hidden>
+                          <Check size={13} strokeWidth={3} />
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -476,88 +590,70 @@ export function OnboardingPage() {
 
             {stepId === 'plano' && corpoTodo && (
               <>
-                <h2 className="text-2xl font-extrabold">Sua Campanha</h2>
-                <p className="mt-1 text-sm text-stone-500">
-                  {draft.frequencia} missões por semana, montadas pro seu foco. Dá pra ajustar
-                  depois nas configurações.
-                </p>
+                <StepHeader
+                  icon={<Compass size={22} />}
+                  title="Sua campanha"
+                  subtitle={`${draft.frequencia} missões por semana, montadas pro seu foco. Dá pra ajustar depois nas configurações.`}
+                />
                 <PlanoPreview draft={draft} />
               </>
             )}
 
             {stepId === 'plano' && !corpoTodo && (
               <>
-                <h2 className="text-2xl font-extrabold">Seu ciclo de treinos</h2>
-                <p className="mt-1 text-sm text-stone-500">
-                  Escolha pelo menos 2 ciclos ativos (A–G). Os treinos sugeridos alternam entre
-                  eles.
-                </p>
-                <button
-                  type="button"
+                <StepHeader
+                  icon={<ListChecks size={22} />}
+                  title="Seu ciclo de treinos"
+                  subtitle="Escolha pelo menos 2 ciclos ativos. Os treinos sugeridos alternam entre eles pra não repetir sempre a mesma missão."
+                />
+                <OptionCard
+                  className="mt-4"
+                  selected={cicloRecomendado}
                   onClick={usarCicloRecomendado}
-                  className={`mt-4 w-full cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
-                    cicloRecomendado ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                  }`}
-                >
-                  <span className="font-bold">⭐ Recomendado</span>
-                  <span className="mt-0.5 block text-xs font-medium text-stone-500">
-                    A gente monta a rotação ideal pro seu foco — treinos genéricos que evoluem com
-                    você.
-                  </span>
-                </button>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {CICLOS.map((c) => {
-                    const active = ciclo.includes(c);
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => toggleCiclo(c)}
-                        className={`cursor-pointer rounded-xl border-2 px-4 py-3 font-bold ${
-                          active ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                        }`}
-                      >
-                        {c} — {CICLO_LABELS[c]}
-                      </button>
-                    );
-                  })}
+                  title="Rotação ideal pro seu foco"
+                  subtitle="Treinos genéricos que evoluem com você — dá pra trocar quando quiser."
+                  recommended
+                />
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {CICLOS.map((c, i) => (
+                    <div
+                      key={c}
+                      className={
+                        i === CICLOS.length - 1 && CICLOS.length % 2 !== 0 ? 'col-span-2' : undefined
+                      }
+                    >
+                      <CicloOptionCard ciclo={c} active={ciclo.includes(c)} onClick={() => toggleCiclo(c)} />
+                    </div>
+                  ))}
                 </div>
               </>
             )}
 
             {stepId === 'prefs' && (
               <>
-                <h2 className="text-2xl font-extrabold">Ajustes finos</h2>
-                <p className="mt-1 text-sm text-stone-500">
-                  Exercícios de segurar (prancha, barra fixa) usam segundos; os demais usam
-                  repetições. Deixe no Recomendado que a gente ajusta pelo seu nível.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setEsquemaRecomendado(true)}
-                  className={`mt-4 w-full cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
-                    esquemaRecomendado ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                  }`}
-                >
-                  <span className="font-bold">⭐ Recomendado</span>
-                  <span className="mt-0.5 block text-xs font-medium text-stone-500">
-                    Repetições e tempos na medida do nível{' '}
-                    {nivel ? NIVEL_LABELS[nivel].toLowerCase() : 'iniciante'}. Dá pra mudar depois.
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEsquemaRecomendado(false)}
-                  className={`mt-2 w-full cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
-                    !esquemaRecomendado ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                  }`}
-                >
-                  <span className="font-bold">Personalizar</span>
-                  <span className="mt-0.5 block text-xs font-medium text-stone-500">
-                    Escolha você mesmo os tempos e repetições.
-                  </span>
-                </button>
-                {!esquemaRecomendado && (
+                <StepHeader
+                  icon={<SlidersHorizontal size={22} />}
+                  title="Como você quer treinar?"
+                  subtitle="Define quantas repetições ou segundos cada exercício pede. Exercícios de segurar (prancha, barra fixa) sempre usam tempo; os demais usam repetições."
+                />
+                <div className="mt-4 flex flex-col gap-2">
+                  <OptionCard
+                    selected={esquemaEscolha === 'recomendado'}
+                    onClick={() => setEsquemaEscolha('recomendado')}
+                    icon={<Gauge size={18} />}
+                    title="Deixar no automático"
+                    subtitle={`Repetições e tempos ajustados pro nível ${nivel ? NIVEL_LABELS[nivel].toLowerCase() : 'iniciante'}. Dá pra mudar quando quiser.`}
+                    recommended
+                  />
+                  <OptionCard
+                    selected={esquemaEscolha === 'personalizar'}
+                    onClick={() => setEsquemaEscolha('personalizar')}
+                    icon={<UserCog size={18} />}
+                    title="Personalizar agora"
+                    subtitle="Escolha você mesmo o tempo de prancha, as repetições por série e o descanso."
+                  />
+                </div>
+                {esquemaEscolha === 'personalizar' && (
                   <div className="mt-4">
                     <label className="block text-sm font-semibold">
                       Tempo nos exercícios de segurar: {formatHoldDuration(tempoHold)}
@@ -574,20 +670,14 @@ export function OnboardingPage() {
                     <p className="mt-4 mb-2 text-sm font-bold text-stone-700">
                       Repetições por série
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="onb-grid-2">
                       {REP_SCHEMES.map((scheme) => (
-                        <button
+                        <Chip
                           key={scheme.id}
-                          type="button"
+                          selected={repSchemeId === scheme.id}
                           onClick={() => setRepSchemeId(scheme.id)}
-                          className={`cursor-pointer rounded-xl border-2 px-3 py-2 text-sm font-bold ${
-                            repSchemeId === scheme.id
-                              ? 'border-emerald-500 bg-emerald-50'
-                              : 'border-stone-200'
-                          }`}
-                        >
-                          {scheme.label}
-                        </button>
+                          label={scheme.label}
+                        />
                       ))}
                     </div>
                     <label className="mt-4 block text-sm font-semibold">
@@ -601,18 +691,14 @@ export function OnboardingPage() {
                         className="mt-2 w-full cursor-pointer"
                       />
                     </label>
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 onb-grid-2">
                       {(['tempo', 'reps'] as const).map((m) => (
-                        <button
+                        <Chip
                           key={m}
-                          type="button"
+                          selected={modo === m}
                           onClick={() => setModo(m)}
-                          className={`flex-1 cursor-pointer rounded-xl border-2 py-3 font-bold ${
-                            modo === m ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-                          }`}
-                        >
-                          {m === 'tempo' ? 'Prefiro tempo' : 'Prefiro repetições'}
-                        </button>
+                          label={m === 'tempo' ? 'Prefiro tempo' : 'Prefiro repetições'}
+                        />
                       ))}
                     </div>
                   </div>
@@ -622,10 +708,25 @@ export function OnboardingPage() {
 
             {stepId === 'tutorial' && (
               <div className="relative text-center">
-                <OnboardingConfetti />
-                <OnboardingWelcomeCharacter />
+                <MiniErrorBoundary>
+                  <OnboardingConfetti />
+                </MiniErrorBoundary>
+
+                <motion.span
+                  className="onb-welcome-pill relative z-10"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                >
+                  <CheckCircle2 size={12} aria-hidden /> Perfil pronto
+                </motion.span>
+
+                <MiniErrorBoundary fallback={WELCOME_FALLBACK}>
+                  <OnboardingWelcomeCharacter />
+                </MiniErrorBoundary>
+
                 <motion.h2
-                  className="mt-3 text-2xl font-extrabold"
+                  className="onb-welcome-title relative z-10"
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
@@ -633,22 +734,45 @@ export function OnboardingPage() {
                   Boas-vindas, {firstName}!
                 </motion.h2>
                 <motion.p
-                  className="mt-2 truncate text-sm font-semibold text-emerald-700"
+                  className="relative z-10 mt-1 text-sm font-semibold text-emerald-700"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.45 }}
+                  transition={{ delay: 0.4 }}
                 >
                   Sua jornada começa agora!
                 </motion.p>
+
                 <motion.ul
-                  className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-stone-700"
+                  className="onb-welcome-list relative z-10"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.55 }}
                 >
-                  <li>💪 Treine e ganhe XP todo dia.</li>
-                  <li>🪙 Ganhe {CURRENCY_NAME} treinando e suba no ranking semanal.</li>
-                  <li>🔥 Mantenha a sequência — nos dias de descanso, um aquecimento leve conta.</li>
+                  <li>
+                    <span className="onb-welcome-list__icon onb-welcome-list__icon--xp" aria-hidden>
+                      <Rocket size={15} />
+                    </span>
+                    Treine e ganhe XP todo dia.
+                  </li>
+                  <li>
+                    <span
+                      className="onb-welcome-list__icon onb-welcome-list__icon--coins"
+                      aria-hidden
+                    >
+                      <Coins size={15} />
+                    </span>
+                    Ganhe Moedas treinando e suba no ranking semanal.
+                  </li>
+                  <li>
+                    <span
+                      className="onb-welcome-list__icon onb-welcome-list__icon--streak"
+                      aria-hidden
+                    >
+                      <Flame size={15} />
+                    </span>
+                    Nos dias de descanso, um aquecimento leve ou uma Atividade (leitura, corrida,
+                    meditação...) mantêm sua sequência.
+                  </li>
                 </motion.ul>
               </div>
             )}

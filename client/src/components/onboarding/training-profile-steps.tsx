@@ -1,18 +1,35 @@
+import type { ReactNode } from 'react';
+import {
+  CalendarDays,
+  Dumbbell,
+  Flame,
+  Gauge,
+  HeartPulse,
+  Layers,
+  PackageOpen,
+  PersonStanding,
+  ShieldAlert,
+  Timer,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 import { EQUIPMENT_CATALOG } from '@shared/equipment';
 import { buildPlanoTreino } from '@shared/training-plan';
 import {
-  ESCOPO_LABELS,
+  CICLO_HINTS,
+  CICLO_LABELS,
   FOCO_HINTS,
   FOCO_LABELS,
   PARTE_CORPO_LABELS,
   PARTE_CORPO_ORDER,
   RESTRICAO_LABELS,
-  type EscopoTreino,
   type Foco,
   type ParteCorpo,
   type PerfilTreino,
   type RestricaoFisica,
+  type TreinoBase,
 } from '@/types';
+import { Chip, OptionCard, StepHeader } from './OnboardingUI';
 import { draftToPerfilTreino, type TrainingProfileDraft } from './training-profile-draft';
 
 interface StepProps {
@@ -20,105 +37,61 @@ interface StepProps {
   onChange: (patch: Partial<TrainingProfileDraft>) => void;
 }
 
-const cardClass = (active: boolean) =>
-  `cursor-pointer rounded-xl border-2 px-4 py-3 text-left ${
-    active ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200'
-  }`;
-
-const ESCOPO_HINTS: Record<EscopoTreino, string> = {
-  abdomen: 'Missões focadas no core — o clássico Abdoria.',
-  corpo_todo: 'Um plano completo de casa: pernas, peito, costas e mais.',
-};
-
 export function ScopeStep({ draft, onChange }: StepProps) {
-  const areasSelecionadas = draft.escopo === 'corpo_todo' && draft.partes !== null;
-  const toggleArea = (parte: ParteCorpo) => {
-    const current = areasSelecionadas ? (draft.partes ?? []) : [];
-    const next = current.includes(parte) ? current.filter((p) => p !== parte) : [...current, parte];
-    onChange({
-      escopo: next.length > 0 ? 'corpo_todo' : null,
-      partes: next.length > 0 ? next : null,
-      missaoRecomendada: false,
-    });
-  };
-
   return (
     <>
-      <h2 className="text-2xl font-extrabold">Qual é a sua missão?</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        As missões usam só exercícios possíveis com o equipamento que você marcou.
-      </p>
+      <StepHeader
+        icon={<Layers size={22} />}
+        title="Qual é a sua missão?"
+        subtitle="As missões usam só exercícios possíveis com o equipamento que você marcou. Dá pra mudar depois, nas configurações."
+      />
       <div className="mt-4 flex flex-col gap-2">
-        <button
-          type="button"
+        <OptionCard
+          selected={draft.escopo === 'abdomen'}
           onClick={() => onChange({ escopo: 'abdomen', partes: null, missaoRecomendada: true })}
-          className={cardClass(draft.missaoRecomendada)}
-        >
-          <span className="font-bold">⭐ Recomendado</span>
-          <span className="mt-0.5 block text-xs font-medium text-stone-500">
-            Core em primeiro lugar — o caminho clássico do Abdoria.
-          </span>
-        </button>
-        {(['abdomen', 'corpo_todo'] as EscopoTreino[]).map((escopo) => (
-          <button
-            key={escopo}
-            type="button"
-            onClick={() => onChange({ escopo, partes: null, missaoRecomendada: false })}
-            className={cardClass(
-              !draft.missaoRecomendada && draft.escopo === escopo && !areasSelecionadas,
-            )}
-          >
-            <span className="font-bold">{ESCOPO_LABELS[escopo]}</span>
-            <span className="mt-0.5 block text-xs font-medium text-stone-500">
-              {ESCOPO_HINTS[escopo]}
-            </span>
-          </button>
-        ))}
+          icon={<Flame size={18} />}
+          title="Só abdômen"
+          subtitle="Core em primeiro lugar — o caminho clássico do Abdoria."
+          recommended
+        />
+        <OptionCard
+          selected={draft.escopo === 'corpo_todo'}
+          onClick={() => onChange({ escopo: 'corpo_todo', partes: null, missaoRecomendada: false })}
+          icon={<Layers size={18} />}
+          title="Corpo todo"
+          subtitle="Um plano completo de casa: pernas, peito, costas e mais — sem largar o abdômen."
+        />
       </div>
-      <p className="mt-4 mb-2 text-sm font-bold text-stone-700">Ou escolha as áreas que quer treinar</p>
-      <div className="flex flex-wrap gap-2">
-        {PARTE_CORPO_ORDER.filter((p) => p !== 'abdomen').map((parte) => (
-          <button
-            key={parte}
-            type="button"
-            onClick={() => toggleArea(parte)}
-            className={`cursor-pointer rounded-xl border-2 px-4 py-2 font-bold ${
-              areasSelecionadas && draft.partes?.includes(parte)
-                ? 'border-emerald-500 bg-emerald-50'
-                : 'border-stone-200'
-            }`}
-          >
-            {PARTE_CORPO_LABELS[parte]}
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-xs text-stone-400">
-        O abdômen entra em toda missão. Dá pra mudar depois, nas configurações.
-      </p>
     </>
   );
 }
 
+const FOCO_ICONS: Record<Foco, ReactNode> = {
+  definicao: <Zap size={18} />,
+  forca: <Dumbbell size={18} />,
+  resistencia: <Timer size={18} />,
+  hipertrofia: <TrendingUp size={18} />,
+  saude: <HeartPulse size={18} />,
+};
+
 export function FocoStep({ draft, onChange }: StepProps) {
   return (
     <>
-      <h2 className="text-2xl font-extrabold">Seu foco</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        Define séries, repetições e descanso das missões.
-      </p>
+      <StepHeader
+        icon={<Gauge size={22} />}
+        title="Qual é o seu foco?"
+        subtitle="Isso define séries, repetições e descanso das suas missões."
+      />
       <div className="mt-4 flex flex-col gap-2">
         {(Object.keys(FOCO_LABELS) as Foco[]).map((foco) => (
-          <button
+          <OptionCard
             key={foco}
-            type="button"
+            selected={draft.foco === foco}
             onClick={() => onChange({ foco })}
-            className={cardClass(draft.foco === foco)}
-          >
-            <span className="font-bold">{FOCO_LABELS[foco]}</span>
-            <span className="mt-0.5 block text-xs font-medium text-stone-500">
-              {FOCO_HINTS[foco]}
-            </span>
-          </button>
+            icon={FOCO_ICONS[foco]}
+            title={FOCO_LABELS[foco]}
+            subtitle={FOCO_HINTS[foco]}
+          />
         ))}
       </div>
     </>
@@ -130,39 +103,32 @@ export function PartesStep({ draft, onChange }: StepProps) {
   const togglePart = (parte: ParteCorpo) => {
     const current = partes ?? [];
     const next = current.includes(parte) ? current.filter((p) => p !== parte) : [...current, parte];
-    onChange({ partes: next });
+    onChange({ partes: next, partesTocado: true });
   };
 
   return (
     <>
-      <h2 className="text-2xl font-extrabold">Partes do corpo</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        O abdômen entra em toda missão — é o coração do Abdoria.
-      </p>
-      <button
-        type="button"
-        onClick={() => onChange({ partes: null })}
-        className={`mt-4 w-full ${cardClass(partes === null)}`}
-      >
-        <span className="font-bold">⭐ Recomendado</span>
-        <span className="mt-0.5 block text-xs font-medium text-stone-500">
-          A gente monta a distribuição ideal a partir do seu foco.
-        </span>
-      </button>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <StepHeader
+        icon={<Layers size={22} />}
+        title="Quais áreas, além do abdômen?"
+        subtitle="O abdômen entra em toda missão — é o coração do Abdoria."
+      />
+      <OptionCard
+        className="mt-4"
+        selected={partes === null && draft.partesTocado}
+        onClick={() => onChange({ partes: null, partesTocado: true })}
+        title="Distribuição automática"
+        subtitle="A gente monta a distribuição ideal a partir do seu foco."
+        recommended
+      />
+      <div className="onb-grid-2 mt-3">
         {PARTE_CORPO_ORDER.filter((p) => p !== 'abdomen').map((parte) => (
-          <button
+          <Chip
             key={parte}
-            type="button"
+            selected={draft.partesTocado && (partes?.includes(parte) ?? false)}
             onClick={() => togglePart(parte)}
-            className={`rounded-xl border-2 px-4 py-2 font-bold ${
-              partes?.includes(parte)
-                ? 'cursor-pointer border-emerald-500 bg-emerald-50'
-                : 'cursor-pointer border-stone-200'
-            }`}
-          >
-            {PARTE_CORPO_LABELS[parte]}
-          </button>
+            label={PARTE_CORPO_LABELS[parte]}
+          />
         ))}
       </div>
     </>
@@ -188,23 +154,22 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
 
   return (
     <>
-      <h2 className="text-2xl font-extrabold">Sua rotina</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        Em quais dias da semana você vai treinar? Nos outros, a gente sugere um aquecimento leve
-        pra manter a sequência sem atrapalhar o descanso.
-      </p>
-      <button
-        type="button"
+      <StepHeader
+        icon={<CalendarDays size={22} />}
+        title="Sua rotina semanal"
+        subtitle="Em quais dias você vai treinar? Nos outros, sugerimos um aquecimento leve ou uma Atividade (leitura, corrida, meditação...) pra manter a sequência sem atrapalhar o descanso."
+      />
+      <OptionCard
+        className="mt-4"
+        selected={sameDays(draft.diasSemana, DIAS_RECOMENDADOS)}
         onClick={() =>
           onChange({ diasSemana: [...DIAS_RECOMENDADOS], frequencia: DIAS_RECOMENDADOS.length })
         }
-        className={`mt-4 w-full ${cardClass(sameDays(draft.diasSemana, DIAS_RECOMENDADOS))}`}
-      >
-        <span className="font-bold">⭐ Recomendado — 4 dias</span>
-        <span className="mt-0.5 block text-xs font-medium text-stone-500">
-          Seg · Qua · Sex · Sáb — treino e descanso bem distribuídos.
-        </span>
-      </button>
+        icon={<Flame size={18} />}
+        title="4 dias — Seg · Qua · Sex · Sáb"
+        subtitle="Treino e descanso bem distribuídos na semana."
+        recommended
+      />
       <div className="mt-3 grid grid-cols-7 gap-1.5">
         {DIA_LABELS.map((label, dia) => (
           <button
@@ -222,6 +187,25 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
           </button>
         ))}
       </div>
+      {draft.diasSemana.length > 4 && (
+        <div
+          className="mt-3 flex items-start gap-2.5 rounded-xl border-2 border-sky-200 bg-sky-50 p-3"
+          role="note"
+        >
+          <span
+            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600"
+            aria-hidden
+          >
+            💤
+          </span>
+          <p className="text-xs font-semibold leading-relaxed text-sky-900">
+            <strong>{draft.diasSemana.length} dias é bastante!</strong> O descanso faz parte do
+            resultado — é nele que o músculo se reconstrói. Se preferir, treine menos dias e
+            preencha os outros com <strong>Atividades</strong> (leitura, corrida, meditação...)
+            que mantêm sua sequência sem comprometer a recuperação.
+          </p>
+        </div>
+      )}
       <p className="mt-5 mb-2 text-sm font-bold text-stone-700">Tempo por treino</p>
       <div className="grid grid-cols-4 gap-2">
         {TEMPOS.map((tempo) => (
@@ -244,37 +228,36 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
 }
 
 export function EquipamentoStep({ draft, onChange }: StepProps) {
-  const nenhum = Object.values(draft.equipamentos).every((v) => !v);
   return (
     <>
-      <h2 className="text-2xl font-extrabold">Equipamento em casa</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        Marca o que você tem — cada item desbloqueia exercícios no catálogo.
-      </p>
+      <StepHeader
+        icon={<PackageOpen size={22} />}
+        title="Equipamento em casa"
+        subtitle="Marca o que você tem — cada item desbloqueia exercícios novos no catálogo."
+      />
       <div className="mt-4 flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => onChange({ equipamentos: {} })}
-          className={cardClass(nenhum)}
-        >
-          <span className="font-bold">Nenhum, só o peso do corpo</span>
-        </button>
+        <OptionCard
+          selected={draft.equipamentoNenhum}
+          onClick={() => onChange({ equipamentos: {}, equipamentoNenhum: true })}
+          icon={<PersonStanding size={18} />}
+          title="Nenhum, só o peso do corpo"
+        />
         {EQUIPMENT_CATALOG.map((item) => {
           const owned = Boolean(draft.equipamentos[item.id]);
           return (
-            <button
+            <OptionCard
               key={item.id}
-              type="button"
+              selected={owned}
               onClick={() =>
-                onChange({ equipamentos: { ...draft.equipamentos, [item.id]: !owned } })
+                onChange({
+                  equipamentos: { ...draft.equipamentos, [item.id]: !owned },
+                  equipamentoNenhum: false,
+                })
               }
-              className={cardClass(owned)}
-            >
-              <span className="font-bold">{item.nome}</span>
-              <span className="mt-0.5 block text-xs font-medium text-stone-500">
-                {item.descricao}
-              </span>
-            </button>
+              icon={<Dumbbell size={18} />}
+              title={item.nome}
+              subtitle={item.descricao}
+            />
           );
         })}
       </div>
@@ -292,34 +275,25 @@ export function RestricoesStep({ draft, onChange }: StepProps) {
   };
   return (
     <>
-      <h2 className="text-2xl font-extrabold">Alguma região sensível?</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        Exercícios que forçam essas regiões saem das recomendações.
-      </p>
-      <div className="mt-4 flex flex-col gap-2">
-        <button
-          type="button"
+      <StepHeader
+        icon={<ShieldAlert size={22} />}
+        title="Alguma região sensível?"
+        subtitle="Exercícios que forçam essas regiões saem das suas recomendações."
+      />
+      <div className="onb-grid-2 mt-4">
+        <Chip
+          selected={draft.restricoes.length === 0}
           onClick={() => onChange({ restricoes: [] })}
-          className={cardClass(draft.restricoes.length === 0)}
-        >
-          <span className="font-bold">Nenhuma</span>
-        </button>
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.keys(RESTRICAO_LABELS) as RestricaoFisica[]).map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => toggle(r)}
-              className={`rounded-xl border-2 px-3 py-3 text-center font-bold ${
-                draft.restricoes.includes(r)
-                  ? 'cursor-pointer border-emerald-500 bg-emerald-50'
-                  : 'cursor-pointer border-stone-200'
-              }`}
-            >
-              {RESTRICAO_LABELS[r]}
-            </button>
-          ))}
-        </div>
+          label="Nenhuma"
+        />
+        {(Object.keys(RESTRICAO_LABELS) as RestricaoFisica[]).map((r) => (
+          <Chip
+            key={r}
+            selected={draft.restricoes.includes(r)}
+            onClick={() => toggle(r)}
+            label={RESTRICAO_LABELS[r]}
+          />
+        ))}
       </div>
       <p className="mt-4 text-xs text-stone-400">
         Isso não substitui orientação médica — se sente dor, procure um profissional de saúde.
@@ -351,5 +325,25 @@ export function PlanoPreview({ draft }: { draft: TrainingProfileDraft }) {
         Os exercícios de cada missão variam conforme seu equipamento e histórico.
       </p>
     </div>
+  );
+}
+
+/** Card de ciclo de treino (A–G) — usado no passo "Seu ciclo de treinos" do onboarding. */
+export function CicloOptionCard({
+  ciclo,
+  active,
+  onClick,
+}: {
+  ciclo: TreinoBase;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <OptionCard
+      selected={active}
+      onClick={onClick}
+      title={`${ciclo} — ${CICLO_LABELS[ciclo]}`}
+      subtitle={CICLO_HINTS[ciclo]}
+    />
   );
 }

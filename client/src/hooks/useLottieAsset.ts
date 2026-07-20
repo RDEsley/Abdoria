@@ -19,10 +19,14 @@ export function useLottieAsset(url: string): unknown | null {
     let request = inflight.get(url);
     if (!request) {
       request = fetch(url)
-        .then((res) => res.json())
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
         .then((json) => {
           cache.set(url, json);
           return json;
+        })
+        .catch((error: unknown) => {
+          console.error(`useLottieAsset: falha ao carregar ${url}`, error);
+          return null;
         })
         .finally(() => {
           inflight.delete(url);

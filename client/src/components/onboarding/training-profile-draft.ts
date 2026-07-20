@@ -9,11 +9,15 @@ export interface TrainingProfileDraft {
   foco: Foco | null;
   /** null = card "Recomendado" selecionado. */
   partes: ParteCorpo[] | null;
+  /** true = usuário já interagiu com a escolha de partes (evita destacar "Recomendado" sem ação do usuário). */
+  partesTocado: boolean;
   frequencia: number;
   /** Dias fixos de treino (0=Dom..6=Sáb); [] = ainda não escolhido. */
   diasSemana: number[];
   tempoSessao: PerfilTreino['tempo_por_sessao_min'];
   equipamentos: Partial<Record<EquipmentId, boolean>>;
+  /** true = usuário escolheu explicitamente "Nenhum equipamento" (evita destacar isso sem ação do usuário). */
+  equipamentoNenhum: boolean;
   restricoes: RestricaoFisica[];
 }
 
@@ -22,10 +26,12 @@ export const DEFAULT_TRAINING_DRAFT: TrainingProfileDraft = {
   missaoRecomendada: false,
   foco: null,
   partes: null,
+  partesTocado: false,
   frequencia: 3,
   diasSemana: [],
   tempoSessao: 20,
   equipamentos: {},
+  equipamentoNenhum: false,
   restricoes: [],
 };
 
@@ -56,10 +62,12 @@ export function perfilToDraft(
     missaoRecomendada: false,
     foco: perfil.foco,
     partes: perfil.partes,
+    partesTocado: true,
     frequencia: perfil.frequencia_semanal,
     diasSemana: perfil.dias_semana ?? [],
     tempoSessao: perfil.tempo_por_sessao_min,
     equipamentos,
+    equipamentoNenhum: Object.values(equipamentos).every((v) => !v),
     restricoes: perfil.restricoes,
   };
 }

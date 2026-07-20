@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -36,11 +36,38 @@ export function TrainingProfileModal({ open, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [invalid, setInvalid] = useState(false);
   const [shakeNonce, setShakeNonce] = useState(0);
-  const [draft, setDraft] = useState<TrainingProfileDraft>(() =>
-    user?.perfil_treino
-      ? perfilToDraft(user.perfil_treino, user.preferencias?.equipamentos ?? {})
-      : { ...DEFAULT_TRAINING_DRAFT, equipamentos: user?.preferencias?.equipamentos ?? {} },
-  );
+  const [draft, setDraft] = useState<TrainingProfileDraft>(() => {
+    if (user?.perfil_treino) {
+      return perfilToDraft(user.perfil_treino, user.preferencias?.equipamentos ?? {});
+    }
+    const equipamentos = user?.preferencias?.equipamentos ?? {};
+    return {
+      ...DEFAULT_TRAINING_DRAFT,
+      equipamentos,
+      equipamentoNenhum: Object.values(equipamentos).every((v) => !v),
+    };
+  });
+
+  // Este modal fica sempre montado (só `open` muda) — sem isso, reabrir
+  // depois de qualquer atualização de perfil (ex.: refeito o onboarding)
+  // continuava mostrando o rascunho capturado na primeira montagem.
+  useEffect(() => {
+    if (!open) return;
+    setDraft(
+      user?.perfil_treino
+        ? perfilToDraft(user.perfil_treino, user.preferencias?.equipamentos ?? {})
+        : {
+            ...DEFAULT_TRAINING_DRAFT,
+            equipamentos: user?.preferencias?.equipamentos ?? {},
+            equipamentoNenhum: Object.values(user?.preferencias?.equipamentos ?? {}).every(
+              (v) => !v,
+            ),
+          },
+    );
+    setStep(0);
+    setInvalid(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao abrir, não a cada edição de `user`
+  }, [open]);
 
   const corpoTodo = draft.escopo === 'corpo_todo';
   const steps = useMemo<StepId[]>(
@@ -109,8 +136,13 @@ export function TrainingProfileModal({ open, onClose }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy="training-profile-modal-title">
-      <div className="mb-3 flex items-center justify-between">
+    <Modal
+      open={open}
+      onClose={onClose}
+      labelledBy="training-profile-modal-title"
+      panelClassName="training-profile-modal"
+    >
+      <div className="training-profile-modal__head">
         <p id="training-profile-modal-title" className="text-sm font-bold text-teal-700">
           Meu plano de treino · {step + 1}/{steps.length}
         </p>
@@ -124,33 +156,35 @@ export function TrainingProfileModal({ open, onClose }: Props) {
         </button>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stepId}
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -24 }}
-          className={invalid ? 'onb-invalid' : undefined}
-        >
-          {stepId === 'scope' && <ScopeStep draft={draft} onChange={patchDraft} />}
-          {stepId === 'foco' && <FocoStep draft={draft} onChange={patchDraft} />}
-          {stepId === 'partes' && <PartesStep draft={draft} onChange={patchDraft} />}
-          {stepId === 'frequencia' && <FrequenciaStep draft={draft} onChange={patchDraft} />}
-          {stepId === 'equipamento' && <EquipamentoStep draft={draft} onChange={patchDraft} />}
-          {stepId === 'restricoes' && <RestricoesStep draft={draft} onChange={patchDraft} />}
-          {stepId === 'plano' && (
-            <>
-              <h2 className="text-2xl font-extrabold">Sua Campanha</h2>
-              <p className="mt-1 text-sm text-stone-500">
-                {draft.frequencia} missões por semana, montadas pro seu foco.
-              </p>
-              <PlanoPreview draft={draft} />
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <div className="training-profile-modal__body">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stepId}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            className={invalid ? 'onb-invalid' : undefined}
+          >
+            {stepId === 'scope' && <ScopeStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'foco' && <FocoStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'partes' && <PartesStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'frequencia' && <FrequenciaStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'equipamento' && <EquipamentoStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'restricoes' && <RestricoesStep draft={draft} onChange={patchDraft} />}
+            {stepId === 'plano' && (
+              <>
+                <h2 className="text-2xl font-extrabold">Sua Campanha</h2>
+                <p className="mt-1 text-sm text-stone-500">
+                  {draft.frequencia} missões por semana, montadas pro seu foco.
+                </p>
+                <PlanoPreview draft={draft} />
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      <div className="mt-6 flex gap-3">
+      <div className="training-profile-modal__footer">
         {step > 0 && (
           <GameButton
             type="button"
