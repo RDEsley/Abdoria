@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { useLottie } from 'lottie-react';
 import { ChevronRight, Coins, Flame, ListChecks, Snowflake, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
@@ -8,6 +7,7 @@ import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { MiniErrorBoundary } from '@/components/ui/MiniErrorBoundary';
+import { LottieView } from '@/components/ui/LottieView';
 import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { useApp } from '@/hooks/useApp';
 import { useLottieAsset } from '@/hooks/useLottieAsset';
@@ -19,14 +19,6 @@ import type { XpBreakdown } from '@/types';
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
 const SUCESSO_LOTTIE_URL = '/assets/Sucesso.json';
-
-function LottieView({ data, loop }: { data: unknown | null; loop: boolean }) {
-  const { View } = useLottie(
-    { animationData: data ?? undefined, loop },
-    { width: '100%', height: '100%' },
-  );
-  return View;
-}
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('pt-BR', {
@@ -78,6 +70,8 @@ interface Props {
   rodadaBusy: boolean;
   onRodadaKeep: () => void;
   onRodadaSwap: () => void;
+  /** Nota pequena abaixo das recompensas (ex.: lembrete de calendário). */
+  footnote?: ReactNode;
 }
 
 /**
@@ -101,6 +95,7 @@ export function WorkoutVictoryScreen({
   rodadaBusy,
   onRodadaKeep,
   onRodadaSwap,
+  footnote,
 }: Props) {
   const { history, stats, user } = useApp();
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -240,12 +235,13 @@ export function WorkoutVictoryScreen({
             {!!atividadesConcluidas && atividadesConcluidas > 0 && (
               <p className="game-victory__atividades">
                 <ListChecks size={13} aria-hidden /> +{atividadesConcluidas} atividade
-                {atividadesConcluidas === 1 ? '' : 's'} concluída
-                {atividadesConcluidas === 1 ? '' : 's'} junto
+                {atividadesConcluidas === 1 ? '' : 's'} concluída{atividadesConcluidas === 1 ? '' : 's'}
               </p>
             )}
           </div>
         )}
+
+        {saved && footnote && <p className="game-victory__footnote">{footnote}</p>}
 
         {!saved ? (
           <GameButton onClick={onFinish} size="lg" className="mt-6 w-full" disabled={saving}>

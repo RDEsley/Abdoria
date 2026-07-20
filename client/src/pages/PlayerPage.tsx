@@ -2,8 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  CalendarCheck,
   Check,
+  ChevronRight,
   Hourglass,
+  ListChecks,
   Pause,
   Play,
   RotateCcw,
@@ -63,7 +66,14 @@ import {
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 
-type Phase = 'ready' | 'working' | 'resting' | 'atividades' | 'done';
+type Phase =
+  | 'ready'
+  | 'working'
+  | 'resting'
+  | 'done'
+  | 'atividades-prompt'
+  | 'atividades'
+  | 'atividades-done';
 
 const ACTIVE_WORKOUT_KEY = 'abdoria_active_workout';
 
@@ -107,6 +117,8 @@ export function PlayerPage() {
   const [saved, setSaved] = useState(false);
   const [storyPost, setStoryPost] = useState<CampaignPost | null>(null);
   const [showStory, setShowStory] = useState(false);
+  const [atividadesStoryPost, setAtividadesStoryPost] = useState<CampaignPost | null>(null);
+  const [showAtividadesStory, setShowAtividadesStory] = useState(false);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const [countdownEnabled, setCountdownEnabled] = useState(
     () => authUser?.preferencias?.contagem_regressiva_habilitada ?? true,
@@ -218,30 +230,10 @@ export function PlayerPage() {
 
     endTimeRef.current = persistWorkoutEndedAt();
     playWorkoutComplete();
-
-    // Atividades anexadas (junto_com_treino) entram na sequência antes da
-    // Missão Completa — só depois delas o resumo final combina os dois.
-    const encadearAtividades =
-      atividadesFlow.agenda.junto_com_treino && atividadesFlow.filaPendente.length > 0;
-    if (encadearAtividades) {
-      atividadesFlow.iniciarFluxo();
-      setPhase('atividades');
-    } else {
-      setPhase('done');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `atividadesFlow` é um objeto novo a cada render (hook sem memo interno); só os 3 campos realmente lidos aqui entram nas deps
-  }, [
-    workout,
-    current,
-    seriesIndex,
-    totalSeries,
-    exerciseIndex,
-    getRestSeconds,
-    startRest,
-    atividadesFlow.agenda.junto_com_treino,
-    atividadesFlow.filaPendente,
-    atividadesFlow.iniciarFluxo,
-  ]);
+    // Atividades anexadas (se houver) só entram em cena depois da Missão
+    // Completa e do capítulo da campanha — ver `proceedAfterStory`.
+    setPhase('done');
+  }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds, startRest]);
 
   const runsCountdown = phase === 'resting' || (phase === 'working' && current?.modo === 'tempo');
 
@@ -497,24 +489,78 @@ export function PlayerPage() {
   useEffect(() => {
     // Salva o treino assim que os exercícios terminam — sem esperar o
     // usuário tocar em nada — pra "Missão Completa" não parecer uma
-    // segunda tela que exige ação manual. `finishTriggeredRef` garante um
-    // único disparo mesmo passando por 'atividades' antes de 'done'.
-    if ((phase === 'atividades' || phase === 'done') && !finishTriggeredRef.current) {
+    // segunda tela que exige ação manual.
+    if (phase === 'done' && !finishTriggeredRef.current) {
       finishTriggeredRef.current = true;
       void handleFinish();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só na transição de fase, handleFinish já se protege com `saving`/`saved`
   }, [phase]);
 
-  /** Fluxo de atividades encadeado depois do treino: soma ao resumo final e libera a Missão Completa. */
+  /**
+   * Depois da Missão Completa (e do capítulo da campanha, se houver): só
+   * agora — nunca antes — checa se vale oferecer as atividades anexadas.
+   * Feito assim de propósito, pra não interromper o fluxo normal de
+   * "treino → missão → capítulo" com nada extra no meio.
+   */
+  const proceedAfterStory = () => {
+    const podeOferecerAtividades =
+      atividadesFlow.agenda.junto_com_treino && atividadesFlow.filaPendente.length > 0;
+    if (podeOferecerAtividades) {
+      setPhase('atividades-prompt');
+    } else {
+      navigate('/');
+    }
+  };
+
+  const iniciarAtividadesDaMissao = () => {
+    atividadesFlow.iniciarFluxo();
+    setPhase('atividades');
+  };
+
+  /** Capítulo de campanha da leva de atividades recém-concluída (mesma lógica do feed). */
+  const buildAtividadesStoryPost = (resumo: AtividadesFluxoResumo): CampaignPost | null => {
+    if (!authUser || resumo.feitas.length === 0) return null;
+    const posts = buildCampaignPosts(
+      [
+        {
+          id: `atividades-${Date.now()}`,
+          treino_nome: 'Atividades',
+          exercicios: [],
+          duracao_total_segundos: 0,
+          xp_ganho: resumo.xp,
+          concluido_em: new Date().toISOString(),
+          isAtividade: true,
+          atividadesFeitas: resumo.feitas,
+        },
+      ],
+      new Map<string, CampaignCatalogInfo>(),
+      {
+        heroi: authUser.nome?.split(' ')[0] ?? 'O herói',
+        level: xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
+        bestiarioDesbloqueados: (authUser.gamificacao?.bestiario_desbloqueados ??
+          []) as AfkEnemyId[],
+      },
+    );
+    return posts[0] ?? null;
+  };
+
+  /** Fluxo de atividades encadeado depois do treino: some direto pra celebração própria. */
   const handleAtividadesEncadeadasConcluidas = (resumo: AtividadesFluxoResumo) => {
     setAtividadesResumo(resumo);
-    setPhase('done');
+    setAtividadesStoryPost(buildAtividadesStoryPost(resumo));
+    setPhase('atividades-done');
   };
 
   const cancelarAtividadesEncadeadas = () => {
-    setAtividadesResumo(atividadesFlow.fecharFluxo());
-    setPhase('done');
+    const resumo = atividadesFlow.fecharFluxo();
+    if (resumo.total > 0) {
+      showGameToast(
+        `${resumo.total} atividade(s) concluída(s). Pode terminar o resto mais tarde.`,
+        { variant: 'success' },
+      );
+    }
+    navigate('/');
   };
 
   const handleRodadaManter = () => {
@@ -523,7 +569,7 @@ export function PlayerPage() {
 
   const handleVictoryContinue = () => {
     if (storyPost) setShowStory(true);
-    else navigate('/');
+    else proceedAfterStory();
   };
 
   const handleRodadaTrocar = async () => {
@@ -544,6 +590,68 @@ export function PlayerPage() {
   };
 
   if (!workout || !current) return null;
+
+  if (phase === 'done') {
+    if (showStory && storyPost) {
+      return <CampaignStoryScreen post={storyPost} onContinue={proceedAfterStory} />;
+    }
+    return (
+      <WorkoutVictoryScreen
+        workoutName={workout.treino_nome}
+        xpGained={xpGained}
+        abdoriaGained={abdoriaGained}
+        xpBreakdown={xpBreakdown}
+        streakCelebration={streakCelebration}
+        levelUpCelebration={levelUpCelebration}
+        equippedEffectId={equippedEffectId}
+        saving={saving}
+        saved={saved}
+        onFinish={() => void handleFinish()}
+        onContinue={handleVictoryContinue}
+        showRodadaModal={showRodadaModal}
+        rodadaBusy={rodadaBusy}
+        onRodadaKeep={handleRodadaManter}
+        onRodadaSwap={() => void handleRodadaTrocar()}
+      />
+    );
+  }
+
+  if (phase === 'atividades-prompt') {
+    const n = atividadesFlow.filaPendente.length;
+    return (
+      <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
+        <AnimatedBackground variant="player" />
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="game-victory relative z-10 text-center"
+        >
+          <span className="game-atividades-prompt__icon" aria-hidden>
+            <ListChecks size={30} />
+          </span>
+          <h2 className="game-victory__title !text-base">QUER FAZER AS ATIVIDADES AGORA?</h2>
+          <p className="mt-2 text-sm font-bold text-stone-600">
+            Você anexou {n} atividade{n === 1 ? '' : 's'} a esta missão — dá pra fazer agora, na
+            sequência, ou deixar pra mais tarde.
+          </p>
+          <GameButton
+            size="lg"
+            className="mt-5 flex w-full items-center justify-center gap-2"
+            onClick={iniciarAtividadesDaMissao}
+          >
+            Sim, fazer agora <ChevronRight size={18} />
+          </GameButton>
+          <button
+            type="button"
+            className="game-auth-guest-link"
+            onClick={() => navigate('/')}
+          >
+            Fazer mais tarde
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (phase === 'atividades') {
     const atividadeAtual = atividadesFlow.atividadeDoPasso;
@@ -578,9 +686,7 @@ export function PlayerPage() {
         </div>
 
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
-          <p className="text-sm font-bold text-stone-600">
-            Treino concluído! Só faltam as atividades da fila de hoje.
-          </p>
+          <p className="text-sm font-bold text-stone-600">Vamos concluir as atividades de hoje.</p>
         </div>
 
         {atividadeAtual && (
@@ -589,7 +695,7 @@ export function PlayerPage() {
             busy={atividadesFlow.busy}
             passo={passoAtual}
             totalPassos={atividadesFlow.totalFluxo}
-            daXp={!atividadesFlow.diaDeTreino}
+            diaDeTreino={atividadesFlow.diaDeTreino}
             progressoHoje={atividadesFlow.concluidasHoje.size}
             metaHoje={ATIVIDADES_MIN_DESCANSO}
             cancelLabel="Fazer mais tarde"
@@ -603,28 +709,36 @@ export function PlayerPage() {
     );
   }
 
-  if (phase === 'done') {
-    if (showStory && storyPost) {
-      return <CampaignStoryScreen post={storyPost} onContinue={() => navigate('/')} />;
+  if (phase === 'atividades-done') {
+    if (showAtividadesStory && atividadesStoryPost) {
+      return <CampaignStoryScreen post={atividadesStoryPost} onContinue={() => navigate('/')} />;
     }
     return (
       <WorkoutVictoryScreen
-        workoutName={workout.treino_nome}
-        xpGained={xpGained + (atividadesResumo?.xp ?? 0)}
-        abdoriaGained={abdoriaGained + (atividadesResumo?.moedas ?? 0)}
+        workoutName="Atividades concluídas"
+        xpGained={atividadesResumo?.xp ?? 0}
+        abdoriaGained={atividadesResumo?.moedas ?? 0}
         atividadesConcluidas={atividadesResumo?.total}
-        xpBreakdown={xpBreakdown}
-        streakCelebration={streakCelebration}
-        levelUpCelebration={levelUpCelebration}
+        xpBreakdown={null}
+        streakCelebration={atividadesResumo?.streakCelebration ?? null}
+        levelUpCelebration={atividadesResumo?.levelUp ?? null}
         equippedEffectId={equippedEffectId}
-        saving={saving}
-        saved={saved}
-        onFinish={() => void handleFinish()}
-        onContinue={handleVictoryContinue}
-        showRodadaModal={showRodadaModal}
-        rodadaBusy={rodadaBusy}
-        onRodadaKeep={handleRodadaManter}
-        onRodadaSwap={() => void handleRodadaTrocar()}
+        saving={false}
+        saved
+        onFinish={() => {}}
+        onContinue={() => {
+          if (atividadesStoryPost) setShowAtividadesStory(true);
+          else navigate('/');
+        }}
+        showRodadaModal={false}
+        rodadaBusy={false}
+        onRodadaKeep={() => {}}
+        onRodadaSwap={() => {}}
+        footnote={
+          <>
+            <CalendarCheck size={13} aria-hidden /> Tudo já registrado no seu calendário de hoje.
+          </>
+        }
       />
     );
   }
@@ -728,7 +842,7 @@ export function PlayerPage() {
           <button
             type="button"
             onClick={() => setCountdownEnabled((v) => !v)}
-            className={`cursor-pointer ${countdownEnabled ? 'text-stone-600' : 'text-stone-300'}`}
+            className={`game-player-toggle${countdownEnabled ? ' game-player-toggle--on' : ''}`}
             aria-label={
               countdownEnabled
                 ? 'Desativar contagem regressiva antes dos exercícios'
@@ -737,7 +851,7 @@ export function PlayerPage() {
             aria-pressed={countdownEnabled}
             title={countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'}
           >
-            <Hourglass size={22} />
+            <Hourglass size={18} />
           </button>
           <button
             type="button"
@@ -746,10 +860,12 @@ export function PlayerPage() {
               setMuted(next);
               setSoundSettings(!next, authUser?.preferencias?.sfx_volume ?? 0.7);
             }}
-            className="cursor-pointer text-stone-600"
+            className={`game-player-toggle${!muted ? ' game-player-toggle--on' : ''}`}
             aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
+            aria-pressed={!muted}
+            title={muted ? 'Som desativado' : 'Som ativado'}
           >
-            {muted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+            {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
           </button>
         </div>
       </header>
@@ -890,7 +1006,7 @@ export function PlayerPage() {
             <div className="flex gap-2">
               <GameButton
                 size="lg"
-                className="flex-[7] flex items-center justify-center gap-2"
+                className="flex-[8] flex items-center justify-center gap-2"
                 variant={paused ? 'primary' : 'secondary'}
                 onClick={togglePause}
               >
@@ -907,7 +1023,7 @@ export function PlayerPage() {
               <GameButton
                 size="lg"
                 variant="ghost"
-                className="flex-[3] flex items-center justify-center"
+                className="flex-[2] flex items-center justify-center"
                 onClick={resetTimer}
                 aria-label="Reiniciar cronômetro do exercício"
                 title="Reiniciar cronômetro"
@@ -922,7 +1038,7 @@ export function PlayerPage() {
               <div className="flex gap-2">
                 <GameButton
                   size="lg"
-                  className="flex-[7] flex items-center justify-center gap-2"
+                  className="flex-[8] flex items-center justify-center gap-2"
                   variant={paused ? 'primary' : 'secondary'}
                   onClick={togglePause}
                 >
@@ -939,7 +1055,7 @@ export function PlayerPage() {
                 <GameButton
                   size="lg"
                   variant="ghost"
-                  className="flex-[3] flex items-center justify-center"
+                  className="flex-[2] flex items-center justify-center"
                   onClick={resetTimer}
                   aria-label="Reiniciar cronômetro de descanso"
                   title="Reiniciar cronômetro"
