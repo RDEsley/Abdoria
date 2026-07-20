@@ -87,7 +87,7 @@ export function useAtividadesFlow() {
   const enviarConclusao = async (
     atividade: AtividadeExtra,
     dados: AtividadeConclusao,
-  ): Promise<boolean> => {
+  ): Promise<{ xp: number; moedas: number } | null> => {
     setBusy(true);
     try {
       const res = await completeAtividade(atividade.id, dados);
@@ -125,12 +125,12 @@ export function useAtividadesFlow() {
         window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: res.level_up }));
       }
       playCompleteSet();
-      return true;
+      return { xp: res.xp_ganho, moedas: res.abdoria_ganha };
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível concluir a atividade.'), {
         variant: 'error',
       });
-      return false;
+      return null;
     } finally {
       setBusy(false);
     }
@@ -166,8 +166,8 @@ export function useAtividadesFlow() {
     const atividade = filaPendente[indice];
     if (!atividade) return;
 
-    const ok = await enviarConclusao(atividade, dados);
-    if (!ok) return;
+    const resultado = await enviarConclusao(atividade, dados);
+    if (!resultado) return;
 
     // `filaPendente` só encolhe depois do refresh, então o próximo item
     // continua sendo o índice atual; o fluxo acaba quando não sobra nada.

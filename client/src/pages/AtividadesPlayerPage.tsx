@@ -4,19 +4,49 @@ import { CalendarCheck, ChevronRight, X } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { AtividadeCompleteModal, type AtividadeConclusao } from '@/components/dashboard/AtividadeCompleteModal';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
+import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAtividadesFlow, type AtividadesFluxoResumo } from '@/hooks/useAtividadesFlow';
 import { useAuth } from '@/context/AuthContext';
 import { ATIVIDADES_MIN_DESCANSO, type AtividadeExtra } from '@shared/atividades';
-import { resolveCosmeticos } from '@/types';
+import { buildCampaignPosts, type CampaignCatalogInfo, type CampaignPost } from '@shared/campaign';
+import { CURRENCY_NAME, resolveCosmeticos, xpLevelFromTotal, type AfkEnemyId } from '@/types';
+
+/** Capítulo de campanha da leva de atividades recém-concluída (mesma lógica do feed). */
+function buildAtividadesStoryPost(
+  resumo: AtividadesFluxoResumo,
+  heroi: string,
+  level: number,
+  bestiarioDesbloqueados: AfkEnemyId[],
+): CampaignPost | null {
+  if (resumo.feitas.length === 0) return null;
+  const posts = buildCampaignPosts(
+    [
+      {
+        id: `atividades-${Date.now()}`,
+        treino_nome: 'Atividades',
+        exercicios: [],
+        duracao_total_segundos: 0,
+        xp_ganho: resumo.xp,
+        concluido_em: new Date().toISOString(),
+        isAtividade: true,
+        atividadesFeitas: resumo.feitas,
+      },
+    ],
+    new Map<string, CampaignCatalogInfo>(),
+    { heroi, level, bestiarioDesbloqueados },
+  );
+  return posts[0] ?? null;
+}
 
 /**
  * Tela cheia (mesma linguagem visual do Player) só pras Atividades do dia —
- * usada tanto pelo "Iniciar" do card de Atividades quanto pelo "Iniciar" da
- * Home em dia de descanso. Em vez de um form solto aparecendo por cima da
- * página, o usuário escolhe da lista qual atividade quer fazer agora (não é
- * uma ordem estrita) e pode sair a qualquer momento com "Fazer mais tarde".
+ * usada pelo "Iniciar" do card de Atividades, pelo "Iniciar" da Home em dia
+ * de descanso, e pelo "Sim, fazer agora" do prompt pós-treino. Em vez de um
+ * form solto aparecendo por cima da página, o usuário escolhe da lista qual
+ * atividade quer fazer agora (não é uma ordem estrita) e pode sair a
+ * qualquer momento com "Fazer mais tarde".
  */
 export function AtividadesPlayerPage() {
   const navigate = useNavigate();
@@ -26,6 +56,7 @@ export function AtividadesPlayerPage() {
   const [selecionada, setSelecionada] = useState<AtividadeExtra | null>(null);
   const [concluidasNestaSessao, setConcluidasNestaSessao] = useState(0);
   const [resumoFinal, setResumoFinal] = useState<AtividadesFluxoResumo | null>(null);
+  const [showStory, setShowStory] = useState(false);
   const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
 
   // Guarda de entrada: sem fila pendente, não tem o que fazer aqui.
@@ -51,6 +82,19 @@ export function AtividadesPlayerPage() {
   if (!entradaValidada) return null;
 
   if (resumoFinal) {
+    const storyPost = authUser
+      ? buildAtividadesStoryPost(
+          resumoFinal,
+          authUser.nome?.split(' ')[0] ?? 'O herói',
+          xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
+          (authUser.gamificacao?.bestiario_desbloqueados ?? []) as AfkEnemyId[],
+        )
+      : null;
+
+    if (showStory && storyPost) {
+      return <CampaignStoryScreen post={storyPost} onContinue={() => navigate('/')} />;
+    }
+
     return (
       <WorkoutVictoryScreen
         workoutName="Atividades concluídas"
@@ -64,7 +108,10 @@ export function AtividadesPlayerPage() {
         saving={false}
         saved
         onFinish={() => {}}
-        onContinue={() => navigate('/')}
+        onContinue={() => {
+          if (storyPost) setShowStory(true);
+          else navigate('/');
+        }}
         showRodadaModal={false}
         rodadaBusy={false}
         onRodadaKeep={() => {}}
@@ -92,11 +139,17 @@ export function AtividadesPlayerPage() {
   const confirmarEscolhida = async (dados: AtividadeConclusao) => {
     if (!selecionada) return;
     const nome = selecionada.nome;
-    const ok = await flow.concluirEscolhida(selecionada, dados);
-    if (!ok) return;
+    const resultado = await flow.concluirEscolhida(selecionada, dados);
+    if (!resultado) return;
     setSelecionada(null);
     setConcluidasNestaSessao((n) => n + 1);
-    showGameToast(`"${nome}" concluída!`, { variant: 'success' });
+    const ganho =
+      resultado.xp > 0
+        ? `+${resultado.xp} XP`
+        : resultado.moedas > 0
+          ? `+${resultado.moedas} ${CURRENCY_NAME}`
+          : null;
+    showGameToast(`"${nome}" concluída!${ganho ? ` ${ganho}` : ''}`, { variant: 'success' });
   };
 
   const progressoHoje = flow.concluidasHoje.size;

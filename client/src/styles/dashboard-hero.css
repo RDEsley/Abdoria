@@ -1331,7 +1331,9 @@
   border-color: #10b981;
 }
 
-/* Modal de conclusão: campo com sufixo de unidade */
+/* Modal de conclusão: campo com sufixo de unidade — número e unidade ficam
+   juntos à esquerda (não esticam pra ocupar a caixa toda, senão a unidade
+   fica solta lá longe, à direita, sem relação visual com o número). */
 .atividade-campo {
   display: flex;
   align-items: center;
@@ -1341,6 +1343,7 @@
   background: #fff;
   border: 2px solid #e7e5e4;
   border-radius: 0.75rem;
+  transition: border-color 0.15s ease;
 }
 
 .atividade-campo:focus-within {
@@ -1348,9 +1351,10 @@
 }
 
 .atividade-campo input {
+  width: 5.5rem;
   min-width: 0;
-  flex: 1;
-  padding: 0.55rem 0;
+  flex: 0 0 auto;
+  padding: 0.6rem 0;
   font-size: 0.9rem;
   font-weight: 700;
   color: #1c1917;
@@ -1359,11 +1363,17 @@
   outline: none;
 }
 
+/* Campos de texto livre (sem unidade) continuam ocupando a caixa inteira. */
+.atividade-campo--texto input {
+  width: auto;
+  flex: 1 1 auto;
+}
+
 .atividade-campo__unidade {
   flex-shrink: 0;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  color: #a8a29e;
+  color: #78716c;
 }
 
 /* Agenda: opção em card e switch */
@@ -1540,10 +1550,12 @@
 }
 
 /* Modal de criar/editar atividade: corpo rolável pra nunca estourar a tela. */
-.atividade-form-modal {
+.game-modal.atividade-form-modal {
   display: flex;
   flex-direction: column;
-  max-height: min(88vh, 34rem);
+  width: 100%;
+  max-width: min(94vw, 30rem);
+  max-height: min(88vh, 38rem);
   overflow: hidden;
 }
 
@@ -1589,16 +1601,18 @@
   background: #ecfdf5;
 }
 
-.atividade-tipo-scroll {
+.atividade-tipo-grid {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 0.4rem;
-  overflow-x: auto;
-  padding-bottom: 0.3rem;
-  scrollbar-width: thin;
 }
 
-.atividade-tipo-scroll .atividade-tipo-chip {
-  flex-shrink: 0;
+.atividade-tipo-grid .atividade-tipo-chip {
   white-space: nowrap;
+}
+
+/* Modal de concluir atividade: mais largo, mesma régua do form de criar. */
+.game-modal.atividade-complete-modal {
+  width: 100%;
+  max-width: min(94vw, 30rem);
 }

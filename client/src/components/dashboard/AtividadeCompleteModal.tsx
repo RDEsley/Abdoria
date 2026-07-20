@@ -93,7 +93,12 @@ export function AtividadeCompleteModal({
       : `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins (hoje é dia de treino, não mexe na sequência).`;
 
   return (
-    <Modal open onClose={onCancel} labelledBy="atividade-complete-title">
+    <Modal
+      open
+      onClose={onCancel}
+      labelledBy="atividade-complete-title"
+      panelClassName="atividade-complete-modal"
+    >
       <div className="text-center">
         {passo != null && totalPassos != null && totalPassos > 1 && (
           <p className="mb-2 text-[0.68rem] font-extrabold tracking-wide text-emerald-600 uppercase">
@@ -128,14 +133,14 @@ export function AtividadeCompleteModal({
         )}
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 text-left">
+      <div className="mt-4 flex flex-col gap-4 text-left">
         {campos.map((campo) => (
           <label key={campo.id} className="block text-sm font-semibold">
             {campo.label}
             {!campo.obrigatorio && (
               <span className="ml-1 text-[0.68rem] font-medium text-stone-400">(opcional)</span>
             )}
-            <span className="atividade-campo">
+            <span className={`atividade-campo${campo.unidade ? '' : ' atividade-campo--texto'}`}>
               <input
                 value={valores[campo.id] ?? ''}
                 onChange={(e) => setValores((v) => ({ ...v, [campo.id]: e.target.value }))}

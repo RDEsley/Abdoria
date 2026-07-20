@@ -27,8 +27,8 @@ export function BuilderStickyBar({
       aria-hidden={false}
     >
       <div className="pointer-events-auto mx-auto max-w-lg border-t border-stone-200/80 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:max-w-3xl">
-        <div className="flex items-center gap-3">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="builder-start-pills flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
             <span className="builder-start-pill builder-start-pill--time">
               <Timer size={13} aria-hidden />
               {hasTime ? `~${estimatedMinutes} min` : '-- min'}

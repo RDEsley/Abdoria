@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  CalendarCheck,
   Check,
   ChevronRight,
   Hourglass,
@@ -20,7 +19,6 @@ import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
-import { AtividadeCompleteModal } from '@/components/dashboard/AtividadeCompleteModal';
 import {
   buildCampaignPosts,
   type CampaignCatalogInfo,
@@ -30,8 +28,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { useAtividadesFlow, type AtividadesFluxoResumo } from '@/hooks/useAtividadesFlow';
-import { ATIVIDADES_MIN_DESCANSO } from '@shared/atividades';
+import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
 import { exerciseMediaUrl } from '@/lib/media';
 import {
   playBeep,
@@ -66,14 +63,7 @@ import {
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 
-type Phase =
-  | 'ready'
-  | 'working'
-  | 'resting'
-  | 'done'
-  | 'atividades-prompt'
-  | 'atividades'
-  | 'atividades-done';
+type Phase = 'ready' | 'working' | 'resting' | 'done' | 'atividades-prompt';
 
 const ACTIVE_WORKOUT_KEY = 'abdoria_active_workout';
 
@@ -105,9 +95,6 @@ export function PlayerPage() {
   const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const [abdoriaGained, setAbdoriaGained] = useState(0);
-  /** Somatório das atividades encadeadas depois do treino — soma à parte pra
-      não disputar o mesmo state com o resultado assíncrono do handleFinish. */
-  const [atividadesResumo, setAtividadesResumo] = useState<AtividadesFluxoResumo | null>(null);
   const [xpBreakdown, setXpBreakdown] = useState<XpBreakdown | null>(null);
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
@@ -117,8 +104,6 @@ export function PlayerPage() {
   const [saved, setSaved] = useState(false);
   const [storyPost, setStoryPost] = useState<CampaignPost | null>(null);
   const [showStory, setShowStory] = useState(false);
-  const [atividadesStoryPost, setAtividadesStoryPost] = useState<CampaignPost | null>(null);
-  const [showAtividadesStory, setShowAtividadesStory] = useState(false);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const [countdownEnabled, setCountdownEnabled] = useState(
     () => authUser?.preferencias?.contagem_regressiva_habilitada ?? true,
@@ -513,54 +498,10 @@ export function PlayerPage() {
     }
   };
 
+  /** Leva pra tela de escolha das atividades — nenhuma abre sozinha, o
+      usuário escolhe da lista qual quer fazer primeiro. */
   const iniciarAtividadesDaMissao = () => {
-    atividadesFlow.iniciarFluxo();
-    setPhase('atividades');
-  };
-
-  /** Capítulo de campanha da leva de atividades recém-concluída (mesma lógica do feed). */
-  const buildAtividadesStoryPost = (resumo: AtividadesFluxoResumo): CampaignPost | null => {
-    if (!authUser || resumo.feitas.length === 0) return null;
-    const posts = buildCampaignPosts(
-      [
-        {
-          id: `atividades-${Date.now()}`,
-          treino_nome: 'Atividades',
-          exercicios: [],
-          duracao_total_segundos: 0,
-          xp_ganho: resumo.xp,
-          concluido_em: new Date().toISOString(),
-          isAtividade: true,
-          atividadesFeitas: resumo.feitas,
-        },
-      ],
-      new Map<string, CampaignCatalogInfo>(),
-      {
-        heroi: authUser.nome?.split(' ')[0] ?? 'O herói',
-        level: xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
-        bestiarioDesbloqueados: (authUser.gamificacao?.bestiario_desbloqueados ??
-          []) as AfkEnemyId[],
-      },
-    );
-    return posts[0] ?? null;
-  };
-
-  /** Fluxo de atividades encadeado depois do treino: some direto pra celebração própria. */
-  const handleAtividadesEncadeadasConcluidas = (resumo: AtividadesFluxoResumo) => {
-    setAtividadesResumo(resumo);
-    setAtividadesStoryPost(buildAtividadesStoryPost(resumo));
-    setPhase('atividades-done');
-  };
-
-  const cancelarAtividadesEncadeadas = () => {
-    const resumo = atividadesFlow.fecharFluxo();
-    if (resumo.total > 0) {
-      showGameToast(
-        `${resumo.total} atividade(s) concluída(s). Pode terminar o resto mais tarde.`,
-        { variant: 'success' },
-      );
-    }
-    navigate('/');
+    navigate('/atividades-player');
   };
 
   const handleRodadaManter = () => {
@@ -650,96 +591,6 @@ export function PlayerPage() {
           </button>
         </motion.div>
       </div>
-    );
-  }
-
-  if (phase === 'atividades') {
-    const atividadeAtual = atividadesFlow.atividadeDoPasso;
-    const passoAtual = (atividadesFlow.passoFila ?? 0) + 1;
-    return (
-      <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
-        <AnimatedBackground variant="player" />
-        <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
-          <span className="w-6" aria-hidden />
-          <div className="text-center">
-            <p className="game-page-header__eyebrow !mb-0">Atividades da missão</p>
-            <p className="text-xs font-extrabold text-stone-800">
-              Atividade {passoAtual}/{atividadesFlow.totalFluxo}
-            </p>
-          </div>
-          <span className="w-6" aria-hidden />
-        </header>
-
-        <div className="relative z-10 flex shrink-0 gap-1 px-4 pb-1 sm:px-6">
-          {Array.from({ length: atividadesFlow.totalFluxo }).map((_, i) => (
-            <span
-              key={i}
-              className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
-                i < passoAtual - 1
-                  ? 'bg-emerald-500'
-                  : i === passoAtual - 1
-                    ? 'bg-amber-400 game-progress-dot--active'
-                    : 'bg-stone-200/80'
-              }`}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
-          <p className="text-sm font-bold text-stone-600">Vamos concluir as atividades de hoje.</p>
-        </div>
-
-        {atividadeAtual && (
-          <AtividadeCompleteModal
-            atividade={atividadeAtual}
-            busy={atividadesFlow.busy}
-            passo={passoAtual}
-            totalPassos={atividadesFlow.totalFluxo}
-            diaDeTreino={atividadesFlow.diaDeTreino}
-            progressoHoje={atividadesFlow.concluidasHoje.size}
-            metaHoje={ATIVIDADES_MIN_DESCANSO}
-            cancelLabel="Fazer mais tarde"
-            onCancel={cancelarAtividadesEncadeadas}
-            onConfirm={(dados) =>
-              void atividadesFlow.concluirPassoFila(dados, handleAtividadesEncadeadasConcluidas)
-            }
-          />
-        )}
-      </div>
-    );
-  }
-
-  if (phase === 'atividades-done') {
-    if (showAtividadesStory && atividadesStoryPost) {
-      return <CampaignStoryScreen post={atividadesStoryPost} onContinue={() => navigate('/')} />;
-    }
-    return (
-      <WorkoutVictoryScreen
-        workoutName="Atividades concluídas"
-        xpGained={atividadesResumo?.xp ?? 0}
-        abdoriaGained={atividadesResumo?.moedas ?? 0}
-        atividadesConcluidas={atividadesResumo?.total}
-        xpBreakdown={null}
-        streakCelebration={atividadesResumo?.streakCelebration ?? null}
-        levelUpCelebration={atividadesResumo?.levelUp ?? null}
-        equippedEffectId={equippedEffectId}
-        saving={false}
-        saved
-        onFinish={() => {}}
-        onContinue={() => {
-          if (atividadesStoryPost) setShowAtividadesStory(true);
-          else navigate('/');
-        }}
-        showRodadaModal={false}
-        rodadaBusy={false}
-        onRodadaKeep={() => {}}
-        onRodadaSwap={() => {}}
-        footnote={
-          <>
-            <CalendarCheck size={13} aria-hidden /> Tudo já registrado no seu calendário de hoje.
-          </>
-        }
-      />
     );
   }
 

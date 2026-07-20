@@ -854,12 +854,16 @@ export function BuilderPage() {
               </p>
               <button
                 type="button"
-                className="game-icon-btn !h-8 !w-8 shrink-0"
+                className="game-icon-btn shrink-0 gap-2 px-3 py-2 text-xs font-extrabold whitespace-nowrap"
                 aria-label="Trocar nível dos esquemas recomendados"
                 title={`Trocar para esquemas de outro nível (atual: ${NIVEL_LABELS[schemeLevel]})`}
                 onClick={cycleSchemeLevel}
               >
                 <GraduationCap size={15} aria-hidden />
+                <span>Trocar nível</span>
+                <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-stone-600 leading-none">
+                  {NIVEL_LABELS[schemeLevel]}
+                </span>
               </button>
             </div>
             <RepSchemeCarousel

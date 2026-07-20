@@ -60,7 +60,7 @@ export const ATIVIDADE_DURACAO_MAX = 60;
 export const ATIVIDADE_NUMERO_MIN = 1;
 export const ATIVIDADE_NUMERO_MAX = 999;
 export const ATIVIDADE_NOME_MAX = 40;
-export const ATIVIDADE_DESCRICAO_MAX = 120;
+export const ATIVIDADE_DESCRICAO_MAX = 100;
 export const ATIVIDADE_OBS_MAX = 400;
 /** Teto de atividades cadastradas (padrão + criadas pelo usuário). */
 export const ATIVIDADES_MAX = 30;

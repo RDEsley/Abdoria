@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Bike,
   BookOpen,
@@ -89,6 +89,17 @@ export function AtividadeFormModal({
     atividade?.meta_tipo === 'numero' ? String(atividade.meta_valor) : '',
   );
   const [unidade, setUnidade] = useState(atividade?.meta_unidade ?? '');
+  const descricaoRef = useRef<HTMLTextAreaElement>(null);
+
+  /** Textarea cresce junto com o texto — sem barra de rolagem própria. */
+  const ajustarAlturaDescricao = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    if (descricaoRef.current) ajustarAlturaDescricao(descricaoRef.current);
+  }, []);
 
   const iconesVisiveis = iconesExpandidos
     ? ATIVIDADE_ICONES
@@ -128,7 +139,7 @@ export function AtividadeFormModal({
         </h2>
       </div>
 
-      <div className="atividade-form-modal__body flex flex-col gap-3">
+      <div className="atividade-form-modal__body flex flex-col gap-4">
         <label className="block text-sm font-semibold">
           Nome
           <input
@@ -260,9 +271,9 @@ export function AtividadeFormModal({
             Tipos <span className="text-xs font-medium text-stone-400">(opcional)</span>
           </p>
           <p className="mt-0.5 text-[0.68rem] font-medium text-stone-400">
-            Ajusta o que perguntamos ao concluir — pode deixar em "Outro". Arraste para ver mais.
+            Ajusta o que perguntamos ao concluir — pode deixar em "Outro".
           </p>
-          <div className="atividade-tipo-scroll mt-2">
+          <div className="atividade-tipo-grid mt-2">
             {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((t) => {
               const TipoIcon = TIPO_ICONS[t];
               const ativo = tipo === t;
@@ -286,11 +297,17 @@ export function AtividadeFormModal({
 
         <label className="block text-sm font-semibold">
           Descrição <span className="text-xs font-medium text-stone-400">(opcional)</span>
-          <input
+          <textarea
+            ref={descricaoRef}
             value={descricao}
-            onChange={(e) => setDescricao(e.target.value.slice(0, ATIVIDADE_DESCRICAO_MAX))}
+            onChange={(e) => {
+              setDescricao(e.target.value.slice(0, ATIVIDADE_DESCRICAO_MAX));
+              ajustarAlturaDescricao(e.target);
+            }}
             placeholder="Ex.: Praticar 3 músicas novas"
-            className={fieldClass}
+            rows={2}
+            maxLength={ATIVIDADE_DESCRICAO_MAX}
+            className={`${fieldClass} resize-none overflow-hidden`}
           />
         </label>
       </div>

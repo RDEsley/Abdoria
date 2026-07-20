@@ -97,9 +97,20 @@
   box-shadow: 2px 2px 0 var(--game-ink) !important;
 }
 
-/* Barra fixa do treino — pills informativos + botão Iniciar */
+/* Barra fixa do treino — pills informativos + botão Iniciar. Os pills nunca
+   quebram linha (senão a barra cresce e o padding-bottom fixo da página
+   descola do conteúdo) — em telas estreitas, rolam na horizontal. */
+.builder-start-pills {
+  scrollbar-width: none;
+}
+
+.builder-start-pills::-webkit-scrollbar {
+  display: none;
+}
+
 .builder-start-pill {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 0.3rem;
   padding: 0.28rem 0.6rem;
