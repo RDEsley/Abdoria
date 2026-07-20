@@ -387,6 +387,13 @@
   transform-origin: center;
 }
 
+/* O retrato normal ancora o sprite embaixo (sobra espaço em cima pra auras
+   de boss) — nessa caixa quadrada e pequena do toast isso ficava puxado
+   pra baixo em vez de centralizado. */
+.achievement-toast__icon-wrap .game-afk-portrait.game-afk-enemy {
+  align-items: center;
+}
+
 .achievement-toast__copy {
   position: relative;
   z-index: 1;

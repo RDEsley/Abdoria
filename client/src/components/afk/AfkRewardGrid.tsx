@@ -3,6 +3,8 @@ import { AnimatePresence } from 'framer-motion';
 import { Gift } from 'lucide-react';
 import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
 import { AfkLootTooltip } from '@/components/afk/AfkLootTooltip';
+import { LottieView } from '@/components/ui/LottieView';
+import { useLottieAsset } from '@/hooks/useLottieAsset';
 import {
   AfkRewardIcon,
   buildAfkRewardItems,
@@ -12,6 +14,8 @@ import {
 import type { AfkPendingReward } from '@/types';
 
 export { countAfkRewardItems, countAfkDropEvents } from '@/lib/afk-rewards';
+
+const CHEST_GLOW_LOTTIE_URL = '/assets/reward-chest.json';
 
 interface Props {
   pending: AfkPendingReward | null | undefined;
@@ -166,6 +170,7 @@ export function AfkRewardGrid({
   const hasLoot = items.length > 0;
   const dropCount = countAfkDropEvents(pending);
   const showLootFromChest = withChest && (chestOpen || chestOpening);
+  const chestGlowData = useLottieAsset(CHEST_GLOW_LOTTIE_URL);
 
   const iconGrid = hasLoot ? (
     <RewardIconGrid
@@ -194,6 +199,11 @@ export function AfkRewardGrid({
             aria-live="polite"
           >
             {iconGrid}
+          </div>
+        ) : null}
+        {showLoot && chestGlowData ? (
+          <div className="game-afk-chest-glow" aria-hidden>
+            <LottieView data={chestGlowData} loop />
           </div>
         ) : null}
         <AfkPatrolChest

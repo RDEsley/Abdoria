@@ -6464,6 +6464,19 @@
   overflow: visible;
 }
 
+/* Luz atrás do baú só enquanto ele revela as recompensas (opening/open). */
+.game-afk-chest-glow {
+  position: absolute;
+  z-index: 0;
+  bottom: -1.5rem;
+  left: 50%;
+  width: 14rem;
+  height: 14rem;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
 .game-afk-rewards-panel--celebrate {
   min-height: 8.5rem;
   justify-content: flex-end;
@@ -7147,10 +7160,10 @@ button.game-afk-reward-chip {
 
 .game-afk-chest__band {
   position: absolute;
-  top: 0.42rem;
+  top: 0.24rem;
   right: -0.12rem;
   left: -0.12rem;
-  z-index: 5;
+  z-index: 1;
   display: block;
   height: 0.18rem;
   background: linear-gradient(180deg, #311019, #5a1322);
