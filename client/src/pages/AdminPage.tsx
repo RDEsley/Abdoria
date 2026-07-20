@@ -6,6 +6,7 @@ import {
   Coins,
   Gem,
   KeyRound,
+  Lightbulb,
   Pencil,
   Search,
   Shield,
@@ -29,7 +30,7 @@ import {
 } from '@/lib/api';
 import { isBanimentoAtivo, type UserRole } from '@/types';
 
-type Tab = 'avaliacoes' | 'usuarios';
+type Tab = 'avaliacoes' | 'sugestoes' | 'usuarios';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   user: 'Jogador',
@@ -132,10 +133,11 @@ export function AdminPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {(
           [
             { id: 'avaliacoes', label: 'Avaliações', Icon: Star },
+            { id: 'sugestoes', label: 'Sugestões', Icon: Lightbulb },
             { id: 'usuarios', label: 'Usuários', Icon: Users },
           ] as const
         ).map(({ id, label, Icon }) => (
@@ -176,6 +178,27 @@ export function AdminPage() {
               )}
               <p className="mt-1 text-[0.62rem] font-bold text-stone-400">
                 {new Date(rating.criada_em).toLocaleDateString('pt-BR')}
+              </p>
+            </article>
+          ))}
+        </section>
+      ) : tab === 'sugestoes' ? (
+        <section className="flex flex-col gap-2">
+          {(overview?.suggestions?.length ?? 0) === 0 && (
+            <p className="py-8 text-center text-sm font-bold text-stone-500">
+              Nenhuma sugestão ainda — o popup aparece quando o jogador atinge 7 dias de streak.
+            </p>
+          )}
+          {overview?.suggestions?.map((suggestion) => (
+            <article key={suggestion.id} className="glass-card p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-extrabold text-stone-800">{suggestion.nome}</p>
+                <span className="shrink-0 text-[0.62rem] font-bold text-stone-400">
+                  {new Date(suggestion.criada_em).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <p className="mt-1.5 text-xs font-medium leading-relaxed text-stone-600">
+                {suggestion.texto}
               </p>
             </article>
           ))}

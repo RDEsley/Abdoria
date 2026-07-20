@@ -15,8 +15,17 @@ export interface AdminUserEntry {
   is_guest: boolean;
 }
 
+export interface AppSuggestionEntry {
+  id: string;
+  user_id: string;
+  nome: string;
+  texto: string;
+  criada_em: string;
+}
+
 export interface AdminOverviewResponse {
   ratings: AppRatingEntry[];
+  suggestions: AppSuggestionEntry[];
   media_estrelas: number | null;
   total_usuarios: number;
 }
@@ -55,5 +64,14 @@ export function submitAppRating(
   return fetchJson('/users/me/rating', {
     method: 'POST',
     body: JSON.stringify({ estrelas, comentario }),
+  });
+}
+
+export function submitAppSuggestion(
+  texto: string,
+): Promise<{ ok: boolean; user: import('@/types').IUserDocument }> {
+  return fetchJson('/users/me/suggestion', {
+    method: 'POST',
+    body: JSON.stringify({ texto }),
   });
 }

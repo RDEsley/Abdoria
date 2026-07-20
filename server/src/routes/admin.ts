@@ -4,6 +4,8 @@ import { User, UserMutable } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { Ratings } from '../repositories/rating-repository.js';
+import { Suggestions } from '../repositories/suggestion-repository.js';
+import { syncAdminMoldura } from '../services/shop.js';
 import type { Banimento, UserRole } from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 
@@ -62,15 +64,16 @@ function toAdminEntry(user: UserLean) {
 adminRouter.get('/overview', async (_req: AuthRequest, res) => {
   try {
     if (!requireAdmin(res)) return;
-    const [ratings, users] = await Promise.all([
+    const [ratings, suggestions, users] = await Promise.all([
       Ratings.listAll(),
+      Suggestions.listAll().catch(() => []),
       User.find({ is_demo_npc: false }, { limit: 500 }),
     ]);
     const media =
       ratings.length > 0
         ? Math.round((ratings.reduce((sum, r) => sum + r.estrelas, 0) / ratings.length) * 10) / 10
         : null;
-    res.json({ ratings, media_estrelas: media, total_usuarios: users.length });
+    res.json({ ratings, suggestions, media_estrelas: media, total_usuarios: users.length });
   } catch (error) {
     console.error('GET /api/admin/overview error:', error);
     res.status(500).json({ error: 'Erro ao carregar o painel.' });
@@ -134,6 +137,12 @@ adminRouter.patch('/users/:id', async (req: AuthRequest, res) => {
         return;
       }
       user.role = role;
+      // Ao virar/deixar de ser admin, concede/revoga a moldura exclusiva e
+      // remove da semanal se acabou de ser promovido a admin (fica oculto).
+      syncAdminMoldura(user);
+      if (role === 'admin') {
+        user.preferencias = { ...user.preferencias, admin_visivel_ranking: false };
+      }
     }
 
     await user.save();
