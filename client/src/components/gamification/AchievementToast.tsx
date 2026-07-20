@@ -24,14 +24,16 @@ export function AchievementToast({ item, stackIndex, onDismiss }: Props) {
     <motion.article
       layout
       className={`achievement-toast achievement-toast--${item.type}`}
-      style={{ zIndex: 9999 - stackIndex }}
+      style={{ zIndex: 9999 - stackIndex, cursor: 'pointer' }}
       initial={{ opacity: 0, x: 120, scale: 0.96 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 120, scale: 0.96 }}
+      exit={{ opacity: 0, x: 80, scale: 0.94, transition: { duration: 0.15, ease: 'easeIn' } }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', damping: 26, stiffness: 320, mass: 0.85 }}
       role="status"
       aria-live="polite"
-      aria-label={`${item.title} ${item.description}`}
+      aria-label={`${item.title} ${item.description}. Toque para dispensar.`}
+      onClick={() => onDismiss(item.id)}
     >
       <div className="achievement-toast__glow" aria-hidden />
       <div className="achievement-toast__icon-wrap">

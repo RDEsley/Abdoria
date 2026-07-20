@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { Castle, Dumbbell, Layers, Settings, Trophy, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
@@ -171,9 +172,15 @@ export function AppLayout() {
 
         <TutorialOverlay open={showTutorial} onClose={handleTutorialClose} />
 
-        {levelUpLevel !== null && (
-          <LevelUpOverlay level={levelUpLevel} onDone={() => setLevelUpLevel(null)} />
-        )}
+        <AnimatePresence>
+          {levelUpLevel !== null && (
+            <LevelUpOverlay
+              key={levelUpLevel}
+              level={levelUpLevel}
+              onDone={() => setLevelUpLevel(null)}
+            />
+          )}
+        </AnimatePresence>
 
         {isHomePage && <AfkFab />}
 
