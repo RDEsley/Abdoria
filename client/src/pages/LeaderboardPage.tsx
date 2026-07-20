@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Coins, Trophy } from 'lucide-react';
+import { Coins, Eye, EyeOff, Trophy } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
-import { getLeaderboard, getMyLeaderboardRank } from '@/lib/api';
+import { getLeaderboard, getMyLeaderboardRank, updateMe } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -75,10 +76,15 @@ function RankRow({
   onOpen?: () => void;
   pinned?: boolean;
 }) {
+  const skinned = entry.is_me && entry.banner_equipado && entry.banner_equipado !== 'fundo_padrao';
+  const skinClass = skinned
+    ? ` game-rank-row--skinned game-card-banner--${entry.banner_equipado.replace('fundo_', '')}`
+    : '';
+
   return (
     <li
       id={entry.is_me && !pinned ? 'my-rank-row' : undefined}
-      className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}${onOpen ? ' game-rank-row--link' : ''}`}
+      className={`game-rank-row${entry.is_me ? ' game-rank-row--me' : ''}${skinClass}${onOpen ? ' game-rank-row--link' : ''}`}
       role={onOpen ? 'button' : undefined}
       tabIndex={onOpen ? 0 : undefined}
       onClick={onOpen}
@@ -102,12 +108,18 @@ function RankRow({
 
 export function LeaderboardPage() {
   const navigate = useNavigate();
+  const { user, applyUser } = useAuth();
   const [metric, setMetric] = useState<LeaderboardMetric>('xp');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [myRowVisible, setMyRowVisible] = useState(false);
+  const [visBusy, setVisBusy] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
   const listWrapRef = useRef<HTMLDivElement>(null);
+
+  const isAdmin = user?.role === 'admin';
+  const adminVisivel = user?.preferencias?.admin_visivel_ranking === true;
 
   useEffect(() => {
     setLoading(true);
@@ -124,7 +136,32 @@ export function LeaderboardPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [metric]);
+  }, [metric, reloadTick]);
+
+  /** Só admins: alterna a própria visibilidade nos rankings (padrão: oculto). */
+  const toggleAdminVisibilidade = async () => {
+    if (!user || visBusy) return;
+    setVisBusy(true);
+    try {
+      const updated = await updateMe({
+        preferencias: { ...user.preferencias, admin_visivel_ranking: !adminVisivel },
+      });
+      applyUser(updated);
+      setReloadTick((tick) => tick + 1);
+      showGameToast(
+        !adminVisivel
+          ? 'Você agora aparece nos rankings.'
+          : 'Você está oculto dos rankings.',
+        { variant: 'info' },
+      );
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível alterar a visibilidade.'), {
+        variant: 'error',
+      });
+    } finally {
+      setVisBusy(false);
+    }
+  };
 
   const meInPodium = entries.slice(0, 3).some((entry) => entry.is_me);
   const meInList = entries.slice(3).some((entry) => entry.is_me);
@@ -168,10 +205,31 @@ export function LeaderboardPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader
-        eyebrow="Comunidade Abdoria"
-        title={metric === 'streak' ? 'Classificação' : 'Classificação Semanal'}
-      />
+      <div className="flex items-start justify-between gap-3">
+        <GamePageHeader
+          eyebrow="Comunidade Abdoria"
+          title={metric === 'streak' ? 'Classificação' : 'Classificação Semanal'}
+        />
+        {isAdmin && (
+          <button
+            type="button"
+            className="game-icon-btn shrink-0"
+            disabled={visBusy}
+            aria-pressed={adminVisivel}
+            aria-label={
+              adminVisivel ? 'Ocultar minha conta dos rankings' : 'Mostrar minha conta nos rankings'
+            }
+            title={
+              adminVisivel
+                ? 'Admin visível nos rankings — toque para ocultar'
+                : 'Admin oculto dos rankings — toque para aparecer'
+            }
+            onClick={() => void toggleAdminVisibilidade()}
+          >
+            {adminVisivel ? <Eye size={18} aria-hidden /> : <EyeOff size={18} aria-hidden />}
+          </button>
+        )}
+      </div>
 
       {metric !== 'streak' && <LeaderboardResetCountdown />}
 

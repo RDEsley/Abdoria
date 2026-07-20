@@ -47,6 +47,7 @@ type EntryUser = {
     moedas?: number | null;
     moldura_loja_equipada?: string | null;
     moldura_equipada?: MolduraId | null;
+    banner_equipado?: string | null;
   } | null;
 };
 
@@ -78,6 +79,7 @@ function toEntry(
     avatar_url: user.avatar_url ?? null,
     moldura_loja_equipada: user.cosmeticos?.moldura_loja_equipada ?? 'borda_basica',
     moldura_equipada: moldura,
+    banner_equipado: user.cosmeticos?.banner_equipado ?? 'fundo_padrao',
     // A moldura especial mostra a contagem de itens secretos — não vem do pódio;
     // no ranking exibimos só o contador de pódio (especial fica sem número).
     moldura_count: moldura && moldura !== 'especial' ? molduraCountFor(podium, moldura) : null,
@@ -93,6 +95,15 @@ const leaderboardFilter = {
   is_guest: false,
 };
 
+/** Admins ficam fora dos rankings por padrão; o toggle na página de Ranking
+    (`preferencias.admin_visivel_ranking`) reativa. Moderadores aparecem normal. */
+function isHiddenAdmin(user: {
+  role?: string | null;
+  preferencias?: { admin_visivel_ranking?: boolean } | null;
+}): boolean {
+  return user.role === 'admin' && user.preferencias?.admin_visivel_ranking !== true;
+}
+
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
@@ -107,10 +118,12 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     await processWeeklyLeaderboardRewardsIfDue();
 
     if (metric === 'streak') {
-      const users = await User.find(leaderboardFilter, {
+      // Busca com folga porque admins ocultos são removidos depois da query.
+      const fetched = await User.find(leaderboardFilter, {
         sort: metricSort(metric),
-        limit,
+        limit: limit + 10,
       });
+      const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
       const podiums = await LeaderboardPodiumHistory.countsForUsers(
         users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
       );
@@ -123,7 +136,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     }
 
     // XP e Dorias são semanais: ordena pelo acumulado da semana corrente.
-    const all = await User.find(leaderboardFilter);
+    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
     const ranked = all
       .map((user) => ({ user, value: weeklyMetricValue(user, metric) }))
       .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
@@ -182,7 +195,7 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
-    const all = await User.find(leaderboardFilter);
+    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
     const myValue = weeklyMetricValue(user, metric);
     const rank =
       all.filter((other) => {

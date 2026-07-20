@@ -14,6 +14,24 @@
   margin: 0.75rem 0 0;
 }
 
+.level-up-celebration__rays {
+  position: absolute;
+  width: 9rem;
+  height: 9rem;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(251, 191, 36, 0.28) 0deg 6deg,
+    transparent 6deg 24deg
+  );
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.level-up-celebration--compact .level-up-celebration__rays {
+  width: 6.5rem;
+  height: 6.5rem;
+}
+
 .level-up-celebration__ring {
   position: absolute;
   width: 6.5rem;
@@ -38,9 +56,10 @@
   min-width: 4.5rem;
   min-height: 4.5rem;
   padding: 0.5rem 0.85rem;
-  border-radius: 1rem;
-  border: 3px solid #1c1917;
-  background: linear-gradient(180deg, #fde047, #f59e0b);
+  overflow: hidden;
+  border-radius: 999px;
+  border: 3px solid #78350f;
+  background: radial-gradient(circle at 35% 30%, #fef9c3, #fde047 45%, #d97706 85%);
   box-shadow:
     0 0 0 2px #fff,
     3px 3px 0 #1c1917;
@@ -55,6 +74,17 @@
 .level-up-celebration__icon {
   color: #78350f;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.45));
+}
+
+.level-up-celebration__shine {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  transform: rotate(20deg);
+  animation: level-up-shine 2.4s ease-in-out infinite;
 }
 
 .level-up-celebration__level {
@@ -130,8 +160,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 0.65rem;
-  padding-top: 0.5rem;
+  gap: 0.85rem;
+  padding-top: 0.75rem;
 }
 
 .game-podium__slot--link {
@@ -139,21 +169,22 @@
 }
 
 .game-podium__slot--link:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   transition: transform 0.12s ease;
 }
 
 .game-podium__slot {
   display: flex;
-  width: min(7.5rem, 28vw);
+  width: min(8.75rem, 30vw);
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .game-podium__avatar {
   flex-shrink: 0;
+  filter: drop-shadow(0 3px 0 rgba(28, 25, 23, 0.18));
 }
 
 .game-podium__name {
@@ -163,22 +194,49 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   line-height: 1.25;
   color: #292524;
 }
 
-.game-podium__detail {
+.game-podium__metric {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
-  gap: 0.2rem;
+  gap: 0.25rem;
   margin: 0;
   width: 100%;
-  font-size: 0.62rem;
+  color: #57534e;
+}
+
+.game-podium__metric svg {
+  align-self: center;
+  color: #f59e0b;
+}
+
+.game-podium__metric-value {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #1c1917;
+  letter-spacing: -0.02em;
+}
+
+.game-podium__metric-unit {
+  font-size: 0.6rem;
   font-weight: 800;
+  text-transform: uppercase;
   color: #78716c;
+}
+
+.game-podium__metric--gold .game-podium__metric-value {
+  font-size: 1.05rem;
+  color: #b45309;
+}
+
+.game-podium__metric--gold svg {
+  color: #d97706;
 }
 
 .game-podium__bar {
@@ -364,4 +422,25 @@
 
 .game-rank-row--me:hover {
   box-shadow: 3px 3px 0 var(--game-green-dark);
+}
+
+/* Pódio/linha do próprio usuário com a skin de fundo equipada no perfil */
+.game-podium__bar.game-podium__bar--skinned {
+  border: 3px solid var(--game-ink);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    3px 3px 0 var(--game-ink),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.game-rank-row--skinned {
+  border-color: var(--game-ink);
+}
+
+.game-rank-row--skinned .game-rank-row__rank,
+.game-rank-row--skinned .game-rank-row__name,
+.game-rank-row--skinned .game-rank-row__value {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }

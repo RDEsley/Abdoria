@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Coins } from 'lucide-react';
+import { Coins, Flame, Zap } from 'lucide-react';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import {
   CURRENCY_NAME,
@@ -9,15 +9,28 @@ import {
 } from '@/types';
 
 const PODIUM_SLOTS = [
-  { entryIndex: 1, medal: 'silver', height: 'h-28' },
-  { entryIndex: 0, medal: 'gold', height: 'h-36' },
-  { entryIndex: 2, medal: 'bronze', height: 'h-24' },
+  { entryIndex: 1, medal: 'silver', height: 'h-28', avatarSize: 'md' },
+  { entryIndex: 0, medal: 'gold', height: 'h-40', avatarSize: 'lg' },
+  { entryIndex: 2, medal: 'bronze', height: 'h-24', avatarSize: 'md' },
 ] as const;
 
-function formatPodiumDetail(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
-  if (metric === 'xp') return `Nv.${entry.level}`;
-  if (metric === 'streak') return `${entry.streak_atual}d`;
-  return `${entry.week_value ?? entry.moedas} ${CURRENCY_NAME}`;
+/** Valor de destaque do pódio — o número que decide a posição no ranking. */
+function podiumMetricValue(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
+  if (metric === 'streak') return `${entry.streak_atual}`;
+  if (metric === 'moedas') return `${entry.week_value ?? entry.moedas}`;
+  return `${entry.week_value ?? entry.nivel_xp}`;
+}
+
+function podiumMetricUnit(metric: LeaderboardMetric): string {
+  if (metric === 'streak') return 'dias';
+  if (metric === 'moedas') return CURRENCY_NAME;
+  return 'XP';
+}
+
+function PodiumMetricIcon({ metric }: { metric: LeaderboardMetric }) {
+  if (metric === 'streak') return <Flame size={14} aria-hidden />;
+  if (metric === 'moedas') return <Coins size={14} aria-hidden />;
+  return <Zap size={14} aria-hidden />;
 }
 
 export function LeaderboardPodium({
@@ -60,9 +73,26 @@ export function LeaderboardPodium({
                 : undefined
             }
           >
-            <LeaderboardUserAvatar entry={entry} size="md" className="game-podium__avatar" />
+            <LeaderboardUserAvatar
+              entry={entry}
+              size={slot.avatarSize}
+              className="game-podium__avatar"
+            />
             <p className="game-podium__name">{entry.nome}</p>
-            <div className={`game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`}>
+            <p className={`game-podium__metric game-podium__metric--${slot.medal}`}>
+              <PodiumMetricIcon metric={metric} />
+              <span className="game-podium__metric-value">
+                {podiumMetricValue(entry, metric)}
+              </span>
+              <span className="game-podium__metric-unit">{podiumMetricUnit(metric)}</span>
+            </p>
+            <div
+              className={
+                entry.is_me && entry.banner_equipado && entry.banner_equipado !== 'fundo_padrao'
+                  ? `game-podium__bar game-podium__bar--skinned game-card-banner--${entry.banner_equipado.replace('fundo_', '')} ${slot.height}`
+                  : `game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`
+              }
+            >
               <span className="game-podium__rank">#{entry.rank}</span>
               {metric !== 'streak' && weeklyLeaderboardReward(entry.rank) && (
                 <span className="game-podium__reward">
@@ -70,10 +100,6 @@ export function LeaderboardPodium({
                 </span>
               )}
             </div>
-            <p className="game-podium__detail">
-              {metric === 'moedas' && <Coins size={10} aria-hidden className="inline" />}
-              {formatPodiumDetail(entry, metric)}
-            </p>
           </motion.div>
         );
       })}
