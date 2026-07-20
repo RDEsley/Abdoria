@@ -794,34 +794,119 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 2rem 2.5rem;
+  gap: 1rem;
+  padding: 2.25rem 2.75rem;
+  overflow: hidden;
   border: 3px solid var(--game-ink);
-  background: linear-gradient(160deg, #fef9c3, #fde68a 45%, #fbbf24);
-  box-shadow: 6px 6px 0 var(--game-ink);
+  border-radius: 1.25rem;
+  background: linear-gradient(160deg, #1e1b4b, #312e81 55%, #1e1b4b);
+  box-shadow:
+    6px 6px 0 var(--game-ink),
+    0 0 40px rgba(251, 191, 36, 0.25);
 }
 
-.level-up-overlay__ring {
+.level-up-overlay__rays {
   position: absolute;
-  inset: -1.25rem;
-  border: 3px solid rgba(245, 158, 11, 0.45);
-  border-radius: 999px;
-}
-
-.level-up-overlay__icon {
-  color: #b45309;
+  inset: -35%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(251, 191, 36, 0.22) 0deg 6deg,
+    transparent 6deg 24deg
+  );
+  pointer-events: none;
 }
 
 .level-up-overlay__label {
+  position: relative;
+  z-index: 1;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
-  color: #92400e;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #fde68a;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
+}
+
+.level-up-overlay__medal-wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 7rem;
+  height: 7rem;
+}
+
+.level-up-overlay__pulse {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  border-radius: 999px;
+}
+
+.level-up-overlay__medal {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 5.5rem;
+  height: 5.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 3px solid #78350f;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fef9c3, #fde047 45%, #d97706 85%);
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 24px rgba(251, 191, 36, 0.7),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.level-up-overlay__crown {
+  color: #78350f;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.4));
 }
 
 .level-up-overlay__level {
   font-family: 'Press Start 2P', monospace;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  line-height: 1;
   color: #78350f;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.level-up-overlay__shine {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: rotate(20deg);
+  animation: level-up-shine 2.2s ease-in-out infinite;
+}
+
+@keyframes level-up-shine {
+  0% {
+    left: -60%;
+  }
+  50%,
+  100% {
+    left: 130%;
+  }
+}
+
+.level-up-overlay__spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.3rem;
+  height: 0.8rem;
+  margin-top: -0.4rem;
+  margin-left: -0.15rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fef08a, #f59e0b);
+  transform-origin: center bottom;
 }
 
 /* Título Dono do Jogo */

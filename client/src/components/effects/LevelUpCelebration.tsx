@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Zap } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { playLevelUp } from '@/lib/sounds';
 
 interface Props {
@@ -30,6 +30,13 @@ export function LevelUpCelebration({ level, compact = false }: Props) {
       aria-live="polite"
     >
       <motion.div
+        className="level-up-celebration__rays"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+        aria-hidden
+      />
+
+      <motion.div
         className="level-up-celebration__ring"
         initial={{ scale: 0.4, opacity: 0 }}
         animate={{ scale: [0.4, 1.35, 1], opacity: [0, 0.9, 0.35] }}
@@ -43,7 +50,7 @@ export function LevelUpCelebration({ level, compact = false }: Props) {
         animate={{ scale: 1, rotate: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 420, damping: 14, delay: 0.12 }}
       >
-        <Zap size={compact ? 16 : 22} className="level-up-celebration__icon" aria-hidden />
+        <Crown size={compact ? 16 : 22} className="level-up-celebration__icon" aria-hidden />
         <motion.span
           className="level-up-celebration__level"
           key={level}
@@ -53,6 +60,7 @@ export function LevelUpCelebration({ level, compact = false }: Props) {
         >
           {level}
         </motion.span>
+        <span className="level-up-celebration__shine" aria-hidden />
       </motion.div>
 
       {SPARKS.map((spark) => (
