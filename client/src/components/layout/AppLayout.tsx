@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Castle, Dumbbell, Layers, Settings, Trophy, User } from 'lucide-react';
+import { Castle, Dumbbell, Layers, Settings, Trophy, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameToastHost } from '@/components/ui/GameToast';
+import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
 import { GameHud } from '@/components/layout/GameHud';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
+import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
@@ -23,11 +25,18 @@ const navItems = [
   { to: '/perfil', icon: User, label: 'Herói' },
 ] as const;
 
+const VIEWPORT_NOTICE_KEY = 'abdoria_viewport_notice_dismissed';
+
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
   const { refresh: refreshApp } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useMobileViewport();
+  const [viewportNoticeDismissed, setViewportNoticeDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem(VIEWPORT_NOTICE_KEY) === '1';
+  });
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
   const [levelUpLevel, setLevelUpLevel] = useState<number | null>(null);
 
@@ -69,6 +78,12 @@ export function AppLayout() {
   };
 
   const isHomePage = location.pathname === '/';
+  const showViewportNotice = !isMobile && !viewportNoticeDismissed;
+
+  const dismissViewportNotice = () => {
+    sessionStorage.setItem(VIEWPORT_NOTICE_KEY, '1');
+    setViewportNoticeDismissed(true);
+  };
 
   return (
     <MidnightRefreshProvider>
@@ -108,6 +123,27 @@ export function AppLayout() {
 
         <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
           <GameHud />
+
+          {showViewportNotice && (
+            <div className="mx-auto w-full max-w-lg px-4 pt-3 md:max-w-3xl">
+              <div className="relative">
+                <GameAlertBanner
+                  variant="info"
+                  title="Melhor experiência no celular"
+                  message="O Abdoria foi desenhado para telas de celular. Em computador ou tablet, alguns elementos podem não se encaixar perfeitamente."
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-500 shadow-sm transition hover:bg-stone-100 hover:text-stone-700"
+                  onClick={dismissViewportNotice}
+                  aria-label="Fechar aviso de compatibilidade de tela"
+                  title="Fechar aviso"
+                >
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+            </div>
+          )}
 
           <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]">
             <Outlet />

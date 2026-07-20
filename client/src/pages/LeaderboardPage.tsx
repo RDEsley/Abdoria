@@ -114,6 +114,7 @@ export function LeaderboardPage() {
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [myRowVisible, setMyRowVisible] = useState(false);
+  const [hasScrolledDown, setHasScrolledDown] = useState(false);
   const [visBusy, setVisBusy] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
   const listWrapRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,16 @@ export function LeaderboardPage() {
       })
       .finally(() => setLoading(false));
   }, [metric, reloadTick]);
+
+  useEffect(() => {
+    const updateScrollState = () => {
+      setHasScrolledDown(window.scrollY > 24);
+    };
+
+    updateScrollState();
+    window.addEventListener('scroll', updateScrollState, { passive: true });
+    return () => window.removeEventListener('scroll', updateScrollState);
+  }, []);
 
   /** Só admins: alterna a própria visibilidade nos rankings (padrão: oculto). */
   const toggleAdminVisibilidade = async () => {
@@ -201,7 +212,7 @@ export function LeaderboardPage() {
 
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
-  const showPinnedMe = me != null && !loading && (!isMeInTop || !myRowVisible);
+  const showPinnedMe = me != null && !loading && hasScrolledDown && (!isMeInTop || !myRowVisible);
 
   return (
     <div className="flex flex-col gap-5">
