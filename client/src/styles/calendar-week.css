@@ -395,3 +395,37 @@
   background: #ecfdf5;
   color: #047857;
 }
+
+/* Calendário — detalhe de uma Atividade concluída */
+.workout-calendar__atividade {
+  margin-top: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  background: rgba(16, 185, 129, 0.08);
+  border-left: 3px solid #10b981;
+  border-radius: 0.5rem;
+}
+
+.workout-calendar__atividade-nome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #065f46;
+}
+
+.workout-calendar__atividade-detalhe {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.workout-calendar__atividade-obs {
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #57534e;
+}

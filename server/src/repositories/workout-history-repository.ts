@@ -11,6 +11,8 @@ export interface WorkoutHistoryDocument {
   xp_ganho: number;
   concluido_em: Date | string;
   plano_dia_indice?: number | null;
+  /** Métricas contextuais da Atividade; null/ausente em treinos. */
+  atividade?: Record<string, unknown> | null;
 }
 
 function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
@@ -25,7 +27,16 @@ function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
     xp_ganho: Number(row.xp_ganho),
     concluido_em: row.concluido_em as string,
     plano_dia_indice: row.plano_dia_indice != null ? Number(row.plano_dia_indice) : null,
+    atividade: (row.atividade as Record<string, unknown> | null) ?? null,
   };
+}
+
+/** A coluna `atividade` chega por migração aplicada à mão — até lá, o insert
+    precisa cair pro shape antigo em vez de derrubar a conclusão da atividade. */
+function isMissingAtividadeColumn(error: { message?: string; code?: string } | null): boolean {
+  if (!error) return false;
+  if (error.code === '42703' || error.code === 'PGRST204') return true;
+  return /atividade/i.test(error.message ?? '') && /column|schema cache/i.test(error.message ?? '');
 }
 
 export const WorkoutHistory = {
@@ -146,12 +157,22 @@ export const WorkoutHistory = {
       xp_ganho: data.xp_ganho,
       concluido_em: data.concluido_em ?? new Date().toISOString(),
       ...(data.plano_dia_indice != null ? { plano_dia_indice: data.plano_dia_indice } : {}),
+      ...(data.atividade != null ? { atividade: data.atividade } : {}),
     };
+
     const { data: inserted, error } = await sb
       .from('workout_history')
       .insert(row)
       .select('*')
       .single();
+
+    if (error && data.atividade != null && isMissingAtividadeColumn(error)) {
+      const { atividade: _omitida, ...semAtividade } = row;
+      const retry = await sb.from('workout_history').insert(semAtividade).select('*').single();
+      if (retry.error) throw retry.error;
+      return rowToHistory(retry.data as Record<string, unknown>);
+    }
+
     if (error) throw error;
     return rowToHistory(inserted as Record<string, unknown>);
   },

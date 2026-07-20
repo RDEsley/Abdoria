@@ -115,6 +115,6 @@
   letter-spacing: 0.02em;
 }
 
-.game-btn:not(.game-login .game-btn):not(.game-profile-save-btn) {
+.game-btn:not(.game-login .game-btn):not(.game-profile-save-btn):not(.w-full) {
   width: auto;
 }

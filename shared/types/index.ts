@@ -154,6 +154,8 @@ export interface UserPreferencias {
   descanso_padrao_seg: number;
   som_habilitado: boolean;
   sfx_volume: number;
+  /** Contagem 3-2-1 antes de exercícios de tempo, pra dar tempo de se posicionar. Default: true. */
+  contagem_regressiva_habilitada?: boolean;
   ciclo_treinos: TreinoBase[];
   modo_padrao: ModoExercicio;
   reps_series_padrao?: number;
@@ -186,8 +188,18 @@ export interface UserPreferencias {
   reonboarding_dispensado?: number;
   /** true = já avaliou o app ou pediu pra não perguntar de novo. */
   avaliacao_respondida?: boolean;
+  /** true = já enviou sugestão (popup do streak 7) ou pediu pra não perguntar. */
+  sugestao_respondida?: boolean;
   /** true = não voltar a oferecer o opt-in de notificações. */
   notificacoes_opt_out?: boolean;
+  /** Lista ordenada de Atividades do usuário; ausente = catálogo padrão. */
+  atividades?: import('../atividades.js').AtividadeExtra[];
+  /** Fila de atividades do dia corrente (ver shared/atividades). */
+  atividades_fila?: import('../atividades.js').AtividadesFila;
+  /** Quando as atividades entram na rotina (ver shared/atividades). */
+  atividades_agenda?: import('../atividades.js').AtividadesAgenda;
+  /** Só admins: true = aparecer nos rankings (padrão: oculto). */
+  admin_visivel_ranking?: boolean;
 }
 
 export type ArmaPreferida = 'arco' | 'espada' | 'magia';
@@ -766,7 +778,7 @@ export const SHOP_XP_COST_PER_MOEDA = 25;
 export const SHOP_MOEDA_COST_PER_XP = 5;
 /** Dorias passivas: 1 moeda a cada N XP totais ganhos. */
 export const MOEDA_XP_STEP = 10;
-export const CURRENCY_NAME = 'Dorias';
+export const CURRENCY_NAME = 'Coins';
 
 /** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
 export const NAME_CHANGE_COST = 10_000;
@@ -798,7 +810,7 @@ export const EXP_INSTANT_XP = 10;
 export const EXP_INSTANT_SHOP_PRICE = 12;
 
 export const DORIA_BAG_ITEM_ID: InventoryItemId = 'doria_bag';
-export const DORIA_BAG_LABEL = 'Bolsa de Dorias';
+export const DORIA_BAG_LABEL = 'Bolsa de Coins';
 export const DORIA_BAG_MIN = 1;
 export const DORIA_BAG_MAX = 10;
 export const DORIA_BAG_SHOP_PRICE = 18;
@@ -813,10 +825,15 @@ export const GOLDEN_SLIME_SECRET_COSMETIC_IDS = [
   'titulo_toque_dourado',
 ] as const;
 
+/** Moldura exclusiva de administradores — nunca listada pra não-admins
+    (nem bloqueada); concedida/removida automaticamente conforme o papel. */
+export const ADMIN_MOLDURA_ID = 'borda_admin';
+
 /** Itens que nunca aparecem na Loja Abdoria nem no catálogo bloqueado. */
 export const SHOP_HIDDEN_COSMETIC_IDS = [
   'titulo_secreto',
   'titulo_dono_do_jogo',
+  ADMIN_MOLDURA_ID,
   ...GOLDEN_SLIME_SECRET_COSMETIC_IDS,
 ] as const;
 
@@ -1081,6 +1098,8 @@ export interface IWorkoutHistory {
   concluido_em: Date;
   /** Dia do plano corpo-todo que este treino concluiu (modo plano). */
   plano_dia_indice?: number;
+  /** Preenchido só em sessões de Atividade — métricas contextuais + OBS. */
+  atividade?: import('../atividades.js').AtividadeLog | null;
 }
 
 export interface IWorkoutHistoryDocument extends IWorkoutHistory {
@@ -1393,6 +1412,8 @@ export interface LeaderboardEntry {
   moldura_equipada?: MolduraId | null;
   /** Contador sobreposto à moldura (pódios naquela posição). */
   moldura_count?: number | null;
+  /** Fundo de perfil equipado (ex.: 'fundo_padrao') — estiliza a própria linha/pódio no ranking. */
+  banner_equipado: string;
   is_me?: boolean;
   /** Total de participantes elegíveis no ranking — só vem em GET /leaderboard/me. */
   total?: number | null;

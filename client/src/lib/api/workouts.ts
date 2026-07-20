@@ -44,6 +44,41 @@ export function getWorkoutHistorySessionDetail(id: string): Promise<WorkoutHisto
   return fetchJson(`/workouts/history/${id}`);
 }
 
+export interface CompleteAtividadeResponse {
+  user: import('@/types').IUserDocument;
+  atividade: import('@shared/atividades').AtividadeExtra;
+  xp_ganho: number;
+  abdoria_ganha: number;
+  /** true = hoje é dia de treino, então a atividade não paga XP nem streak. */
+  dia_de_treino: boolean;
+  atividades_hoje: number;
+  atividades_minimo: number;
+  /** true = bateu o mínimo de atividades do dia de descanso. */
+  meta_descanso_atingida: boolean;
+  streak_celebration: { streak_atual: number; streak_anterior: number } | null;
+  level_up: { level_anterior: number; level_novo: number } | null;
+  new_achievements: { id: string; titulo: string; descricao: string; icon: string }[];
+}
+
+/**
+ * Conclui uma Atividade da fila do dia com as métricas do form contextual.
+ * Dia de descanso paga XP e sustenta a streak (a partir do mínimo do dia);
+ * dia de treino registra só pro calendário/conquistas.
+ */
+export function completeAtividade(
+  atividadeId: string,
+  payload: { metricas: Record<string, number | string>; obs?: string },
+): Promise<CompleteAtividadeResponse> {
+  return fetchJson('/workouts/atividade/complete', {
+    method: 'POST',
+    body: JSON.stringify({
+      atividade_id: atividadeId,
+      metricas: payload.metricas,
+      ...(payload.obs ? { obs: payload.obs } : {}),
+    }),
+  });
+}
+
 export function completeWorkout(payload: CompleteWorkoutPayload): Promise<CompleteWorkoutResponse> {
   return fetchJson('/workouts/complete', { method: 'POST', body: JSON.stringify(payload) });
 }

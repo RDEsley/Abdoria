@@ -11,7 +11,13 @@ import {
 import {
   computeStreakWithFrozenDays,
   findStreakMissedDaysForFreeze,
+  workoutDayKey,
 } from '../../../shared/streak/protection.js';
+import {
+  ATIVIDADES_MIN_DESCANSO,
+  isAtividadeHistory,
+  isDiaDeTreino,
+} from '../../../shared/atividades.js';
 import { consumeInventoryItem, getItemCount } from './inventory.js';
 import { Notifications } from '../repositories/notification-repository.js';
 import { User, type UserRecord } from '../domain/User.js';
@@ -56,6 +62,7 @@ type HistorySummary = {
   musculos_estimulados: MusculoPrincipal[];
   treino_tipo?: string;
   duracao_total_segundos?: number;
+  treino_nome?: string;
 };
 
 function computeStreakFromHistories(
@@ -63,6 +70,39 @@ function computeStreakFromHistories(
   frozenDates: string[] = [],
 ): { atual: number; maior: number } {
   return computeStreakWithFrozenDays(histories, frozenDates);
+}
+
+/**
+ * Filtra o histórico pro cálculo de streak segundo as regras de Atividades:
+ * - Treino real sempre sustenta o dia.
+ * - Em dia de TREINO agendado, atividade nunca sustenta a streak — quem
+ *   garante o dia é o treino (elas ficam só pro calendário/conquistas).
+ * - Em dia de DESCANSO, as atividades sustentam o dia desde que o usuário
+ *   tenha concluído pelo menos `ATIVIDADES_MIN_DESCANSO` naquele dia.
+ * Usa o `dias_semana` atual do perfil como aproximação do que valia em cada data.
+ */
+function historiesEligibleForStreak(
+  histories: HistorySummary[],
+  diasSemana: number[] | null | undefined,
+): HistorySummary[] {
+  const porDia = new Map<string, { treino: boolean; atividades: number }>();
+  for (const h of histories) {
+    const key = workoutDayKey(h.concluido_em);
+    const dia = porDia.get(key) ?? { treino: false, atividades: 0 };
+    if (isAtividadeHistory(h.treino_nome)) dia.atividades += 1;
+    else dia.treino = true;
+    porDia.set(key, dia);
+  }
+
+  return histories.filter((h) => {
+    if (!isAtividadeHistory(h.treino_nome)) return true;
+    const dia = porDia.get(workoutDayKey(h.concluido_em));
+    if (!dia) return false;
+    if (dia.treino) return true; // o dia já está garantido pelo treino
+    const weekday = getSaoPauloWeekday(new Date(h.concluido_em));
+    if (isDiaDeTreino(diasSemana, weekday)) return false;
+    return dia.atividades >= ATIVIDADES_MIN_DESCANSO;
+  });
 }
 
 /**
@@ -215,7 +255,11 @@ export function evaluateAchievementsFromHistories(
   const totalWorkouts = summary.length;
   const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
   const totalMinutes = user.gamificacao.total_minutos;
-  const streak = computeStreakFromHistories(summary, user.gamificacao.streak_congelamentos ?? []);
+  const streakHistories = historiesEligibleForStreak(summary, user.perfil_treino?.dias_semana);
+  const streak = computeStreakFromHistories(
+    streakHistories,
+    user.gamificacao.streak_congelamentos ?? [],
+  );
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
 
   const weeklyHistories = summary.filter((h) => new Date(h.concluido_em) >= since);
@@ -287,11 +331,12 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
   )) as HistorySummary[];
 
   const totalSeconds = histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
+  const streakHistories = historiesEligibleForStreak(histories, user.perfil_treino?.dias_semana);
 
-  const frozenDays = applyStreakFreezeProtection(user, histories);
+  const frozenDays = applyStreakFreezeProtection(user, streakHistories);
 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
-  const streakAfterFreeze = computeStreakFromHistories(histories, frozenDates);
+  const streakAfterFreeze = computeStreakFromHistories(streakHistories, frozenDates);
 
   user.gamificacao.total_minutos = Math.floor(totalSeconds / 60);
   user.gamificacao.streak_atual = streakAfterFreeze.atual;

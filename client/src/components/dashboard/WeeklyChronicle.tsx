@@ -1,11 +1,13 @@
 import { useEffect, useMemo } from 'react';
-import { Dumbbell, Minus, ScrollText, TrendingDown, TrendingUp, Zap } from 'lucide-react';
+import { Dumbbell, ListChecks, Minus, ScrollText, TrendingDown, TrendingUp, Zap } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { toLocalDateKey } from '@/lib/utils';
+import { isAtividadeHistory } from '@shared/atividades';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 
 interface WeekTotals {
-  workouts: number;
+  treinos: number;
+  atividades: number;
   xp: number;
 }
 
@@ -13,7 +15,7 @@ function weekDayKeys(mondayKey: string): Set<string> {
   return new Set(Array.from({ length: 7 }, (_, i) => addDaysSaoPaulo(mondayKey, i)));
 }
 
-/** Card narrativo comparando XP e treinos desta semana com a semana anterior. */
+/** Card narrativo comparando XP, treinos e atividades desta semana com a anterior. */
 export function WeeklyChronicle() {
   const { history, ensureHistory, historyLoading } = useApp();
 
@@ -28,18 +30,17 @@ export function WeeklyChronicle() {
     const currentKeys = weekDayKeys(currentMonday);
     const previousKeys = weekDayKeys(previousMonday);
 
-    const current: WeekTotals = { workouts: 0, xp: 0 };
-    const previous: WeekTotals = { workouts: 0, xp: 0 };
+    const current: WeekTotals = { treinos: 0, atividades: 0, xp: 0 };
+    const previous: WeekTotals = { treinos: 0, atividades: 0, xp: 0 };
 
     for (const entry of history) {
       const key = toLocalDateKey(entry.concluido_em);
-      if (currentKeys.has(key)) {
-        current.workouts += 1;
-        current.xp += entry.xp_ganho ?? 0;
-      } else if (previousKeys.has(key)) {
-        previous.workouts += 1;
-        previous.xp += entry.xp_ganho ?? 0;
-      }
+      const bucket = currentKeys.has(key) ? current : previousKeys.has(key) ? previous : null;
+      if (!bucket) continue;
+
+      if (isAtividadeHistory(entry.treino_nome)) bucket.atividades += 1;
+      else bucket.treinos += 1;
+      bucket.xp += entry.xp_ganho ?? 0;
     }
 
     return { current, previous };
@@ -49,8 +50,9 @@ export function WeeklyChronicle() {
     return <p className="text-sm text-stone-500">Escrevendo a crônica da semana...</p>;
   }
 
-  const hasPrevious = previous.workouts > 0 || previous.xp > 0;
-  const workoutsDelta = current.workouts - previous.workouts;
+  const hasPrevious = previous.treinos > 0 || previous.atividades > 0 || previous.xp > 0;
+  const treinosDelta = current.treinos - previous.treinos;
+  const atividadesDelta = current.atividades - previous.atividades;
   const xpDeltaPct =
     previous.xp > 0 ? Math.round(((current.xp - previous.xp) / previous.xp) * 100) : null;
 
@@ -59,7 +61,9 @@ export function WeeklyChronicle() {
   let trendTone = 'bg-stone-100 text-stone-600';
   if (!hasPrevious) {
     headline =
-      current.workouts > 0 ? 'Capítulo de estreia da sua jornada!' : 'Uma nova crônica começa';
+      current.treinos > 0 || current.atividades > 0
+        ? 'Capítulo de estreia da sua jornada!'
+        : 'Uma nova crônica começa';
     trendTone = 'bg-sky-100 text-sky-700';
   } else if (xpDeltaPct === null || xpDeltaPct === 0) {
     headline = 'Ritmo constante';
@@ -121,10 +125,21 @@ export function WeeklyChronicle() {
             <Dumbbell size={14} aria-hidden />
           </span>
           <span className="text-xs font-extrabold text-stone-700">
-            {current.workouts} treino{current.workouts !== 1 ? 's' : ''}
+            {current.treinos} treino{current.treinos !== 1 ? 's' : ''}
           </span>
-          {deltaChip(hasPrevious ? workoutsDelta : null, '')}
+          {deltaChip(hasPrevious ? treinosDelta : null, '')}
         </li>
+        {(current.atividades > 0 || previous.atividades > 0) && (
+          <li className="flex items-center gap-2 rounded-xl border-2 border-stone-100 bg-stone-50 px-3 py-2">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+              <ListChecks size={14} aria-hidden />
+            </span>
+            <span className="text-xs font-extrabold text-stone-700">
+              {current.atividades} atividade{current.atividades !== 1 ? 's' : ''}
+            </span>
+            {deltaChip(hasPrevious ? atividadesDelta : null, '')}
+          </li>
+        )}
       </ul>
     </section>
   );

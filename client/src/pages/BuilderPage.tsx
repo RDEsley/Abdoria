@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Bookmark, GraduationCap } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
+import { resolveFila } from '@shared/atividades';
+import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
 import { MAX_REP_SCHEMES, RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
@@ -30,7 +32,8 @@ import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { getPresets, getRecommendWorkout } from '@/lib/api';
+import { getPresets, getRecommendWorkout, updateMe } from '@/lib/api';
+import { getErrorMessage } from '@/lib/api-errors';
 import { resolveSelectedRepSchemeId } from '@/lib/user-dados';
 import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
 import type {
@@ -80,11 +83,35 @@ export function BuilderPage() {
     exercisesLoading,
     ensureExercises,
     user,
+    refresh,
   } = useApp();
-  const { user: authUser } = useAuth();
+  const { user: authUser, applyUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const presetFromUrl = searchParams.get('preset');
+
+  // Atividades enfileiradas no Início entram na sequência depois do treino.
+  const atividadesNaFila = resolveFila(authUser?.preferencias, getTodaySaoPaulo()).length;
+
+  /** Tira as atividades da fila de hoje sem sair do Construtor — o treino segue só. */
+  const handleRemoverAtividadesDaFila = async () => {
+    if (!authUser) return;
+    try {
+      const atualizado = await updateMe({
+        preferencias: {
+          ...authUser.preferencias,
+          atividades_fila: { data: getTodaySaoPaulo(), ids: [] },
+        },
+      });
+      applyUser(atualizado);
+      await refresh();
+      showGameToast('Atividades tiradas do treino de hoje.', { variant: 'success' });
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível remover as atividades.'), {
+        variant: 'error',
+      });
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<BuilderTab>('train');
   const [allPresets, setAllPresets] = useState<IWorkoutPresetDocument[]>([]);
@@ -973,6 +1000,10 @@ export function BuilderPage() {
         estimatedMinutes={estimatedMinutes}
         disabled={activeQueue.length === 0}
         onStart={proceedToWorkout}
+        atividadesNaFila={atividadesNaFila}
+        onRemoverAtividades={
+          atividadesNaFila > 0 ? () => void handleRemoverAtividadesDaFila() : undefined
+        }
       />
     </div>
   );

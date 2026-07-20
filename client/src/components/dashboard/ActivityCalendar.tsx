@@ -25,6 +25,28 @@ function pad2(n: number) {
   return String(n).padStart(2, '0');
 }
 
+/** Rótulos curtos das métricas registradas na conclusão da atividade. */
+const METRICA_UNIDADES: Record<string, string> = {
+  tempo_min: 'min',
+  paginas: 'páginas',
+  km: 'km',
+  metros: 'm',
+  quantidade: '',
+};
+
+/** "30 páginas · 25 min" a partir das métricas salvas no histórico. */
+function formatMetricas(metricas: Record<string, number | string> | undefined): string {
+  if (!metricas) return '';
+  return Object.entries(metricas)
+    .map(([chave, valor]) => {
+      if (typeof valor === 'string') return valor;
+      const unidade = METRICA_UNIDADES[chave];
+      return unidade ? `${valor} ${unidade}` : String(valor);
+    })
+    .filter(Boolean)
+    .join(' · ');
+}
+
 export function ActivityCalendar() {
   const { history, ensureHistory, historyLoading, user } = useApp();
   const frozenSet = useMemo(
@@ -47,17 +69,45 @@ export function ActivityCalendar() {
     const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
     const firstWeekday = new Date(year, monthIndex, 1).getDay();
 
-    const dayMeta = new Map<string, { count: number; minutes: number; workouts: string[] }>();
+    const dayMeta = new Map<
+      string,
+      {
+        count: number;
+        treinos: number;
+        minutes: number;
+        workouts: string[];
+        atividades: { nome: string; detalhe: string; obs?: string }[];
+      }
+    >();
 
     for (const entry of history) {
       const key = toLocalDateKey(entry.concluido_em);
       const [keyYear, keyMonth] = key.split('-').map(Number);
       if (keyYear !== year || keyMonth - 1 !== monthIndex) continue;
-      const prev = dayMeta.get(key) ?? { count: 0, minutes: 0, workouts: [] };
+      const prev = dayMeta.get(key) ?? {
+        count: 0,
+        treinos: 0,
+        minutes: 0,
+        workouts: [],
+        atividades: [],
+      };
+      const log = entry.atividade ?? null;
+
       dayMeta.set(key, {
         count: prev.count + 1,
+        treinos: prev.treinos + (log ? 0 : 1),
         minutes: prev.minutes + Math.round((entry.duracao_total_segundos ?? 0) / 60),
-        workouts: [...prev.workouts, entry.treino_nome ?? 'Treino'],
+        workouts: log ? prev.workouts : [...prev.workouts, entry.treino_nome ?? 'Treino'],
+        atividades: log
+          ? [
+              ...prev.atividades,
+              {
+                nome: log.nome,
+                detalhe: formatMetricas(log.metricas),
+                ...(log.obs ? { obs: log.obs } : {}),
+              },
+            ]
+          : prev.atividades,
       });
     }
 
@@ -175,14 +225,37 @@ export function ActivityCalendar() {
       {selectedMeta && selectedDay && (
         <div className="workout-calendar__detail">
           <p className="workout-calendar__detail-title">
-            {selectedDay.split('-').reverse().join('/')} · {selectedMeta.count} treino(s) ·{' '}
-            {formatTrainingDuration(selectedMeta.minutes * 60)}
+            {selectedDay.split('-').reverse().join('/')} ·{' '}
+            {[
+              selectedMeta.treinos > 0 ? `${selectedMeta.treinos} treino(s)` : null,
+              selectedMeta.atividades.length > 0
+                ? `${selectedMeta.atividades.length} atividade(s)`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}{' '}
+            · {formatTrainingDuration(selectedMeta.minutes * 60)}
           </p>
-          <ul className="workout-calendar__detail-list">
-            {selectedMeta.workouts.map((name, i) => (
-              <li key={`${selectedDay}-${i}`}>{name}</li>
-            ))}
-          </ul>
+          {selectedMeta.workouts.length > 0 && (
+            <ul className="workout-calendar__detail-list">
+              {selectedMeta.workouts.map((name, i) => (
+                <li key={`${selectedDay}-t-${i}`}>{name}</li>
+              ))}
+            </ul>
+          )}
+          {selectedMeta.atividades.map((atividade, i) => (
+            <div key={`${selectedDay}-a-${i}`} className="workout-calendar__atividade">
+              <p className="workout-calendar__atividade-nome">
+                {atividade.nome}
+                {atividade.detalhe && (
+                  <span className="workout-calendar__atividade-detalhe">{atividade.detalhe}</span>
+                )}
+              </p>
+              {atividade.obs && (
+                <p className="workout-calendar__atividade-obs">“{atividade.obs}”</p>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

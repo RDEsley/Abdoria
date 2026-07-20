@@ -1,7 +1,54 @@
-/* Loader */
+/* Loader — avião supersônico cruzando a cena em loop */
 .game-loader {
-  padding: 2rem 1rem;
+  padding: 1.75rem 1rem 1.25rem;
   text-align: center;
+}
+
+.game-loader-scene {
+  position: relative;
+  width: 100%;
+  max-width: 20rem;
+  height: 3.5rem;
+  margin: 0 auto 0.85rem;
+  overflow: hidden;
+}
+
+.game-loader-plane {
+  position: absolute;
+  top: 50%;
+  left: -14%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f766e;
+  opacity: 0;
+  filter: drop-shadow(0 2px 3px rgba(15, 118, 110, 0.4));
+  animation: game-plane-fly 4.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.game-loader-trail {
+  position: absolute;
+  top: 50%;
+  left: -14%;
+  width: 38%;
+  height: 0.32rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #22d3ee 30%,
+    #a855f7 58%,
+    #f97316 85%,
+    transparent
+  );
+  border-radius: 999px;
+  filter: blur(1.5px);
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0.2);
+  transform-origin: right center;
+  animation: game-plane-trail 4.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.game-loader__label {
   font-family: 'Press Start 2P', monospace;
   font-size: 0.5rem;
   color: #57534e;
@@ -11,6 +58,89 @@
 @keyframes game-loader-blink {
   50% {
     opacity: 0.35;
+  }
+}
+
+@keyframes game-plane-fly {
+  0% {
+    left: -14%;
+    opacity: 0;
+    transform: translateY(-50%) rotate(0deg) scale(0.85);
+  }
+  14% {
+    left: 4%;
+    opacity: 1;
+    transform: translateY(-50%) rotate(0deg) scale(1);
+  }
+  30% {
+    left: 22%;
+    opacity: 1;
+    transform: translateY(-64%) rotate(-5deg) scale(1);
+  }
+  45% {
+    left: 40%;
+    opacity: 1;
+    transform: translateY(-38%) rotate(4deg) scale(1);
+  }
+  58% {
+    left: 56%;
+    opacity: 1;
+    transform: translateY(-50%) rotate(0deg) scale(1);
+  }
+  64% {
+    left: 60%;
+    opacity: 1;
+    transform: translateY(-50%) rotate(-8deg) scale(1.1);
+  }
+  76% {
+    left: 128%;
+    opacity: 1;
+    transform: translateY(-50%) rotate(-20deg) scale(0.75);
+  }
+  79%,
+  100% {
+    left: 138%;
+    opacity: 0;
+    transform: translateY(-50%) rotate(-20deg) scale(0.7);
+  }
+}
+
+@keyframes game-plane-trail {
+  0%,
+  60% {
+    left: -14%;
+    opacity: 0;
+    transform: translateY(-50%) scaleX(0.2);
+  }
+  65% {
+    left: 42%;
+    opacity: 0.9;
+    transform: translateY(-50%) scaleX(0.7);
+  }
+  76% {
+    left: 90%;
+    opacity: 0.75;
+    transform: translateY(-50%) scaleX(1.8);
+  }
+  82%,
+  100% {
+    left: 112%;
+    opacity: 0;
+    transform: translateY(-50%) scaleX(2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-loader-plane,
+  .game-loader-trail {
+    animation: none;
+    opacity: 1;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .game-loader-trail {
+    display: none;
   }
 }
 
@@ -902,4 +1032,595 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Atividades (Início)                                                  */
+/* ------------------------------------------------------------------ */
+
+.atividades-progresso {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.atividades-progresso__barra {
+  position: relative;
+  flex: 1;
+  height: 0.5rem;
+  overflow: hidden;
+  background: #e7e5e4;
+  border-radius: 999px;
+}
+
+.atividades-progresso__fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #34d399, #059669);
+  border-radius: 999px;
+}
+
+.atividades-progresso__label {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #78716c;
+}
+
+.atividades-progresso__label.is-done {
+  color: #047857;
+}
+
+/* Altura travada em ~4 linhas e meia: com o teto de 30 atividades, a seção
+   nunca empurra o resto da Home pra baixo — o resto rola por dentro. */
+/* Medidor de fila: enche conforme o usuário seleciona atividades pro dia —
+   fica mais colorido e "vivo" quanto mais ele adiciona, até 6 (dopamina). */
+.atividades-fila-cta {
+  display: flex;
+  flex-direction: column;
+}
+
+.atividades-fila-medidor {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.atividades-fila-medidor__pip {
+  height: 0.4rem;
+  flex: 1;
+  background: #e7e5e4;
+  border-radius: 999px;
+  transition: background 0.25s ease;
+}
+
+.atividades-fila-medidor--tier-1 .atividades-fila-medidor__pip.is-filled {
+  background: linear-gradient(90deg, #34d399, #059669);
+}
+
+.atividades-fila-medidor--tier-2 .atividades-fila-medidor__pip.is-filled {
+  background: linear-gradient(90deg, #34d399, #0d9488);
+}
+
+.atividades-fila-medidor--tier-3 .atividades-fila-medidor__pip.is-filled {
+  background: linear-gradient(90deg, #22d3ee, #0891b2);
+}
+
+.atividades-fila-medidor--tier-4 .atividades-fila-medidor__pip.is-filled {
+  background: linear-gradient(90deg, #a78bfa, #7c3aed);
+}
+
+.atividades-fila-medidor--tier-5 .atividades-fila-medidor__pip.is-filled {
+  background: linear-gradient(90deg, #fb923c, #ea580c);
+}
+
+.atividades-fila-medidor--tier-6 .atividades-fila-medidor__pip.is-filled {
+  background: linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #fb923c, #f472b6);
+  background-size: 250% 100%;
+  animation: atividades-fila-shimmer 1.6s linear infinite;
+}
+
+@keyframes atividades-fila-shimmer {
+  to {
+    background-position: -250% 0;
+  }
+}
+
+.atividades-fila-mensagem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #047857;
+}
+
+.atividades-lista {
+  display: flex;
+  flex-direction: column;
+  max-height: 16rem;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0;
+  padding: 0.1rem 0.15rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.atividades-lista::-webkit-scrollbar {
+  width: 0.35rem;
+}
+
+.atividades-lista::-webkit-scrollbar-thumb {
+  background: #e7e5e4;
+  border-radius: 999px;
+}
+
+.atividade-item {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.9rem;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.atividade-item--fila {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.atividade-item--feita {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.atividade-item__main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 0.75rem;
+}
+
+.atividade-item__main:disabled {
+  cursor: default;
+}
+
+.atividade-item__icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  color: #57534e;
+  background: #f5f5f4;
+  border-radius: 0.65rem;
+}
+
+.atividade-item--fila .atividade-item__icon,
+.atividade-item--feita .atividade-item__icon {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.atividade-item__text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.atividade-item__text strong {
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1c1917;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atividade-item--feita .atividade-item__text strong {
+  text-decoration: line-through;
+  text-decoration-color: rgba(4, 120, 87, 0.5);
+}
+
+.atividade-item__text small {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #a8a29e;
+}
+
+.atividade-item__badge {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #78716c;
+  background: #f5f5f4;
+  border-radius: 999px;
+}
+
+.atividade-item--fila .atividade-item__badge {
+  color: #fff;
+  background: #10b981;
+}
+
+.atividade-item__acoes {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.3rem;
+  padding-right: 0.4rem;
+}
+
+.atividade-item__acao {
+  display: flex;
+  height: 1.9rem;
+  width: 1.9rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  color: #57534e;
+  background: #f5f5f4;
+  border: none;
+  border-radius: 0.6rem;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.atividade-item__acao:hover:not(:disabled) {
+  background: #e7e5e4;
+}
+
+.atividade-item__acao--excluir:hover:not(:disabled) {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.atividade-item__acao:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.atividade-item__handle {
+  display: flex;
+  height: 100%;
+  min-height: 2.75rem;
+  width: 1.75rem;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  align-items: center;
+  justify-content: center;
+  color: #d6d3d1;
+  background: none;
+  border: none;
+}
+
+.atividade-item__handle:hover {
+  color: #a8a29e;
+}
+
+.atividade-item__handle:active {
+  cursor: grabbing;
+}
+
+.atividade-item--dragging {
+  box-shadow:
+    0 8px 20px rgba(28, 25, 23, 0.12),
+    0 0 0 2px #10b981;
+  z-index: 20;
+}
+
+/* Modal de criação: escolha entre meta por tempo ou por número */
+.atividade-meta-btn {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #57534e;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.75rem;
+}
+
+.atividade-meta-btn--active {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+/* Modal de conclusão: campo com sufixo de unidade */
+.atividade-campo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  padding: 0 0.75rem;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.75rem;
+}
+
+.atividade-campo:focus-within {
+  border-color: #10b981;
+}
+
+.atividade-campo input {
+  min-width: 0;
+  flex: 1;
+  padding: 0.55rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1c1917;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.atividade-campo__unidade {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #a8a29e;
+}
+
+/* Agenda: opção em card e switch */
+.atividade-option {
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.9rem;
+}
+
+.atividade-option--active {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+.atividade-option__text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.atividade-option__text strong {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.atividade-option__text small {
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #78716c;
+}
+
+.atividade-switch {
+  display: flex;
+  cursor: pointer;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.9rem;
+}
+
+.atividade-switch input {
+  margin-top: 0.15rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #10b981;
+}
+
+.atividade-switch span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.atividade-switch strong {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.atividade-switch small {
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #78716c;
+}
+
+.game-icon-btn--active {
+  color: #047857;
+  background: #d1fae5;
+  border-color: #10b981;
+}
+
+.atividade-action-btn {
+  display: inline-flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--game-ink);
+  white-space: nowrap;
+  background: #fff;
+  border: var(--border-card);
+  border-radius: var(--radius-chip);
+  box-shadow: var(--shadow-resting);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.atividade-action-btn:hover {
+  background: #f5f5f4;
+}
+
+.atividade-action-btn:active {
+  transform: scale(0.96);
+}
+
+.atividade-action-btn--active {
+  color: #047857;
+  background: #d1fae5;
+  border-color: #10b981;
+}
+
+.atividade-dia {
+  position: relative;
+  display: flex;
+  height: 2.75rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #57534e;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.75rem;
+}
+
+.atividade-dia--active {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+.atividade-dia__marca {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  color: #92400e;
+  background: #fde68a;
+  border: 1.5px solid #fff;
+  border-radius: 999px;
+}
+
+.atividade-tipo-chip {
+  display: inline-flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #78716c;
+  background: #fff;
+  border: 1.5px solid #e7e5e4;
+  border-radius: 999px;
+}
+
+.atividade-tipo-chip--active {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+/* Modal de criar/editar atividade: corpo rolável pra nunca estourar a tela. */
+.atividade-form-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 34rem);
+  overflow: hidden;
+}
+
+.atividade-form-modal__head {
+  flex-shrink: 0;
+}
+
+.atividade-form-modal__body {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.75rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
+}
+
+.atividade-form-modal__footer {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.atividade-form-modal__ver-mais {
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #57534e;
+  background: #f5f5f4;
+  border: none;
+  border-radius: 0.65rem;
+}
+
+.atividade-form-modal__ver-mais:hover {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.atividade-tipo-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+  scrollbar-width: thin;
+}
+
+.atividade-tipo-scroll .atividade-tipo-chip {
+  flex-shrink: 0;
+  white-space: nowrap;
 }

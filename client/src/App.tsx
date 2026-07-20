@@ -44,6 +44,9 @@ const AchievementsPage = lazy(() =>
 const PlayerPage = lazy(() =>
   import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })),
 );
+const AtividadesPlayerPage = lazy(() =>
+  import('@/pages/AtividadesPlayerPage').then((m) => ({ default: m.AtividadesPlayerPage })),
+);
 const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 const HistoricoPage = lazy(() =>
   import('@/pages/HistoricoPage').then((m) => ({ default: m.HistoricoPage })),
@@ -183,6 +186,14 @@ export default function App() {
                   element={
                     <LazyPage>
                       <PlayerPage />
+                    </LazyPage>
+                  }
+                />
+                <Route
+                  path="atividades-player"
+                  element={
+                    <LazyPage>
+                      <AtividadesPlayerPage />
                     </LazyPage>
                   }
                 />

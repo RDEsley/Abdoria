@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Play, Timer } from 'lucide-react';
+import { Flame, ListChecks, Play, Timer } from 'lucide-react';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -9,14 +9,17 @@ import { WeekSummary } from '@/components/dashboard/WeekSummary';
 import { WeeklyChronicle } from '@/components/dashboard/WeeklyChronicle';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { RatingPrompt } from '@/components/dashboard/RatingPrompt';
+import { SuggestionPrompt } from '@/components/dashboard/SuggestionPrompt';
 import { NotificationOptInPrompt } from '@/components/dashboard/NotificationOptInPrompt';
-import { TrainingPlanInviteCard } from '@/components/dashboard/TrainingPlanInviteCard';
+import { AtividadesCard } from '@/components/dashboard/AtividadesCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatTrainingDuration } from '@/lib/utils';
 import { getExercises } from '@/lib/api';
 import { buildRestDayWarmup, isRestDay } from '@shared/training-plan';
+import { ATIVIDADES_MIN_DESCANSO, resolveFila } from '@shared/atividades';
+import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { useApp } from '@/hooks/useApp';
 import {
   MUSCULO_LABELS,
@@ -77,7 +80,14 @@ export function DashboardPage() {
   // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
   const diaDescanso =
     !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
+  // No descanso, o aquecimento leve é um treino real (sustenta a streak
+  // sozinho); as Atividades ficam por conta do AtividadesCard.
   const aquecimento = diaDescanso && perfilTreino ? buildRestDayWarmup(perfilTreino, hoje) : null;
+  // Descanso é melhor gasto com Atividades (mais leve que treinar) do que
+  // com o aquecimento — que fica reservado pra quem realmente quer treinar.
+  const filaHojeCount = diaDescanso
+    ? resolveFila(user?.preferencias, getTodaySaoPaulo()).length
+    : 0;
 
   const startWarmup = async () => {
     if (!aquecimento) return;
@@ -125,6 +135,7 @@ export function DashboardPage() {
       className="relative flex flex-col gap-5"
     >
       <RatingPrompt />
+      <SuggestionPrompt />
       {stats.streak_atual < 3 && <NotificationOptInPrompt />}
 
       <motion.div variants={item}>
@@ -151,6 +162,13 @@ export function DashboardPage() {
               ? (aquecimento?.descricao ?? 'Hoje é dia de recuperar.')
               : stats.proximo_treino}
         </p>
+        {diaDescanso && (
+          <p className="mt-2 text-[0.68rem] font-semibold text-stone-500">
+            {filaHojeCount > 0
+              ? `Você já tem ${filaHojeCount} atividade${filaHojeCount === 1 ? '' : 's'} na fila de hoje — elas mantêm sua sequência sem pesar no seu descanso.`
+              : `Hoje o ideal é descansar de verdade: escolha ${ATIVIDADES_MIN_DESCANSO}+ Atividades logo abaixo — elas mantêm sua sequência sem conflitar com o descanso que seu corpo precisa. O aquecimento fica pra quem realmente quer treinar ou queimar umas calorias extras.`}
+          </p>
+        )}
         {aquecimento && (
           <div className="mt-2 space-y-1">
             {aquecimento.exercicios.map((ex) => (
@@ -194,7 +212,25 @@ export function DashboardPage() {
             Escolha ou monte um treino na aba <strong>Missão</strong>.
           </p>
         )}
-        {!stats.treino_hoje && diaDescanso && (
+        {!stats.treino_hoje && diaDescanso && filaHojeCount > 0 && (
+          <>
+            <GameButton
+              className="mt-3 flex w-full items-center justify-center gap-2"
+              onClick={() => navigate('/atividades-player')}
+            >
+              <ListChecks size={14} /> Iniciar {filaHojeCount} atividade
+              {filaHojeCount === 1 ? '' : 's'}
+            </GameButton>
+            <button
+              type="button"
+              onClick={() => void startWarmup()}
+              className="mt-2 block w-full cursor-pointer text-center text-[0.65rem] font-bold text-stone-400 hover:text-stone-600"
+            >
+              Prefiro treinar leve mesmo assim
+            </button>
+          </>
+        )}
+        {!stats.treino_hoje && diaDescanso && filaHojeCount === 0 && (
           <GameButton
             className="mt-3 flex w-full items-center justify-center gap-2"
             onClick={() => void startWarmup()}
@@ -212,7 +248,7 @@ export function DashboardPage() {
       </motion.div>
 
       <motion.div variants={item}>
-        <TrainingPlanInviteCard />
+        <AtividadesCard />
       </motion.div>
 
       <motion.div variants={item}>

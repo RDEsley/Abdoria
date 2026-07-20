@@ -16,6 +16,7 @@ import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { awardMoedaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
 import {
   applyWorkoutXpBreakdown,
+  awardDailyXp,
   calculateWorkoutXpBreakdown,
   getDailyXpCapBreakdownForUser,
 } from '../services/economy.js';
@@ -38,6 +39,19 @@ import {
   diffNewPersonalRecords,
 } from '../../../shared/personal-records.js';
 import { buildFeedPage, parseFeedCursor } from '../services/workout-history-feed.js';
+import {
+  ATIVIDADE_DURACAO_MIN,
+  ATIVIDADE_OBS_MAX,
+  ATIVIDADES_MIN_DESCANSO,
+  camposParaAtividade,
+  findAtividade,
+  isAtividadeHistory,
+  isDiaDeTreino,
+  nomeHistoricoAtividade,
+  type AtividadeExtra,
+  type AtividadeLog,
+} from '../../../shared/atividades.js';
+import { endOfDaySaoPaulo, getSaoPauloWeekday, startOfDaySaoPaulo } from '../utils/timezone.js';
 
 export const workoutsRouter = Router();
 
@@ -436,5 +450,169 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/workouts/complete error:', error);
     res.status(500).json({ error: 'Erro ao salvar treino.' });
+  }
+});
+
+/** Valida as respostas do form contextual contra os campos daquela atividade. */
+function sanitizeMetricas(
+  atividade: AtividadeExtra,
+  raw: unknown,
+): Record<string, number | string> {
+  const entrada = (raw ?? {}) as Record<string, unknown>;
+  const metricas: Record<string, number | string> = {};
+
+  for (const campo of camposParaAtividade(atividade)) {
+    const valor = entrada[campo.id];
+    if (valor === undefined || valor === null || valor === '') continue;
+
+    if (campo.formato === 'texto') {
+      const texto = String(valor).trim().slice(0, 60);
+      if (texto) metricas[campo.id] = texto;
+      continue;
+    }
+
+    const numero = Number(valor);
+    if (!Number.isFinite(numero) || numero <= 0) continue;
+    metricas[campo.id] =
+      campo.formato === 'inteiro' ? Math.round(numero) : Math.round(numero * 100) / 100;
+  }
+
+  return metricas;
+}
+
+/**
+ * Conclui uma Atividade da fila do dia.
+ *
+ * XP/streak (ver CLAUDE.md → Sistema de Atividades):
+ * - Dia de DESCANSO: cada atividade vale `Máx. diário / ATIVIDADES_MIN_DESCANSO`,
+ *   sempre limitado ao que resta do orçamento — concluir o mínimo de 3 entrega
+ *   praticamente o teto do dia. A streak é sustentada a partir da 3ª (regra em
+ *   `historiesEligibleForStreak`, em services/gamification.ts).
+ * - Dia de TREINO: 0 XP e nenhum efeito na streak; a sessão fica registrada
+ *   só pro calendário e pras conquistas.
+ */
+workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const body = req.body as { atividade_id?: string; metricas?: unknown; obs?: string };
+    const atividade = findAtividade(user.preferencias, String(body.atividade_id ?? ''));
+    if (!atividade) {
+      res.status(404).json({ error: 'Atividade não encontrada.' });
+      return;
+    }
+
+    const todayFilter = {
+      usuario_id: user.id,
+      concluido_em: {
+        $gte: startOfDaySaoPaulo().toISOString(),
+        $lt: endOfDaySaoPaulo().toISOString(),
+      },
+    };
+    const sessoesHoje = await WorkoutHistory.find(todayFilter);
+    const historyNome = nomeHistoricoAtividade(atividade.nome);
+    if (sessoesHoje.some((entry) => entry.treino_nome === historyNome)) {
+      res.status(400).json({ error: 'Você já concluiu essa atividade hoje.' });
+      return;
+    }
+
+    const streakBefore = user.gamificacao.streak_atual;
+    const prevAchievements = new Set(user.gamificacao.conquistas);
+
+    const metricas = sanitizeMetricas(atividade, body.metricas);
+    const obs = String(body.obs ?? '')
+      .trim()
+      .slice(0, ATIVIDADE_OBS_MAX);
+    const log: AtividadeLog = {
+      atividade_id: atividade.id,
+      nome: atividade.nome,
+      icon: atividade.icon,
+      tipo: atividade.tipo,
+      metricas,
+      ...(obs ? { obs } : {}),
+    };
+
+    const minutos =
+      Number(metricas.tempo_min) ||
+      (atividade.meta_tipo === 'tempo' ? atividade.meta_valor : ATIVIDADE_DURACAO_MIN);
+
+    const history = await WorkoutHistory.create({
+      usuario_id: user.id,
+      treino_nome: historyNome,
+      treino_tipo: 'custom',
+      exercicios: [],
+      duracao_total_segundos: Math.max(0, Math.round(minutos)) * 60,
+      musculos_estimulados: [],
+      concluido_em: new Date(),
+      xp_ganho: 0,
+      plano_dia_indice: null,
+      atividade: log as unknown as Record<string, unknown>,
+    });
+
+    await syncUserGamification(user.id.toString());
+    const updatedUser = await User.findById(user.id);
+    if (!updatedUser) {
+      res.status(500).json({ error: 'Erro ao atualizar usuário.' });
+      return;
+    }
+
+    const diaDeTreino = isDiaDeTreino(
+      updatedUser.perfil_treino?.dias_semana ?? null,
+      getSaoPauloWeekday(),
+    );
+
+    // Em dia de treino a atividade não paga XP: quem remunera o dia é o treino.
+    const cap = getDailyXpCapBreakdownForUser(updatedUser).total;
+    const xpBruto = diaDeTreino ? 0 : Math.floor(cap / ATIVIDADES_MIN_DESCANSO);
+
+    const levelBefore = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
+    const xpAwarded = xpBruto > 0 ? awardDailyXp(updatedUser, xpBruto) : 0;
+    const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
+    const abdoriaGanha = xpAwarded > 0 ? awardMoedaFromXpProgress(updatedUser) : 0;
+    syncShopUnlocks(updatedUser);
+
+    if (xpAwarded > 0) await WorkoutHistory.updateById(history.id, { xp_ganho: xpAwarded });
+    await updatedUser.save();
+
+    const atividadesHoje =
+      sessoesHoje.filter((entry) => isAtividadeHistory(entry.treino_nome)).length + 1;
+    const streakAfter = updatedUser.gamificacao.streak_atual;
+    const newAchievements = updatedUser.gamificacao.conquistas.filter(
+      (a) => !prevAchievements.has(a),
+    );
+
+    res.status(201).json({
+      history: { ...history, xp_ganho: xpAwarded },
+      user: sanitizeUser(updatedUser),
+      atividade,
+      xp_ganho: xpAwarded,
+      abdoria_ganha: abdoriaGanha,
+      dia_de_treino: diaDeTreino,
+      atividades_hoje: atividadesHoje,
+      atividades_minimo: ATIVIDADES_MIN_DESCANSO,
+      meta_descanso_atingida: !diaDeTreino && atividadesHoje >= ATIVIDADES_MIN_DESCANSO,
+      streak_celebration:
+        streakAfter > streakBefore
+          ? { streak_atual: streakAfter, streak_anterior: streakBefore }
+          : null,
+      level_up:
+        levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null,
+      new_achievements: newAchievements
+        .map((id) => ACHIEVEMENT_BY_ID[id])
+        .filter(Boolean)
+        .map((a) => ({
+          id: a!.id,
+          titulo: a!.titulo,
+          descricao: a!.descricao,
+          icon: a!.icon,
+        })),
+    });
+  } catch (error) {
+    console.error('POST /api/workouts/atividade/complete error:', error);
+    res.status(500).json({ error: 'Erro ao concluir atividade.' });
   }
 });
