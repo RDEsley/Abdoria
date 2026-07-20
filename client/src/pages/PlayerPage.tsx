@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Pause, Play, SkipForward, Timer, Volume2, VolumeX, X } from 'lucide-react';
+import {
+  Check,
+  Hourglass,
+  Pause,
+  Play,
+  RotateCcw,
+  SkipForward,
+  Timer,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
 import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
+import { AtividadeCompleteModal } from '@/components/dashboard/AtividadeCompleteModal';
 import {
   buildCampaignPosts,
   type CampaignCatalogInfo,
@@ -15,6 +27,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
+import { useAtividadesFlow, type AtividadesFluxoResumo } from '@/hooks/useAtividadesFlow';
 import { exerciseMediaUrl } from '@/lib/media';
 import {
   playBeep,
@@ -49,7 +62,7 @@ import {
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 
-type Phase = 'ready' | 'working' | 'resting' | 'done';
+type Phase = 'ready' | 'working' | 'resting' | 'atividades' | 'done';
 
 const ACTIVE_WORKOUT_KEY = 'abdoria_active_workout';
 
@@ -69,6 +82,7 @@ export function PlayerPage() {
   const navigate = useNavigate();
   const { saveWorkout, exercises, ensureExercises } = useApp();
   const { user: authUser } = useAuth();
+  const atividadesFlow = useAtividadesFlow();
   const [workout] = useState<ActiveWorkout | null>(readActiveWorkout);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [seriesIndex, setSeriesIndex] = useState(0);
@@ -80,6 +94,9 @@ export function PlayerPage() {
   const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const [abdoriaGained, setAbdoriaGained] = useState(0);
+  /** Somatório das atividades encadeadas depois do treino — soma à parte pra
+      não disputar o mesmo state com o resultado assíncrono do handleFinish. */
+  const [atividadesResumo, setAtividadesResumo] = useState<AtividadesFluxoResumo | null>(null);
   const [xpBreakdown, setXpBreakdown] = useState<XpBreakdown | null>(null);
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
@@ -90,7 +107,13 @@ export function PlayerPage() {
   const [storyPost, setStoryPost] = useState<CampaignPost | null>(null);
   const [showStory, setShowStory] = useState(false);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
+  const [countdownEnabled, setCountdownEnabled] = useState(
+    () => authUser?.preferencias?.contagem_regressiva_habilitada ?? true,
+  );
+  /** 3, 2, 1 antes de um exercício de tempo começar; null = sem contagem rolando. */
+  const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const mutedRef = useRef(muted);
+  const countdownEnabledRef = useRef(countdownEnabled);
   const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
   const prefsRef = useRef(authUser?.preferencias);
   const startTimeRef = useRef(0);
@@ -107,11 +130,19 @@ export function PlayerPage() {
   }, [muted, authUser?.preferencias]);
 
   useEffect(() => {
+    countdownEnabledRef.current = countdownEnabled;
+  }, [countdownEnabled]);
+
+  useEffect(() => {
     return () => {
       const prefs = prefsRef.current;
       if (!prefs) return;
       void updateMe({
-        preferencias: { ...prefs, som_habilitado: !mutedRef.current },
+        preferencias: {
+          ...prefs,
+          som_habilitado: !mutedRef.current,
+          contagem_regressiva_habilitada: countdownEnabledRef.current,
+        },
       });
     };
   }, []);
@@ -184,10 +215,32 @@ export function PlayerPage() {
       return;
     }
 
-    setPhase('done');
     endTimeRef.current = persistWorkoutEndedAt();
     playWorkoutComplete();
-  }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds, startRest]);
+
+    // Atividades anexadas (junto_com_treino) entram na sequência antes da
+    // Missão Completa — só depois delas o resumo final combina os dois.
+    const encadearAtividades =
+      atividadesFlow.agenda.junto_com_treino && atividadesFlow.filaPendente.length > 0;
+    if (encadearAtividades) {
+      atividadesFlow.iniciarFluxo();
+      setPhase('atividades');
+    } else {
+      setPhase('done');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `atividadesFlow` é um objeto novo a cada render (hook sem memo interno); só os 3 campos realmente lidos aqui entram nas deps
+  }, [
+    workout,
+    current,
+    seriesIndex,
+    totalSeries,
+    exerciseIndex,
+    getRestSeconds,
+    startRest,
+    atividadesFlow.agenda.junto_com_treino,
+    atividadesFlow.filaPendente,
+    atividadesFlow.iniciarFluxo,
+  ]);
 
   const runsCountdown = phase === 'resting' || (phase === 'working' && current?.modo === 'tempo');
 
@@ -228,19 +281,47 @@ export function PlayerPage() {
     }
   }, [secondsLeft, workout, paused, phase, current?.modo, advanceAfterSeries]);
 
-  const startSeries = () => {
+  const markSessionStarted = () => {
     if (!sessionStartedRef.current) {
       startTimeRef.current = persistWorkoutStartedAt();
       sessionStartedRef.current = true;
     }
-    setPaused(false);
+  };
+
+  const startSeries = () => {
     if (current?.modo === 'reps') {
+      markSessionStarted();
+      setPaused(false);
       setPhase('working');
-    } else {
+      return;
+    }
+    if (countdownEnabled) {
+      setCountdownValue(3);
+      return;
+    }
+    markSessionStarted();
+    setPaused(false);
+    setSecondsLeft(getTargetSeconds());
+    setPhase('working');
+  };
+
+  // Contagem 3-2-1 antes de um exercício de tempo — só depois dela o
+  // cronômetro real da série começa a valer.
+  useEffect(() => {
+    if (countdownValue === null) return;
+    if (countdownValue === 0) {
+      setCountdownValue(null);
+      markSessionStarted();
+      setPaused(false);
       setSecondsLeft(getTargetSeconds());
       setPhase('working');
+      return;
     }
-  };
+    playBeep(660, 0.08);
+    const id = window.setTimeout(() => setCountdownValue((v) => (v === null ? null : v - 1)), 800);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage ao próprio tick; markSessionStarted/getTargetSeconds são estáveis o bastante pro efeito
+  }, [countdownValue]);
 
   const completeSeries = () => {
     if (phase !== 'working') return;
@@ -254,6 +335,21 @@ export function PlayerPage() {
     setSecondsLeft(0);
     setRestTotalSec(0);
     setPaused(false);
+  };
+
+  /** Reinicia o cronômetro da fase atual (exercício de tempo ou descanso) do zero. */
+  const resetTimer = () => {
+    if (phase === 'resting') {
+      tickHandledRef.current = false;
+      setSecondsLeft(restTotalSec);
+      setPaused(false);
+      return;
+    }
+    if (phase === 'working' && current?.modo === 'tempo') {
+      tickHandledRef.current = false;
+      setSecondsLeft(getTargetSeconds());
+      setPaused(false);
+    }
   };
 
   const togglePause = () => {
@@ -341,7 +437,7 @@ export function PlayerPage() {
   }, [ensureExercises]);
 
   const handleFinish = async () => {
-    if (!workout || saving) return;
+    if (!workout || saving || saved) return;
     setSaving(true);
     try {
       const duration = computeWorkoutElapsedSeconds({
@@ -396,6 +492,30 @@ export function PlayerPage() {
     }
   };
 
+  const finishTriggeredRef = useRef(false);
+  useEffect(() => {
+    // Salva o treino assim que os exercícios terminam — sem esperar o
+    // usuário tocar em nada — pra "Missão Completa" não parecer uma
+    // segunda tela que exige ação manual. `finishTriggeredRef` garante um
+    // único disparo mesmo passando por 'atividades' antes de 'done'.
+    if ((phase === 'atividades' || phase === 'done') && !finishTriggeredRef.current) {
+      finishTriggeredRef.current = true;
+      void handleFinish();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na transição de fase, handleFinish já se protege com `saving`/`saved`
+  }, [phase]);
+
+  /** Fluxo de atividades encadeado depois do treino: soma ao resumo final e libera a Missão Completa. */
+  const handleAtividadesEncadeadasConcluidas = (resumo: AtividadesFluxoResumo) => {
+    setAtividadesResumo(resumo);
+    setPhase('done');
+  };
+
+  const cancelarAtividadesEncadeadas = () => {
+    setAtividadesResumo(atividadesFlow.fecharFluxo());
+    setPhase('done');
+  };
+
   const handleRodadaManter = () => {
     setShowRodadaModal(false);
   };
@@ -424,6 +544,61 @@ export function PlayerPage() {
 
   if (!workout || !current) return null;
 
+  if (phase === 'atividades') {
+    const atividadeAtual = atividadesFlow.atividadeDoPasso;
+    const passoAtual = (atividadesFlow.passoFila ?? 0) + 1;
+    return (
+      <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
+        <AnimatedBackground variant="player" />
+        <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
+          <span className="w-6" aria-hidden />
+          <div className="text-center">
+            <p className="game-page-header__eyebrow !mb-0">Atividades da missão</p>
+            <p className="text-xs font-extrabold text-stone-800">
+              Atividade {passoAtual}/{atividadesFlow.totalFluxo}
+            </p>
+          </div>
+          <span className="w-6" aria-hidden />
+        </header>
+
+        <div className="relative z-10 flex shrink-0 gap-1 px-4 pb-1 sm:px-6">
+          {Array.from({ length: atividadesFlow.totalFluxo }).map((_, i) => (
+            <span
+              key={i}
+              className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
+                i < passoAtual - 1
+                  ? 'bg-emerald-500'
+                  : i === passoAtual - 1
+                    ? 'bg-amber-400 game-progress-dot--active'
+                    : 'bg-stone-200/80'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
+          <p className="text-sm font-bold text-stone-600">
+            Treino concluído! Só faltam as atividades da fila de hoje.
+          </p>
+        </div>
+
+        {atividadeAtual && (
+          <AtividadeCompleteModal
+            atividade={atividadeAtual}
+            busy={atividadesFlow.busy}
+            passo={passoAtual}
+            totalPassos={atividadesFlow.totalFluxo}
+            daXp={!atividadesFlow.diaDeTreino}
+            onCancel={cancelarAtividadesEncadeadas}
+            onConfirm={(dados) =>
+              void atividadesFlow.concluirPassoFila(dados, handleAtividadesEncadeadasConcluidas)
+            }
+          />
+        )}
+      </div>
+    );
+  }
+
   if (phase === 'done') {
     if (showStory && storyPost) {
       return <CampaignStoryScreen post={storyPost} onContinue={() => navigate('/')} />;
@@ -431,8 +606,9 @@ export function PlayerPage() {
     return (
       <WorkoutVictoryScreen
         workoutName={workout.treino_nome}
-        xpGained={xpGained}
-        abdoriaGained={abdoriaGained}
+        xpGained={xpGained + (atividadesResumo?.xp ?? 0)}
+        abdoriaGained={abdoriaGained + (atividadesResumo?.moedas ?? 0)}
+        atividadesConcluidas={atividadesResumo?.total}
         xpBreakdown={xpBreakdown}
         streakCelebration={streakCelebration}
         levelUpCelebration={levelUpCelebration}
@@ -471,6 +647,15 @@ export function PlayerPage() {
           : 0;
 
   const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
+  const ringPodeIniciar = phase === 'ready' && countdownValue === null;
+  const ringOnClick = ringPodeIniciar ? startSeries : canTogglePause ? togglePause : undefined;
+  const ringLabel = ringPodeIniciar
+    ? `Iniciar série ${seriesIndex + 1}`
+    : canTogglePause
+      ? paused
+        ? 'Continuar cronômetro'
+        : 'Pausar cronômetro'
+      : undefined;
 
   const phaseBadge =
     phase === 'resting' ? (
@@ -538,6 +723,20 @@ export function PlayerPage() {
           )}
           <button
             type="button"
+            onClick={() => setCountdownEnabled((v) => !v)}
+            className={`cursor-pointer ${countdownEnabled ? 'text-stone-600' : 'text-stone-300'}`}
+            aria-label={
+              countdownEnabled
+                ? 'Desativar contagem regressiva antes dos exercícios'
+                : 'Ativar contagem regressiva antes dos exercícios'
+            }
+            aria-pressed={countdownEnabled}
+            title={countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'}
+          >
+            <Hourglass size={22} />
+          </button>
+          <button
+            type="button"
             onClick={() => {
               const next = !muted;
               setMuted(next);
@@ -562,11 +761,11 @@ export function PlayerPage() {
         {workout.queue.map((item, i) => (
           <span
             key={`${item.slug}-${i}`}
-            className={`h-1.5 flex-1 rounded-full border border-stone-900/25 ${
+            className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
               i < exerciseIndex
                 ? 'bg-emerald-500'
                 : i === exerciseIndex
-                  ? 'bg-amber-400'
+                  ? 'bg-amber-400 game-progress-dot--active'
                   : 'bg-stone-200/80'
             }`}
           />
@@ -621,14 +820,37 @@ export function PlayerPage() {
             )}
           </div>
 
-          <WorkoutTimerRing
-            phase={phase}
-            modo={current.modo}
-            secondsLeft={secondsLeft}
-            seriesIndex={seriesIndex}
-            totalSeries={totalSeries}
-            progressPct={progressPct}
-          />
+          <div className="relative">
+            <WorkoutTimerRing
+              phase={phase}
+              modo={current.modo}
+              secondsLeft={secondsLeft}
+              seriesIndex={seriesIndex}
+              totalSeries={totalSeries}
+              progressPct={progressPct}
+              paused={paused}
+              onCenterClick={ringOnClick}
+              clickLabel={ringLabel}
+            />
+
+            {countdownValue !== null && countdownValue > 0 && (
+              <div className="game-countdown-overlay" role="status" aria-live="assertive">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={countdownValue}
+                    className="game-countdown-overlay__number"
+                    initial={{ scale: 0.4, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 1.5, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                  >
+                    {countdownValue}
+                  </motion.span>
+                </AnimatePresence>
+                <span className="game-countdown-overlay__hint">Prepare-se...</span>
+              </div>
+            )}
+          </div>
 
           {paused && canTogglePause && (
             <p className="game-player-paused">
@@ -661,42 +883,66 @@ export function PlayerPage() {
           )}
 
           {phase === 'working' && current.modo === 'tempo' && (
-            <GameButton
-              size="lg"
-              className="w-full flex items-center justify-center gap-2"
-              variant={paused ? 'primary' : 'secondary'}
-              onClick={togglePause}
-            >
-              {paused ? (
-                <>
-                  <Play size={20} fill="currentColor" /> Continuar exercício
-                </>
-              ) : (
-                <>
-                  <Pause size={20} /> Pausar exercício
-                </>
-              )}
-            </GameButton>
-          )}
-
-          {phase === 'resting' && (
-            <>
+            <div className="flex gap-2">
               <GameButton
                 size="lg"
-                className="w-full flex items-center justify-center gap-2"
+                className="flex-[7] flex items-center justify-center gap-2"
                 variant={paused ? 'primary' : 'secondary'}
                 onClick={togglePause}
               >
                 {paused ? (
                   <>
-                    <Play size={20} fill="currentColor" /> Continuar descanso
+                    <Play size={20} fill="currentColor" /> Continuar exercício
                   </>
                 ) : (
                   <>
-                    <Pause size={20} /> Pausar descanso
+                    <Pause size={20} /> Pausar exercício
                   </>
                 )}
               </GameButton>
+              <GameButton
+                size="lg"
+                variant="ghost"
+                className="flex-[3] flex items-center justify-center"
+                onClick={resetTimer}
+                aria-label="Reiniciar cronômetro do exercício"
+                title="Reiniciar cronômetro"
+              >
+                <RotateCcw size={18} />
+              </GameButton>
+            </div>
+          )}
+
+          {phase === 'resting' && (
+            <>
+              <div className="flex gap-2">
+                <GameButton
+                  size="lg"
+                  className="flex-[7] flex items-center justify-center gap-2"
+                  variant={paused ? 'primary' : 'secondary'}
+                  onClick={togglePause}
+                >
+                  {paused ? (
+                    <>
+                      <Play size={20} fill="currentColor" /> Continuar descanso
+                    </>
+                  ) : (
+                    <>
+                      <Pause size={20} /> Pausar descanso
+                    </>
+                  )}
+                </GameButton>
+                <GameButton
+                  size="lg"
+                  variant="ghost"
+                  className="flex-[3] flex items-center justify-center"
+                  onClick={resetTimer}
+                  aria-label="Reiniciar cronômetro de descanso"
+                  title="Reiniciar cronômetro"
+                >
+                  <RotateCcw size={18} />
+                </GameButton>
+              </div>
               <GameButton
                 variant="secondary"
                 size="lg"

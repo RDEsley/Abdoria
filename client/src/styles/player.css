@@ -23,6 +23,67 @@
   box-shadow: var(--shadow-resting);
 }
 
+/* Contagem 3-2-1 antes de um exercício de tempo começar */
+.game-countdown-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.96) 55%, rgba(255, 255, 255, 0.75));
+  backdrop-filter: blur(2px);
+}
+
+.game-countdown-overlay__number {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(2.25rem, 9vw, 3rem);
+  line-height: 1;
+  color: var(--game-green-dark);
+  text-shadow: 3px 3px 0 rgba(5, 150, 105, 0.18);
+}
+
+.game-countdown-overlay__hint {
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #78716c;
+}
+
+.game-progress-dot {
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.game-progress-dot--active {
+  animation: game-progress-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes game-progress-pulse {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-progress-dot--active {
+    animation: none;
+  }
+}
+
+.game-timer-ring__svg circle:last-child {
+  transition: stroke-dasharray 0.9s linear;
+}
+
 .game-timer-ring__svg {
   width: clamp(6rem, 26vw, 9.5rem);
   height: clamp(6rem, 26vw, 9.5rem);
@@ -156,6 +217,11 @@
   box-shadow: 6px 6px 0 var(--game-ink);
 }
 
+.game-victory__check {
+  width: 7rem;
+  height: 7rem;
+}
+
 .game-victory__title {
   margin: 0;
   font-family: 'Press Start 2P', monospace;
@@ -165,16 +231,36 @@
   text-shadow: 2px 2px 0 #a7f3d0;
 }
 
+.game-victory__xp-wrap {
+  position: relative;
+  display: inline-flex;
+  margin-top: 0.75rem;
+}
+
 .game-victory__xp {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  margin-top: 0.75rem;
+  margin: 0;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.6rem;
   color: var(--game-gold-dark);
   animation: game-xp-pop 0.6s ease-out;
+}
+
+.game-victory__xp--interactive {
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 0.5rem;
+  transition: background 0.12s ease;
+}
+
+.game-victory__xp--interactive:hover,
+.game-victory__xp--interactive:focus-visible {
+  background: rgba(217, 119, 6, 0.1);
 }
 
 .game-victory__rewards {
@@ -193,18 +279,56 @@
   animation: game-xp-pop 0.75s ease-out;
 }
 
+.game-victory__atividades {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 999px;
+}
+
 .game-victory__breakdown {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  z-index: 5;
+  width: max-content;
+  max-width: min(15rem, 80vw);
   list-style: none;
-  margin: 0.75rem 0 0;
+  margin: 0;
   padding: 0.65rem 0.75rem;
   text-align: left;
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1.6;
   color: #57534e;
-  background: rgba(255, 255, 255, 0.65);
-  border: 2px dashed rgba(28, 25, 23, 0.15);
+  background: #fff;
+  border: 2px solid rgba(28, 25, 23, 0.15);
   border-radius: 0.75rem;
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -0.3rem);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.game-victory__xp-wrap:hover .game-victory__breakdown,
+.game-victory__xp--interactive:focus-visible ~ .game-victory__breakdown,
+.game-victory__breakdown--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
 }
 
 .game-victory__breakdown-cap {

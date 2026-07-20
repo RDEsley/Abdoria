@@ -1,19 +1,24 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Coins, Flame, Snowflake, Zap } from 'lucide-react';
+import Lottie from 'lottie-react';
+import { ChevronRight, Coins, Flame, ListChecks, Snowflake, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
+import { MiniErrorBoundary } from '@/components/ui/MiniErrorBoundary';
 import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { useApp } from '@/hooks/useApp';
+import { useLottieAsset } from '@/hooks/useLottieAsset';
 import { toLocalDateKey } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { CURRENCY_NAME, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { XpBreakdown } from '@/types';
 
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
+const SUCESSO_LOTTIE_URL = '/assets/Sucesso.json';
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('pt-BR', {
@@ -23,10 +28,34 @@ function todayLabel(): string {
   });
 }
 
+/** Confete de missão completa — some sozinho, não faz loop. */
+function VictoryConfetti() {
+  const data = useLottieAsset(CONFETTI_LOTTIE_URL);
+  if (!data) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+      <Lottie animationData={data} loop={false} className="mx-auto h-full max-w-lg" />
+    </div>
+  );
+}
+
+/** Selo de check animado — cai pro ✓ estático se a animação não carregar. */
+function VictoryCheck() {
+  const data = useLottieAsset(SUCESSO_LOTTIE_URL);
+  if (!data) return <div className="game-level-badge mx-auto mb-4">✓</div>;
+  return (
+    <div className="game-victory__check mx-auto mb-4" aria-hidden>
+      <Lottie animationData={data} loop={false} />
+    </div>
+  );
+}
+
 interface Props {
   workoutName: string;
   xpGained: number;
   abdoriaGained: number;
+  /** Atividades encadeadas depois do treino que também entraram nesse resumo. */
+  atividadesConcluidas?: number;
   xpBreakdown: XpBreakdown | null;
   streakCelebration: number | null;
   levelUpCelebration: LevelUpData | null;
@@ -49,6 +78,7 @@ export function WorkoutVictoryScreen({
   workoutName,
   xpGained,
   abdoriaGained,
+  atividadesConcluidas,
   xpBreakdown,
   streakCelebration,
   levelUpCelebration,
@@ -63,6 +93,7 @@ export function WorkoutVictoryScreen({
   onRodadaSwap,
 }: Props) {
   const { history, stats, user } = useApp();
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const week = useMemo(() => {
     const todayKey = toLocalDateKey(new Date());
@@ -90,12 +121,19 @@ export function WorkoutVictoryScreen({
     <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
       <AnimatedBackground variant="player" />
       {saved && <CompletionCelebration effectId={equippedEffectId} />}
+      {saved && (
+        <MiniErrorBoundary>
+          <VictoryConfetti />
+        </MiniErrorBoundary>
+      )}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="game-victory relative z-10"
       >
-        <div className="game-level-badge mx-auto mb-4">✓</div>
+        <MiniErrorBoundary fallback={<div className="game-level-badge mx-auto mb-4">✓</div>}>
+          <VictoryCheck />
+        </MiniErrorBoundary>
         <h2 className="game-victory__title">MISSÃO COMPLETA!</h2>
         <p className="mt-2 text-sm font-bold text-stone-600">{workoutName}</p>
 
@@ -154,28 +192,47 @@ export function WorkoutVictoryScreen({
 
         {saved && (
           <div className="game-victory__rewards">
-            <p className="game-victory__xp">
-              <Zap size={14} aria-hidden /> +{xpGained} XP
-            </p>
+            <div className="game-victory__xp-wrap">
+              <button
+                type="button"
+                className="game-victory__xp game-victory__xp--interactive"
+                onClick={() => setShowBreakdown((v) => !v)}
+                aria-expanded={xpBreakdown ? showBreakdown : undefined}
+                aria-describedby={xpBreakdown ? 'victory-xp-breakdown' : undefined}
+              >
+                <Zap size={14} aria-hidden /> +{xpGained} XP
+              </button>
+              {xpBreakdown && (
+                <ul
+                  id="victory-xp-breakdown"
+                  role="tooltip"
+                  className={`game-victory__breakdown${showBreakdown ? ' game-victory__breakdown--visible' : ''}`}
+                >
+                  {xpBreakdown.exercicios > 0 && <li>Exercícios +{xpBreakdown.exercicios}</li>}
+                  {xpBreakdown.exercicios === 0 && xpBreakdown.total_diario === 0 && (
+                    <li className="game-victory__breakdown-cap">Mín. 3 exercícios para XP diário</li>
+                  )}
+                  {xpBreakdown.streak > 0 && <li>Streak +{xpBreakdown.streak}</li>}
+                  {xpBreakdown.conquistas > 0 && <li>Conquistas +{xpBreakdown.conquistas}</li>}
+                  {xpBreakdown.total_bruto > xpBreakdown.aplicado && (
+                    <li className="game-victory__breakdown-cap">
+                      Máx. diário · +{xpBreakdown.aplicado}/{xpBreakdown.total_bruto} XP
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
             {abdoriaGained > 0 && (
               <p className="game-victory__abdoria">
                 <Coins size={14} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
               </p>
             )}
-            {xpBreakdown && (
-              <ul className="game-victory__breakdown">
-                {xpBreakdown.exercicios > 0 && <li>Exercícios +{xpBreakdown.exercicios}</li>}
-                {xpBreakdown.exercicios === 0 && xpBreakdown.total_diario === 0 && (
-                  <li className="game-victory__breakdown-cap">Mín. 3 exercícios para XP diário</li>
-                )}
-                {xpBreakdown.streak > 0 && <li>Streak +{xpBreakdown.streak}</li>}
-                {xpBreakdown.conquistas > 0 && <li>Conquistas +{xpBreakdown.conquistas}</li>}
-                {xpBreakdown.total_bruto > xpBreakdown.aplicado && (
-                  <li className="game-victory__breakdown-cap">
-                    Máx. diário · +{xpBreakdown.aplicado}/{xpBreakdown.total_bruto} XP
-                  </li>
-                )}
-              </ul>
+            {!!atividadesConcluidas && atividadesConcluidas > 0 && (
+              <p className="game-victory__atividades">
+                <ListChecks size={13} aria-hidden /> +{atividadesConcluidas} atividade
+                {atividadesConcluidas === 1 ? '' : 's'} concluída
+                {atividadesConcluidas === 1 ? '' : 's'} junto
+              </p>
             )}
           </div>
         )}
