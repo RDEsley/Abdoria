@@ -11,6 +11,7 @@ export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: st
   borda_fogo: { id: 'borda_fogo', nome: 'Fogo', icon: 'flame' },
   borda_lendario: { id: 'borda_lendario', nome: 'Lendária', icon: 'gem' },
   borda_imparavel: { id: 'borda_imparavel', nome: 'Imparável', icon: 'shield' },
+  borda_admin: { id: 'borda_admin', nome: 'Guardião de Abdoria', icon: 'crown' },
   titulo_eu_sou_heroi: { id: 'titulo_eu_sou_heroi', nome: 'Eu sou herói', icon: 'crown' },
   titulo_guerreiro: { id: 'titulo_guerreiro', nome: 'Guerreiro do core', icon: 'shield' },
   titulo_imparavel: { id: 'titulo_imparavel', nome: 'Imparável', icon: 'flame' },
@@ -73,6 +74,12 @@ export const COSMETIC_DISPLAY: Record<
   borda_aurum_slime: {
     nome: 'Aurum do Slime',
     descricao: 'Moldura pulsante forjada no ouro líquido do Golden Slime.',
+    icon: 'crown',
+    raridade: 'secreto',
+  },
+  borda_admin: {
+    nome: 'Guardião de Abdoria',
+    descricao: 'Moldura exclusiva de quem administra o reino.',
     icon: 'crown',
     raridade: 'secreto',
   },

@@ -6,18 +6,22 @@ import {
   type GiftCodeDefinition,
 } from '../data/gift-codes.js';
 import { COSMETIC_BY_ID, COSMETICS, DEFAULT_BORDA_ID } from '../data/cosmetics.js';
+import { allExercises } from '../db/seeds/all-exercises.js';
 import { User } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import type { CosmeticDefinition, CosmeticKind, ShopCatalogItem, ShopResponse } from '../types/index.js';
 import {
   MOEDA_XP_STEP,
   CURRENCY_NAME,
+  ADMIN_MOLDURA_ID,
   FROZEN_STREAK_ITEM_ID,
   SHOP_HIDDEN_COSMETIC_IDS,
   DEFAULT_COSMETICOS,
   SHOP_MOEDA_COST_PER_XP,
   SHOP_XP_COST_PER_MOEDA,
+  mergeUserDadosSalvos,
   resolveCosmeticos,
+  resolveUserDadosSalvos,
   sortCosmeticCatalogItems,
   spendableXpForShop,
   xpLevelFromTotal,
@@ -119,8 +123,29 @@ function isAutoUnlockEligible(
   return false;
 }
 
+/** Moldura de admin: concedida ao virar admin (por qualquer via) e revogada
+    ao deixar de ser — nunca fica visível/equipada em conta comum. */
+export function syncAdminMoldura(user: UserDoc): void {
+  if (user.role === undefined) return; // coluna role ainda não migrada
+  const unlocked = new Set(user.cosmeticos.desbloqueados);
+  const isAdmin = user.role === 'admin';
+
+  if (isAdmin && !unlocked.has(ADMIN_MOLDURA_ID)) {
+    unlocked.add(ADMIN_MOLDURA_ID);
+    user.cosmeticos.desbloqueados = [...unlocked];
+  }
+  if (!isAdmin && unlocked.has(ADMIN_MOLDURA_ID)) {
+    unlocked.delete(ADMIN_MOLDURA_ID);
+    user.cosmeticos.desbloqueados = [...unlocked];
+    if (user.cosmeticos.moldura_loja_equipada === ADMIN_MOLDURA_ID) {
+      user.cosmeticos.moldura_loja_equipada = DEFAULT_BORDA_ID;
+    }
+  }
+}
+
 export function syncShopUnlocks(user: UserDoc): void {
   ensureCosmeticos(user);
+  syncAdminMoldura(user);
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
   const conquistas = new Set(user.gamificacao.conquistas);
   const unlocked = new Set(user.cosmeticos.desbloqueados);
@@ -297,6 +322,40 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
   return { user, item: toCatalogItem(item, user) };
 }
 
+/** Código master de dev/dono: desbloqueia literalmente tudo (cosméticos + exercícios). */
+const MASTER_UNLOCK_CODE = 'violadearco';
+
+async function redeemMasterUnlockCode(user: UserDoc) {
+  const redeemed = new Set(user.cosmeticos.codigos_resgatados ?? []);
+  if (redeemed.has(MASTER_UNLOCK_CODE)) {
+    return { error: 'Você já resgatou este código nesta conta.', status: 400 as const };
+  }
+  redeemed.add(MASTER_UNLOCK_CODE);
+  user.cosmeticos.codigos_resgatados = [...redeemed];
+
+  const todosCosmeticos = COSMETICS.map((item) => item.id);
+  user.cosmeticos.desbloqueados = todosCosmeticos;
+  syncGiftCodeAbdoriaBlocks(user);
+
+  const todosExercicios = allExercises.map((ex) => ex.slug);
+  user.dados_salvos = mergeUserDadosSalvos(resolveUserDadosSalvos(user.dados_salvos), {
+    exercicios_desbloqueados: todosExercicios,
+  });
+
+  await user.save();
+
+  return {
+    user,
+    codigo: MASTER_UNLOCK_CODE,
+    xp_ganho: 0,
+    abdoria_ganha: 0,
+    itens_desbloqueados: todosCosmeticos,
+    titulo: undefined as string | undefined,
+    mensagem: `Tudo desbloqueado: ${todosCosmeticos.length} cosméticos e ${todosExercicios.length} exercícios.`,
+    recompensas: [{ tipo: 'cosmetico' as const, nome: 'Absolutamente tudo' }],
+  };
+}
+
 export async function redeemGiftCode(userId: string, rawCode: string) {
   const user = await loadUserForShop(userId);
   if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
@@ -304,6 +363,10 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
   const code = normalizeGiftCode(rawCode);
   if (!isValidGiftCodeFormat(code)) {
     return { error: giftCodeFormatError(), status: 400 as const };
+  }
+
+  if (code === MASTER_UNLOCK_CODE) {
+    return redeemMasterUnlockCode(user);
   }
 
   const definition = GIFT_CODE_BY_KEY[code];

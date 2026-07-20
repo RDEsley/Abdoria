@@ -209,6 +209,43 @@
   box-shadow: 3px 3px 0 #6b21a8;
 }
 
+/* Moldura exclusiva de admin — dourado-real com brilho pulsante */
+.game-cosmetic-avatar--border-admin {
+  border: 3px solid #fde047;
+  border-radius: 999px;
+  box-shadow:
+    0 0 18px rgba(250, 204, 21, 0.6),
+    inset 0 0 8px rgba(255, 251, 235, 0.5),
+    3px 3px 0 #a16207;
+  animation: game-border-admin-glow 2.4s ease-in-out infinite;
+}
+
+.game-cosmetic-avatar--border-admin::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 2px solid #facc15;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes game-border-admin-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 14px rgba(250, 204, 21, 0.5),
+      inset 0 0 8px rgba(255, 251, 235, 0.45),
+      3px 3px 0 #a16207;
+  }
+  50% {
+    box-shadow:
+      0 0 26px rgba(253, 224, 71, 0.85),
+      inset 0 0 12px rgba(255, 251, 235, 0.6),
+      3px 3px 0 #a16207;
+  }
+}
+
 @keyframes game-border-prata-shine {
   0%,
   100% {

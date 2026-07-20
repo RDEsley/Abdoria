@@ -116,7 +116,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     id: 'titulo_lenda',
     kind: 'titulo',
     nome: 'Lenda viva',
-    descricao: 'Compre na loja com Dorias.',
+    descricao: 'Compre na loja com Coins.',
     icon: 'gem',
     raridade: 'lendario',
     unlock: { tipo: 'moedas', preco_moedas: 85 },
@@ -256,7 +256,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Beeps retrô estilo fliperama.',
     icon: 'rocket',
     raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 1 },
+    unlock: { tipo: 'moedas', preco_moedas: 3 },
   },
   {
     id: 'som_retro',
@@ -265,7 +265,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Sintetizador old-school.',
     icon: 'rocket',
     raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 1 },
+    unlock: { tipo: 'moedas', preco_moedas: 3 },
   },
   {
     id: 'som_pixel',
@@ -274,7 +274,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Tons quadrados de jogos 8-bit.',
     icon: 'star',
     raridade: 'epico',
-    unlock: { tipo: 'moedas', preco_moedas: 2 },
+    unlock: { tipo: 'moedas', preco_moedas: 6 },
   },
   {
     id: 'som_metal',
@@ -283,7 +283,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Impactos metálicos de RPG.',
     icon: 'shield',
     raridade: 'epico',
-    unlock: { tipo: 'moedas', preco_moedas: 2 },
+    unlock: { tipo: 'moedas', preco_moedas: 6 },
   },
   {
     id: 'som_epico',
@@ -292,7 +292,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Fanfarras heroicas na vitória.',
     icon: 'trophy',
     raridade: 'lendario',
-    unlock: { tipo: 'moedas', preco_moedas: 2 },
+    unlock: { tipo: 'moedas', preco_moedas: 9 },
   },
   {
     id: 'som_cristal',
@@ -319,7 +319,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Pops leves e divertidos.',
     icon: 'heart',
     raridade: 'comum',
-    unlock: { tipo: 'moedas', preco_moedas: 1 },
+    unlock: { tipo: 'moedas', preco_moedas: 2 },
   },
   {
     id: 'som_8bit',
@@ -328,7 +328,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Beeps de fliperama retrô.',
     icon: 'rocket',
     raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 1 },
+    unlock: { tipo: 'moedas', preco_moedas: 4 },
   },
   {
     id: 'som_treino',
@@ -337,7 +337,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Energia de treino intenso.',
     icon: 'dumbbell',
     raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 1 },
+    unlock: { tipo: 'moedas', preco_moedas: 4 },
   },
   {
     id: 'som_boss',
@@ -346,7 +346,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Impactos graves de chefe de RPG.',
     icon: 'shield',
     raridade: 'epico',
-    unlock: { tipo: 'moedas', preco_moedas: 2 },
+    unlock: { tipo: 'moedas', preco_moedas: 7 },
   },
   {
     id: 'som_noturno',
@@ -355,7 +355,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Atmosfera misteriosa para a noite.',
     icon: 'moon',
     raridade: 'epico',
-    unlock: { tipo: 'moedas', preco_moedas: 2 },
+    unlock: { tipo: 'moedas', preco_moedas: 7 },
   },
   {
     id: 'som_vitoria',
@@ -364,7 +364,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Fanfarra triunfal ao finalizar.',
     icon: 'crown',
     raridade: 'lendario',
-    unlock: { tipo: 'moedas', preco_moedas: 2 },
+    unlock: { tipo: 'moedas', preco_moedas: 10 },
   },
 
   // —— Efeitos visuais ——
@@ -431,6 +431,15 @@ export const COSMETICS: CosmeticDefinition[] = [
     icon: 'moon',
     raridade: 'secreto',
     unlock: { tipo: 'afk_secreto' },
+  },
+  {
+    id: 'borda_admin',
+    kind: 'moldura_loja',
+    nome: 'Guardião de Abdoria',
+    descricao: 'Moldura exclusiva de quem administra o reino.',
+    icon: 'crown',
+    raridade: 'secreto',
+    unlock: { tipo: 'codigo' },
   },
 
   {
