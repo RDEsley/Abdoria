@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Clock3, Code2, MessageCircle, Ticket } from 'lucide-react';
+import { Ticket } from 'lucide-react';
 import { GiftCodeRewardReveal } from '@/components/settings/GiftCodeRewardReveal';
 import { GameButton } from '@/components/ui/GameButton';
 import { redeemGiftCode } from '@/lib/api';
@@ -73,34 +73,6 @@ export function GiftCodeSection() {
         <h3 className="game-section-title mb-4 flex items-center gap-2">
           <Ticket size={14} /> Código presente
         </h3>
-
-        <div className="settings-social-links">
-          <a
-            className="settings-social-link"
-            href="https://github.com/rdesley"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="settings-social-link__icon" aria-hidden>
-              <Code2 size={15} />
-            </span>
-            <span className="settings-social-link__text">
-              <strong>GitHub</strong>
-              <small>rdesley</small>
-            </span>
-          </a>
-          <span className="settings-social-link settings-social-link--soon" aria-disabled="true">
-            <span className="settings-social-link__icon" aria-hidden>
-              <MessageCircle size={15} />
-            </span>
-            <span className="settings-social-link__text">
-              <strong>Discord do Abdoria</strong>
-              <small>
-                <Clock3 size={10} aria-hidden /> Em breve
-              </small>
-            </span>
-          </span>
-        </div>
 
         <div className="game-gift-code">
           <label className="game-gift-code__label" htmlFor="settings-gift-code">

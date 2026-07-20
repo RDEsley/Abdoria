@@ -20,6 +20,7 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { Modal } from '@/components/ui/Modal';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { TrainingProfileModal } from '@/components/onboarding/TrainingProfileModal';
+import { AboutSection } from '@/components/settings/AboutSection';
 import { GiftCodeSection } from '@/components/settings/GiftCodeSection';
 import { SoundPackSection } from '@/components/settings/SoundPackSection';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
@@ -241,6 +242,7 @@ export function SettingsPage() {
         </div>
       </section>
 
+
       <section className="glass-card p-4">
         <h3 className="game-section-title mb-4 flex items-center gap-2">
           <Volume2 size={14} /> Áudio
@@ -376,6 +378,8 @@ export function SettingsPage() {
           </GameButton>
         </div>
       </section>
+
+      <AboutSection />
 
       <GameButton
         variant="secondary"

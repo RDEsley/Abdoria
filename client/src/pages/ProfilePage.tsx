@@ -1,7 +1,17 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Palette, Pencil, Save, Settings, Share2, ShieldCheck, Users } from 'lucide-react';
+import {
+  MessageSquareWarning,
+  Palette,
+  Pencil,
+  Save,
+  Settings,
+  Share2,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
+import { SupportModal } from '@/components/profile/SupportModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
@@ -39,6 +49,7 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [showCosmetics, setShowCosmetics] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const [social, setSocial] = useState<{
     followers: number;
     following: number;
@@ -169,10 +180,19 @@ export function ProfilePage() {
           <Link to="/configuracoes" className="game-icon-btn" aria-label="Configurações">
             <Settings size={20} aria-hidden />
           </Link>
+          <button
+            type="button"
+            className="game-icon-btn"
+            aria-label="Reportar bug ou sugestão"
+            onClick={() => setShowSupport(true)}
+          >
+            <MessageSquareWarning size={20} aria-hidden />
+          </button>
         </div>
       </header>
 
       <CosmeticsModal open={showCosmetics} onClose={() => setShowCosmetics(false)} />
+      <SupportModal open={showSupport} onClose={() => setShowSupport(false)} />
       <ProfileEditModal
         open={showEdit}
         profile={profile}
