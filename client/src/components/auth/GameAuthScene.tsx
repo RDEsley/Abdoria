@@ -84,12 +84,29 @@ interface GameAuthPanelProps {
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
+  /** false = sem logo (ex.: cadastro, onde o título já identifica a tela). */
+  showLogo?: boolean;
+  /** 'lg' = logo bem maior (login) — escala fluida via clamp(), sem quebrar no mobile. */
+  logoSize?: 'default' | 'lg';
 }
 
-export function GameAuthPanel({ title, children, footer, className }: GameAuthPanelProps) {
+export function GameAuthPanel({
+  title,
+  children,
+  footer,
+  className,
+  showLogo = true,
+  logoSize = 'default',
+}: GameAuthPanelProps) {
   return (
     <main className={`game-login__panel${className ? ` ${className}` : ''}`}>
-      <BrandMark size={112} alt="Abdoria" className="game-login__logo" />
+      {showLogo && (
+        <BrandMark
+          size={logoSize === 'lg' ? 176 : 112}
+          alt="Abdoria"
+          className={`game-login__logo${logoSize === 'lg' ? ' game-login__logo--lg' : ''}`}
+        />
+      )}
       {title && <h1 className="game-login__title">{title}</h1>}
       {children}
       {footer}

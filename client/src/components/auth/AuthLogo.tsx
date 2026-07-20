@@ -1,7 +1,7 @@
 import { BrandMark } from '@/components/brand/BrandMark';
 
 interface Props {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showLabel?: boolean;
   className?: string;
 }
@@ -10,6 +10,7 @@ const sizes = {
   sm: { img: 64, className: 'h-16 w-16' },
   md: { img: 80, className: 'h-20 w-20' },
   lg: { img: 112, className: 'h-28 w-28' },
+  xl: { img: 152, className: 'h-[9.5rem] w-[9.5rem]' },
 };
 
 export function AuthLogo({ size = 'md', showLabel = true, className = '' }: Props) {

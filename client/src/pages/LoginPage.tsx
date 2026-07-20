@@ -117,13 +117,7 @@ export function LoginPage() {
 
   return (
     <GameAuthScene variant="day">
-      <GameAuthPanel
-        footer={
-          <Link to="/register" className="game-login__link">
-            Novo jogador?
-          </Link>
-        }
-      >
+      <GameAuthPanel logoSize="lg">
         {registerState?.accountCreated && (
           <GameAlertBanner
             variant="success"
@@ -227,13 +221,21 @@ export function LoginPage() {
           )}
         </form>
 
+        <div className="game-auth-divider">
+          <span>ou</span>
+        </div>
+
+        <Link to="/register" className="game-btn game-btn--outline">
+          Criar conta
+        </Link>
+
         <button
           type="button"
           onClick={handleGuest}
           disabled={loading || guestLoading}
-          className="game-btn game-btn--secondary game-auth-guest"
+          className="game-auth-guest-link"
         >
-          {guestLoading ? 'Carregando…' : 'Visitante'}
+          {guestLoading ? 'Carregando…' : 'Entrar como Visitante'}
         </button>
       </GameAuthPanel>
 

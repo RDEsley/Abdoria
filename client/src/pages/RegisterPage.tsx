@@ -57,6 +57,7 @@ export function RegisterPage() {
     <GameAuthScene variant="night">
       <GameAuthPanel
         title="NOVO JOGADOR"
+        showLogo={false}
         className="game-login__panel--register"
         footer={
           <Link to="/login" className="game-login__link">

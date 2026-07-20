@@ -224,6 +224,46 @@
   }
 }
 
+/* Mobile (largura curta OU altura curta, cobre celular deitado também):
+   sol/lua encolhem e sobem pro canto, com brilho mais contido, e o form
+   abandona a centralização perfeita — sempre começa abaixo do astro em vez
+   de arriscar ficar por trás dele quando o conteúdo é alto (cadastro). */
+@media (max-width: 480px), (max-height: 700px) {
+  .game-login {
+    align-items: flex-start;
+    padding-top: 4.5rem;
+  }
+
+  .game-celestial {
+    top: 0.65rem;
+    width: 42px;
+    height: 42px;
+  }
+
+  .game-celestial--sun {
+    right: 6%;
+    box-shadow:
+      0 0 20px 6px rgba(253, 224, 71, 0.4),
+      0 0 46px 14px rgba(253, 224, 71, 0.14);
+  }
+
+  .game-celestial--moon {
+    left: 6%;
+    box-shadow:
+      0 0 18px 5px rgba(253, 230, 138, 0.32),
+      0 0 42px 12px rgba(253, 230, 138, 0.1);
+  }
+
+  .game-celestial__rays {
+    inset: -10px;
+  }
+
+  .game-login__logo--lg {
+    width: clamp(6.5rem, 18vw + 3rem, 9rem);
+    height: clamp(6.5rem, 18vw + 3rem, 9rem);
+  }
+}
+
 /* O form acompanha a troca de lado do astro */
 .game-login--day .game-login__panel {
   animation: game-panel-slide-left 0.7s cubic-bezier(0.3, 1.05, 0.5, 1) both;
@@ -603,6 +643,14 @@
   animation: game-logo-bob 2.4s ease-in-out infinite;
 }
 
+/* Logo grande do Login — clamp() em vez de tamanho fixo, pra encolher
+   sozinha em telas curtas sem precisar de media query dedicada. */
+.game-login__logo--lg {
+  width: clamp(7rem, 15vw + 6rem, 11rem);
+  height: clamp(7rem, 15vw + 6rem, 11rem);
+  margin-bottom: 0.25rem;
+}
+
 @keyframes game-logo-bob {
   0%,
   100% {
@@ -669,6 +717,24 @@
   border: 2px solid transparent;
   border-radius: 0.65rem;
   box-shadow: 0 2px 0 rgba(28, 25, 23, 0.08);
+  animation: game-alert-in 0.25s ease-out;
+}
+
+@keyframes game-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-toast-banner {
+    animation: none;
+  }
 }
 
 .game-toast-banner__icon {
@@ -833,6 +899,7 @@
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 0.45rem;
+  animation: game-alert-in 0.2s ease-out;
 }
 
 .game-auth-field__error::before {
@@ -914,6 +981,34 @@
   cursor: not-allowed;
 }
 
+/* Links estilizados como .game-btn (ex.: "Criar conta") são <a>, que ignoram
+   width/padding em display:inline por padrão — sem isso ficavam torto. */
+a.game-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.game-btn--outline {
+  background: #fff;
+  color: #047857;
+  border-color: #10b981;
+  box-shadow: 2px 2px 0 #10b981;
+}
+
+.game-btn--outline:hover:not(:disabled) {
+  background: #ecfdf5;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #10b981;
+}
+
+.game-btn--outline:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #10b981;
+}
+
 .game-login__link {
   display: inline-block;
   margin-top: 1.25rem;
@@ -976,12 +1071,57 @@
   text-decoration: underline;
 }
 
-.game-auth-guest {
-  margin-top: 0.65rem;
+.game-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.15rem 0 0.85rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  color: #a8a29e;
+  text-transform: uppercase;
+}
+
+.game-auth-divider::before,
+.game-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(28, 25, 23, 0.14);
+}
+
+.game-auth-guest-link {
+  display: block;
+  width: 100%;
+  margin-top: 0.85rem;
+  padding: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #a8a29e;
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.game-auth-guest-link:hover:not(:disabled) {
+  color: #78716c;
+  text-decoration: underline;
+}
+
+.game-auth-guest-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .game-login__panel--register {
   max-width: 360px;
+}
+
+/* Sem logo acima (showLogo=false): o título é o primeiro elemento, não
+   precisa do respiro extra que existia pra separar da logo. */
+.game-login__panel--register .game-login__title {
+  margin-top: 0;
 }
 
 .game-modal-overlay {
@@ -1015,6 +1155,7 @@
 .terms-modal {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
   max-height: 85vh;
 }
 
@@ -1022,7 +1163,6 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  margin-top: 1rem;
 }
 
 .terms-modal__body {
