@@ -79,8 +79,12 @@ export function useAtividadesFlow() {
   // é a própria conclusão (ver `enviarConclusao`), removendo-o da fila
   // persistida. Isso é o que permite repetir — o usuário pode adicionar de
   // volta manualmente uma atividade já concluída hoje, e ela volta a valer.
+  //
+  // A ordem segue `atividades` (a lista mestre, reordenável pelo usuário),
+  // não a ordem de inserção na fila — assim mover uma atividade de posição
+  // no card também reorganiza a ordem no atividade-player.
   const filaPendente = useMemo(
-    () => fila.map((id) => atividades.find((a) => a.id === id)).filter((a): a is AtividadeExtra => !!a),
+    () => atividades.filter((a) => fila.includes(a.id)),
     [fila, atividades],
   );
 
@@ -92,14 +96,12 @@ export function useAtividadesFlow() {
     try {
       const res = await completeAtividade(atividade.id, dados);
       applyUser(res.user);
-      // `refresh()` não busca o histórico (só usuário/stats) — sem forçar o
-      // reload aqui, `concluidasHoje`/`filaPendente` ficavam presos no
-      // estado de antes da conclusão, como se nada tivesse acontecido.
-      await Promise.all([refresh(), ensureHistory({ force: true })]);
 
       // Tira da fila persistida assim que conclui — sem isso ela nunca
       // encolhia (nada mais removia o id de lá) e a tela de atividades
       // parecia travada. Pra repetir, o usuário adiciona de volta na hora.
+      // Roda ANTES do refresh: o refresh único abaixo já lê a fila limpa,
+      // dispensando o segundo refresh que dobrava a espera de cada conclusão.
       if (user && fila.includes(atividade.id)) {
         try {
           const semAtual = fila.filter((id) => id !== atividade.id);
@@ -107,12 +109,16 @@ export function useAtividadesFlow() {
             preferencias: { ...user.preferencias, atividades_fila: { data: hoje, ids: semAtual } },
           });
           applyUser(atualizado);
-          await refresh();
         } catch {
           // A conclusão em si já valeu (XP/streak salvos) — se só a limpeza
           // da fila falhar, não vale a pena travar o fluxo por isso.
         }
       }
+
+      // `refresh()` não busca o histórico (só usuário/stats) — sem forçar o
+      // reload aqui, `concluidasHoje`/`filaPendente` ficavam presos no
+      // estado de antes da conclusão, como se nada tivesse acontecido.
+      await Promise.all([refresh(), ensureHistory({ force: true })]);
 
       acumulado.current.xp += res.xp_ganho;
       acumulado.current.moedas += res.abdoria_ganha;

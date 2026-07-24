@@ -362,7 +362,12 @@
 
 .game-xp-section__summary {
   flex: 1;
-  min-width: min(100%, 14rem);
+  /* min-width: 0 (não 14rem como antes) — o valor alto forçava o bloco
+     inteiro pro fim da linha em telas estreitas (iPhone SE, Android
+     compacto: anel 5.5rem + gap já não sobrava espaço pros 14rem mínimos).
+     Com 0, o flex item pode encolher e o texto quebra sozinho dentro do
+     espaço real ao lado do anel, sem forçar wrap do layout inteiro. */
+  min-width: 0;
 }
 
 .game-xp-section__title {
@@ -382,6 +387,28 @@
   color: #f59e0b;
 }
 
+.game-xp-section__name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+/* Título equipado ao lado do nome no card do Início (mesma linguagem visual do Perfil). */
+.game-xp-section__player-title {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #b45309;
+}
+
+.game-xp-section__hero--skinned .game-xp-section__player-title {
+  color: #fcd34d;
+}
+
 .game-xp-section__subtitle {
   margin: 0.45rem 0 0;
   font-size: 0.72rem;
@@ -392,6 +419,37 @@
 
 .game-xp-section__subtitle strong {
   color: #047857;
+}
+
+/* Telas bem estreitas (iPhone SE, Android compacto ~320-360px): anel menor
+   e menos padding, pra sobrar espaço real pro nome/XP ao lado dele. */
+@media (max-width: 360px) {
+  .game-xp-section__hero {
+    gap: 0.7rem 0.85rem;
+    padding: 0.85rem 0.8rem;
+  }
+
+  .game-xp-section__ring {
+    width: 4.4rem;
+    height: 4.4rem;
+  }
+
+  .game-xp-section__level {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .game-xp-section__level-num {
+    font-size: 1.2rem;
+  }
+
+  .game-xp-section__title {
+    font-size: 0.92rem;
+  }
+
+  .game-xp-section__subtitle {
+    font-size: 0.66rem;
+  }
 }
 
 .game-xp-section__chips {
@@ -1279,34 +1337,62 @@
   opacity: 0.5;
 }
 
-.atividade-item__handle {
+/* Reordenar por setas (não drag-and-drop — evita conflito com o scroll da lista em touch). */
+.atividade-item__reorder {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  width: 1.75rem;
+}
+
+.atividade-item__reorder-btn {
+  display: flex;
+  height: 1.375rem;
+  align-items: center;
+  justify-content: center;
+  color: #a8a29e;
+  background: none;
+  border: none;
+  border-radius: 0.4rem;
+}
+
+.atividade-item__reorder-btn:hover:not(:disabled) {
+  color: #57534e;
+  background: #f5f5f4;
+}
+
+.atividade-item__reorder-btn:disabled {
+  color: #e7e5e4;
+  cursor: default;
+}
+
+/* Seleção em lote (modo editar): substitui as setas de reordenar no mesmo espaço. */
+.atividade-item__select {
   display: flex;
   height: 100%;
   min-height: 2.75rem;
   width: 1.75rem;
   flex-shrink: 0;
-  cursor: grab;
-  touch-action: none;
+  cursor: pointer;
   align-items: center;
   justify-content: center;
-  color: #d6d3d1;
+  color: #a8a29e;
   background: none;
   border: none;
+  border-radius: 0.5rem;
 }
 
-.atividade-item__handle:hover {
-  color: #a8a29e;
+.atividade-item__select:hover {
+  color: #57534e;
 }
 
-.atividade-item__handle:active {
-  cursor: grabbing;
+.atividade-item--selecionada {
+  border-color: #10b981;
+  background: #ecfdf5;
 }
 
-.atividade-item--dragging {
-  box-shadow:
-    0 8px 20px rgba(28, 25, 23, 0.12),
-    0 0 0 2px #10b981;
-  z-index: 20;
+.atividade-item--selecionada .atividade-item__select {
+  color: #059669;
 }
 
 /* Modal de criação: escolha entre meta por tempo ou por número */

@@ -2,31 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useAnimationControls } from 'framer-motion';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
   CalendarClock,
   Check,
-  GripVertical,
+  ChevronDown,
+  ChevronUp,
   ListChecks,
   Pencil,
   Plus,
   RotateCcw,
   Sparkles,
+  Square,
+  SquareCheck,
   Trash2,
   X,
 } from 'lucide-react';
@@ -67,22 +53,28 @@ function mensagemFila(n: number): string | null {
 }
 
 /**
- * Uma linha da lista: sempre arrastável pela alça (mesmo padrão puro
- * dnd-kit — sem Framer Motion no item — usado na fila de exercícios do
- * Construtor; misturar spring animation com o transform do dnd-kit no
- * mesmo nó deixava o arraste com lag). Editar/excluir ficam direto no
- * row, visíveis só em modo de edição, sem submenu.
+ * Uma linha da lista: reordenar é por setas ↑/↓ (não drag-and-drop — numa
+ * lista dentro de um feed rolável, arraste em touch conflita com o scroll
+ * da página; setas são instantâneas e não têm ambiguidade de gesto).
+ * Editar/excluir ficam direto no row, visíveis só em modo de edição, sem
+ * submenu.
  */
-function SortableAtividadeItem({
+function AtividadeItem({
   atividade,
   feita,
   naFila,
   modoEdicao,
   bloqueada,
   busy,
+  selecionado,
+  podeSubir,
+  podeDescer,
   onToggleFila,
   onEdit,
   onDelete,
+  onToggleSelecionado,
+  onMoveUp,
+  onMoveDown,
 }: {
   atividade: AtividadeExtra;
   feita: boolean;
@@ -91,41 +83,59 @@ function SortableAtividadeItem({
   /** Hoje não está nos dias agendados pra atividades — só visualização/CRUD. */
   bloqueada: boolean;
   busy: boolean;
+  /** Marcada pra exclusão em lote (só faz sentido com modoEdicao ativo). */
+  selecionado: boolean;
+  podeSubir: boolean;
+  podeDescer: boolean;
   onToggleFila: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleSelecionado: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: atividade.id,
-  });
-
   const Icon = ACHIEVEMENT_ICON_COMPONENTS[atividade.icon];
   const meta =
     atividade.meta_tipo === 'tempo'
       ? `${atividade.meta_valor} min`
       : `${atividade.meta_valor} ${atividade.meta_unidade ?? ''}`.trim();
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : undefined,
-  };
-
   return (
     <li
-      ref={setNodeRef}
-      style={style}
-      className={`atividade-item${feita ? ' atividade-item--feita' : ''}${naFila ? ' atividade-item--fila' : ''}${isDragging ? ' atividade-item--dragging' : ''}`}
+      className={`atividade-item${feita ? ' atividade-item--feita' : ''}${naFila ? ' atividade-item--fila' : ''}${selecionado ? ' atividade-item--selecionada' : ''}`}
     >
-      <button
-        type="button"
-        className="atividade-item__handle"
-        aria-label={`Arrastar ${atividade.nome} para reordenar`}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical size={16} aria-hidden />
-      </button>
+      {modoEdicao ? (
+        <button
+          type="button"
+          className="atividade-item__select"
+          aria-label={selecionado ? `Desmarcar ${atividade.nome}` : `Selecionar ${atividade.nome}`}
+          aria-pressed={selecionado}
+          onClick={onToggleSelecionado}
+        >
+          {selecionado ? <SquareCheck size={18} aria-hidden /> : <Square size={18} aria-hidden />}
+        </button>
+      ) : (
+        <span className="atividade-item__reorder">
+          <button
+            type="button"
+            className="atividade-item__reorder-btn"
+            aria-label={`Mover ${atividade.nome} para cima`}
+            disabled={!podeSubir}
+            onClick={onMoveUp}
+          >
+            <ChevronUp size={13} aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="atividade-item__reorder-btn"
+            aria-label={`Mover ${atividade.nome} para baixo`}
+            disabled={!podeDescer}
+            onClick={onMoveDown}
+          >
+            <ChevronDown size={13} aria-hidden />
+          </button>
+        </span>
+      )}
 
       <button
         type="button"
@@ -199,41 +209,86 @@ function SortableAtividadeItem({
  * registradas (quem paga o dia é o treino).
  */
 export function AtividadesCard() {
-  const { user, refresh } = useApp();
+  const { user, refresh, applyUser: applyAppUser } = useApp();
   const { applyUser } = useAuth();
   const navigate = useNavigate();
   const flow = useAtividadesFlow();
 
-  const [busy, setBusy] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [editando, setEditando] = useState<AtividadeExtra | 'nova' | null>(null);
   const [mostrarAgenda, setMostrarAgenda] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const { atividades, fila, hojeNaAgenda, diaDeTreino, concluidasHoje, filaPendente } = flow;
 
   const noLimite = atividades.length >= ATIVIDADES_MAX;
 
-  /* ---------------- persistência (CRUD da lista) ---------------- */
+  const sairDoModoEdicao = () => {
+    setModoEdicao(false);
+    setSelecionados(new Set());
+  };
 
-  const persist = async (patch: Record<string, unknown>, mensagem?: string): Promise<boolean> => {
-    if (!user || busy) return false;
-    setBusy(true);
-    try {
-      const atualizado = await updateMe({ preferencias: { ...user.preferencias, ...patch } });
-      // Este card lê `user` do AppContext (via useApp), não do AuthContext —
-      // applyUser sozinho não bastava: a fila/lista ficava "travada" porque o
-      // AppContext nunca sabia que preferencias tinham mudado. refresh()
-      // busca o /me atualizado e resolve os dois contextos de uma vez.
-      applyUser(atualizado);
-      await refresh();
-      if (mensagem) showGameToast(mensagem, { variant: 'success' });
-      return true;
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível salvar.'), { variant: 'error' });
-      return false;
-    } finally {
-      setBusy(false);
-    }
+  // Clique fora da seção desativa o modo editar sozinho — antes só saía
+  // clicando de novo no botão ou trocando de página. Os modais de
+  // criar/editar atividade e de agenda são portais pro <body> (fora da
+  // subárvore desta seção), então ficam ignorados enquanto abertos: sem essa
+  // guarda, abrir "Criar atividade" em modo edição desativaria o modo sozinho.
+  useEffect(() => {
+    if (!modoEdicao) return;
+    if (editando || mostrarAgenda) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (!sectionRef.current) return;
+      if (sectionRef.current.contains(event.target as Node)) return;
+      sairDoModoEdicao();
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [modoEdicao, editando, mostrarAgenda]);
+
+  /* ------------- persistência otimista (CRUD da lista + fila) ------------- */
+
+  // A UI atualiza NA HORA com o estado otimista; o updateMe roda em segundo
+  // plano numa fila serializada (cliques rápidos chegam ao servidor em ordem).
+  // `userRef` evita closure velha em cliques na mesma frame; `seqRef` garante
+  // que só a ÚLTIMA resposta do servidor reconcilia o estado (respostas
+  // antigas não regridem um otimista mais novo). Falha => volta pro servidor.
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+  const persistChain = useRef<Promise<unknown>>(Promise.resolve());
+  const seqRef = useRef(0);
+
+  const persist = (patch: Record<string, unknown>, mensagem?: string): void => {
+    const base = userRef.current;
+    if (!base) return;
+
+    const preferencias = { ...base.preferencias, ...patch };
+    const otimista = { ...base, preferencias };
+    userRef.current = otimista;
+    applyUser(otimista);
+    applyAppUser(otimista);
+    if (mensagem) showGameToast(mensagem, { variant: 'success' });
+
+    const seq = ++seqRef.current;
+    persistChain.current = persistChain.current
+      .then(() => updateMe({ preferencias }))
+      .then((atualizado) => {
+        if (seq !== seqRef.current) return;
+        userRef.current = atualizado;
+        applyUser(atualizado);
+        applyAppUser(atualizado);
+      })
+      .catch((err) => {
+        if (seq !== seqRef.current) return;
+        showGameToast(getErrorMessage(err, 'Não foi possível salvar — desfazendo.'), {
+          variant: 'error',
+        });
+        void refresh();
+      });
   };
 
   const salvarLista = (lista: AtividadeExtra[], mensagem?: string) =>
@@ -250,39 +305,68 @@ export function AtividadesCard() {
     const lista = existe
       ? atividades.map((a) => (a.id === atividade.id ? atividade : a))
       : [atividade, ...atividades];
-    void salvarLista(lista, existe ? 'Atividade atualizada.' : 'Atividade criada!');
+    salvarLista(lista, existe ? 'Atividade atualizada.' : 'Atividade criada!');
     setEditando(null);
   };
 
   const excluir = (id: string) => {
-    void salvarLista(
-      atividades.filter((a) => a.id !== id),
-      'Atividade removida.',
-    );
-    if (fila.includes(id)) void salvarFila(fila.filter((f) => f !== id));
+    // Lista + fila saem no MESMO patch: uma request só, sem travar a tela.
+    const patch: Record<string, unknown> = { atividades: atividades.filter((a) => a.id !== id) };
+    if (fila.includes(id)) {
+      patch.atividades_fila = { data: getTodaySaoPaulo(), ids: fila.filter((f) => f !== id) };
+    }
+    persist(patch, 'Atividade removida.');
+    setSelecionados((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   };
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const toggleSelecionado = (id: string) => {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
-  /** Arrastar pela alça reordena — sempre ativo. */
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = atividades.findIndex((a) => a.id === active.id);
-    const newIndex = atividades.findIndex((a) => a.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    void salvarLista(arrayMove(atividades, oldIndex, newIndex));
+  const excluirSelecionados = () => {
+    if (selecionados.size === 0) return;
+    const patch: Record<string, unknown> = {
+      atividades: atividades.filter((a) => !selecionados.has(a.id)),
+    };
+    const filaSemSelecionadas = fila.filter((id) => !selecionados.has(id));
+    if (filaSemSelecionadas.length !== fila.length) {
+      patch.atividades_fila = { data: getTodaySaoPaulo(), ids: filaSemSelecionadas };
+    }
+    persist(
+      patch,
+      selecionados.size === 1 ? 'Atividade removida.' : `${selecionados.size} atividades removidas.`,
+    );
+    setSelecionados(new Set());
+  };
+
+  /** Move uma posição pra cima/baixo — clique é instantâneo, sem ambiguidade de gesto. */
+  const moverAtividade = (id: string, direcao: 'cima' | 'baixo') => {
+    const index = atividades.findIndex((a) => a.id === id);
+    if (index === -1) return;
+    const alvo = direcao === 'cima' ? index - 1 : index + 1;
+    if (alvo < 0 || alvo >= atividades.length) return;
+    const lista = [...atividades];
+    const [item] = lista.splice(index, 1);
+    lista.splice(alvo, 0, item);
+    salvarLista(lista);
   };
 
   const resetar = () => {
-    void salvarLista(
+    salvarLista(
       ATIVIDADES_CATALOGO.map((a) => ({ ...a })),
       'Atividades restauradas para o padrão.',
     );
-    setModoEdicao(false);
+    sairDoModoEdicao();
   };
 
   /* ---------------- fila ---------------- */
@@ -293,7 +377,7 @@ export function AtividadesCard() {
     if (!hojeNaAgenda) return;
     playClick();
     const naFila = fila.includes(atividade.id);
-    void salvarFila(naFila ? fila.filter((id) => id !== atividade.id) : [...fila, atividade.id]);
+    salvarFila(naFila ? fila.filter((id) => id !== atividade.id) : [...fila, atividade.id]);
   };
 
   /* ---------------- medidor da fila ---------------- */
@@ -315,7 +399,7 @@ export function AtividadesCard() {
   /* ---------------- render ---------------- */
 
   return (
-    <section className="glass-card p-4">
+    <section ref={sectionRef} className="glass-card p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="game-section-title !mb-0 flex items-center gap-2">
           <ListChecks size={14} aria-hidden /> Atividades
@@ -338,7 +422,8 @@ export function AtividadesCard() {
             title={modoEdicao ? 'Concluir edição' : 'Editar lista'}
             onClick={() => {
               playClick();
-              setModoEdicao((v) => !v);
+              if (modoEdicao) sairDoModoEdicao();
+              else setModoEdicao(true);
             }}
           >
             {modoEdicao ? (
@@ -384,7 +469,6 @@ export function AtividadesCard() {
 
           <GameButton
             className="mt-2 flex w-full items-center justify-center gap-2"
-            disabled={busy}
             onClick={() => {
               playClick();
               navigate('/atividades-player');
@@ -395,33 +479,49 @@ export function AtividadesCard() {
         </div>
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={atividades.map((a) => a.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <ul className="atividades-lista">
-            {atividades.map((atividade) => (
-              <SortableAtividadeItem
-                key={atividade.id}
-                atividade={atividade}
-                feita={concluidasHoje.has(atividade.nome)}
-                naFila={fila.includes(atividade.id)}
-                modoEdicao={modoEdicao}
-                bloqueada={!hojeNaAgenda}
-                busy={busy}
-                onToggleFila={() => alternarFila(atividade)}
-                onEdit={() => setEditando(atividade)}
-                onDelete={() => excluir(atividade.id)}
-              />
-            ))}
-          </ul>
-        </SortableContext>
-      </DndContext>
+      <ul className="atividades-lista">
+        {atividades.map((atividade, index) => (
+          <AtividadeItem
+            key={atividade.id}
+            atividade={atividade}
+            feita={concluidasHoje.has(atividade.nome)}
+            naFila={fila.includes(atividade.id)}
+            modoEdicao={modoEdicao}
+            bloqueada={!hojeNaAgenda}
+            busy={false}
+            selecionado={selecionados.has(atividade.id)}
+            podeSubir={index > 0}
+            podeDescer={index < atividades.length - 1}
+            onToggleFila={() => alternarFila(atividade)}
+            onEdit={() => setEditando(atividade)}
+            onDelete={() => excluir(atividade.id)}
+            onToggleSelecionado={() => toggleSelecionado(atividade.id)}
+            onMoveUp={() => moverAtividade(atividade.id, 'cima')}
+            onMoveDown={() => moverAtividade(atividade.id, 'baixo')}
+          />
+        ))}
+      </ul>
 
-      {atividades.length > 1 && (
-        <p className="mt-2 flex items-center gap-1.5 text-[0.65rem] font-semibold text-stone-400">
-          <GripVertical size={12} aria-hidden /> Segure a alça e arraste pra reordenar.
+      {modoEdicao && selecionados.size > 0 ? (
+        <GameButton
+          variant="danger"
+          className="mt-2 flex w-full items-center justify-center gap-2"
+          onClick={excluirSelecionados}
+        >
+          <Trash2 size={15} aria-hidden /> Excluir {selecionados.size} selecionada
+          {selecionados.size === 1 ? '' : 's'}
+        </GameButton>
+      ) : (
+        atividades.length > 1 &&
+        !modoEdicao && (
+          <p className="mt-2 flex items-center gap-1.5 text-[0.65rem] font-semibold text-stone-400">
+            <ChevronUp size={12} aria-hidden /> Use as setas para reordenar.
+          </p>
+        )
+      )}
+      {modoEdicao && selecionados.size === 0 && (
+        <p className="mt-2 text-[0.65rem] font-semibold text-stone-400">
+          Toque nos quadrados para selecionar e excluir em lote.
         </p>
       )}
 
@@ -433,7 +533,6 @@ export function AtividadesCard() {
         <GameButton
           variant="secondary"
           className="mt-3 flex w-full items-center justify-center gap-2"
-          disabled={busy}
           onClick={() => setEditando('nova')}
         >
           <Plus size={16} aria-hidden /> Criar atividade
@@ -444,7 +543,6 @@ export function AtividadesCard() {
         <GameButton
           variant="ghost"
           className="mt-2 flex w-full items-center justify-center gap-2"
-          disabled={busy}
           onClick={resetar}
         >
           <RotateCcw size={15} aria-hidden /> Restaurar atividades padrão
