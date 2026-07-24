@@ -1,16 +1,21 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  Activity,
+  Cake,
+  Dumbbell,
   MessageSquareWarning,
-  Palette,
   Pencil,
+  Ruler,
   Save,
   Settings,
   Share2,
   ShieldCheck,
+  Target,
   Users,
+  Weight,
 } from 'lucide-react';
-import { CosmeticsModal } from '@/components/cosmetics/CosmeticsModal';
+import { BannerPickerModal } from '@/components/profile/BannerPickerModal';
 import { SupportModal } from '@/components/profile/SupportModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
@@ -23,11 +28,21 @@ import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useApp } from '@/hooks/useApp';
+import { useCopy } from '@/hooks/useCopy';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import { getMySocial } from '@/lib/api/social';
 import { playTabSwitch } from '@/lib/sounds';
-import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
+import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
+import { resolveEquippedTitle } from '@/lib/cosmetic-title';
+import { resolveIdentityBorder } from '@/lib/identity-border';
+import {
+  digitsOnly,
+  formatAlturaMask,
+  imcFaixa,
+  sanitizeDecimalInput,
+  validateBodyMetrics,
+} from '@/lib/utils';
 import {
   calcImc,
   NIVEL_LABELS,
@@ -44,17 +59,42 @@ type Tab = 'dados' | 'progresso' | 'definicao';
 export function ProfilePage() {
   const { user: appUser, stats, refresh } = useApp();
   const { user, refreshUser } = useAuth();
+  const copy = useCopy();
   const profile = user ?? appUser;
   const [tab, setTab] = useState<Tab>('progresso');
   const [saving, setSaving] = useState(false);
-  const [showCosmetics, setShowCosmetics] = useState(false);
+  const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [social, setSocial] = useState<{
     followers: number;
     following: number;
     amigos: number;
+    likes_recebidos: number;
   } | null>(null);
+
+  // Rascunho dos Dados: pré-preenchido com o que já veio do Onboarding
+  // (profile.idade/peso_kg/altura_cm) e sincronizado se a conta mudar em
+  // segundo plano (ex.: outro dispositivo). Máscaras iguais às do Onboarding
+  // — altura em "1.75 m" e peso com 1 casa decimal ("72.5 kg").
+  const [idadeDraft, setIdadeDraft] = useState(String(profile?.idade ?? ''));
+  const [pesoDraft, setPesoDraft] = useState(String(profile?.peso_kg ?? ''));
+  const [alturaDraft, setAlturaDraft] = useState(
+    profile?.altura_cm != null ? String(profile.altura_cm) : '',
+  );
+  const [nivelDraft, setNivelDraft] = useState<NivelUsuario>(profile?.nivel ?? 'iniciante');
+  const [objetivoDraft, setObjetivoDraft] = useState<Objetivo>(profile?.objetivo ?? 'definicao');
+  const [dadosHydratedFor, setDadosHydratedFor] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile || dadosHydratedFor === profile.id) return;
+    setIdadeDraft(String(profile.idade ?? ''));
+    setPesoDraft(String(profile.peso_kg ?? ''));
+    setAlturaDraft(profile.altura_cm != null ? String(profile.altura_cm) : '');
+    setNivelDraft(profile.nivel);
+    setObjetivoDraft(profile.objetivo);
+    setDadosHydratedFor(profile.id);
+  }, [profile, dadosHydratedFor]);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,19 +129,9 @@ export function ProfilePage() {
     showGameToast('Link do perfil copiado!', { variant: 'success' });
   };
 
-  const imc =
-    profile.imc ??
-    (profile.peso_kg && profile.altura_cm ? calcImc(profile.peso_kg, profile.altura_cm) : null);
   const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
-  const equippedTitle = cosmeticos.titulo_equipado
-    ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome
-    : null;
-  const titleClass =
-    cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
-      ? 'game-profile-hero__title cosmetic-title--dono-do-jogo'
-      : cosmeticos.titulo_equipado === 'titulo_secreto'
-        ? 'game-profile-hero__title cosmetic-title--secreto'
-        : 'game-profile-hero__title';
+  const identityBorder = resolveIdentityBorder(cosmeticos);
+  const resolvedTitle = resolveEquippedTitle(cosmeticos.titulo_equipado);
   const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
   const heroShellClass =
     fundoKey === 'padrao'
@@ -116,27 +146,36 @@ export function ProfilePage() {
     await refresh();
   };
 
+  const dadosValidation = validateBodyMetrics(idadeDraft, pesoDraft, alturaDraft);
+  const dadosImc =
+    dadosValidation.peso_kg && dadosValidation.altura_cm
+      ? calcImc(dadosValidation.peso_kg, dadosValidation.altura_cm)
+      : null;
+
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
+    if (dadosValidation.error) {
+      showGameToast(dadosValidation.error, { variant: 'error' });
+      return;
+    }
     setSaving(true);
     try {
-      const pesoRaw = String(form.get('peso_kg') ?? '').trim();
-      const alturaRaw = String(form.get('altura_cm') ?? '').trim();
-      const idadeRaw = String(form.get('idade') ?? '').trim();
-      const peso = pesoRaw ? Number(pesoRaw) : undefined;
-      const altura = alturaRaw ? Number(alturaRaw) : undefined;
-      const idade = idadeRaw ? Number(idadeRaw) : undefined;
       await updateMe({
-        idade,
-        peso_kg: peso,
-        altura_cm: altura,
-        imc: peso && altura ? calcImc(peso, altura) : undefined,
-        nivel: form.get('nivel') as NivelUsuario,
-        objetivo: form.get('objetivo') as Objetivo,
+        idade: dadosValidation.idade ?? undefined,
+        peso_kg: dadosValidation.peso_kg ?? undefined,
+        altura_cm: dadosValidation.altura_cm ?? undefined,
+        imc: dadosImc ?? undefined,
+        nivel: nivelDraft,
+        objetivo: objetivoDraft,
       });
       await refreshUser();
       await refresh();
+      showGameToast('Dados atualizados!', { variant: 'success' });
+    } catch (err) {
+      showGameToast(
+        err instanceof Error ? err.message : 'Não foi possível salvar seus dados.',
+        { variant: 'error' },
+      );
     } finally {
       setSaving(false);
     }
@@ -151,7 +190,7 @@ export function ProfilePage() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex items-start justify-between gap-3">
-        <GamePageHeader eyebrow="Ficha do herói" title="Perfil" />
+        <GamePageHeader eyebrow={copy('perfil_eyebrow')} title="Perfil" />
         <div className="flex shrink-0 gap-2">
           {user?.role === 'admin' && (
             <Link to="/admin" className="game-icon-btn" aria-label="Administração">
@@ -169,14 +208,6 @@ export function ProfilePage() {
           <Link to="/amigos" className="game-icon-btn" aria-label="Amigos">
             <Users size={20} aria-hidden />
           </Link>
-          <button
-            type="button"
-            className="game-icon-btn"
-            aria-label="Personalizar perfil"
-            onClick={() => setShowCosmetics(true)}
-          >
-            <Palette size={20} aria-hidden />
-          </button>
           <Link to="/configuracoes" className="game-icon-btn" aria-label="Configurações">
             <Settings size={20} aria-hidden />
           </Link>
@@ -191,7 +222,11 @@ export function ProfilePage() {
         </div>
       </header>
 
-      <CosmeticsModal open={showCosmetics} onClose={() => setShowCosmetics(false)} />
+      <BannerPickerModal
+        open={showBannerPicker}
+        onClose={() => setShowBannerPicker(false)}
+        onChanged={handleRefresh}
+      />
       <SupportModal open={showSupport} onClose={() => setShowSupport(false)} />
       <ProfileEditModal
         open={showEdit}
@@ -205,27 +240,34 @@ export function ProfilePage() {
         <button
           type="button"
           className="game-profile-hero__edit"
-          aria-label="Editar perfil"
-          onClick={() => setShowEdit(true)}
+          aria-label="Trocar banner do perfil"
+          title="Trocar banner"
+          onClick={() => setShowBannerPicker(true)}
         >
           <Pencil size={14} aria-hidden />
         </button>
         <div className="game-profile-hero">
-          <span className="game-profile-hero__avatar-wrap">
+          <button
+            type="button"
+            className="game-profile-hero__avatar-wrap game-profile-hero__avatar-btn"
+            aria-label="Editar perfil (foto, nome, moldura, título)"
+            onClick={() => setShowEdit(true)}
+          >
             <UserAvatar
               nome={profile.nome}
               avatarUrl={profile.avatar_url}
-              moldura={cosmeticos.moldura_equipada ?? null}
+              moldura={identityBorder.moldura}
+              borderLoja={identityBorder.borderLoja}
               size="lg"
             />
             <span className="game-profile-hero__level-badge" aria-label={`Nível ${xpLevel}`}>
               {xpLevel}
             </span>
-          </span>
+          </button>
           <div className="game-profile-hero__meta min-w-0">
             <p className="game-profile-hero__name-row">
               <span className="game-profile-hero__name truncate">{profile.nome}</span>
-              {equippedTitle && <span className={titleClass}>{equippedTitle}</span>}
+              <AnimatedTitleText title={resolvedTitle} className="game-profile-hero__title" />
             </p>
             {profile.descricao ? (
               <p className="game-profile-hero__bio">{profile.descricao}</p>
@@ -255,6 +297,10 @@ export function ProfilePage() {
             <strong>{social?.following ?? '—'}</strong>
             <span>seguindo</span>
           </Link>
+          <span className="profile-counts__item" title="Curtidas que seu perfil recebeu">
+            <strong>{social?.likes_recebidos ?? '—'}</strong>
+            <span>curtidas</span>
+          </span>
         </nav>
       </div>
 
@@ -275,53 +321,73 @@ export function ProfilePage() {
       </div>
 
       {tab === 'dados' && (
-        <form onSubmit={handleSave} className="glass-card flex flex-col gap-4 p-4">
-          <label className="flex flex-col gap-1 text-sm font-bold">
-            Idade
+        <form onSubmit={handleSave} className="glass-card profile-dados-form p-4">
+          <p className="profile-dados-hint">
+            Preenchido no cadastro — ajuste sempre que seu corpo ou seus objetivos mudarem.
+          </p>
+
+          <label className="onb-field">
+            <span className="onb-field__icon" aria-hidden>
+              <Cake size={16} />
+            </span>
             <input
-              name="idade"
               type="text"
               inputMode="numeric"
-              defaultValue={profile.idade ?? ''}
-              placeholder="Ex.: 28"
-              className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+              value={idadeDraft}
+              onChange={(e) => setIdadeDraft(digitsOnly(e.target.value).slice(0, 3))}
+              placeholder="Idade"
+              maxLength={3}
             />
+            <span className="onb-field__suffix">anos</span>
           </label>
+
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-sm font-bold">
-              Peso (kg)
+            <label className="onb-field">
+              <span className="onb-field__icon" aria-hidden>
+                <Weight size={16} />
+              </span>
               <input
-                name="peso_kg"
                 type="text"
-                inputMode="numeric"
-                defaultValue={profile.peso_kg ?? ''}
-                placeholder="Ex.: 70"
-                className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+                inputMode="decimal"
+                value={pesoDraft}
+                onChange={(e) => setPesoDraft(sanitizeDecimalInput(e.target.value))}
+                placeholder="72.5"
+                maxLength={5}
               />
+              <span className="onb-field__suffix">kg</span>
             </label>
-            <label className="flex flex-col gap-1 text-sm font-bold">
-              Altura (cm)
+            <label className="onb-field">
+              <span className="onb-field__icon" aria-hidden>
+                <Ruler size={16} />
+              </span>
               <input
-                name="altura_cm"
                 type="text"
                 inputMode="numeric"
-                defaultValue={profile.altura_cm ?? ''}
-                placeholder="Ex.: 170"
-                className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+                value={formatAlturaMask(alturaDraft)}
+                onChange={(e) => setAlturaDraft(digitsOnly(e.target.value).slice(0, 3))}
+                placeholder="1.75"
+                maxLength={4}
               />
+              <span className="onb-field__suffix">m</span>
             </label>
           </div>
-          {imc && (
-            <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-800">
-              IMC: {imc}
-            </p>
+
+          {dadosImc != null && (
+            <div className={`profile-dados-imc ${imcFaixa(dadosImc).className}`}>
+              <Activity size={16} aria-hidden />
+              <span>
+                IMC <strong>{dadosImc}</strong> · {imcFaixa(dadosImc).label}
+              </span>
+            </div>
           )}
-          <label className="flex flex-col gap-1 text-sm font-bold">
-            Nível
+
+          <label className="profile-dados-select">
+            <span className="profile-dados-select__label">
+              <Dumbbell size={14} aria-hidden /> Nível
+            </span>
             <select
-              name="nivel"
-              defaultValue={profile.nivel}
-              className="cursor-pointer rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+              value={nivelDraft}
+              onChange={(e) => setNivelDraft(e.target.value as NivelUsuario)}
             >
               {(['iniciante', 'intermediario', 'avancado'] as NivelUsuario[]).map((n) => (
                 <option key={n} value={n}>
@@ -330,12 +396,14 @@ export function ProfilePage() {
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm font-bold">
-            Objetivo
+
+          <label className="profile-dados-select">
+            <span className="profile-dados-select__label">
+              <Target size={14} aria-hidden /> Objetivo
+            </span>
             <select
-              name="objetivo"
-              defaultValue={profile.objetivo}
-              className="cursor-pointer rounded-xl border border-stone-300 bg-stone-50 px-3 py-2"
+              value={objetivoDraft}
+              onChange={(e) => setObjetivoDraft(e.target.value as Objetivo)}
             >
               {(['definicao', 'resistencia', 'forca', 'manutencao'] as Objetivo[]).map((o) => (
                 <option key={o} value={o}>
@@ -343,8 +411,9 @@ export function ProfilePage() {
                 </option>
               ))}
             </select>
-            <p className="text-xs font-medium text-stone-500">{OBJETIVO_HINTS[profile.objetivo]}</p>
+            <p className="profile-dados-select__hint">{OBJETIVO_HINTS[objetivoDraft]}</p>
           </label>
+
           <div className="game-profile-form__actions">
             <GameButton
               type="submit"

@@ -241,6 +241,159 @@
   gap: 0.5rem;
 }
 
+/* Listas de cosméticos (títulos/molduras/efeitos) dentro do Editar Perfil. */
+.profile-edit-cosmetics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+/* Seletor compacto (Título / Efeito): cabeçalho + lista rolável que abre. */
+.cosmetic-picker {
+  gap: 0;
+}
+
+.cosmetic-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  border-radius: 0.85rem;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cosmetic-picker__trigger:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.cosmetic-picker__trigger--open {
+  border-color: rgba(16, 185, 129, 0.6);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cosmetic-picker__trigger-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.cosmetic-picker__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--game-ink, #1c1917);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cosmetic-picker__chevron {
+  flex-shrink: 0;
+  color: #78716c;
+  transition: transform 0.2s ease;
+}
+
+.cosmetic-picker__trigger--open .cosmetic-picker__chevron {
+  transform: rotate(180deg);
+}
+
+.cosmetic-picker__panel {
+  overflow: hidden;
+}
+
+.cosmetic-picker__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: 0.6rem 0.15rem 0.15rem;
+}
+
+/* Seletor de banner (lápis do hero do Perfil). */
+.profile-banner-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.profile-banner-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-banner-option:disabled {
+  cursor: default;
+}
+
+.profile-banner-option__swatch {
+  position: relative;
+  display: block;
+  height: 3.6rem;
+  border-radius: 0.8rem;
+  border: 2px solid rgba(28, 25, 23, 0.1);
+  background-color: #e7e5e4;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.profile-banner-option--active .profile-banner-option__swatch {
+  border-color: var(--game-green, #059669);
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
+}
+
+.profile-banner-option:disabled:not(.profile-banner-option--active) .profile-banner-option__swatch {
+  opacity: 0.55;
+}
+
+.profile-banner-option__badge {
+  position: absolute;
+  right: 0.35rem;
+  top: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--game-green, #059669);
+  color: #fff;
+}
+
+.profile-banner-option__lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.55);
+  color: #57534e;
+}
+
+.profile-banner-option__name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #57534e;
+}
+
 .profile-edit-modal__footer {
   display: flex;
   justify-content: flex-end;
@@ -763,30 +916,46 @@ a.profile-counts__item:hover strong {
   transform: rotate(180deg);
 }
 
-/* Opções — barra fixa de salvar (só com alterações pendentes) */
-.settings-savebar {
+/*
+ * Opções — barra fixa de salvar (só com alterações pendentes).
+ * A centralização (translateX) precisa ficar num WRAPPER separado do nó que
+ * o Framer Motion anima: motion escreve `transform` inline no próprio
+ * elemento animado, o que sobrescreve por completo qualquer `transform`
+ * definido via CSS nesse mesmo elemento (mesma propriedade, inline vence) —
+ * era por isso que a barra aparecia cortada, com metade fora da tela.
+ */
+.settings-savebar-wrap {
   position: fixed;
   left: 50%;
   bottom: calc(5.6rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 40;
+  width: min(calc(100vw - 2rem), 30rem);
+  pointer-events: none;
+}
+
+.settings-savebar-wrap > * {
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .settings-savebar-wrap {
+    left: calc(50% + 8rem);
+    bottom: 1.25rem;
+  }
+}
+
+.settings-savebar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  width: min(calc(100vw - 2rem), 30rem);
+  width: 100%;
   padding: 0.6rem 0.6rem 0.6rem 1rem;
   border: 2px solid var(--game-ink);
   border-radius: 1rem;
   background: var(--game-paper, #fffdf7);
   box-shadow: 3px 3px 0 var(--game-ink);
-}
-
-@media (min-width: 768px) {
-  .settings-savebar {
-    left: calc(50% + 8rem);
-    bottom: 1.25rem;
-  }
 }
 
 .settings-savebar__label {
@@ -824,6 +993,89 @@ a.profile-counts__item:hover strong {
   font-size: 0.62rem;
   font-weight: 700;
   color: #78716c;
+}
+
+/* Detalhe de pódios (1º/2º/3º) no perfil público. */
+.public-profile-podium {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.public-profile-podium__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1 1 0;
+  min-width: 6rem;
+  justify-content: center;
+  padding: 0.45rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #57534e;
+  background: #fff;
+  border: var(--border-card);
+  box-shadow: var(--shadow-resting);
+}
+
+.public-profile-podium__chip strong {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
+.public-profile-podium__chip--gold {
+  color: #b45309;
+}
+.public-profile-podium__chip--gold svg {
+  color: #f59e0b;
+}
+.public-profile-podium__chip--silver svg {
+  color: #94a3b8;
+}
+.public-profile-podium__chip--bronze svg {
+  color: #b45309;
+}
+
+/* Botão de curtir perfil (coração + contador) no perfil público. */
+.profile-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 999px;
+  background: #fff;
+  color: #ef4444;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease;
+}
+
+.profile-like-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.profile-like-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.profile-like-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.profile-like-btn--on {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.profile-like-btn--on svg {
+  fill: currentColor;
 }
 
 /* Painel admin — estrelas das avaliações */
@@ -1034,4 +1286,103 @@ a.settings-social-link:active {
   color: #78716c;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Foto do hero vira botão que abre o Editar Perfil completo. */
+.game-profile-hero__avatar-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Aba Dados do Perfil — reusa .onb-field (ícone + input) do Onboarding pra
+   manter a mesma linguagem visual entre as duas telas. */
+.profile-dados-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.profile-dados-hint {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #78716c;
+  line-height: 1.4;
+}
+
+.profile-dados-imc {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.profile-dados-imc strong {
+  font-weight: 900;
+}
+
+.profile-dados-imc--baixo {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.profile-dados-imc--ideal {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.profile-dados-imc--sobrepeso {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.profile-dados-imc--alto {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.profile-dados-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.profile-dados-select__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #57534e;
+}
+
+.profile-dados-select select {
+  padding: 0.7rem 0.85rem;
+  font-weight: 700;
+  color: #1c1917;
+  background: #fff;
+  border: 1.5px solid #d6d3d1;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.profile-dados-select select:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.profile-dados-select__hint {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #a8a29e;
 }

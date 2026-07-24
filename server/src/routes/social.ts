@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { xpLevelFromTotal, type MolduraId } from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 import { Follows } from '../repositories/follow-repository.js';
+import { ProfileLikes } from '../repositories/like-repository.js';
 import { Notifications } from '../repositories/notification-repository.js';
 import {
   LeaderboardPodiumHistory,
@@ -216,15 +217,52 @@ socialRouter.delete('/follower/:id', async (req: AuthRequest, res) => {
   }
 });
 
+/** Curtir o perfil de outro usuário (coração). Unilateral e idempotente. */
+socialRouter.post('/like', async (req: AuthRequest, res) => {
+  try {
+    const targetId = typeof req.body?.user_id === 'string' ? req.body.user_id : '';
+    if (!targetId || targetId === req.userId) {
+      res.status(400).json({ error: 'Usuário inválido.' });
+      return;
+    }
+    const target = await User.findById(targetId, { lean: true });
+    if (!target) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    await ProfileLikes.like(req.userId!, targetId);
+    const total = await ProfileLikes.countFor(targetId);
+    res.json({ ok: true, total, eu_curti: true });
+  } catch (error) {
+    console.error('POST /api/social/like error:', error);
+    res.status(500).json({ error: 'Erro ao curtir perfil.' });
+  }
+});
+
+/** Descurtir. */
+socialRouter.delete('/like/:id', async (req: AuthRequest, res) => {
+  try {
+    const targetId = String(req.params.id);
+    await ProfileLikes.unlike(req.userId!, targetId);
+    const total = await ProfileLikes.countFor(targetId);
+    res.json({ ok: true, total, eu_curti: false });
+  } catch (error) {
+    console.error('DELETE /api/social/like error:', error);
+    res.status(500).json({ error: 'Erro ao remover curtida.' });
+  }
+});
+
 socialRouter.get('/me', async (req: AuthRequest, res) => {
   try {
     const relation = await loadRelation(req.userId!);
     const amigos = [...relation.followingIds].filter((id) => relation.followerIds.has(id)).length;
+    const likes_recebidos = await ProfileLikes.countFor(req.userId!);
     res.json({
       followers: relation.followerIds.size,
       following: relation.followingIds.size,
       amigos,
       following_ids: [...relation.followingIds],
+      likes_recebidos,
     });
   } catch (error) {
     console.error('GET /api/social/me error:', error);

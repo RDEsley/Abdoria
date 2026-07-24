@@ -5,7 +5,9 @@ import { UserAvatar } from '@/components/profile/UserAvatar';
 import { TopNavbar } from '@/components/layout/TopNavbar';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
+import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
+import { resolveEquippedTitle } from '@/lib/cosmetic-title';
+import { resolveIdentityBorder } from '@/lib/identity-border';
 import { resolveCosmeticos, xpProgressFromTotal } from '@/types';
 
 export function GameHud() {
@@ -30,15 +32,8 @@ export function GameHud() {
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(xpTotal);
   const firstName = user?.is_guest ? user?.nome ?? 'Visitante' : user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
-  const equippedTitle = cosmeticos.titulo_equipado
-    ? COSMETIC_BY_ID[cosmeticos.titulo_equipado]?.nome
-    : null;
-  const titleClassName =
-    cosmeticos.titulo_equipado === 'titulo_dono_do_jogo'
-      ? 'cosmetic-title--dono-do-jogo'
-      : cosmeticos.titulo_equipado === 'titulo_secreto'
-        ? 'cosmetic-title--secreto'
-        : undefined;
+  const identityBorder = resolveIdentityBorder(cosmeticos);
+  const resolvedTitle = resolveEquippedTitle(cosmeticos.titulo_equipado);
 
   return (
     <TopNavbar
@@ -52,13 +47,13 @@ export function GameHud() {
         <UserAvatar
           nome={firstName}
           avatarUrl={user?.avatar_url}
-          moldura={cosmeticos.moldura_equipada ?? null}
+          moldura={identityBorder.moldura}
+          borderLoja={identityBorder.borderLoja}
           size="sm"
           className="top-navbar__identity-avatar"
         />
       }
-      userTitle={equippedTitle}
-      titleClassName={titleClassName}
+      userTitle={<AnimatedTitleText title={resolvedTitle} className="top-navbar__title truncate" />}
       coinsEarnedPulse={coinsEarnedPulse}
       onProfileClick={() => navigate('/perfil')}
       actions={<NotificationsBell />}

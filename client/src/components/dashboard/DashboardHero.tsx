@@ -1,8 +1,10 @@
 ﻿import type { CSSProperties } from 'react';
+import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { XpBar } from '@/components/ui/XpBar';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { StreakCountdown } from '@/components/gamification/StreakCountdown';
 import { useAuth } from '@/context/AuthContext';
+import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
 import { resolveCosmeticos, type DashboardStats } from '@/types';
 
@@ -23,6 +25,7 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
   const { user } = useAuth();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
+  const resolvedTitle = resolveEquippedTitle(cosmeticos.titulo_equipado);
   const fundoKey = cosmeticos.banner_equipado.replace('fundo_', '');
   const heroClass =
     fundoKey === 'padrao'
@@ -51,7 +54,10 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
         </button>
 
         <div className="game-xp-section__summary min-w-0 flex-1">
-          <h2 className="game-xp-section__title">{firstName}</h2>
+          <div className="game-xp-section__name-row">
+            <h2 className="game-xp-section__title">{firstName}</h2>
+            <AnimatedTitleText title={resolvedTitle} className="game-xp-section__player-title" />
+          </div>
           <p className="game-xp-section__subtitle">
             <strong>{xpInLevel}</strong> / {xpToNext} XP · faltam <strong>{xpParaLevelUp}</strong>{' '}
             para o nível {level + 1}

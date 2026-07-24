@@ -48,11 +48,26 @@ export function removeFollower(userId: string): Promise<{ ok: boolean }> {
   return fetchJson(`/social/follower/${userId}`, { method: 'DELETE' });
 }
 
+export interface LikeResponse {
+  ok: boolean;
+  total: number;
+  eu_curti: boolean;
+}
+
+export function likeProfile(userId: string): Promise<LikeResponse> {
+  return fetchJson('/social/like', { method: 'POST', body: JSON.stringify({ user_id: userId }) });
+}
+
+export function unlikeProfile(userId: string): Promise<LikeResponse> {
+  return fetchJson(`/social/like/${userId}`, { method: 'DELETE' });
+}
+
 export function getMySocial(): Promise<{
   followers: number;
   following: number;
   amigos: number;
   following_ids: string[];
+  likes_recebidos: number;
 }> {
   return fetchJson('/social/me');
 }

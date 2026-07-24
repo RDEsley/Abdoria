@@ -1,110 +1,23 @@
-/** Metadados locais espelhando o catálogo do servidor (ícones e molduras no HUD). */
-import type { CosmeticRarity } from '@/types';
+/**
+ * Metadados de cosméticos no client — derivados do catálogo compartilhado
+ * (`@shared/cosmetics`), a mesma fonte que o servidor usa. Antes isto era um
+ * espelho mantido à mão que ficava dessincronizado: títulos que existiam só no
+ * servidor resolviam pra `undefined` e sumiam do card/perfil. Derivar daqui
+ * garante que todo cosmético (inclusive os novos) apareça sempre.
+ */
+import { COSMETICS } from '@shared/cosmetics';
+import type { CosmeticDefinition, CosmeticRarity } from '@/types';
 
-export const COSMETIC_BY_ID: Record<string, { id: string; nome: string; icon: string }> = {
-  borda_basica: { id: 'borda_basica', nome: 'Básica', icon: 'shield' },
-  borda_bronze: { id: 'borda_bronze', nome: 'Bronze', icon: 'medal' },
-  borda_prata: { id: 'borda_prata', nome: 'Prata', icon: 'star' },
-  borda_ouro: { id: 'borda_ouro', nome: 'Ouro', icon: 'crown' },
-  borda_esmeralda: { id: 'borda_esmeralda', nome: 'Esmeralda', icon: 'gem' },
-  borda_ametista: { id: 'borda_ametista', nome: 'Ametista', icon: 'moon' },
-  borda_fogo: { id: 'borda_fogo', nome: 'Fogo', icon: 'flame' },
-  borda_lendario: { id: 'borda_lendario', nome: 'Lendária', icon: 'gem' },
-  borda_imparavel: { id: 'borda_imparavel', nome: 'Imparável', icon: 'shield' },
-  borda_admin: { id: 'borda_admin', nome: 'Guardião de Abdoria', icon: 'crown' },
-  titulo_eu_sou_heroi: { id: 'titulo_eu_sou_heroi', nome: 'Eu sou herói', icon: 'crown' },
-  titulo_guerreiro: { id: 'titulo_guerreiro', nome: 'Guerreiro do core', icon: 'shield' },
-  titulo_imparavel: { id: 'titulo_imparavel', nome: 'Imparável', icon: 'flame' },
-  titulo_lenda: { id: 'titulo_lenda', nome: 'Lenda viva', icon: 'gem' },
-  titulo_atleta: { id: 'titulo_atleta', nome: 'Atleta dedicado', icon: 'medal' },
-  titulo_campeao: { id: 'titulo_campeao', nome: 'Campeão do core', icon: 'trophy' },
-  titulo_mestre: { id: 'titulo_mestre', nome: 'Mestre do abdômen', icon: 'crown' },
-  titulo_guardiao: { id: 'titulo_guardiao', nome: 'Guardião da chama', icon: 'flame' },
-  titulo_veterano: { id: 'titulo_veterano', nome: 'Veterano', icon: 'shield' },
-  titulo_fenix: { id: 'titulo_fenix', nome: 'Fênix', icon: 'flame' },
-  titulo_explorador: { id: 'titulo_explorador', nome: 'Explorador', icon: 'rocket' },
-  titulo_madrugador: { id: 'titulo_madrugador', nome: 'Madrugador', icon: 'star' },
-  titulo_coruja: { id: 'titulo_coruja', nome: 'Coruja noturna', icon: 'moon' },
-  titulo_dono_do_jogo: { id: 'titulo_dono_do_jogo', nome: 'Dono do Jogo', icon: 'crown' },
-  titulo_secreto: { id: 'titulo_secreto', nome: 'Secret', icon: 'moon' },
-  fundo_padrao: { id: 'fundo_padrao', nome: 'Padrão', icon: 'star' },
-  fundo_aurora: { id: 'fundo_aurora', nome: 'Aurora', icon: 'star' },
-  fundo_vulcao: { id: 'fundo_vulcao', nome: 'Vulcão', icon: 'flame' },
-  fundo_galaxia: { id: 'fundo_galaxia', nome: 'Galáxia', icon: 'moon' },
-  fundo_dojo: { id: 'fundo_dojo', nome: 'Dojo', icon: 'shield' },
-  fundo_floresta: { id: 'fundo_floresta', nome: 'Floresta', icon: 'gem' },
-  fundo_praia: { id: 'fundo_praia', nome: 'Praia', icon: 'star' },
-  fundo_templo: { id: 'fundo_templo', nome: 'Templo', icon: 'moon' },
-  fundo_neon: { id: 'fundo_neon', nome: 'Neon City', icon: 'zap' },
-  som_classico: { id: 'som_classico', nome: 'Clássico', icon: 'zap' },
-  som_suave: { id: 'som_suave', nome: 'Suave', icon: 'star' },
-  som_chime: { id: 'som_chime', nome: 'Sino', icon: 'zap' },
-  som_pop: { id: 'som_pop', nome: 'Pop', icon: 'star' },
-  som_arcade: { id: 'som_arcade', nome: 'Arcade', icon: 'rocket' },
-  som_retro: { id: 'som_retro', nome: 'Retro', icon: 'rocket' },
-  som_pixel: { id: 'som_pixel', nome: 'Pixel', icon: 'star' },
-  som_metal: { id: 'som_metal', nome: 'Metal', icon: 'shield' },
-  som_epico: { id: 'som_epico', nome: 'Épico', icon: 'trophy' },
-  som_cristal: { id: 'som_cristal', nome: 'Cristal', icon: 'gem' },
-  som_zen: { id: 'som_zen', nome: 'Zen', icon: 'moon' },
-  som_bolha: { id: 'som_bolha', nome: 'Bolha', icon: 'heart' },
-  som_8bit: { id: 'som_8bit', nome: '8-Bit', icon: 'rocket' },
-  som_treino: { id: 'som_treino', nome: 'Pump', icon: 'dumbbell' },
-  som_boss: { id: 'som_boss', nome: 'Boss', icon: 'shield' },
-  som_noturno: { id: 'som_noturno', nome: 'Noturno', icon: 'moon' },
-  som_vitoria: { id: 'som_vitoria', nome: 'Vitória', icon: 'crown' },
-  efeito_padrao: { id: 'efeito_padrao', nome: 'Padrão', icon: 'medal' },
-  efeito_confete: { id: 'efeito_confete', nome: 'Confete', icon: 'star' },
-  efeito_raios: { id: 'efeito_raios', nome: 'Raios', icon: 'zap' },
-  efeito_fogo: { id: 'efeito_fogo', nome: 'Chamas', icon: 'flame' },
-  efeito_agua: { id: 'efeito_agua', nome: 'Onda Azul', icon: 'star' },
-  efeito_glitch: { id: 'efeito_glitch', nome: 'Quebra de Tela', icon: 'zap' },
-};
+export const COSMETIC_BY_ID: Record<string, CosmeticDefinition> = Object.fromEntries(
+  COSMETICS.map((item) => [item.id, item]),
+);
 
 export const COSMETIC_DISPLAY: Record<
   string,
   { nome: string; descricao: string; icon: string; raridade: CosmeticRarity }
-> = {
-  titulo_secreto: {
-    nome: 'Secret',
-    descricao: 'Um título que ninguém deveria encontrar.',
-    icon: 'moon',
-    raridade: 'secreto',
-  },
-  borda_aurum_slime: {
-    nome: 'Aurum do Slime',
-    descricao: 'Moldura pulsante forjada no ouro líquido do Golden Slime.',
-    icon: 'crown',
-    raridade: 'secreto',
-  },
-  borda_admin: {
-    nome: 'Guardião de Abdoria',
-    descricao: 'Moldura exclusiva de quem administra o reino.',
-    icon: 'crown',
-    raridade: 'secreto',
-  },
-  fundo_ouro_liquido: {
-    nome: 'Ouro Líquido',
-    descricao: 'Rio de ouro derretido — brilho eterno do Golden Slime.',
-    icon: 'gem',
-    raridade: 'secreto',
-  },
-  titulo_toque_dourado: {
-    nome: 'Toque Dourado',
-    descricao: 'Título animado reservado a quem derrota o Golden Slime.',
-    icon: 'crown',
-    raridade: 'secreto',
-  },
-  titulo_dono_do_jogo: {
-    nome: 'Dono do Jogo',
-    descricao: 'Título lendário raríssimo — brilha em cores fortes.',
-    icon: 'crown',
-    raridade: 'lendario',
-  },
-  fundo_galaxia: {
-    nome: 'Galáxia',
-    descricao: 'Cosmos profundo com estrelas cintilantes.',
-    icon: 'moon',
-    raridade: 'lendario',
-  },
-};
+> = Object.fromEntries(
+  COSMETICS.map((item) => [
+    item.id,
+    { nome: item.nome, descricao: item.descricao, icon: item.icon, raridade: item.raridade },
+  ]),
+);

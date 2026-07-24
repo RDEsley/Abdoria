@@ -202,7 +202,18 @@ export interface UserPreferencias {
   atividades_agenda?: import('../atividades.js').AtividadesAgenda;
   /** Só admins: true = aparecer nos rankings (padrão: oculto). */
   admin_visivel_ranking?: boolean;
+  /** Último dia (YYYY-MM-DD, SP) em que o roll diário de Frozen Streak acertou. */
+  afk_frozen_ultimo_dia?: string | null;
+  /** Idioma da interface. Só 'pt' tem conteúdo hoje — campo já existe pra
+      quando inglês/espanhol chegarem, sem precisar de migração. */
+  idioma?: Idioma;
+  /** Tom do texto: 'jogo' (RPG, padrão) ou 'normal' (direto, sem jargão de
+      jogo) — independente do idioma escolhido. */
+  tom_texto?: TomTexto;
 }
+
+export type Idioma = 'pt' | 'en' | 'es';
+export type TomTexto = 'jogo' | 'normal';
 
 export type ArmaPreferida = 'arco' | 'espada' | 'magia';
 
@@ -361,6 +372,7 @@ export {
   buildBestiaryDropCatalog,
   inferBestiaryDropsFromKill,
   mergeBestiaryDropDiscoveries,
+  migrateBestiaryDropId,
   snapshotBestiaryPending,
 } from '../afk/bestiary-drops.js';
 export type {
@@ -449,7 +461,23 @@ export interface Gamificacao {
 export type CosmeticKind = 'moldura_loja' | 'titulo' | 'som' | 'efeito' | 'banner';
 
 export type CosmeticUnlockType =
-  'gratis' | 'nivel' | 'conquista' | 'moedas' | 'codigo' | 'afk_secreto' | 'golden_slime';
+  | 'gratis'
+  | 'nivel'
+  | 'conquista'
+  | 'moedas'
+  | 'codigo'
+  | 'afk_secreto'
+  | 'golden_slime'
+  /** Drop do inimigo especial "?" (1 em 100.000). */
+  | 'enigma_slime'
+  /** Drop do Slime Binário (1 em 101.010). */
+  | 'slime_binario'
+  /** Streak máxima (dias) atingida — ver streak_dias. */
+  | 'streak'
+  /** Possuir qualquer item de raridade Mítica (arma ou cosmético). */
+  | 'item_mitico'
+  /** Possuir o trio Flamejante: Magia de Fogo + Arco Flamejante + Espada Flamejante. */
+  | 'conjunto_flamejante';
 
 export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'mitico' | 'secreto';
 
@@ -464,6 +492,8 @@ export interface CosmeticUnlockRule {
   nivel_min?: number;
   conquista_id?: string;
   preco_moedas?: number;
+  /** Dias de streak (maior streak já atingida) exigidos pelo tipo 'streak'. */
+  streak_dias?: number;
 }
 
 export interface CosmeticDefinition {
@@ -489,6 +519,11 @@ export const MOLDURA_LABELS: Record<MolduraId, string> = {
 export interface Cosmeticos {
   /** Saldo de Dorias. */
   moedas: number;
+  /**
+   * Total vitalício de Coins ganhas (nunca desconta gasto) — base do ranking
+   * global. Contas antigas inicializam no saldo atual (piso do vitalício real).
+   */
+  moedas_total_ganhas?: number;
   /** Blocos de XP já convertidos em Dorias. */
   moedas_xp_blocos: number;
   moldura_loja_equipada: string;
@@ -498,8 +533,17 @@ export interface Cosmeticos {
   banner_equipado: string;
   /** Moldura do avatar de identidade (null = sem moldura). */
   moldura_equipada?: MolduraId | null;
+  /**
+   * Qual borda o avatar de identidade mostra: 'podio' (usa `moldura_equipada`)
+   * ou 'loja' (usa `moldura_loja_equipada`). Regra "última equipada vence" —
+   * equipar uma borda de pódio seta 'podio', uma de conquista seta 'loja'.
+   * Ausente = 'podio' (comportamento antigo).
+   */
+  borda_perfil_fonte?: 'podio' | 'loja';
   desbloqueados: string[];
   codigos_resgatados: string[];
+  /** Desbloqueios automáticos ainda não celebrados na tela (fila do reveal). */
+  desbloqueios_pendentes?: string[];
 }
 
 export interface LojaDiariaSlot {
@@ -584,10 +628,15 @@ export {
   PATROL_WEAPON_BY_ID,
   PATROL_WEAPON_RARITY_LABELS,
   PATROL_LEGENDARY_WEAPON_IDS,
+  PATROL_MYTHIC_WEAPON_IDS,
   PATROL_SECRET_WEAPON_IDS,
+  SPELL_RARE_DROP_MULTIPLIER,
+  SPELL_REWARD_QUANTITY_MULTIPLIER_SECRET,
   patrolWeaponsByKind,
   patrolHeroDamage,
   resolvePatrolArmas,
+  spellRareDropMultiplier,
+  spellRewardQuantityMultiplier,
 } from '../patrol/shop.js';
 
 export {
@@ -832,11 +881,21 @@ export const GOLDEN_SLIME_SECRET_COSMETIC_IDS = [
 export const ADMIN_MOLDURA_ID = 'borda_admin';
 
 /** Itens que nunca aparecem na Loja Abdoria nem no catálogo bloqueado. */
+/** Drops raríssimos dos inimigos especiais "?" e Slime Binário — mesmo tratamento
+    do Golden Slime: escondidos do catálogo até serem conquistados, pra não
+    entregar a surpresa. */
+export const RARE_ENEMY_SECRET_COSMETIC_IDS = [
+  'titulo_enigma',
+  'borda_binario',
+  'titulo_codigo_evolucao',
+] as const;
+
 export const SHOP_HIDDEN_COSMETIC_IDS = [
   'titulo_secreto',
   'titulo_dono_do_jogo',
   ADMIN_MOLDURA_ID,
   ...GOLDEN_SLIME_SECRET_COSMETIC_IDS,
+  ...RARE_ENEMY_SECRET_COSMETIC_IDS,
 ] as const;
 
 export function isGoldenSlimeSecretCosmetic(id: string): boolean {
@@ -1423,6 +1482,9 @@ export interface LeaderboardEntry {
 
 export type LeaderboardMetric = 'xp' | 'streak' | 'moedas';
 
+/** Semanal = acumuladores que resetam no domingo; Global = totais vitalícios. */
+export type LeaderboardPeriod = 'semanal' | 'global';
+
 export const LEADERBOARD_DISPLAY_LIMIT = 25;
 
 /** Recorde exibido no perfil público (top 3 por volume). */
@@ -1451,6 +1513,8 @@ export interface PublicProfile {
   streak_atual: number;
   moldura_loja_equipada: string;
   moldura_equipada: MolduraId | null;
+  /** Qual borda o avatar de identidade mostra (ver `Cosmeticos.borda_perfil_fonte`). */
+  borda_perfil_fonte?: 'podio' | 'loja';
   titulo_equipado: string | null;
   banner_equipado: string;
   podio: { first: number; second: number; third: number };
@@ -1462,6 +1526,8 @@ export interface PublicProfile {
     destaque: PublicProfileConquista[];
   };
   social: { followers: number; following: number; amigos: number };
+  /** Curtidas de perfil (coração): total recebido + se o usuário logado já curtiu. */
+  likes: { total: number; eu_curti: boolean };
   /** Relação do usuário logado com este perfil. */
   relacao: { seguindo: boolean; segue_voce: boolean; amigo: boolean };
 }
@@ -1671,6 +1737,8 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   som_habilitado: true,
   sfx_volume: 0.7,
   confetti_animacoes_habilitadas: true,
+  idioma: 'pt',
+  tom_texto: 'jogo',
   ciclo_treinos: ['A', 'B', 'C'],
   modo_padrao: 'tempo',
   reps_series_padrao: 3,

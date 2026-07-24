@@ -54,7 +54,10 @@ export function sanitizeUser(user: UserRecord | Record<string, unknown>) {
   return raw;
 }
 
-type PublicProfileExtras = Pick<PublicProfile, 'records_top' | 'conquistas' | 'social' | 'relacao'>;
+type PublicProfileExtras = Pick<
+  PublicProfile,
+  'records_top' | 'conquistas' | 'social' | 'likes' | 'relacao'
+>;
 
 /** Perfil público de outro usuário (ranking, amigos) — whitelist positiva, nunca
     email/idade/peso/preferências/dados_salvos/inventário/afk/perfil ou plano de treino. */
@@ -73,6 +76,7 @@ export function sanitizePublicProfile(
     streak_atual: user.gamificacao.streak_atual,
     moldura_loja_equipada: cosmeticos.moldura_loja_equipada,
     moldura_equipada: cosmeticos.moldura_equipada ?? null,
+    borda_perfil_fonte: cosmeticos.borda_perfil_fonte,
     titulo_equipado: cosmeticos.titulo_equipado,
     banner_equipado: cosmeticos.banner_equipado,
     podio,

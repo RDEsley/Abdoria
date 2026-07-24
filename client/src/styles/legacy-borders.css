@@ -24,7 +24,8 @@
 
 .game-cosmetic-avatar--border-ouro::before,
 .game-cosmetic-avatar--border-lendario::before,
-.game-cosmetic-avatar--border-fogo::before {
+.game-cosmetic-avatar--border-fogo::before,
+.game-cosmetic-avatar--border-binario::before {
   content: '';
   position: absolute;
   inset: -6px;
@@ -78,6 +79,54 @@
 
 .game-cosmetic-avatar--border-fogo::after {
   content: none;
+}
+
+/* Slime Binário — anel segmentado preto/verde estilo Matrix. */
+.game-cosmetic-avatar--border-binario::before {
+  background: conic-gradient(
+    from 0deg,
+    #052e16 0deg 40deg,
+    #22c55e 40deg 50deg,
+    #052e16 50deg 90deg,
+    #052e16 90deg 130deg,
+    #4ade80 130deg 140deg,
+    #052e16 140deg 180deg,
+    #052e16 180deg 220deg,
+    #22c55e 220deg 230deg,
+    #052e16 230deg 270deg,
+    #052e16 270deg 310deg,
+    #4ade80 310deg 320deg,
+    #052e16 320deg 360deg
+  );
+  padding: 3px;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+  animation:
+    game-border-binario-rotate 5s linear infinite,
+    game-border-binario-glow 1.4s ease-in-out infinite;
+}
+
+@keyframes game-border-binario-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes game-border-binario-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.4);
+  }
 }
 
 .game-avatar-portrait,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, Flame, Gavel, Medal, Timer, Trophy, UserPlus } from 'lucide-react';
+import { ArrowLeft, Check, Flame, Gavel, Heart, Medal, Timer, Trophy, UserPlus } from 'lucide-react';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 import { ModerationModal } from '@/components/admin/ModerationModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
@@ -8,8 +8,10 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { getPublicProfile } from '@/lib/api';
-import { followUser, unfollowUser } from '@/lib/api/social';
-import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
+import { followUser, likeProfile, unfollowUser, unlikeProfile } from '@/lib/api/social';
+import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
+import { resolveEquippedTitle } from '@/lib/cosmetic-title';
+import { resolveIdentityBorder } from '@/lib/identity-border';
 import { formatTrainingDuration } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import type { MolduraId, PublicProfile } from '@/types';
@@ -29,6 +31,8 @@ export function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
   const [showModeration, setShowModeration] = useState(false);
+  const [likes, setLikes] = useState<{ total: number; eu_curti: boolean } | null>(null);
+  const [likeBusy, setLikeBusy] = useState(false);
   const isStaff = me?.role === 'admin' || me?.role === 'moderador';
 
   const load = useCallback(async () => {
@@ -36,6 +40,7 @@ export function PublicProfilePage() {
     try {
       const data = await getPublicProfile(userId);
       setProfile(data);
+      setLikes(data.likes);
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível carregar este perfil.'), {
         variant: 'error',
@@ -69,6 +74,26 @@ export function PublicProfilePage() {
     }
   };
 
+  const toggleLike = async () => {
+    if (!userId || !likes || likeBusy) return;
+    setLikeBusy(true);
+    const prev = likes;
+    setLikes(
+      prev.eu_curti
+        ? { total: Math.max(0, prev.total - 1), eu_curti: false }
+        : { total: prev.total + 1, eu_curti: true },
+    );
+    try {
+      const res = prev.eu_curti ? await unlikeProfile(userId) : await likeProfile(userId);
+      setLikes({ total: res.total, eu_curti: res.eu_curti });
+    } catch (err) {
+      setLikes(prev);
+      showGameToast(getErrorMessage(err, 'Não foi possível curtir.'), { variant: 'error' });
+    } finally {
+      setLikeBusy(false);
+    }
+  };
+
   if (loading) return <PageLoader />;
 
   if (!profile) {
@@ -82,15 +107,8 @@ export function PublicProfilePage() {
     );
   }
 
-  const equippedTitle = profile.titulo_equipado
-    ? COSMETIC_BY_ID[profile.titulo_equipado]?.nome
-    : null;
-  const titleClass =
-    profile.titulo_equipado === 'titulo_dono_do_jogo'
-      ? 'game-profile-hero__title cosmetic-title--dono-do-jogo'
-      : profile.titulo_equipado === 'titulo_secreto'
-        ? 'game-profile-hero__title cosmetic-title--secreto'
-        : 'game-profile-hero__title';
+  const identityBorder = resolveIdentityBorder(profile);
+  const resolvedTitle = resolveEquippedTitle(profile.titulo_equipado);
   const fundoKey = profile.banner_equipado.replace('fundo_', '');
   const heroShellClass =
     fundoKey === 'padrao'
@@ -131,6 +149,17 @@ export function PublicProfilePage() {
           )}
           <button
             type="button"
+            className={`profile-like-btn${likes?.eu_curti ? ' profile-like-btn--on' : ''}`}
+            disabled={likeBusy || !likes}
+            onClick={() => void toggleLike()}
+            aria-pressed={likes?.eu_curti ?? false}
+            aria-label={likes?.eu_curti ? 'Remover curtida' : 'Curtir perfil'}
+          >
+            <Heart size={15} aria-hidden />
+            <span className="tabular-nums">{likes?.total ?? 0}</span>
+          </button>
+          <button
+            type="button"
             className={`follow-card__btn${relacao.seguindo ? ' follow-card__btn--done' : ''}${relacao.amigo ? ' follow-card__btn--friend' : ''}`}
             disabled={followBusy}
             onClick={() => void toggleFollow()}
@@ -148,8 +177,9 @@ export function PublicProfilePage() {
             <UserAvatar
               nome={profile.nome}
               avatarUrl={profile.avatar_url}
-              moldura={profile.moldura_equipada}
-              molduraCount={molduraCountOf(profile, profile.moldura_equipada)}
+              moldura={identityBorder.moldura}
+              borderLoja={identityBorder.borderLoja}
+              molduraCount={molduraCountOf(profile, identityBorder.moldura)}
               size="lg"
             />
             <span
@@ -162,7 +192,7 @@ export function PublicProfilePage() {
           <div className="game-profile-hero__meta min-w-0">
             <p className="game-profile-hero__name-row">
               <span className="game-profile-hero__name truncate">{profile.nome}</span>
-              {equippedTitle && <span className={titleClass}>{equippedTitle}</span>}
+              <AnimatedTitleText title={resolvedTitle} className="game-profile-hero__title" />
             </p>
             {profile.descricao && <p className="game-profile-hero__bio">{profile.descricao}</p>}
           </div>
@@ -201,6 +231,26 @@ export function PublicProfilePage() {
           <span>Treinando</span>
         </div>
       </div>
+
+      {podiumTotal > 0 && (
+        <div className="public-profile-podium" aria-label="Pódios no ranking semanal">
+          <span className="public-profile-podium__chip public-profile-podium__chip--gold">
+            <Medal size={15} aria-hidden />
+            <strong>{profile.podio.first}</strong>
+            <span>1º lugar</span>
+          </span>
+          <span className="public-profile-podium__chip public-profile-podium__chip--silver">
+            <Medal size={15} aria-hidden />
+            <strong>{profile.podio.second}</strong>
+            <span>2º lugar</span>
+          </span>
+          <span className="public-profile-podium__chip public-profile-podium__chip--bronze">
+            <Medal size={15} aria-hidden />
+            <strong>{profile.podio.third}</strong>
+            <span>3º lugar</span>
+          </span>
+        </div>
+      )}
 
       <section className="glass-card p-4" aria-label="Conquistas">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">

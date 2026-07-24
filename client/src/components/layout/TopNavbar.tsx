@@ -38,8 +38,8 @@ export interface TopNavbarProps {
   avatarUrl?: string | null;
   /** Sobrescreve avatarUrl quando presente (ex.: CosmeticAvatar). */
   avatar?: ReactNode;
-  userTitle?: string | null;
-  titleClassName?: string;
+  /** Nó pronto (ex.: <AnimatedTitleText>) — já traz sua própria classe/animação. */
+  userTitle?: ReactNode;
   coinsEarnedPulse?: number | null;
   onProfileClick?: () => void;
   /** Ações extras à direita (ex.: sino de notificações). */
@@ -91,7 +91,6 @@ export function TopNavbar({
   avatarUrl,
   avatar,
   userTitle,
-  titleClassName,
   coinsEarnedPulse,
   onProfileClick,
   actions,
@@ -125,11 +124,7 @@ export function TopNavbar({
           <div className="top-navbar__identity min-w-0 flex-1">
             <div className="top-navbar__name-row flex min-w-0 items-baseline gap-1.5">
               <span className="top-navbar__name truncate">{userName}</span>
-              {userTitle && (
-                <span className={`top-navbar__title truncate ${titleClassName ?? ''}`.trim()}>
-                  {userTitle}
-                </span>
-              )}
+              {userTitle}
             </div>
             <div
               className="top-navbar__xp-track"
