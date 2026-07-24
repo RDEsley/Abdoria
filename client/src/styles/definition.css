@@ -390,3 +390,17 @@
   background: #ecfdf5;
   color: #047857;
 }
+
+.definicao-sim__imc-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #57534e;
+}
+
+.definicao-sim__imc-line strong {
+  color: #1c1917;
+}

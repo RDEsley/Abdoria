@@ -1664,3 +1664,32 @@ a.game-btn {
 }
 
 /* Estilos de onboarding (cabeçalho, cards de opção) vivem em styles/onboarding.css */
+
+/* Curiosidades em rodízio na tela de carregamento (sessão/boot) */
+.loading-trivia {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 2.8rem;
+  margin-top: 0.25rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 0.85rem;
+  text-align: left;
+}
+
+.loading-trivia__icon {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  color: #059669;
+}
+
+.loading-trivia__text {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #44403c;
+}

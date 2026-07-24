@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import { useApp } from '@/hooks/useApp';
 import { showGameToast } from '@/components/ui/GameToast';
 import { formatTrainingDuration } from '@/lib/utils';
@@ -113,17 +113,29 @@ export function WeekSummary() {
 
       <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-3 text-center">
         <div>
-          <p className="stat-number">{totals.workouts}</p>
+          <p className="stat-number" style={{ '--val-len': String(totals.workouts).length } as CSSProperties}>
+            {totals.workouts}
+          </p>
           <p className="stat-label mt-1">Treinos</p>
         </div>
         <div>
-          <p className="stat-number">
-            {historyLoading ? '—' : formatTrainingDuration(totals.seconds)}
-          </p>
+          {(() => {
+            const tempo = historyLoading ? '—' : formatTrainingDuration(totals.seconds);
+            return (
+              <p className="stat-number" style={{ '--val-len': tempo.length } as CSSProperties}>
+                {tempo}
+              </p>
+            );
+          })()}
           <p className="stat-label mt-1">Tempo</p>
         </div>
         <div>
-          <p className="stat-number text-emerald-700">+{totals.xp}</p>
+          <p
+            className="stat-number text-emerald-700"
+            style={{ '--val-len': String(totals.xp).length + 1 } as CSSProperties}
+          >
+            +{totals.xp}
+          </p>
           <p className="stat-label mt-1">XP</p>
         </div>
       </div>

@@ -35,10 +35,16 @@
   margin: 0.35rem 0 0;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 800;
-  font-size: clamp(1.75rem, 4vw + 1rem, 2.75rem);
+  /* `--val-len` (STatTile.tsx) reduz a fonte conforme o texto cresce — evita
+     quebra de linha de valores longos ("128h 45min") no tile de 2 colunas. */
+  font-size: clamp(1.05rem, calc(2.75rem - var(--val-len, 3) * 0.11rem), 2.75rem);
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
   color: var(--game-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .game-stat__hint {

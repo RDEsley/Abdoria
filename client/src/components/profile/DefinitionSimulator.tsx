@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Lightbulb, Save, Sparkles, Target, TrendingDown } from 'lucide-react';
+import { Flame, Lightbulb, Save, Scale, Sparkles, Target, TrendingDown } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { updateMe } from '@/lib/api';
+import { imcFaixa } from '@/lib/utils';
 import type { DashboardStats, IUserDocument, NivelUsuario, SexoBiologico } from '@/types';
 import {
   calcImc,
@@ -64,6 +65,15 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
     gorduraAtualNum != null && profile.peso_kg
       ? calcKgParaMeta(profile.peso_kg, gorduraAtualNum, gorduraMeta)
       : null;
+  const massaGordaKg =
+    gorduraAtualNum != null && profile.peso_kg
+      ? Math.round(profile.peso_kg * (gorduraAtualNum / 100) * 10) / 10
+      : null;
+  const massaMagraKg =
+    massaGordaKg != null && profile.peso_kg
+      ? Math.round((profile.peso_kg - massaGordaKg) * 10) / 10
+      : null;
+  const imcClassificacao = imc != null ? imcFaixa(imc) : null;
 
   const treinosSemana = useMemo(() => {
     if (!stats) return 0;
@@ -239,6 +249,13 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
           </label>
         </div>
 
+        {imc != null && imcClassificacao && (
+          <p className="definicao-sim__imc-line">
+            <Scale size={13} aria-hidden /> IMC atual: <strong>{imc}</strong> ·{' '}
+            {imcClassificacao.label}
+          </p>
+        )}
+
         <div className="definicao-sim__quick-actions">
           <button
             type="button"
@@ -295,8 +312,22 @@ export function DefinitionSimulator({ profile, stats, onSaved }: Props) {
               <span className="definicao-sim__stat-value">
                 {kgPerder != null && kgPerder > 0 ? `~${kgPerder} kg` : '—'}
               </span>
-              <span className="definicao-sim__stat-label">Peso estimado (massa magra)</span>
+              <span className="definicao-sim__stat-label">Gordura a perder (kg)</span>
             </div>
+            {massaMagraKg != null && (
+              <div className="definicao-sim__stat">
+                <Scale size={16} className="text-sky-600" />
+                <span className="definicao-sim__stat-value">{massaMagraKg} kg</span>
+                <span className="definicao-sim__stat-label">Massa magra estimada</span>
+              </div>
+            )}
+            {massaGordaKg != null && (
+              <div className="definicao-sim__stat">
+                <Scale size={16} className="text-amber-600" />
+                <span className="definicao-sim__stat-value">{massaGordaKg} kg</span>
+                <span className="definicao-sim__stat-label">Massa gorda estimada</span>
+              </div>
+            )}
           </div>
 
           {projecao && diff! > 0 && (

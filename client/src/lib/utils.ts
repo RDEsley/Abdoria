@@ -58,6 +58,56 @@ export function parseOptionalInt(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** Converte string decimal opcional (aceita vírgula ou ponto); vazio retorna null. */
+export function parseOptionalDecimal(value: string): number | null {
+  const trimmed = value.trim().replace(',', '.');
+  if (!trimmed) return null;
+  const n = Number.parseFloat(trimmed);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Máscara de exibição da altura: injeta o ponto decimal (metros) enquanto
+ * digita — só funciona porque altura em cm sempre tem no máx. 3 dígitos
+ * (100-250), então o ponto sempre entra depois do 1º dígito ("175" -> "1.75").
+ * Compartilhada entre Onboarding e a aba Dados do Perfil.
+ */
+export function formatAlturaMask(digits: string): string {
+  if (digits.length === 0) return '';
+  if (digits.length === 1) return digits;
+  return `${digits[0]}.${digits.slice(1)}`;
+}
+
+/**
+ * Sanitiza digitação livre de peso (kg): mantém dígitos e no máx. 1 ponto
+ * decimal com 1 casa. Ao contrário da altura, o peso não tem largura fixa de
+ * dígitos (2 ou 3 dígitos antes da vírgula), então aqui o usuário digita o
+ * ponto — não dá pra inferir a posição automaticamente sem quebrar o caso
+ * comum de peso inteiro (ex.: "72" viraria "7.2" se a máscara empurrasse o
+ * ponto sozinha).
+ */
+export function sanitizeDecimalInput(value: string, maxDecimals = 1): string {
+  const cleaned = value.replace(',', '.').replace(/[^\d.]/g, '');
+  const firstDot = cleaned.indexOf('.');
+  if (firstDot === -1) return cleaned.slice(0, 3);
+  const intPart = cleaned.slice(0, firstDot).slice(0, 3);
+  const decPart = cleaned.slice(firstDot + 1).replace(/\./g, '').slice(0, maxDecimals);
+  return `${intPart}.${decPart}`;
+}
+
+export interface ImcFaixa {
+  label: string;
+  className: string;
+}
+
+/** Classificação de IMC (referência OMS) — usada no card de Dados e na Definição. */
+export function imcFaixa(imc: number): ImcFaixa {
+  if (imc < 18.5) return { label: 'Abaixo do peso', className: 'profile-dados-imc--baixo' };
+  if (imc < 25) return { label: 'Peso ideal', className: 'profile-dados-imc--ideal' };
+  if (imc < 30) return { label: 'Sobrepeso', className: 'profile-dados-imc--sobrepeso' };
+  return { label: 'Obesidade', className: 'profile-dados-imc--alto' };
+}
+
 export interface BodyMetricsValidation {
   idade: number | null;
   peso_kg: number | null;
@@ -72,7 +122,7 @@ export function validateBodyMetrics(
   altura: string,
 ): BodyMetricsValidation {
   const idadeNum = parseOptionalInt(idade);
-  const pesoNum = parseOptionalInt(peso);
+  const pesoNum = parseOptionalDecimal(peso);
   const alturaNum = parseOptionalInt(altura);
 
   if (idadeNum !== null && (idadeNum < 10 || idadeNum > 120)) {
