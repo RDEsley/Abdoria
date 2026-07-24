@@ -4,7 +4,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { LeaderboardMetric } from '../types/index.js';
 import { LEADERBOARD_DISPLAY_LIMIT, xpLevelFromTotal } from '../types/index.js';
-import { readMoedaBalance } from '../services/economy.js';
+import { readLifetimeMoedas, readMoedaBalance } from '../services/economy.js';
 import { syncMoedaBalancesForLeaderboard } from '../services/moeda-leaderboard.js';
 import { processWeeklyLeaderboardRewardsIfDue } from '../services/weekly-leaderboard-rewards.js';
 import { weeklyMetricValue } from '../services/weekly-stats.js';
@@ -26,6 +26,21 @@ function parseMetric(raw: string | undefined): LeaderboardMetric {
   if (raw === 'streak') return 'streak';
   if (raw === 'moedas' || raw === 'abdoria') return 'moedas';
   return 'xp';
+}
+
+type LeaderboardPeriod = 'semanal' | 'global';
+
+function parsePeriod(raw: string | undefined): LeaderboardPeriod {
+  return raw === 'global' ? 'global' : 'semanal';
+}
+
+/** Valor vitalício da métrica — XP total e Coins totais ganhas (sem descontar gasto). */
+function globalMetricValue(
+  user: EntryUser,
+  metric: Exclude<LeaderboardMetric, 'streak'>,
+): number {
+  if (metric === 'xp') return user.gamificacao.nivel_xp;
+  return readLifetimeMoedas(user);
 }
 
 function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
@@ -107,6 +122,7 @@ function isHiddenAdmin(user: {
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
+    const period = parsePeriod(req.query.period as string | undefined);
     const limit = Math.min(
       Number(req.query.limit) || LEADERBOARD_DISPLAY_LIMIT,
       LEADERBOARD_DISPLAY_LIMIT,
@@ -135,10 +151,12 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    // XP e Dorias são semanais: ordena pelo acumulado da semana corrente.
+    // Semanal ordena pelos acumuladores da semana; Global pelos totais vitalícios.
     const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
+    const valueOf = (user: (typeof all)[number]) =>
+      period === 'global' ? globalMetricValue(user, metric) : weeklyMetricValue(user, metric);
     const ranked = all
-      .map((user) => ({ user, value: weeklyMetricValue(user, metric) }))
+      .map((user) => ({ user, value: valueOf(user) }))
       .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
       .slice(0, limit);
 
@@ -171,6 +189,7 @@ leaderboardRouter.get('/podium/me', async (req: AuthRequest, res) => {
 leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
+    const period = parsePeriod(req.query.period as string | undefined);
 
     if (metric === 'moedas') {
       await syncMoedaBalancesForLeaderboard();
@@ -196,11 +215,13 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
     }
 
     const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
-    const myValue = weeklyMetricValue(user, metric);
+    const valueOf = (target: (typeof all)[number]) =>
+      period === 'global' ? globalMetricValue(target, metric) : weeklyMetricValue(target, metric);
+    const myValue = valueOf(user);
     const rank =
       all.filter((other) => {
         if (other.id === user.id) return false;
-        const otherValue = weeklyMetricValue(other, metric);
+        const otherValue = valueOf(other);
         return (
           otherValue > myValue ||
           (otherValue === myValue && other.nome.localeCompare(user.nome, 'pt-BR') < 0)

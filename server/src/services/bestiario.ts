@@ -10,6 +10,7 @@ import {
   buildBestiaryDropCatalog,
   inferBestiaryDropsFromKill,
   mergeBestiaryDropDiscoveries,
+  migrateBestiaryDropId,
   type AfkEnemyId,
   type BestiaryDropId,
   type BestiaryPendingSnapshot,
@@ -112,7 +113,7 @@ export function readBestiaryResponse(user: UserRecord): {
     label: category.label,
     entries: category.enemyIds.map((id) => {
       const def = AFK_ENEMIES[id];
-      const discovered = new Set(discoveries[id] ?? []);
+      const discovered = new Set((discoveries[id] ?? []).map(migrateBestiaryDropId));
       return {
         id,
         label: def.label,

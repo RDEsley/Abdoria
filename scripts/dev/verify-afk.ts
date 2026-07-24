@@ -6,8 +6,6 @@ import assert from 'node:assert/strict';
 import {
   AFK_KILLS_PER_MINUTE,
   AFK_GOLDEN_SLIME_MOEDA_BONUS,
-  AFK_LEGENDARY_ROLL_BOSS,
-  AFK_LEGENDARY_ROLL_NORMAL,
   advanceKillsUntilBoss,
   shouldSpawnBoss,
 } from '../../shared/afk/combat.ts';
@@ -97,8 +95,6 @@ assert.equal(AFK_KILL_DROP_CHANCE_COMMON, 4);
 assert.equal(AFK_KILL_DROP_CHANCE_ELITE, 6);
 assert.equal(AFK_KILL_DROP_CHANCE_BOSS, 10);
 assert.equal(AFK_KILL_DROP_CHANCES.common, 4);
-assert.equal(AFK_LEGENDARY_ROLL_BOSS, 9991);
-assert.equal(AFK_LEGENDARY_ROLL_NORMAL, 9995);
 assert.equal(getKillDropChanceForTier('common'), 4);
 assert.equal(getKillDropChanceForTier('elite'), 6);
 assert.equal(getKillDropChanceForTier('boss'), 10);
@@ -154,8 +150,10 @@ uBoss.afk!.combat!.kills_until_boss = 99;
 applyKill(uBoss);
 assert.ok(uBoss.afk!.combat!.is_boss, '100th kill spawns boss');
 
-const pendingBefore = { ...EMPTY_AFK_PENDING };
-const pendingBoss = { ...EMPTY_AFK_PENDING };
+const freshPending = () => ({ ...EMPTY_AFK_PENDING, cosmetic_ids: [], weapon_ids: [] });
+
+const pendingBefore = freshPending();
+const pendingBoss = freshPending();
 rollLootTable(uBoss, 1, pendingBefore);
 rollLootTable(uBoss, 2, pendingBoss, { bossBoost: true });
 assert.ok(
@@ -163,6 +161,25 @@ assert.ok(
     pendingBefore.xp + pendingBefore.abdoria + pendingBefore.frozen_streaks - 1,
   'boss loot table runs',
 );
+
+// Tabelas por tier: comum nunca dropa item raro/frozen/route; elite nunca dropa
+// bolsa/EXP instantâneo nem item raro (frozen/route de elite têm rolls próprios).
+for (let i = 0; i < 3000; i += 1) {
+  const trialCommon = freshPending();
+  rollLootTable(uBoss, 50_000 + i, trialCommon, { tier: 'common' });
+  assert.equal(trialCommon.cosmetic_ids.length, 0, 'comum não dropa cosmético');
+  assert.equal(trialCommon.weapon_ids.length, 0, 'comum não dropa arma');
+  assert.ok(!trialCommon.titulo_secreto, 'comum não dropa título secreto');
+  assert.equal(trialCommon.frozen_streaks, 0, 'comum não dropa frozen streak');
+  assert.equal(trialCommon.route_drinks, 0, 'comum não dropa route drink');
+
+  const trialElite = freshPending();
+  rollLootTable(uBoss, 90_000 + i, trialElite, { tier: 'elite' });
+  assert.equal(trialElite.exp_instant, 0, 'elite não dropa EXP instantâneo');
+  assert.equal(trialElite.doria_bags, 0, 'elite não dropa bolsa de coins');
+  assert.equal(trialElite.cosmetic_ids.length, 0, 'elite não dropa cosmético');
+  assert.ok(!trialElite.titulo_secreto, 'elite não dropa título secreto');
+}
 
 let procMisses = 0;
 let procHits = 0;

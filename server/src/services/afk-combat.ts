@@ -17,9 +17,11 @@ import { normalizeCombat } from '../repositories/user-repository.js';
 import {
   rollKillDrop,
   rollRouteDrinkDrop,
-  rollBossLegendaryWeapon,
+  rollBossMythicWeapon,
   rollGoldenSlimeSecretCosmetic,
   rollMagicRabbitSpell,
+  rollEnigmaDrop,
+  rollBinarioDrop,
 } from './afk-rolls.js';
 import { unlockBestiaryEnemy, recordBestiaryKillDrops } from './bestiario.js';
 import { snapshotBestiaryPending } from '../types/index.js';
@@ -81,6 +83,8 @@ function onEnemyDefeated(
   const wasBoss = combat.is_boss;
   const wasGolden = defeatedEnemyId === 'golden_slime';
   const wasMagicRabbit = defeatedEnemyId === 'magic_rabbit';
+  const wasEnigma = defeatedEnemyId === 'slime_enigma';
+  const wasBinario = defeatedEnemyId === 'slime_binario';
   const tier = enemyTier(combat);
 
   unlockBestiaryEnemy(user, defeatedEnemyId);
@@ -96,15 +100,22 @@ function onEnemyDefeated(
     rollGoldenSlimeSecretCosmetic(user, combat.kills_total, pending);
   } else if (wasMagicRabbit) {
     rollMagicRabbitSpell(user, combat.kills_total, pending);
+  } else if (wasEnigma) {
+    rollEnigmaDrop(user, pending);
+  } else if (wasBinario) {
+    rollBinarioDrop(user, pending);
   } else {
     rollKillDrop(user, combat.kills_total, pending, { bossBoost: wasBoss, tier });
     if (wasBoss) {
       const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
-      rollBossLegendaryWeapon(user, combat.kills_total, pending, new Set(armas.desbloqueados));
+      rollBossMythicWeapon(user, combat.kills_total, pending, new Set(armas.desbloqueados));
     }
   }
 
-  rollRouteDrinkDrop(user, combat.kills_total, pending);
+  // Route Drink faz parte do loot de sustain: só Elites (e o Golden Slime).
+  if (tier === 'elite' || wasGolden) {
+    rollRouteDrinkDrop(user, combat.kills_total, pending);
+  }
 
   recordBestiaryKillDrops(user, defeatedEnemyId, pendingBefore, snapshotBestiaryPending(pending));
 

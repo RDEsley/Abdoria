@@ -12,22 +12,29 @@ export const BESTIARY_CATEGORIES: BestiaryCategory[] = [
   {
     id: 'common',
     label: 'Comuns',
-    enemyIds: ['bat', 'zombie', 'skeleton'],
+    enemyIds: ['bat', 'zombie', 'skeleton', 'slime_macaco', 'slime_agua', 'slime_doce', 'slime_chocolate'],
   },
   {
     id: 'elite',
     label: 'Elites',
-    enemyIds: ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'],
+    enemyIds: ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight', 'slime_chumbo'],
   },
   {
     id: 'boss',
     label: 'Chefes',
-    enemyIds: ['boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem'],
+    enemyIds: [
+      'boss_colossus',
+      'boss_lich',
+      'boss_hydra',
+      'boss_golem',
+      'boss_procrastinador',
+      'boss_preguica',
+    ],
   },
   {
     id: 'golden',
     label: 'Especial',
-    enemyIds: ['golden_slime', 'magic_rabbit'],
+    enemyIds: ['golden_slime', 'magic_rabbit', 'slime_enigma', 'slime_binario'],
   },
 ];
 

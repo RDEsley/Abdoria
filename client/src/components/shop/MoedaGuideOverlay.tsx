@@ -12,8 +12,8 @@ const SLIDES = [
   },
   {
     icon: Store,
-    title: 'Exploração AFK',
-    body: `Derrote inimigos na Exploração AFK: cada patrulha rende ${CURRENCY_NAME}, itens e até cosméticos raros.`,
+    title: 'Exploração',
+    body: `Derrote inimigos na Exploração: cada patrulha rende ${CURRENCY_NAME}, itens e até cosméticos raros.`,
   },
   {
     icon: Trophy,

@@ -4,16 +4,25 @@ export type AfkEnemyId =
   | 'bat'
   | 'zombie'
   | 'skeleton'
+  | 'slime_macaco'
+  | 'slime_agua'
+  | 'slime_doce'
+  | 'slime_chocolate'
   | 'armored_skeleton'
   | 'crystal_slime'
   | 'storm_slime'
   | 'slime_knight'
+  | 'slime_chumbo'
   | 'golden_slime'
   | 'magic_rabbit'
+  | 'slime_enigma'
+  | 'slime_binario'
   | 'boss_colossus'
   | 'boss_lich'
   | 'boss_hydra'
-  | 'boss_golem';
+  | 'boss_golem'
+  | 'boss_procrastinador'
+  | 'boss_preguica';
 
 export interface AfkEnemyDefinition {
   id: AfkEnemyId;
@@ -92,42 +101,75 @@ export const AFK_BOSS_INTERVAL = 100;
 export const AFK_ELITE_CHANCE = 12;
 export const AFK_GOLDEN_SLIME_CHANCE = 5000;
 export const AFK_GOLDEN_SLIME_MOEDA_BONUS = 99;
+/** @deprecated Loot raro migrou pra janelas /1e6 por tier em afk-rolls (server). */
 export const AFK_LEGENDARY_ROLL_NORMAL = 9995;
+/** @deprecated Loot raro migrou pra janelas /1e6 por tier em afk-rolls (server). */
 export const AFK_LEGENDARY_ROLL_BOSS = 9991;
-/**
- * 0,13% por kill de boss — rolagem em /10000 (9987–9999 = 13 valores).
- * Calibrado para ~160h até a 1ª lendária: 8 kills/min × 60 × 160h = 76.800 kills,
- * 1 boss a cada 100 kills (AFK_BOSS_INTERVAL) ⇒ 768 bosses; 1/0,0013 ≈ 769 bosses ≈ 76.900 kills ≈ 160,2h.
- */
+/** @deprecated Armas nível 9 viraram Míticas — ver rollBossMythicWeapon em afk-rolls. */
 export const AFK_BOSS_LEGENDARY_WEAPON_ROLL = 9987;
 
-// HP base dos slimes: comuns 80–150, elites 400–600, bosses 1000–1500, Golden = 10.000.
+// HP base dos slimes: comuns 80–150, elites 400–620 (Chumbo é exceção, 3.000),
+// bosses 4.000–5.000, Golden/Mágico/especiais raríssimos = 8.000–10.000.
 export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
   bat: { id: 'bat', tier: 'common', maxHp: 90, label: 'Slime Morcego' },
   zombie: { id: 'zombie', tier: 'common', maxHp: 115, label: 'Slime Musgo' },
   skeleton: { id: 'skeleton', tier: 'common', maxHp: 145, label: 'Slime Ósseo' },
+  slime_macaco: { id: 'slime_macaco', tier: 'common', maxHp: 100, label: 'Slime Macaco' },
+  slime_agua: { id: 'slime_agua', tier: 'common', maxHp: 130, label: 'Slime de Água' },
+  slime_doce: { id: 'slime_doce', tier: 'common', maxHp: 105, label: 'Slime de Doce' },
+  slime_chocolate: { id: 'slime_chocolate', tier: 'common', maxHp: 140, label: 'Slime de Chocolate' },
   armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 440, label: 'Slime Blindado' },
   crystal_slime: { id: 'crystal_slime', tier: 'elite', maxHp: 510, label: 'Slime Cristalino' },
   storm_slime: { id: 'storm_slime', tier: 'elite', maxHp: 580, label: 'Slime Trovão' },
   slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 620, label: 'Slime Cavaleiro' },
+  slime_chumbo: { id: 'slime_chumbo', tier: 'elite', maxHp: 3000, label: 'Slime Chumbo' },
   golden_slime: { id: 'golden_slime', tier: 'common', maxHp: 10000, label: 'Golden Slime' },
   magic_rabbit: { id: 'magic_rabbit', tier: 'common', maxHp: 8000, label: 'Slime Mágico' },
-  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 1050, label: 'Rei Slime' },
-  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 1250, label: 'Slime Lich' },
-  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 1450, label: 'Hidra Slime' },
-  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 1350, label: 'Golem de Pedra' },
+  slime_enigma: { id: 'slime_enigma', tier: 'common', maxHp: 10000, label: '?' },
+  slime_binario: { id: 'slime_binario', tier: 'common', maxHp: 10000, label: 'Slime Binário' },
+  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 4000, label: 'Rei Slime' },
+  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 4300, label: 'Slime Lich' },
+  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 5000, label: 'Hidra Slime' },
+  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 4700, label: 'Golem de Pedra' },
+  boss_procrastinador: {
+    id: 'boss_procrastinador',
+    tier: 'boss',
+    maxHp: 4150,
+    label: 'Slime Procrastinador',
+  },
+  boss_preguica: { id: 'boss_preguica', tier: 'boss', maxHp: 4500, label: 'Slime Preguiça' },
 };
 
 export const AFK_MAGIC_RABBIT_CHANCE = 2304;
+/** "?" — 1 em 100.000 spawns. */
+export const AFK_ENIGMA_CHANCE = 100_000;
+/** Slime Binário — 1 em 101.010 spawns. */
+export const AFK_BINARIO_CHANCE = 101_010;
 
-const COMMON_ENEMIES: AfkEnemyId[] = ['bat', 'zombie', 'skeleton'];
+const COMMON_ENEMIES: AfkEnemyId[] = [
+  'bat',
+  'zombie',
+  'skeleton',
+  'slime_macaco',
+  'slime_agua',
+  'slime_doce',
+  'slime_chocolate',
+];
 const ELITE_ENEMIES: AfkEnemyId[] = [
   'armored_skeleton',
   'crystal_slime',
   'storm_slime',
   'slime_knight',
+  'slime_chumbo',
 ];
-const BOSS_ENEMIES: AfkEnemyId[] = ['boss_colossus', 'boss_lich', 'boss_hydra', 'boss_golem'];
+const BOSS_ENEMIES: AfkEnemyId[] = [
+  'boss_colossus',
+  'boss_lich',
+  'boss_hydra',
+  'boss_golem',
+  'boss_procrastinador',
+  'boss_preguica',
+];
 
 export const DEFAULT_AFK_COMBAT: AfkCombatState = {
   kills_total: 0,
@@ -173,6 +215,14 @@ export function shouldSpawnMagicRabbit(seed: number): boolean {
   return seed % AFK_MAGIC_RABBIT_CHANCE === 0;
 }
 
+export function shouldSpawnEnigma(seed: number): boolean {
+  return seed % AFK_ENIGMA_CHANCE === 0;
+}
+
+export function shouldSpawnBinario(seed: number): boolean {
+  return seed % AFK_BINARIO_CHANCE === 0;
+}
+
 export function pickNextEnemy(
   seed: number,
   opts: { isBoss: boolean; isElite: boolean; previousEnemyId?: AfkEnemyId },
@@ -207,6 +257,14 @@ export function resolveNextSpawn(
 
   if (!isBoss && shouldSpawnMagicRabbit(seed)) {
     return { enemy_id: 'magic_rabbit', elite: false, is_boss: false };
+  }
+
+  if (!isBoss && shouldSpawnEnigma(seed)) {
+    return { enemy_id: 'slime_enigma', elite: false, is_boss: false };
+  }
+
+  if (!isBoss && shouldSpawnBinario(seed)) {
+    return { enemy_id: 'slime_binario', elite: false, is_boss: false };
   }
 
   const elite = !isBoss && shouldSpawnElite(seed);

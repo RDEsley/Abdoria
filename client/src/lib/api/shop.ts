@@ -24,3 +24,8 @@ export function equipShopItem(kind: CosmeticKind, id: string): Promise<EquipCosm
 export function redeemGiftCode(code: string): Promise<RedeemCodeResponse> {
   return fetchJson('/shop/redeem-code', { method: 'POST', body: JSON.stringify({ code }) });
 }
+
+/** Limpa a fila de celebrações de cosmético desbloqueado (depois do reveal). */
+export function ackCosmeticCelebration(): Promise<{ user: IUserDocument }> {
+  return fetchJson('/shop/celebracao/ack', { method: 'POST' });
+}

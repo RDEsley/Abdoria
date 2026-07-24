@@ -1,14 +1,19 @@
-import type { AfkPendingReward } from '../types/index.js';
+/**
+ * Drop diário de Frozen Streak da Exploração AFK.
+ *
+ * Modelo antigo (janelas de 24h de acúmulo) tinha dois defeitos fatais:
+ * o acúmulo zera a cada coleta (quem coletava o baú nunca completava janela)
+ * e o seed era fixo por usuário (80% das contas nunca dropavam). O modelo
+ * atual rola uma vez por dia-calendário (SP), com seed usuário+data — todo
+ * dia é uma chance nova e independente, sem estado extra além do dedupe.
+ */
 
-/** Janela de 24h de exploração acumulada para rolar Frozen Streak. */
-export const AFK_FROZEN_STREAK_WINDOW_MINUTES = 24 * 60;
+/** 30% ao dia ⇒ ~2,1 Frozen Streaks por semana pra quem mantém a Exploração ativa. */
+export const AFK_FROZEN_STREAK_DAILY_THRESHOLD = 3000;
 
-/** ~20% de chance de 1 Frozen Streak por janela de 24h (0 ou 1, nunca mais). */
-export const AFK_FROZEN_STREAK_DROP_THRESHOLD = 2000;
-
-export function hashFrozenStreakSeed(userId: string, windowIndex: number): number {
+export function hashFrozenStreakSeed(userId: string, dayKey: string | number): number {
   let h = 2166136261;
-  const s = `frozen:${userId}:${windowIndex}`;
+  const s = `frozen:${userId}:${dayKey}`;
   for (let i = 0; i < s.length; i += 1) {
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 16777619);
@@ -16,22 +21,7 @@ export function hashFrozenStreakSeed(userId: string, windowIndex: number): numbe
   return Math.abs(h);
 }
 
-/**
- * Rola 0 ou 1 Frozen Streak por cada bloco completo de 24h de exploração.
- * `prevMinutes` / `totalMinutes` = minutos acumulados antes e depois do sync.
- */
-export function rollFrozenStreakForExplorationMinutes(
-  userId: string,
-  prevMinutes: number,
-  totalMinutes: number,
-  pending: AfkPendingReward,
-): void {
-  const prevWindows = Math.floor(Math.max(0, prevMinutes) / AFK_FROZEN_STREAK_WINDOW_MINUTES);
-  const totalWindows = Math.floor(Math.max(0, totalMinutes) / AFK_FROZEN_STREAK_WINDOW_MINUTES);
-
-  for (let window = prevWindows; window < totalWindows; window += 1) {
-    const roll = hashFrozenStreakSeed(userId, window) % 10000;
-    if (roll >= AFK_FROZEN_STREAK_DROP_THRESHOLD) continue;
-    pending.frozen_streaks = (pending.frozen_streaks ?? 0) + 1;
-  }
+/** Roll determinístico do dia — mesmo resultado em qualquer sync do mesmo dia. */
+export function rollDailyFrozenStreak(userId: string, dayKey: string): boolean {
+  return hashFrozenStreakSeed(userId, dayKey) % 10000 < AFK_FROZEN_STREAK_DAILY_THRESHOLD;
 }

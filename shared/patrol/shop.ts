@@ -31,13 +31,19 @@ export const SPELL_DUPLICATE_DORIAS = 15;
 export const DEFAULT_ARCO_ID = 'arco_01';
 export const DEFAULT_ESPADA_ID = 'espada_01';
 
-/** Armas lendárias (nível 9) dropáveis de bosses. */
-export const PATROL_LEGENDARY_WEAPON_IDS = ['arco_09', 'espada_09'] as const;
+/** Armas Míticas (nível 9) dropáveis de bosses — mais raras que Lendário. */
+export const PATROL_MYTHIC_WEAPON_IDS = ['arco_09', 'espada_09'] as const;
+
+/** @deprecated As armas de nível 9 viraram Míticas — use {@link PATROL_MYTHIC_WEAPON_IDS}. */
+export const PATROL_LEGENDARY_WEAPON_IDS = PATROL_MYTHIC_WEAPON_IDS;
 
 /** Armas Secret (nível 10) dropáveis na Exploração — taxa menor que título Secret. */
 export const PATROL_SECRET_WEAPON_IDS = ['arco_10', 'espada_10'] as const;
 
-/** Magias dropáveis exclusivamente do Slime Mágico — não compráveis na loja. */
+/** Trio Flamejante — possuir os 3 desbloqueia a moldura Fogo do Editar Perfil. */
+export const CONJUNTO_FLAMEJANTE_IDS = ['magia_fogo', 'arco_06', 'espada_09'] as const;
+
+/** Magias dropáveis do Slime Mágico (também compráveis na loja de exploração). */
 export const PATROL_SPELL_IDS = [
   'magia_agua',
   'magia_terra',
@@ -45,6 +51,8 @@ export const PATROL_SPELL_IDS = [
   'magia_fogo',
   'magia_relampago',
   'magia_buraco_negro',
+  'magia_raio_laser',
+  'magia_explosao',
 ] as const;
 
 export type PatrolSpellId = (typeof PATROL_SPELL_IDS)[number];
@@ -62,6 +70,7 @@ const LEGACY_WEAPON_ID_MAP: Record<string, string> = {
 
 function rarityForLevel(nivel: number): PatrolWeaponRarity {
   if (nivel >= 10) return 'secreto';
+  if (nivel >= 9) return 'mitico';
   if (nivel >= 7) return 'lendario';
   if (nivel >= 5) return 'epico';
   if (nivel >= 3) return 'raro';
@@ -210,7 +219,7 @@ const ESPADA_SEEDS: WeaponSeed[] = [
     nivel: 9,
     preco: 55135,
     dano: 50,
-    nome: 'Lâmina do Dragão',
+    nome: 'Espada Flamejante',
     descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.',
   },
   {
@@ -240,6 +249,8 @@ function buildWeapon(kind: 'arco' | 'espada', seed: WeaponSeed): PatrolWeaponDef
   };
 }
 
+// Magias dão menos dano que arcos/espadas: em troca, de Épico pra cima carregam
+// passiva de +chance de drops raros (ver SPELL_RARE_DROP_MULTIPLIER).
 const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
   {
     id: 'magia_agua',
@@ -249,7 +260,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     descricao: 'Ondas de água pura que atingem o inimigo do alto, varrendo o campo de batalha.',
     raridade: 'comum',
     unlock: { tipo: 'moedas', preco_moedas: 3000 },
-    dano_base: 28,
+    dano_base: 14,
   },
   {
     id: 'magia_terra',
@@ -259,7 +270,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     descricao: 'Pedregulhos surgem do chão e caem sobre o inimigo com força esmagadora.',
     raridade: 'raro',
     unlock: { tipo: 'moedas', preco_moedas: 5500 },
-    dano_base: 32,
+    dano_base: 18,
   },
   {
     id: 'magia_gelo',
@@ -269,7 +280,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     descricao: 'Cristais de gelo perfuram o alvo de cima, congelando qualquer resistência.',
     raridade: 'raro',
     unlock: { tipo: 'moedas', preco_moedas: 8500 },
-    dano_base: 36,
+    dano_base: 22,
   },
   {
     id: 'magia_fogo',
@@ -279,7 +290,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     descricao: 'Uma bola de fogo incandescente mergulha do céu e explode ao impacto.',
     raridade: 'epico',
     unlock: { tipo: 'moedas', preco_moedas: 15000 },
-    dano_base: 42,
+    dano_base: 28,
   },
   {
     id: 'magia_relampago',
@@ -289,7 +300,7 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     descricao: 'Um relâmpago cortante rasga a atmosfera direto para a cabeça do inimigo.',
     raridade: 'epico',
     unlock: { tipo: 'moedas', preco_moedas: 24000 },
-    dano_base: 48,
+    dano_base: 34,
   },
   {
     id: 'magia_buraco_negro',
@@ -299,9 +310,56 @@ const SPELL_DEFINITIONS: PatrolWeaponDefinition[] = [
     descricao: 'Uma singularidade gravitacional absorve tudo ao redor com força devastadora.',
     raridade: 'lendario',
     unlock: { tipo: 'moedas', preco_moedas: 60000 },
-    dano_base: 60,
+    dano_base: 46,
+  },
+  {
+    id: 'magia_raio_laser',
+    kind: 'magia',
+    nivel: 7,
+    nome: 'Raio Laser',
+    descricao: 'Um feixe de luz pura atravessa o horizonte em linha reta, apagando o que tocar.',
+    raridade: 'mitico',
+    unlock: { tipo: 'moedas', preco_moedas: 120000 },
+    dano_base: 54,
+  },
+  {
+    id: 'magia_explosao',
+    kind: 'magia',
+    nivel: 8,
+    nome: 'Explosão',
+    descricao:
+      'A magia definitiva: uma única detonação cataclísmica que consome tudo — e exige tudo de quem a conjura.',
+    raridade: 'secreto',
+    unlock: { tipo: 'moedas', preco_moedas: 200000 },
+    dano_base: 66,
   },
 ];
+
+/**
+ * Passiva das magias (vale com a magia EQUIPADA): multiplica a chance dos drops
+ * mais raros da Exploração (cosmético lendário, arma Mítica/Secret, título Secret).
+ */
+export const SPELL_RARE_DROP_MULTIPLIER: Partial<Record<PatrolWeaponRarity, number>> = {
+  epico: 1.05,
+  lendario: 1.05,
+  mitico: 1.08,
+  secreto: 1.15,
+};
+
+/** Passiva extra da magia Secret: multiplica a quantidade de XP/Coins do loot. */
+export const SPELL_REWARD_QUANTITY_MULTIPLIER_SECRET = 1.09;
+
+export function spellRareDropMultiplier(spellId: string | null | undefined): number {
+  const def = spellId ? PATROL_WEAPON_BY_ID[spellId] : undefined;
+  if (!def || def.kind !== 'magia') return 1;
+  return SPELL_RARE_DROP_MULTIPLIER[def.raridade] ?? 1;
+}
+
+export function spellRewardQuantityMultiplier(spellId: string | null | undefined): number {
+  const def = spellId ? PATROL_WEAPON_BY_ID[spellId] : undefined;
+  if (!def || def.kind !== 'magia') return 1;
+  return def.raridade === 'secreto' ? SPELL_REWARD_QUANTITY_MULTIPLIER_SECRET : 1;
+}
 
 export const PATROL_WEAPONS: PatrolWeaponDefinition[] = [
   ...ARCO_SEEDS.map((seed) => buildWeapon('arco', seed)),

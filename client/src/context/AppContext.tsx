@@ -78,6 +78,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /**
+   * Atualiza só o usuário do AppContext (otimista ou resposta de API), sem
+   * refetch — pra interações que precisam refletir na hora (fila de
+   * atividades, preferências) sem pagar um `refresh()` completo.
+   */
+  const applyUser = useCallback((next: IUserDocument) => {
+    setUser(next);
+    window.dispatchEvent(new CustomEvent('abdoria:user-updated', { detail: next }));
+  }, []);
+
   const flushPersist = useCallback(async () => {
     const snapshot = pendingPersist.current;
     if (!snapshot) return;
@@ -490,6 +500,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       error,
       muscleFilter,
       setMuscleFilter,
+      applyUser,
       refresh,
       loadRecommendations,
       ensureExercises,
@@ -518,6 +529,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       historyLoading,
       error,
       muscleFilter,
+      applyUser,
       refresh,
       loadRecommendations,
       ensureExercises,

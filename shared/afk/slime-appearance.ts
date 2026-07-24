@@ -96,11 +96,23 @@ export function resolveSlimeAppearance(
   if (enemyId === 'magic_rabbit') {
     return { eyes: 'star', mouth: 'smile', extra: 'sparkle' };
   }
+  if (enemyId === 'slime_enigma' || enemyId === 'slime_binario') {
+    return { eyes: 'round', mouth: 'flat', extra: 'none' };
+  }
   if (enemyId === 'skeleton') {
     return { eyes: 'round', mouth: 'flat', extra: 'none' };
   }
   if (enemyId === 'armored_skeleton') {
     return { eyes: 'round', mouth: 'flat', extra: 'none' };
+  }
+  if (enemyId === 'slime_chumbo') {
+    return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+  }
+  if (isBoss && enemyId === 'boss_procrastinador') {
+    return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+  }
+  if (isBoss && enemyId === 'boss_preguica') {
+    return { eyes: 'sleepy', mouth: 'o', extra: 'none' };
   }
 
   let eyes = EYE_STYLES[s % EYE_STYLES.length]!;
@@ -133,6 +145,14 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'sleepy', mouth: 'vampire', extra: 'none' };
     case 'skeleton':
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
+    case 'slime_macaco':
+      return { eyes: 'round', mouth: 'grin', extra: 'none' };
+    case 'slime_agua':
+      return { eyes: 'wide', mouth: 'o', extra: 'none' };
+    case 'slime_doce':
+      return { eyes: 'happy', mouth: 'smile', extra: 'none' };
+    case 'slime_chocolate':
+      return { eyes: 'happy', mouth: 'cat', extra: 'none' };
     case 'armored_skeleton':
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
     case 'crystal_slime':
@@ -141,10 +161,15 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'anime', mouth: 'grin', extra: 'none' };
     case 'slime_knight':
       return { eyes: 'round', mouth: 'smile', extra: 'none' };
+    case 'slime_chumbo':
+      return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
     case 'golden_slime':
       return { eyes: 'star', mouth: 'o', extra: 'aura' };
     case 'magic_rabbit':
       return { eyes: 'star', mouth: 'smile', extra: 'sparkle' };
+    case 'slime_enigma':
+    case 'slime_binario':
+      return { eyes: 'round', mouth: 'flat', extra: 'none' };
     case 'boss_colossus':
       return { eyes: 'wide', mouth: 'grin', extra: 'none' };
     case 'boss_lich':
@@ -153,6 +178,10 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'wide', mouth: 'grin', extra: 'none' };
     case 'boss_golem':
       return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+    case 'boss_procrastinador':
+      return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+    case 'boss_preguica':
+      return { eyes: 'sleepy', mouth: 'o', extra: 'none' };
     default:
       return { eyes: 'round', mouth: 'smile', extra: 'none' };
   }

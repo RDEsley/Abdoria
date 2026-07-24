@@ -1,6 +1,26 @@
 /** Efeitos visuais de cada magia da Loja da Exploração durante o ataque. */
 export function AfkSpellEffect({ spellId }: { spellId: string }) {
   switch (spellId) {
+    case 'magia_raio_laser':
+      return (
+        <>
+          <span className="game-afk-spell-laser" aria-hidden>
+            <i className="game-afk-spell-laser__beam" />
+            <i className="game-afk-spell-laser__core" />
+          </span>
+          <span className="game-afk-spell-laser-flash" aria-hidden />
+        </>
+      );
+
+    case 'magia_explosao':
+      return (
+        <span className="game-afk-spell-explosion" aria-hidden>
+          <i className="game-afk-spell-explosion__flash" />
+          <i className="game-afk-spell-explosion__core" />
+          <i className="game-afk-spell-explosion__ring" />
+        </span>
+      );
+
     case 'magia_buraco_negro':
       return (
         <span className="game-afk-spell-blackhole" aria-hidden>

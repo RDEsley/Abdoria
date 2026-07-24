@@ -40,7 +40,7 @@ export function RouteDrinkSuggestModal({
       <p className="game-modal__text">
         {canUse ? (
           <>
-            Receba na hora o loot de {routeDrinkCount * ROUTE_DRINK_HOURS}h de Exploração AFK (
+            Receba na hora o loot de {routeDrinkCount * ROUTE_DRINK_HOURS}h de Exploração (
             {ROUTE_DRINK_HOURS}h por unidade) — baú animado e itens aplicados direto na conta.
           </>
         ) : (

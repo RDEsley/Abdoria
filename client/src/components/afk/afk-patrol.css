@@ -50,7 +50,7 @@
 .game-afk-fab__glow {
   position: absolute;
   inset: -0.35rem;
-  border-radius: 1.2rem;
+  border-radius: 999px;
   background: radial-gradient(circle at 50% 40%, rgba(52, 211, 153, 0.28), transparent 68%);
   opacity: 0.75;
   pointer-events: none;
@@ -95,8 +95,8 @@
 .game-afk-fab-swords {
   position: relative;
   display: block;
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.3rem;
+  height: 1.3rem;
   color: #57534e;
 }
 
@@ -105,21 +105,23 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  transform-origin: 50% 80%;
+  /* Pivô no centro (não na base) — as duas lâminas cruzam formando um X de
+     verdade, estilo emblema de guerra, em vez de ficarem quase paralelas. */
+  transform-origin: 50% 50%;
   will-change: transform;
 }
 
 .game-afk-fab-swords__blade--l {
-  transform: rotate(-7deg);
+  transform: rotate(-45deg);
 }
 
 .game-afk-fab-swords__blade--r {
-  transform: scaleX(-1) rotate(-7deg);
+  transform: scaleX(-1) rotate(-45deg);
 }
 
 .game-afk-fab-swords__spark {
   position: absolute;
-  top: 8%;
+  top: 50%;
   left: 50%;
   width: 0.46rem;
   height: 0.46rem;
@@ -168,16 +170,16 @@
   0%,
   18%,
   100% {
-    transform: rotate(-7deg);
+    transform: rotate(-45deg);
   }
   38% {
-    transform: rotate(-23deg);
+    transform: rotate(-58deg);
   }
   50% {
-    transform: rotate(4deg);
+    transform: rotate(-32deg);
   }
   64% {
-    transform: rotate(-7deg);
+    transform: rotate(-45deg);
   }
 }
 
@@ -185,16 +187,16 @@
   0%,
   18%,
   100% {
-    transform: scaleX(-1) rotate(-7deg);
+    transform: scaleX(-1) rotate(-45deg);
   }
   38% {
-    transform: scaleX(-1) rotate(-23deg);
+    transform: scaleX(-1) rotate(-58deg);
   }
   50% {
-    transform: scaleX(-1) rotate(4deg);
+    transform: scaleX(-1) rotate(-32deg);
   }
   64% {
-    transform: scaleX(-1) rotate(-7deg);
+    transform: scaleX(-1) rotate(-45deg);
   }
 }
 
@@ -219,8 +221,8 @@
 }
 
 .game-afk-fab-swords--header {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.55rem;
+  height: 1.55rem;
 }
 
 .game-afk-modal__title-icon .game-afk-fab-swords--header {
@@ -283,16 +285,6 @@
   .game-afk-fab {
     right: 1.25rem;
     bottom: 1.5rem;
-    flex-direction: row;
-    gap: 0.5rem;
-    min-width: auto;
-    min-height: auto;
-    padding: 0.5rem 0.9rem 0.5rem 0.65rem;
-    border-radius: 999px;
-  }
-
-  .game-afk-fab__glow {
-    border-radius: 999px;
   }
 }
 
@@ -590,6 +582,28 @@
   box-shadow: 1px 1px 0 #4338ca;
 }
 
+.game-afk-modal__shop-btn--village {
+  border-color: #0369a1;
+  background: linear-gradient(180deg, #bae6fd, #38bdf8);
+  color: #0c4a6e;
+  box-shadow: 2px 2px 0 #0369a1;
+}
+
+.game-afk-modal__shop-btn--village:hover {
+  transform: translateY(-1px);
+}
+
+.game-afk-modal__shop-btn--village:active {
+  box-shadow: 1px 1px 0 #0369a1;
+}
+
+.game-afk-modal__shop-btn--village[aria-pressed='true'] {
+  background: linear-gradient(180deg, #fde68a, #fbbf24);
+  border-color: #92400e;
+  color: #78350f;
+  box-shadow: 2px 2px 0 #92400e;
+}
+
 .game-afk-modal__inventory-badge {
   display: inline-flex;
   align-items: center;
@@ -625,6 +639,23 @@
 
 .game-afk-modal__title-icon .game-afk-fab-swords {
   color: #fef9c3;
+}
+
+/* Ícone do título vira botão: alterna vila x exploração. */
+.game-afk-modal__title-icon--btn {
+  padding: 0;
+  cursor: pointer;
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+
+.game-afk-modal__title-icon--btn:hover {
+  filter: brightness(1.08);
+}
+
+.game-afk-modal__title-icon--btn:active {
+  transform: scale(0.94);
 }
 
 .game-afk-modal__title {
@@ -5264,6 +5295,38 @@
   background: linear-gradient(165deg, #bbf7d0 0%, #86efac 40%, #4ade80 70%, #15803d 100%);
 }
 
+/* Novos comuns — Rodada 9 */
+.game-afk-enemy--slime_macaco .game-afk-slime__blob {
+  background: linear-gradient(165deg, #e8c39e 0%, #c68642 40%, #8b5a2b 70%, #5c3a1e 100%);
+}
+
+.game-afk-enemy--slime_agua .game-afk-slime__blob {
+  background: linear-gradient(165deg, #e0f7fa 0%, #4dd0e1 40%, #0097a7 70%, #006064 100%);
+}
+
+.game-afk-enemy--slime_doce .game-afk-slime__blob {
+  background: linear-gradient(165deg, #ffd1e8 0%, #ff8fc7 40%, #ec4899 70%, #9d174d 100%);
+}
+
+.game-afk-enemy--slime_chocolate .game-afk-slime__blob {
+  background: linear-gradient(165deg, #c99b6c 0%, #8b5a2b 40%, #5c3a1e 70%, #2e1a0d 100%);
+}
+
+/* Novo elite — Slime Chumbo (3.000 HP) */
+.game-afk-enemy--slime_chumbo .game-afk-slime__blob {
+  background: linear-gradient(165deg, #cbd5e1 0%, #94a3b8 40%, #475569 70%, #1e293b 100%);
+  box-shadow: inset 0 2px 0 rgba(226, 232, 240, 0.4);
+}
+
+/* Novos chefes */
+.game-afk-enemy--boss_procrastinador .game-afk-slime__blob {
+  background: linear-gradient(165deg, #d4d4d8 0%, #a1a1aa 40%, #52525b 70%, #27272a 100%);
+}
+
+.game-afk-enemy--boss_preguica .game-afk-slime__blob {
+  background: linear-gradient(165deg, #d9f99d 0%, #84cc16 40%, #4d7c0f 70%, #365314 100%);
+}
+
 .game-afk-enemy--golden .game-afk-slime__blob {
   background: linear-gradient(
     165deg,
@@ -5287,6 +5350,133 @@
   }
   50% {
     filter: brightness(1.12);
+  }
+}
+
+/* ============================================================
+   "?" — inimigo especial raríssimo (1 em 100.000)
+   ============================================================ */
+
+.game-afk-slime__blob--enigma {
+  background: radial-gradient(circle at 35% 30%, #1c1917 0%, #0a0a0a 55%, #000000 100%);
+  box-shadow:
+    0 0 18px rgba(168, 85, 247, 0.45),
+    0 0 34px rgba(168, 85, 247, 0.2),
+    2px 3px 0 rgba(0, 0, 0, 0.5);
+  animation: game-afk-enigma-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes game-afk-enigma-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 18px rgba(168, 85, 247, 0.45),
+      0 0 34px rgba(168, 85, 247, 0.2),
+      2px 3px 0 rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 26px rgba(216, 180, 254, 0.65),
+      0 0 46px rgba(168, 85, 247, 0.35),
+      2px 3px 0 rgba(0, 0, 0, 0.5);
+  }
+}
+
+.game-afk-slime__enigma-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.game-afk-slime__enigma-mark {
+  font-family: 'Press Start 2P', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow:
+    0 0 10px rgba(216, 180, 254, 0.9),
+    0 0 20px rgba(168, 85, 247, 0.6);
+  animation: game-afk-enigma-flicker 3.4s ease-in-out infinite;
+}
+
+@keyframes game-afk-enigma-flicker {
+  0%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.35;
+  }
+  96% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================================
+   Slime Binário — inimigo especial raríssimo (1 em 101.010)
+   ============================================================ */
+
+.game-afk-slime__blob--binario {
+  background: linear-gradient(165deg, #052e16 0%, #14532d 35%, #052e16 70%, #000000 100%);
+  box-shadow:
+    0 0 16px rgba(74, 222, 128, 0.5),
+    0 0 30px rgba(34, 197, 94, 0.25),
+    2px 3px 0 rgba(0, 0, 0, 0.5);
+  animation: game-afk-binario-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes game-afk-binario-pulse {
+  0%,
+  100% {
+    filter: brightness(1) hue-rotate(0deg);
+  }
+  50% {
+    filter: brightness(1.18) hue-rotate(8deg);
+  }
+}
+
+.game-afk-slime__binario-digits {
+  position: absolute;
+  inset: 6% 8% 10%;
+  display: flex;
+  justify-content: space-between;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  mask-image: radial-gradient(circle at 50% 45%, black 65%, transparent 100%);
+}
+
+.game-afk-slime__binario-digit {
+  font-family: 'Press Start 2P', 'Plus Jakarta Sans', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #4ade80;
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.8);
+  animation: game-afk-binario-rain 2.6s linear infinite;
+  animation-delay: calc(var(--i, 0) * -0.32s);
+}
+
+@keyframes game-afk-binario-rain {
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(220%);
+    opacity: 0;
   }
 }
 
@@ -6464,17 +6654,20 @@
   overflow: visible;
 }
 
-/* Luz atrás do baú só enquanto ele revela as recompensas (opening/open). */
+/* Luz atrás do baú só enquanto ele revela as recompensas (opening/open).
+   Proporcional ao baú (era 14rem — mais que o dobro do baú "lg" de 5.75rem
+   — e em loop contínuo: dominava a cena e "engolia" o desenho do baú a
+   cada repetição). */
 .game-afk-chest-glow {
   position: absolute;
   z-index: 0;
-  bottom: -1.5rem;
+  bottom: -0.5rem;
   left: 50%;
-  width: 14rem;
-  height: 14rem;
+  width: 7rem;
+  height: 7rem;
   transform: translateX(-50%);
   pointer-events: none;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 .game-afk-rewards-panel--celebrate {
@@ -7099,6 +7292,7 @@ button.game-afk-reward-chip {
 /* Patrol chest */
 .game-afk-chest {
   position: relative;
+  z-index: 1;
   width: 4.5rem;
   height: 3.25rem;
   flex-shrink: 0;
@@ -7107,6 +7301,24 @@ button.game-afk-reward-chip {
 .game-afk-chest--lg {
   width: 5.75rem;
   height: 4.2rem;
+}
+
+/* Sombra no chão — separa o baú do fundo e reforça a leitura de volume 3D. */
+.game-afk-chest::before {
+  content: '';
+  position: absolute;
+  right: 6%;
+  bottom: -0.3rem;
+  left: 6%;
+  z-index: -1;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(20, 14, 10, 0.4) 0%, transparent 72%);
+}
+
+.game-afk-chest--lg::before {
+  bottom: -0.36rem;
+  height: 0.6rem;
 }
 
 /* ── Baú pixel-art (referência: docs/private/design-references/bau-abdoria-imagem.jpg)
@@ -7120,14 +7332,22 @@ button.game-afk-reward-chip {
   bottom: 0;
   left: 0;
   height: 2.05rem;
-  background: linear-gradient(180deg, #e8324a 0%, #d5253d 55%, #b01e30 100%);
+  background: linear-gradient(145deg, #f2536b 0%, #d5253d 42%, #b01e30 78%, #8f1728 100%);
   border: 2.5px solid #191210;
   border-radius: 0.1rem 0.1rem 0.22rem 0.22rem;
   box-shadow:
     inset 0 0 0 0.26rem #f2b418,
     inset 0 0 0 0.34rem #8a5c08,
     inset 0 0 0 0.46rem #8c1626,
-    0 5px 6px -3px rgba(20, 14, 10, 0.45);
+    /* Realce diagonal (luz vindo de cima-esquerda) + sombra oposta — dá
+       curvatura à face plana em vez de um gradiente só vertical. */
+    inset 0.14rem 0.14rem 0.3rem rgba(255, 200, 180, 0.35),
+    inset -0.16rem -0.16rem 0.32rem rgba(0, 0, 0, 0.32),
+    0 5px 6px -3px rgba(20, 14, 10, 0.45),
+    /* Sombra sólida deslocada — o mesmo "pop" 3D chunky usado nos botões do
+       jogo (game-afk-fab, game-afk-modal__shop-btn); as sombras difusas
+       acima quase não aparecem num baú tão pequeno. */
+    3px 4px 0 rgba(20, 14, 10, 0.55);
 }
 
 .game-afk-chest__body::before {
@@ -7280,12 +7500,15 @@ button.game-afk-reward-chip {
 .game-afk-chest__lid {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #ffd94a 0%, #f2b418 60%, #d99b10 100%);
+  background: linear-gradient(145deg, #ffe98a 0%, #ffd94a 30%, #f2b418 62%, #c98d0c 100%);
   border: 2.5px solid #191210;
   border-radius: 0.82rem 0.82rem 0.08rem 0.08rem;
   box-shadow:
     inset 0 2px 0 rgba(255, 246, 200, 0.7),
-    inset 0 -2px 0 rgba(138, 92, 8, 0.55);
+    inset 0 -2px 0 rgba(138, 92, 8, 0.55),
+    inset 0.16rem 0.16rem 0.28rem rgba(255, 255, 255, 0.45),
+    inset -0.16rem -0.14rem 0.3rem rgba(90, 55, 5, 0.3),
+    2px 3px 0 rgba(20, 14, 10, 0.45);
   overflow: hidden;
 }
 
@@ -7308,11 +7531,13 @@ button.game-afk-reward-chip {
   right: 0.3rem;
   bottom: 0;
   left: 0.3rem;
-  background: linear-gradient(160deg, #f4536d 0%, #d5253d 55%, #a01b2e 100%);
+  background: linear-gradient(150deg, #f4536d 0%, #d5253d 50%, #a01b2e 85%, #841624 100%);
   border: 2px solid #191210;
   border-bottom: none;
   border-radius: 0.75rem 0.75rem 0 0;
-  box-shadow: inset 0 0 0 0.14rem #8c1626;
+  box-shadow:
+    inset 0 0 0 0.14rem #8c1626,
+    inset 0.1rem 0.1rem 0.2rem rgba(255, 200, 180, 0.3);
 }
 
 /* Aro dourado na boca da tampa */
@@ -8840,11 +9065,11 @@ button.game-afk-reward-chip {
 .game-afk-slime__face--colossus .game-afk-slime__eye {
   width: 0.86rem;
   height: 0.96rem;
-  background: radial-gradient(circle at 38% 32%, #fca5a5 0%, #dc2626 40%, #7f1d1d 100%);
+  background: radial-gradient(circle at 38% 32%, #ffffff 0%, #f1f5f9 45%, #cbd5e1 100%);
   box-shadow:
-    0 0 10px rgba(220, 38, 38, 0.75),
-    0 0 18px rgba(185, 28, 28, 0.4);
-  border: 1px solid rgba(250, 200, 200, 0.3);
+    0 0 10px rgba(255, 255, 255, 0.75),
+    0 0 18px rgba(226, 232, 240, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .game-afk-slime__face--colossus .game-afk-slime__iris {
@@ -8852,12 +9077,12 @@ button.game-afk-reward-chip {
   height: 54%;
   background: radial-gradient(
     circle at 35% 30%,
-    #fff0f0 0%,
-    #fca5a5 30%,
-    #dc2626 65%,
-    #7f1d1d 100%
+    #ffffff 0%,
+    #f8fafc 30%,
+    #e2e8f0 65%,
+    #cbd5e1 100%
   );
-  box-shadow: 0 0 6px rgba(255, 120, 120, 0.8);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
 }
 
 /* X close button in toolbar — styled as a close variant */
@@ -8933,25 +9158,27 @@ button.game-afk-reward-chip {
 }
 
 .game-afk-fab {
+  width: 3.8rem;
+  height: 3.8rem;
   min-width: 3.8rem;
   min-height: 3.8rem;
-  padding: 0.42rem 0.52rem 0.36rem;
+  padding: 0;
   border: 2.5px solid #1a4a3a;
-  border-radius: 1.1rem;
+  border-radius: 999px;
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.18) 0%, transparent 40%),
     linear-gradient(170deg, #065f46 0%, #047857 50%, #064e3b 100%);
   box-shadow:
     0 0 0 1px rgba(52, 211, 153, 0.35),
     0 0 20px rgba(16, 185, 129, 0.25),
-    4px 5px 0 rgba(6, 50, 32, 0.55),
+    3px 4px 0 rgba(6, 50, 32, 0.55),
     inset 0 1.5px 0 rgba(255, 255, 255, 0.28);
 }
 
 .game-afk-fab__icon {
-  width: 1.8rem;
-  height: 1.8rem;
-  border-radius: 0.6rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
     linear-gradient(180deg, #065f46 0%, #043d2e 100%);
@@ -8962,8 +9189,8 @@ button.game-afk-reward-chip {
 }
 
 .game-afk-fab .game-afk-fab-swords {
-  width: 1.28rem;
-  height: 1.28rem;
+  width: 1.7rem;
+  height: 1.7rem;
   color: #a7f3d0;
   filter: drop-shadow(0 0 3px rgba(52, 211, 153, 0.6)) drop-shadow(0 1px 0 rgba(6, 78, 59, 0.55));
 }
@@ -9001,377 +9228,213 @@ button.game-afk-reward-chip {
   filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.85)) drop-shadow(0 1px 0 rgba(4, 20, 40, 0.55));
 }
 
-/* ============================================================
-   BESTIARY — canonical layout (overrides index.css)
-   ============================================================ */
-
-/* Modal shell */
-.game-bestiary-modal {
-  max-height: min(calc(100dvh - 2.5rem), 42rem);
-  overflow: hidden; /* modal não rola — o scroll-area rola */
-  display: flex;
-  flex-direction: column;
-}
-
-.game-bestiary-modal__head {
-  padding-bottom: 0.55rem;
-  border-bottom: 2px solid #e7e5e4;
-  margin-bottom: 0.75rem;
-  flex-shrink: 0;
-}
-
-/* Scroll area — ocupa o espaço restante e rola */
-.game-bestiary-scroll {
-  flex: 1;
-  min-height: 0; /* essencial: permite o flex-child encolher e rolar */
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding-right: 0.15rem;
-  padding-bottom: 1.5rem;
-}
-
-/* Section */
-.game-bestiary-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  /* Filho de flex-column com overflow: sem isso a seção é comprimida
-     em vez de gerar scroll, e a última (Especiais) some. */
-  flex-shrink: 0;
-}
-
-/* Reset the index.css separator that stacks on top of gap */
-.game-bestiary-section + .game-bestiary-section {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
-.game-bestiary-section__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0 0.1rem;
-  margin-bottom: 0;
-}
-
-.game-bestiary-section__title {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #1c1917;
-}
-
-.game-bestiary-section__counter {
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: #78716c;
-  background: #f5f5f4;
-  border: 1px solid #d6d3d1;
-  border-radius: 999px;
-  padding: 0.08rem 0.45rem;
-}
-
-/* Golden section */
-.game-bestiary-section--golden {
-  background: linear-gradient(135deg, rgba(254, 240, 138, 0.18) 0%, rgba(251, 191, 36, 0.08) 100%);
-  border: 1.5px solid rgba(251, 191, 36, 0.4);
-  border-radius: 0.75rem;
-  padding: 0.7rem 0.6rem;
-  position: relative;
-  overflow: hidden;
-}
-.game-bestiary-section--golden::before {
-  content: '';
+/* Raio Laser (Mítico) — feixe horizontal que corta a arena até o slime */
+.game-afk-spell-laser {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(251, 191, 36, 0.18) 0%, transparent 65%);
+  left: -4%;
+  right: 12%;
+  top: calc(52% - 0.8rem);
+  height: 1.6rem;
+  z-index: 10;
   pointer-events: none;
 }
 
-.game-bestiary-section__golden-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  font-size: 0.6rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #b45309;
-  margin-bottom: 0.35rem;
-}
-
-/* Carousel */
-.game-bestiary-carousel {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.game-bestiary-carousel__nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  flex-shrink: 0;
-  border: 1.5px solid #d6d3d1;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  color: #44403c;
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    transform 0.12s;
-}
-.game-bestiary-carousel__nav:hover {
-  background: #fff;
-  transform: scale(1.06);
-}
-
-/* Card — ROW layout: portrait-wrap | meta */
-.game-bestiary-card {
-  display: flex;
-  flex-direction: row; /* override index.css column */
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem 0.7rem;
-  border: 2px solid rgba(28, 25, 23, 0.12);
-  border-radius: 0.75rem;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), rgba(250, 250, 249, 0.85));
-  flex: 1;
-  min-height: unset; /* override index.css 13.5rem */
-  overflow: visible; /* allow drops popup to overflow */
-  text-align: left; /* override index.css center */
-}
-
-.game-bestiary-card--unlocked {
-  border-color: #d6d3d1;
-  background: #fff;
-}
-
-.game-bestiary-card--locked {
-  opacity: 0.78;
-  background: #f3f4f6;
-  border-color: #d1d5db;
-}
-
-.game-bestiary-card--golden {
-  border: 2px solid rgba(251, 191, 36, 0.6) !important;
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
-}
-
-.game-bestiary-card--golden .game-bestiary-card__tier {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #1c1917;
-  font-weight: 900;
-}
-
-/* Portrait column (left side of card) */
-.game-bestiary-card__portrait-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.game-bestiary-card__portrait {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: unset; /* override index.css 7.5rem */
-  width: auto;
-  padding: 0;
-  background: none;
-  border-bottom: none;
-  border-radius: 0.5rem;
-}
-
-.game-bestiary-card__portrait--button {
-  position: relative;
-  border: 2px solid transparent;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition:
-    border-color 0.14s ease,
-    background 0.14s ease,
-    transform 0.1s ease;
-  outline: none;
-  padding: 0;
-}
-.game-bestiary-card__portrait--button:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-  background: rgba(209, 250, 229, 0.35);
-  transform: scale(1.04);
-}
-.game-bestiary-card__portrait--button:active {
-  transform: scale(0.97);
-}
-.game-bestiary-card__portrait--active {
-  border-color: rgba(16, 185, 129, 0.55);
-  background: rgba(209, 250, 229, 0.45);
-}
-
-/* Meta column (right side of card) */
-.game-bestiary-card__meta {
-  flex: 1;
-  min-width: 0;
-  width: auto;
-  text-align: left; /* override index.css center */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 0.15rem;
-}
-
-.game-bestiary-card__tier {
-  display: inline-block;
-  padding: 0.08rem 0.42rem;
-  border-radius: 999px;
-  font-size: 0.56rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 0.2rem;
-}
-
-.game-bestiary-card__tier--common {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-.game-bestiary-card__tier--elite {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
-.game-bestiary-card__tier--boss {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-.game-bestiary-card__tier--golden {
-  background: #fef3c7;
-  color: #b45309;
-}
-.game-bestiary-card__tier--locked {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.game-bestiary-card__meta h4 {
-  margin: 0 0 0.12rem;
-  font-size: 0.82rem;
-  font-weight: 900;
-  color: #1c1917;
-  line-height: 1.2;
-}
-
-.game-bestiary-card__meta p {
-  margin: 0;
-  font-size: 0.62rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #78716c;
-}
-
-.game-bestiary-card__drops-hint {
-  font-size: 0.56rem;
-  color: #047857;
-  font-weight: 700;
-  opacity: 0.85;
-  margin-top: 0.1rem;
-}
-
-.game-bestiary-card__locked-hint {
-  font-size: 0.6rem;
-  color: #6b7280;
-  font-style: italic;
-  margin-top: 0.1rem;
-}
-
-/* Drops popup (floats below portrait) */
-.game-bestiary-drops-popup {
+.game-afk-spell-laser__beam {
   position: absolute;
-  top: calc(100% + 0.45rem);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  min-width: 11rem;
-  max-width: 14rem;
-  padding: 0.55rem 0.6rem;
-  background: #fafaf9;
-  border: 2px solid #1c1917;
-  border-radius: 0.6rem;
-  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.5);
-}
-
-.game-bestiary-drops-popup__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.38rem;
-  gap: 0.4rem;
-}
-
-.game-bestiary-drops-popup__title {
-  font-size: 0.62rem;
-  font-weight: 900;
-  color: #1c1917;
-  letter-spacing: 0.02em;
-}
-
-.game-bestiary-drops-popup__close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
-  border: 1.5px solid #78350f;
-  border-radius: 0.3rem;
-  background: linear-gradient(180deg, #fde68a, #fbbf24);
-  color: #78350f;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-/* Dots navigation */
-.game-bestiary-dots {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.38rem;
-  padding: 0.15rem 0;
-  margin-top: 0; /* override index.css margin-top: 0.55rem */
-}
-
-.game-bestiary-dots__dot {
-  width: 0.44rem;
-  height: 0.44rem;
+  inset: 0.35rem 0;
+  display: block;
   border-radius: 999px;
-  background: #d6d3d1;
-  border: 2px solid #c8c5c2;
-  padding: 0;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    transform 0.15s,
-    border-color 0.15s;
+  background: linear-gradient(
+    90deg,
+    rgba(196, 181, 253, 0) 0%,
+    rgba(196, 181, 253, 0.85) 12%,
+    #f5f3ff 55%,
+    #a78bfa 100%
+  );
+  box-shadow:
+    0 0 14px rgba(167, 139, 250, 0.85),
+    0 0 34px rgba(139, 92, 246, 0.5);
+  transform-origin: left center;
+  animation: game-afk-spell-laser-beam 2s cubic-bezier(0.3, 0, 0.2, 1) forwards;
 }
 
-.game-bestiary-dots__dot--active {
-  background: #44403c;
-  border-color: #1c1917;
-  transform: scale(1.2);
+.game-afk-spell-laser__core {
+  position: absolute;
+  inset: 0.62rem 0;
+  display: block;
+  border-radius: 999px;
+  background: #fff;
+  transform-origin: left center;
+  animation: game-afk-spell-laser-beam 2s cubic-bezier(0.34, 0, 0.16, 1) forwards;
 }
 
-.game-bestiary-dots__dot--locked {
-  opacity: 0.42;
-  background: #e7e5e4;
+@keyframes game-afk-spell-laser-beam {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  10% {
+    opacity: 1;
+    transform: scaleX(0.08);
+  }
+  32% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  74% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.game-afk-spell-laser-flash {
+  position: absolute;
+  right: calc(10% - 3.4rem);
+  top: calc(52% - 3.4rem);
+  width: 6.8rem;
+  height: 6.8rem;
+  z-index: 9;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(245, 243, 255, 0.95) 0%,
+    rgba(167, 139, 250, 0.55) 45%,
+    transparent 72%
+  );
+  animation: game-afk-spell-laser-flash 2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes game-afk-spell-laser-flash {
+  0%,
+  24% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  38% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  72% {
+    opacity: 0.6;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+/* Explosão (Secret) — detonação única centrada no slime, estilo Megumin */
+.game-afk-spell-explosion {
+  position: absolute;
+  right: calc(10% - 7rem);
+  top: calc(52% - 7rem);
+  width: 14rem;
+  height: 14rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.game-afk-spell-explosion__flash {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fff 0%, rgba(254, 243, 199, 0.9) 40%, transparent 70%);
+  animation: game-afk-spell-explosion-flash 2s ease-out forwards;
+}
+
+.game-afk-spell-explosion__core {
+  position: absolute;
+  inset: 18%;
+  display: block;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    #fef9c3 0%,
+    #fbbf24 34%,
+    #ea580c 62%,
+    rgba(124, 45, 18, 0.85) 82%,
+    transparent 100%
+  );
+  animation: game-afk-spell-explosion-core 2s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+}
+
+.game-afk-spell-explosion__ring {
+  position: absolute;
+  inset: 4%;
+  display: block;
+  border-radius: 999px;
+  border: 3px solid rgba(254, 215, 170, 0.9);
+  box-shadow:
+    0 0 18px rgba(251, 146, 60, 0.7),
+    inset 0 0 12px rgba(251, 146, 60, 0.4);
+  animation: game-afk-spell-explosion-ring 2s ease-out forwards;
+}
+
+@keyframes game-afk-spell-explosion-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.05);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  30% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes game-afk-spell-explosion-core {
+  0% {
+    opacity: 0;
+    transform: scale(0.05);
+  }
+  14% {
+    opacity: 1;
+    transform: scale(0.55);
+  }
+  46% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  78% {
+    opacity: 0.8;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes game-afk-spell-explosion-ring {
+  0%,
+  8% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 0.5;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
 }

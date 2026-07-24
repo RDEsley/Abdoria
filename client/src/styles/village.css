@@ -1,0 +1,199 @@
+/* ============================================================
+   VILA DE ABDORIA — hub entre patrulhas (Rodada 9)
+   ============================================================ */
+
+.game-afk-village {
+  display: flex;
+}
+
+.game-afk-village__banner {
+  position: absolute;
+  top: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 0.22rem 0.85rem;
+  border: 2px solid var(--afk-ink);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1c1917;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.35);
+}
+
+.game-afk-village__well {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: 2.6rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #78716c, #57534e);
+  border: 2px solid #292524;
+  box-shadow: inset 0 3px 4px rgba(0, 0, 0, 0.35);
+}
+
+.game-afk-village__well::before {
+  content: '';
+  position: absolute;
+  inset: 0.28rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #38bdf8, #0369a1);
+  opacity: 0.85;
+}
+
+.game-afk-village__building {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.14s ease;
+}
+
+.game-afk-village__building:hover {
+  transform: translateY(-2px);
+}
+
+.game-afk-village__building:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.game-afk-village__building--shop {
+  bottom: 16%;
+  left: 30%;
+}
+
+.game-afk-village__building--bestiary {
+  bottom: 16%;
+  right: 12%;
+}
+
+.game-afk-village__roof {
+  width: 0;
+  height: 0;
+  border-left: 1.55rem solid transparent;
+  border-right: 1.55rem solid transparent;
+  border-bottom: 1.15rem solid #b91c1c;
+  filter: drop-shadow(0 2px 0 rgba(28, 25, 23, 0.25));
+}
+
+.game-afk-village__roof--bestiary {
+  border-bottom-color: #4338ca;
+}
+
+.game-afk-village__stall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.1rem;
+  height: 2.5rem;
+  margin-top: -0.15rem;
+  border: 2px solid var(--afk-ink);
+  border-radius: 0.3rem;
+  background: linear-gradient(180deg, #fde68a, #fbbf24);
+  color: #78350f;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.3);
+}
+
+.game-afk-village__building--bestiary .game-afk-village__stall {
+  background: linear-gradient(180deg, #c7d2fe, #818cf8);
+  color: #312e81;
+}
+
+.game-afk-village__label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(28, 25, 23, 0.16);
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #1c1917;
+  white-space: nowrap;
+}
+
+.game-afk-village__label-count {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.game-afk-village__continue {
+  position: absolute;
+  top: 50%;
+  right: 4%;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  transform: translateY(-50%);
+  border: 2.5px solid var(--afk-ink);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #86efac, #22c55e);
+  color: #14532d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.4);
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+  animation: game-afk-village-continue-pulse 2.2s ease-in-out infinite;
+}
+
+.game-afk-village__continue:hover {
+  transform: translateY(-50%) translateX(-2px);
+}
+
+.game-afk-village__continue:active {
+  transform: translateY(-50%) scale(0.96);
+  box-shadow: 1px 1px 0 rgba(28, 25, 23, 0.4);
+}
+
+@keyframes game-afk-village-continue-pulse {
+  0%,
+  100% {
+    box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.4);
+  }
+  50% {
+    box-shadow:
+      3px 3px 0 rgba(28, 25, 23, 0.4),
+      0 0 14px rgba(34, 197, 94, 0.55);
+  }
+}
+
+@media (max-width: 480px) {
+  .game-afk-village__building--shop {
+    left: 24%;
+  }
+
+  .game-afk-village__building--bestiary {
+    right: 8%;
+  }
+
+  .game-afk-village__continue {
+    right: 3%;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.64rem;
+  }
+
+  .game-afk-village__stall {
+    width: 2.6rem;
+    height: 2.1rem;
+  }
+}

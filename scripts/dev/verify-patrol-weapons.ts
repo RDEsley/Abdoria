@@ -4,14 +4,11 @@
  */
 import assert from 'node:assert/strict';
 import {
-  AFK_BOSS_LEGENDARY_WEAPON_ROLL,
   AFK_CRIT_CHANCE_ARCO,
   AFK_CRIT_CHANCE_ESPADA,
   AFK_CRIT_STREAK_STEP_ARCO,
   AFK_GOLDEN_SLIME_MOEDA_BONUS,
   AFK_GOLDEN_SLIME_CHANCE,
-  AFK_LEGENDARY_ROLL_BOSS,
-  AFK_LEGENDARY_ROLL_NORMAL,
   shouldSpawnGoldenSlime,
 } from '../../shared/afk/combat.ts';
 import {
@@ -20,10 +17,12 @@ import {
   AFK_KILL_DROP_CHANCE_ELITE,
 } from '../../shared/types/index.ts';
 import {
-  PATROL_LEGENDARY_WEAPON_IDS,
+  PATROL_MYTHIC_WEAPON_IDS,
   PATROL_WEAPONS,
   patrolHeroDamage,
   patrolWeaponsByKind,
+  spellRareDropMultiplier,
+  spellRewardQuantityMultiplier,
 } from '../../shared/patrol/shop.ts';
 import {
   resolvePatrolAttackDamage,
@@ -31,7 +30,7 @@ import {
   resolvePatrolCritChancePercent,
   isPatrolHitKillTarget,
 } from '../../shared/patrol/damage.ts';
-import { rollBossLegendaryWeapon, hashKillSeed } from '../../server/src/services/afk-rolls.ts';
+import { rollBossMythicWeapon } from '../../server/src/services/afk-rolls.ts';
 import { EMPTY_AFK_PENDING } from '../../server/src/repositories/user-repository.ts';
 import type { UserRecord } from '../../server/src/types/user-record.ts';
 
@@ -40,12 +39,11 @@ assert.equal(AFK_CRIT_CHANCE_ESPADA, 6);
 assert.equal(AFK_CRIT_STREAK_STEP_ARCO, 4);
 assert.equal(AFK_GOLDEN_SLIME_CHANCE, 5000);
 assert.equal(AFK_GOLDEN_SLIME_MOEDA_BONUS, 99);
-assert.equal(AFK_BOSS_LEGENDARY_WEAPON_ROLL, 9987);
 
 assert.equal(patrolWeaponsByKind('arco').length, 10);
 assert.equal(patrolWeaponsByKind('espada').length, 10);
-assert.equal(patrolWeaponsByKind('magia').length, 6);
-assert.equal(PATROL_WEAPONS.length, 26);
+assert.equal(patrolWeaponsByKind('magia').length, 8);
+assert.equal(PATROL_WEAPONS.length, 28);
 
 const arco1 = PATROL_WEAPONS.find((w) => w.id === 'arco_01')!;
 const espada1 = PATROL_WEAPONS.find((w) => w.id === 'espada_01')!;
@@ -63,6 +61,42 @@ const arco10 = PATROL_WEAPONS.find((w) => w.id === 'arco_10')!;
 const espada10 = PATROL_WEAPONS.find((w) => w.id === 'espada_10')!;
 assert.equal(arco10.raridade, 'secreto');
 assert.equal(espada10.raridade, 'secreto');
+
+// Nível 9 é Mítico (Arco Dracônico + Espada Flamejante, ex-Lâmina do Dragão).
+const arco9 = PATROL_WEAPONS.find((w) => w.id === 'arco_09')!;
+const espada9 = PATROL_WEAPONS.find((w) => w.id === 'espada_09')!;
+assert.equal(arco9.raridade, 'mitico');
+assert.equal(espada9.raridade, 'mitico');
+assert.equal(espada9.nome, 'Espada Flamejante');
+
+// Magias: -14 de dano base em troca da passiva de drops raros (épico+).
+const spellDamage = Object.fromEntries(
+  patrolWeaponsByKind('magia').map((w) => [w.id, w.dano_base]),
+);
+assert.deepEqual(spellDamage, {
+  magia_agua: 14,
+  magia_terra: 18,
+  magia_gelo: 22,
+  magia_fogo: 28,
+  magia_relampago: 34,
+  magia_buraco_negro: 46,
+  magia_raio_laser: 54,
+  magia_explosao: 66,
+});
+assert.equal(spellRareDropMultiplier('magia_agua'), 1);
+assert.equal(spellRareDropMultiplier('magia_gelo'), 1);
+assert.equal(spellRareDropMultiplier('magia_fogo'), 1.05);
+assert.equal(spellRareDropMultiplier('magia_buraco_negro'), 1.05);
+assert.equal(spellRareDropMultiplier('magia_raio_laser'), 1.08);
+assert.equal(spellRareDropMultiplier('magia_explosao'), 1.15);
+assert.equal(spellRewardQuantityMultiplier('magia_raio_laser'), 1);
+assert.equal(spellRewardQuantityMultiplier('magia_explosao'), 1.09);
+assert.equal(spellRareDropMultiplier('arco_09'), 1, 'passiva é exclusiva de magia');
+
+const raioLaser = PATROL_WEAPONS.find((w) => w.id === 'magia_raio_laser')!;
+const explosao = PATROL_WEAPONS.find((w) => w.id === 'magia_explosao')!;
+assert.equal(raioLaser.raridade, 'mitico');
+assert.equal(explosao.raridade, 'secreto');
 
 assert.equal(patrolHeroDamage('arco', 'arco_05'), 24);
 assert.equal(patrolHeroDamage('espada', 'espada_09'), 50);
@@ -121,29 +155,19 @@ for (let seed = 0; seed < 50_000; seed += 1) {
 }
 assert.equal(goldenHits, 10, 'golden slime 1/5000 over 50k seeds');
 
-const mockUser = { id: 'boss-drop-test' } as UserRecord;
+const mockUser = { id: 'boss-drop-test', preferencias: {} } as UserRecord;
 let weaponDrops = 0;
-for (let i = 0; i < 20_000; i += 1) {
-  const roll = hashKillSeed('boss-drop-test', i + 9001) % 10000;
-  if (roll < AFK_BOSS_LEGENDARY_WEAPON_ROLL) continue;
-  weaponDrops += 1;
-}
-assert.ok(
-  weaponDrops >= 10 && weaponDrops <= 50,
-  `boss weapon roll gate ~0.13% (got ${weaponDrops}/20000)`,
-);
-
-weaponDrops = 0;
-for (let i = 0; i < 20_000; i += 1) {
+const mythicSamples = 200_000;
+for (let i = 0; i < mythicSamples; i += 1) {
   const pending = { ...EMPTY_AFK_PENDING, weapon_ids: [] as string[] };
-  rollBossLegendaryWeapon(mockUser, i, pending, new Set());
+  rollBossMythicWeapon(mockUser, i, pending, new Set());
   if (pending.weapon_ids.length > 0) weaponDrops += 1;
 }
 assert.ok(
-  weaponDrops >= 10 && weaponDrops <= 50,
-  `boss weapon drop ~0.13% (got ${weaponDrops}/20000)`,
+  weaponDrops >= 50 && weaponDrops <= 170,
+  `boss mythic drop ~0.05% (got ${weaponDrops}/${mythicSamples})`,
 );
-assert.deepEqual([...PATROL_LEGENDARY_WEAPON_IDS], ['arco_09', 'espada_09']);
+assert.deepEqual([...PATROL_MYTHIC_WEAPON_IDS], ['arco_09', 'espada_09']);
 
 console.log('Patrol weapons verification OK');
 console.log(
@@ -152,13 +176,8 @@ console.log(
       drop_proc_common_pct: AFK_KILL_DROP_CHANCE_COMMON,
       drop_proc_elite_pct: AFK_KILL_DROP_CHANCE_ELITE,
       drop_proc_boss_pct: AFK_KILL_DROP_CHANCE_BOSS,
-      loot_legendary_roll_normal: AFK_LEGENDARY_ROLL_NORMAL,
-      loot_legendary_roll_boss: AFK_LEGENDARY_ROLL_BOSS,
-      boss_weapon_drop_pct: (10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 100,
-      boss_weapon_roll_threshold: AFK_BOSS_LEGENDARY_WEAPON_ROLL,
-      boss_weapon_hours_to_first: Math.round(
-        ((1 / ((10000 - AFK_BOSS_LEGENDARY_WEAPON_ROLL) / 10000)) * 100) / 8 / 60,
-      ),
+      boss_mythic_drop_pct: 0.05,
+      boss_mythic_hours_to_first: Math.round((1 / 0.0005) * (100 / 8 / 60)),
       golden_slime_chance: `1/${AFK_GOLDEN_SLIME_CHANCE}`,
       golden_slime_abdoria: AFK_GOLDEN_SLIME_MOEDA_BONUS,
       bow_crit_pct: AFK_CRIT_CHANCE_ARCO,

@@ -9,8 +9,9 @@ import {
   ROUTE_DRINK_ITEM_ID,
   type AfkPendingReward,
 } from '../types/index.js';
-import { rollFrozenStreakForExplorationMinutes } from '../../../shared/afk/frozen-streak-drop.js';
+import { rollDailyFrozenStreak } from '../../../shared/afk/frozen-streak-drop.js';
 import { afkKillsForHours, buildAfkMetaFields } from '../../../shared/utils/afk.js';
+import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { grantMoeda } from './economy.js';
 import { addWeeklyXp } from './weekly-stats.js';
 import { addInventoryItem } from './inventory.js';
@@ -152,6 +153,21 @@ function grantExplorationHourRewards(
   return applyAfkRewardBundle(user, pending);
 }
 
+/**
+ * Roll diário de Frozen Streak — roda em todo sync (mesmo com o baú no teto),
+ * no máximo 1 por dia. O roll é determinístico por usuário+dia, então só
+ * marcamos o dia quando acerta; dias de erro podem re-rolar à vontade.
+ */
+function rollFrozenStreakOfTheDay(user: UserRecord, afk: AfkState): void {
+  const today = getTodaySaoPaulo();
+  if (user.preferencias.afk_frozen_ultimo_dia === today) return;
+  if (!rollDailyFrozenStreak(String(user.id), today)) return;
+
+  afk.pending.frozen_streaks += 1;
+  afk.pending.drop_count = (afk.pending.drop_count ?? 0) + 1;
+  user.preferencias.afk_frozen_ultimo_dia = today;
+}
+
 export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[] {
   const before = new Set(ensureBestiario(user));
   const afk = ensureAfk(user);
@@ -160,6 +176,8 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
   if (!afkStarted(afk)) {
     return collectNewBestiaryUnlocks(before, user);
   }
+
+  rollFrozenStreakOfTheDay(user, afk);
 
   const lastSeen = new Date(afk.last_seen_at!);
   const already = afk.minutos_acumulados ?? 0;
@@ -183,7 +201,6 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
   const totalMinutes = already + newMinutes;
 
   simulateOfflineKills(user, newMinutes);
-  rollFrozenStreakForExplorationMinutes(String(user.id), already, totalMinutes, afk.pending);
 
   afk.minutos_acumulados = totalMinutes;
   // Avança last_seen_at exatamente pelos minutos consumidos — preserva segundos fracionários.

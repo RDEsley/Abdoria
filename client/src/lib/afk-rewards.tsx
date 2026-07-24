@@ -1,10 +1,12 @@
 import type React from 'react';
 import {
+  Bomb,
   CircleDot,
   Coins,
   Droplets,
   Flame,
   Mountain,
+  Radiation,
   Snowflake,
   Sparkles,
   Zap,
@@ -93,7 +95,9 @@ function rarityForItem(item: AfkRewardItem): AfkRewardRarity {
   }
   // Cosméticos só dropam na Exploração quando são épicos/lendários.
   if (item.kind === 'cosmetic') return 'lendario';
-  if (item.kind === 'route_drink' || item.kind === 'frozen_streak') return 'raro';
+  // Frozen Streak subiu pra Épico (2026-07-21) — reflete a raridade real do drop.
+  if (item.kind === 'frozen_streak') return 'epico';
+  if (item.kind === 'route_drink') return 'raro';
   return 'comum';
 }
 
@@ -243,6 +247,8 @@ export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?:
         magia_fogo: Flame,
         magia_relampago: Zap,
         magia_buraco_negro: CircleDot,
+        magia_raio_laser: Radiation,
+        magia_explosao: Bomb,
       };
       const SpellIcon = spellIcons[item.cosmeticId] ?? Sparkles;
       return <SpellIcon size={size} aria-hidden />;

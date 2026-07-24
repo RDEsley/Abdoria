@@ -30,6 +30,7 @@ function BestiaryDropIcon({ dropId, size = 14 }: { dropId: string; size?: number
     case 'titulo_secreto':
       return <Crown size={size} aria-hidden />;
     case 'weapon_legendary':
+    case 'weapon_mythic':
       return <PatrolBowIcon className="game-bestiary-drop__weapon-icon" variant="arco_09" />;
     case 'weapon_secret':
       return <PatrolBowIcon className="game-bestiary-drop__weapon-icon" variant="arco_10" />;

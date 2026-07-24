@@ -16,12 +16,18 @@ import {
   weeklyLeaderboardReward,
   type LeaderboardEntry,
   type LeaderboardMetric,
+  type LeaderboardPeriod,
 } from '@/types';
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'xp', label: 'Pontos (XP)' },
   { id: 'moedas', label: 'Coins' },
   { id: 'streak', label: 'Dias seguidos' },
+];
+
+const PERIODS: { id: LeaderboardPeriod; label: string; hint: string }[] = [
+  { id: 'semanal', label: 'Semanal', hint: 'Acumulado da semana — zera todo domingo' },
+  { id: 'global', label: 'Global', hint: 'Total de toda a jornada — nunca zera' },
 ];
 
 // Faixa aproximada pra quem está fora do top 25 — só entra em jogo se o total de
@@ -36,8 +42,17 @@ function formatRankBand(rank: number, total: number | null | undefined): string 
   return total > 1000 ? '1000+' : undefined;
 }
 
-function WeeklyRewardBadge({ rank, metric }: { rank: number; metric: LeaderboardMetric }) {
-  if (metric === 'streak') return null;
+function WeeklyRewardBadge({
+  rank,
+  metric,
+  period,
+}: {
+  rank: number;
+  metric: LeaderboardMetric;
+  period: LeaderboardPeriod;
+}) {
+  // Recompensa de fechamento só existe no ciclo semanal.
+  if (metric === 'streak' || period === 'global') return null;
   const reward = weeklyLeaderboardReward(rank);
   if (!reward) return null;
 
@@ -64,6 +79,7 @@ function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: Leaderb
 function RankRow({
   entry,
   metric,
+  period,
   label,
   rankLabel,
   onOpen,
@@ -71,6 +87,7 @@ function RankRow({
 }: {
   entry: LeaderboardEntry;
   metric: LeaderboardMetric;
+  period: LeaderboardPeriod;
   label?: string;
   rankLabel?: string;
   onOpen?: () => void;
@@ -99,7 +116,7 @@ function RankRow({
       <LeaderboardUserAvatar entry={entry} size="sm" />
       <div className="game-rank-row__main">
         <span className="game-rank-row__name">{label ?? entry.nome}</span>
-        <WeeklyRewardBadge rank={entry.rank} metric={metric} />
+        <WeeklyRewardBadge rank={entry.rank} metric={metric} period={period} />
       </div>
       <RankValue entry={entry} metric={metric} />
     </li>
@@ -110,6 +127,7 @@ export function LeaderboardPage() {
   const navigate = useNavigate();
   const { user, applyUser } = useAuth();
   const [metric, setMetric] = useState<LeaderboardMetric>('xp');
+  const [period, setPeriod] = useState<LeaderboardPeriod>('semanal');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,9 +140,15 @@ export function LeaderboardPage() {
   const isAdmin = user?.role === 'admin';
   const adminVisivel = user?.preferencias?.admin_visivel_ranking === true;
 
+  // Streak não tem ciclo — período só se aplica a XP/Coins.
+  const effectivePeriod: LeaderboardPeriod = metric === 'streak' ? 'semanal' : period;
+
   useEffect(() => {
     setLoading(true);
-    void Promise.all([getLeaderboard(metric), getMyLeaderboardRank(metric)])
+    void Promise.all([
+      getLeaderboard(metric, effectivePeriod),
+      getMyLeaderboardRank(metric, effectivePeriod),
+    ])
       .then(([list, myRank]) => {
         setEntries(list);
         setMe(myRank);
@@ -137,7 +161,7 @@ export function LeaderboardPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [metric, reloadTick]);
+  }, [metric, effectivePeriod, reloadTick]);
 
   useEffect(() => {
     const updateScrollState = () => {
@@ -219,7 +243,13 @@ export function LeaderboardPage() {
       <div className="flex items-start justify-between gap-3">
         <GamePageHeader
           eyebrow="Comunidade Abdoria"
-          title={metric === 'streak' ? 'Classificação' : 'Classificação Semanal'}
+          title={
+            metric === 'streak'
+              ? 'Classificação'
+              : effectivePeriod === 'global'
+                ? 'Classificação Global'
+                : 'Classificação Semanal'
+          }
         />
         {isAdmin && (
           <button
@@ -242,7 +272,7 @@ export function LeaderboardPage() {
         )}
       </div>
 
-      {metric !== 'streak' && <LeaderboardResetCountdown />}
+      {metric !== 'streak' && effectivePeriod === 'semanal' && <LeaderboardResetCountdown />}
 
       <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
         {METRICS.map(({ id, label }) => (
@@ -266,6 +296,31 @@ export function LeaderboardPage() {
         ))}
       </div>
 
+      {metric !== 'streak' && (
+        <div
+          className="game-rank-period"
+          role="radiogroup"
+          aria-label="Período da classificação"
+        >
+          {PERIODS.map(({ id, label, hint }) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={period === id}
+              title={hint}
+              onClick={() => setPeriod(id)}
+              className={`game-rank-period__btn${period === id ? ' game-rank-period__btn--active' : ''}`}
+            >
+              {label}
+            </button>
+          ))}
+          <span className="game-rank-period__hint">
+            {PERIODS.find((p) => p.id === period)?.hint}
+          </span>
+        </div>
+      )}
+
       {loading ? (
         <PageLoader />
       ) : (
@@ -281,6 +336,7 @@ export function LeaderboardPage() {
                   key={entry.user_id}
                   entry={entry}
                   metric={metric}
+                  period={effectivePeriod}
                   onOpen={() => openProfile(entry)}
                 />
               ))}
@@ -309,6 +365,7 @@ export function LeaderboardPage() {
               <RankRow
                 entry={me}
                 metric={metric}
+                period={effectivePeriod}
                 label="Você"
                 rankLabel={isMeInTop ? undefined : formatRankBand(me.rank, me.total)}
                 onOpen={isMeInTop ? scrollToMyRow : undefined}

@@ -64,7 +64,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
 - **Máx. diário** — **100 XP + 1 por nível** (+ **1 XP** por inimigo único no bestiário)
 - **XP extra** — streak, conquistas e habilidades desbloqueadas (sem limite diário)
-- **Exploração AFK** — herói em combate automático enquanto você está fora (máx. **24h** de exploração)
+- **Exploração** — herói em combate automático enquanto você está fora (máx. **24h** de exploração)
   - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
   - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
   - **Bestiário** — derrote inimigos para desbloquear entradas e aumentar o teto diário de XP
@@ -105,7 +105,7 @@ A moeda **Dorias** você usa na loja de cosméticos e na loja da exploração. V
 
 Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
-### Exploração AFK — loot por kill
+### Exploração — loot por kill
 
 **Chance de dropar algo (por kill):**
 

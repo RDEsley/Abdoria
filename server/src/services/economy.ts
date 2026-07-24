@@ -37,6 +37,28 @@ export function ensureMoedaWallet(user: UserRecord): void {
   ) {
     user.cosmeticos.moedas_xp_blocos = 0;
   }
+
+  if (
+    typeof user.cosmeticos.moedas_total_ganhas !== 'number' ||
+    Number.isNaN(user.cosmeticos.moedas_total_ganhas)
+  ) {
+    // Conta antiga sem histórico: o saldo atual é o piso do vitalício real.
+    user.cosmeticos.moedas_total_ganhas = user.cosmeticos.moedas;
+  }
+}
+
+/** Total vitalício de Coins ganhas — base do ranking global (nunca desconta gasto). */
+export function readLifetimeMoedas(user: {
+  gamificacao: { nivel_xp: number };
+  cosmeticos?: {
+    moedas?: number | null;
+    moedas_xp_blocos?: number | null;
+    moedas_total_ganhas?: number | null;
+  } | null;
+}): number {
+  const saldo = readMoedaBalance(user);
+  const total = user.cosmeticos?.moedas_total_ganhas;
+  return typeof total === 'number' && !Number.isNaN(total) ? Math.max(total, saldo) : saldo;
 }
 
 /** Saldo de Dorias — sempre usa valor persistido após primeira sincronização. */
@@ -140,6 +162,7 @@ export function awardMoedaFromXp(user: UserRecord): number {
   const gained = Math.max(0, blocks - previous);
   if (gained > 0) {
     user.cosmeticos.moedas += gained;
+    user.cosmeticos.moedas_total_ganhas = (user.cosmeticos.moedas_total_ganhas ?? 0) + gained;
     user.cosmeticos.moedas_xp_blocos = blocks;
     addWeeklyMoedas(user, gained);
   }
@@ -150,6 +173,7 @@ export function grantMoeda(user: UserRecord, amount: number): void {
   if (amount <= 0) return;
   ensureMoedaWallet(user);
   user.cosmeticos.moedas += amount;
+  user.cosmeticos.moedas_total_ganhas = (user.cosmeticos.moedas_total_ganhas ?? 0) + amount;
   addWeeklyMoedas(user, amount);
 }
 

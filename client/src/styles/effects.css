@@ -487,7 +487,7 @@
   color: transparent;
 }
 .game-shop-rarity-label--secreto {
-  color: #be185d;
+  color: #0c0a09;
 }
 
 .game-shop-row {
@@ -660,6 +660,10 @@
   -webkit-background-clip: text;
   color: transparent;
 }
+.game-shop-row--secreto .game-shop-row__rarity {
+  color: #fff;
+  background: #0c0a09;
+}
 
 /* Borda por raridade — comum mantém a borda neutra padrão */
 .game-shop-row--raro {
@@ -676,6 +680,12 @@
   background:
     linear-gradient(#fff, #fff) padding-box,
     linear-gradient(135deg, #ef4444, #f59e0b, #22c55e, #0ea5e9, #8b5cf6) border-box;
+}
+.game-shop-row--secreto {
+  border-color: #1c1917;
+  box-shadow:
+    3px 3px 0 rgba(12, 10, 9, 0.35),
+    inset 0 0 0 1px rgba(12, 10, 9, 0.15);
 }
 
 .game-shop-row__desc {
@@ -883,6 +893,40 @@
   }
 }
 
+/* Título "???????" (drop do inimigo especial "?") — preto com borda branca leve,
+   cada "?" pulando levemente em cascata da esquerda pra direita. */
+.cosmetic-title--enigma {
+  display: inline-flex;
+  color: #0a0a0a;
+  -webkit-text-stroke: 0.4px rgba(255, 255, 255, 0.85);
+  text-shadow:
+    0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 6px rgba(168, 85, 247, 0.25);
+}
+
+.cosmetic-title--enigma__char {
+  display: inline-block;
+  animation: cosmetic-title-enigma-bounce 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.09s);
+}
+
+@keyframes cosmetic-title-enigma-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-0.14em);
+  }
+}
+
+/* Título "Código de Evolução" (drop do Slime Binário) — verde Matrix sutil. */
+.cosmetic-title--codigo-evolucao {
+  color: #16a34a;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
 /* ── Selo de ícone da Personalização (títulos/efeitos) — moldura por raridade ── */
 .cosmetic-icon {
   position: relative;
@@ -945,10 +989,10 @@
 }
 
 .cosmetic-icon--secreto {
-  background: linear-gradient(150deg, #f472b6, #be185d);
+  background: linear-gradient(150deg, #44403c, #0c0a09);
   box-shadow:
     2px 2px 0 rgba(28, 25, 23, 0.22),
-    0 0 14px rgba(190, 24, 93, 0.45);
+    0 0 14px rgba(12, 10, 9, 0.5);
 }
 
 .cosmetic-icon--locked {

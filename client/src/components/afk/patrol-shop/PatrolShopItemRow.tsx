@@ -1,10 +1,12 @@
 import {
+  Bomb,
   CircleDot,
   Coins,
   Droplets,
   Flame,
   Lock,
   Mountain,
+  Radiation,
   Snowflake,
   Sparkles,
   Swords,
@@ -41,6 +43,8 @@ const SPELL_ICONS: Record<string, LucideIcon> = {
   magia_fogo: Flame,
   magia_relampago: Zap,
   magia_buraco_negro: CircleDot,
+  magia_raio_laser: Radiation,
+  magia_explosao: Bomb,
 };
 
 function WeaponThumb({ item }: { item: PatrolShopCatalogItem }) {

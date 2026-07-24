@@ -1,6 +1,6 @@
 ﻿import { AFK_ENEMIES, AFK_GOLDEN_SLIME_MOEDA_BONUS, type AfkEnemyId } from './combat.js';
 import {
-  PATROL_LEGENDARY_WEAPON_IDS,
+  PATROL_MYTHIC_WEAPON_IDS,
   PATROL_SECRET_WEAPON_IDS,
   PATROL_SPELL_IDS,
 } from '../patrol/shop.js';
@@ -28,7 +28,9 @@ export type BestiaryDropId =
   | 'cosmetic_legendary'
   | 'cosmetic_secret'
   | 'titulo_secreto'
+  /** @deprecated legado persistido em descobertas antigas — hoje exibido como weapon_mythic. */
   | 'weapon_legendary'
+  | 'weapon_mythic'
   | 'weapon_secret'
   | 'weapon_spell';
 
@@ -45,43 +47,48 @@ export interface BestiaryDropDefinition {
  */
 const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   xp: '85%',
-  abdoria: '8%',
+  abdoria: '10%',
   abdoria_golden: '100%',
   doria_bag: '2%',
   exp_instant: '5%',
-  frozen_streak: '20%',
+  frozen_streak: '30%',
   route_drink: '0,04%',
-  cosmetic_legendary: '0,03%',
+  cosmetic_legendary: '0,07%',
   cosmetic_secret: '0,01%',
   titulo_secreto: '0,01%',
-  weapon_legendary: '0,13%',
+  weapon_legendary: '0,05%',
+  weapon_mythic: '0,05%',
   weapon_secret: '0,003%',
   weapon_spell: '100%',
 };
 
-const COMMON_ELITE_DROPS: BestiaryDropId[] = [
+// Loot por tier: comuns = recursos básicos; elites = sustain (frozen/route);
+// bosses = recursos + itens raros (lendário/mítico/secret).
+const COMMON_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'doria_bag', 'exp_instant'];
+const ELITE_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'frozen_streak', 'route_drink'];
+const BOSS_DROPS: BestiaryDropId[] = [
   'xp',
   'abdoria',
-  'doria_bag',
-  'exp_instant',
   'frozen_streak',
-  'route_drink',
   'cosmetic_legendary',
   'titulo_secreto',
+  'weapon_mythic',
   'weapon_secret',
 ];
 
-const BOSS_EXTRA_DROPS: BestiaryDropId[] = ['weapon_legendary'];
-
 const GOLDEN_SLIME_DROPS: BestiaryDropId[] = ['abdoria_golden', 'cosmetic_secret', 'route_drink'];
 const MAGIC_RABBIT_DROPS: BestiaryDropId[] = ['weapon_spell'];
+/** "?" e Slime Binário: cosmético secreto na 1ª derrota; Coins + Bolsa nas seguintes. */
+const RARE_ENEMY_DROPS: BestiaryDropId[] = ['cosmetic_secret', 'abdoria', 'doria_bag'];
 
 export function bestiaryDropsForEnemy(enemyId: AfkEnemyId): BestiaryDropId[] {
   if (enemyId === 'golden_slime') return [...GOLDEN_SLIME_DROPS];
   if (enemyId === 'magic_rabbit') return [...MAGIC_RABBIT_DROPS];
+  if (enemyId === 'slime_enigma' || enemyId === 'slime_binario') return [...RARE_ENEMY_DROPS];
   const tier = AFK_ENEMIES[enemyId]?.tier ?? 'common';
-  if (tier === 'boss') return [...COMMON_ELITE_DROPS, ...BOSS_EXTRA_DROPS];
-  return [...COMMON_ELITE_DROPS];
+  if (tier === 'boss') return [...BOSS_DROPS];
+  if (tier === 'elite') return [...ELITE_DROPS];
+  return [...COMMON_DROPS];
 }
 
 export function buildBestiaryDropCatalog(
@@ -103,10 +110,16 @@ export function buildBestiaryDropCatalog(
     cosmetic_legendary: def('cosmetic_legendary', 'Cosmético lendário'),
     cosmetic_secret: def('cosmetic_secret', 'Cosmético secreto'),
     titulo_secreto: def('titulo_secreto', 'Título secreto'),
-    weapon_legendary: def('weapon_legendary', 'Arma lendária'),
+    weapon_legendary: def('weapon_legendary', 'Arma Mítica'),
+    weapon_mythic: def('weapon_mythic', 'Arma Mítica'),
     weapon_secret: def('weapon_secret', 'Arma Secret'),
     weapon_spell: def('weapon_spell', 'Magia'),
   };
+}
+
+/** Descobertas antigas gravaram 'weapon_legendary'; hoje o drop é 'weapon_mythic'. */
+export function migrateBestiaryDropId(id: BestiaryDropId): BestiaryDropId {
+  return id === 'weapon_legendary' ? 'weapon_mythic' : id;
 }
 
 export type BestiaryPendingSnapshot = {
@@ -157,6 +170,13 @@ export function inferBestiaryDropsFromKill(
     return found;
   }
 
+  if (enemyId === 'slime_enigma' || enemyId === 'slime_binario') {
+    if (after.cosmetic_ids.length > before.cosmetic_ids.length) found.push('cosmetic_secret');
+    if (after.abdoria > before.abdoria) found.push('abdoria');
+    if (after.doria_bags > before.doria_bags) found.push('doria_bag');
+    return found;
+  }
+
   if (after.xp > before.xp) found.push('xp');
   if (after.abdoria > before.abdoria) found.push('abdoria');
   if (after.doria_bags > before.doria_bags) found.push('doria_bag');
@@ -170,8 +190,8 @@ export function inferBestiaryDropsFromKill(
   if (newWeaponIds.some((id) => (PATROL_SECRET_WEAPON_IDS as readonly string[]).includes(id))) {
     found.push('weapon_secret');
   }
-  if (newWeaponIds.some((id) => (PATROL_LEGENDARY_WEAPON_IDS as readonly string[]).includes(id))) {
-    found.push('weapon_legendary');
+  if (newWeaponIds.some((id) => (PATROL_MYTHIC_WEAPON_IDS as readonly string[]).includes(id))) {
+    found.push('weapon_mythic');
   }
 
   return found;

@@ -3,6 +3,7 @@ import { sanitizeUser } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
+  acknowledgeCosmeticUnlocks,
   buildShopResponse,
   equipShopItem,
   loadUserForShop,
@@ -83,6 +84,20 @@ shopRouter.patch('/equip', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/shop/equip error:', error);
     res.status(500).json({ error: 'Erro ao equipar item.' });
+  }
+});
+
+shopRouter.post('/celebracao/ack', async (req: AuthRequest, res) => {
+  try {
+    const result = await acknowledgeCosmeticUnlocks(req.userId!);
+    if ('error' in result) {
+      res.status(result.status ?? 400).json({ error: result.error });
+      return;
+    }
+    res.json({ user: sanitizeUser(result.user) });
+  } catch (error) {
+    console.error('POST /api/shop/celebracao/ack error:', error);
+    res.status(500).json({ error: 'Erro ao confirmar celebração.' });
   }
 });
 

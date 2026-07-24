@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Backpack, BookOpen, Store, X } from 'lucide-react';
+import { Backpack, BookOpen, TreePine, X } from 'lucide-react';
 import { BestiaryModal } from '@/components/bestiary/BestiaryModal';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
+import { AfkVillageScene } from '@/components/afk/AfkVillageScene';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
+import {
+  EXPLORATION_TUTORIAL_KEY,
+  EXPLORATION_TUTORIAL_SLIDES,
+} from '@/components/afk/exploration-tutorial-slides';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
+import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { InventoryModal } from '@/components/inventory/InventoryModal';
 import {
   buildRewardPresentationFromAfk,
@@ -43,9 +49,15 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const [shopOpen, setShopOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  /** Hub entre patrulhas: a vila (loja + bestiário) x a cena de combate ao vivo. */
+  const [sceneMode, setSceneMode] = useState<'exploring' | 'village'>('exploring');
+  const [showTutorial, setShowTutorial] = useState(false);
   const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
   const loadedAtRef = useRef(0);
   const syncedMinutosRef = useRef<number | null>(null);
+  /** true depois da 1ª carga bem-sucedida — refreshes em segundo plano (poll,
+      claim, troca de arma, fechar inventário) não devem mais piscar o loading. */
+  const hasLoadedRef = useRef(false);
 
   const reconcileTimerFromServer = useCallback((serverMinutos: number) => {
     const prev = syncedMinutosRef.current;
@@ -71,7 +83,12 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const userId = String(user?.id ?? 'guest');
 
   const load = useCallback(async () => {
-    setLoading(true);
+    // Só a 1ª carga mostra o estado de loading (timer "--:--:--", botão desabilitado).
+    // Refreshes em segundo plano (poll de 15s, claim, troca de arma, fechar
+    // inventário) atualizam o meta silenciosamente — sem isso, a UI piscava
+    // "carregando" e desabilitava o Coletar a cada sync, parecendo bugado.
+    const isInitialLoad = !hasLoadedRef.current;
+    if (isInitialLoad) setLoading(true);
     try {
       const data = await getAfkMeta();
       setMeta((prev) => ({
@@ -80,23 +97,29 @@ export function AfkPatrolModal({ open, onClose }: Props) {
         route_drink_count: data.route_drink_count,
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
+      hasLoadedRef.current = true;
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível carregar a exploração.'), {
         variant: 'error',
       });
     } finally {
-      setLoading(false);
+      if (isInitialLoad) setLoading(false);
     }
   }, [reconcileTimerFromServer]);
 
   useEffect(() => {
     if (!open) {
       syncedMinutosRef.current = null;
+      hasLoadedRef.current = false;
       setShopOpen(false);
       setBestiaryOpen(false);
       setInventoryOpen(false);
       setCelebrationClaimed(null);
+      setSceneMode('exploring');
       return;
+    }
+    if (!window.localStorage.getItem(EXPLORATION_TUTORIAL_KEY)) {
+      setShowTutorial(true);
     }
     void load();
   }, [open, load]);
@@ -175,6 +198,11 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose, shopOpen, inventoryOpen]);
 
+  const handleTutorialClose = useCallback(() => {
+    window.localStorage.setItem(EXPLORATION_TUTORIAL_KEY, '1');
+    setShowTutorial(false);
+  }, []);
+
   const handleCelebrationClose = useCallback(() => {
     setCelebrationClaimed((claimed) => {
       if (claimed) {
@@ -237,11 +265,25 @@ export function AfkPatrolModal({ open, onClose }: Props) {
         >
           <div className="game-afk-modal__topbar">
             <div className="game-afk-modal__title-group">
-              <div className="game-afk-modal__title-icon" aria-hidden>
-                <AfkFabSwords variant="header" />
-              </div>
+              <button
+                type="button"
+                className="game-afk-modal__title-icon game-afk-modal__title-icon--btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSceneMode((m) => (m === 'village' ? 'exploring' : 'village'));
+                }}
+                title={sceneMode === 'village' ? 'Voltar a explorar' : 'Voltar à vila'}
+                aria-label={sceneMode === 'village' ? 'Voltar a explorar' : 'Voltar à vila'}
+                aria-pressed={sceneMode === 'village'}
+              >
+                {sceneMode === 'village' ? (
+                  <AfkFabSwords variant="header" />
+                ) : (
+                  <TreePine size={24} aria-hidden />
+                )}
+              </button>
               <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                Exploração AFK
+                Exploração
               </h2>
             </div>
             <div className="game-afk-modal__toolbar">
@@ -283,18 +325,6 @@ export function AfkPatrolModal({ open, onClose }: Props) {
               </button>
               <button
                 type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShopOpen(true);
-                }}
-                title="Loja da Exploração"
-                aria-label="Abrir loja da exploração"
-              >
-                <Store size={26} aria-hidden />
-              </button>
-              <button
-                type="button"
                 className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--close"
                 onClick={onClose}
                 title="Fechar"
@@ -305,14 +335,25 @@ export function AfkPatrolModal({ open, onClose }: Props) {
             </div>
           </div>
 
-          <AfkCombatScene
-            userId={userId}
-            weapon={weapon}
-            weaponId={weaponId}
-            combat={meta?.combat ?? null}
-            hasLoot={meta?.has_rewards}
-            capped={capped}
-          />
+          {sceneMode === 'village' ? (
+            <AfkVillageScene
+              weapon={weapon}
+              bestiaryUnlocked={stats?.bestiario_desbloqueados?.length ?? 0}
+              bestiaryTotal={ALL_BESTIARY_ENEMY_IDS.length}
+              onOpenShop={() => setShopOpen(true)}
+              onOpenBestiary={() => setBestiaryOpen(true)}
+              onContinue={() => setSceneMode('exploring')}
+            />
+          ) : (
+            <AfkCombatScene
+              userId={userId}
+              weapon={weapon}
+              weaponId={weaponId}
+              combat={meta?.combat ?? null}
+              hasLoot={meta?.has_rewards}
+              capped={capped}
+            />
+          )}
 
           <div className="game-afk-dock">
             <AfkTimerPanel
@@ -362,6 +403,13 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
       <InventoryModal open={inventoryOpen} onClose={handleInventoryClose} layer="modal" />
       <BestiaryModal open={bestiaryOpen} onClose={() => setBestiaryOpen(false)} layer="modal" />
+
+      <TutorialOverlay
+        open={showTutorial}
+        onClose={handleTutorialClose}
+        slides={EXPLORATION_TUTORIAL_SLIDES}
+        ctaLabel="Vamos explorar!"
+      />
     </>,
     document.body,
   );

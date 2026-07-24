@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { AfkEnemyId } from '@/types';
 import { collectSlimeAccessories, resolvePortraitAppearance, type SlimeAppearance } from '@/types';
 import { SlimeAccessoryLayer, SlimeAccessoryPart } from '@/components/afk/SlimeAccessories';
@@ -42,6 +43,10 @@ export function SlimeBody({
   const isLich = enemyId === 'boss_lich';
   const isColossus = enemyId === 'boss_colossus';
   const isGolem = enemyId === 'boss_golem';
+  const isEnigma = enemyId === 'slime_enigma';
+  const isBinario = enemyId === 'slime_binario';
+  /** "?" e Binário têm rosto totalmente bespoke — a face modular padrão fica oculta. */
+  const showModularFace = !isEnigma && !isBinario;
 
   const mouthClass = `game-afk-slime__mouth game-afk-slime__mouth--${appearance.mouth}${
     isBoss && !isHydra ? ' game-afk-slime__mouth--boss' : ''
@@ -71,33 +76,61 @@ export function SlimeBody({
     .filter(Boolean)
     .join(' ');
 
+  const blobClass = [
+    'game-afk-slime__blob',
+    isEnigma ? 'game-afk-slime__blob--enigma' : '',
+    isBinario ? 'game-afk-slime__blob--binario' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <>
-      <div className="game-afk-slime__blob" />
+      <div className={blobClass} />
       {isHydra && <SlimeHydraHeads />}
       {isColossus && <div className="game-afk-slime__colossus-spikes" aria-hidden />}
       {isLich && <div className="game-afk-slime__lich-orbs" aria-hidden />}
       {isGolem && <div className="game-afk-slime__golem-cracks" aria-hidden />}
+      {isBinario && (
+        <div className="game-afk-slime__binario-digits" aria-hidden>
+          {['1', '0', '1', '1', '0', '0', '1', '0'].map((digit, i) => (
+            <span
+              key={i}
+              className="game-afk-slime__binario-digit"
+              style={{ '--i': i } as CSSProperties}
+            >
+              {digit}
+            </span>
+          ))}
+        </div>
+      )}
       <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="back" />
-      <div className={faceClass}>
-        <span
-          className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}
-        >
-          <span className="game-afk-slime__iris" />
-        </span>
-        <span className="game-afk-slime__eye game-afk-slime__eye--r">
-          <span className="game-afk-slime__iris" />
-        </span>
-        <span className={mouthClass} />
-        {showCheeks && (
-          <>
-            <span className="game-afk-slime__cheek game-afk-slime__cheek--l" aria-hidden />
-            <span className="game-afk-slime__cheek game-afk-slime__cheek--r" aria-hidden />
-          </>
-        )}
-        {hasGlasses && !looting && <SlimeAccessoryPart kind="glasses" />}
-        {hasPatch && !looting && <SlimeAccessoryPart kind="patch" />}
-      </div>
+      {isEnigma && (
+        <div className="game-afk-slime__enigma-face" aria-hidden>
+          <span className="game-afk-slime__enigma-mark">?</span>
+        </div>
+      )}
+      {showModularFace && (
+        <div className={faceClass}>
+          <span
+            className={`game-afk-slime__eye game-afk-slime__eye--l${hasPatch ? ' game-afk-slime__eye--patched' : ''}`}
+          >
+            <span className="game-afk-slime__iris" />
+          </span>
+          <span className="game-afk-slime__eye game-afk-slime__eye--r">
+            <span className="game-afk-slime__iris" />
+          </span>
+          <span className={mouthClass} />
+          {showCheeks && (
+            <>
+              <span className="game-afk-slime__cheek game-afk-slime__cheek--l" aria-hidden />
+              <span className="game-afk-slime__cheek game-afk-slime__cheek--r" aria-hidden />
+            </>
+          )}
+          {hasGlasses && !looting && <SlimeAccessoryPart kind="glasses" />}
+          {hasPatch && !looting && <SlimeAccessoryPart kind="patch" />}
+        </div>
+      )}
       <SlimeAccessoryLayer accessories={accessories} looting={looting} layer="front" />
     </>
   );
@@ -105,9 +138,13 @@ export function SlimeBody({
 
 export function buildSlimePortraitData(enemyId: AfkEnemyId) {
   const isBoss = enemyId.startsWith('boss_');
-  const elite = ['armored_skeleton', 'crystal_slime', 'storm_slime', 'slime_knight'].includes(
-    enemyId,
-  );
+  const elite = [
+    'armored_skeleton',
+    'crystal_slime',
+    'storm_slime',
+    'slime_knight',
+    'slime_chumbo',
+  ].includes(enemyId);
   const appearance = resolvePortraitAppearance(enemyId);
   const accessories = collectSlimeAccessories(enemyId, isBoss, elite, appearance);
   return { isBoss, elite, appearance, accessories };

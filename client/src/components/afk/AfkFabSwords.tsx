@@ -1,4 +1,4 @@
-import { Sword } from 'lucide-react';
+import { ClashSwordIcon } from '@/components/afk/ClashSwordIcon';
 
 interface Props {
   variant?: 'fab' | 'header';
@@ -10,21 +10,14 @@ interface Props {
  */
 export function AfkFabSwords({ variant = 'fab' }: Props) {
   const isHeader = variant === 'header';
-  const stroke = isHeader ? 2.1 : 2.25;
 
   return (
     <span
       className={`game-afk-fab-swords${isHeader ? ' game-afk-fab-swords--header' : ''}`}
       aria-hidden
     >
-      <Sword
-        className="game-afk-fab-swords__blade game-afk-fab-swords__blade--l"
-        strokeWidth={stroke}
-      />
-      <Sword
-        className="game-afk-fab-swords__blade game-afk-fab-swords__blade--r"
-        strokeWidth={stroke}
-      />
+      <ClashSwordIcon className="game-afk-fab-swords__blade game-afk-fab-swords__blade--l" />
+      <ClashSwordIcon className="game-afk-fab-swords__blade game-afk-fab-swords__blade--r" />
       <span className="game-afk-fab-swords__spark" />
     </span>
   );

@@ -5,7 +5,12 @@ import {
   isGiftCodeExpired,
   type GiftCodeDefinition,
 } from '../data/gift-codes.js';
-import { COSMETIC_BY_ID, COSMETICS, DEFAULT_BORDA_ID } from '../data/cosmetics.js';
+import { COSMETIC_BY_ID, COSMETICS, DEFAULT_BORDA_ID, REMOVED_COSMETIC_IDS } from '../data/cosmetics.js';
+import {
+  CONJUNTO_FLAMEJANTE_IDS,
+  PATROL_WEAPON_BY_ID,
+  resolvePatrolArmas,
+} from '../../../shared/patrol/shop.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
 import { User } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
@@ -85,7 +90,7 @@ function moedasUnlockLabel(item: CosmeticDefinition): string {
     return `${price} ${CURRENCY_NAME}`;
   }
   if (item.raridade === 'lendario' || item.raridade === 'epico') {
-    return 'Drop raro na Exploração AFK';
+    return 'Drop raro na Exploração';
   }
   return 'Em breve — nova forma de desbloquear';
 }
@@ -106,20 +111,47 @@ export function buildUnlockLabel(item: CosmeticDefinition): string {
       return moedasUnlockLabel(item);
     case 'codigo':
       return 'Resgate um código presente em Opções';
+    case 'streak':
+      return `Alcance ${item.unlock.streak_dias ?? '?'} dias de streak`;
+    case 'item_mitico':
+      return 'Possua qualquer item Mítico';
+    case 'conjunto_flamejante':
+      return 'Reúna Magia de Fogo, Arco Flamejante e Espada Flamejante';
     default:
       return 'Desbloqueio especial';
   }
 }
 
-function isAutoUnlockEligible(
-  item: CosmeticDefinition,
-  level: number,
-  conquistas: Set<string>,
-): boolean {
-  const { tipo, nivel_min, conquista_id } = item.unlock;
+interface UnlockContext {
+  level: number;
+  conquistas: Set<string>;
+  /** Maior streak já registrada (streak_maior ∪ streak_atual). */
+  streakMaior: number;
+  /** Armas/magias desbloqueadas na Exploração. */
+  armas: Set<string>;
+  unlockedCosmetics: Set<string>;
+}
+
+function ownsMythicItem(ctx: UnlockContext): boolean {
+  for (const id of ctx.armas) {
+    if (PATROL_WEAPON_BY_ID[id]?.raridade === 'mitico') return true;
+  }
+  for (const id of ctx.unlockedCosmetics) {
+    if (COSMETIC_BY_ID[id]?.raridade === 'mitico') return true;
+  }
+  return false;
+}
+
+function isAutoUnlockEligible(item: CosmeticDefinition, ctx: UnlockContext): boolean {
+  const { tipo, nivel_min, conquista_id, streak_dias } = item.unlock;
   if (tipo === 'gratis') return true;
-  if (tipo === 'nivel' && nivel_min != null && level >= nivel_min) return true;
-  if (tipo === 'conquista' && conquista_id && conquistas.has(conquista_id)) return true;
+  if (tipo === 'nivel' && nivel_min != null && ctx.level >= nivel_min) return true;
+  if (tipo === 'conquista' && conquista_id && ctx.conquistas.has(conquista_id)) return true;
+  if (tipo === 'streak' && streak_dias != null && ctx.streakMaior >= streak_dias) return true;
+  if (tipo === 'item_mitico') return ownsMythicItem(ctx);
+  if (tipo === 'conjunto_flamejante') {
+    return CONJUNTO_FLAMEJANTE_IDS.every((id) => ctx.armas.has(id));
+  }
   return false;
 }
 
@@ -146,18 +178,42 @@ export function syncAdminMoldura(user: UserDoc): void {
 export function syncShopUnlocks(user: UserDoc): void {
   ensureCosmeticos(user);
   syncAdminMoldura(user);
-  const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
-  const conquistas = new Set(user.gamificacao.conquistas);
   const unlocked = new Set(user.cosmeticos.desbloqueados);
 
+  // Molduras aposentadas (Bronze/Ouro por nível) saem de contas antigas.
+  for (const removedId of REMOVED_COSMETIC_IDS) unlocked.delete(removedId);
+
+  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
+  const ctx: UnlockContext = {
+    level: xpLevelFromTotal(user.gamificacao.nivel_xp),
+    conquistas: new Set(user.gamificacao.conquistas),
+    streakMaior: Math.max(
+      user.gamificacao.streak_maior ?? 0,
+      user.gamificacao.streak_atual ?? 0,
+    ),
+    armas: new Set(armas.desbloqueados),
+    unlockedCosmetics: unlocked,
+  };
+
+  const newlyUnlocked: string[] = [];
   for (const item of COSMETICS) {
     if (unlocked.has(item.id)) continue;
     if ((SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id)) continue;
     if (item.unlock.tipo === 'afk_secreto' || item.unlock.tipo === 'golden_slime') continue;
-    if (isAutoUnlockEligible(item, level, conquistas)) unlocked.add(item.id);
+    if (isAutoUnlockEligible(item, ctx)) {
+      unlocked.add(item.id);
+      // 'gratis' entra silencioso (kit inicial); o resto merece celebração na tela.
+      if (item.unlock.tipo !== 'gratis') newlyUnlocked.push(item.id);
+    }
   }
 
   user.cosmeticos.desbloqueados = [...unlocked];
+
+  if (newlyUnlocked.length > 0) {
+    const pendentes = new Set(user.cosmeticos.desbloqueios_pendentes ?? []);
+    for (const id of newlyUnlocked) pendentes.add(id);
+    user.cosmeticos.desbloqueios_pendentes = [...pendentes];
+  }
 
   if (!unlocked.has(user.cosmeticos.moldura_loja_equipada))
     user.cosmeticos.moldura_loja_equipada = DEFAULT_BORDA_ID;
@@ -301,6 +357,8 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
   switch (kind) {
     case 'moldura_loja':
       user.cosmeticos.moldura_loja_equipada = item.id;
+      // Última borda equipada vence: o avatar de identidade passa a mostrar a de conquista.
+      user.cosmeticos.borda_perfil_fonte = 'loja';
       break;
     case 'titulo':
       user.cosmeticos.titulo_equipado = item.id;
@@ -464,6 +522,18 @@ function buildGiftCodeRewardLines(
   }
 
   return lines;
+}
+
+/** Marca como vistas as celebrações de desbloqueio pendentes (fila do reveal). */
+export async function acknowledgeCosmeticUnlocks(userId: string) {
+  const user = await User.findById(userId);
+  if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
+  ensureCosmeticos(user);
+  if ((user.cosmeticos.desbloqueios_pendentes ?? []).length > 0) {
+    user.cosmeticos.desbloqueios_pendentes = [];
+    await user.save();
+  }
+  return { user };
 }
 
 /** Compatibilidade com serviço anterior. */

@@ -52,7 +52,12 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
 import { playClick, playCompleteSet, playSuccess } from '@/lib/sounds';
-import { digitsOnly, validateBodyMetrics } from '@/lib/utils';
+import {
+  digitsOnly,
+  formatAlturaMask,
+  sanitizeDecimalInput,
+  validateBodyMetrics,
+} from '@/lib/utils';
 import {
   calcImc,
   NIVEL_LABELS,
@@ -130,13 +135,6 @@ function formatHoldDuration(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return seconds === 0 ? `${minutes}min` : `${minutes}min ${seconds}s`;
-}
-
-/** Máscara de exibição da altura: injeta o ponto decimal (metros) enquanto digita. */
-function formatAlturaMask(digits: string): string {
-  if (digits.length === 0) return '';
-  if (digits.length === 1) return digits;
-  return `${digits[0]}.${digits.slice(1)}`;
 }
 
 /**
@@ -479,11 +477,11 @@ export function OnboardingPage() {
                       </span>
                       <input
                         type="text"
-                        inputMode="numeric"
+                        inputMode="decimal"
                         value={peso}
-                        onChange={(e) => setPeso(digitsOnly(e.target.value))}
-                        placeholder="Peso"
-                        maxLength={3}
+                        onChange={(e) => setPeso(sanitizeDecimalInput(e.target.value))}
+                        placeholder="72.5"
+                        maxLength={5}
                       />
                       <span className="onb-field__suffix">kg</span>
                     </label>
@@ -554,7 +552,7 @@ export function OnboardingPage() {
                 <StepHeader
                   icon={<Swords size={22} />}
                   title="Escolha seu estilo de combate"
-                  subtitle="Usado na Exploração AFK — sua patrulha luta sozinha nesse estilo enquanto você treina de verdade aqui fora."
+                  subtitle="Usado na Exploração — sua patrulha luta sozinha nesse estilo enquanto você treina de verdade aqui fora."
                 />
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   {WEAPONS.map((weapon) => (

@@ -6,8 +6,9 @@ import { COSMETIC_RARITY_LABELS, type ShopCatalogItem } from '@/types';
 interface Props {
   item: ShopCatalogItem;
   busy: boolean;
-  isPreviewing: boolean;
-  onPreview: () => void;
+  isPreviewing?: boolean;
+  /** Ausente = sem estágio de prévia (ex.: listas do Editar Perfil). */
+  onPreview?: () => void;
   onEquip: () => void;
 }
 
@@ -38,14 +39,15 @@ function ItemThumb({ item }: { item: ShopCatalogItem }) {
   return <CosmeticIcon icon={item.icon} size={20} unlocked={item.desbloqueada} raridade={item.raridade} />;
 }
 
-export function ShopItemRow({ item, busy, isPreviewing, onPreview, onEquip }: Props) {
+export function ShopItemRow({ item, busy, isPreviewing = false, onPreview, onEquip }: Props) {
   const canPreview =
-    item.desbloqueada ||
-    item.kind === 'moldura_loja' ||
-    item.kind === 'titulo' ||
-    item.kind === 'banner' ||
-    item.kind === 'som' ||
-    item.kind === 'efeito';
+    Boolean(onPreview) &&
+    (item.desbloqueada ||
+      item.kind === 'moldura_loja' ||
+      item.kind === 'titulo' ||
+      item.kind === 'banner' ||
+      item.kind === 'som' ||
+      item.kind === 'efeito');
 
   return (
     <article

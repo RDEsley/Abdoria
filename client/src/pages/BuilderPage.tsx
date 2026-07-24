@@ -374,27 +374,54 @@ export function BuilderPage() {
   };
 
   const [schemeLevel, setSchemeLevel] = useState<NivelUsuario>(nivel);
+  const [schemeLevelBusy, setSchemeLevelBusy] = useState(false);
 
-  /** Troca os esquemas pelos 3 recomendados de outro nível — sobrescreve os salvos. */
-  const cycleSchemeLevel = () => {
+  // Nível trocado em outro lugar (Perfil, outro dispositivo) reflete no botão.
+  useEffect(() => {
+    setSchemeLevel(nivel);
+  }, [nivel]);
+
+  /**
+   * Troca o nível de TREINO inteiro: atualiza o nível do perfil (os treinos
+   * recomendados seguem o novo nível) e aplica os 3 esquemas recomendados
+   * dele — sobrescreve os salvos, comportamento documentado do botão.
+   */
+  const cycleSchemeLevel = async () => {
+    if (schemeLevelBusy) return;
     const order: NivelUsuario[] = ['iniciante', 'intermediario', 'avancado'];
-    const nextLevel = order[(order.indexOf(schemeLevel) + 1) % order.length];
+    const nextLevel = order[(order.indexOf(schemeLevel) + 1) % order.length]!;
+    setSchemeLevelBusy(true);
     setSchemeLevel(nextLevel);
+
     const recommended: StoredRepScheme[] = REP_SCHEME_BY_NIVEL[nextLevel].map((scheme) => ({
       ...scheme,
       isCustom: false,
     }));
-    saveRepSchemes(nivel, recommended);
+    saveRepSchemes(nextLevel, recommended);
     lastAppliedQueueKeyRef.current = '';
     const first = recommended[0];
     if (first) {
       setSelectedSchemeId(first.id);
-      setSelectedRepSchemeId(nivel, first.id);
+      setSelectedRepSchemeId(nextLevel, first.id);
       applyRepScheme(first, 'all', { force: true });
     }
-    showGameToast(`Esquemas de ${NIVEL_LABELS[nextLevel].toLowerCase()} aplicados.`, {
-      variant: 'info',
-    });
+
+    try {
+      const atualizado = await updateMe({ nivel: nextLevel });
+      applyUser(atualizado);
+      await refresh();
+      void loadRecommendations({ force: true });
+      showGameToast(`Nível ${NIVEL_LABELS[nextLevel]} — treinos e esquemas atualizados.`, {
+        variant: 'success',
+      });
+    } catch (err) {
+      setSchemeLevel(nivel);
+      showGameToast(getErrorMessage(err, 'Não foi possível trocar o nível.'), {
+        variant: 'error',
+      });
+    } finally {
+      setSchemeLevelBusy(false);
+    }
   };
 
   const handleCreateScheme = (scheme: RepSchemeRecommendation) => {
@@ -855,9 +882,10 @@ export function BuilderPage() {
               <button
                 type="button"
                 className="game-icon-btn shrink-0 gap-2 px-3 py-2 text-xs font-extrabold whitespace-nowrap"
-                aria-label="Trocar nível dos esquemas recomendados"
-                title={`Trocar para esquemas de outro nível (atual: ${NIVEL_LABELS[schemeLevel]})`}
-                onClick={cycleSchemeLevel}
+                aria-label="Trocar nível dos treinos e esquemas recomendados"
+                title={`Trocar o nível dos treinos e esquemas (atual: ${NIVEL_LABELS[schemeLevel]})`}
+                disabled={schemeLevelBusy}
+                onClick={() => void cycleSchemeLevel()}
               >
                 <GraduationCap size={15} aria-hidden />
                 <span>Trocar nível</span>

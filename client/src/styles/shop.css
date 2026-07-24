@@ -1344,3 +1344,48 @@
     opacity: 0.65;
   }
 }
+
+/* Reveal de cosmético desbloqueado (fila desbloqueios_pendentes) */
+.cosmetic-unlock-card {
+  perspective: 900px;
+}
+
+.cosmetic-unlock-card__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 6.4rem;
+  height: 6.4rem;
+  margin: 0.75rem auto 0.35rem;
+  border-radius: 1.2rem;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(231, 229, 228, 0.9) 100%);
+  border: 2px solid rgba(28, 25, 23, 0.08);
+  box-shadow: 0 6px 22px rgba(28, 25, 23, 0.12);
+}
+
+.cosmetic-unlock-card__stage--lendario {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 6px 26px rgba(245, 158, 11, 0.35);
+}
+
+.cosmetic-unlock-card__stage--mitico {
+  border-color: transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    conic-gradient(#ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444) border-box;
+}
+
+.cosmetic-unlock-card__stage--secreto {
+  border-color: #1c1917;
+  background: radial-gradient(circle, #292524 0%, #0c0a09 100%);
+}
+
+.cosmetic-unlock-card__ring {
+  display: block;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 999px;
+  border-width: 4px;
+  border-style: solid;
+  background: #fafaf9;
+}

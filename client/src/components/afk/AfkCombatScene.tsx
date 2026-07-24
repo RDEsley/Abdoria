@@ -113,13 +113,25 @@ export function AfkCombatScene({
     onBossChange?.(localIsBoss);
   }, [localIsBoss, onBossChange]);
 
+  /** true depois do 1º sync com o servidor nesta sessão da cena. */
+  const hasSyncedRef = useRef(false);
+
   useEffect(() => {
     if (!combat) return;
 
     const serverKills = combat.kills_total;
     const localKills = killsTotalRef.current;
+    if (serverKills <= localKills) return;
 
-    if (serverKills > localKills) {
+    // Só a 1ª sincronização troca o inimigo/vida visíveis na hora — reflete
+    // onde a exploração realmente está ao abrir a tela (depois de ausência,
+    // claim, etc). Da 2ª em diante, só absorve o contador sem tocar no
+    // inimigo/vida: o servidor "tica" num ritmo fixo (8 kills/min) que não
+    // tem relação com o tempo real de abater um boss/elite na tela — sem essa
+    // trava, o poll de 15s cortava a luta local no meio (o inimigo trocava
+    // sem morrer de verdade, parecendo "morrer antes da vida acabar").
+    if (!hasSyncedRef.current) {
+      hasSyncedRef.current = true;
       killsTotalRef.current = serverKills;
       setLocalKillsUntilBoss(combat.kills_until_boss);
       setLocalIsBoss(combat.is_boss);
@@ -129,7 +141,10 @@ export function AfkCombatScene({
       localIsBossRef.current = combat.is_boss;
       localEnemyIdRef.current = combat.enemy_id;
       setDisplayHp(combat.enemy_hp);
+      return;
     }
+
+    killsTotalRef.current = serverKills;
   }, [combat]);
 
   const respawnLocalEnemy = useCallback(

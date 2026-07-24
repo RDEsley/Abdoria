@@ -1,73 +1,25 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Coins,
-  Compass,
-  Dumbbell,
-  Flame,
-  ListChecks,
-  Target,
-  Trophy,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, type LucideIcon } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { playClick, playCompleteSet } from '@/lib/sounds';
 
-// Ordem intencional: primeiro o que o app É (treino, missão diária,
-// atividade no descanso, calendário) — só depois a camada de jogo (XP,
-// moedas, exploração, ranking). Quem entende o app usa melhor o jogo.
-const SLIDES = [
-  {
-    icon: Dumbbell,
-    title: 'Bem-vindo ao Abdoria',
-    body: 'Um app de treino de abdômen de verdade — com aquecimento guiado, evolução real e um pouco de RPG pra deixar o hábito mais gostoso de manter.',
-  },
-  {
-    icon: Target,
-    title: 'Sua missão diária',
-    body: 'A Home sempre sugere o treino do dia. Toque em Jogar e siga no seu ritmo — por repetições ou por tempo, você escolhe.',
-  },
-  {
-    icon: ListChecks,
-    title: 'Dia de descanso tem Atividade',
-    body: 'Sem treino hoje? Escolha Atividades como leitura, corrida ou meditação na Home — elas mantêm sua sequência sem pular o descanso.',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Tudo fica no calendário',
-    body: 'Treinos, atividades e observações do dia ficam salvos — dá pra olhar pra trás e ver sua evolução a qualquer momento.',
-  },
-  {
-    icon: Flame,
-    title: 'XP e sequência',
-    body: 'Cada treino ou Atividade concluída rende XP e mantém sua sequência de dias viva. O contador de XP zera à meia-noite.',
-  },
-  {
-    icon: Coins,
-    title: 'Moedas e personalização',
-    body: 'Ganhe Moedas treinando e use na aba Áudio pra desbloquear pacotes de som. Molduras e títulos vêm de conquistas, códigos e eventos.',
-  },
-  {
-    icon: Compass,
-    title: 'Exploração AFK',
-    body: 'Sua patrulha explora sozinha em segundo plano e traz recompensas — dá uma olhada de vez em quando pra coletar o que achou.',
-  },
-  {
-    icon: Trophy,
-    title: 'Suba no ranking',
-    body: 'Dispute a Arena semanal de XP e Moedas contra outros jogadores e mantenha sua sequência de dias no topo.',
-  },
-] as const;
+export interface TutorialSlide {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Slides do passo a passo — cada tela de tutorial passa a sua. */
+  slides: readonly TutorialSlide[];
+  /** Rótulo do botão final. */
+  ctaLabel?: string;
 }
 
-export function TutorialOverlay({ open, onClose }: Props) {
+export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }: Props) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -76,9 +28,9 @@ export function TutorialOverlay({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const Slide = SLIDES[step];
+  const Slide = slides[step];
   const Icon = Slide.icon;
-  const isLast = step === SLIDES.length - 1;
+  const isLast = step === slides.length - 1;
 
   const next = () => {
     if (isLast) {
@@ -127,7 +79,7 @@ export function TutorialOverlay({ open, onClose }: Props) {
         </AnimatePresence>
 
         <div className="mt-5 flex items-center justify-center gap-1.5">
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all ${
@@ -149,10 +101,10 @@ export function TutorialOverlay({ open, onClose }: Props) {
             <ChevronLeft size={24} />
           </button>
           <span className="text-xs font-bold text-stone-400">
-            {step + 1}/{SLIDES.length}
+            {step + 1}/{slides.length}
           </span>
           {isLast ? (
-            <GameButton onClick={next}>Entendi!</GameButton>
+            <GameButton onClick={next}>{ctaLabel}</GameButton>
           ) : (
             <button
               type="button"

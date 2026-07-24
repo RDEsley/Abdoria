@@ -50,7 +50,7 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
     );
   } catch (error) {
     console.error('GET /api/meta/afk error:', error);
-    res.status(500).json({ error: 'Erro ao sincronizar Exploração AFK.' });
+    res.status(500).json({ error: 'Erro ao sincronizar Exploração.' });
   }
 });
 

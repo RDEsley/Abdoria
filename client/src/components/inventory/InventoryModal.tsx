@@ -356,7 +356,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               >
                 <h3 className="game-inventory-detail__title">{ROUTE_DRINK_LABEL}</h3>
                 <p className="game-inventory-detail__desc">
-                  Aplica na hora o loot de {ROUTE_DRINK_HOURS}h de Exploração AFK por unidade — usar
+                  Aplica na hora o loot de {ROUTE_DRINK_HOURS}h de Exploração por unidade — usar
                   todos rende {routeCount * ROUTE_DRINK_HOURS}h. Você tem {routeCount} em estoque
                   (máx. {stackCap}).
                 </p>
