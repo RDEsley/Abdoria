@@ -28,6 +28,7 @@ import { sanitizePublicProfile } from '../utils/sanitize-user.js';
 import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
 import { WorkoutHistory } from '../repositories/workout-history-repository.js';
 import { Follows } from '../repositories/follow-repository.js';
+import { ProfileLikes } from '../repositories/like-repository.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import {
   computePersonalRecords,
@@ -149,13 +150,16 @@ usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
       return;
     }
 
-    const [podio, history, targetFollowing, targetFollowers, meFollowing] = await Promise.all([
-      LeaderboardPodiumHistory.countsForUser(user.id),
-      WorkoutHistory.find({ usuario_id: user.id }),
-      Follows.followingIds(user.id),
-      Follows.followerIds(user.id),
-      Follows.followingIds(req.userId!),
-    ]);
+    const [podio, history, targetFollowing, targetFollowers, meFollowing, likesTotal, euCurti] =
+      await Promise.all([
+        LeaderboardPodiumHistory.countsForUser(user.id),
+        WorkoutHistory.find({ usuario_id: user.id }),
+        Follows.followingIds(user.id),
+        Follows.followerIds(user.id),
+        Follows.followingIds(req.userId!),
+        ProfileLikes.countFor(user.id),
+        ProfileLikes.hasLiked(req.userId!, user.id),
+      ]);
 
     const records_top = [
       ...computePersonalRecords(
@@ -196,6 +200,7 @@ usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
           following: targetFollowing.length,
           amigos,
         },
+        likes: { total: likesTotal, eu_curti: euCurti },
         relacao: { seguindo, segue_voce: segueVoce, amigo: seguindo && segueVoce },
       }),
     );
@@ -318,6 +323,8 @@ usersRouter.post('/me/moldura', async (req: AuthRequest, res) => {
     }
 
     user.cosmeticos.moldura_equipada = moldura ?? null;
+    // Última borda equipada vence: o avatar de identidade passa a mostrar a de pódio.
+    user.cosmeticos.borda_perfil_fonte = 'podio';
     await user.save();
 
     res.json({ user: sanitizeUser(user) });
@@ -414,6 +421,27 @@ usersRouter.delete('/me/avatar', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('DELETE /api/users/me/avatar error:', error);
     res.status(500).json({ error: 'Erro ao remover a foto de perfil.' });
+  }
+});
+
+/** Apaga a conta em definitivo. Cascade no banco cuida do resto (ver User.deleteById). */
+usersRouter.delete('/me', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    if (user.avatar_url) {
+      await removeAvatar(user.id);
+    }
+    await User.deleteById(user.id);
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('DELETE /api/users/me error:', error);
+    res.status(500).json({ error: 'Erro ao apagar a conta.' });
   }
 });
 

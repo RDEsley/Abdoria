@@ -621,6 +621,16 @@ export const User = {
 
     return null;
   },
+
+  /** Apaga a conta. Todas as tabelas relacionadas usam ON DELETE CASCADE
+      (workout_history, user_afk_state, notifications, follows,
+      profile_likes, leaderboard_podium_history etc.) — um delete aqui
+      limpa tudo. Não remove a foto do Storage (não é coberto por cascade
+      de banco); ver `removeAvatar` na rota antes de chamar isto. */
+  async deleteById(id: string): Promise<void> {
+    const sb = getSupabase();
+    await sb.from('profiles').delete().eq('id', id);
+  },
 };
 
 export { normalizePending, normalizeCombat, EMPTY_AFK_PENDING };

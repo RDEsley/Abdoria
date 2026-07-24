@@ -66,6 +66,11 @@ export function removeProfilePhoto(): Promise<{ user: IUserDocument }> {
   return fetchJson('/users/me/avatar', { method: 'DELETE' });
 }
 
+/** Apaga a conta em definitivo — sem volta. */
+export function deleteAccount(): Promise<{ ok: boolean }> {
+  return fetchJson('/users/me', { method: 'DELETE' });
+}
+
 export function getMolduraStatus(): Promise<MolduraStatusResponse> {
   return fetchJson('/users/me/molduras');
 }

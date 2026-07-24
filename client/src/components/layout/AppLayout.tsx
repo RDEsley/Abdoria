@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { Castle, Dumbbell, Layers, Settings, Trophy, User, X } from 'lucide-react';
+import { Dumbbell, Home, Layers, Settings, Trophy, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameToastHost } from '@/components/ui/GameToast';
 import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
+import { CosmeticUnlockCelebration } from '@/components/cosmetics/CosmeticUnlockCelebration';
 import { GameHud } from '@/components/layout/GameHud';
+import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
+import { useCopy } from '@/hooks/useCopy';
 import { useAuth } from '@/context/AuthContext';
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
@@ -18,19 +21,27 @@ import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
 
-const navItems = [
-  { to: '/', icon: Castle, label: 'Início' },
-  { to: '/biblioteca', icon: Layers, label: 'Exercícios' },
-  { to: '/construtor', icon: Dumbbell, label: 'Missão' },
-  { to: '/ranking', icon: Trophy, label: 'Ranking' },
-  { to: '/perfil', icon: User, label: 'Herói' },
-] as const;
+// Ícone da Home padronizado com os demais itens de navegação (linha simples,
+// mesmo peso visual — Castle destoava, era mais ilustrativo que os outros).
+// Rótulos variam por preferencias.tom_texto (Linguagem de Jogo x Normal) —
+// ver shared/copy.ts.
+function buildNavItems(copy: ReturnType<typeof useCopy>) {
+  return [
+    { to: '/', icon: Home, label: 'Início' },
+    { to: '/biblioteca', icon: Layers, label: copy('nav_biblioteca') },
+    { to: '/construtor', icon: Dumbbell, label: copy('nav_construtor') },
+    { to: '/ranking', icon: Trophy, label: copy('nav_ranking') },
+    { to: '/perfil', icon: User, label: copy('nav_perfil') },
+  ] as const;
+}
 
 const VIEWPORT_NOTICE_KEY = 'abdoria_viewport_notice_dismissed';
 
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
   const { refresh: refreshApp } = useApp();
+  const copy = useCopy();
+  const navItems = buildNavItems(copy);
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMobileViewport();
@@ -125,9 +136,14 @@ export function AppLayout() {
         <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
           <GameHud />
 
-          {showViewportNotice && (
-            <div className="mx-auto w-full max-w-lg px-4 pt-3 md:max-w-3xl">
-              <div className="relative">
+          <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]">
+            {showViewportNotice && (
+              // Precisa viver DENTRO do <main>: a TopNavbar é `position: fixed`
+              // (não ocupa espaço no fluxo) e só o <main> compensa a altura dela
+              // via padding-top. Como irmão do <main> (fora dele), o aviso nascia
+              // colado no topo do container e ficava coberto pela navbar fixa —
+              // o bug reportado de "aviso atrás da top-navbar".
+              <div className="relative mb-4">
                 <GameAlertBanner
                   variant="info"
                   title="Melhor experiência no celular"
@@ -143,10 +159,7 @@ export function AppLayout() {
                   <X size={16} aria-hidden />
                 </button>
               </div>
-            </div>
-          )}
-
-          <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]">
+            )}
             <Outlet />
           </main>
 
@@ -170,7 +183,11 @@ export function AppLayout() {
           </nav>
         </div>
 
-        <TutorialOverlay open={showTutorial} onClose={handleTutorialClose} />
+        <TutorialOverlay
+          open={showTutorial}
+          onClose={handleTutorialClose}
+          slides={ONBOARDING_TUTORIAL_SLIDES}
+        />
 
         <AnimatePresence>
           {levelUpLevel !== null && (
@@ -184,6 +201,7 @@ export function AppLayout() {
 
         {isHomePage && <AfkFab />}
 
+        <CosmeticUnlockCelebration />
         <GameToastHost />
       </div>
     </MidnightRefreshProvider>

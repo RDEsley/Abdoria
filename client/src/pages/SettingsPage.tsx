@@ -2,17 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertTriangle,
   Bell,
   Check,
   ChevronDown,
   ClipboardList,
   Copy,
   Dumbbell,
+  Gamepad2,
   HelpCircle,
   LogOut,
+  MessageSquareText,
   PlayCircle,
   Sparkles,
   ScrollText,
+  Trash2,
   UserRound,
   Volume2,
   Zap,
@@ -24,14 +28,16 @@ import { TrainingProfileModal } from '@/components/onboarding/TrainingProfileMod
 import { AboutSection } from '@/components/settings/AboutSection';
 import { GiftCodeSection } from '@/components/settings/GiftCodeSection';
 import { SoundPackSection } from '@/components/settings/SoundPackSection';
+import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
 import { useAuth } from '@/context/AuthContext';
-import { updateMe } from '@/lib/api';
+import { deleteAccount, updateMe } from '@/lib/api';
+import { getErrorMessage } from '@/lib/api-errors';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
-import type { TreinoBase } from '@/types';
+import type { TomTexto, TreinoBase } from '@/types';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_XP_POR_UNIDADE,
@@ -67,6 +73,10 @@ export function SettingsPage() {
   const [showTerms, setShowTerms] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  /** 1ª confirmação: digitar a frase. 2ª: tela final, separada, de "tem certeza mesmo". */
+  const [deleteStep, setDeleteStep] = useState<'closed' | 'confirm-phrase' | 'final'>('closed');
+  const [deletePhrase, setDeletePhrase] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [showTrainingProfile, setShowTrainingProfile] = useState(false);
   const [showXpRules, setShowXpRules] = useState(() => location.hash === '#regras-xp');
 
@@ -84,6 +94,7 @@ export function SettingsPage() {
   const [confetti, setConfetti] = useState(
     user?.preferencias?.confetti_animacoes_habilitadas ?? true,
   );
+  const [tomTexto, setTomTexto] = useState<TomTexto>(user?.preferencias?.tom_texto ?? 'jogo');
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
   const [ciclo, setCiclo] = useState<TreinoBase[]>(
     normalizeCicloTreinos(user?.preferencias?.ciclo_treinos),
@@ -98,16 +109,18 @@ export function SettingsPage() {
       som !== (prefs?.som_habilitado ?? true) ||
       volume !== (prefs?.sfx_volume ?? 0.7) ||
       confetti !== (prefs?.confetti_animacoes_habilitadas ?? true) ||
+      tomTexto !== (prefs?.tom_texto ?? 'jogo') ||
       descanso !== (prefs?.descanso_padrao_seg ?? 30) ||
       normalizeCicloTreinos(ciclo).join('') !==
         normalizeCicloTreinos(prefs?.ciclo_treinos).join('')
     );
-  }, [user, som, volume, confetti, descanso, ciclo]);
+  }, [user, som, volume, confetti, tomTexto, descanso, ciclo]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
     setConfetti(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
+    setTomTexto(user?.preferencias?.tom_texto ?? 'jogo');
     setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
     setCiclo(normalizeCicloTreinos(user?.preferencias?.ciclo_treinos));
   };
@@ -121,6 +134,7 @@ export function SettingsPage() {
           som_habilitado: som,
           sfx_volume: volume,
           confetti_animacoes_habilitadas: confetti,
+          tom_texto: tomTexto,
           descanso_padrao_seg: descanso,
           ciclo_treinos: normalizeCicloTreinos(ciclo),
         },
@@ -135,6 +149,26 @@ export function SettingsPage() {
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const closeDeleteFlow = () => {
+    setDeleteStep('closed');
+    setDeletePhrase('');
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      await deleteAccount();
+      await logout();
+      navigate('/login');
+      showGameToast('Conta apagada. Sentiremos sua falta.', { variant: 'info' });
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível apagar a conta.'), {
+        variant: 'error',
+      });
+      setDeletingAccount(false);
+    }
   };
 
   const requestNotifications = () => {
@@ -302,9 +336,34 @@ export function SettingsPage() {
             {confetti ? 'Ligadas' : 'Desligadas'}
           </span>
         </GameButton>
-        <p className="mt-2 text-xs font-medium text-stone-500">
-          Isso afeta missões, vitórias e recompensas. O restante das animações continua ativo.
-        </p>
+      </section>
+
+      <section className="glass-card p-4">
+        <h3 className="game-section-title mb-3 flex items-center gap-2">
+          <Gamepad2 size={14} /> Linguagem
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          <GameButton
+            type="button"
+            variant={tomTexto === 'jogo' ? 'secondary' : 'ghost'}
+            className="flex-col !h-auto gap-1 py-3"
+            onClick={() => setTomTexto('jogo')}
+            aria-pressed={tomTexto === 'jogo'}
+          >
+            <Gamepad2 size={18} aria-hidden />
+            <span className="text-xs font-bold">Linguagem de Jogo</span>
+          </GameButton>
+          <GameButton
+            type="button"
+            variant={tomTexto === 'normal' ? 'secondary' : 'ghost'}
+            className="flex-col !h-auto gap-1 py-3"
+            onClick={() => setTomTexto('normal')}
+            aria-pressed={tomTexto === 'normal'}
+          >
+            <MessageSquareText size={18} aria-hidden />
+            <span className="text-xs font-bold">Linguagem normal</span>
+          </GameButton>
+        </div>
       </section>
 
       <section className="glass-card p-4">
@@ -360,7 +419,7 @@ export function SettingsPage() {
                   </li>
                   <li>
                     Exercícios, streak e conquistas do treino contam no mesmo máx. diário. EXP
-                    Instantâneo, AFK e códigos presente vão direto ao total.
+                    Instantâneo, Exploração e códigos presente vão direto ao total.
                   </li>
                   <li>Após atingir o máx., o restante do dia não rende mais XP de treino.</li>
                 </ul>
@@ -443,6 +502,14 @@ export function SettingsPage() {
         <LogOut size={18} /> Sair da conta
       </GameButton>
 
+      <GameButton
+        variant="ghost"
+        onClick={() => setDeleteStep('confirm-phrase')}
+        className="flex items-center justify-center gap-2 text-red-600"
+      >
+        <Trash2 size={18} /> Deletar minha conta
+      </GameButton>
+
       <Modal
         open={confirmLogout}
         onClose={() => setConfirmLogout(false)}
@@ -472,30 +539,108 @@ export function SettingsPage() {
         </div>
       </Modal>
 
+      {/* 1ª confirmação: digitar a frase exata. */}
+      <Modal
+        open={deleteStep === 'confirm-phrase'}
+        onClose={closeDeleteFlow}
+        labelledBy="delete-account-phrase-title"
+      >
+        <div className="flex items-center gap-2 text-red-600">
+          <AlertTriangle size={20} aria-hidden />
+          <h2 id="delete-account-phrase-title" className="text-base font-extrabold text-stone-800">
+            Deletar sua conta?
+          </h2>
+        </div>
+        <p className="mt-2 text-sm font-medium text-stone-600">
+          Isso apaga treinos, XP, streak, cosméticos e todo o resto pra sempre — não dá pra
+          desfazer. Pra confirmar, escreva <strong>tenho certeza</strong> no campo abaixo.
+        </p>
+        <input
+          type="text"
+          value={deletePhrase}
+          onChange={(e) => setDeletePhrase(e.target.value)}
+          placeholder="tenho certeza"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          className="game-input mt-3 w-full"
+        />
+        <div className="mt-4 flex justify-end gap-2">
+          <GameButton variant="ghost" className="!w-auto px-4" onClick={closeDeleteFlow}>
+            Cancelar
+          </GameButton>
+          <GameButton
+            variant="danger"
+            className="!w-auto px-5"
+            disabled={deletePhrase.trim().toLowerCase() !== 'tenho certeza'}
+            onClick={() => setDeleteStep('final')}
+          >
+            Continuar
+          </GameButton>
+        </div>
+      </Modal>
+
+      {/* 2ª confirmação: última chance, separada da digitação da frase. */}
+      <Modal open={deleteStep === 'final'} onClose={closeDeleteFlow} labelledBy="delete-account-final-title">
+        <div className="flex items-center gap-2 text-red-600">
+          <AlertTriangle size={20} aria-hidden />
+          <h2 id="delete-account-final-title" className="text-base font-extrabold text-stone-800">
+            Essa é sua última chance
+          </h2>
+        </div>
+        <p className="mt-2 text-sm font-medium text-stone-600">
+          Ao confirmar, sua conta é apagada imediatamente e não pode ser recuperada.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <GameButton
+            variant="ghost"
+            className="!w-auto px-4"
+            disabled={deletingAccount}
+            onClick={closeDeleteFlow}
+          >
+            Cancelar
+          </GameButton>
+          <GameButton
+            variant="danger"
+            className="!w-auto px-5"
+            disabled={deletingAccount}
+            onClick={() => void handleDeleteAccount()}
+          >
+            {deletingAccount ? 'Apagando...' : 'Sim, deletar minha conta'}
+          </GameButton>
+        </div>
+      </Modal>
+
       <AnimatePresence>
         {dirty && (
-          <motion.div
-            className="settings-savebar"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-          >
-            <span className="settings-savebar__label">Alterações não salvas</span>
-            <div className="settings-savebar__actions">
-              <GameButton variant="ghost" className="!w-auto px-3" onClick={discard}>
-                Descartar
-              </GameButton>
-              <GameButton className="!w-auto px-5" disabled={saving} onClick={() => void save()}>
-                {saving ? 'Salvando...' : 'Salvar'}
-              </GameButton>
-            </div>
-          </motion.div>
+          <div className="settings-savebar-wrap">
+            <motion.div
+              className="settings-savebar"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 24 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            >
+              <span className="settings-savebar__label">Alterações não salvas</span>
+              <div className="settings-savebar__actions">
+                <GameButton variant="ghost" className="!w-auto px-3" onClick={discard}>
+                  Descartar
+                </GameButton>
+                <GameButton className="!w-auto px-5" disabled={saving} onClick={() => void save()}>
+                  {saving ? 'Salvando...' : 'Salvar'}
+                </GameButton>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
       <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
-      <TutorialOverlay open={showTutorial} onClose={handleTutorialClose} />
+      <TutorialOverlay
+        open={showTutorial}
+        onClose={handleTutorialClose}
+        slides={ONBOARDING_TUTORIAL_SLIDES}
+      />
       <TrainingProfileModal
         open={showTrainingProfile}
         onClose={() => setShowTrainingProfile(false)}

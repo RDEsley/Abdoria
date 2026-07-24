@@ -41,6 +41,21 @@ body {
   min-height: 100vh;
 }
 
+/* Modo minimalista (Configurações → Celebrações): mata toda animação/transição
+   CSS do sistema, não só confete. Duração quase-zero (em vez de `none`) mantém
+   os eventos animationend/transitionend disparando, então nada que dependa
+   deles trava. Framer Motion é desligado à parte via <MotionConfig
+   reducedMotion="always"> em App.tsx — CSS puro não afeta essas animações. */
+:root.game-minimal-mode,
+:root.game-minimal-mode * {
+  animation-duration: 0.001ms !important;
+  animation-delay: -0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* Rolagem horizontal nativa — não bloqueia scroll vertical no celular */
 .game-swipe-scroll {
   overflow-x: auto;

@@ -21,6 +21,7 @@ import { buildRestDayWarmup, isRestDay } from '@shared/training-plan';
 import { ATIVIDADES_MIN_DESCANSO, resolveFila } from '@shared/atividades';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { useApp } from '@/hooks/useApp';
+import { useCopy } from '@/hooks/useCopy';
 import {
   MUSCULO_LABELS,
   XP_DAILY_MIN_EXERCISES,
@@ -46,6 +47,7 @@ const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 export function DashboardPage() {
   const { stats, loading, refresh, loadRecommendations, user, exercises } = useApp();
   const navigate = useNavigate();
+  const copy = useCopy();
 
   useEffect(() => {
     if (!loading && stats) {
@@ -153,7 +155,11 @@ export function DashboardPage() {
         className={`game-quest-card ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
       >
         <span className="game-quest-card__badge">
-          {stats.treino_hoje ? 'Concluída' : diaDescanso ? 'Dia de descanso' : 'Missão diária'}
+          {stats.treino_hoje
+            ? 'Concluída'
+            : diaDescanso
+              ? 'Dia de descanso'
+              : copy('dashboard_quest_badge')}
         </span>
         <p className="game-quest-card__status">
           {stats.treino_hoje
