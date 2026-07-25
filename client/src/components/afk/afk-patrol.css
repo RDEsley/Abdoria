@@ -51,39 +51,22 @@
   position: absolute;
   inset: -0.35rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 50% 40%, rgba(52, 211, 153, 0.28), transparent 68%);
-  opacity: 0.75;
+  background: radial-gradient(circle at 50% 40%, rgba(52, 211, 153, 0.16), transparent 68%);
+  opacity: 0.5;
   pointer-events: none;
   z-index: -1;
 }
 
-.game-afk-fab__shine {
-  position: absolute;
-  top: 0.18rem;
-  left: 0.55rem;
-  right: 0.55rem;
-  height: 0.42rem;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent);
-  pointer-events: none;
-}
-
+/* Só um wrapper de layout pra centralizar as espadas — sem forma própria,
+   pra parecer um botão único e liso (o anel externo do .game-afk-fab é a
+   única borda visível). */
 .game-afk-fab__icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 1.55rem;
   height: 1.55rem;
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, transparent 55%),
-    linear-gradient(180deg, #134e4a 0%, #0f3d3a 100%);
-  border: 2px solid rgba(254, 243, 199, 0.55);
-  border-radius: 0.52rem;
   color: #fef9c3;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 2px 0 rgba(6, 78, 59, 0.55);
-  overflow: visible;
 }
 
 .game-afk-fab .game-afk-fab-swords {
@@ -225,10 +208,6 @@
   height: 1.55rem;
 }
 
-.game-afk-modal__title-icon .game-afk-fab-swords--header {
-  margin: 0 auto;
-}
-
 .game-afk-fab:hover {
   transform: translateY(-3px);
   filter: brightness(1.04);
@@ -285,24 +264,6 @@
   .game-afk-fab {
     right: 1.25rem;
     bottom: 1.5rem;
-  }
-}
-
-.game-afk-fab__label {
-  font-size: 0.5rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  line-height: 1;
-  color: #ecfdf5;
-  text-shadow: 0 1px 0 rgba(6, 78, 59, 0.65);
-  white-space: nowrap;
-}
-
-@media (min-width: 768px) {
-  .game-afk-fab__label {
-    font-size: 0.62rem;
-    letter-spacing: 0.05em;
   }
 }
 
@@ -369,6 +330,40 @@
   border: 4px solid var(--afk-ink);
   box-shadow: 8px 8px 0 var(--afk-ink);
   border-radius: 0.25rem;
+}
+
+/* Variante tela cheia — rota /exploracao, sem moldura de diálogo flutuante */
+.game-afk-overlay--page {
+  position: static;
+  z-index: auto;
+  display: block;
+  min-height: 100dvh;
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.game-afk-modal--page {
+  max-width: 46rem;
+  max-height: none;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1rem
+    calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  border-width: 0 0 0 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 640px) {
+  .game-afk-modal--page {
+    border-left-width: 4px;
+    border-right-width: 4px;
+    border-style: solid;
+    border-color: var(--afk-ink);
+    box-shadow: 6px 0 0 var(--afk-ink);
+  }
 }
 
 .game-afk-modal__header {
@@ -618,44 +613,6 @@
   background: #047857;
   border: 1.5px solid #065f46;
   border-radius: 999px;
-}
-
-.game-afk-modal__title-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.1rem;
-  height: 2.1rem;
-  color: #fef9c3;
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, transparent 55%),
-    linear-gradient(160deg, #0f766e 0%, #047857 50%, #065f46 100%);
-  border: 2px solid var(--afk-ink);
-  border-radius: 0.5rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 2px 0 rgba(6, 78, 59, 0.5);
-}
-
-.game-afk-modal__title-icon .game-afk-fab-swords {
-  color: #fef9c3;
-}
-
-/* Ícone do título vira botão: alterna vila x exploração. */
-.game-afk-modal__title-icon--btn {
-  padding: 0;
-  cursor: pointer;
-  transition:
-    transform 0.14s ease,
-    filter 0.14s ease;
-}
-
-.game-afk-modal__title-icon--btn:hover {
-  filter: brightness(1.08);
-}
-
-.game-afk-modal__title-icon--btn:active {
-  transform: scale(0.94);
 }
 
 .game-afk-modal__title {
@@ -6599,6 +6556,41 @@
   transition: width 0.4s ease;
 }
 
+/* Limite de 24h atingido — a barra e o tempo pulsam em cores quentes em vez
+   de um texto estático de "máx. 24h", chamando atenção pra vir coletar. */
+.game-afk-timer--capped .game-afk-timer__value {
+  animation: game-afk-timer-capped-text 1.3s ease-in-out infinite;
+}
+
+.game-afk-timer--capped .game-afk-timer__bar-fill {
+  animation: game-afk-timer-capped-bar 1.3s ease-in-out infinite;
+}
+
+.game-afk-timer__capped-hint {
+  color: #b45309;
+  font-weight: 800;
+}
+
+@keyframes game-afk-timer-capped-text {
+  0%,
+  100% {
+    color: #d97706;
+  }
+  50% {
+    color: #ef4444;
+  }
+}
+
+@keyframes game-afk-timer-capped-bar {
+  0%,
+  100% {
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  }
+  50% {
+    background: linear-gradient(90deg, #f87171, #dc2626);
+  }
+}
+
 /* Rewards */
 .game-afk-rewards-panel {
   display: flex;
@@ -7321,24 +7313,25 @@ button.game-afk-reward-chip {
   height: 0.6rem;
 }
 
-/* ── Baú pixel-art (referência: docs/private/design-references/bau-abdoria-imagem.jpg)
-   Corpo vermelho emoldurado em ouro, tampa em domo dourado com painéis
-   vermelhos e placa de fechadura dourada central. Anéis de box-shadow
-   reproduzem as camadas do pixel art: contorno preto → ouro → sombra do
-   ouro → vermelho escuro → vermelho vivo. ── */
+/* ── Baú pixel-art (Rodada 10 — paleta esmeralda, pra combinar com a cor
+   principal do resto do app, em vez do vermelho+ouro genérico de baú de
+   tesouro). Corpo esmeralda emoldurado em ouro, tampa em domo dourado com
+   painéis esmeralda e placa de fechadura dourada central. Anéis de
+   box-shadow reproduzem as camadas do pixel art: contorno preto → ouro →
+   sombra do ouro → esmeralda escuro → esmeralda vivo. ── */
 .game-afk-chest__body {
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   height: 2.05rem;
-  background: linear-gradient(145deg, #f2536b 0%, #d5253d 42%, #b01e30 78%, #8f1728 100%);
+  background: linear-gradient(145deg, #34d399 0%, #10b981 42%, #059669 78%, #047857 100%);
   border: 2.5px solid #191210;
   border-radius: 0.1rem 0.1rem 0.22rem 0.22rem;
   box-shadow:
     inset 0 0 0 0.26rem #f2b418,
     inset 0 0 0 0.34rem #8a5c08,
-    inset 0 0 0 0.46rem #8c1626,
+    inset 0 0 0 0.46rem #065f46,
     /* Realce diagonal (luz vindo de cima-esquerda) + sombra oposta — dá
        curvatura à face plana em vez de um gradiente só vertical. */
     inset 0.14rem 0.14rem 0.3rem rgba(255, 200, 180, 0.35),
@@ -7386,7 +7379,7 @@ button.game-afk-reward-chip {
   z-index: 1;
   display: block;
   height: 0.18rem;
-  background: linear-gradient(180deg, #311019, #5a1322);
+  background: linear-gradient(180deg, #052e22, #0a3d2e);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 1px 0 rgba(25, 18, 16, 0.5);
@@ -7531,12 +7524,12 @@ button.game-afk-reward-chip {
   right: 0.3rem;
   bottom: 0;
   left: 0.3rem;
-  background: linear-gradient(150deg, #f4536d 0%, #d5253d 50%, #a01b2e 85%, #841624 100%);
+  background: linear-gradient(150deg, #34d399 0%, #10b981 50%, #059669 85%, #065f46 100%);
   border: 2px solid #191210;
   border-bottom: none;
   border-radius: 0.75rem 0.75rem 0 0;
   box-shadow:
-    inset 0 0 0 0.14rem #8c1626,
+    inset 0 0 0 0.14rem #065f46,
     inset 0.1rem 0.1rem 0.2rem rgba(255, 200, 180, 0.3);
 }
 
@@ -9165,27 +9158,18 @@ button.game-afk-reward-chip {
   padding: 0;
   border: 2.5px solid #1a4a3a;
   border-radius: 999px;
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.18) 0%, transparent 40%),
-    linear-gradient(170deg, #065f46 0%, #047857 50%, #064e3b 100%);
-  box-shadow:
-    0 0 0 1px rgba(52, 211, 153, 0.35),
-    0 0 20px rgba(16, 185, 129, 0.25),
-    3px 4px 0 rgba(6, 50, 32, 0.55),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.28);
+  background: linear-gradient(170deg, #065f46 0%, #047857 50%, #064e3b 100%);
+  box-shadow: 3px 4px 0 rgba(6, 50, 32, 0.55);
 }
 
+/* Só o anel externo do botão marca o círculo — sem um segundo círculo
+   concêntrico em volta do ícone (era o que dava a leitura de "duas bordas"). */
 .game-afk-fab__icon {
   width: 2.35rem;
   height: 2.35rem;
-  border-radius: 999px;
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
-    linear-gradient(180deg, #065f46 0%, #043d2e 100%);
-  border: 2px solid rgba(52, 211, 153, 0.5);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 2px 0 rgba(4, 30, 20, 0.65);
+  border: none;
+  background: none;
+  box-shadow: none;
 }
 
 .game-afk-fab .game-afk-fab-swords {
@@ -9193,15 +9177,6 @@ button.game-afk-reward-chip {
   height: 1.7rem;
   color: #a7f3d0;
   filter: drop-shadow(0 0 3px rgba(52, 211, 153, 0.6)) drop-shadow(0 1px 0 rgba(6, 78, 59, 0.55));
-}
-
-.game-afk-fab__label {
-  font-size: 0.52rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #a7f3d0;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
 }
 
 .game-afk-fab--loot {
@@ -9214,13 +9189,6 @@ button.game-afk-reward-chip {
     0 0 22px rgba(14, 165, 233, 0.5),
     4px 5px 0 rgba(4, 16, 30, 0.65),
     inset 0 1.5px 0 rgba(255, 255, 255, 0.3);
-}
-
-.game-afk-fab--loot .game-afk-fab__icon {
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.22) 0%, transparent 50%),
-    linear-gradient(180deg, #0369a1 0%, #0c4a6e 100%);
-  border-color: rgba(56, 189, 248, 0.65);
 }
 
 .game-afk-fab--loot .game-afk-fab .game-afk-fab-swords {
@@ -9437,4 +9405,173 @@ button.game-afk-reward-chip {
     opacity: 0;
     transform: scale(1.35);
   }
+}
+
+/* ============================================================
+   EXPLORAÇÃO — transição vila ↔ floresta, Rodada 10
+   ============================================================ */
+
+.game-scene-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 8, 6, 0.9);
+  animation: game-scene-transition-fade 0.18s ease-out;
+  pointer-events: none;
+}
+
+.game-scene-transition__text {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 22rem;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #fde68a;
+  text-align: center;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.game-scene-transition__letter {
+  display: inline-block;
+  opacity: 0;
+  animation: game-scene-transition-bounce 0.5s ease-out forwards;
+}
+
+@keyframes game-scene-transition-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes game-scene-transition-bounce {
+  0% {
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.7);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-0.18rem) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================================
+   EXPLORAÇÃO — fluxo de 1ª entrada (gênero + arma), Rodada 10
+   ============================================================ */
+
+.game-afk-modal__topbar--setup {
+  padding-bottom: 0.65rem;
+  border-bottom: 2px dashed rgba(28, 25, 23, 0.14);
+}
+
+.exploration-intro {
+  display: flex;
+  justify-content: center;
+  padding: 0.4rem 0 0.6rem;
+}
+
+.exploration-intro__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.exploration-intro__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin-bottom: 0.5rem;
+  color: #78350f;
+  background: linear-gradient(180deg, #fde68a, #fbbf24);
+  border: 2.5px solid var(--afk-ink);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.3);
+}
+
+.exploration-intro__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #1c1917;
+}
+
+.exploration-intro__subtitle {
+  max-width: 22rem;
+  margin: 0.3rem 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #57534e;
+}
+
+.exploration-intro__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.exploration-intro__back {
+  margin-top: 1rem;
+}
+
+@media (max-width: 380px) {
+  .exploration-intro__subtitle {
+    font-size: 0.72rem;
+  }
+}
+
+/* Fallback de erro da página de Exploração — nunca deixa a tela em branco */
+.game-exploration-crash {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(180deg, #fffbeb 0%, #fff9e8 100%);
+}
+
+.game-exploration-crash__title {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #1c1917;
+}
+
+.game-exploration-crash__hint {
+  max-width: 22rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #57534e;
+}
+
+.game-exploration-crash__btn {
+  margin-top: 0.5rem;
+  padding: 0.55rem 1.2rem;
+  border: 2.5px solid var(--afk-ink);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #86efac, #22c55e);
+  color: #14532d;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.4);
 }

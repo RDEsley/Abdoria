@@ -27,7 +27,7 @@ export function AfkTimerPanel({
   const chances = dropChances ?? AFK_KILL_DROP_CHANCES;
 
   return (
-    <div className="game-afk-timer" aria-live="polite">
+    <div className={`game-afk-timer${capped ? ' game-afk-timer--capped' : ''}`} aria-live="polite">
       <div className="game-afk-timer__row">
         <span className="game-afk-timer__label">Tempo acumulado</span>
         {!capped && !loading && (
@@ -45,7 +45,7 @@ export function AfkTimerPanel({
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Progresso até o limite de 24h de exploração"
+        aria-label={`Progresso até o limite de ${AFK_MAX_MINUTES / 60}h de exploração`}
       >
         <div
           className="game-afk-timer__bar-fill"
@@ -57,7 +57,15 @@ export function AfkTimerPanel({
           className="game-afk-timer__label"
           style={{ textAlign: 'center', marginTop: '0.1rem' }}
         >
-          Cada inimigo derrotado pode dropar loot · máx. {AFK_MAX_MINUTES / 60}h
+          Cada inimigo derrotado pode dropar loot
+        </span>
+      )}
+      {capped && (
+        <span
+          className="game-afk-timer__label game-afk-timer__capped-hint"
+          style={{ textAlign: 'center', marginTop: '0.1rem' }}
+        >
+          Limite atingido — colete pra continuar explorando!
         </span>
       )}
     </div>

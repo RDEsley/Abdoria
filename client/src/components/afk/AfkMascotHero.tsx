@@ -1,4 +1,4 @@
-import type { ArmaPreferida } from '@/types';
+import type { ArmaPreferida, PersonagemGenero } from '@/types';
 
 export type MascotSpriteWeapon = ArmaPreferida | 'magia';
 
@@ -8,14 +8,29 @@ const MASCOT_SPRITE_SRC: Record<MascotSpriteWeapon, string> = {
   magia: '/assets/patrol-mascot-magia.png',
 };
 
+const MASCOT_SPRITE_SRC_FEMALE: Record<MascotSpriteWeapon, string> = {
+  arco: '/assets/patrol-mascot-female-arco.png',
+  espada: '/assets/patrol-mascot-female-espada.png',
+  magia: '/assets/patrol-mascot-female-magia.png',
+};
+
 interface Props {
   weapon: MascotSpriteWeapon;
   attacking: boolean;
   attackSeq: number;
   isCrit?: boolean;
+  genero?: PersonagemGenero;
 }
 
-export function AfkMascotHero({ weapon, attacking, attackSeq, isCrit = false }: Props) {
+export function AfkMascotHero({
+  weapon,
+  attacking,
+  attackSeq,
+  isCrit = false,
+  genero = 'masculino',
+}: Props) {
+  const spriteSrc =
+    genero === 'feminino' ? MASCOT_SPRITE_SRC_FEMALE[weapon] : MASCOT_SPRITE_SRC[weapon];
   const heroClass = [
     'game-afk-mascot',
     `game-afk-mascot--${weapon}`,
@@ -30,7 +45,7 @@ export function AfkMascotHero({ weapon, attacking, attackSeq, isCrit = false }: 
       <div className="game-afk-mascot__shadow" />
       <div className="game-afk-mascot__figure">
         <img
-          src={MASCOT_SPRITE_SRC[weapon]}
+          src={spriteSrc}
           alt=""
           className="game-afk-mascot__sprite-img"
           draggable={false}

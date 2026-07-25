@@ -1,10 +1,8 @@
-import { ArrowRight, BookOpen, Store } from 'lucide-react';
-import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
-import { AfkSkyCycle } from '@/components/afk/AfkSkyCycle';
-import type { ArmaPreferida } from '@/types';
+import { ArrowRight } from 'lucide-react';
+import type { PersonagemGenero } from '@/types';
 
 interface Props {
-  weapon: ArmaPreferida;
+  genero: PersonagemGenero;
   bestiaryUnlocked: number;
   bestiaryTotal: number;
   onOpenShop: () => void;
@@ -13,13 +11,13 @@ interface Props {
 }
 
 /**
- * Cena de hub entre patrulhas: a vila. Reusa o mesmo cenário de céu/montanhas/
- * árvores da exploração (AfkSkyCycle) pra manter a identidade visual, com a
- * loja e o bestiário como construções clicáveis e um botão claro pra voltar
- * a explorar — o "respiro" entre uma sessão de combate e outra.
+ * Cena de hub entre patrulhas: a vila. Cenário 100% CSS (céu + grama, sem
+ * imagem de fundo) com a loja e o museu (bestiário) sobrepostos — ambos
+ * clicáveis. O personagem fica parado à esquerda (não é combate AFK), só
+ * entra em exploração de verdade ao clicar em "Explorar".
  */
 export function AfkVillageScene({
-  weapon,
+  genero,
   bestiaryUnlocked,
   bestiaryTotal,
   onOpenShop,
@@ -29,51 +27,46 @@ export function AfkVillageScene({
   return (
     <div className="game-afk-scene">
       <div className="game-afk-scene__viewport game-afk-village">
-        <AfkSkyCycle showClouds />
-
-        <div className="game-afk-village__banner">
-          <span>Vila de Abdoria</span>
-        </div>
+        <div className="game-afk-village__ground-shadow" aria-hidden />
 
         <button
           type="button"
           className="game-afk-village__building game-afk-village__building--shop"
           onClick={onOpenShop}
+          aria-label="Abrir loja da Exploração"
+          title="Loja"
         >
-          <span className="game-afk-village__roof" aria-hidden />
-          <span className="game-afk-village__stall" aria-hidden>
-            <Store size={20} aria-hidden />
-          </span>
-          <span className="game-afk-village__label">Loja</span>
+          <img src="/assets/loja-da-vila.png" alt="" draggable={false} />
         </button>
 
         <button
           type="button"
-          className="game-afk-village__building game-afk-village__building--bestiary"
+          className="game-afk-village__building game-afk-village__building--museu"
           onClick={onOpenBestiary}
+          aria-label="Abrir Bestiário"
+          title="Bestiário"
         >
-          <span className="game-afk-village__roof game-afk-village__roof--bestiary" aria-hidden />
-          <span className="game-afk-village__stall" aria-hidden>
-            <BookOpen size={18} aria-hidden />
-          </span>
-          <span className="game-afk-village__label">
-            Bestiário
-            <span className="game-afk-village__label-count tabular-nums">
-              {bestiaryUnlocked}/{bestiaryTotal}
-            </span>
+          <img src="/assets/museu-da-vila-bestiario.png" alt="" draggable={false} />
+          <span className="game-afk-village__building-count tabular-nums">
+            {bestiaryUnlocked}/{bestiaryTotal}
           </span>
         </button>
 
-        <span className="game-afk-village__well" aria-hidden />
+        <div className="game-afk-village__hero">
+          <img
+            src={
+              genero === 'feminino'
+                ? '/assets/patrol-mascot-female-village.png'
+                : '/assets/patrol-mascot-village.png'
+            }
+            alt=""
+            className="game-afk-village__hero-img"
+            draggable={false}
+          />
+        </div>
 
-        <AfkMascotHero weapon={weapon} attacking={false} attackSeq={0} />
-
-        <button
-          type="button"
-          className="game-afk-village__continue"
-          onClick={onContinue}
-        >
-          Continuar Explorando
+        <button type="button" className="game-afk-village__continue" onClick={onContinue}>
+          Explorar
           <ArrowRight size={16} aria-hidden />
         </button>
       </div>

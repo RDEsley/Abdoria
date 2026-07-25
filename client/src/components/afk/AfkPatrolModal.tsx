@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Backpack, BookOpen, TreePine, X } from 'lucide-react';
+import { Backpack, TreePine, X } from 'lucide-react';
 import { BestiaryModal } from '@/components/bestiary/BestiaryModal';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkVillageScene } from '@/components/afk/AfkVillageScene';
+import { ExplorationIntroFlow } from '@/components/afk/ExplorationIntroFlow';
+import { SceneTransitionOverlay } from '@/components/afk/SceneTransitionOverlay';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import {
   EXPLORATION_TUTORIAL_KEY,
@@ -30,15 +32,19 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import type { AfkPendingReward, ArmaPreferida } from '@/types';
+import type { AfkPendingReward, ArmaPreferida, PersonagemGenero } from '@/types';
 import { ALL_BESTIARY_ENEMY_IDS, resolvePatrolArmas } from '@/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** 'page' renderiza como tela cheia (rota /exploracao), sem overlay de
+      diálogo — usado pela ExplorationPage. Padrão: modal flutuante. */
+  variant?: 'modal' | 'page';
 }
 
-export function AfkPatrolModal({ open, onClose }: Props) {
+export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
+  const isPage = variant === 'page';
   const { user, applyUser } = useAuth();
   const { refresh: refreshApp, stats } = useApp();
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
@@ -49,8 +55,12 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   const [shopOpen, setShopOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  /** Hub entre patrulhas: a vila (loja + bestiário) x a cena de combate ao vivo. */
-  const [sceneMode, setSceneMode] = useState<'exploring' | 'village'>('exploring');
+  /** Hub entre patrulhas: a vila (loja + bestiário) x a cena de combate ao vivo.
+      Sempre abre na vila — o personagem só entra em exploração de verdade
+      depois que o jogador clica em "Explorar". */
+  const [sceneMode, setSceneMode] = useState<'exploring' | 'village'>('village');
+  const [sceneTransition, setSceneTransition] = useState<string | null>(null);
+  const sceneTransitionTimerRef = useRef<number | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
   const loadedAtRef = useRef(0);
@@ -107,6 +117,31 @@ export function AfkPatrolModal({ open, onClose }: Props) {
     }
   }, [reconcileTimerFromServer]);
 
+  /** Troca de cena com uma transição breve — evita o corte seco entre a
+      vila e a floresta e dá um respiro de "carregando" estilo jogo. */
+  const goToScene = useCallback(
+    (mode: 'exploring' | 'village') => {
+      if (mode === sceneMode) return;
+      const label = mode === 'exploring' ? 'Entrando na Floresta...' : 'Voltando para a vila...';
+      setSceneTransition(label);
+      if (sceneTransitionTimerRef.current) window.clearTimeout(sceneTransitionTimerRef.current);
+      sceneTransitionTimerRef.current = window.setTimeout(() => {
+        setSceneMode(mode);
+        sceneTransitionTimerRef.current = window.setTimeout(() => {
+          setSceneTransition(null);
+        }, 300);
+      }, 1620);
+    },
+    [sceneMode],
+  );
+
+  useEffect(
+    () => () => {
+      if (sceneTransitionTimerRef.current) window.clearTimeout(sceneTransitionTimerRef.current);
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!open) {
       syncedMinutosRef.current = null;
@@ -115,14 +150,22 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       setBestiaryOpen(false);
       setInventoryOpen(false);
       setCelebrationClaimed(null);
-      setSceneMode('exploring');
+      setSceneMode('village');
+      if (sceneTransitionTimerRef.current) {
+        window.clearTimeout(sceneTransitionTimerRef.current);
+        sceneTransitionTimerRef.current = null;
+      }
+      setSceneTransition(null);
       return;
     }
-    if (!window.localStorage.getItem(EXPLORATION_TUTORIAL_KEY)) {
+    if (
+      user?.preferencias?.personagem_genero &&
+      !window.localStorage.getItem(EXPLORATION_TUTORIAL_KEY)
+    ) {
       setShowTutorial(true);
     }
     void load();
-  }, [open, load]);
+  }, [open, load, user?.preferencias?.personagem_genero]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -235,6 +278,8 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
+  const needsCharacterSetup = !user?.preferencias?.personagem_genero;
+  const genero: PersonagemGenero = user?.preferencias?.personagem_genero ?? 'masculino';
   const capped = meta?.capped ?? false;
   const inventoryItemCount =
     (stats?.frozen_streak_count ?? 0) +
@@ -250,27 +295,52 @@ export function AfkPatrolModal({ open, onClose }: Props) {
   return createPortal(
     <>
       <div
-        className="game-afk-overlay"
-        role="dialog"
-        aria-modal="true"
+        className={`game-afk-overlay${isPage ? ' game-afk-overlay--page' : ''}`}
+        role={isPage ? undefined : 'dialog'}
+        aria-modal={isPage ? undefined : true}
         aria-labelledby="afk-patrol-title"
-        onClick={onClose}
+        onClick={isPage ? undefined : onClose}
       >
         <motion.div
-          className="game-afk-modal"
+          className={`game-afk-modal${isPage ? ' game-afk-modal--page' : ''}`}
           initial={{ opacity: 0, y: 24, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="game-afk-modal__topbar">
+          {needsCharacterSetup ? (
+            <>
+              <div className="game-afk-modal__topbar game-afk-modal__topbar--setup">
+                <h2 id="afk-patrol-title" className="game-afk-modal__title">
+                  Exploração
+                </h2>
+                <button
+                  type="button"
+                  className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--close"
+                  onClick={onClose}
+                  title="Fechar"
+                  aria-label="Fechar exploração"
+                >
+                  <X size={22} aria-hidden />
+                </button>
+              </div>
+              <ExplorationIntroFlow onDone={() => void load()} />
+            </>
+          ) : (
+            <>
+              <div className="game-afk-modal__topbar">
             <div className="game-afk-modal__title-group">
+              <h2 id="afk-patrol-title" className="game-afk-modal__title">
+                Exploração
+              </h2>
+            </div>
+            <div className="game-afk-modal__toolbar">
               <button
                 type="button"
-                className="game-afk-modal__title-icon game-afk-modal__title-icon--btn"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--village"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSceneMode((m) => (m === 'village' ? 'exploring' : 'village'));
+                  goToScene(sceneMode === 'village' ? 'exploring' : 'village');
                 }}
                 title={sceneMode === 'village' ? 'Voltar a explorar' : 'Voltar à vila'}
                 aria-label={sceneMode === 'village' ? 'Voltar a explorar' : 'Voltar à vila'}
@@ -279,50 +349,33 @@ export function AfkPatrolModal({ open, onClose }: Props) {
                 {sceneMode === 'village' ? (
                   <AfkFabSwords variant="header" />
                 ) : (
-                  <TreePine size={24} aria-hidden />
+                  <TreePine size={18} aria-hidden />
                 )}
+                {sceneMode === 'exploring' && <span>Vila</span>}
               </button>
-              <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                Exploração
-              </h2>
-            </div>
-            <div className="game-afk-modal__toolbar">
-              <button
-                type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setInventoryOpen(true);
-                }}
-                title="Inventário"
-                aria-label={
-                  inventoryItemCount > 0
-                    ? `Abrir inventário, ${inventoryItemCount} itens`
-                    : 'Abrir inventário'
-                }
-              >
-                <Backpack size={26} aria-hidden />
-                {inventoryItemCount > 0 && (
-                  <span className="game-afk-modal__inventory-badge tabular-nums">
-                    {inventoryItemCount}
-                  </span>
-                )}
-              </button>
-              <button
-                type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--bestiary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setBestiaryOpen(true);
-                }}
-                title="Bestiário"
-                aria-label="Abrir bestiário da exploração"
-              >
-                <BookOpen size={26} aria-hidden />
-                <span className="game-afk-modal__inventory-badge tabular-nums">
-                  {stats?.bestiario_desbloqueados?.length ?? 0}/{ALL_BESTIARY_ENEMY_IDS.length}
-                </span>
-              </button>
+              {sceneMode === 'village' && (
+                <button
+                  type="button"
+                  className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInventoryOpen(true);
+                  }}
+                  title="Inventário"
+                  aria-label={
+                    inventoryItemCount > 0
+                      ? `Abrir inventário, ${inventoryItemCount} itens`
+                      : 'Abrir inventário'
+                  }
+                >
+                  <Backpack size={26} aria-hidden />
+                  {inventoryItemCount > 0 && (
+                    <span className="game-afk-modal__inventory-badge tabular-nums">
+                      {inventoryItemCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 type="button"
                 className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--close"
@@ -337,18 +390,19 @@ export function AfkPatrolModal({ open, onClose }: Props) {
 
           {sceneMode === 'village' ? (
             <AfkVillageScene
-              weapon={weapon}
+              genero={genero}
               bestiaryUnlocked={stats?.bestiario_desbloqueados?.length ?? 0}
               bestiaryTotal={ALL_BESTIARY_ENEMY_IDS.length}
               onOpenShop={() => setShopOpen(true)}
               onOpenBestiary={() => setBestiaryOpen(true)}
-              onContinue={() => setSceneMode('exploring')}
+              onContinue={() => goToScene('exploring')}
             />
           ) : (
             <AfkCombatScene
               userId={userId}
               weapon={weapon}
               weaponId={weaponId}
+              genero={genero}
               combat={meta?.combat ?? null}
               hasLoot={meta?.has_rewards}
               capped={capped}
@@ -386,8 +440,12 @@ export function AfkPatrolModal({ open, onClose }: Props) {
               </GameButton>
             </div>
           </div>
+            </>
+          )}
         </motion.div>
       </div>
+
+      {sceneTransition && <SceneTransitionOverlay label={sceneTransition} />}
 
       <PatrolShopModal
         open={shopOpen}
@@ -405,7 +463,7 @@ export function AfkPatrolModal({ open, onClose }: Props) {
       <BestiaryModal open={bestiaryOpen} onClose={() => setBestiaryOpen(false)} layer="modal" />
 
       <TutorialOverlay
-        open={showTutorial}
+        open={showTutorial && !needsCharacterSetup}
         onClose={handleTutorialClose}
         slides={EXPLORATION_TUTORIAL_SLIDES}
         ctaLabel="Vamos explorar!"

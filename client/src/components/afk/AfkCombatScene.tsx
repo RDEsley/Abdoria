@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Sparkles } from 'lucide-react';
-import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida } from '@/types';
+import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida, PersonagemGenero } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
   advanceKillsUntilBoss,
@@ -25,6 +25,7 @@ interface Props {
   userId: string;
   weapon: ArmaPreferida;
   weaponId: string;
+  genero?: PersonagemGenero;
   combat: AfkCombatSnapshot | null;
   hasLoot?: boolean;
   capped?: boolean;
@@ -48,6 +49,7 @@ export function AfkCombatScene({
   userId,
   weapon,
   weaponId,
+  genero = 'masculino',
   combat,
   hasLoot,
   capped,
@@ -303,6 +305,7 @@ export function AfkCombatScene({
 
         <AfkMascotHero
           weapon={weapon}
+          genero={genero}
           attacking={attacking}
           attackSeq={attackSeq}
           isCrit={attackIsCrit}

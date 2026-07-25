@@ -6,15 +6,16 @@ import { useLottie } from 'lottie-react';
 import {
   BicepsFlexed,
   Cake,
-  Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Coins,
   Compass,
   Flame,
+  Gamepad2,
   Gauge,
   ListChecks,
+  MessageSquareText,
   PartyPopper,
   Rocket,
   Ruler,
@@ -23,7 +24,6 @@ import {
   SignalMedium,
   SkipForward,
   SlidersHorizontal,
-  Swords,
   UserCog,
   Weight,
 } from 'lucide-react';
@@ -51,7 +51,7 @@ import {
 } from '@/components/onboarding/training-profile-draft';
 import { useAuth } from '@/context/AuthContext';
 import { completeOnboarding } from '@/lib/api';
-import { playClick, playCompleteSet, playSuccess } from '@/lib/sounds';
+import { playCompleteSet, playSuccess } from '@/lib/sounds';
 import {
   digitsOnly,
   formatAlturaMask,
@@ -63,16 +63,16 @@ import {
   NIVEL_LABELS,
   normalizeCicloTreinos,
   suggestNivel,
-  type ArmaPreferida,
   type NivelUsuario,
+  type TomTexto,
   type TreinoBase,
 } from '@/types';
 
 type StepId =
   | 'terms'
+  | 'linguagem'
   | 'body'
   | 'level'
-  | 'weapon'
   | 'scope'
   | 'foco'
   | 'partes'
@@ -107,16 +107,6 @@ const CICLOS_POR_FOCO: Record<string, TreinoBase[]> = {
   hipertrofia: ['A', 'B', 'C'],
   saude: ['D', 'E'],
 };
-
-const WEAPONS: {
-  id: ArmaPreferida;
-  label: string;
-  hint: string;
-  img: string;
-}[] = [
-  { id: 'arco', label: 'Arco', hint: 'Ataque à distância', img: '/assets/patrol-mascot-arco.png' },
-  { id: 'espada', label: 'Espada', hint: 'Combate corpo a corpo', img: '/assets/patrol-mascot-espada.png' },
-];
 
 const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
 const CHARACTER_LOTTIE_URL = '/assets/character-welcome.json';
@@ -196,7 +186,7 @@ export function OnboardingPage() {
   const [peso, setPeso] = useState('');
   const [altura, setAltura] = useState('');
   const [nivel, setNivel] = useState<NivelUsuario | null>(null);
-  const [armaPreferida, setArmaPreferida] = useState<ArmaPreferida | null>(null);
+  const [tomTexto, setTomTexto] = useState<TomTexto>('jogo');
   const [draft, setDraft] = useState<TrainingProfileDraft>(DEFAULT_TRAINING_DRAFT);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [cicloRecomendado, setCicloRecomendado] = useState(false);
@@ -238,9 +228,9 @@ export function OnboardingPage() {
   const steps = useMemo<StepId[]>(
     () => [
       'terms',
+      'linguagem',
       'body',
       'level',
-      'weapon',
       'equipamento',
       'scope',
       'foco',
@@ -303,8 +293,8 @@ export function OnboardingPage() {
           som_habilitado: true,
           sfx_volume: 0.7,
           tutorial_visto: false,
-          arma_preferida: armaPreferida ?? 'arco',
           equipamentos: draft.equipamentos,
+          tom_texto: tomTexto,
         },
       };
 
@@ -326,7 +316,6 @@ export function OnboardingPage() {
     if (stepId === 'terms' && !termsAccepted) return 'Aceite os termos para continuar.';
     if (stepId === 'body') return bodyMetrics.error;
     if (stepId === 'level' && !nivel) return 'Selecione seu nível de treino.';
-    if (stepId === 'weapon' && !armaPreferida) return 'Escolha seu estilo de combate.';
     if (stepId === 'scope' && !draft.escopo) return 'Escolha a sua missão.';
     if (stepId === 'foco' && !draft.foco) return 'Selecione seu foco.';
     if (stepId === 'partes' && draft.partes !== null && draft.partes.length === 0) {
@@ -448,6 +437,33 @@ export function OnboardingPage() {
               </>
             )}
 
+            {stepId === 'linguagem' && (
+              <>
+                <StepHeader
+                  icon={<Gamepad2 size={22} />}
+                  title="Como você quer jogar?"
+                  subtitle="Dá pra trocar depois nas Opções — isso só muda o tom dos textos, não o que o app faz."
+                />
+                <div className="mt-4 flex flex-col gap-2">
+                  <OptionCard
+                    selected={tomTexto === 'jogo'}
+                    onClick={() => setTomTexto('jogo')}
+                    icon={<Gamepad2 size={18} />}
+                    title="Linguagem de Jogo"
+                    subtitle="HP, XP, Heroi e o resto do vocabulário RPG — a experiência completa."
+                    recommended
+                  />
+                  <OptionCard
+                    selected={tomTexto === 'normal'}
+                    onClick={() => setTomTexto('normal')}
+                    icon={<MessageSquareText size={18} />}
+                    title="Linguagem normal"
+                    subtitle="Tudo em português direto, sem termos de jogo — pra quem só quer treinar."
+                  />
+                </div>
+              </>
+            )}
+
             {stepId === 'body' && (
               <>
                 <StepHeader
@@ -543,43 +559,6 @@ export function OnboardingPage() {
                     title={NIVEL_LABELS.avancado}
                     subtitle="Treino é rotina — pode encarar cargas e intensidade máximas desde já."
                   />
-                </div>
-              </>
-            )}
-
-            {stepId === 'weapon' && (
-              <>
-                <StepHeader
-                  icon={<Swords size={22} />}
-                  title="Escolha seu estilo de combate"
-                  subtitle="Usado na Exploração — sua patrulha luta sozinha nesse estilo enquanto você treina de verdade aqui fora."
-                />
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {WEAPONS.map((weapon) => (
-                    <button
-                      key={weapon.id}
-                      type="button"
-                      onClick={() => {
-                        playClick();
-                        setArmaPreferida(weapon.id);
-                      }}
-                      className={`onb-weapon-card${armaPreferida === weapon.id ? ' onb-weapon-card--selected' : ''}`}
-                    >
-                      <img
-                        src={weapon.img}
-                        alt=""
-                        className="onb-weapon-card__img"
-                        draggable={false}
-                      />
-                      <span className="onb-weapon-card__label">{weapon.label}</span>
-                      <span className="onb-weapon-card__hint">{weapon.hint}</span>
-                      {armaPreferida === weapon.id && (
-                        <span className="onb-weapon-card__check" aria-hidden>
-                          <Check size={13} strokeWidth={3} />
-                        </span>
-                      )}
-                    </button>
-                  ))}
                 </div>
               </>
             )}
@@ -773,8 +752,8 @@ export function OnboardingPage() {
                     >
                       <Flame size={15} />
                     </span>
-                    Nos dias de descanso, um aquecimento leve ou uma Atividade (leitura, corrida,
-                    meditação...) mantêm sua sequência.
+                    Nos dias de descanso, Atividades como alongamento, leitura, corrida ou
+                    meditação mantêm sua sequência.
                   </li>
                 </motion.ul>
               </div>
