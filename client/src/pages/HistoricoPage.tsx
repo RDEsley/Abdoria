@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Medal, ScrollText, Timer, Zap } from 'lucide-react';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
@@ -21,6 +22,7 @@ function formatSessionDate(concluidoEm: string | Date): string {
 }
 
 export function HistoricoPage() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<IWorkoutHistoryDocument[]>([]);
   const [nextCursor, setNextCursor] = useState<WorkoutHistoryFeedCursor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,11 @@ export function HistoricoPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Diário de bordo" title="Histórico de treinos" />
+      <GamePageHeader
+        eyebrow="Diário de bordo"
+        title="Treinos e Atividades"
+        onBack={() => navigate(-1)}
+      />
 
       {sessions.length === 0 && (
         <div className="glass-card p-4 text-center text-sm font-bold text-stone-500">

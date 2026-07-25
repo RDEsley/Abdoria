@@ -217,6 +217,34 @@
   color: var(--game-ink);
 }
 
+.game-page-header__back {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin-top: 0.1rem;
+  color: var(--game-ink);
+  background: #fff;
+  border: 2px solid var(--game-ink);
+  border-radius: 0.6rem;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.35);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.game-page-header__back:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.35);
+}
+
+.game-page-header__back:active {
+  transform: scale(0.94);
+  box-shadow: 1px 1px 0 rgba(28, 25, 23, 0.35);
+}
+
 /* Cards de missão / quest */
 .game-quest-card {
   position: relative;

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { AchievementCard, sortAchievements } from '@/components/gamification/AchievementCard';
@@ -11,6 +11,7 @@ import { ACHIEVEMENT_DIFFICULTY_LABELS, type AchievementDifficulty } from '@/typ
 const DIFFICULTY_ORDER: AchievementDifficulty[] = ['facil', 'media', 'dificil', 'lendaria'];
 
 export function AchievementsPage() {
+  const navigate = useNavigate();
   const { stats, loading, refresh } = useApp();
 
   if (loading) return <PageLoader />;
@@ -34,11 +35,7 @@ export function AchievementsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Hall da fama" title="Conquistas">
-        <Link to="/" className="text-xs font-bold text-emerald-700 hover:underline">
-          ← Base
-        </Link>
-      </GamePageHeader>
+      <GamePageHeader eyebrow="Hall da fama" title="Conquistas" onBack={() => navigate(-1)} />
 
       <div className="game-quest-card flex items-center gap-3">
         <div className="game-level-badge !h-12 !w-12">
