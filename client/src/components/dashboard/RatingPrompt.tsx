@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
@@ -24,17 +24,27 @@ export function RatingPrompt() {
   const [busy, setBusy] = useState(false);
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(SESSION_KEY) === '1');
 
-  const shouldShow =
+  const eligibleNow =
     !dismissed &&
     !!user &&
     !user.preferencias?.avaliacao_respondida &&
     (stats?.streak_atual ?? 0) >= 3;
 
-  if (!shouldShow) return null;
+  // Trava a decisão de mostrar uma vez satisfeita — sem isso, qualquer
+  // atualização passageira de `stats`/`user` em segundo plano (poll do AFK,
+  // refresh de contexto) recalculava `shouldShow` a cada render e podia
+  // desmontar o modal no meio da digitação, apagando o comentário.
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (eligibleNow) setVisible(true);
+  }, [eligibleNow]);
+
+  if (!visible || !user) return null;
 
   const closeForSession = () => {
     sessionStorage.setItem(SESSION_KEY, '1');
     setDismissed(true);
+    setVisible(false);
   };
 
   const neverAskAgain = async () => {

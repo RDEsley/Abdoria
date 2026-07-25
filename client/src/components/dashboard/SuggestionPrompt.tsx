@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
@@ -29,18 +29,28 @@ export function SuggestionPrompt() {
     !user.preferencias?.avaliacao_respondida &&
     sessionStorage.getItem('abdoria_rating_prompt_seen') !== '1';
 
-  const shouldShow =
+  const eligibleNow =
     !dismissed &&
     !!user &&
     !ratingPendente &&
     !user.preferencias?.sugestao_respondida &&
     (stats?.streak_atual ?? 0) >= 7;
 
-  if (!shouldShow) return null;
+  // Trava a decisão de mostrar uma vez satisfeita — sem isso, qualquer
+  // atualização passageira de `stats`/`user` em segundo plano (poll do AFK,
+  // refresh de contexto) recalculava `shouldShow` a cada render e podia
+  // desmontar o modal no meio da digitação, apagando o texto.
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (eligibleNow) setVisible(true);
+  }, [eligibleNow]);
+
+  if (!visible || !user) return null;
 
   const closeForSession = () => {
     sessionStorage.setItem(SESSION_KEY, '1');
     setDismissed(true);
+    setVisible(false);
   };
 
   const neverAskAgain = async () => {
