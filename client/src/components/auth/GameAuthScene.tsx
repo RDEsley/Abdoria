@@ -1,19 +1,24 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { BrandMark } from '@/components/brand/BrandMark';
 
-/** Sol (dia) ou lua (noite) com rosto — fecha os olhos quando alguma senha está visível. */
+/** Sol (dia) ou lua (noite) com rosto — fecha os olhos e "espia" (cresce um
+    pouco, mais presente na tela) quando alguma senha está visível. */
 function GameCelestial({ variant, eyesClosed }: { variant: 'day' | 'night'; eyesClosed: boolean }) {
   const kind = variant === 'day' ? 'sun' : 'moon';
   return (
     <span
-      className={`game-celestial game-celestial--${kind}${eyesClosed ? ' game-celestial--sleep' : ''}`}
-      aria-hidden
+      className={`game-celestial-mount game-celestial-mount--${kind}${eyesClosed ? ' game-celestial-mount--peek' : ''}`}
     >
-      {variant === 'day' && <span className="game-celestial__rays" />}
-      <span className="game-celestial__face">
-        <span className="game-celestial__eye game-celestial__eye--l" />
-        <span className="game-celestial__eye game-celestial__eye--r" />
-        <span className="game-celestial__mouth" />
+      <span
+        className={`game-celestial game-celestial--${kind}${eyesClosed ? ' game-celestial--sleep' : ''}`}
+        aria-hidden
+      >
+        {variant === 'day' && <span className="game-celestial__rays" />}
+        <span className="game-celestial__face">
+          <span className="game-celestial__eye game-celestial__eye--l" />
+          <span className="game-celestial__eye game-celestial__eye--r" />
+          <span className="game-celestial__mouth" />
+        </span>
       </span>
     </span>
   );
@@ -33,7 +38,7 @@ function GameTree({
   variant = 'round',
 }: {
   className: string;
-  variant?: 'round' | 'oak' | 'sapling';
+  variant?: 'round' | 'oak';
 }) {
   if (variant === 'oak') {
     return (
@@ -48,32 +53,12 @@ function GameTree({
     );
   }
 
-  if (variant === 'sapling') {
-    return (
-      <div className={`game-tree game-tree--sapling ${className}`} aria-hidden>
-        <div className="game-tree__sapling-top" />
-        <div className="game-tree__sapling-mid" />
-        <div className="game-tree__trunk game-tree__trunk--thin" />
-      </div>
-    );
-  }
-
   return (
     <div className={`game-tree game-tree--round ${className}`} aria-hidden>
       <div className="game-tree__foliage">
         <span className="game-tree__shine" />
       </div>
       <div className="game-tree__trunk" />
-    </div>
-  );
-}
-
-function GameBush({ className }: { className: string }) {
-  return (
-    <div className={`game-bush ${className}`} aria-hidden>
-      <span className="game-bush__leaf game-bush__leaf--1" />
-      <span className="game-bush__leaf game-bush__leaf--2" />
-      <span className="game-bush__leaf game-bush__leaf--3" />
     </div>
   );
 }
@@ -137,8 +122,6 @@ export function GameAuthScene({ children, variant = 'night' }: GameAuthSceneProp
     return () => window.removeEventListener('abdoria:password-visibility', handler);
   }, []);
 
-  const isDay = variant === 'day';
-
   return (
     <div className={`game-login game-login--${variant}`}>
       <div className="game-login__sky" aria-hidden>
@@ -170,27 +153,6 @@ export function GameAuthScene({ children, variant = 'night' }: GameAuthSceneProp
         <div className="game-login__scenery">
           <GameTree className="game-tree--1" variant="round" />
           <GameTree className="game-tree--2" variant="oak" />
-          <GameTree className="game-tree--3" variant="sapling" />
-          <GameBush className="game-bush--1" />
-          <GameBush className="game-bush--2" />
-          <GameBush className="game-bush--3" />
-          <GameBush className="game-bush--4" />
-          <GameBush className="game-bush--5" />
-          <span className="game-rock game-rock--1" />
-          <span className="game-rock game-rock--2" />
-          {isDay ? (
-            <>
-              <span className="game-flower game-flower--1" />
-              <span className="game-flower game-flower--2" />
-              <span className="game-flower game-flower--3" />
-            </>
-          ) : (
-            <>
-              <span className="game-firefly game-firefly--1" />
-              <span className="game-firefly game-firefly--2" />
-              <span className="game-firefly game-firefly--3" />
-            </>
-          )}
         </div>
         <div className="game-login__dirt" />
         <div className="game-login__grass" />

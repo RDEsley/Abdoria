@@ -37,18 +37,43 @@
 }
 
 /* ---- Sol/Lua com rosto ---- */
+/* Wrapper de posição/peek — separado do .game-celestial de propósito: esse
+   tem a animação de entrada (translate) com fill "both", que travaria
+   pra sempre qualquer transform aplicado no MESMO elemento depois (é por
+   isso que o efeito de "espiar" quando a senha fica visível mora aqui, um
+   nível acima, só com transition — sem brigar com a entrada). */
+.game-celestial-mount {
+  position: absolute;
+  top: 6%;
+  z-index: 1;
+  width: 88px;
+  height: 88px;
+  transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.game-celestial-mount--sun {
+  right: 10%;
+}
+
+.game-celestial-mount--moon {
+  left: 10%;
+}
+
+/* Senha visível: o astro "espia" a tela — cresce e desce um pouco, além de
+   fechar os olhos (ver .game-celestial--sleep mais abaixo). */
+.game-celestial-mount--peek {
+  transform: scale(1.24) translateY(10%);
+}
+
 .game-celestial {
   position: absolute;
-  top: 7%;
+  inset: 0;
   z-index: 1;
-  width: 60px;
-  height: 60px;
   border-radius: 50%;
 }
 
 /* Sol nasce à direita (o form fica no centro): entra vindo do lado da lua. */
 .game-celestial--sun {
-  right: 12%;
   background: radial-gradient(circle at 38% 32%, #fef9c3 0%, #fde047 55%, #f59e0b 100%);
   box-shadow:
     0 0 36px 10px rgba(253, 224, 71, 0.45),
@@ -60,7 +85,6 @@
 
 /* Lua nasce à esquerda — lado oposto ao sol. */
 .game-celestial--moon {
-  left: 12%;
   background: radial-gradient(circle at 35% 32%, #fefce8 0%, #fde68a 55%, #fcd34d 100%);
   box-shadow:
     0 0 32px 8px rgba(253, 230, 138, 0.35),
@@ -79,22 +103,22 @@
 }
 
 .game-celestial--moon::before {
-  top: 10px;
-  left: 10px;
-  width: 12px;
-  height: 12px;
+  top: 14px;
+  left: 14px;
+  width: 17px;
+  height: 17px;
 }
 
 .game-celestial--moon::after {
-  top: 14px;
-  right: 12px;
-  width: 7px;
-  height: 7px;
+  top: 20px;
+  right: 17px;
+  width: 10px;
+  height: 10px;
 }
 
 .game-celestial__rays {
   position: absolute;
-  inset: -16px;
+  inset: -22px;
   display: block;
   border-radius: 50%;
   background: repeating-conic-gradient(
@@ -117,8 +141,8 @@
   position: absolute;
   top: 38%;
   display: block;
-  width: 7px;
-  height: 10px;
+  width: 10px;
+  height: 14px;
   border-radius: 999px;
   background: #78350f;
   transition:
@@ -143,24 +167,24 @@
   left: 50%;
   top: 56%;
   display: block;
-  width: 15px;
-  height: 8px;
-  margin-left: -7.5px;
-  border: 2.5px solid #78350f;
+  width: 21px;
+  height: 11px;
+  margin-left: -10.5px;
+  border: 3px solid #78350f;
   border-top: none;
   border-radius: 0 0 999px 999px;
   transition: height 0.18s ease;
 }
 
-/* Senha visível: olhos fechados (soneca educada) */
+/* Senha visível: olhos fechados (espiando de longe, educadamente) */
 .game-celestial--sleep .game-celestial__eye {
-  height: 2.5px;
-  transform: translateY(4px);
+  height: 3.5px;
+  transform: translateY(5.5px);
   animation: none;
 }
 
 .game-celestial--sleep .game-celestial__mouth {
-  height: 4px;
+  height: 6px;
 }
 
 @keyframes game-celestial-cross-right {
@@ -234,21 +258,31 @@
     padding-top: 4.5rem;
   }
 
-  .game-celestial {
+  .game-celestial-mount {
     top: 0.65rem;
-    width: 42px;
-    height: 42px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .game-celestial-mount--sun {
+    right: 6%;
+  }
+
+  .game-celestial-mount--moon {
+    left: 6%;
+  }
+
+  .game-celestial-mount--peek {
+    transform: scale(1.18) translateY(8%);
   }
 
   .game-celestial--sun {
-    right: 6%;
     box-shadow:
       0 0 20px 6px rgba(253, 224, 71, 0.4),
       0 0 46px 14px rgba(253, 224, 71, 0.14);
   }
 
   .game-celestial--moon {
-    left: 6%;
     box-shadow:
       0 0 18px 5px rgba(253, 230, 138, 0.32),
       0 0 42px 12px rgba(253, 230, 138, 0.1);
@@ -306,11 +340,6 @@
   animation-delay: -2.2s;
 }
 
-.game-tree--3 .game-tree__sapling-top {
-  animation: game-tree-sway 5s ease-in-out -1s infinite;
-  transform-origin: 50% 100%;
-}
-
 @keyframes game-tree-sway {
   0%,
   100% {
@@ -321,78 +350,6 @@
   }
 }
 
-.game-flower {
-  position: absolute;
-  bottom: 4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, #fbbf24 0 2.4px, transparent 2.6px),
-    radial-gradient(circle at 50% 14%, #f9a8d4 0 2.6px, transparent 3px),
-    radial-gradient(circle at 86% 50%, #f9a8d4 0 2.6px, transparent 3px),
-    radial-gradient(circle at 50% 86%, #f9a8d4 0 2.6px, transparent 3px),
-    radial-gradient(circle at 14% 50%, #f9a8d4 0 2.6px, transparent 3px);
-}
-
-.game-flower--1 {
-  left: 14%;
-}
-
-.game-flower--2 {
-  left: 46%;
-  bottom: 8px;
-  transform: scale(0.85);
-}
-
-.game-flower--3 {
-  right: 18%;
-}
-
-.game-firefly {
-  position: absolute;
-  bottom: 26px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #fde047;
-  box-shadow: 0 0 8px 3px rgba(253, 224, 71, 0.55);
-  animation: game-firefly-float 5.2s ease-in-out infinite;
-}
-
-.game-firefly--1 {
-  left: 18%;
-}
-
-.game-firefly--2 {
-  left: 52%;
-  animation-delay: -1.8s;
-}
-
-.game-firefly--3 {
-  right: 16%;
-  animation-delay: -3.4s;
-}
-
-@keyframes game-firefly-float {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: translate(0, 0);
-  }
-  30% {
-    opacity: 1;
-    transform: translate(6px, -14px);
-  }
-  60% {
-    opacity: 0.6;
-    transform: translate(-5px, -24px);
-  }
-  85% {
-    opacity: 1;
-    transform: translate(3px, -8px);
-  }
-}
 
 .game-login__clouds {
   position: absolute;
@@ -1446,24 +1403,6 @@ a.game-btn {
   background: radial-gradient(circle at 40% 35%, #22c55e, #0f5c2b);
 }
 
-/* Muda */
-.game-tree__sapling-top {
-  width: 22px;
-  height: 22px;
-  background: #22c55e;
-  border: 2px solid #0b2e18;
-  border-radius: 50%;
-}
-
-.game-tree__sapling-mid {
-  width: 16px;
-  height: 16px;
-  margin-top: -6px;
-  background: #16a34a;
-  border: 2px solid #0b2e18;
-  border-radius: 50%;
-}
-
 .game-tree--1 {
   left: 3%;
   transform: scale(0.92);
@@ -1472,99 +1411,10 @@ a.game-btn {
   right: 4%;
   transform: scale(1);
 }
-.game-tree--3 {
-  left: 76%;
-  transform: scale(0.88);
-  opacity: 0.92;
-}
 
-/* Arbustos — cluster de folhas */
-.game-bush {
-  position: absolute;
-  bottom: 0;
-  width: 40px;
-  height: 28px;
-}
-
-.game-bush__leaf {
-  position: absolute;
-  bottom: 0;
-  border: 2px solid #0b2e18;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #4ade80, #16a34a);
-}
-
-.game-bush__leaf--1 {
-  left: 0;
-  width: 22px;
-  height: 22px;
-}
-
-.game-bush__leaf--2 {
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 4px;
-  width: 26px;
-  height: 26px;
-  z-index: 1;
-  background: radial-gradient(circle at 35% 30%, #6ee7b7, #0f6b32);
-}
-
-.game-bush__leaf--3 {
-  right: 0;
-  width: 20px;
-  height: 20px;
-  bottom: 1px;
-  background: radial-gradient(circle at 35% 30%, #22c55e, #0f5c2b);
-}
-
-.game-bush--1 {
-  left: 17%;
-  transform: scale(1);
-}
-.game-bush--2 {
-  left: 31%;
-  transform: scale(0.82);
-  opacity: 0.95;
-}
-.game-bush--3 {
-  right: 20%;
-  transform: scale(1.05);
-}
-.game-bush--4 {
-  right: 36%;
-  transform: scale(0.78);
-  bottom: 3px;
-}
-.game-bush--5 {
-  left: 50%;
-  transform: translateX(-50%) scale(0.7);
-  opacity: 0.88;
-}
-
-/* Pedras decorativas */
-.game-rock {
-  position: absolute;
-  bottom: 2px;
-  background: #44403c;
-  border: 2px solid #221f1c;
-  border-radius: 4px;
-}
-
-.game-rock--1 {
-  left: 42%;
-  width: 14px;
-  height: 10px;
-  box-shadow: 3px 2px 0 #2a2724;
-}
-
-.game-rock--2 {
-  right: 14%;
-  width: 10px;
-  height: 8px;
-  background: #57534e;
-}
-
+/* Terra e grama em gradiente liso (em vez do padrão "tijolinho" repetido)
+   — mesma linguagem "grama viva sobre terra" da vila da Exploração, pra
+   as duas cenas RPG do app conversarem entre si visualmente. */
 .game-login__dirt {
   position: absolute;
   right: 0;
@@ -1572,15 +1422,7 @@ a.game-btn {
   left: 0;
   z-index: 0;
   height: 28px;
-  background: repeating-linear-gradient(
-    90deg,
-    #2e1505 0px,
-    #2e1505 8px,
-    #45210a 8px,
-    #45210a 16px,
-    #200e03 16px,
-    #200e03 24px
-  );
+  background: linear-gradient(180deg, #45210a 0%, #2e1505 55%, #200e03 100%);
   border-top: 3px solid #150a02;
   box-shadow: inset 0 4px 0 rgba(0, 0, 0, 0.3);
 }
@@ -1592,75 +1434,11 @@ a.game-btn {
   left: 0;
   z-index: 1;
   height: 52px;
-  background: repeating-linear-gradient(
-    90deg,
-    #22c55e 0px,
-    #22c55e 6px,
-    #16a34a 6px,
-    #16a34a 12px,
-    #0f6b32 12px,
-    #0f6b32 18px
-  );
+  background: linear-gradient(180deg, #4ade80 0%, #22c55e 22%, #16a34a 55%, #0f6b32 100%);
   border-top: 4px solid #0b0a08;
   box-shadow:
     inset 0 10px 0 rgba(191, 219, 254, 0.12),
     inset 0 -6px 0 #0b4a24;
-}
-
-.game-login__grass::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  right: 0;
-  left: 0;
-  height: 12px;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0px,
-    transparent 14px,
-    #16a34a 14px,
-    #16a34a 16px,
-    transparent 16px,
-    transparent 28px,
-    #0b4a24 28px,
-    #0b4a24 30px
-  );
-  clip-path: polygon(
-    0% 100%,
-    3% 40%,
-    6% 100%,
-    9% 30%,
-    12% 100%,
-    15% 50%,
-    18% 100%,
-    21% 35%,
-    24% 100%,
-    27% 55%,
-    30% 100%,
-    33% 25%,
-    36% 100%,
-    39% 45%,
-    42% 100%,
-    45% 30%,
-    48% 100%,
-    51% 50%,
-    54% 100%,
-    57% 35%,
-    60% 100%,
-    63% 40%,
-    66% 100%,
-    69% 28%,
-    72% 100%,
-    75% 52%,
-    78% 100%,
-    81% 38%,
-    84% 100%,
-    87% 45%,
-    90% 100%,
-    93% 32%,
-    96% 100%,
-    100% 100%
-  );
 }
 
 /* Estilos de onboarding (cabeçalho, cards de opção) vivem em styles/onboarding.css */
