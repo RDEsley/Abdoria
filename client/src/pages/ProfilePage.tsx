@@ -305,12 +305,12 @@ export function ProfilePage() {
             <strong>{social?.likes_recebidos ?? '—'}</strong>
             <span>curtidas</span>
           </span>
-          <span className="profile-counts__item" title="Visitantes únicos do seu perfil">
-            <strong>{social?.visualizacoes_recebidas ?? '—'}</strong>
-            <span>visualizações</span>
-          </span>
         </nav>
       </div>
+
+      <p className="profile-views-hint">
+        <strong>{social?.visualizacoes_recebidas ?? '—'}</strong> visualizações no seu perfil
+      </p>
 
       <div className="flex gap-2">
         {tabs.map((t) => (

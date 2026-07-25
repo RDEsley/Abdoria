@@ -44,19 +44,18 @@
    existente); não tem onClick próprio, o botão pai já cobre a foto toda. */
 .game-profile-hero__avatar-edit-badge {
   position: absolute;
-  top: -0.2rem;
-  right: -0.2rem;
+  top: -0.15rem;
+  right: -0.15rem;
   z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.45rem;
+  height: 1.45rem;
   border-radius: 999px;
   border: 2px solid #fff;
-  background: #1c1917;
+  background: #57534e;
   color: #fff;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .game-profile-hero__level-badge {
@@ -530,6 +529,21 @@
 
 a.profile-counts__item:hover strong {
   text-decoration: underline;
+}
+
+/* Hint de visualizações — fora do card do perfil, abaixo dele */
+.profile-views-hint {
+  margin: -0.15rem 0 0;
+  padding: 0 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #78716c;
+  text-align: center;
+}
+
+.profile-views-hint strong {
+  font-weight: 800;
+  color: #44403c;
 }
 
 /* Listas sociais (amigos/seguindo/seguidores) */
