@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Coins, Dumbbell, Medal, Snowflake, Sparkles, TimerReset, Trash2, X } from 'lucide-react';
+import {
+  Bell,
+  Coins,
+  Dumbbell,
+  Medal,
+  Snowflake,
+  Sparkles,
+  TimerReset,
+  Trash2,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -23,6 +34,7 @@ function iconForTipo(tipo: string) {
   if (tipo === 'streak_frozen' || tipo === 'frozen_baixo') return <Snowflake size={16} aria-hidden />;
   if (tipo === 'streak_reset') return <TimerReset size={16} aria-hidden />;
   if (tipo === 'lembrete_treino') return <Dumbbell size={16} aria-hidden />;
+  if (tipo === 'novo_seguidor') return <UserPlus size={16} aria-hidden />;
   return <Sparkles size={16} aria-hidden />;
 }
 

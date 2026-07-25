@@ -4,6 +4,7 @@ import { XpBar } from '@/components/ui/XpBar';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { StreakCountdown } from '@/components/gamification/StreakCountdown';
 import { useAuth } from '@/context/AuthContext';
+import { useCopy } from '@/hooks/useCopy';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
 import { resolveCosmeticos, type DashboardStats } from '@/types';
@@ -23,6 +24,7 @@ interface Props {
  */
 export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp }: Props) {
   const { user } = useAuth();
+  const copy = useCopy();
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const resolvedTitle = resolveEquippedTitle(cosmeticos.titulo_equipado);
@@ -59,8 +61,8 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
             <AnimatedTitleText title={resolvedTitle} className="game-xp-section__player-title" />
           </div>
           <p className="game-xp-section__subtitle">
-            <strong>{xpInLevel}</strong> / {xpToNext} XP · faltam <strong>{xpParaLevelUp}</strong>{' '}
-            para o nível {level + 1}
+            <strong>{xpInLevel}</strong> / {xpToNext} {copy('xp_unit')} · faltam{' '}
+            <strong>{xpParaLevelUp}</strong> para o nível {level + 1}
           </p>
           <div className="mt-2">
             <XpBar value={xpInLevel} max={xpToNext} showValues={false} />

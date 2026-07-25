@@ -490,6 +490,19 @@
     inset 0 0 8px rgba(139, 92, 246, 0.8),
     0 0 10px rgba(109, 40, 217, 0.5);
 }
+.game-patrol-spell-orb--magia_raio_laser {
+  background: radial-gradient(circle at 32% 28%, #ffffff 0%, #22d3ee 45%, #0e7490 100%);
+  color: #083344;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    0 0 10px rgba(34, 211, 238, 0.6);
+}
+.game-patrol-spell-orb--magia_explosao {
+  background: radial-gradient(circle at 32% 28%, #fecaca 0%, #dc2626 45%, #1c1917 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.35),
+    0 0 12px rgba(220, 38, 38, 0.65);
+}
 
 .game-patrol-shop-row__thumb-wrap {
   grid-area: thumb;
@@ -694,6 +707,12 @@
   color: #92400e;
   background: #fffbeb;
   border-color: rgba(245, 158, 11, 0.2);
+}
+
+.game-patrol-shop-row__stat-pill--drop {
+  color: #6d28d9;
+  background: #f5f3ff;
+  border-color: rgba(124, 58, 237, 0.2);
 }
 
 .game-patrol-shop-row__stat-note {

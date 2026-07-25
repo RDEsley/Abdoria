@@ -10,6 +10,7 @@ import {
   Snowflake,
   Sparkles,
   Swords,
+  Target,
   Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -24,6 +25,7 @@ import {
   formatPatrolCritChancePercent,
   type PatrolShopCatalogItem,
 } from '@/types';
+import { SPELL_RARE_DROP_MULTIPLIER } from '@shared/patrol/shop';
 
 interface Props {
   item: PatrolShopCatalogItem;
@@ -133,6 +135,12 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
               {item.kind === 'espada' && (
                 <span className="game-patrol-shop-row__stat-note">+25 dano</span>
               )}
+            </span>
+          )}
+          {item.kind === 'magia' && SPELL_RARE_DROP_MULTIPLIER[item.raridade] && (
+            <span className="game-patrol-shop-row__stat-pill game-patrol-shop-row__stat-pill--drop">
+              <Target size={11} aria-hidden />+
+              {Math.round((SPELL_RARE_DROP_MULTIPLIER[item.raridade]! - 1) * 100)}% Chance de Drop
             </span>
           )}
         </div>

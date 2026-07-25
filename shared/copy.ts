@@ -16,6 +16,13 @@ export const COPY = {
   dashboard_quest_badge: { jogo: 'Missão diária', normal: 'Treino de hoje' },
 
   perfil_eyebrow: { jogo: 'Ficha do herói', normal: 'Seus dados' },
+
+  xp_unit: { jogo: 'XP', normal: 'pontos' },
+  hp_unit: { jogo: 'HP', normal: 'vida' },
+
+  conquistas_eyebrow: { jogo: 'Hall da fama', normal: 'Suas conquistas' },
+  conquistas_title: { jogo: 'Conquistas', normal: 'Conquistas' },
+  conquistas_subtitle: { jogo: '% real de heróis com cada uma', normal: '% real de jogadores com cada uma' },
 } as const satisfies Record<string, Record<TomTexto, string>>;
 
 export type CopyKey = keyof typeof COPY;
