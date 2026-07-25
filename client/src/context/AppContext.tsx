@@ -415,6 +415,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyUserDados, schedulePersist],
   );
 
+  /**
+   * Desbloqueia vários de uma vez (1 update otimista + 1 persist), em vez de N chamadas de
+   * `unlockExercise` em sequência — "Desbloquear tudo" chamando `unlockExercise` dezenas de
+   * vezes disparava N `flushPersist` concorrentes (cada `schedulePersist(..., immediate: true)`
+   * inicia o dela própria sem esperar a anterior terminar); quando resolviam fora de ordem, a
+   * resposta de uma request MAIS VELHA (com menos itens) sobrescrevia o estado já mais novo —
+   * o bug real de "destrava, buga e desbloqueia de novo o que já tinha desbloqueado".
+   */
+  const unlockExercises = useCallback(
+    (slugs: string[]) => {
+      if (slugs.length === 0) return new Set(userDadosRef.current.exercicios_desbloqueados);
+      const unlocked = new Set(userDadosRef.current.exercicios_desbloqueados);
+      for (const slug of slugs) unlocked.add(slug);
+      const exercicios_desbloqueados = [...unlocked];
+      const next = mergeUserDadosSalvos(userDadosRef.current, { exercicios_desbloqueados });
+      applyUserDados(next);
+      schedulePersist({ exercicios_desbloqueados }, true);
+      return unlocked;
+    },
+    [applyUserDados, schedulePersist],
+  );
+
   const saveWorkout = useCallback(
     async (payload: CompleteWorkoutPayload) => {
       const result = await completeWorkout(payload);
@@ -515,6 +537,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addRepScheme,
       removeRepScheme,
       unlockExercise,
+      unlockExercises,
       saveWorkout,
     }),
     [
@@ -544,6 +567,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addRepScheme,
       removeRepScheme,
       unlockExercise,
+      unlockExercises,
       saveWorkout,
     ],
   );

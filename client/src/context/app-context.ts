@@ -53,6 +53,7 @@ export interface AppContextValue {
   ) => StoredRepScheme[];
   removeRepScheme: (nivel: NivelUsuario, schemeId: string) => StoredRepScheme[];
   unlockExercise: (slug: string) => Set<string>;
+  unlockExercises: (slugs: string[]) => Set<string>;
   saveWorkout: (payload: CompleteWorkoutPayload) => Promise<{
     xp_ganho: number;
     abdoria_ganha: number;

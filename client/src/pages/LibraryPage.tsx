@@ -4,10 +4,12 @@ import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { EquipmentPanel } from '@/components/library/EquipmentPanel';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
+import { showGameToast } from '@/components/ui/GameToast';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { getLockedExercises } from '@/lib/api/exercises';
+import { playUnlock } from '@/lib/sounds';
 import type { IExerciseDocument, MusculoPrincipal, Prioridade } from '@/types';
 import {
   EQUIPMENT_CATALOG,
@@ -26,7 +28,7 @@ export function LibraryPage() {
     exercisesLoading,
     loadRecommendations,
   } = useApp();
-  const { isUnlocked, unlock } = useUnlockedExercises();
+  const { isUnlocked, unlock, unlockAll } = useUnlockedExercises();
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
   const [search, setSearch] = useState('');
@@ -88,27 +90,21 @@ export function LibraryPage() {
     [filtered, isUnlocked],
   );
 
-  const [revealDelays, setRevealDelays] = useState<Record<string, number>>({});
-
-  // "Desbloquear tudo" com dezenas de itens não se sustenta: só os primeiros
-  // ganham a festa (som + animação staggered); o resto desbloqueia direto,
-  // sem empilhar dezenas de sons/animações simultâneas.
+  // 1 update otimista + 1 persist pro lote inteiro (ver `unlockExercises` no
+  // AppContext) — chamar `unlock()` dezenas de vezes em sequência disparava N
+  // requests concorrentes que podiam resolver fora de ordem e reverter itens
+  // já desbloqueados. Feedback é imediato pra todo mundo (sem animação
+  // escalonada por item, que não se sustentava com dezenas de exercícios).
   const handleUnlockAll = useCallback(() => {
-    const UNLOCK_ALL_ANIMATED_COUNT = 5;
-    const UNLOCK_ALL_STAGGER_MS = 120;
-    const animated = lockedInView.slice(0, UNLOCK_ALL_ANIMATED_COUNT);
-    const instant = lockedInView.slice(UNLOCK_ALL_ANIMATED_COUNT);
-
-    setRevealDelays((prev) => {
-      const next = { ...prev };
-      animated.forEach((ex, i) => {
-        next[ex.slug] = i * UNLOCK_ALL_STAGGER_MS;
-      });
-      return next;
-    });
-
-    instant.forEach((ex) => unlock(ex.slug));
-  }, [lockedInView, unlock]);
+    const slugs = lockedInView.map((ex) => ex.slug);
+    if (slugs.length === 0) return;
+    unlockAll(slugs);
+    playUnlock();
+    showGameToast(
+      `${slugs.length} exercício${slugs.length === 1 ? '' : 's'} desbloqueado${slugs.length === 1 ? '' : 's'}!`,
+      { variant: 'success' },
+    );
+  }, [lockedInView, unlockAll]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -191,8 +187,16 @@ export function LibraryPage() {
             : `${filtered.length} habilidade(s) · ${filteredUnlockedCount} desbloqueada(s)`}
         </p>
         {!exercisesLoading && lockedInView.length > 0 && (
-          <GameButton size="sm" onClick={handleUnlockAll} className="shrink-0">
-            <Sparkles size={14} /> Desbloquear tudo ({lockedInView.length})
+          <GameButton
+            size="sm"
+            onClick={handleUnlockAll}
+            className="library-unlock-all-btn shrink-0"
+          >
+            <span className="library-unlock-all-btn__icon" aria-hidden>
+              <Sparkles size={13} />
+            </span>
+            Desbloquear tudo
+            <span className="library-unlock-all-btn__count">{lockedInView.length}</span>
           </GameButton>
         )}
       </div>
@@ -210,7 +214,6 @@ export function LibraryPage() {
                 isBlocked={blockedExerciseSlugs.includes(exercise.slug)}
                 onTogglePin={toggleExercisePin}
                 onToggleBlock={toggleExerciseBlock}
-                autoRevealDelayMs={revealDelays[exercise.slug]}
               />
             ))}
       </div>

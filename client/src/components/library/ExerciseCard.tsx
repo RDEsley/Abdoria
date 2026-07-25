@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { UnlockCelebration } from '@/components/effects/UnlockCelebration';
 import { ExerciseVideoModal } from '@/components/library/ExerciseVideoModal';
@@ -19,8 +19,6 @@ interface Props {
   isBlocked?: boolean;
   onTogglePin?: (slug: string) => void;
   onToggleBlock?: (slug: string) => void;
-  /** Dispara a revelação sozinha após esse atraso — usado pelo "Desbloquear tudo". */
-  autoRevealDelayMs?: number;
 }
 
 export const ExerciseCard = memo(function ExerciseCard({
@@ -32,7 +30,6 @@ export const ExerciseCard = memo(function ExerciseCard({
   isBlocked = false,
   onTogglePin,
   onToggleBlock,
-  autoRevealDelayMs,
 }: Props) {
   const [unlocking, setUnlocking] = useState(false);
   const displayName = formatExerciseName(exercise);
@@ -48,15 +45,6 @@ export const ExerciseCard = memo(function ExerciseCard({
     setUnlocking(true);
     playUnlock();
   };
-
-  useEffect(() => {
-    if (unlocked || unlocking || autoRevealDelayMs == null) return;
-    const timer = window.setTimeout(() => {
-      setUnlocking(true);
-      playUnlock();
-    }, autoRevealDelayMs);
-    return () => window.clearTimeout(timer);
-  }, [autoRevealDelayMs, unlocked, unlocking]);
 
   const handlePlay = () => {
     setShowVideo(true);
