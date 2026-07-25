@@ -37,7 +37,7 @@ export function CosmeticIcon({ icon, size = 18, unlocked = true, raridade }: Pro
       className={`cosmetic-icon ${RARITY_CLASS[raridade]}${unlocked ? '' : ' cosmetic-icon--locked'}`}
     >
       <span className="cosmetic-icon__sheen" aria-hidden />
-      <Icon size={size} strokeWidth={2.25} className="cosmetic-icon__glyph" />
+      <Icon size={size} stroke={2.25} className="cosmetic-icon__glyph" />
     </span>
   );
 }

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Achievement } from '@/types';
-import { ACHIEVEMENT_DIFFICULTY_LABELS, formatAchievementPlayerPct } from '@/types';
+import { formatAchievementPlayerPct } from '@/types';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 
 interface Props {
@@ -9,20 +9,19 @@ interface Props {
 }
 
 export function AchievementCard({ achievement, compact = false }: Props) {
-  const { desbloqueada, dificuldade, icon, titulo, descricao, pct_jogadores } = achievement;
+  const { desbloqueada, icon, titulo, descricao, pct_jogadores } = achievement;
 
   return (
     <div
       title={`${descricao} · ${formatAchievementPlayerPct(pct_jogadores)} dos jogadores`}
-      className={`game-achievement game-achievement--${dificuldade} ${desbloqueada ? 'game-achievement--unlocked' : 'game-achievement--locked'} ${compact ? 'game-achievement--compact' : 'game-achievement--full'}`}
+      className={`game-achievement ${desbloqueada ? 'game-achievement--unlocked' : 'game-achievement--locked'} ${compact ? 'game-achievement--compact' : 'game-achievement--full'}`}
     >
       <AchievementBadge icon={icon} unlocked={desbloqueada} size={compact ? 18 : 22} />
       <div className="game-achievement__body">
         <span className="game-achievement__title">{titulo}</span>
         {!compact && <span className="game-achievement__desc">{descricao}</span>}
         <span className="game-achievement__meta">
-          {ACHIEVEMENT_DIFFICULTY_LABELS[dificuldade]} · {formatAchievementPlayerPct(pct_jogadores)}{' '}
-          dos jogadores
+          {formatAchievementPlayerPct(pct_jogadores)} dos jogadores
         </span>
       </div>
     </div>
