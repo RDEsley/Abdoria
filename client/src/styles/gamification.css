@@ -653,17 +653,18 @@
 
 .game-toast {
   position: fixed;
-  inset-inline: 1rem;
-  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  top: calc(var(--top-navbar-height) + 0.65rem);
+  right: 0.75rem;
+  left: auto;
   z-index: 120;
-  max-width: 22rem;
-  margin-inline: auto;
-  padding: 0.7rem 0.9rem;
+  width: min(19rem, calc(100vw - 1.5rem));
+  overflow: hidden;
+  padding: 0.65rem 0.8rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
   line-height: 1.35;
   color: #fff;
-  text-align: center;
+  text-align: left;
   pointer-events: none;
   background: rgba(28, 25, 23, 0.94);
   border: 2px solid var(--game-ink);
@@ -672,9 +673,35 @@
   animation: game-toast-in 0.12s ease-out;
 }
 
+.game-toast__message {
+  margin: 0;
+}
+
+.game-toast__bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  margin-top: 0.5rem;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.game-toast__bar-fill {
+  display: block;
+  height: 100%;
+  background: currentcolor;
+  transform-origin: left;
+  animation: game-toast-shrink var(--toast-duration, 2400ms) linear forwards;
+}
+
 .game-toast--success {
   border-color: #10b981;
   box-shadow: 3px 3px 0 rgba(4, 120, 87, 0.35);
+}
+
+.game-toast--success .game-toast__bar-fill {
+  background: #10b981;
 }
 
 .game-toast--error {
@@ -683,10 +710,18 @@
   box-shadow: 3px 3px 0 rgba(127, 29, 29, 0.45);
 }
 
+.game-toast--error .game-toast__bar-fill {
+  background: #f87171;
+}
+
 .game-toast--warn {
   background: rgba(69, 45, 10, 0.96);
   border-color: #fbbf24;
   box-shadow: 3px 3px 0 rgba(120, 53, 15, 0.4);
+}
+
+.game-toast--warn .game-toast__bar-fill {
+  background: #fbbf24;
 }
 
 .game-toast--info {
@@ -695,20 +730,27 @@
   box-shadow: 3px 3px 0 rgba(7, 58, 102, 0.4);
 }
 
-@media (min-width: 768px) {
-  .game-toast {
-    bottom: 1.5rem;
-  }
+.game-toast--info .game-toast__bar-fill {
+  background: #38bdf8;
 }
 
 @keyframes game-toast-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes game-toast-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
   }
 }
 

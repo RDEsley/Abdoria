@@ -355,6 +355,12 @@
   background: #f0f9ff;
 }
 
+/* Últimos 59min: número vermelho independente do estado (urgência crescente). */
+.streak-countdown__time--urgent {
+  color: #dc2626;
+  animation: streak-countdown-pulse 1s ease-in-out infinite;
+}
+
 @keyframes streak-countdown-pulse {
   0%,
   100% {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, CheckCircle2, Info, WifiOff } from 'lucide-react';
 
@@ -55,6 +55,7 @@ export interface GameToastOptions {
 }
 
 interface ToastPayload {
+  id: number;
   message: string;
   variant: GameToastVariant;
   duration: number;
@@ -70,10 +71,12 @@ const DEFAULT_DURATION: Record<GameToastVariant, number> = {
 };
 
 let notify: Listener | null = null;
+let toastSeq = 0;
 
 export function showGameToast(message: string, options?: GameToastOptions): void {
   const variant = options?.variant ?? 'success';
   notify?.({
+    id: ++toastSeq,
     message,
     variant,
     duration: options?.duration ?? DEFAULT_DURATION[variant],
@@ -105,11 +108,16 @@ export function GameToastHost() {
 
   return createPortal(
     <div
+      key={toast.id}
       className={`game-toast game-toast--${toast.variant}`}
       role={toast.variant === 'error' ? 'alert' : 'status'}
       aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
+      style={{ '--toast-duration': `${toast.duration}ms` } as CSSProperties}
     >
-      {toast.message}
+      <p className="game-toast__message">{toast.message}</p>
+      <span className="game-toast__bar" aria-hidden>
+        <span className="game-toast__bar-fill" />
+      </span>
     </div>,
     document.body,
   );

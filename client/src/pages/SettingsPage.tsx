@@ -66,8 +66,12 @@ import {
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
+function notificationsSupported(): boolean {
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
+
 export function SettingsPage() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, applyUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showTerms, setShowTerms] = useState(false);
@@ -171,10 +175,48 @@ export function SettingsPage() {
     }
   };
 
-  const requestNotifications = () => {
-    if ('Notification' in window) {
-      void Notification.requestPermission();
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
+    notificationsSupported() ? Notification.permission : 'denied',
+  );
+  const notifOptOut = user?.preferencias?.notificacoes_opt_out ?? false;
+  const notifAtivas = notifPermission === 'granted' && !notifOptOut;
+
+  const toggleNotifications = async () => {
+    if (notifAtivas) {
+      try {
+        const updated = await updateMe({
+          preferencias: { ...user!.preferencias, notificacoes_opt_out: true },
+        });
+        applyUser(updated);
+        showGameToast('Notificações desativadas.', { variant: 'info' });
+      } catch (err) {
+        showGameToast(getErrorMessage(err, 'Não foi possível desativar.'), { variant: 'error' });
+      }
+      return;
     }
+
+    if (!notificationsSupported()) return;
+
+    if (notifPermission === 'denied') {
+      showGameToast('Notificações bloqueadas no navegador — ative nas configurações do site.', {
+        variant: 'info',
+      });
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
+    if (permission !== 'granted') return;
+
+    try {
+      const updated = await updateMe({
+        preferencias: { ...user!.preferencias, notificacoes_opt_out: false },
+      });
+      applyUser(updated);
+    } catch {
+      /* permissão do navegador já foi concedida — segue mesmo se o save falhar */
+    }
+    showGameToast('Notificações ativadas! Vamos te avisar na hora certa.', { variant: 'success' });
   };
 
   const toggleCiclo = (c: TreinoBase) => {
@@ -373,8 +415,13 @@ export function SettingsPage() {
         <p className="mb-3 text-xs font-medium text-stone-500">
           Lembretes de treino e avisos do jogo, direto no navegador.
         </p>
-        <GameButton variant="secondary" className="w-full" onClick={requestNotifications}>
-          Permitir notificações
+        <GameButton
+          variant="secondary"
+          className="w-full"
+          aria-pressed={notifAtivas}
+          onClick={() => void toggleNotifications()}
+        >
+          {notifAtivas ? 'Desativar notificações' : 'Ativar notificações'}
         </GameButton>
       </section>
 
