@@ -18,18 +18,6 @@
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
-.game-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.55rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.38rem;
-  color: var(--game-green-dark);
-  background: #d1fae5;
-  border: 2px solid var(--game-ink);
-}
-
 /* Botão de ícone (configurações, notificações, ações de header) */
 .game-icon-btn {
   display: inline-flex;

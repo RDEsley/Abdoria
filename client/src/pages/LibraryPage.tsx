@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Lock, Search, Sparkles, X } from 'lucide-react';
+import {
+  BarChart3,
+  Dumbbell,
+  Flame,
+  Lock,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { EquipmentPanel } from '@/components/library/EquipmentPanel';
 import { GameButton } from '@/components/ui/GameButton';
@@ -33,6 +42,7 @@ export function LibraryPage() {
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
   const [search, setSearch] = useState('');
   const [lockedExercises, setLockedExercises] = useState<IExerciseDocument[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const refreshRecommendations = useCallback(() => {
     void loadRecommendations({ force: true });
@@ -90,6 +100,17 @@ export function LibraryPage() {
     [filtered, isUnlocked],
   );
 
+  const secondaryFilterCount = (nivelFilter !== '' ? 1 : 0) + (prioridadeFilter !== '' ? 1 : 0);
+  const hasAnyFilter =
+    Boolean(muscleFilter) || secondaryFilterCount > 0 || search.trim() !== '';
+
+  const clearAllFilters = useCallback(() => {
+    setMuscleFilter(null);
+    setNivelFilter('');
+    setPrioridadeFilter('');
+    setSearch('');
+  }, [setMuscleFilter]);
+
   // 1 update otimista + 1 persist pro lote inteiro (ver `unlockExercises` no
   // AppContext) — chamar `unlock()` dezenas de vezes em sequência disparava N
   // requests concorrentes que podiam resolver fora de ordem e reverter itens
@@ -133,47 +154,99 @@ export function LibraryPage() {
           )}
         </label>
 
-        <div className="library-filters">
-          <select
-            value={muscleFilter ?? ''}
-            onChange={(e) => setMuscleFilter((e.target.value || null) as MusculoPrincipal | null)}
-            className="game-select library-filters__select"
-            aria-label="Filtrar por músculo"
+        <div className="library-muscle-tabs" role="group" aria-label="Filtrar por músculo">
+          <button
+            type="button"
+            className={`game-tab game-tab--scroll${!muscleFilter ? ' game-tab--active' : ''}`}
+            onClick={() => setMuscleFilter(null)}
           >
-            <option value="">Todos os músculos</option>
-            {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((m) => (
-              <option key={m} value={m}>
-                {MUSCULO_LABELS[m]}
-              </option>
-            ))}
-          </select>
-          <select
-            value={nivelFilter}
-            onChange={(e) => setNivelFilter(e.target.value ? Number(e.target.value) : '')}
-            className="game-select library-filters__select"
-            aria-label="Filtrar por nível"
-          >
-            <option value="">Todos os níveis</option>
-            {[1, 2, 3, 4].map((n) => (
-              <option key={n} value={n}>
-                Nível {n}
-              </option>
-            ))}
-          </select>
-          <select
-            value={prioridadeFilter}
-            onChange={(e) => setPrioridadeFilter((e.target.value || '') as Prioridade | '')}
-            className="game-select library-filters__select"
-            aria-label="Filtrar por prioridade"
-          >
-            <option value="">Todas prioridades</option>
-            {(Object.keys(PRIORIDADE_LABELS) as Prioridade[]).map((p) => (
-              <option key={p} value={p}>
-                {PRIORIDADE_LABELS[p]}
-              </option>
-            ))}
-          </select>
+            Todos
+          </button>
+          {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={`game-tab game-tab--scroll${muscleFilter === m ? ' game-tab--active' : ''}`}
+              onClick={() => setMuscleFilter(muscleFilter === m ? null : m)}
+            >
+              {MUSCULO_LABELS[m]}
+            </button>
+          ))}
         </div>
+
+        <div className="library-toolbar__row">
+          <button
+            type="button"
+            className={`library-filter-btn${secondaryFilterCount > 0 ? ' library-filter-btn--active' : ''}`}
+            onClick={() => setFiltersOpen((v) => !v)}
+            aria-expanded={filtersOpen}
+          >
+            <SlidersHorizontal size={14} aria-hidden />
+            Filtros
+            {secondaryFilterCount > 0 && (
+              <span className="library-filter-btn__badge tabular-nums">{secondaryFilterCount}</span>
+            )}
+          </button>
+          {hasAnyFilter && (
+            <button type="button" className="library-clear-btn" onClick={clearAllFilters}>
+              Limpar filtros
+            </button>
+          )}
+        </div>
+
+        {filtersOpen && (
+          <div className="library-filters-panel">
+            <div className="library-filters-panel__group">
+              <p className="library-filters-panel__label">
+                <BarChart3 size={13} aria-hidden /> Nível
+              </p>
+              <div className="library-chip-row">
+                <button
+                  type="button"
+                  className={`game-tab game-tab--scroll${nivelFilter === '' ? ' game-tab--active' : ''}`}
+                  onClick={() => setNivelFilter('')}
+                >
+                  Todos
+                </button>
+                {[1, 2, 3, 4].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`game-tab game-tab--scroll${nivelFilter === n ? ' game-tab--active' : ''}`}
+                    onClick={() => setNivelFilter(nivelFilter === n ? '' : n)}
+                  >
+                    Nível {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="library-filters-panel__group">
+              <p className="library-filters-panel__label">
+                <Flame size={13} aria-hidden /> Prioridade
+              </p>
+              <div className="library-chip-row">
+                <button
+                  type="button"
+                  className={`game-tab game-tab--scroll${prioridadeFilter === '' ? ' game-tab--active' : ''}`}
+                  onClick={() => setPrioridadeFilter('')}
+                >
+                  Todas
+                </button>
+                {(Object.keys(PRIORIDADE_LABELS) as Prioridade[]).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`game-tab game-tab--scroll${prioridadeFilter === p ? ' game-tab--active' : ''}`}
+                    onClick={() => setPrioridadeFilter(prioridadeFilter === p ? '' : p)}
+                  >
+                    {PRIORIDADE_LABELS[p]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {muscleFilter && <p className="muscle-zone-hint -mt-2">{MUSCULO_HINTS[muscleFilter]}</p>}
@@ -181,7 +254,8 @@ export function LibraryPage() {
       <EquipmentPanel onEquipmentChange={refreshRecommendations} />
 
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold text-stone-500">
+        <p className="library-results-count text-xs font-bold text-stone-500">
+          <Dumbbell size={13} aria-hidden />
           {exercisesLoading
             ? 'Carregando itens...'
             : `${filtered.length} habilidade(s) · ${filteredUnlockedCount} desbloqueada(s)`}
