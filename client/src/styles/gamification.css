@@ -421,19 +421,6 @@
   background: rgba(28, 25, 23, 0.12);
 }
 
-.game-section-title--facil {
-  color: #059669;
-}
-.game-section-title--media {
-  color: #0284c7;
-}
-.game-section-title--dificil {
-  color: #d97706;
-}
-.game-section-title--lendaria {
-  color: #9333ea;
-}
-
 /* Item card (biblioteca) */
 .game-item-card {
   padding: 0.65rem;
@@ -822,5 +809,34 @@
     opacity: 1;
     transform: scale(1);
     filter: brightness(1);
+  }
+}
+
+/* Recordes pessoais — contador do painel + glow do recorde "quente" (<24h) */
+.personal-records-count {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border: 1.5px solid rgba(217, 119, 6, 0.35);
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.personal-record-row--hot {
+  animation: personal-record-hot-glow 2.2s ease-in-out infinite;
+}
+
+@keyframes personal-record-hot-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(249, 115, 22, 0);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.35);
   }
 }
