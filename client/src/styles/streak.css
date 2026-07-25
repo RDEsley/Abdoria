@@ -338,15 +338,12 @@
   opacity: 0.85;
 }
 
+/* Sem Frozen Streak no inventário: alerta neutro (âmbar) até faltar pouco —
+   virar vermelho o tempo todo (5h inteiras) era alarmante demais. */
 .streak-countdown--danger {
-  color: #b91c1c;
-  border-color: #fca5a5;
-  background: #fef2f2;
-}
-
-.streak-countdown--danger .streak-countdown__time {
-  color: #dc2626;
-  animation: streak-countdown-pulse 1s ease-in-out infinite;
+  color: #92400e;
+  border-color: #fbbf24;
+  background: #fef3c7;
 }
 
 .streak-countdown--frozen {
@@ -355,9 +352,11 @@
   background: #f0f9ff;
 }
 
-/* Últimos 59min: número vermelho independente do estado (urgência crescente). */
+/* Últimos 59min: número vermelho independente do estado (urgência crescente).
+   Especificidade de 1 classe — de propósito, pra ser a ÚNICA fonte de vermelho
+   no número (nenhuma outra regra de --danger/--frozen pode competir com ela). */
 .streak-countdown__time--urgent {
-  color: #dc2626;
+  color: #dc2626 !important;
   animation: streak-countdown-pulse 1s ease-in-out infinite;
 }
 
