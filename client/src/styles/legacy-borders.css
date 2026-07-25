@@ -29,7 +29,9 @@
   content: '';
   position: absolute;
   inset: -6px;
-  border-radius: 999px;
+  /* Acompanha o formato do host (círculo nos avatares, quadrado nas
+     miniaturas da loja/Editar Perfil) em vez de forçar sempre um círculo. */
+  border-radius: inherit;
   pointer-events: none;
   z-index: -1;
 }
@@ -142,47 +144,70 @@
   z-index: 2;
 }
 
+/* Chamas orbitando o avatar — técnica de "mount" do tamanho EXATO do
+   container (inset:0), girado em torno do próprio centro (transform-origin
+   50% 50%, sem ambiguidade). A chama é filha, ancorada por top/margin (não
+   transform, que já está ocupado pela animação de dança) exatamente na
+   borda superior do mount — depois de girar 0/90/180/270°, isso cai sempre
+   em cima do anel, proporcional a QUALQUER tamanho de avatar, sem precisar
+   calibrar raio manualmente por classe (bug anterior: raio fixo em rem só
+   acertava 1-2 dos 7 tamanhos reais do app). */
+/* inset positivo = a base da chama ancora PRA DENTRO do avatar, então ela
+   cruza o anel e sobra só a ponta pra fora (pedido: mais fogo por dentro do
+   que por fora da moldura, em vez de flutuando longe do anel). */
 .game-avatar-border-fx--fogo {
-  inset: -10px;
+  inset: 3px;
+  --fire-w: 6px;
+  --fire-h: 11px;
+}
+
+.game-cosmetic-avatar--sm .game-avatar-border-fx--fogo,
+.user-avatar--xs .game-avatar-border-fx--fogo,
+.user-avatar--sm .game-avatar-border-fx--fogo {
+  inset: 2px;
+  --fire-w: 5px;
+  --fire-h: 8px;
+}
+
+.game-cosmetic-avatar--lg .game-avatar-border-fx--fogo,
+.user-avatar--lg .game-avatar-border-fx--fogo {
+  inset: 4px;
+  --fire-w: 7px;
+  --fire-h: 13px;
 }
 
 .game-avatar-border-fx__flame-mount {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform-origin: center 138%;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.game-avatar-border-fx__flame-mount[data-i='0'] {
+  transform: rotate(0deg);
+}
+.game-avatar-border-fx__flame-mount[data-i='1'] {
+  transform: rotate(90deg);
+}
+.game-avatar-border-fx__flame-mount[data-i='2'] {
+  transform: rotate(180deg);
+}
+.game-avatar-border-fx__flame-mount[data-i='3'] {
+  transform: rotate(270deg);
 }
 
 .game-avatar-border-fx__flame {
-  display: block;
-  width: 6px;
-  height: 11px;
-  margin-left: -3px;
-  margin-top: -5.5px;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--fire-w, 6px);
+  height: var(--fire-h, 11px);
+  margin-left: calc(var(--fire-w, 6px) / -2);
+  margin-top: calc(var(--fire-h, 11px) * -1);
+  transform-origin: center bottom;
   background: linear-gradient(to top, #dc2626 0%, #f97316 42%, #fde047 88%, transparent 100%);
   border-radius: 50% 50% 18% 18%;
   opacity: 0.9;
   animation: game-avatar-flame-dance 0.55s ease-in-out infinite;
-}
-
-.game-cosmetic-avatar--lg .game-avatar-border-fx__flame {
-  width: 7px;
-  height: 13px;
-  margin-left: -3.5px;
-  margin-top: -6.5px;
-}
-
-.game-avatar-border-fx__flame-mount[data-i='0'] {
-  transform: rotate(0deg) translateY(-1.55rem);
-}
-.game-avatar-border-fx__flame-mount[data-i='1'] {
-  transform: rotate(90deg) translateY(-1.55rem);
-}
-.game-avatar-border-fx__flame-mount[data-i='2'] {
-  transform: rotate(180deg) translateY(-1.55rem);
-}
-.game-avatar-border-fx__flame-mount[data-i='3'] {
-  transform: rotate(270deg) translateY(-1.55rem);
 }
 
 .game-avatar-border-fx__flame-mount[data-i='0'] .game-avatar-border-fx__flame {
@@ -196,23 +221,6 @@
 }
 .game-avatar-border-fx__flame-mount[data-i='3'] .game-avatar-border-fx__flame {
   animation-delay: -0.42s;
-}
-
-.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount {
-  transform-origin: center 142%;
-}
-
-.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='0'] {
-  transform: rotate(0deg) translateY(-2rem);
-}
-.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='1'] {
-  transform: rotate(90deg) translateY(-2rem);
-}
-.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='2'] {
-  transform: rotate(180deg) translateY(-2rem);
-}
-.game-cosmetic-avatar--lg .game-avatar-border-fx__flame-mount[data-i='3'] {
-  transform: rotate(270deg) translateY(-2rem);
 }
 
 @keyframes game-border-ouro-rotate {

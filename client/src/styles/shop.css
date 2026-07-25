@@ -1381,6 +1381,7 @@
 }
 
 .cosmetic-unlock-card__ring {
+  position: relative;
   display: block;
   width: 4.4rem;
   height: 4.4rem;

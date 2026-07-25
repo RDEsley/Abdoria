@@ -580,6 +580,7 @@
 }
 
 .game-shop-row__thumb-ring {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
