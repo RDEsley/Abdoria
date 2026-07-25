@@ -52,9 +52,6 @@ export interface AtividadeExtra {
   builtin?: boolean;
 }
 
-/** Id reservado: o aquecimento leve clássico (gera treino real, não atividade). */
-export const ATIVIDADE_AQUECIMENTO_ID = 'aquecimento';
-
 export const ATIVIDADE_DURACAO_MIN = 5;
 export const ATIVIDADE_DURACAO_MAX = 60;
 export const ATIVIDADE_NUMERO_MIN = 1;

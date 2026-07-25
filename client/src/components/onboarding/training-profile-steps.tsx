@@ -157,7 +157,7 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
       <StepHeader
         icon={<CalendarDays size={22} />}
         title="Sua rotina semanal"
-        subtitle="Em quais dias você vai treinar? Nos outros, sugerimos um aquecimento leve ou uma Atividade (leitura, corrida, meditação...) pra manter a sequência sem atrapalhar o descanso."
+        subtitle="Em quais dias você vai treinar? Nos outros, sugerimos uma Atividade leve (alongamento, leitura, corrida, meditação...) pra manter a sequência sem atrapalhar o descanso."
       />
       <OptionCard
         className="mt-4"

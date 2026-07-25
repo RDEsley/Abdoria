@@ -61,7 +61,7 @@ export function buildLocalNotices(stats: DashboardStats | null): AppNotification
         id: `local-reset-${today}`,
         tipo: 'streak_reset',
         titulo: `Sua sequência expira em ${formatCountdown(seconds)}!`,
-        corpo: `Sem Frozen Streak no inventário: treine (ou faça o aquecimento do dia de descanso) pra não perder ${stats.streak_atual} dia(s) de sequência.`,
+        corpo: `Sem Frozen Streak no inventário: treine (ou complete Atividades no dia de descanso) pra não perder ${stats.streak_atual} dia(s) de sequência.`,
         payload: {},
         lida_em: null,
         criada_em: now,

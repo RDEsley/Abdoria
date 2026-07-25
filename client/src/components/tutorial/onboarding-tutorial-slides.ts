@@ -8,7 +8,7 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: Dumbbell,
     title: 'Bem-vindo ao Abdoria',
-    body: 'Um app de treino de abdômen de verdade — com aquecimento guiado, evolução real e um pouco de RPG pra deixar o hábito mais gostoso de manter.',
+    body: 'Um app de treino de abdômen de verdade — com evolução real e um pouco de RPG pra deixar o hábito mais gostoso de manter.',
   },
   {
     icon: Target,
