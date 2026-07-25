@@ -88,13 +88,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.45rem;
+  border-radius: 0.5rem;
   border: 2px solid #e7e5e4;
   background: #fafaf9;
   font-size: 0.7rem;
   font-weight: 800;
   color: #44403c;
   cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .workout-calendar__cell--empty {
@@ -106,33 +109,45 @@
 .workout-calendar__cell--l1 {
   background: #ecfdf5;
   border-color: #bbf7d0;
+  box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.2);
 }
 .workout-calendar__cell--l2 {
   background: #bbf7d0;
   border-color: #86efac;
+  box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.28);
 }
 .workout-calendar__cell--l3 {
   background: #86efac;
   border-color: #34d399;
+  box-shadow: 2px 2px 0 rgba(4, 120, 87, 0.32);
 }
 .workout-calendar__cell--l4 {
-  background: #34d399;
-  border-color: #059669;
+  background: linear-gradient(145deg, #34d399, #059669);
+  border-color: var(--game-ink);
   color: #fff;
+  box-shadow: 2px 2px 0 rgba(6, 78, 59, 0.4);
 }
 
 .workout-calendar__cell--selected {
-  outline: 2px solid var(--game-ink);
-  outline-offset: 1px;
+  border-color: var(--game-ink);
+  transform: scale(1.12);
+  box-shadow: 2.5px 2.5px 0 var(--game-ink);
+  z-index: 1;
 }
 
-.workout-calendar__dot {
+.workout-calendar__icons {
   position: absolute;
-  bottom: 3px;
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: currentColor;
+  bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  color: currentcolor;
+  opacity: 0.85;
+}
+
+.workout-calendar__icons--frozen {
+  color: #0369a1;
+  opacity: 1;
 }
 
 .workout-calendar__detail {
@@ -400,8 +415,5 @@
   background: #e0f2fe;
   border-color: #7dd3fc;
   color: #0369a1;
-}
-
-.workout-calendar__dot--frozen {
-  background: #0284c7;
+  box-shadow: 1.5px 1.5px 0 rgba(3, 105, 161, 0.25);
 }

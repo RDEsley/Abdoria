@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell, Snowflake, Sparkles } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
@@ -168,6 +168,8 @@ export function ActivityCalendar() {
           const meta = dayMeta.get(cell.date);
           const isSelected = selectedDay === cell.date;
           const frozen = !meta && frozenSet.has(cell.date);
+          const hasTreino = (meta?.treinos ?? 0) > 0;
+          const hasAtividade = (meta?.atividades.length ?? 0) > 0;
           return (
             <button
               key={cell.date}
@@ -183,8 +185,17 @@ export function ActivityCalendar() {
               }
             >
               <span className="workout-calendar__day">{cell.day}</span>
-              {cell.level > 0 && <span className="workout-calendar__dot" aria-hidden />}
-              {frozen && <span className="workout-calendar__dot workout-calendar__dot--frozen" aria-hidden />}
+              {(hasTreino || hasAtividade) && (
+                <span className="workout-calendar__icons" aria-hidden>
+                  {hasTreino && <Dumbbell size={9} />}
+                  {hasAtividade && <Sparkles size={9} />}
+                </span>
+              )}
+              {frozen && (
+                <span className="workout-calendar__icons workout-calendar__icons--frozen" aria-hidden>
+                  <Snowflake size={9} />
+                </span>
+              )}
             </button>
           );
         })}
