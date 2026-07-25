@@ -101,7 +101,7 @@ assert.equal(explosao.raridade, 'secreto');
 assert.equal(patrolHeroDamage('arco', 'arco_05'), 24);
 assert.equal(patrolHeroDamage('espada', 'espada_09'), 50);
 
-assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'bat'), 90);
+assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'bat'), 200);
 assert.ok(isPatrolHitKillTarget('bat'));
 assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'armored_skeleton'), 52);
 assert.equal(resolvePatrolBaseDamage('espada', 'espada_10', 'golden_slime'), 60);

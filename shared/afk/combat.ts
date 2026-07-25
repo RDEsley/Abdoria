@@ -108,36 +108,37 @@ export const AFK_LEGENDARY_ROLL_BOSS = 9991;
 /** @deprecated Armas nível 9 viraram Míticas — ver rollBossMythicWeapon em afk-rolls. */
 export const AFK_BOSS_LEGENDARY_WEAPON_ROLL = 9987;
 
-// HP base dos slimes: comuns 80–150, elites 400–620 (Chumbo é exceção, 3.000),
-// bosses 4.000–5.000, Golden/Mágico/especiais raríssimos = 8.000–10.000.
+// HP base dos slimes (Rodada 10, rebalanceado): comuns 200–300, elites
+// 1.000–3.000 (Chumbo continua o teto do tier), bosses 7.000–8.000,
+// Golden/Mágico/especiais raríssimos continuam à parte (8.000–10.000).
 export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
-  bat: { id: 'bat', tier: 'common', maxHp: 90, label: 'Slime Morcego' },
-  zombie: { id: 'zombie', tier: 'common', maxHp: 115, label: 'Slime Musgo' },
-  skeleton: { id: 'skeleton', tier: 'common', maxHp: 145, label: 'Slime Ósseo' },
-  slime_macaco: { id: 'slime_macaco', tier: 'common', maxHp: 100, label: 'Slime Macaco' },
-  slime_agua: { id: 'slime_agua', tier: 'common', maxHp: 130, label: 'Slime de Água' },
-  slime_doce: { id: 'slime_doce', tier: 'common', maxHp: 105, label: 'Slime de Doce' },
-  slime_chocolate: { id: 'slime_chocolate', tier: 'common', maxHp: 140, label: 'Slime de Chocolate' },
-  armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 440, label: 'Slime Blindado' },
-  crystal_slime: { id: 'crystal_slime', tier: 'elite', maxHp: 510, label: 'Slime Cristalino' },
-  storm_slime: { id: 'storm_slime', tier: 'elite', maxHp: 580, label: 'Slime Trovão' },
-  slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 620, label: 'Slime Cavaleiro' },
+  bat: { id: 'bat', tier: 'common', maxHp: 200, label: 'Slime Morcego' },
+  zombie: { id: 'zombie', tier: 'common', maxHp: 245, label: 'Slime Musgo' },
+  skeleton: { id: 'skeleton', tier: 'common', maxHp: 300, label: 'Slime Ósseo' },
+  slime_macaco: { id: 'slime_macaco', tier: 'common', maxHp: 215, label: 'Slime Macaco' },
+  slime_agua: { id: 'slime_agua', tier: 'common', maxHp: 260, label: 'Slime de Água' },
+  slime_doce: { id: 'slime_doce', tier: 'common', maxHp: 230, label: 'Slime de Doce' },
+  slime_chocolate: { id: 'slime_chocolate', tier: 'common', maxHp: 280, label: 'Slime de Chocolate' },
+  armored_skeleton: { id: 'armored_skeleton', tier: 'elite', maxHp: 1000, label: 'Slime Blindado' },
+  crystal_slime: { id: 'crystal_slime', tier: 'elite', maxHp: 1300, label: 'Slime Cristalino' },
+  storm_slime: { id: 'storm_slime', tier: 'elite', maxHp: 1600, label: 'Slime Trovão' },
+  slime_knight: { id: 'slime_knight', tier: 'elite', maxHp: 2000, label: 'Slime Cavaleiro' },
   slime_chumbo: { id: 'slime_chumbo', tier: 'elite', maxHp: 3000, label: 'Slime Chumbo' },
   golden_slime: { id: 'golden_slime', tier: 'common', maxHp: 10000, label: 'Golden Slime' },
   magic_rabbit: { id: 'magic_rabbit', tier: 'common', maxHp: 8000, label: 'Slime Mágico' },
   slime_enigma: { id: 'slime_enigma', tier: 'common', maxHp: 10000, label: '?' },
   slime_binario: { id: 'slime_binario', tier: 'common', maxHp: 10000, label: 'Slime Binário' },
-  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 4000, label: 'Rei Slime' },
-  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 4300, label: 'Slime Lich' },
-  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 5000, label: 'Hidra Slime' },
-  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 4700, label: 'Golem de Pedra' },
+  boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 7000, label: 'Rei Slime' },
+  boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 7400, label: 'Slime Lich' },
+  boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 8000, label: 'Hidra Slime' },
+  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 7800, label: 'Golem de Pedra' },
   boss_procrastinador: {
     id: 'boss_procrastinador',
     tier: 'boss',
-    maxHp: 4150,
+    maxHp: 7200,
     label: 'Slime Procrastinador',
   },
-  boss_preguica: { id: 'boss_preguica', tier: 'boss', maxHp: 4500, label: 'Slime Preguiça' },
+  boss_preguica: { id: 'boss_preguica', tier: 'boss', maxHp: 7600, label: 'Slime Preguiça' },
 };
 
 export const AFK_MAGIC_RABBIT_CHANCE = 2304;
