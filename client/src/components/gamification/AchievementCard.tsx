@@ -75,12 +75,10 @@ export function pickAchievementPreview(conquistas: Achievement[], limit: number)
   return picked.slice(0, limit);
 }
 
+/** Lista única (sem seções por dificuldade): desbloqueadas primeiro, depois por % real desc. */
 export function sortAchievements(conquistas: Achievement[]): Achievement[] {
   return [...conquistas].sort((a, b) => {
     if (a.desbloqueada !== b.desbloqueada) return a.desbloqueada ? -1 : 1;
-    const order = { facil: 0, media: 1, dificil: 2, lendaria: 3 } as const;
-    const diff = order[a.dificuldade] - order[b.dificuldade];
-    if (diff !== 0) return diff;
     return b.pct_jogadores - a.pct_jogadores;
   });
 }

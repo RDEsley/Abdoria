@@ -23,6 +23,9 @@ import { Notifications } from '../repositories/notification-repository.js';
 import { User, type UserRecord } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
+import { AFK_ENEMIES } from '../../../shared/afk/combat.js';
+import { PATROL_WEAPON_BY_ID, resolvePatrolArmas } from '../../../shared/patrol/shop.js';
+import { COSMETIC_BY_ID } from '../../../shared/cosmetics.js';
 import {
   getTodaySaoPaulo,
   getHourSaoPaulo,
@@ -163,7 +166,20 @@ function hasWeekendWarrior(histories: HistorySummary[]): boolean {
   return [...weeks.values()].some((days) => days.has(0) && days.has(6));
 }
 
-function hasPerfectWeek(histories: HistorySummary[]): boolean {
+/** Arma OU cosmético (magia/moldura) de raridade Mítica na conta do jogador. */
+function ownsMythicItem(user: UserRecord): boolean {
+  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas).desbloqueados;
+  for (const id of armas) {
+    if (PATROL_WEAPON_BY_ID[id]?.raridade === 'mitico') return true;
+  }
+  for (const id of user.cosmeticos?.desbloqueados ?? []) {
+    if (COSMETIC_BY_ID[id]?.raridade === 'mitico') return true;
+  }
+  return false;
+}
+
+/** Quantas semanas distintas tiveram treino nos 7 dias — 0 se nenhuma. */
+function countPerfectWeeks(histories: HistorySummary[]): number {
   const weeks = new Map<string, Set<number>>();
 
   for (const history of histories) {
@@ -174,7 +190,7 @@ function hasPerfectWeek(histories: HistorySummary[]): boolean {
     weeks.set(weekKey, days);
   }
 
-  return [...weeks.values()].some((days) => days.size >= 7);
+  return [...weeks.values()].filter((days) => days.size >= 7).length;
 }
 
 function weeklyTreinoTypes(histories: HistorySummary[], weekStart: Date): Set<string> {
@@ -312,11 +328,73 @@ export function evaluateAchievementsFromHistories(
   if (totalExercises >= 500) unlocked.add('exercicios_500');
   if (level >= 10) unlocked.add('nivel_10');
   if (totalWorkouts >= 100) unlocked.add('treinos_100');
-  if (hasPerfectWeek(summary)) unlocked.add('semana_perfeita');
+  const perfectWeeks = countPerfectWeeks(summary);
+  if (perfectWeeks >= 1) unlocked.add('semana_perfeita');
   if (streak.atual >= 365 || streak.maior >= 365) unlocked.add('streak_365');
   if (user.gamificacao.nivel_xp >= 5000) unlocked.add('xp_mestre');
 
+  // —— Novas (Rodada 10) ——
+  if (streak.atual >= 160 || streak.maior >= 160) unlocked.add('streak_160');
+  if ((user.gamificacao.streak_congelamentos?.length ?? 0) >= 10)
+    unlocked.add('freeze_streak_10x');
+  if (level >= 15) unlocked.add('nivel_15');
+  if (level >= 20) unlocked.add('nivel_20');
+  if (user.gamificacao.nivel_xp >= 10_000) unlocked.add('xp_10000');
+  if (user.gamificacao.nivel_xp >= 25_000) unlocked.add('xp_25000');
+  if (totalWorkouts >= 200) unlocked.add('treinos_200');
+  if (totalMinutes >= 1000) unlocked.add('minutos_1000');
+  if (totalExercises >= 1000) unlocked.add('exercicios_1000');
+
+  const atividadesTotal = summary.filter((h) => isAtividadeHistory(h.treino_nome)).length;
+  if (atividadesTotal >= 25) unlocked.add('atividades_25');
+  if (atividadesTotal >= 100) unlocked.add('atividades_100');
+
+  const madrugadaDias = new Set(
+    summary
+      .filter((h) => getHourSaoPaulo(new Date(h.concluido_em)) < 8)
+      .map((h) => workoutDayKey(h.concluido_em)),
+  ).size;
+  if (madrugadaDias >= 10) unlocked.add('madrugador_10');
+
+  const corujaDias = new Set(
+    summary
+      .filter((h) => getHourSaoPaulo(new Date(h.concluido_em)) >= 22)
+      .map((h) => workoutDayKey(h.concluido_em)),
+  ).size;
+  if (corujaDias >= 10) unlocked.add('coruja_10');
+
+  const bestiarioCount = user.gamificacao.bestiario_desbloqueados?.length ?? 0;
+  if (bestiarioCount >= 10) unlocked.add('bestiario_10');
+  if (bestiarioCount >= Object.keys(AFK_ENEMIES).length) unlocked.add('bestiario_completo');
+
+  if ((user.cosmeticos?.moedas_total_ganhas ?? 0) >= 1000) unlocked.add('moedas_1000');
+  if (ownsMythicItem(user)) unlocked.add('item_mitico');
+  if (perfectWeeks >= 4) unlocked.add('semanas_perfeitas_4');
+
   return [...unlocked];
+}
+
+const ACHIEVEMENT_PCT_CACHE_MS = 10 * 60 * 1000;
+let achievementPctCache: { at: number; percentages: Record<string, number> } | null = null;
+
+/**
+ * Percentual real (não fictício) de jogadores elegíveis com cada conquista — cacheado por
+ * 10min em memória (não precisa ser em tempo real, e recalcular em toda request de conquistas
+ * seria caro conforme a base de usuários cresce).
+ */
+export async function getAchievementUnlockPercentages(): Promise<Record<string, number>> {
+  if (achievementPctCache && Date.now() - achievementPctCache.at < ACHIEVEMENT_PCT_CACHE_MS) {
+    return achievementPctCache.percentages;
+  }
+
+  const { total, counts } = await User.achievementUnlockCounts();
+  const percentages: Record<string, number> = {};
+  for (const achievement of ACHIEVEMENTS) {
+    percentages[achievement.id] = total > 0 ? ((counts[achievement.id] ?? 0) / total) * 100 : 0;
+  }
+
+  achievementPctCache = { at: Date.now(), percentages };
+  return percentages;
 }
 
 export async function syncUserGamification(userId: string): Promise<UserMutable | null> {

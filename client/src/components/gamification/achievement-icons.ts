@@ -12,6 +12,7 @@ import {
   Moon,
   Rocket,
   Shield,
+  Snowflake,
   Sparkles,
   Star,
   Sun,
@@ -40,4 +41,5 @@ export const ACHIEVEMENT_ICON_COMPONENTS: Record<AchievementIcon, typeof Medal> 
   shield: Shield,
   droplet: Droplet,
   sparkles: Sparkles,
+  snowflake: Snowflake,
 };

@@ -6,12 +6,11 @@ import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { useApp } from '@/hooks/useApp';
-import { ACHIEVEMENT_DIFFICULTY_LABELS, type AchievementDifficulty } from '@/types';
-
-const DIFFICULTY_ORDER: AchievementDifficulty[] = ['facil', 'media', 'dificil', 'lendaria'];
+import { useCopy } from '@/hooks/useCopy';
 
 export function AchievementsPage() {
   const navigate = useNavigate();
+  const copy = useCopy();
   const { stats, loading, refresh } = useApp();
 
   if (loading) return <PageLoader />;
@@ -35,7 +34,11 @@ export function AchievementsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Hall da fama" title="Conquistas" onBack={() => navigate(-1)} />
+      <GamePageHeader
+        eyebrow={copy('conquistas_eyebrow')}
+        title={copy('conquistas_title')}
+        onBack={() => navigate(-1)}
+      />
 
       <div className="game-quest-card flex items-center gap-3">
         <div className="game-level-badge !h-12 !w-12">
@@ -45,34 +48,21 @@ export function AchievementsPage() {
           <p className="text-sm font-extrabold text-stone-800">
             {unlockedCount} de {sorted.length} desbloqueadas
           </p>
-          <p className="text-xs font-bold text-stone-500">
-            Percentuais estimados — dados reais em breve
-          </p>
+          <p className="text-xs font-bold text-stone-500">{copy('conquistas_subtitle')}</p>
         </div>
       </div>
 
-      {DIFFICULTY_ORDER.map((dificuldade) => {
-        const group = sorted.filter((c) => c.dificuldade === dificuldade);
-        if (group.length === 0) return null;
-
-        return (
-          <motion.section
-            key={dificuldade}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-4"
-          >
-            <h3 className={`game-section-title game-section-title--${dificuldade}`}>
-              {ACHIEVEMENT_DIFFICULTY_LABELS[dificuldade]}
-            </h3>
-            <div className="flex flex-col gap-2">
-              {group.map((c) => (
-                <AchievementCard key={c.id} achievement={c} />
-              ))}
-            </div>
-          </motion.section>
-        );
-      })}
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card p-4"
+      >
+        <div className="flex flex-col gap-2">
+          {sorted.map((c) => (
+            <AchievementCard key={c.id} achievement={c} />
+          ))}
+        </div>
+      </motion.section>
     </div>
   );
 }

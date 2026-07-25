@@ -538,6 +538,32 @@ export const User = {
     return count ?? 0;
   },
 
+  /**
+   * Quantos jogadores reais (não-convidado, não-NPC, onboarded) têm cada conquista, mais o
+   * total elegível — base pro percentual real de `pct_jogadores`. Conta em JS em vez de SQL
+   * agregado: sem stored procedure, sem migração, e a base de usuários ainda é pequena o
+   * suficiente pra isso ser barato.
+   */
+  async achievementUnlockCounts(): Promise<{ total: number; counts: Record<string, number> }> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('profiles')
+      .select('gamificacao')
+      .eq('is_guest', false)
+      .eq('is_demo_npc', false)
+      .eq('onboarding_completed', true);
+
+    if (error || !data) return { total: 0, counts: {} };
+
+    const counts: Record<string, number> = {};
+    for (const row of data as { gamificacao: { conquistas?: string[] } | null }[]) {
+      for (const id of row.gamificacao?.conquistas ?? []) {
+        counts[id] = (counts[id] ?? 0) + 1;
+      }
+    }
+    return { total: data.length, counts };
+  },
+
   async create(data: Partial<UserRecord> & { email: string; nome: string }): Promise<UserMutable> {
     const sb = getSupabase();
     const row = {

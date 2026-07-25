@@ -1,8 +1,9 @@
 import type { AchievementDefinition } from '../types/index.js';
 
 /**
- * Catálogo de conquistas. `pct_jogadores` é fictício por enquanto — substituir por
- * agregação real quando houver volume de usuários em produção.
+ * Catálogo de conquistas. `dificuldade` só serve de rótulo/classificação por card — a lista
+ * não é mais dividida em seções por dificuldade na UI, é uma lista única ordenada por
+ * percentual real de jogadores (computado em `getAchievementUnlockPercentages`, não aqui).
  */
 export const ACHIEVEMENTS: AchievementDefinition[] = [
   // —— Fáceis ——
@@ -12,7 +13,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'medal',
     descricao: 'Complete seu primeiro treino',
     dificuldade: 'facil',
-    pct_jogadores: 68,
   },
   {
     id: 'streak_2',
@@ -20,7 +20,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'heart',
     descricao: 'Treine 2 dias seguidos',
     dificuldade: 'facil',
-    pct_jogadores: 54,
   },
   {
     id: 'streak_3',
@@ -28,7 +27,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'flame',
     descricao: 'Mantenha 3 dias de streak',
     dificuldade: 'facil',
-    pct_jogadores: 41,
   },
   {
     id: 'treinos_5',
@@ -36,7 +34,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'dumbbell',
     descricao: 'Complete 5 treinos no total',
     dificuldade: 'facil',
-    pct_jogadores: 48,
   },
   {
     id: 'minutos_60',
@@ -44,7 +41,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'clock',
     descricao: 'Acumule 60 minutos de treino',
     dificuldade: 'facil',
-    pct_jogadores: 52,
   },
 
   // —— Médias ——
@@ -54,7 +50,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'flame',
     descricao: 'Mantenha 7 dias de streak',
     dificuldade: 'media',
-    pct_jogadores: 28,
   },
   {
     id: 'exercicios_50',
@@ -62,7 +57,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'zap',
     descricao: 'Complete 50 exercícios no total',
     dificuldade: 'media',
-    pct_jogadores: 24,
   },
   {
     id: 'nivel_3',
@@ -70,7 +64,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'star',
     descricao: 'Alcance o nível 3',
     dificuldade: 'media',
-    pct_jogadores: 31,
   },
   {
     id: 'early_bird',
@@ -78,7 +71,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'sun',
     descricao: 'Treine antes das 8h (horário SP)',
     dificuldade: 'media',
-    pct_jogadores: 19,
   },
   {
     id: 'night_owl',
@@ -86,7 +78,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'moon',
     descricao: 'Treine depois das 22h (horário SP)',
     dificuldade: 'media',
-    pct_jogadores: 17,
   },
   {
     id: 'fim_de_semana',
@@ -94,7 +85,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'calendar',
     descricao: 'Treine sábado e domingo na mesma semana',
     dificuldade: 'media',
-    pct_jogadores: 22,
   },
   {
     id: 'ciclo_ab',
@@ -102,7 +92,20 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'target',
     descricao: 'Complete treinos A e B na mesma semana',
     dificuldade: 'media',
-    pct_jogadores: 26,
+  },
+  {
+    id: 'atividades_25',
+    titulo: 'Hábito saudável',
+    icon: 'sparkles',
+    descricao: 'Complete 25 Atividades no total',
+    dificuldade: 'media',
+  },
+  {
+    id: 'bestiario_10',
+    titulo: 'Caçador de slimes',
+    icon: 'target',
+    descricao: 'Desbloqueie 10 inimigos no Bestiário',
+    dificuldade: 'media',
   },
 
   // —— Difíceis ——
@@ -112,7 +115,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'calendar',
     descricao: 'Mantenha 14 dias de streak',
     dificuldade: 'dificil',
-    pct_jogadores: 11,
   },
   {
     id: 'streak_30',
@@ -120,7 +122,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'crown',
     descricao: 'Mantenha 30 dias de streak',
     dificuldade: 'dificil',
-    pct_jogadores: 6,
   },
   {
     id: 'exercicios_100',
@@ -128,7 +129,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'trophy',
     descricao: 'Complete 100 exercícios no total',
     dificuldade: 'dificil',
-    pct_jogadores: 8,
   },
   {
     id: 'treino_completo',
@@ -136,7 +136,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'trophy',
     descricao: 'Estimule todos os músculos em uma semana',
     dificuldade: 'dificil',
-    pct_jogadores: 7,
   },
   {
     id: 'nivel_5',
@@ -144,7 +143,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'star',
     descricao: 'Alcance o nível 5',
     dificuldade: 'dificil',
-    pct_jogadores: 9,
   },
   {
     id: 'ciclo_completo',
@@ -152,7 +150,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'medal',
     descricao: 'Complete treinos A, B e C na mesma semana',
     dificuldade: 'dificil',
-    pct_jogadores: 5,
   },
   {
     id: 'minutos_500',
@@ -160,7 +157,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'clock',
     descricao: 'Acumule 500 minutos de treino',
     dificuldade: 'dificil',
-    pct_jogadores: 10,
   },
   {
     id: 'treinos_25',
@@ -168,7 +164,62 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'dumbbell',
     descricao: 'Complete 25 treinos no total',
     dificuldade: 'dificil',
-    pct_jogadores: 12,
+  },
+  {
+    id: 'nivel_15',
+    titulo: 'Herói experiente',
+    icon: 'star',
+    descricao: 'Alcance o nível 15',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'xp_10000',
+    titulo: 'Colecionador de XP',
+    icon: 'rocket',
+    descricao: 'Acumule 10.000 XP no total',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'minutos_1000',
+    titulo: 'Mil minutos de ferro',
+    icon: 'clock',
+    descricao: 'Acumule 1.000 minutos de treino',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'freeze_streak_10x',
+    titulo: 'Mestre do gelo',
+    icon: 'snowflake',
+    descricao: 'Use 10 Frozen Streak ao longo da jornada',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'madrugador_10',
+    titulo: 'Rei da madrugada',
+    icon: 'sun',
+    descricao: 'Treine antes das 8h em 10 dias diferentes',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'coruja_10',
+    titulo: 'Senhor da noite',
+    icon: 'moon',
+    descricao: 'Treine depois das 22h em 10 dias diferentes',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'moedas_1000',
+    titulo: 'Tesouro do herói',
+    icon: 'gem',
+    descricao: 'Acumule 1.000 Coins ganhos na jornada',
+    dificuldade: 'dificil',
+  },
+  {
+    id: 'item_mitico',
+    titulo: 'Toque mítico',
+    icon: 'gem',
+    descricao: 'Possua qualquer item de raridade Mítica',
+    dificuldade: 'dificil',
   },
 
   // —— Lendárias (quase impossíveis) ——
@@ -178,7 +229,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'shield',
     descricao: 'Mantenha 60 dias de streak',
     dificuldade: 'lendaria',
-    pct_jogadores: 1.8,
   },
   {
     id: 'streak_100',
@@ -186,7 +236,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'crown',
     descricao: 'Mantenha 100 dias de streak',
     dificuldade: 'lendaria',
-    pct_jogadores: 0.3,
   },
   {
     id: 'exercicios_500',
@@ -194,7 +243,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'zap',
     descricao: 'Complete 500 exercícios no total',
     dificuldade: 'lendaria',
-    pct_jogadores: 1.1,
   },
   {
     id: 'nivel_10',
@@ -202,7 +250,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'gem',
     descricao: 'Alcance o nível 10',
     dificuldade: 'lendaria',
-    pct_jogadores: 1.4,
   },
   {
     id: 'treinos_100',
@@ -210,7 +257,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'dumbbell',
     descricao: 'Complete 100 treinos no total',
     dificuldade: 'lendaria',
-    pct_jogadores: 0.7,
   },
   {
     id: 'semana_perfeita',
@@ -218,7 +264,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'calendar',
     descricao: 'Treine todos os 7 dias de uma semana',
     dificuldade: 'lendaria',
-    pct_jogadores: 0.9,
   },
   {
     id: 'streak_365',
@@ -226,7 +271,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'gem',
     descricao: 'Mantenha 365 dias de streak',
     dificuldade: 'lendaria',
-    pct_jogadores: 0.05,
   },
   {
     id: 'xp_mestre',
@@ -234,7 +278,62 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     icon: 'rocket',
     descricao: 'Acumule 5.000 XP no total',
     dificuldade: 'lendaria',
-    pct_jogadores: 0.6,
+  },
+  {
+    id: 'streak_160',
+    titulo: 'Guerreiro inabalável',
+    icon: 'shield',
+    descricao: 'Mantenha 160 dias de streak',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'nivel_20',
+    titulo: 'Lenda viva',
+    icon: 'crown',
+    descricao: 'Alcance o nível 20',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'xp_25000',
+    titulo: 'Fonte infinita de XP',
+    icon: 'gem',
+    descricao: 'Acumule 25.000 XP no total',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'treinos_200',
+    titulo: 'Máquina de treinar',
+    icon: 'dumbbell',
+    descricao: 'Complete 200 treinos no total',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'exercicios_1000',
+    titulo: 'Exterminador supremo',
+    icon: 'zap',
+    descricao: 'Complete 1.000 exercícios no total',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'atividades_100',
+    titulo: 'Vida equilibrada',
+    icon: 'sparkles',
+    descricao: 'Complete 100 Atividades no total',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'bestiario_completo',
+    titulo: 'Mestre do bestiário',
+    icon: 'trophy',
+    descricao: 'Desbloqueie todos os inimigos do Bestiário',
+    dificuldade: 'lendaria',
+  },
+  {
+    id: 'semanas_perfeitas_4',
+    titulo: 'Perfeição repetida',
+    icon: 'crown',
+    descricao: 'Tenha 4 semanas perfeitas (7/7 dias) na jornada',
+    dificuldade: 'lendaria',
   },
 ];
 

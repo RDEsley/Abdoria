@@ -70,18 +70,18 @@ export type AchievementIcon =
   | 'heart'
   | 'shield'
   | 'droplet'
-  | 'sparkles';
+  | 'sparkles'
+  | 'snowflake';
 
 export type AchievementDifficulty = 'facil' | 'media' | 'dificil' | 'lendaria';
 
+/** Catálogo estático — não sabe percentual de jogadores (isso é computado, ver `Achievement`). */
 export interface AchievementDefinition {
   id: string;
   titulo: string;
   icon: AchievementIcon;
   descricao: string;
   dificuldade: AchievementDifficulty;
-  /** Percentual fictício de jogadores com a conquista (substituir por dado real depois). */
-  pct_jogadores: number;
 }
 
 export interface ExerciseMedia {
@@ -168,6 +168,8 @@ export interface UserPreferencias {
   esquema_recomendado?: boolean;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
+  /** Visual do personagem na Exploração — escolhido na 1ª entrada, antes da arma. */
+  personagem_genero?: PersonagemGenero | null;
   /** Estilo de combate na Exploração AFK. */
   arma_preferida?: ArmaPreferida | null;
   /** Arcos e espadas desbloqueados na loja da exploração. */
@@ -216,6 +218,9 @@ export type Idioma = 'pt' | 'en' | 'es';
 export type TomTexto = 'jogo' | 'normal';
 
 export type ArmaPreferida = 'arco' | 'espada' | 'magia';
+
+/** Visual do personagem (mascote) na Exploração. */
+export type PersonagemGenero = 'masculino' | 'feminino';
 
 // —— Perfil de treino (onboarding "personal trainer") ————————————————————————
 
@@ -1169,6 +1174,8 @@ export interface IWorkoutHistoryDocument extends IWorkoutHistory {
 
 export interface Achievement extends AchievementDefinition {
   desbloqueada: boolean;
+  /** Percentual real de jogadores (elegíveis) que têm essa conquista — computado no servidor. */
+  pct_jogadores: number;
 }
 
 export interface TreinoSugeridoExercicio {
@@ -1430,8 +1437,6 @@ export interface ActiveWorkout {
   preset_id?: string;
   /** Dia do plano corpo-todo (modo plano) — repassado ao concluir. */
   plano_dia_indice?: number;
-  /** Sessão leve de dia de descanso — mantém a streak sem contar como treino pleno. */
-  aquecimento?: boolean;
 }
 
 export interface PresetExercise {
@@ -1528,6 +1533,8 @@ export interface PublicProfile {
   social: { followers: number; following: number; amigos: number };
   /** Curtidas de perfil (coração): total recebido + se o usuário logado já curtiu. */
   likes: { total: number; eu_curti: boolean };
+  /** Visitantes únicos do perfil (cada usuário conta 1 vez, não por visita). */
+  visualizacoes: number;
   /** Relação do usuário logado com este perfil. */
   relacao: { seguindo: boolean; segue_voce: boolean; amigo: boolean };
 }
@@ -1745,6 +1752,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   reps_repeticoes_padrao: 12,
   preset_favorito_id: null,
   tutorial_visto: false,
+  personagem_genero: null,
   arma_preferida: null,
   ocultar_aviso_xp_diario: false,
   exercicios_fixos: [],

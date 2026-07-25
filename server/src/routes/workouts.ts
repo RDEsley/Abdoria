@@ -7,6 +7,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   ACHIEVEMENTS,
+  getAchievementUnlockPercentages,
   getWeeklyMuscles,
   hasTrainedToday,
   resetXpDiarioIfNeeded,
@@ -140,10 +141,12 @@ workoutsRouter.get('/achievements', async (req: AuthRequest, res) => {
       return;
     }
 
+    const pct = await getAchievementUnlockPercentages();
     res.json(
       ACHIEVEMENTS.map((a) => ({
         ...a,
         desbloqueada: user.gamificacao.conquistas.includes(a.id),
+        pct_jogadores: pct[a.id] ?? 0,
       })),
     );
   } catch (error) {
@@ -226,9 +229,11 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     const trained = muscles.filter(([, count]) => count > 0);
     const sorted = [...trained].sort((a, b) => b[1] - a[1]);
 
+    const achievementPct = await getAchievementUnlockPercentages();
     const conquistas = ACHIEVEMENTS.map((a) => ({
       ...a,
       desbloqueada: user.gamificacao.conquistas.includes(a.id),
+      pct_jogadores: achievementPct[a.id] ?? 0,
     }));
 
     const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
