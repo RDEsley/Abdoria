@@ -407,12 +407,15 @@ export function AtividadesCard() {
         <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
           <button
             type="button"
-            className="atividade-action-btn"
+            className="atividade-action-btn atividade-action-btn--agenda"
             aria-label="Quando fazer atividades"
             title="Quando fazer atividades"
             onClick={() => setMostrarAgenda(true)}
           >
-            <CalendarClock size={13} aria-hidden /> Agenda
+            <span className="atividade-action-btn__icon" aria-hidden>
+              <CalendarClock size={13} />
+            </span>
+            Agenda
           </button>
           <button
             type="button"
@@ -426,15 +429,10 @@ export function AtividadesCard() {
               else setModoEdicao(true);
             }}
           >
-            {modoEdicao ? (
-              <>
-                <Check size={13} aria-hidden /> Concluir
-              </>
-            ) : (
-              <>
-                <Pencil size={13} aria-hidden /> Editar
-              </>
-            )}
+            <span className="atividade-action-btn__icon" aria-hidden>
+              {modoEdicao ? <Check size={13} /> : <Pencil size={13} />}
+            </span>
+            {modoEdicao ? 'Concluir' : 'Editar'}
           </button>
         </div>
       </div>
