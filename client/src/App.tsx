@@ -52,6 +52,12 @@ const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default:
 const HistoricoPage = lazy(() =>
   import('@/pages/HistoricoPage').then((m) => ({ default: m.HistoricoPage })),
 );
+const CampaignBookPage = lazy(() =>
+  import('@/pages/CampaignBookPage').then((m) => ({ default: m.CampaignBookPage })),
+);
+const ExplorationPage = lazy(() =>
+  import('@/pages/ExplorationPage').then((m) => ({ default: m.ExplorationPage })),
+);
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
@@ -209,6 +215,22 @@ export default function App() {
                     element={
                       <LazyPage>
                         <AtividadesPlayerPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="campanha"
+                    element={
+                      <LazyPage>
+                        <CampaignBookPage />
+                      </LazyPage>
+                    }
+                  />
+                  <Route
+                    path="exploracao"
+                    element={
+                      <LazyPage>
+                        <ExplorationPage />
                       </LazyPage>
                     }
                   />

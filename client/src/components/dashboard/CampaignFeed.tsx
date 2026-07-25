@@ -1,19 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { GameButton } from '@/components/ui/GameButton';
 import { CAMPAIGN_EVENT_STYLE } from '@/components/campaign/campaign-style';
-import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
-import {
-  buildCampaignPosts,
-  type CampaignCatalogInfo,
-  type CampaignPost,
-  type CampaignSession,
-} from '@shared/campaign';
-import { isAtividadeHistory } from '@shared/atividades';
-import { toLocalDateKey } from '@/lib/utils';
-import { formatMetricas } from '@/lib/atividade-format';
-import { xpLevelFromTotal, type AfkEnemyId } from '@/types';
+import { useCampaignPosts } from '@/hooks/useCampaignPosts';
+import type { CampaignPost } from '@shared/campaign';
 
 function relativeDate(iso: string): string {
   const date = new Date(iso);
@@ -85,92 +75,14 @@ function PostCard({ post }: { post: CampaignPost }) {
 
 /**
  * Feed narrativo do Mapa da Campanha — 1 post por sessão de treino (a
- * "missão do dia"). Só o capítulo mais recente aparece por padrão.
+ * "missão do dia"). Só o capítulo mais recente aparece aqui; os anteriores
+ * ficam no livro de capítulos (`/campanha`).
  */
 export function CampaignFeed() {
-  const { history, ensureHistory, historyLoading, exercises, ensureExercises } = useApp();
-  const { user } = useAuth();
-  const [showAll, setShowAll] = useState(false);
+  const navigate = useNavigate();
+  const { posts, loading } = useCampaignPosts();
 
-  useEffect(() => {
-    void ensureHistory();
-    void ensureExercises();
-  }, [ensureHistory, ensureExercises]);
-
-  const posts = useMemo(() => {
-    if (!user || history.length === 0) return [];
-    const catalogBySlug = new Map<string, CampaignCatalogInfo>(
-      exercises.map((ex) => [
-        ex.slug,
-        {
-          nivel: ex.nivel,
-          prioridade: ex.prioridade,
-          musculo_principal: ex.musculo_principal,
-          grupos: ex.grupos,
-          nome_pt: ex.nome_pt,
-        },
-      ]),
-    );
-    // Sessões de treino entram 1:1; sessões de Atividade (sem exercícios pra
-    // narrar como combate) são agrupadas por dia — vira 1 "missão pessoal" por
-    // dia, igual ao treino, em vez de 1 post por atividade concluída.
-    const treinoSessions: CampaignSession[] = [];
-    const atividadesPorDia = new Map<string, typeof history>();
-    for (const entry of history) {
-      if (isAtividadeHistory(entry.treino_nome) && entry.atividade) {
-        const dia = toLocalDateKey(entry.concluido_em);
-        const grupo = atividadesPorDia.get(dia) ?? [];
-        grupo.push(entry);
-        atividadesPorDia.set(dia, grupo);
-        continue;
-      }
-      treinoSessions.push({
-        id: entry.id,
-        treino_nome: entry.treino_nome,
-        exercicios: entry.exercicios ?? [],
-        duracao_total_segundos: entry.duracao_total_segundos,
-        xp_ganho: entry.xp_ganho,
-        concluido_em: entry.concluido_em,
-      });
-    }
-
-    const atividadeSessions: CampaignSession[] = [...atividadesPorDia.entries()].map(
-      ([dia, entries]) => {
-        const ordenadas = [...entries].sort(
-          (a, b) => new Date(a.concluido_em).getTime() - new Date(b.concluido_em).getTime(),
-        );
-        const ultima = ordenadas[ordenadas.length - 1];
-        return {
-          id: `atividades-${dia}`,
-          treino_nome: 'Atividades',
-          exercicios: [],
-          duracao_total_segundos: ordenadas.reduce(
-            (acc, e) => acc + (e.duracao_total_segundos ?? 0),
-            0,
-          ),
-          xp_ganho: ordenadas.reduce((acc, e) => acc + (e.xp_ganho ?? 0), 0),
-          concluido_em: ultima.concluido_em,
-          isAtividade: true,
-          atividadesFeitas: ordenadas.map((e) => ({
-            nome: e.atividade!.nome,
-            detalhe: formatMetricas(e.atividade!.metricas),
-          })),
-        };
-      },
-    );
-
-    return buildCampaignPosts(
-      [...treinoSessions, ...atividadeSessions],
-      catalogBySlug,
-      {
-        heroi: user.nome?.split(' ')[0] ?? 'O herói',
-        level: xpLevelFromTotal(user.gamificacao?.nivel_xp ?? 0),
-        bestiarioDesbloqueados: (user.gamificacao?.bestiario_desbloqueados ?? []) as AfkEnemyId[],
-      },
-    );
-  }, [history, exercises, user]);
-
-  if (historyLoading) {
+  if (loading) {
     return <p className="mt-3 text-sm text-stone-500">Abrindo o diário de campanha...</p>;
   }
 
@@ -182,23 +94,19 @@ export function CampaignFeed() {
     );
   }
 
-  const visible = showAll ? posts : posts.slice(0, 1);
-
   return (
     <div className="mt-4 flex flex-col gap-2.5">
       <AnimatePresence initial={false}>
-        {visible.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+        <PostCard key={posts[0].id} post={posts[0]} />
       </AnimatePresence>
       {posts.length > 1 && (
         <GameButton
           variant="secondary"
           size="sm"
-          onClick={() => setShowAll((v) => !v)}
+          onClick={() => navigate('/campanha')}
           className="mt-1"
         >
-          {showAll ? 'Ver menos' : 'Ver capítulos anteriores'}
+          Ver capítulos anteriores
         </GameButton>
       )}
     </div>
