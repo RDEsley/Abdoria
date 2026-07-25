@@ -6,6 +6,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Dumbbell,
   ListChecks,
   Pencil,
   Plus,
@@ -437,12 +438,20 @@ export function AtividadesCard() {
         </div>
       </div>
 
-      <p className="mt-1 text-xs font-semibold text-stone-500">
-        {diaDeTreino
-          ? 'Hoje é dia de treino: as atividades ficam registradas e podem liberar conquistas, mas o XP e a streak vêm do treino.'
-          : hojeNaAgenda
-            ? 'Dia de descanso: escolha atividades pra ganhar XP e manter sua sequência.'
-            : 'Atividades não agendadas para hoje — toque no calendário acima pra ajustar os dias.'}
+      <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-stone-500">
+        {diaDeTreino ? (
+          <>
+            <Dumbbell size={12} aria-hidden /> Dia de treino — XP e streak vêm do treino
+          </>
+        ) : hojeNaAgenda ? (
+          <>
+            <Sparkles size={12} aria-hidden /> Escolha, crie ou edite Atividades
+          </>
+        ) : (
+          <>
+            <CalendarClock size={12} aria-hidden /> Não agendadas hoje — ajuste no calendário acima
+          </>
+        )}
       </p>
 
       {filaPendente.length > 0 && !modoEdicao && hojeNaAgenda && (
@@ -500,7 +509,7 @@ export function AtividadesCard() {
         ))}
       </ul>
 
-      {modoEdicao && selecionados.size > 0 ? (
+      {modoEdicao && selecionados.size > 0 && (
         <GameButton
           variant="danger"
           className="mt-2 flex w-full items-center justify-center gap-2"
@@ -509,13 +518,6 @@ export function AtividadesCard() {
           <Trash2 size={15} aria-hidden /> Excluir {selecionados.size} selecionada
           {selecionados.size === 1 ? '' : 's'}
         </GameButton>
-      ) : (
-        atividades.length > 1 &&
-        !modoEdicao && (
-          <p className="mt-2 flex items-center gap-1.5 text-[0.65rem] font-semibold text-stone-400">
-            <ChevronUp size={12} aria-hidden /> Use as setas para reordenar.
-          </p>
-        )
       )}
       {modoEdicao && selecionados.size === 0 && (
         <p className="mt-2 text-[0.65rem] font-semibold text-stone-400">
