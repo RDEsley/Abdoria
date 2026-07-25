@@ -26,7 +26,6 @@ import {
   NAME_CHANGE_COST,
   type IUserDocument,
   type MolduraId,
-  type ShopCatalogItem,
   type ShopResponse,
 } from '@/types';
 
@@ -34,7 +33,7 @@ interface Props {
   open: boolean;
   profile: IUserDocument;
   onClose: () => void;
-  /** Recarrega usuário/app depois de foto, nome, moldura ou descrição mudarem. */
+  /** Recarrega usuário/app depois de foto, nome, moldura, título ou descrição mudarem. */
   onChanged: () => Promise<void>;
 }
 
@@ -49,18 +48,31 @@ function molduraCountOf(status: MolduraStatusResponse, moldura: MolduraId): numb
 
 const MOLDURA_OPTIONS: MolduraId[] = ['bronze', 'prata', 'ouro', 'especial'];
 
+/** Rascunho da borda selecionada — só vira mudança real ao clicar em Salvar. */
+type BordaDraft =
+  | { fonte: 'nenhuma' }
+  | { fonte: 'podio'; moldura: MolduraId }
+  | { fonte: 'loja'; itemId: string };
+
+function bordaDraftEquals(a: BordaDraft, b: BordaDraft): boolean {
+  if (a.fonte !== b.fonte) return false;
+  if (a.fonte === 'podio' && b.fonte === 'podio') return a.moldura === b.moldura;
+  if (a.fonte === 'loja' && b.fonte === 'loja') return a.itemId === b.itemId;
+  return true;
+}
+
 export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameDraft, setNameDraft] = useState(profile.nome);
   const [bioDraft, setBioDraft] = useState(profile.descricao ?? '');
   const [molduras, setMolduras] = useState<MolduraStatusResponse | null>(null);
   const [catalog, setCatalog] = useState<ShopResponse | null>(null);
-  const [busyItemId, setBusyItemId] = useState<string | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   /** undefined = sem mudança; string = nova foto (data URL); null = remover. */
   const [pendingPhoto, setPendingPhoto] = useState<string | null | undefined>(undefined);
+  const [tituloDraft, setTituloDraft] = useState<string | null>(null);
+  const [bordaDraft, setBordaDraft] = useState<BordaDraft>({ fonte: 'nenhuma' });
 
   useEffect(() => {
     if (!open) return;
@@ -68,6 +80,16 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
     setBioDraft(profile.descricao ?? '');
     setCropFile(null);
     setPendingPhoto(undefined);
+    setTituloDraft(profile.cosmeticos?.titulo_equipado ?? null);
+
+    const currentBorder = resolveIdentityBorder(profile.cosmeticos);
+    setBordaDraft(
+      currentBorder.moldura
+        ? { fonte: 'podio', moldura: currentBorder.moldura }
+        : currentBorder.borderLoja
+          ? { fonte: 'loja', itemId: currentBorder.borderLoja }
+          : { fonte: 'nenhuma' },
+    );
 
     let cancelled = false;
     getMolduraStatus()
@@ -104,20 +126,6 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
 
   if (!open) return null;
 
-  const run = async (action: () => Promise<unknown>, successMessage?: string) => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await action();
-      await onChanged();
-      if (successMessage) showGameToast(successMessage, { variant: 'success' });
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível salvar.'), { variant: 'error' });
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const handlePhotoFile = (file: File | undefined) => {
     if (file) setCropFile(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -129,6 +137,20 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
   const photoChanged =
     pendingPhoto !== undefined && (pendingPhoto !== null || Boolean(profile.avatar_url));
   const nameChangeIsPaid = (profile.nome_trocas ?? 0) > 0;
+
+  const identityBorder = resolveIdentityBorder(profile.cosmeticos);
+  const currentBordaDraft: BordaDraft = identityBorder.moldura
+    ? { fonte: 'podio', moldura: identityBorder.moldura }
+    : identityBorder.borderLoja
+      ? { fonte: 'loja', itemId: identityBorder.borderLoja }
+      : { fonte: 'nenhuma' };
+  const bordaChanged = !bordaDraftEquals(bordaDraft, currentBordaDraft);
+
+  const currentTituloId = profile.cosmeticos?.titulo_equipado ?? null;
+  const tituloChanged = tituloDraft !== currentTituloId;
+
+  const anythingChanged =
+    nameChanged || bioChanged || photoChanged || bordaChanged || tituloChanged;
 
   const handleSave = async () => {
     const nome = nameDraft.trim();
@@ -155,6 +177,17 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
       if (bioChanged) {
         await updateMe({ descricao: bioDraft.trim() || null });
       }
+      if (bordaChanged) {
+        if (bordaDraft.fonte === 'loja') {
+          await equipShopItem('moldura_loja', bordaDraft.itemId);
+        } else {
+          await equipMoldura(bordaDraft.fonte === 'podio' ? bordaDraft.moldura : null);
+        }
+      }
+      if (tituloChanged && tituloDraft) {
+        await equipShopItem('titulo', tituloDraft);
+      }
+      if (bordaChanged || tituloChanged) playEquip();
       await onChanged();
       onClose();
     } catch (err) {
@@ -164,31 +197,46 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
     }
   };
 
-  const identityBorder = resolveIdentityBorder(profile.cosmeticos);
-  const semBorda = identityBorder.moldura == null && !identityBorder.borderLoja;
+  type BordaOption = {
+    key: string;
+    draft: BordaDraft;
+    unlocked: boolean;
+    label: string;
+    lockHint: string;
+  } & (
+    | { kind: 'podio'; moldura: MolduraId; count: number | null }
+    | { kind: 'loja'; itemId: string }
+  );
 
-  const handleEquipCosmetic = async (item: ShopCatalogItem) => {
-    if (busyItemId) return;
-    setBusyItemId(item.id);
-    try {
-      await equipShopItem(item.kind, item.id);
-      playEquip();
-      const data = await getShop();
-      setCatalog(data);
-      await onChanged();
-      showGameToast(`${item.nome} equipado!`, { variant: 'success' });
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), {
-        variant: 'error',
-      });
-    } finally {
-      setBusyItemId(null);
-    }
-  };
+  const podioOptions: BordaOption[] = MOLDURA_OPTIONS.map((moldura) => ({
+    key: `podio-${moldura}`,
+    kind: 'podio',
+    draft: { fonte: 'podio', moldura },
+    moldura,
+    count: molduras ? molduraCountOf(molduras, moldura) : null,
+    unlocked: molduras?.desbloqueadas.includes(moldura) ?? false,
+    label: MOLDURA_LABELS[moldura],
+    lockHint:
+      moldura === 'especial'
+        ? 'Desbloqueie com um item secreto do jogo'
+        : 'Feche uma semana no pódio pra desbloquear',
+  }));
 
-  const molduraLojaOptions = (catalog?.molduras_loja ?? [])
+  const lojaOptions: BordaOption[] = (catalog?.molduras_loja ?? [])
     .filter((item) => item.id !== 'borda_basica')
-    .sort((a, b) => Number(b.desbloqueada) - Number(a.desbloqueada));
+    .map((item) => ({
+      key: `loja-${item.id}`,
+      kind: 'loja',
+      draft: { fonte: 'loja', itemId: item.id },
+      itemId: item.id,
+      unlocked: item.desbloqueada,
+      label: item.nome,
+      lockHint: `Como conseguir: ${item.unlock_label}`,
+    }));
+
+  const bordaOptions = [...podioOptions, ...lojaOptions].sort(
+    (a, b) => Number(b.unlocked) - Number(a.unlocked),
+  );
 
   return createPortal(
     <div className="game-modal-overlay" role="presentation" onClick={onClose}>
@@ -211,18 +259,18 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
             <button
               type="button"
               className="profile-edit-photo__btn"
-              disabled={busy}
+              disabled={saving}
               onClick={() => fileInputRef.current?.click()}
               aria-label={profile.avatar_url ? 'Trocar foto de perfil' : 'Adicionar foto de perfil'}
             >
               <UserAvatar
                 nome={profile.nome}
                 avatarUrl={displayedAvatarUrl}
-                moldura={identityBorder.moldura}
-                borderLoja={identityBorder.borderLoja}
+                moldura={bordaDraft.fonte === 'podio' ? bordaDraft.moldura : null}
+                borderLoja={bordaDraft.fonte === 'loja' ? bordaDraft.itemId : null}
                 molduraCount={
-                  molduras && identityBorder.moldura
-                    ? molduraCountOf(molduras, identityBorder.moldura)
+                  molduras && bordaDraft.fonte === 'podio'
+                    ? molduraCountOf(molduras, bordaDraft.moldura)
                     : null
                 }
                 size="lg"
@@ -235,7 +283,7 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
               <button
                 type="button"
                 className="profile-edit-photo__remove"
-                disabled={busy}
+                disabled={saving}
                 onClick={() => setPendingPhoto(null)}
               >
                 <Trash2 size={12} aria-hidden />
@@ -285,102 +333,52 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
             label="Título"
             hint="Títulos vêm de conquistas, códigos e eventos. Toque para escolher."
             items={catalog?.titulos}
-            busyItemId={busyItemId}
-            onEquip={(item) => void handleEquipCosmetic(item)}
+            selectedId={tituloDraft}
+            onSelect={(item) => setTituloDraft(item.id)}
             styledTitle
-          />
-
-          <CosmeticScrollPicker
-            label="Efeito de celebração"
-            hint="Muda o efeito das suas vitórias."
-            items={catalog?.efeitos}
-            busyItemId={busyItemId}
-            onEquip={(item) => void handleEquipCosmetic(item)}
+            simple
           />
 
           <div className="profile-edit-field">
             <span className="profile-edit-field__label">Bordas de Perfil</span>
             <span className="profile-edit-field__hint">
-              Bordas de pódio e de conquista. Toque numa desbloqueada para equipar.
+              Bordas de pódio e de conquista, desbloqueadas primeiro. Escolha e toque em Salvar.
             </span>
             <div className="profile-edit-molduras">
               <button
                 type="button"
-                className={`profile-moldura-option${semBorda ? ' profile-moldura-option--active' : ''}`}
-                disabled={busy}
-                onClick={() => void run(() => equipMoldura(null))}
+                className={`profile-moldura-option${bordaDraft.fonte === 'nenhuma' ? ' profile-moldura-option--active' : ''}`}
+                onClick={() => setBordaDraft({ fonte: 'nenhuma' })}
               >
                 <UserAvatar nome={profile.nome} avatarUrl={profile.avatar_url} size="sm" />
                 <span>Nenhuma</span>
               </button>
 
-              {[...MOLDURA_OPTIONS]
-                .sort((a, b) => {
-                  const aUnlocked = molduras?.desbloqueadas.includes(a) ?? false;
-                  const bUnlocked = molduras?.desbloqueadas.includes(b) ?? false;
-                  if (aUnlocked === bUnlocked) return 0;
-                  return aUnlocked ? -1 : 1;
-                })
-                .map((moldura) => {
-                  const unlocked = molduras?.desbloqueadas.includes(moldura) ?? false;
-                  const count = molduras ? molduraCountOf(molduras, moldura) : null;
-                  return (
-                    <button
-                      key={moldura}
-                      type="button"
-                      className={`profile-moldura-option${identityBorder.moldura === moldura ? ' profile-moldura-option--active' : ''}`}
-                      disabled={busy || !unlocked}
-                      onClick={() => void run(() => equipMoldura(moldura))}
-                      title={
-                        unlocked
-                          ? MOLDURA_LABELS[moldura]
-                          : moldura === 'especial'
-                            ? 'Desbloqueie com um item secreto do jogo'
-                            : 'Feche uma semana no pódio pra desbloquear'
-                      }
-                    >
-                      <span className="profile-moldura-option__preview">
-                        <UserAvatar
-                          nome={profile.nome}
-                          avatarUrl={profile.avatar_url}
-                          moldura={moldura}
-                          molduraCount={unlocked ? count : null}
-                          size="sm"
-                        />
-                        {!unlocked && (
-                          <span className="profile-moldura-option__lock" aria-hidden>
-                            <Lock size={12} />
-                          </span>
-                        )}
-                      </span>
-                      <span>{MOLDURA_LABELS[moldura]}</span>
-                    </button>
-                  );
-                })}
-
-              {molduraLojaOptions.map((item) => (
+              {bordaOptions.map((option) => (
                 <button
-                  key={item.id}
+                  key={option.key}
                   type="button"
-                  className={`profile-moldura-option${identityBorder.borderLoja === item.id ? ' profile-moldura-option--active' : ''}`}
-                  disabled={busy || busyItemId != null || !item.desbloqueada}
-                  onClick={() => void handleEquipCosmetic(item)}
-                  title={item.desbloqueada ? item.nome : `Como conseguir: ${item.unlock_label}`}
+                  className={`profile-moldura-option${bordaDraftEquals(bordaDraft, option.draft) ? ' profile-moldura-option--active' : ''}`}
+                  disabled={!option.unlocked}
+                  onClick={() => setBordaDraft(option.draft)}
+                  title={option.unlocked ? option.label : option.lockHint}
                 >
                   <span className="profile-moldura-option__preview">
                     <UserAvatar
                       nome={profile.nome}
                       avatarUrl={profile.avatar_url}
-                      borderLoja={item.id}
+                      moldura={option.kind === 'podio' ? option.moldura : null}
+                      molduraCount={option.kind === 'podio' && option.unlocked ? option.count : null}
+                      borderLoja={option.kind === 'loja' ? option.itemId : null}
                       size="sm"
                     />
-                    {!item.desbloqueada && (
+                    {!option.unlocked && (
                       <span className="profile-moldura-option__lock" aria-hidden>
                         <Lock size={12} />
                       </span>
                     )}
                   </span>
-                  <span>{item.nome}</span>
+                  <span>{option.label}</span>
                 </button>
               ))}
             </div>
@@ -393,7 +391,7 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
           </GameButton>
           <GameButton
             className="!w-auto px-5"
-            disabled={saving || busy || (!nameChanged && !bioChanged && !photoChanged)}
+            disabled={saving || !anythingChanged}
             onClick={() => void handleSave()}
           >
             {saving ? 'Salvando...' : 'Salvar'}
