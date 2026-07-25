@@ -406,7 +406,7 @@
 .game-rank-pinned {
   position: fixed;
   left: 50%;
-  bottom: calc(5.6rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   width: min(calc(100vw - 2rem), 30rem);
   z-index: 40;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Coins, Eye, EyeOff, Trophy } from 'lucide-react';
+import { CalendarDays, Coins, Eye, EyeOff, Globe, Trophy } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
@@ -25,9 +25,9 @@ const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'streak', label: 'Dias seguidos' },
 ];
 
-const PERIODS: { id: LeaderboardPeriod; label: string; hint: string }[] = [
-  { id: 'semanal', label: 'Semanal', hint: 'Acumulado da semana — zera todo domingo' },
-  { id: 'global', label: 'Global', hint: 'Total de toda a jornada — nunca zera' },
+const PERIODS: { id: LeaderboardPeriod; label: string; icon: typeof Globe }[] = [
+  { id: 'semanal', label: 'Semanal', icon: CalendarDays },
+  { id: 'global', label: 'Global', icon: Globe },
 ];
 
 // Faixa aproximada pra quem está fora do top 25 — só entra em jogo se o total de
@@ -272,6 +272,28 @@ export function LeaderboardPage() {
         )}
       </div>
 
+      {metric !== 'streak' && (
+        <div
+          className="game-rank-period game-rank-period--split"
+          role="radiogroup"
+          aria-label="Período da classificação"
+        >
+          {PERIODS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={period === id}
+              onClick={() => setPeriod(id)}
+              className={`game-rank-period__btn${period === id ? ' game-rank-period__btn--active' : ''}`}
+            >
+              <Icon size={14} aria-hidden />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {metric !== 'streak' && effectivePeriod === 'semanal' && <LeaderboardResetCountdown />}
 
       <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
@@ -295,31 +317,6 @@ export function LeaderboardPage() {
           </button>
         ))}
       </div>
-
-      {metric !== 'streak' && (
-        <div
-          className="game-rank-period"
-          role="radiogroup"
-          aria-label="Período da classificação"
-        >
-          {PERIODS.map(({ id, label, hint }) => (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={period === id}
-              title={hint}
-              onClick={() => setPeriod(id)}
-              className={`game-rank-period__btn${period === id ? ' game-rank-period__btn--active' : ''}`}
-            >
-              {label}
-            </button>
-          ))}
-          <span className="game-rank-period__hint">
-            {PERIODS.find((p) => p.id === period)?.hint}
-          </span>
-        </div>
-      )}
 
       {loading ? (
         <PageLoader />

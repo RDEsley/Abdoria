@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Trophy } from 'lucide-react';
 import { leaderboardResetCountdownParts } from '@shared/utils/timezone';
 
 export function LeaderboardResetCountdown() {
@@ -13,12 +14,26 @@ export function LeaderboardResetCountdown() {
 
   return (
     <div className="game-rank-countdown" role="status" aria-live="polite">
-      <span className="game-rank-countdown__label">Próximo reset</span>
-      <span className="game-rank-countdown__values tabular-nums">
-        <span>{parts.days}d</span>
-        <span>{parts.hours}h</span>
-        <span>{parts.minutes}m</span>
+      <span className="game-rank-countdown__icon" aria-hidden>
+        <Trophy size={16} />
       </span>
+      <div className="game-rank-countdown__body">
+        <span className="game-rank-countdown__label">Próximo reset</span>
+        <div className="game-rank-countdown__values tabular-nums">
+          <span className="game-rank-countdown__tile">
+            <strong>{parts.days}</strong>
+            <small>dias</small>
+          </span>
+          <span className="game-rank-countdown__tile">
+            <strong>{parts.hours}</strong>
+            <small>hrs</small>
+          </span>
+          <span className="game-rank-countdown__tile">
+            <strong>{parts.minutes}</strong>
+            <small>min</small>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
