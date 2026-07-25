@@ -332,28 +332,38 @@
   border-radius: 0.25rem;
 }
 
-/* Variante tela cheia — rota /exploracao, sem moldura de diálogo flutuante */
+/* Variante tela cheia — rota /exploracao, sem moldura de diálogo flutuante.
+   `fixed inset:0` tira o conteúdo do fluxo do <main> do AppLayout (que tem
+   padding-top/bottom fixos pra compensar a top-navbar e a bottom-nav) — sem
+   isso, esse padding somava com o min-height:100dvh do próprio modal e
+   forçava scroll na página inteira mesmo quando o conteúdo cabia numa tela
+   só. O overlay agora é o único container com scroll (overflow-y:auto),
+   que só aparece quando o conteúdo real passa da altura da viewport. */
 .game-afk-overlay--page {
-  position: static;
-  z-index: auto;
+  position: fixed;
+  inset: 0;
+  z-index: 55;
   display: block;
-  min-height: 100dvh;
   padding: 0;
-  background: none;
+  background: linear-gradient(180deg, #fffbeb 0%, #fff9e8 100%);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .game-afk-modal--page {
   max-width: 46rem;
   max-height: none;
-  min-height: 100dvh;
+  min-height: 100%;
   margin: 0 auto;
   padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1rem
     calc(1.25rem + env(safe-area-inset-bottom, 0px));
   border-width: 0 0 0 0;
   border-radius: 0;
   box-shadow: none;
+  overflow: visible;
 }
 
 @media (min-width: 640px) {
@@ -1352,6 +1362,41 @@
 
 .game-afk-boss-banner {
   display: none;
+}
+
+/* Botão "voltar à vila" mais intuitivo, direto na cena de combate — além
+   do ícone compacto no topbar, esse fica visível o tempo todo, com texto,
+   num canto livre (fora da área do mascote/painel de boss). */
+.game-afk-scene__back-btn {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 9;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.32rem 0.6rem;
+  border: 2px solid #92400e;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #78350f;
+  font-size: 0.62rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #92400e;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+.game-afk-scene__back-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 #92400e;
+}
+
+.game-afk-scene__back-btn:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 #92400e;
 }
 
 .game-afk-scene__boss-callout {
@@ -6405,42 +6450,24 @@
   border-radius: 0.55rem;
 }
 
+/* Minimalista de propósito: pílula clara e fina, sem painel escuro/vidro
+   fosco/glow pulsante — só o essencial (rótulo, contador, barrinha). */
 .game-afk-combat-hud__boss-panel--overlay {
   position: absolute;
-  top: 0.35rem;
-  right: 0.35rem;
-  left: 0.35rem;
+  top: 0.4rem;
+  right: 0.4rem;
+  left: 0.4rem;
   z-index: 15;
   margin: 0;
-  padding: 0.35rem 0.45rem 0.32rem;
-  background: linear-gradient(155deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 27, 75, 0.9) 100%);
-  border: 2px solid rgba(251, 191, 36, 0.85);
-  border-radius: 0.5rem;
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  padding: 0.3rem 0.55rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
 }
 
 .game-afk-combat-hud__boss-panel--overlay.game-afk-combat-hud__boss-panel--active {
-  border-color: rgba(248, 113, 113, 0.9);
-  background: linear-gradient(155deg, rgba(69, 10, 10, 0.94) 0%, rgba(30, 27, 75, 0.92) 100%);
-  animation: game-afk-boss-panel-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes game-afk-boss-panel-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 4px 14px rgba(0, 0, 0, 0.45),
-      0 0 0 rgba(248, 113, 113, 0);
-  }
-  50% {
-    box-shadow:
-      0 4px 14px rgba(0, 0, 0, 0.45),
-      0 0 12px rgba(248, 113, 113, 0.35);
-  }
+  background: rgba(255, 241, 242, 0.92);
 }
 
 .game-afk-combat-hud__boss-header {
@@ -6448,48 +6475,44 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.28rem;
+  margin-bottom: 0.2rem;
 }
 
 .game-afk-combat-hud__boss-label {
-  font-size: 0.58rem;
-  font-weight: 900;
-  color: #fef3c7;
-  letter-spacing: 0.04em;
+  font-size: 0.56rem;
+  font-weight: 800;
+  color: #57534e;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .game-afk-combat-hud__boss-panel--active .game-afk-combat-hud__boss-label {
-  color: #fecaca;
+  color: #b91c1c;
 }
 
 .game-afk-combat-hud__boss-count {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 900;
-  color: #fde047;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  color: #1c1917;
 }
 
 .game-afk-combat-hud__boss-track {
-  height: 0.46rem;
+  height: 0.34rem;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.55);
-  border: 2px solid rgba(0, 0, 0, 0.65);
+  background: rgba(28, 25, 23, 0.12);
+  border: none;
   border-radius: 999px;
 }
 
 .game-afk-combat-hud__boss-panel--overlay .game-afk-combat-hud__boss-track {
-  background: rgba(0, 0, 0, 0.65);
-  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(28, 25, 23, 0.1);
 }
 
 .game-afk-combat-hud__boss-fill {
   height: 100%;
-  background: linear-gradient(90deg, #fbbf24, #f59e0b 60%, #d97706);
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
   border-radius: 999px;
   transition: width 0.3s ease;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .game-afk-combat-hud__boss-progress {
@@ -7389,7 +7412,7 @@ button.game-afk-reward-chip {
 .game-afk-chest__lock {
   position: absolute;
   top: 26%;
-  left: 58%;
+  left: 50%;
   z-index: 4;
   width: 1rem;
   height: 1.28rem;
@@ -7474,7 +7497,12 @@ button.game-afk-reward-chip {
 .game-afk-chest__lid-wrap {
   position: absolute;
   right: 0;
-  bottom: 1.88rem;
+  /* .game-afk-chest__lid-rim (filho) estica 0.14rem ABAIXO do bottom deste
+     wrap (bottom:-0.14rem) — o valor aqui precisa compensar isso pra o aro
+     dourado bater rente ao topo do .game-afk-chest__body (height:2.05rem)
+     em vez de pintar por cima dele. Sem essa conta, sobrava um pedaço do
+     aro visivelmente "flutuando" sobre o corpo do baú. */
+  bottom: 2.16rem;
   left: 0;
   z-index: 2;
   height: 1.15rem;
@@ -7485,7 +7513,8 @@ button.game-afk-reward-chip {
 }
 
 .game-afk-chest--lg .game-afk-chest__lid-wrap {
-  bottom: 2.38rem;
+  /* Mesma lógica pro tamanho --lg: bate no topo do body (height:2.55rem). */
+  bottom: 2.66rem;
   height: 1.35rem;
 }
 

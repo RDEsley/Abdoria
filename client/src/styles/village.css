@@ -1,8 +1,7 @@
 /* ============================================================
-   VILA DE ABDORIA — hub entre patrulhas (Rodada 10, cenário 100% CSS)
-   Sem imagem de fundo: céu + grama pintados via gradientes, travados num
-   aspect-ratio fixo (16:9) pra loja/museu/herói ficarem sempre nas mesmas
-   posições relativas, em qualquer largura de tela.
+   VILA DE ABDORIA — hub entre patrulhas (Rodada 10.2, cenário CSS
+   caprichado: céu com sol/nuvens, colinas, praça de terra batida
+   conectando os prédios — sem imagem de fundo).
    ============================================================ */
 
 .game-afk-village {
@@ -15,48 +14,91 @@
   min-height: 0;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, #63bdec 0%, #86d0f0 28%, #b9e6f5 52%, #cdeef8 64%, transparent 64%),
-    linear-gradient(180deg, transparent 62%, #8fd48a 64%, #6dbb63 82%, #4f9a49 100%);
+  background: linear-gradient(180deg, #4fa8dd 0%, #7ec4ea 30%, #a8dcf2 55%, #c3e9f5 68%);
 }
 
-/* Sol + brilho no céu */
-.game-afk-scene__viewport.game-afk-village::before {
+/* Sol com brilho suave */
+.game-afk-village__sun {
+  position: absolute;
+  top: 8%;
+  right: 9%;
+  z-index: 0;
+  width: 13%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle at 38% 32%, #fffef2 0%, #fff6c4 38%, #ffe98a 68%, transparent 100%);
+  box-shadow: 0 0 4rem 1.4rem rgba(255, 245, 180, 0.45);
+  pointer-events: none;
+}
+
+/* Nuvens fofas — cada uma é 3 elipses sobrepostas via box-shadow */
+.game-afk-village__cloud {
+  position: absolute;
+  z-index: 0;
+  width: 9%;
+  aspect-ratio: 3.4;
+  background: #fff;
+  border-radius: 999px;
+  opacity: 0.85;
+  box-shadow:
+    2.2em 0.3em 0 -0.35em #fff,
+    -2em 0.35em 0 -0.4em #fff,
+    0.6em -0.55em 0 -0.25em #fff;
+  pointer-events: none;
+}
+
+.game-afk-village__cloud--1 {
+  top: 12%;
+  left: 8%;
+  width: 7%;
+}
+
+.game-afk-village__cloud--2 {
+  top: 22%;
+  left: 38%;
+  width: 5.5%;
+  opacity: 0.7;
+}
+
+.game-afk-village__cloud--3 {
+  top: 9%;
+  left: 60%;
+  width: 6.5%;
+  opacity: 0.75;
+}
+
+/* Grama — do horizonte até o chão, estilo "bloco de grama sobre terra" do
+   Terraria: faixa verde viva bem fina no topo (a superfície), transição
+   pra terra marrom por baixo. As colinas distantes são pintadas como
+   camadas extra do MESMO background (listadas antes = por cima), perto do
+   topo do elemento (a linha do horizonte) — se fossem uma camada própria
+   atrás da grama, a grama opaca simplesmente cobriria elas por completo. */
+.game-afk-village__grass {
+  position: absolute;
+  inset: 62% 0 0 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 46% 55% at 10% 5%, rgba(140, 205, 110, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 42% 50% at 42% 3%, rgba(140, 205, 110, 0.4) 0%, transparent 70%),
+    radial-gradient(ellipse 44% 52% at 82% 4%, rgba(140, 205, 110, 0.48) 0%, transparent 70%),
+    linear-gradient(
+      180deg,
+      #8fe870 0%,
+      #6cb551 6%,
+      #4d9438 18%,
+      #8b5e34 30%,
+      #6b4423 62%,
+      #55341b 100%
+    );
+}
+
+.game-afk-village__grass::before {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 0;
-  background: radial-gradient(
-    circle at 85% 18%,
-    #fffceb 0%,
-    rgba(255, 252, 235, 0.75) 7%,
-    rgba(255, 252, 235, 0.28) 15%,
-    transparent 24%
-  );
-  pointer-events: none;
-}
-
-/* Colinas distantes, perto do horizonte */
-.game-afk-scene__viewport.game-afk-village::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse 42% 24% at 12% 60%, rgba(66, 138, 66, 0.4) 0%, transparent 72%),
-    radial-gradient(ellipse 38% 20% at 45% 58%, rgba(66, 138, 66, 0.28) 0%, transparent 72%),
-    radial-gradient(ellipse 40% 22% at 80% 60%, rgba(66, 138, 66, 0.32) 0%, transparent 72%);
-  pointer-events: none;
-}
-
-/* Sombra suave no primeiro plano — dá profundidade ao chão */
-.game-afk-village__ground-shadow {
-  position: absolute;
-  inset: auto 0 0 0;
-  z-index: 1;
-  height: 22%;
-  background: linear-gradient(to top, rgba(20, 40, 15, 0.18), transparent);
-  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1.4px);
+  background-size: 2.6% 9%;
+  opacity: 0.5;
 }
 
 .game-afk-village__building {
@@ -72,12 +114,42 @@
     filter 0.16s ease;
 }
 
+.game-afk-village__building-label {
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  z-index: 4;
+  transform: translateX(-50%);
+  padding: 0.16rem 0.6rem;
+  border: 2px solid var(--afk-ink);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.64rem;
+  font-weight: 900;
+  color: #1c1917;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.32);
+}
+
 .game-afk-village__building img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: bottom;
   filter: drop-shadow(2px 4px 1px rgba(20, 30, 15, 0.32));
+}
+
+.game-afk-village__building-shadow {
+  position: absolute;
+  bottom: -2%;
+  left: 50%;
+  z-index: 2;
+  width: 70%;
+  height: 10%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(15, 25, 10, 0.35) 0%, transparent 75%);
+  pointer-events: none;
 }
 
 .game-afk-village__building:hover {
@@ -98,18 +170,142 @@
   border-radius: 0.4rem;
 }
 
+/* Base dos prédios em cima da linha céu/grama (62% do topo = 38% do
+   fundo) — igual a uma construção do Terraria assentada bem na superfície,
+   em vez de flutuando lá embaixo longe do horizonte. As imagens têm ~10%
+   de moldura transparente embaixo da própria base desenhada, por isso o
+   "bottom" fica um pouco abaixo dos 38% — pra a base VISÍVEL (não a borda
+   invisível do PNG) encostar no horizonte. */
 .game-afk-village__building--shop {
-  left: 17%;
-  bottom: 9%;
-  width: 15%;
-  height: 38%;
+  left: 15%;
+  bottom: 34%;
+  width: 21%;
+  height: 42%;
 }
 
 .game-afk-village__building--museu {
-  left: 59%;
-  bottom: 9%;
-  width: 16%;
-  height: 38%;
+  left: 58%;
+  bottom: 34%;
+  width: 22%;
+  height: 42%;
+}
+
+/* Casinhas de fundo — só cenário, sem interação, preenchendo os vãos entre
+   a loja e o museu (e as pontas da vila) pra ela parecer mais povoada. */
+.game-afk-village__house {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.game-afk-village__house-roof {
+  width: 0;
+  height: 0;
+  border-right: 1.15em solid transparent;
+  border-bottom: 0.95em solid #b45309;
+  border-left: 1.15em solid transparent;
+  filter: drop-shadow(1px 2px 0 rgba(20, 15, 10, 0.28));
+}
+
+.game-afk-village__house-body {
+  position: relative;
+  width: 2em;
+  height: 1.7em;
+  background: #fef3c7;
+  border: 2px solid #57402a;
+  border-top: none;
+}
+
+.game-afk-village__house-window {
+  position: absolute;
+  top: 0.28em;
+  left: 0.28em;
+  width: 0.5em;
+  height: 0.5em;
+  background: #7dd3fc;
+  border: 1.5px solid #57402a;
+}
+
+.game-afk-village__house-door {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0.56em;
+  height: 0.9em;
+  transform: translateX(-50%);
+  background: #7c4a24;
+  border: 1.5px solid #57402a;
+  border-bottom: none;
+}
+
+.game-afk-village__house--1 {
+  bottom: 35.5%;
+  left: 3%;
+  font-size: 15px;
+  opacity: 0.92;
+}
+.game-afk-village__house--2 {
+  bottom: 36.5%;
+  left: 40%;
+  font-size: 12px;
+  opacity: 0.8;
+}
+.game-afk-village__house--3 {
+  right: 3%;
+  bottom: 35.5%;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Árvores de fundo — mesma técnica CSS-art da tela de login, versão bem
+   simples (só copa + tronco) pra não competir visualmente com a loja e o
+   museu. */
+.game-afk-village__tree {
+  position: absolute;
+  z-index: 1;
+  width: 1.6em;
+  height: 2.15em;
+  pointer-events: none;
+}
+
+.game-afk-village__tree::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0.36em;
+  height: 0.8em;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #402a15 0%, #573a1e 40%, #402a15 100%);
+  border: 1.5px solid #241708;
+}
+
+.game-afk-village__tree::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1.6em;
+  height: 1.5em;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 35% 30%, #4ade80 0%, #16a34a 55%, #0f3d21 100%);
+  border: 2px solid #0b2e18;
+  border-radius: 50% 50% 46% 46%;
+}
+
+.game-afk-village__tree--1 {
+  bottom: 36%;
+  left: 48%;
+  font-size: 13px;
+}
+.game-afk-village__tree--2 {
+  right: 11%;
+  bottom: 36%;
+  font-size: 11px;
+  opacity: 0.88;
 }
 
 .game-afk-village__building-count {
@@ -127,34 +323,6 @@
   color: #1c1917;
   white-space: nowrap;
   box-shadow: 1px 1px 0 rgba(28, 25, 23, 0.3);
-}
-
-/* Herói alinhado à esquerda, em pé no chão */
-.game-afk-village__hero {
-  position: absolute;
-  bottom: 5%;
-  left: 3%;
-  z-index: 2;
-  height: 48%;
-  pointer-events: none;
-}
-
-.game-afk-village__hero-img {
-  display: block;
-  width: auto;
-  height: 100%;
-  filter: drop-shadow(2px 4px 2px rgba(0, 0, 0, 0.3));
-  animation: game-afk-village-hero-idle 2.6s ease-in-out infinite;
-}
-
-@keyframes game-afk-village-hero-idle {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3%);
-  }
 }
 
 .game-afk-village__continue {

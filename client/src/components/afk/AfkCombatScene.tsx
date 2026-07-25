@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida, PersonagemGenero } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
@@ -30,6 +30,7 @@ interface Props {
   hasLoot?: boolean;
   capped?: boolean;
   onBossChange?: (isBoss: boolean) => void;
+  onBackToVillage?: () => void;
 }
 
 const FALLBACK_SNAPSHOT: AfkCombatSnapshot = {
@@ -54,6 +55,7 @@ export function AfkCombatScene({
   hasLoot,
   capped,
   onBossChange,
+  onBackToVillage,
 }: Props) {
   const isMobile = useMobileViewport();
   const [attackSeq, setAttackSeq] = useState(0);
@@ -290,6 +292,18 @@ export function AfkCombatScene({
         data-enemy={localEnemyId}
       >
         <AfkSkyCycle showClouds={!isMobile} showSparkles={showSparkles} enemyId={localEnemyId} />
+
+        {onBackToVillage && (
+          <button
+            type="button"
+            className="game-afk-scene__back-btn"
+            onClick={onBackToVillage}
+            aria-label="Voltar à vila"
+          >
+            <ArrowLeft size={15} aria-hidden />
+            Vila
+          </button>
+        )}
 
         <AfkBossProgressPanel
           killsUntilBoss={localKillsUntilBoss}

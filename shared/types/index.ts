@@ -352,6 +352,10 @@ export interface AfkState {
   combat?: AfkCombatState;
   /** Presente na resposta de stats/meta quando há loot para coletar. */
   has_rewards?: boolean;
+  /** Não-nulo enquanto o jogador está na vila (hub) — tempo não acumula
+      nesse período; volta a correr quando o jogador entra na floresta
+      de novo (ver pauseAfk/resumeAfk em server/src/services/afk.ts). */
+  paused_at?: string | null;
 }
 
 export type { AfkCombatState, AfkCombatSnapshot, AfkEnemyId, AfkEnemyTier } from '../afk/combat.js';
@@ -948,6 +952,7 @@ export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
 export const DEFAULT_AFK_STATE: AfkState = {
   last_seen_at: null,
   minutos_acumulados: 0,
+  paused_at: null,
   pending: {
     xp: 0,
     abdoria: 0,

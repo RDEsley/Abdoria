@@ -24,7 +24,7 @@ import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { AfkTimerPanel } from '@/components/afk/AfkTimerPanel';
 import { PatrolShopModal } from '@/components/afk/patrol-shop/PatrolShopModal';
 import { GameButton } from '@/components/ui/GameButton';
-import { claimAfkRewards, getAfkMeta, type AfkMetaResponse } from '@/lib/api';
+import { claimAfkRewards, getAfkMeta, setAfkScene, type AfkMetaResponse } from '@/lib/api';
 import { DEV_REWARD_PREVIEW_EVENT } from '@/lib/dev-reward-preview';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import { mergeAfkCombatSnapshot } from '@/lib/afk-combat-merge';
@@ -177,6 +177,31 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     return () => window.clearInterval(combatPoll);
   }, [open, load]);
 
+  // Vila pausa o tempo acumulado da Exploração no servidor; floresta
+  // retoma — dispara em toda troca de cena, inclusive a inicial (a página
+  // abre na vila por padrão, então o timer já nasce pausado).
+  useEffect(() => {
+    if (!open) return;
+    setAfkScene(sceneMode)
+      .then((res) => {
+        setMeta((prev) => ({
+          ...(prev ?? ({} as AfkMetaResponse)),
+          minutos_acumulados: res.minutos_acumulados,
+          pending: res.pending,
+          has_rewards: res.has_rewards,
+          kill_drop_chance: res.kill_drop_chance ?? prev?.kill_drop_chance ?? 4,
+          kill_drop_chances: res.kill_drop_chances ?? prev?.kill_drop_chances,
+          max_minutes: res.max_minutes ?? prev?.max_minutes ?? 1440,
+          capped: res.capped ?? prev?.capped ?? false,
+          combat: mergeAfkCombatSnapshot(prev?.combat, res.combat),
+        }));
+        reconcileTimerFromServer(res.minutos_acumulados);
+      })
+      .catch(() => {
+        /* melhor esforço — o próximo poll de 15s corrige o estado */
+      });
+  }, [open, sceneMode, reconcileTimerFromServer]);
+
   useEffect(() => {
     const onAfkSync = (event: Event) => {
       const detail = (event as CustomEvent<AfkMetaResponse & { ok?: boolean }>).detail;
@@ -292,7 +317,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     void load();
   };
 
-  return createPortal(
+  const content = (
     <>
       <div
         className={`game-afk-overlay${isPage ? ' game-afk-overlay--page' : ''}`}
@@ -330,14 +355,9 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             <>
               <div className="game-afk-modal__topbar">
             <div className="game-afk-modal__title-group">
-              <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                Exploração
-              </h2>
-            </div>
-            <div className="game-afk-modal__toolbar">
               <button
                 type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--village"
+                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--village"
                 onClick={(e) => {
                   e.stopPropagation();
                   goToScene(sceneMode === 'village' ? 'exploring' : 'village');
@@ -349,10 +369,14 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                 {sceneMode === 'village' ? (
                   <AfkFabSwords variant="header" />
                 ) : (
-                  <TreePine size={18} aria-hidden />
+                  <TreePine size={22} aria-hidden />
                 )}
-                {sceneMode === 'exploring' && <span>Vila</span>}
               </button>
+              <h2 id="afk-patrol-title" className="game-afk-modal__title">
+                Exploração
+              </h2>
+            </div>
+            <div className="game-afk-modal__toolbar">
               {sceneMode === 'village' && (
                 <button
                   type="button"
@@ -390,7 +414,6 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
 
           {sceneMode === 'village' ? (
             <AfkVillageScene
-              genero={genero}
               bestiaryUnlocked={stats?.bestiario_desbloqueados?.length ?? 0}
               bestiaryTotal={ALL_BESTIARY_ENEMY_IDS.length}
               onOpenShop={() => setShopOpen(true)}
@@ -406,6 +429,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
               combat={meta?.combat ?? null}
               hasLoot={meta?.has_rewards}
               capped={capped}
+              onBackToVillage={() => goToScene('village')}
             />
           )}
 
@@ -468,7 +492,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         slides={EXPLORATION_TUTORIAL_SLIDES}
         ctaLabel="Vamos explorar!"
       />
-    </>,
-    document.body,
+    </>
   );
+
+  // Variante 'page' renderiza direto na árvore (dentro de #root) — o portal
+  // pro <body> deixava o conteúdo real depois do #root (que tem
+  // min-height:100vh no CSS global), empurrando a Exploração inteira pra
+  // baixo da dobra e exigindo scroll só pra ver a página.
+  return isPage ? content : createPortal(content, document.body);
 }

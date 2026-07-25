@@ -72,6 +72,11 @@ export function pingAfk(): Promise<AfkPingResponse> {
   return fetchJson('/meta/afk/ping', { method: 'POST' });
 }
 
+/** Vila pausa o tempo acumulado da Exploração; floresta ("exploring") retoma. */
+export function setAfkScene(mode: 'village' | 'exploring'): Promise<AfkPingResponse> {
+  return fetchJson('/meta/afk/scene', { method: 'POST', body: JSON.stringify({ mode }) });
+}
+
 export function getInventory(): Promise<InventarioSummary> {
   return fetchJson('/meta/inventory');
 }

@@ -31,6 +31,7 @@ interface AfkState {
   last_seen_at: Date | string | null;
   minutos_acumulados: number;
   pending: AfkPendingReward;
+  paused_at?: Date | string | null;
 }
 
 function ensureAfk(user: UserRecord): AfkState {
@@ -179,6 +180,13 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
 
   rollFrozenStreakOfTheDay(user, afk);
 
+  // Pausado (jogador na vila) — não acumula tempo enquanto não voltar pra
+  // floresta. `pauseAfk`/`resumeAfk` cuidam de creditar o que já rolou até
+  // o momento da pausa e de "pular" o intervalo pausado ao retomar.
+  if (afk.paused_at) {
+    return collectNewBestiaryUnlocks(before, user);
+  }
+
   const lastSeen = new Date(afk.last_seen_at!);
   const already = afk.minutos_acumulados ?? 0;
 
@@ -206,6 +214,34 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
   // Avança last_seen_at exatamente pelos minutos consumidos — preserva segundos fracionários.
   afk.last_seen_at = new Date(lastSeen.getTime() + newMinutes * 60_000).toISOString();
   return collectNewBestiaryUnlocks(before, user);
+}
+
+/**
+ * Jogador entrou na vila — credita normalmente tudo até agora e trava o
+ * relógio (`paused_at`). Idempotente: chamar de novo enquanto já pausado
+ * não faz nada (evita perder segundos fracionários em toques repetidos).
+ * Funciona mesmo antes do primeiro `activateAfk` (conta nova, timer nunca
+ * ligado) — a página de Exploração abre na vila por padrão, então o
+ * pedido de pausa pode chegar antes da ativação; nesse caso só marca
+ * `paused_at` e não há nada pra creditar ainda.
+ */
+export function pauseAfk(user: UserRecord, now = new Date()): void {
+  const afk = ensureAfk(user);
+  if (afk.paused_at) return;
+  if (afkStarted(afk)) syncAfkRewards(user, now);
+  afk.paused_at = now.toISOString();
+}
+
+/**
+ * Jogador voltou pra floresta — destrava o relógio e pula o cursor
+ * (`last_seen_at`) direto pro agora, descartando o intervalo passado na
+ * vila em vez de creditá-lo como se fosse tempo de exploração.
+ */
+export function resumeAfk(user: UserRecord, now = new Date()): void {
+  const afk = ensureAfk(user);
+  if (!afk.paused_at) return;
+  afk.paused_at = null;
+  afk.last_seen_at = now.toISOString();
 }
 
 function collectNewBestiaryUnlocks(before: Set<AfkEnemyId>, user: UserRecord): AfkEnemyId[] {

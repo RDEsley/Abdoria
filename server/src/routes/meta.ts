@@ -8,6 +8,8 @@ import {
   claimAfkRewards,
   afkResponsePayload,
   hasAfkRewardsToClaim,
+  pauseAfk,
+  resumeAfk,
   syncAfkRewards,
   touchAfkPresence,
 } from '../services/afk.js';
@@ -78,6 +80,34 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/meta/afk/claim error:', error);
     res.status(500).json({ error: 'Erro ao coletar recompensas AFK.' });
+  }
+});
+
+metaRouter.post('/afk/scene', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const mode = req.body?.mode;
+    if (mode !== 'village' && mode !== 'exploring') {
+      res.status(400).json({ error: "mode precisa ser 'village' ou 'exploring'." });
+      return;
+    }
+    // Vila = tempo pausado (jogador não está explorando de verdade);
+    // floresta = tempo volta a correr a partir de agora.
+    if (mode === 'village') {
+      pauseAfk(user);
+    } else {
+      resumeAfk(user);
+    }
+    const bestiario_novos = syncAfkRewards(user);
+    await user.save();
+    res.json({ ok: true, ...afkResponsePayload(user, undefined, bestiario_novos) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/scene error:', error);
+    res.status(500).json({ error: 'Erro ao trocar de cena na Exploração.' });
   }
 });
 
