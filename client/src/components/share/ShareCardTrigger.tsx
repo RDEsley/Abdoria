@@ -3,7 +3,7 @@ import { Share2 } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
-import { exportShareCardBlob, shareOrDownloadImage } from '@/lib/share-card';
+import { buildShareMessage, exportShareCardBlob, shareOrDownloadImage } from '@/lib/share-card';
 import { useAuth } from '@/context/AuthContext';
 import { ShareCard, type ShareCardData } from '@/components/share/ShareCard';
 
@@ -30,7 +30,7 @@ export function ShareCardTrigger({
     setBusy(true);
     try {
       const blob = await exportShareCardBlob(cardRef.current);
-      await shareOrDownloadImage(blob, `abdoria-${data.kind}-${Date.now()}.png`);
+      await shareOrDownloadImage(blob, `abdoria-${data.kind}-${Date.now()}.png`, buildShareMessage(data));
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível gerar a imagem.'), {
         variant: 'error',
