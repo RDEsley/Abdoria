@@ -69,10 +69,48 @@
   color: #a8a29e;
 }
 
+/* Card do ciclo/treino selecionado, logo abaixo dos chips de ciclo */
+.game-cycle-card {
+  position: relative;
+  border: 2px solid var(--game-ink);
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.18);
+}
+
+.game-cycle-card__header {
+  display: flex;
+  align-items: center;
+}
+
+.game-cycle-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border: 1.5px solid rgba(4, 120, 87, 0.3);
+  border-radius: 999px;
+  background: #ecfdf5;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #047857;
+}
+
+.game-cycle-card__badge--saved {
+  border-color: rgba(2, 132, 199, 0.3);
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.game-cycle-card__title {
+  margin-top: 0.35rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
 /* Cabeçalho da seção Treino do dia */
 .game-train-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.6rem;
 }
 
@@ -82,7 +120,6 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  margin-top: 0.1rem;
   border: 2px solid var(--game-ink);
   border-radius: 0.5rem;
   background: linear-gradient(135deg, #fde68a, #fbbf24);

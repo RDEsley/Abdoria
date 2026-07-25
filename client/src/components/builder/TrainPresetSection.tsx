@@ -72,9 +72,8 @@ export function TrainPresetSection({
           <Swords size={16} />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="game-section-title !mb-0">Treino do dia</h3>
           <div
-            className="game-builder-cycle-progress mt-1"
+            className="game-builder-cycle-progress"
             role="tablist"
             aria-label={plan ? 'Missões do plano' : 'Ciclos de treino'}
           >
@@ -177,13 +176,15 @@ export function TrainPresetSection({
       )}
 
       {(selectedPreset || selectedSavedWorkout || selectedPlanWorkout) && (
-        <div className="glass-card p-4">
+        <div className="glass-card game-cycle-card p-4">
           {selectedPreset && (
             <>
-              <p className="text-[0.65rem] font-bold text-emerald-600">
-                Ciclo {selectedPreset.ciclo_id}
-              </p>
-              <p className="text-sm font-extrabold text-stone-900">
+              <div className="game-cycle-card__header">
+                <span className="game-cycle-card__badge">
+                  <Swords size={11} aria-hidden /> Ciclo {selectedPreset.ciclo_id}
+                </span>
+              </div>
+              <p className="game-cycle-card__title">
                 {selectedPreset.nome.split('—')[1]?.trim() ?? selectedPreset.nome}
               </p>
               <MuscleTagGroup
@@ -210,10 +211,12 @@ export function TrainPresetSection({
           )}
           {!selectedPreset && selectedPlanWorkout && (
             <>
-              <p className="text-[0.65rem] font-bold text-emerald-600">
-                {selectedPlanWorkout.plano_titulo ?? 'Plano de treino'}
-              </p>
-              <p className="text-sm font-extrabold text-stone-900">
+              <div className="game-cycle-card__header">
+                <span className="game-cycle-card__badge">
+                  <Swords size={11} aria-hidden /> {selectedPlanWorkout.plano_titulo ?? 'Plano de treino'}
+                </span>
+              </div>
+              <p className="game-cycle-card__title">
                 {selectedPlanWorkout.nome.split('—')[1]?.trim() ?? selectedPlanWorkout.nome}
               </p>
               {plan && plan.selecionadoIndice != null && (
@@ -241,8 +244,12 @@ export function TrainPresetSection({
           )}
           {selectedSavedWorkout && (
             <>
-              <p className="text-[0.65rem] font-bold text-sky-600">Treino salvo</p>
-              <p className="text-sm font-extrabold text-stone-900">{selectedSavedWorkout.nome}</p>
+              <div className="game-cycle-card__header">
+                <span className="game-cycle-card__badge game-cycle-card__badge--saved">
+                  Treino salvo
+                </span>
+              </div>
+              <p className="game-cycle-card__title">{selectedSavedWorkout.nome}</p>
               <p className="mt-2 text-xs font-bold text-stone-600">
                 {selectedSavedWorkout.queue.length} exercícios personalizados.
               </p>
