@@ -1,13 +1,6 @@
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import type { MusculoPrincipal } from '../types/index.js';
-import {
-  XP_ACHIEVEMENT_BONUS,
-  XP_DAILY_MIN_EXERCISES,
-  XP_DAILY_PER_EXERCISE,
-  FROZEN_STREAK_ITEM_ID,
-  streakXpBonus,
-  xpLevelFromTotal,
-} from '../types/index.js';
+import { FROZEN_STREAK_ITEM_ID, xpLevelFromTotal } from '../types/index.js';
 import {
   computeStreakWithFrozenDays,
   findStreakMissedDaysForFreeze,
@@ -36,14 +29,6 @@ import {
 } from '../utils/timezone.js';
 
 export { ACHIEVEMENTS };
-
-export {
-  XP_WORKOUT_BASE,
-  XP_PER_EXERCISE as XP_SERIES,
-  XP_ACHIEVEMENT_BONUS as XP_ACHIEVEMENT,
-  XP_DAILY_CAP_BASE as XP_DAILY_CAP,
-  streakXpBonus,
-} from '../types/index.js';
 
 function getWeekStart(date: Date): Date {
   const weekKey = getWeekStartSaoPaulo(date);
@@ -441,16 +426,6 @@ async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise
       payload: { frozen_days: frozenDays },
     },
   ]);
-}
-
-export function calculateWorkoutXp(
-  exerciseCount: number,
-  streakAtual: number,
-  newAchievements: string[],
-): number {
-  const exercicios =
-    exerciseCount >= XP_DAILY_MIN_EXERCISES ? exerciseCount * XP_DAILY_PER_EXERCISE : 0;
-  return exercicios + streakXpBonus(streakAtual) + newAchievements.length * XP_ACHIEVEMENT_BONUS;
 }
 
 export function hasTrainedToday(userId: string): Promise<boolean> {
