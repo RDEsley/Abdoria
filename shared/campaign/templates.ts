@@ -1,3 +1,5 @@
+import { CURRENCY_NAME } from '../types/index.js';
+
 /**
  * Templates narrativos do Mapa da Campanha (Lotes 1 e 2 — 10 tipos).
  * Placeholders: {heroi} {exercicio} {detalhe} {inimigo}
@@ -99,7 +101,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     tipo: 'horda_contida',
     inimigo: 'comum',
     texto:
-      'A guilda ofereceu 50 Dorias por cabeça de {inimigo} {no_lugar}. Depois de {detalhe} de {exercicio}, o tesoureiro pediu parcelamento.',
+      `A guilda ofereceu 50 ${CURRENCY_NAME} por cabeça de {inimigo} {no_lugar}. Depois de {detalhe} de {exercicio}, o tesoureiro pediu parcelamento.`,
   },
   {
     id: 'horda-09',
@@ -189,7 +191,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     tipo: 'monstro_derrotado',
     inimigo: 'comum',
     texto:
-      'O estalajadeiro {do_lugar} pagou adiantado: {inimigo} rondava o estábulo. Serviço feito em {detalhe} de {exercicio}, gorjeta em Dorias.',
+      `O estalajadeiro {do_lugar} pagou adiantado: {inimigo} rondava o estábulo. Serviço feito em {detalhe} de {exercicio}, gorjeta em ${CURRENCY_NAME}.`,
   },
   {
     id: 'monstro-04',
@@ -210,7 +212,7 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     tipo: 'monstro_derrotado',
     inimigo: 'comum',
     texto:
-      'Cartaz pregado {no_lugar}: "PROCURA-SE: {inimigo}. Recompensa: honra e Dorias." {heroi} arrancou o cartaz com {detalhe} de {exercicio} de vantagem.',
+      `Cartaz pregado {no_lugar}: "PROCURA-SE: {inimigo}. Recompensa: honra e ${CURRENCY_NAME}." {heroi} arrancou o cartaz com {detalhe} de {exercicio} de vantagem.`,
   },
   {
     id: 'monstro-07',

@@ -18,7 +18,7 @@ export const CAMPAIGN_PLACES: CampaignPlace[] = [
   { id: 'bosque-slimes', nome: 'Bosque dos Slimes', artigo: 'o' },
   { id: 'estrada-sal', nome: 'Estrada do Sal', artigo: 'a' },
   { id: 'brumafunda', nome: 'Moinho de Brumafunda', artigo: 'o' },
-  { id: 'poco-dorias', nome: 'Poço das Dorias', artigo: 'o' },
+  { id: 'poco-dorias', nome: 'Poço das Moedas', artigo: 'o' },
   { id: 'colinas-mansas', nome: 'Colinas Mansas', artigo: 'as' },
   { id: 'vau-raso', nome: 'Ponte do Vau Raso', artigo: 'a' },
   { id: 'mercado-doria', nome: 'Mercado de Doria', artigo: 'o' },
