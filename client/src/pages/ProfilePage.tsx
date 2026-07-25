@@ -71,6 +71,7 @@ export function ProfilePage() {
     following: number;
     amigos: number;
     likes_recebidos: number;
+    visualizacoes_recebidas: number;
   } | null>(null);
 
   // Rascunho dos Dados: pré-preenchido com o que já veio do Onboarding
@@ -263,6 +264,9 @@ export function ProfilePage() {
             <span className="game-profile-hero__level-badge" aria-label={`Nível ${xpLevel}`}>
               {xpLevel}
             </span>
+            <span className="game-profile-hero__avatar-edit-badge" aria-hidden>
+              <Pencil size={11} aria-hidden />
+            </span>
           </button>
           <div className="game-profile-hero__meta min-w-0">
             <p className="game-profile-hero__name-row">
@@ -300,6 +304,10 @@ export function ProfilePage() {
           <span className="profile-counts__item" title="Curtidas que seu perfil recebeu">
             <strong>{social?.likes_recebidos ?? '—'}</strong>
             <span>curtidas</span>
+          </span>
+          <span className="profile-counts__item" title="Visitantes únicos do seu perfil">
+            <strong>{social?.visualizacoes_recebidas ?? '—'}</strong>
+            <span>visualizações</span>
           </span>
         </nav>
       </div>

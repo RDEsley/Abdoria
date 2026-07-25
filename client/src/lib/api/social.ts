@@ -68,6 +68,7 @@ export function getMySocial(): Promise<{
   amigos: number;
   following_ids: string[];
   likes_recebidos: number;
+  visualizacoes_recebidas: number;
 }> {
   return fetchJson('/social/me');
 }

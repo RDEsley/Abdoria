@@ -56,7 +56,7 @@ export function sanitizeUser(user: UserRecord | Record<string, unknown>) {
 
 type PublicProfileExtras = Pick<
   PublicProfile,
-  'records_top' | 'conquistas' | 'social' | 'likes' | 'relacao'
+  'records_top' | 'conquistas' | 'social' | 'likes' | 'visualizacoes' | 'relacao'
 >;
 
 /** Perfil público de outro usuário (ranking, amigos) — whitelist positiva, nunca

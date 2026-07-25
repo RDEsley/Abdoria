@@ -29,6 +29,7 @@ import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-rep
 import { WorkoutHistory } from '../repositories/workout-history-repository.js';
 import { Follows } from '../repositories/follow-repository.js';
 import { ProfileLikes } from '../repositories/like-repository.js';
+import { ProfileViews } from '../repositories/view-repository.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import {
   computePersonalRecords,
@@ -150,16 +151,29 @@ usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
       return;
     }
 
-    const [podio, history, targetFollowing, targetFollowers, meFollowing, likesTotal, euCurti] =
-      await Promise.all([
-        LeaderboardPodiumHistory.countsForUser(user.id),
-        WorkoutHistory.find({ usuario_id: user.id }),
-        Follows.followingIds(user.id),
-        Follows.followerIds(user.id),
-        Follows.followingIds(req.userId!),
-        ProfileLikes.countFor(user.id),
-        ProfileLikes.hasLiked(req.userId!, user.id),
-      ]);
+    // Não bloqueia a resposta por causa disso — se falhar (tabela ainda não
+    // aplicada), o perfil continua carregando normal, só a visita não conta.
+    void ProfileViews.record(req.userId!, user.id);
+
+    const [
+      podio,
+      history,
+      targetFollowing,
+      targetFollowers,
+      meFollowing,
+      likesTotal,
+      euCurti,
+      visualizacoes,
+    ] = await Promise.all([
+      LeaderboardPodiumHistory.countsForUser(user.id),
+      WorkoutHistory.find({ usuario_id: user.id }),
+      Follows.followingIds(user.id),
+      Follows.followerIds(user.id),
+      Follows.followingIds(req.userId!),
+      ProfileLikes.countFor(user.id),
+      ProfileLikes.hasLiked(req.userId!, user.id),
+      ProfileViews.countFor(user.id),
+    ]);
 
     const records_top = [
       ...computePersonalRecords(
@@ -201,6 +215,7 @@ usersRouter.get('/:id/public', async (req: AuthRequest, res) => {
           amigos,
         },
         likes: { total: likesTotal, eu_curti: euCurti },
+        visualizacoes,
         relacao: { seguindo, segue_voce: segueVoce, amigo: seguindo && segueVoce },
       }),
     );

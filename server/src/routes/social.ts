@@ -6,6 +6,7 @@ import { xpLevelFromTotal, type MolduraId } from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 import { Follows } from '../repositories/follow-repository.js';
 import { ProfileLikes } from '../repositories/like-repository.js';
+import { ProfileViews } from '../repositories/view-repository.js';
 import { Notifications } from '../repositories/notification-repository.js';
 import {
   LeaderboardPodiumHistory,
@@ -256,13 +257,17 @@ socialRouter.get('/me', async (req: AuthRequest, res) => {
   try {
     const relation = await loadRelation(req.userId!);
     const amigos = [...relation.followingIds].filter((id) => relation.followerIds.has(id)).length;
-    const likes_recebidos = await ProfileLikes.countFor(req.userId!);
+    const [likes_recebidos, visualizacoes_recebidas] = await Promise.all([
+      ProfileLikes.countFor(req.userId!),
+      ProfileViews.countFor(req.userId!),
+    ]);
     res.json({
       followers: relation.followerIds.size,
       following: relation.followingIds.size,
       amigos,
       following_ids: [...relation.followingIds],
       likes_recebidos,
+      visualizacoes_recebidas,
     });
   } catch (error) {
     console.error('GET /api/social/me error:', error);

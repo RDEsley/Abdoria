@@ -211,6 +211,10 @@ export function PublicProfilePage() {
             <strong>{social.following}</strong>
             <span>seguindo</span>
           </span>
+          <span className="profile-counts__item" title="Visitantes únicos deste perfil">
+            <strong>{profile.visualizacoes}</strong>
+            <span>visualizações</span>
+          </span>
         </div>
       </div>
 
