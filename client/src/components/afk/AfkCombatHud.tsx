@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AfkCombatSnapshot } from '@/types';
-import { AFK_BOSS_INTERVAL, AFK_ENEMIES } from '@/types';
-
-interface EnemyBarProps {
-  combat: AfkCombatSnapshot;
-  displayHp: number;
-}
+import { AFK_BOSS_INTERVAL } from '@/types';
 
 export function AfkBossProgressPanel({
   killsUntilBoss,
@@ -49,78 +43,6 @@ export function AfkBossProgressPanel({
           className="game-afk-combat-hud__boss-fill"
           style={{ width: `${bossActive ? 100 : bossProgressPct}%` }}
         />
-      </div>
-    </div>
-  );
-}
-
-export function AfkCombatHud({ combat, displayHp }: EnemyBarProps) {
-  const maxHp = combat.enemy_max_hp;
-  const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (displayHp / maxHp) * 100)) : 0;
-  const enemyLabel = AFK_ENEMIES[combat.enemy_id]?.label ?? 'Slime';
-  const tierClass =
-    combat.enemy_id === 'golden_slime' || combat.enemy_id === 'magic_rabbit'
-      ? 'golden'
-      : combat.is_boss
-        ? 'boss'
-        : combat.elite
-          ? 'elite'
-          : 'common';
-
-  return (
-    <div className="game-afk-combat-hud">
-      <div
-        className={`game-afk-combat-hud__enemy-bar game-afk-combat-hud__enemy-bar--${tierClass}`}
-      >
-        <div className="game-afk-combat-hud__enemy-header">
-          <div className="game-afk-combat-hud__enemy-identity">
-            <span className="game-afk-combat-hud__enemy-slug" aria-hidden>
-              {combat.enemy_id === 'golden_slime' || combat.enemy_id === 'magic_rabbit'
-                ? '✧'
-                : combat.is_boss
-                  ? '👑'
-                  : combat.elite
-                    ? '✦'
-                    : '●'}
-            </span>
-            <div className="game-afk-combat-hud__enemy-title">
-              <span className="game-afk-combat-hud__enemy-name">{enemyLabel}</span>
-              {combat.enemy_id === 'golden_slime' && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">
-                  Raro
-                </span>
-              )}
-              {combat.enemy_id === 'magic_rabbit' && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--golden">
-                  Mágico
-                </span>
-              )}
-              {combat.is_boss && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--boss">
-                  BOSS
-                </span>
-              )}
-              {!combat.is_boss && combat.elite && (
-                <span className="game-afk-combat-hud__badge game-afk-combat-hud__badge--elite">
-                  Elite
-                </span>
-              )}
-            </div>
-          </div>
-          <span className="game-afk-combat-hud__hp-text tabular-nums">
-            {Math.max(0, Math.ceil(displayHp))} / {maxHp}
-          </span>
-        </div>
-        <div
-          className="game-afk-combat-hud__hp-track"
-          role="progressbar"
-          aria-valuenow={displayHp}
-          aria-valuemin={0}
-          aria-valuemax={maxHp}
-          aria-label={`Vida de ${enemyLabel}`}
-        >
-          <div className="game-afk-combat-hud__hp-fill" style={{ width: `${hpPct}%` }} />
-        </div>
       </div>
     </div>
   );

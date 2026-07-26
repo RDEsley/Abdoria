@@ -14,11 +14,7 @@ import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
 import { AfkEnemySprite } from '@/components/afk/AfkEnemySprite';
 import { AfkSpellEffect } from '@/components/afk/AfkSpellEffect';
-import {
-  AfkCombatHud,
-  AfkBossProgressPanel,
-  useDamageFloaters,
-} from '@/components/afk/AfkCombatHud';
+import { AfkBossProgressPanel, useDamageFloaters } from '@/components/afk/AfkCombatHud';
 import { AfkSkyCycle } from '@/components/afk/AfkSkyCycle';
 
 interface Props {
@@ -293,18 +289,6 @@ export function AfkCombatScene({
       >
         <AfkSkyCycle showClouds={!isMobile} showSparkles={showSparkles} enemyId={localEnemyId} />
 
-        {onBackToVillage && (
-          <button
-            type="button"
-            className="game-afk-scene__back-btn"
-            onClick={onBackToVillage}
-            aria-label="Voltar à vila"
-          >
-            <ArrowLeft size={15} aria-hidden />
-            Vila
-          </button>
-        )}
-
         <AfkBossProgressPanel
           killsUntilBoss={localKillsUntilBoss}
           bossActive={localIsBoss}
@@ -436,6 +420,7 @@ export function AfkCombatScene({
           dying={dying}
           looting={looting}
           hitKey={attackSeq}
+          displayHp={displayHp}
         />
 
         {lootDropSeq > 0 && (
@@ -464,7 +449,17 @@ export function AfkCombatScene({
         </div>
       </div>
 
-      <AfkCombatHud combat={snapshot} displayHp={displayHp} />
+      {onBackToVillage && (
+        <button
+          type="button"
+          className="game-afk-scene__back-btn"
+          onClick={onBackToVillage}
+          aria-label="Voltar à vila"
+        >
+          <ArrowLeft size={16} aria-hidden />
+          Voltar para a Vila
+        </button>
+      )}
     </div>
   );
 }

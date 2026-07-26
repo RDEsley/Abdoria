@@ -203,11 +203,6 @@
   }
 }
 
-.game-afk-fab-swords--header {
-  width: 1.55rem;
-  height: 1.55rem;
-}
-
 .game-afk-fab:hover {
   transform: translateY(-3px);
   filter: brightness(1.04);
@@ -433,27 +428,34 @@
   padding-bottom: 0.4rem;
 }
 
-.game-afk-modal__title-group {
+/* Variante de 3 colunas — título sempre centralizado de verdade no meio
+   do topbar, com os botões da esquerda/direita cada um na sua coluna
+   (mesma largura "1fr" nas duas pontas), em vez de deslocar o título
+   conforme quantos botões aparecem em cada lado. Só a topbar principal
+   (exploração/vila) usa isso — a do setup de personagem continua flex
+   simples (só título + fechar). */
+.game-afk-modal__topbar--main {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.game-afk-modal__topbar-side {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  flex: 1;
   min-width: 0;
 }
 
-.game-afk-modal__title-group .game-afk-modal__title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.game-afk-modal__topbar-side--start {
+  justify-content: flex-start;
 }
 
 .game-afk-modal__toolbar {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.4rem;
-  margin-left: auto;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 @media (max-width: 420px) {
@@ -486,7 +488,39 @@
   min-width: 0.9rem;
   padding: 0.02rem 0.18rem;
   font-size: 0.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 3px rgba(127, 29, 29, 0.5);
+}
+
+/* Barrinha com o nome do botão, revelada ao passar o mouse (ou focar) —
+   os botões do topbar são só ícone, isso dá o rótulo sem precisar de um
+   tooltip nativo do navegador (que demora e não combina com o resto do
+   visual do jogo). */
+.game-afk-modal__shop-btn-hint {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  z-index: 20;
+  margin-left: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  transform: translateY(-50%) translateX(-0.4rem);
+  border: 1.5px solid var(--afk-ink);
+  border-radius: 999px;
+  background: var(--afk-ink);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+.game-afk-modal__shop-btn--icon:hover .game-afk-modal__shop-btn-hint,
+.game-afk-modal__shop-btn--icon:focus-visible .game-afk-modal__shop-btn-hint {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 /* ---- Dock unificado: tempo + baú + coletar em um só painel ---- */
@@ -495,11 +529,22 @@
   flex-direction: column;
   gap: 0.55rem;
   padding: 0.75rem 0.7rem 0.7rem;
-  border: 3px solid var(--afk-ink);
+  /* Borda própria em vez de confiar só na moldura pintada na imagem — o
+     "100% 100%" abaixo estica a arte de forma não-uniforme (a altura do
+     card varia com o conteúdo), o que deixava a moldura desenhada mais
+     grossa de um lado que do outro. Essa borda fica sempre com espessura
+     constante por cima. */
+  border: 2.5px solid var(--afk-ink);
   border-radius: 0.8rem;
-  background:
-    radial-gradient(120% 80% at 50% 0%, rgba(255, 247, 214, 0.9), transparent 60%),
-    linear-gradient(180deg, #fff8e6 0%, #fdeecb 100%);
+  /* Véu claro bem sutil por cima da arte — só o suficiente pra dar
+     contraste ao texto sem esconder o pergaminho/cantos com moedas e
+     gemas (a versão anterior, mais opaca, deixava a arte quase invisível). */
+  background-image:
+    linear-gradient(rgba(255, 251, 235, 0.28), rgba(255, 251, 235, 0.28)),
+    url('/assets/background-afk-chest.png');
+  background-size:
+    100% 100%,
+    100% 100%;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     0 4px 0 rgba(28, 25, 23, 0.12);
@@ -602,13 +647,10 @@
   box-shadow: 1px 1px 0 #0369a1;
 }
 
-.game-afk-modal__shop-btn--village[aria-pressed='true'] {
-  background: linear-gradient(180deg, #fde68a, #fbbf24);
-  border-color: #92400e;
-  color: #78350f;
-  box-shadow: 2px 2px 0 #92400e;
-}
-
+/* Badge estilo "notificação" (vermelho, redondo, pulsando) — igual ao
+   contador de não-lidos de qualquer app, pra chamar atenção de verdade
+   pros itens novos, em vez do verde neutro que se misturava com o resto
+   do botão. */
 .game-afk-modal__inventory-badge {
   display: inline-flex;
   align-items: center;
@@ -620,17 +662,45 @@
   font-weight: 900;
   line-height: 1.2;
   color: #fff;
-  background: #047857;
-  border: 1.5px solid #065f46;
+  background: linear-gradient(180deg, #f87171, #dc2626);
+  border: 1.5px solid #fff;
   border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(127, 29, 29, 0.5);
+  animation: game-afk-inventory-badge-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes game-afk-inventory-badge-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
 }
 
 .game-afk-modal__title {
   margin: 0;
+  overflow: hidden;
   font-size: 1.05rem;
   font-weight: 900;
   line-height: 1.2;
   color: #0f172a;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Título principal da Exploração/Vila — centralizado no topbar (ver
+   .game-afk-modal__topbar--main) com um pouco mais de presença que um
+   <h2> simples: maior, com respiro entre letras e uma sombra clara sutil
+   pra dar profundidade, no mesmo espírito "sticker" do resto do app. */
+.game-afk-modal__topbar--main .game-afk-modal__title {
+  min-width: 0;
+  padding: 0 0.3rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .game-afk-modal__header--compact .game-afk-modal__title {
@@ -707,8 +777,11 @@
 
 .game-afk-scene__viewport {
   position: relative;
-  height: 17rem;
-  min-height: 17rem;
+  height: auto;
+  min-height: 0;
+  /* Mesma proporção do viewport da vila, pros dois containers baterem
+     em tamanho/formato. */
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   border: 3px solid var(--afk-ink);
   border-radius: 0.65rem;
@@ -1366,37 +1439,51 @@
 
 /* Botão "voltar à vila" mais intuitivo, direto na cena de combate — além
    do ícone compacto no topbar, esse fica visível o tempo todo, com texto,
-   num canto livre (fora da área do mascote/painel de boss). */
+   como um bloco abaixo da cena (mesmo tratamento do "Explorar Floresta"
+   da vila) em vez de flutuar sobre a arte. */
 .game-afk-scene__back-btn {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  z-index: 9;
-  display: inline-flex;
+  display: flex;
+  width: 100%;
+  margin-top: 0.65rem;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.32rem 0.6rem;
-  border: 2px solid #92400e;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  border: 2.5px solid var(--afk-ink);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(180deg, #fde68a, #f59e0b);
   color: #78350f;
-  font-size: 0.62rem;
+  font-size: 0.78rem;
   font-weight: 900;
+  white-space: nowrap;
   cursor: pointer;
-  box-shadow: 2px 2px 0 #92400e;
+  box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.4);
   transition:
     transform 0.14s ease,
     box-shadow 0.14s ease;
+  animation: game-afk-back-btn-pulse 2.2s ease-in-out infinite;
 }
 
 .game-afk-scene__back-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 3px 3px 0 #92400e;
+  transform: translateY(-2px);
+  box-shadow: 4px 5px 0 rgba(28, 25, 23, 0.4);
 }
 
 .game-afk-scene__back-btn:active {
-  transform: translateY(1px);
-  box-shadow: 1px 1px 0 #92400e;
+  transform: translateY(0) scale(0.96);
+  box-shadow: 1px 1px 0 rgba(28, 25, 23, 0.4);
+}
+
+@keyframes game-afk-back-btn-pulse {
+  0%,
+  100% {
+    box-shadow: 3px 3px 0 rgba(28, 25, 23, 0.4);
+  }
+  50% {
+    box-shadow:
+      3px 3px 0 rgba(28, 25, 23, 0.4),
+      0 0 14px rgba(245, 158, 11, 0.55);
+  }
 }
 
 .game-afk-scene__boss-callout {
@@ -4071,6 +4158,84 @@
   overflow: visible;
 }
 
+/* Barra de vida do inimigo — minimalista de propósito, flutua sozinha bem
+   em cima do mob (sem card/nome/badges embaixo da cena, que competia com
+   o resto do HUD e ocupava espaço à toa). Nome do slime fica só como texto
+   (sem chip), pra manter o minimalismo. */
+.game-afk-enemy__name-tag {
+  position: absolute;
+  top: -1.3rem;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  font-size: 0.56rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.game-afk-enemy--boss .game-afk-enemy__name-tag {
+  top: -1.42rem;
+  font-size: 0.62rem;
+}
+
+.game-afk-enemy__hp-track {
+  position: absolute;
+  top: -0.55rem;
+  left: 50%;
+  z-index: 5;
+  width: 2.4rem;
+  height: 0.26rem;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+.game-afk-enemy--boss .game-afk-enemy__hp-track {
+  top: -0.65rem;
+  width: 3.1rem;
+}
+
+/* Flash na barra a cada golpe recebido — a chave (hitKey) do sprite já
+   remonta esse nó por ataque, então a keyframe sempre reinicia do zero. */
+.game-afk-enemy__hp-track--hit {
+  animation: game-afk-hp-hit-flash 0.32s ease-out;
+}
+
+@keyframes game-afk-hp-hit-flash {
+  0% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.game-afk-enemy__hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, #16a34a);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.game-afk-enemy__hp-track--hit .game-afk-enemy__hp-fill {
+  animation: game-afk-hp-fill-hit-flash 0.32s ease-out;
+}
+
+@keyframes game-afk-hp-fill-hit-flash {
+  0% {
+    filter: brightness(2.2);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 .game-afk-enemy--elite .game-afk-slime__blob {
   box-shadow:
     0 0 10px rgba(168, 85, 247, 0.45),
@@ -5893,21 +6058,6 @@
   }
 }
 
-.game-afk-combat-hud__enemy-bar--golden {
-  background: linear-gradient(145deg, #422006 0%, #713f12 45%, #1a2744 100%);
-  border-color: #fbbf24;
-  box-shadow:
-    inset 0 1px 0 rgba(253, 224, 71, 0.22),
-    0 0 14px rgba(250, 204, 21, 0.28),
-    0 3px 0 rgba(0, 0, 0, 0.22);
-}
-
-.game-afk-combat-hud__badge--golden {
-  background: linear-gradient(180deg, #fde68a, #f59e0b);
-  color: #78350f;
-  border: 1px solid #b45309;
-}
-
 .game-afk-enemy--boss_hydra .game-afk-slime__blob {
   background: linear-gradient(180deg, #34d399 0%, #047857 55%, #064e3b 100%);
   height: 68%;
@@ -6142,162 +6292,6 @@
 }
 
 /* Combat HUD */
-.game-afk-combat-hud {
-  margin-top: 0.45rem;
-}
-
-.game-afk-combat-hud__enemy-bar {
-  padding: 0.55rem 0.65rem 0.5rem;
-  background: linear-gradient(145deg, #0d1b2a 0%, #112233 50%, #0a1520 100%);
-  border: 2px solid #1e3448;
-  border-radius: 0.65rem;
-  box-shadow:
-    inset 0 1px 0 rgba(148, 210, 255, 0.1),
-    0 3px 0 rgba(0, 0, 0, 0.28);
-}
-
-.game-afk-combat-hud__enemy-bar--common {
-  background: linear-gradient(145deg, #0d1b2a 0%, #112233 50%, #0a1520 100%);
-  border-color: #1e3448;
-  box-shadow:
-    inset 0 1px 0 rgba(148, 210, 255, 0.1),
-    0 3px 0 rgba(0, 0, 0, 0.28);
-}
-
-.game-afk-combat-hud__enemy-bar--elite {
-  background: linear-gradient(145deg, #2e1f4a 0%, #1a1230 45%, #1a2744 100%);
-  border-color: #5b21b6;
-  box-shadow:
-    inset 0 1px 0 rgba(196, 181, 253, 0.16),
-    0 0 12px rgba(124, 58, 237, 0.2),
-    0 3px 0 rgba(0, 0, 0, 0.22);
-}
-
-.game-afk-combat-hud__enemy-bar--boss {
-  background: linear-gradient(145deg, #3d2a0f 0%, #261a08 45%, #1a1230 100%);
-  border-color: #b45309;
-  box-shadow:
-    inset 0 1px 0 rgba(251, 191, 36, 0.2),
-    0 0 14px rgba(245, 158, 11, 0.22),
-    0 3px 0 rgba(0, 0, 0, 0.25);
-}
-
-.game-afk-combat-hud__enemy-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.38rem;
-}
-
-.game-afk-combat-hud__enemy-identity {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.35rem;
-  min-width: 0;
-}
-
-.game-afk-combat-hud__enemy-slug {
-  flex-shrink: 0;
-  margin-top: 0.05rem;
-  font-size: 0.55rem;
-  line-height: 1;
-  color: #6ee7b7;
-  opacity: 0.85;
-}
-
-.game-afk-combat-hud__enemy-bar--elite .game-afk-combat-hud__enemy-slug {
-  color: #c4b5fd;
-}
-
-.game-afk-combat-hud__enemy-bar--boss .game-afk-combat-hud__enemy-slug {
-  color: #fbbf24;
-}
-
-.game-afk-combat-hud__enemy-title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.game-afk-combat-hud__enemy-name {
-  font-size: 0.7rem;
-  font-weight: 900;
-  line-height: 1.2;
-  color: #d1fae5;
-  letter-spacing: 0.01em;
-}
-
-.game-afk-combat-hud__enemy-bar--elite .game-afk-combat-hud__enemy-name {
-  color: #ede9fe;
-}
-
-.game-afk-combat-hud__enemy-bar--boss .game-afk-combat-hud__enemy-name {
-  color: #fef3c7;
-}
-
-.game-afk-combat-hud__badge {
-  padding: 0.08rem 0.32rem;
-  font-size: 0.46rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  border-radius: 0.2rem;
-  border: 1px solid var(--afk-ink);
-}
-
-.game-afk-combat-hud__badge--elite {
-  color: #f3e8ff;
-  background: #7c3aed;
-}
-
-.game-afk-combat-hud__badge--boss {
-  color: #1c1917;
-  background: linear-gradient(180deg, #fbbf24, #f59e0b);
-}
-
-.game-afk-combat-hud__hp-track {
-  height: 0.55rem;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.35);
-  border: 2px solid rgba(0, 0, 0, 0.45);
-  border-radius: 999px;
-}
-
-.game-afk-combat-hud__hp-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #f87171, #dc2626 55%, #991b1b);
-  border-radius: 999px;
-  transition: width 0.25s ease;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-}
-
-.game-afk-combat-hud__enemy-bar--elite .game-afk-combat-hud__hp-fill {
-  background: linear-gradient(90deg, #c084fc, #9333ea 55%, #6b21a8);
-}
-
-.game-afk-combat-hud__enemy-bar--boss .game-afk-combat-hud__hp-fill {
-  background: linear-gradient(90deg, #fbbf24, #f59e0b 55%, #d97706);
-}
-
-.game-afk-combat-hud__hp-text {
-  flex-shrink: 0;
-  font-size: 0.58rem;
-  font-weight: 800;
-  line-height: 1.2;
-  color: #a7f3d0;
-  text-align: right;
-}
-
-.game-afk-combat-hud__enemy-bar--elite .game-afk-combat-hud__hp-text {
-  color: #ddd6fe;
-}
-
-.game-afk-combat-hud__enemy-bar--boss .game-afk-combat-hud__hp-text {
-  color: #fde68a;
-}
-
 .game-afk-scene__damage-layer {
   position: absolute;
   inset: 0;
@@ -6442,16 +6436,9 @@
   }
 }
 
-.game-afk-combat-hud__boss-panel {
-  margin-top: 0.4rem;
-  padding: 0.45rem 0.55rem;
-  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-  border: 2px solid #475569;
-  border-radius: 0.55rem;
-}
-
-/* Minimalista de propósito: pílula clara e fina, sem painel escuro/vidro
-   fosco/glow pulsante — só o essencial (rótulo, contador, barrinha). */
+/* Painel do próximo boss — minimalista de propósito: sem cartão/pílula de
+   fundo (só flutua sobre a cena), rótulo + contador + barrinha fina, com
+   sombra de texto pra continuar legível em cima do céu/chão da cena. */
 .game-afk-combat-hud__boss-panel--overlay {
   position: absolute;
   top: 0.4rem;
@@ -6459,15 +6446,8 @@
   left: 0.4rem;
   z-index: 15;
   margin: 0;
-  padding: 0.3rem 0.55rem;
-  background: rgba(255, 255, 255, 0.88);
-  border: none;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
-}
-
-.game-afk-combat-hud__boss-panel--overlay.game-afk-combat-hud__boss-panel--active {
-  background: rgba(255, 241, 242, 0.92);
+  padding: 0;
+  background: none;
 }
 
 .game-afk-combat-hud__boss-header {
@@ -6481,31 +6461,29 @@
 .game-afk-combat-hud__boss-label {
   font-size: 0.56rem;
   font-weight: 800;
-  color: #57534e;
+  color: #fff;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
 
 .game-afk-combat-hud__boss-panel--active .game-afk-combat-hud__boss-label {
-  color: #b91c1c;
+  color: #fecaca;
 }
 
 .game-afk-combat-hud__boss-count {
   font-size: 0.62rem;
   font-weight: 900;
-  color: #1c1917;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
 
 .game-afk-combat-hud__boss-track {
-  height: 0.34rem;
+  height: 0.3rem;
   overflow: hidden;
-  background: rgba(28, 25, 23, 0.12);
+  background: rgba(0, 0, 0, 0.28);
   border: none;
   border-radius: 999px;
-}
-
-.game-afk-combat-hud__boss-panel--overlay .game-afk-combat-hud__boss-track {
-  background: rgba(28, 25, 23, 0.1);
 }
 
 .game-afk-combat-hud__boss-fill {
@@ -6513,14 +6491,6 @@
   background: linear-gradient(90deg, #fbbf24, #f59e0b);
   border-radius: 999px;
   transition: width 0.3s ease;
-}
-
-.game-afk-combat-hud__boss-progress {
-  margin: 0.35rem 0 0;
-  font-size: 0.58rem;
-  font-weight: 700;
-  text-align: center;
-  color: #57534e;
 }
 
 /* Timer panel */
@@ -6548,13 +6518,15 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #57534e;
+  color: var(--afk-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .game-afk-timer__next {
   font-size: 0.58rem;
   font-weight: 700;
   color: var(--afk-accent);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .game-afk-timer__value {
@@ -6562,13 +6534,14 @@
   font-size: 0.82rem;
   color: var(--afk-accent);
   text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .game-afk-timer__bar {
   height: 0.45rem;
   overflow: hidden;
-  background: #e7e5e4;
-  border: 2px solid rgba(28, 25, 23, 0.12);
+  background: rgba(255, 255, 255, 0.65);
+  border: 2px solid rgba(28, 25, 23, 0.28);
   border-radius: 999px;
 }
 
@@ -6592,6 +6565,7 @@
 .game-afk-timer__capped-hint {
   color: #b45309;
   font-weight: 800;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 @keyframes game-afk-timer-capped-text {
@@ -7318,22 +7292,27 @@ button.game-afk-reward-chip {
   height: 4.2rem;
 }
 
-/* Sombra no chão — separa o baú do fundo e reforça a leitura de volume 3D. */
+/* Sombra no chão — separa o baú do fundo e reforça a leitura de volume 3D.
+   2 camadas (núcleo de contato mais escuro e estreito + halo difuso mais
+   largo e claro por cima) em vez de uma elipse lisa só, pra ficar mais
+   "desenhada" e menos chapada. */
 .game-afk-chest::before {
   content: '';
   position: absolute;
-  right: 6%;
-  bottom: -0.3rem;
-  left: 6%;
+  right: 2%;
+  bottom: -0.32rem;
+  left: 2%;
   z-index: -1;
-  height: 0.5rem;
+  height: 0.65rem;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(20, 14, 10, 0.4) 0%, transparent 72%);
+  background:
+    radial-gradient(ellipse 42% 78% at center, rgba(8, 6, 4, 0.55) 0%, transparent 76%),
+    radial-gradient(ellipse 100% 100% at center, rgba(20, 14, 10, 0.32) 0%, transparent 78%);
 }
 
 .game-afk-chest--lg::before {
-  bottom: -0.36rem;
-  height: 0.6rem;
+  bottom: -0.4rem;
+  height: 0.8rem;
 }
 
 /* ── Baú pixel-art (Rodada 10 — paleta esmeralda, pra combinar com a cor
@@ -7351,18 +7330,13 @@ button.game-afk-reward-chip {
   background: linear-gradient(145deg, #34d399 0%, #10b981 42%, #059669 78%, #047857 100%);
   border: 2.5px solid #191210;
   border-radius: 0.1rem 0.1rem 0.22rem 0.22rem;
+  /* Simplificado: só os 3 anéis (ouro → sombra do ouro → esmeralda escuro)
+     que dão a leitura de "moldura" + a sombra sólida deslocada de sempre —
+     tirou os 2 realces diagonais, sutis demais pra fazer falta. */
   box-shadow:
     inset 0 0 0 0.26rem #f2b418,
     inset 0 0 0 0.34rem #8a5c08,
     inset 0 0 0 0.46rem #065f46,
-    /* Realce diagonal (luz vindo de cima-esquerda) + sombra oposta — dá
-       curvatura à face plana em vez de um gradiente só vertical. */
-    inset 0.14rem 0.14rem 0.3rem rgba(255, 200, 180, 0.35),
-    inset -0.16rem -0.16rem 0.32rem rgba(0, 0, 0, 0.32),
-    0 5px 6px -3px rgba(20, 14, 10, 0.45),
-    /* Sombra sólida deslocada — o mesmo "pop" 3D chunky usado nos botões do
-       jogo (game-afk-fab, game-afk-modal__shop-btn); as sombras difusas
-       acima quase não aparecem num baú tão pequeno. */
     3px 4px 0 rgba(20, 14, 10, 0.55);
 }
 
@@ -7525,11 +7499,11 @@ button.game-afk-reward-chip {
   background: linear-gradient(145deg, #ffe98a 0%, #ffd94a 30%, #f2b418 62%, #c98d0c 100%);
   border: 2.5px solid #191210;
   border-radius: 0.82rem 0.82rem 0.08rem 0.08rem;
+  /* Simplificado: só o brilho de cima + sombra de baixo (dão o volume do
+     domo) e a sombra sólida deslocada — tirou os realces diagonais. */
   box-shadow:
     inset 0 2px 0 rgba(255, 246, 200, 0.7),
     inset 0 -2px 0 rgba(138, 92, 8, 0.55),
-    inset 0.16rem 0.16rem 0.28rem rgba(255, 255, 255, 0.45),
-    inset -0.16rem -0.14rem 0.3rem rgba(90, 55, 5, 0.3),
     2px 3px 0 rgba(20, 14, 10, 0.45);
   overflow: hidden;
 }
@@ -7573,39 +7547,6 @@ button.game-afk-reward-chip {
   background: linear-gradient(180deg, #ffd94a, #f2b418 55%, #b97e0c);
   border: 2px solid #191210;
   border-radius: 0.1rem;
-}
-
-.game-afk-chest--ready .game-afk-chest__body,
-.game-afk-chest--ready .game-afk-chest__lid {
-  animation: game-afk-chest-ready-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes game-afk-chest-ready-pulse {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.08);
-    box-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
-  }
-}
-
-.game-afk-chest--ready .game-afk-chest__lock {
-  animation: game-afk-chest-lock-wiggle 1.2s ease-in-out infinite;
-}
-
-@keyframes game-afk-chest-lock-wiggle {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-6deg);
-  }
-  75% {
-    transform: rotate(6deg);
-  }
 }
 
 .game-afk-chest--opening .game-afk-chest__lid-wrap,
@@ -8253,10 +8194,12 @@ button.game-afk-reward-chip {
     font-size: 0.6rem;
   }
 
-  /* Viewport da batalha menor para caber sem rolar tanto. */
+  /* Viewport da batalha menor para caber sem rolar tanto — mantém a
+     mesma proporção 3:2, só encolhe via max-width. */
   .game-afk-scene__viewport {
-    height: 13.5rem;
-    min-height: 13.5rem;
+    max-width: 24rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .game-afk-reward-chip {
@@ -9123,46 +9066,6 @@ button.game-afk-reward-chip {
 }
 
 /* ============================================================
-   CHEST — smoother "ready" animation (no brightness flicker)
-   ============================================================ */
-
-.game-afk-chest--ready .game-afk-chest__body,
-.game-afk-chest--ready .game-afk-chest__lid {
-  animation: game-afk-chest-ready-pulse 2.4s ease-in-out infinite;
-}
-
-@keyframes game-afk-chest-ready-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.88;
-    box-shadow: 0 0 8px rgba(251, 191, 36, 0.28);
-  }
-}
-
-.game-afk-chest--ready .game-afk-chest__lock {
-  animation: game-afk-chest-lock-wiggle 2s ease-in-out infinite;
-}
-
-@keyframes game-afk-chest-lock-wiggle {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  20% {
-    transform: rotate(-4deg);
-  }
-  40% {
-    transform: rotate(4deg);
-  }
-  60% {
-    transform: rotate(0deg);
-  }
-}
-
-/* ============================================================
    FAB BUTTON — redesign
    ============================================================ */
 
@@ -9194,16 +9097,16 @@ button.game-afk-reward-chip {
 /* Só o anel externo do botão marca o círculo — sem um segundo círculo
    concêntrico em volta do ícone (era o que dava a leitura de "duas bordas"). */
 .game-afk-fab__icon {
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.7rem;
+  height: 2.7rem;
   border: none;
   background: none;
   box-shadow: none;
 }
 
 .game-afk-fab .game-afk-fab-swords {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 2.15rem;
+  height: 2.15rem;
   color: #a7f3d0;
   filter: drop-shadow(0 0 3px rgba(52, 211, 153, 0.6)) drop-shadow(0 1px 0 rgba(6, 78, 59, 0.55));
 }

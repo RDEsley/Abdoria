@@ -19,6 +19,7 @@ interface Props {
   dying: boolean;
   looting: boolean;
   hitKey: number;
+  displayHp: number;
 }
 
 export function AfkEnemySprite({
@@ -30,9 +31,12 @@ export function AfkEnemySprite({
   dying,
   looting,
   hitKey,
+  displayHp,
 }: Props) {
   const enemyId = combat.enemy_id;
   const label = AFK_ENEMIES[enemyId]?.label ?? 'Inimigo';
+  const maxHp = combat.enemy_max_hp;
+  const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (displayHp / maxHp) * 100)) : 0;
 
   const faceSeed = useMemo(
     () => hashCombatSeed(`${userId}:${spawnKillsTotal}:face`),
@@ -67,6 +71,22 @@ export function AfkEnemySprite({
       {combat.is_boss && <div className="game-afk-enemy__boss-aura" aria-hidden />}
       {(enemyId === 'golden_slime' || enemyId === 'magic_rabbit') && (
         <div className="game-afk-enemy__golden-sparkle" aria-hidden />
+      )}
+
+      {!dying && !looting && (
+        <>
+          <span className="game-afk-enemy__name-tag">{label}</span>
+          <div
+            className={`game-afk-enemy__hp-track${hit ? ' game-afk-enemy__hp-track--hit' : ''}`}
+            role="progressbar"
+            aria-valuenow={displayHp}
+            aria-valuemin={0}
+            aria-valuemax={maxHp}
+            aria-label={`Vida de ${label}`}
+          >
+            <div className="game-afk-enemy__hp-fill" style={{ width: `${hpPct}%` }} />
+          </div>
+        </>
       )}
 
       <div className="game-afk-enemy__sprite">

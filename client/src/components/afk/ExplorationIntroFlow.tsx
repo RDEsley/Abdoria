@@ -139,7 +139,7 @@ export function ExplorationIntroFlow({ onDone }: Props) {
             </div>
             <GameButton
               variant="secondary"
-              className="exploration-intro__back"
+              className="exploration-intro__back w-full"
               disabled={saving}
               onClick={() => setGenero(null)}
             >
