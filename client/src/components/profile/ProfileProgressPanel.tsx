@@ -43,7 +43,7 @@ export function ProfileProgressPanel({ stats }: Props) {
           hint={`Recorde: ${stats.streak_maior} dias`}
         />
         <StatTile
-          icon={<Trophy className="text-amber-600" size={20} />}
+          icon={<Trophy className="text-amber-600" size={20} fill="currentColor" fillOpacity={0.18} />}
           title="Conquistas"
           value={`${unlockedAchievements}/${stats.conquistas.length}`}
           hint="Desbloqueadas no jogo"
