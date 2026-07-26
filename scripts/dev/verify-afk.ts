@@ -29,6 +29,7 @@ import {
   grantPatrolCacheRewards,
   syncAfkRewards,
   claimAfkRewards,
+  resumeAfk,
 } from '../../server/src/services/afk.ts';
 import {
   applyKill,
@@ -117,19 +118,30 @@ syncAfkRewards(uNaoIniciado, new Date(t0.getTime() + 30 * 60_000));
 assert.equal(uNaoIniciado.afk.minutos_acumulados, 0, 'AFK só acumula depois da primeira visita');
 assert.equal(uNaoIniciado.afk.last_seen_at, null, 'sync não inicia o timer sozinho');
 
-// activateAfk liga o timer na primeira visita; reabrir a tela depois NÃO reseta o progresso
-// acumulado (era o bug: last_seen_at voltava pra "agora" a cada reabertura da tela).
+// activateAfk liga o relógio (last_seen_at) na primeira visita, mas nasce PAUSADO — o
+// personagem começa na vila, só acumula depois que o jogador clica em "Explorar"
+// (resumeAfk). Reabrir a tela depois NÃO reseta o progresso acumulado (era o bug:
+// last_seen_at voltava pra "agora" a cada reabertura da tela).
 const uPrimeiraVisita = mockUser(0);
 uPrimeiraVisita.afk.last_seen_at = null;
 activateAfk(uPrimeiraVisita, t0);
-assert.equal(uPrimeiraVisita.afk.last_seen_at, t0.toISOString(), 'primeira visita liga o timer');
+assert.equal(uPrimeiraVisita.afk.last_seen_at, t0.toISOString(), 'primeira visita liga o relógio');
+assert.ok(uPrimeiraVisita.afk.paused_at, 'primeira visita nasce pausada (vila)');
 syncAfkRewards(uPrimeiraVisita, new Date(t0.getTime() + 10 * 60_000));
-assert.equal(uPrimeiraVisita.afk.minutos_acumulados, 10, '10min acumulados desde a ativação');
+assert.equal(
+  uPrimeiraVisita.afk.minutos_acumulados,
+  0,
+  'pausado na vila não acumula antes de clicar em Explorar',
+);
+// Jogador clica em "Explorar" — a partir daqui o tempo passa a contar de verdade.
+resumeAfk(uPrimeiraVisita, new Date(t0.getTime() + 10 * 60_000));
+syncAfkRewards(uPrimeiraVisita, new Date(t0.getTime() + 20 * 60_000));
+assert.equal(uPrimeiraVisita.afk.minutos_acumulados, 10, '10min acumulados desde o Explorar');
 // Reabrir a tela de exploração (activateAfk de novo) não deve resetar last_seen_at nem o timer.
-activateAfk(uPrimeiraVisita, new Date(t0.getTime() + 10 * 60_000 + 5_000));
+activateAfk(uPrimeiraVisita, new Date(t0.getTime() + 20 * 60_000 + 5_000));
 assert.equal(
   uPrimeiraVisita.afk.last_seen_at,
-  new Date(t0.getTime() + 10 * 60_000).toISOString(),
+  new Date(t0.getTime() + 20 * 60_000).toISOString(),
   'reabrir a tela não reseta o timer já iniciado',
 );
 assert.ok(u1.afk.combat && u1.afk.combat.kills_total >= 1, 'offline kills simulated');

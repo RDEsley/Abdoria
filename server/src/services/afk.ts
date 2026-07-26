@@ -57,11 +57,16 @@ function afkStarted(afk: AfkState): boolean {
   return afk.last_seen_at != null;
 }
 
-/** Primeira abertura da tela de Exploração AFK: liga o timer a partir de agora. */
+/** Primeira abertura da tela de Exploração AFK: liga o timer a partir de agora.
+    Nasce PAUSADO (vila) — o personagem começa na vila até o jogador clicar em
+    "Explorar"; sem isso, `paused_at` ficaria indefinido e o client (que decide
+    onde reabrir a tela a partir dele) jogaria um personagem novo direto pra
+    floresta. */
 export function activateAfk(user: UserRecord, now = new Date()): void {
   const afk = ensureAfk(user);
   if (afkStarted(afk)) return;
   afk.last_seen_at = now.toISOString();
+  afk.paused_at = now.toISOString();
 }
 
 function applyAfkRewardBundle(
@@ -142,15 +147,32 @@ export function grantRouteDrinkRewards(
   user: UserRecord,
   hours = ROUTE_DRINK_HOURS,
 ): { claimed: AfkPendingReward; overflow_to_dorias: number } {
-  return grantExplorationHourRewards(user, hours);
+  return grantExplorationHourRewards(user, hours, { noSelfRouteDrink: true });
+}
+
+/**
+ * Só ao usar o próprio Route Drink: nenhum dos kills simulados pode devolver
+ * outro Route Drink de brinde — vira Frozen Streak (o outro drop de Elite)
+ * no lugar. Sem isso o item nunca sairia do inventário de quem só usa Route
+ * Drink pra tudo. Não mexe no Baú da Exploração nem no acúmulo passivo —
+ * aqueles continuam podendo dropar Route Drink normalmente.
+ */
+function substituteRouteDrinkSelfDrops(pending: AfkPendingReward): void {
+  if (pending.route_drinks <= 0) return;
+  pending.frozen_streaks += pending.route_drinks;
+  pending.route_drinks = 0;
 }
 
 function grantExplorationHourRewards(
   user: UserRecord,
   hours: number,
+  opts?: { noSelfRouteDrink?: boolean },
 ): { claimed: AfkPendingReward; overflow_to_dorias: number } {
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
   simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
+  if (opts?.noSelfRouteDrink) {
+    substituteRouteDrinkSelfDrops(pending);
+  }
   return applyAfkRewardBundle(user, pending);
 }
 
@@ -295,6 +317,11 @@ export function afkResponsePayload(
     has_rewards: hasAfkRewardsToClaim(user.afk),
     combat: combatSnapshot(user),
     bestiario_novos,
+    // Cena real do personagem (vila = pausado, floresta = explorando) —
+    // fonte de verdade pro client saber onde retomar ao reabrir a tela,
+    // em vez de sempre assumir vila (AFK de verdade continua enquanto o
+    // jogador não está olhando).
+    paused: Boolean(user.afk?.paused_at),
     ...buildAfkMetaFields(minutos),
     ...extra,
   };

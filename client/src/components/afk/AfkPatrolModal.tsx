@@ -7,7 +7,6 @@ import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkVillageScene } from '@/components/afk/AfkVillageScene';
 import { ExplorationIntroFlow } from '@/components/afk/ExplorationIntroFlow';
 import { SceneTransitionOverlay } from '@/components/afk/SceneTransitionOverlay';
-import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import {
   EXPLORATION_TUTORIAL_KEY,
   EXPLORATION_TUTORIAL_SLIDES,
@@ -28,6 +27,7 @@ import { claimAfkRewards, getAfkMeta, setAfkScene, type AfkMetaResponse } from '
 import { DEV_REWARD_PREVIEW_EVENT } from '@/lib/dev-reward-preview';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import { mergeAfkCombatSnapshot } from '@/lib/afk-combat-merge';
+import { emitXpEarned } from '@/lib/xp-orbs';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
@@ -56,9 +56,14 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   /** Hub entre patrulhas: a vila (loja + bestiário) x a cena de combate ao vivo.
-      Sempre abre na vila — o personagem só entra em exploração de verdade
-      depois que o jogador clica em "Explorar". */
+      Personagem novo começa na vila até clicar em "Explorar"; depois disso a
+      cena de abertura vem do servidor (ver load()/data.paused) — fechar a
+      tela explorando reabre explorando, fechar na vila manda explorar sozinho. */
   const [sceneMode, setSceneMode] = useState<'exploring' | 'village'>('village');
+  const sceneModeRef = useRef(sceneMode);
+  useEffect(() => {
+    sceneModeRef.current = sceneMode;
+  }, [sceneMode]);
   const [sceneTransition, setSceneTransition] = useState<string | null>(null);
   const sceneTransitionTimerRef = useRef<number | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -92,6 +97,15 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         : (patrolArmas.magia_equipada ?? patrolArmas.arco_equipado);
   const userId = String(user?.id ?? 'guest');
 
+  // Badge da mochila mostra só os itens NOVOS desde a última vez que o
+  // jogador abriu o inventário (não o total) — evita o número "grudado"
+  // sempre alto depois que o inventário já foi checado uma vez.
+  const [inventorySeenCount, setInventorySeenCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const stored = window.localStorage.getItem(`abdoria_inventory_seen_${userId}`);
+    return stored ? Number(stored) || 0 : 0;
+  });
+
   const load = useCallback(async () => {
     // Só a 1ª carga mostra o estado de loading (timer "--:--:--", botão desabilitado).
     // Refreshes em segundo plano (poll de 15s, claim, troca de arma, fechar
@@ -107,6 +121,11 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         route_drink_count: data.route_drink_count,
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
+      // AFK de verdade: a cena que a tela abre é a que o servidor diz que
+      // está rolando (pausado = vila, senão = explorando), não sempre vila —
+      // senão fechar a tela enquanto explorava jogava o jogador de volta pra
+      // vila ao reabrir, quebrando a premissa de "progride mesmo fora da tela".
+      if (isInitialLoad) setSceneMode(data.paused ? 'village' : 'exploring');
       hasLoadedRef.current = true;
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível carregar a exploração.'), {
@@ -150,7 +169,16 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       setBestiaryOpen(false);
       setInventoryOpen(false);
       setCelebrationClaimed(null);
-      setSceneMode('village');
+      // Fechar a tela parado na vila manda o personagem explorar sozinho —
+      // é assim que AFK funciona, progresso não pode ficar pausado só porque
+      // o jogador não está olhando. Não força mais 'village' aqui: a próxima
+      // abertura decide a cena a partir do que o servidor diz (load()/
+      // data.paused), então isso também corrige o reabrir sempre na vila.
+      if (sceneModeRef.current === 'village') {
+        void setAfkScene('exploring').catch(() => {
+          /* melhor esforço — o próximo open recarrega e corrige */
+        });
+      }
       if (sceneTransitionTimerRef.current) {
         window.clearTimeout(sceneTransitionTimerRef.current);
         sceneTransitionTimerRef.current = null;
@@ -240,13 +268,16 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
   }, []);
 
+  // Na vila o tempo acumulado fica pausado no servidor (setAfkScene já cuida
+  // disso); o relógio visual local também não pode continuar correndo aqui,
+  // senão o número sobe na tela mesmo com o acúmulo travado no backend.
   useEffect(() => {
-    if (!open || meta?.capped) return undefined;
+    if (!open || meta?.capped || sceneMode === 'village') return undefined;
     const timer = window.setInterval(() => {
       setElapsedSinceSyncMin((Date.now() - loadedAtRef.current) / 60_000);
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [open, meta?.capped]);
+  }, [open, meta?.capped, sceneMode]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -290,6 +321,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       const res = await claimAfkRewards();
       applyUser(res.user);
       await refreshApp();
+      emitXpEarned(res.claimed.xp);
+      if (res.level_up) {
+        window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: res.level_up }));
+      }
       showClaimedCelebration(res.claimed, res.overflow_to_dorias);
       await load();
     } catch (err) {
@@ -311,6 +346,13 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     (stats?.route_drink_count ?? meta?.route_drink_count ?? 0) +
     (stats?.exp_instant_count ?? 0) +
     (stats?.doria_bag_count ?? 0);
+  const newInventoryItemCount = Math.max(0, inventoryItemCount - inventorySeenCount);
+
+  const handleInventoryOpen = () => {
+    setInventoryOpen(true);
+    setInventorySeenCount(inventoryItemCount);
+    window.localStorage.setItem(`abdoria_inventory_seen_${userId}`, String(inventoryItemCount));
+  };
 
   const handleInventoryClose = () => {
     setInventoryOpen(false);
@@ -353,53 +395,56 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             </>
           ) : (
             <>
-              <div className="game-afk-modal__topbar">
-            <div className="game-afk-modal__title-group">
-              <button
-                type="button"
-                className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--village"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToScene(sceneMode === 'village' ? 'exploring' : 'village');
-                }}
-                title={sceneMode === 'village' ? 'Voltar a explorar' : 'Voltar à vila'}
-                aria-label={sceneMode === 'village' ? 'Voltar a explorar' : 'Voltar à vila'}
-                aria-pressed={sceneMode === 'village'}
-              >
-                {sceneMode === 'village' ? (
-                  <AfkFabSwords variant="header" />
-                ) : (
+              <div className="game-afk-modal__topbar game-afk-modal__topbar--main">
+            <div className="game-afk-modal__topbar-side game-afk-modal__topbar-side--start">
+              {sceneMode === 'exploring' && (
+                <button
+                  type="button"
+                  className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--village"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToScene('village');
+                  }}
+                  title="Voltar à vila"
+                  aria-label="Voltar à vila"
+                >
                   <TreePine size={22} aria-hidden />
-                )}
-              </button>
-              <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                Exploração
-              </h2>
-            </div>
-            <div className="game-afk-modal__toolbar">
+                  <span className="game-afk-modal__shop-btn-hint" aria-hidden>
+                    Voltar para a Vila
+                  </span>
+                </button>
+              )}
               {sceneMode === 'village' && (
                 <button
                   type="button"
                   className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setInventoryOpen(true);
+                    handleInventoryOpen();
                   }}
                   title="Inventário"
                   aria-label={
-                    inventoryItemCount > 0
-                      ? `Abrir inventário, ${inventoryItemCount} itens`
+                    newInventoryItemCount > 0
+                      ? `Abrir inventário, ${newInventoryItemCount} itens novos`
                       : 'Abrir inventário'
                   }
                 >
                   <Backpack size={26} aria-hidden />
-                  {inventoryItemCount > 0 && (
+                  <span className="game-afk-modal__shop-btn-hint" aria-hidden>
+                    Mochila
+                  </span>
+                  {newInventoryItemCount > 0 && (
                     <span className="game-afk-modal__inventory-badge tabular-nums">
-                      {inventoryItemCount}
+                      {newInventoryItemCount}
                     </span>
                   )}
                 </button>
               )}
+            </div>
+            <h2 id="afk-patrol-title" className="game-afk-modal__title">
+              {sceneMode === 'village' ? 'Vila Abdoria' : 'Exploração'}
+            </h2>
+            <div className="game-afk-modal__toolbar">
               <button
                 type="button"
                 className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--close"

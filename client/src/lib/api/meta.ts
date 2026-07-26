@@ -5,6 +5,7 @@ import type {
   ArmaPreferida,
   Inventario,
   IUserDocument,
+  LevelUpCelebration,
 } from '@/types';
 import { fetchJson } from './client';
 
@@ -32,6 +33,8 @@ export interface AfkMetaResponse {
   combat: AfkCombatSnapshot;
   route_drink_count?: number;
   bestiario_novos?: AfkEnemyId[];
+  /** true = personagem na vila (pausado); false = explorando de verdade. */
+  paused?: boolean;
 }
 
 export interface InventarioSummary extends Inventario {
@@ -51,6 +54,7 @@ export function claimAfkRewards(): Promise<{
   user: IUserDocument;
   claimed: AfkPendingReward;
   overflow_to_dorias?: number;
+  level_up?: LevelUpCelebration | null;
 }> {
   return fetchJson('/meta/afk/claim', { method: 'POST' });
 }
@@ -117,7 +121,7 @@ export function consumeExpInstant(useAll = false): Promise<{
   });
 }
 
-export function consumeDoriaBag(quantity = 1): Promise<{
+export function consumeDoriaBag(quantity = 1, useAll = false): Promise<{
   user: IUserDocument;
   abdoria_ganha: number;
   rolls: number[];
@@ -126,7 +130,7 @@ export function consumeDoriaBag(quantity = 1): Promise<{
 }> {
   return fetchJson('/meta/inventory/doria-bag', {
     method: 'POST',
-    body: JSON.stringify({ quantity }),
+    body: JSON.stringify(useAll ? { use_all: true } : { quantity }),
   });
 }
 
