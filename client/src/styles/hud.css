@@ -29,11 +29,13 @@
   overflow: hidden;
   background: #d6d3d1;
   border: 2px solid var(--game-ink);
+  border-radius: 999px;
   box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.12);
 }
 
 .game-xp-bar__fill {
   height: 100%;
+  border-radius: inherit;
   background: repeating-linear-gradient(90deg, #34d399 0, #34d399 8px, #10b981 8px, #10b981 16px);
   transition: width 0.35s ease;
 }
@@ -243,6 +245,12 @@
 .game-page-header__back:active {
   transform: scale(0.94);
   box-shadow: 1px 1px 0 rgba(28, 25, 23, 0.35);
+}
+
+/* Variante "fechar" (X) — circular, mesmo padrão dos botões de fechar de
+   modal/tela cheia do app. */
+.game-page-header__back--circle {
+  border-radius: 999px;
 }
 
 /* Cards de missão / quest */

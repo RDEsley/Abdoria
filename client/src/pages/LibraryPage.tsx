@@ -154,30 +154,10 @@ export function LibraryPage() {
           )}
         </label>
 
-        <div className="library-muscle-tabs" role="group" aria-label="Filtrar por músculo">
+        <div className="library-chips-row">
           <button
             type="button"
-            className={`game-tab game-tab--scroll${!muscleFilter ? ' game-tab--active' : ''}`}
-            onClick={() => setMuscleFilter(null)}
-          >
-            Todos
-          </button>
-          {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              className={`game-tab game-tab--scroll${muscleFilter === m ? ' game-tab--active' : ''}`}
-              onClick={() => setMuscleFilter(muscleFilter === m ? null : m)}
-            >
-              {MUSCULO_LABELS[m]}
-            </button>
-          ))}
-        </div>
-
-        <div className="library-toolbar__row">
-          <button
-            type="button"
-            className={`library-filter-btn${secondaryFilterCount > 0 ? ' library-filter-btn--active' : ''}`}
+            className={`game-tab game-tab--scroll library-filter-btn${secondaryFilterCount > 0 ? ' game-tab--active' : ''}`}
             onClick={() => setFiltersOpen((v) => !v)}
             aria-expanded={filtersOpen}
           >
@@ -187,12 +167,33 @@ export function LibraryPage() {
               <span className="library-filter-btn__badge tabular-nums">{secondaryFilterCount}</span>
             )}
           </button>
-          {hasAnyFilter && (
-            <button type="button" className="library-clear-btn" onClick={clearAllFilters}>
-              Limpar filtros
+
+          <div className="library-muscle-tabs" role="group" aria-label="Filtrar por músculo">
+            <button
+              type="button"
+              className={`game-tab game-tab--scroll${!muscleFilter ? ' game-tab--active' : ''}`}
+              onClick={() => setMuscleFilter(null)}
+            >
+              Todos
             </button>
-          )}
+            {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={`game-tab game-tab--scroll${muscleFilter === m ? ' game-tab--active' : ''}`}
+                onClick={() => setMuscleFilter(muscleFilter === m ? null : m)}
+              >
+                {MUSCULO_LABELS[m]}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {hasAnyFilter && (
+          <button type="button" className="library-clear-btn" onClick={clearAllFilters}>
+            Limpar filtros
+          </button>
+        )}
 
         {filtersOpen && (
           <div className="library-filters-panel">

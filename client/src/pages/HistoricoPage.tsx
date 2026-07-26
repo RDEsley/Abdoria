@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Medal, ScrollText, Timer, Zap } from 'lucide-react';
+import { Dumbbell, ListChecks, Medal, ScrollText, Search, Timer, Zap } from 'lucide-react';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
@@ -16,6 +16,21 @@ import type {
   WorkoutHistorySessionDetail,
 } from '@/types';
 
+type TypeFilter = 'todos' | 'treinos' | 'atividades';
+type PeriodFilter = 'todos' | 'semana' | 'mes';
+
+const TYPE_FILTERS: { id: TypeFilter; label: string }[] = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'treinos', label: 'Treinos' },
+  { id: 'atividades', label: 'Atividades' },
+];
+
+const PERIOD_FILTERS: { id: PeriodFilter; label: string }[] = [
+  { id: 'todos', label: 'Sempre' },
+  { id: 'semana', label: 'Esta semana' },
+  { id: 'mes', label: 'Este mês' },
+];
+
 function formatSessionDate(concluidoEm: string | Date): string {
   const d = new Date(concluidoEm);
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -30,6 +45,9 @@ export function HistoricoPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<WorkoutHistorySessionDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [query, setQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('todos');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('todos');
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +103,32 @@ export function HistoricoPage() {
     }
   };
 
+  const now = new Date().getTime();
+  const filteredSessions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sessions.filter((session) => {
+      const isAtividade = Boolean(session.atividade);
+      if (typeFilter === 'treinos' && isAtividade) return false;
+      if (typeFilter === 'atividades' && !isAtividade) return false;
+
+      if (periodFilter !== 'todos') {
+        const diffDays = (now - new Date(session.concluido_em).getTime()) / 86_400_000;
+        if (periodFilter === 'semana' && diffDays > 7) return false;
+        if (periodFilter === 'mes' && diffDays > 31) return false;
+      }
+
+      if (q) {
+        const matchesNome = session.treino_nome.toLowerCase().includes(q);
+        const matchesExercicio = session.exercicios.some((ex) =>
+          ex.nome.toLowerCase().includes(q),
+        );
+        if (!matchesNome && !matchesExercicio) return false;
+      }
+
+      return true;
+    });
+  }, [sessions, query, typeFilter, periodFilter, now]);
+
   if (loading) {
     return <PageLoader />;
   }
@@ -95,7 +139,53 @@ export function HistoricoPage() {
         eyebrow="Diário de bordo"
         title="Treinos e Atividades"
         onBack={() => navigate(-1)}
+        backIcon="x"
+        backAlign="right"
       />
+
+      {sessions.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <label className="library-search">
+            <Search size={16} className="library-search__icon" aria-hidden />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por treino ou exercício..."
+              className="library-search__input"
+              aria-label="Buscar no histórico"
+            />
+          </label>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Tipo">
+            {TYPE_FILTERS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={`game-tab game-tab--scroll${typeFilter === id ? ' game-tab--active' : ''}`}
+                onClick={() => setTypeFilter(id)}
+              >
+                {id === 'treinos' && <Dumbbell size={12} className="mr-1 inline" aria-hidden />}
+                {id === 'atividades' && <ListChecks size={12} className="mr-1 inline" aria-hidden />}
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Período">
+            {PERIOD_FILTERS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                className={`game-tab game-tab--scroll${periodFilter === id ? ' game-tab--active' : ''}`}
+                onClick={() => setPeriodFilter(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {sessions.length === 0 && (
         <div className="glass-card p-4 text-center text-sm font-bold text-stone-500">
@@ -103,8 +193,15 @@ export function HistoricoPage() {
         </div>
       )}
 
+      {sessions.length > 0 && filteredSessions.length === 0 && (
+        <div className="glass-card p-4 text-center text-sm font-bold text-stone-500">
+          Nada encontrado nos treinos carregados.
+          {nextCursor && ' Carregue mais treinos abaixo para buscar mais pra trás.'}
+        </div>
+      )}
+
       <ul className="flex flex-col gap-2">
-        {sessions.map((session) => (
+        {filteredSessions.map((session) => (
           <li key={session.id}>
             <button
               type="button"

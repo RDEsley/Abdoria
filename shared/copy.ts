@@ -8,7 +8,7 @@ import type { TomTexto } from './types/index.js';
  * escopo e o que fica pra uma expansão futura.
  */
 export const COPY = {
-  nav_biblioteca: { jogo: 'Biblioteca', normal: 'Exercícios' },
+  nav_biblioteca: { jogo: 'Treinos', normal: 'Exercícios' },
   nav_construtor: { jogo: 'Missão', normal: 'Treinos' },
   nav_ranking: { jogo: 'Ranking', normal: 'Classificação' },
   nav_perfil: { jogo: 'Herói', normal: 'Perfil' },

@@ -22,7 +22,7 @@ export function AchievementsPage() {
           Não foi possível carregar suas conquistas.
         </p>
         <GameButton onClick={() => void refresh()}>Tentar novamente</GameButton>
-        <Link to="/" className="text-xs font-bold text-emerald-700 hover:underline">
+        <Link to="/" className="game-link-btn">
           ← Voltar à Base
         </Link>
       </div>
@@ -38,6 +38,7 @@ export function AchievementsPage() {
         eyebrow={copy('conquistas_eyebrow')}
         title={copy('conquistas_title')}
         onBack={() => navigate(-1)}
+        backIcon="x"
       />
 
       <div className="game-quest-card flex items-center gap-3">

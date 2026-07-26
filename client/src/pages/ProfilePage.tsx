@@ -264,8 +264,8 @@ export function ProfilePage() {
             <span className="game-profile-hero__level-badge" aria-label={`Nível ${xpLevel}`}>
               {xpLevel}
             </span>
-            <span className="game-profile-hero__avatar-edit-badge" aria-hidden>
-              <Pencil size={11} aria-hidden />
+            <span className="game-profile-hero__avatar-overlay" aria-hidden>
+              <Pencil size={20} aria-hidden />
             </span>
           </button>
           <div className="game-profile-hero__meta min-w-0">

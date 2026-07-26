@@ -877,7 +877,7 @@ export function BuilderPage() {
           <section>
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-xs font-extrabold uppercase tracking-wide text-stone-800">
-                Esquemas recomendados ({NIVEL_LABELS[schemeLevel]})
+                Esquemas recomendados
               </p>
               <button
                 type="button"

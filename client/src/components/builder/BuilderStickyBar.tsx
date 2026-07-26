@@ -26,7 +26,7 @@ export function BuilderStickyBar({
       className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 md:bottom-0"
       aria-hidden={false}
     >
-      <div className="pointer-events-auto mx-auto max-w-lg border-t border-stone-200/80 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md md:max-w-3xl">
+      <div className="pointer-events-auto mx-auto max-w-lg bg-white/95 px-4 py-3 shadow-[0_-6px_24px_rgba(28,25,23,0.1)] backdrop-blur-md [border-top:3px_solid_var(--game-ink)] md:max-w-3xl">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="builder-start-pills flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
             <span className="builder-start-pill builder-start-pill--time">
