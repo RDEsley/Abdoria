@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Achievement } from '@/types';
 import { formatAchievementPlayerPct } from '@/types';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
+import { GameButton } from '@/components/ui/GameButton';
 
 interface Props {
   achievement: Achievement;
@@ -35,6 +36,7 @@ interface PreviewProps {
 }
 
 export function AchievementsPreview({ conquistas, unlockedCount, total }: PreviewProps) {
+  const navigate = useNavigate();
   const preview = pickAchievementPreview(conquistas, 4);
 
   return (
@@ -50,9 +52,14 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
           <AchievementCard key={c.id} achievement={c} compact />
         ))}
       </div>
-      <Link to="/conquistas" className="game-link-btn mt-3 inline-flex">
-        Ver todas as conquistas →
-      </Link>
+      <GameButton
+        variant="secondary"
+        size="sm"
+        onClick={() => navigate('/conquistas')}
+        className="mt-3 w-full"
+      >
+        Ver todas as conquistas
+      </GameButton>
     </section>
   );
 }
