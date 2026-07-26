@@ -39,23 +39,30 @@
   display: inline-flex;
 }
 
-/* Lapisinho no canto superior direito da foto — só um sinalizador visual de
-   que a foto inteira é clicável e abre o Editar Perfil (comportamento já
-   existente); não tem onClick próprio, o botão pai já cobre a foto toda. */
-.game-profile-hero__avatar-edit-badge {
+/* Camada de edição da foto — some por padrão; só aparece (fade-in) ao passar
+   o mouse (ou focar/tocar) em qualquer ponto da foto, com o lápis centralizado
+   por cima de um véu escuro semi-transparente, no estilo consagrado por
+   Instagram/Facebook/LinkedIn pra trocar foto de perfil. Não tem onClick
+   próprio — o botão pai já cobre a foto toda. */
+.game-profile-hero__avatar-overlay {
   position: absolute;
-  top: -0.15rem;
-  right: -0.15rem;
+  inset: 0;
   z-index: 3;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.45rem;
-  height: 1.45rem;
   border-radius: 999px;
-  border: 2px solid #fff;
-  background: #57534e;
+  background: rgba(0, 0, 0, 0.45);
   color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.game-profile-hero__avatar-btn:hover .game-profile-hero__avatar-overlay,
+.game-profile-hero__avatar-btn:focus-visible .game-profile-hero__avatar-overlay,
+.game-profile-hero__avatar-btn:active .game-profile-hero__avatar-overlay {
+  opacity: 1;
 }
 
 .game-profile-hero__level-badge {
@@ -378,6 +385,21 @@
   color: #78716c;
 }
 
+.profile-banner-picker__spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 3px solid var(--game-green, #059669);
+  border-top-color: transparent;
+  animation: profile-banner-spin 0.7s linear infinite;
+}
+
+@keyframes profile-banner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Seletor de banner (lápis do hero do Perfil). */
 .profile-banner-grid {
   display: grid;
@@ -417,7 +439,7 @@
   box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
 }
 
-.profile-banner-option:disabled:not(.profile-banner-option--active) .profile-banner-option__swatch {
+.profile-banner-option--locked .profile-banner-option__swatch {
   opacity: 0.55;
 }
 

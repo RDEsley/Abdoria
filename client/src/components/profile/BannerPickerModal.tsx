@@ -15,18 +15,29 @@ interface Props {
   onChanged: () => Promise<void>;
 }
 
-/** Troca rápida do banner do card de Perfil (aberta pelo lápis do hero). */
+/** Troca do banner do card de Perfil (aberta pelo lápis do hero). */
 export function BannerPickerModal({ open, onClose, onChanged }: Props) {
   const [banners, setBanners] = useState<ShopCatalogItem[] | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
+  // Busca da lista separada do listener de Escape — sem isso, os dois
+  // dividiam um único efeito com `onClose` na dependência, e como `onClose`
+  // é recriado a cada render do componente pai (arrow function inline), o
+  // efeito rodava de novo em QUALQUER re-render do pai enquanto o modal
+  // estava aberto: `setBanners(null)` disparava e a tela "piscava" pro
+  // loading e recarregava do zero, mesmo sem o usuário ter feito nada.
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setBanners(null);
+    setSelectedId(null);
     getShop()
       .then((data) => {
-        if (!cancelled) setBanners(data.banners ?? []);
+        if (cancelled) return;
+        const list = data.banners ?? [];
+        setBanners(list);
+        setSelectedId(list.find((b) => b.equipada)?.id ?? null);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -35,36 +46,56 @@ export function BannerPickerModal({ open, onClose, onChanged }: Props) {
           });
         }
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKeyDown);
-    return () => {
-      cancelled = true;
-      document.removeEventListener('keydown', onKeyDown);
-    };
+    return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
   if (!open) return null;
 
-  const handleEquip = async (item: ShopCatalogItem) => {
-    if (busyId || item.equipada || !item.desbloqueada) return;
-    setBusyId(item.id);
+  const handleSelect = (item: ShopCatalogItem) => {
+    if (saving) return;
+    if (!item.desbloqueada) {
+      showGameToast(item.unlock_label, { variant: 'info' });
+      return;
+    }
+    setSelectedId(item.id);
+  };
+
+  const currentEquippedId = banners?.find((b) => b.equipada)?.id ?? null;
+  const anythingChanged = selectedId != null && selectedId !== currentEquippedId;
+
+  const handleSave = async () => {
+    if (!anythingChanged || saving || !selectedId) return;
+    setSaving(true);
     try {
-      await equipShopItem('banner', item.id);
+      await equipShopItem('banner', selectedId);
       playEquip();
       await onChanged();
-      const data = await getShop();
-      setBanners(data.banners ?? []);
+      onClose();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível trocar o banner.'), {
         variant: 'error',
       });
     } finally {
-      setBusyId(null);
+      setSaving(false);
     }
   };
+
+  // Desbloqueados primeiro, bloqueados depois — mantém a ordem do catálogo
+  // dentro de cada grupo.
+  const orderedBanners = banners
+    ? [...banners].sort((a, b) => Number(b.desbloqueada) - Number(a.desbloqueada))
+    : null;
 
   return createPortal(
     <div className="game-modal-overlay" role="presentation" onClick={onClose}>
@@ -88,26 +119,32 @@ export function BannerPickerModal({ open, onClose, onChanged }: Props) {
         </header>
 
         <div className="profile-edit-modal__body">
-          {!banners ? (
-            <p className="game-loader">Carregando banners...</p>
+          {!orderedBanners ? (
+            <div
+              className="flex items-center justify-center py-10"
+              role="status"
+              aria-label="Carregando banners"
+            >
+              <span className="profile-banner-picker__spinner" />
+            </div>
           ) : (
             <div className="profile-banner-grid">
-              {banners.map((item) => {
+              {orderedBanners.map((item) => {
                 const key = item.id.replace('fundo_', '');
                 return (
                   <button
                     key={item.id}
                     type="button"
-                    className={`profile-banner-option${item.equipada ? ' profile-banner-option--active' : ''}`}
-                    disabled={busyId === item.id || !item.desbloqueada}
+                    className={`profile-banner-option${item.id === selectedId ? ' profile-banner-option--active' : ''}${!item.desbloqueada ? ' profile-banner-option--locked' : ''}`}
+                    disabled={saving}
                     title={item.desbloqueada ? item.nome : `${item.nome} — ${item.unlock_label}`}
-                    onClick={() => void handleEquip(item)}
+                    onClick={() => handleSelect(item)}
                   >
                     <span
                       className={`profile-banner-option__swatch game-card-banner--${key}`}
                       aria-hidden
                     >
-                      {item.equipada && (
+                      {item.id === selectedId && (
                         <span className="profile-banner-option__badge">
                           <Check size={12} aria-hidden />
                         </span>
@@ -127,8 +164,12 @@ export function BannerPickerModal({ open, onClose, onChanged }: Props) {
         </div>
 
         <footer className="profile-edit-modal__footer">
-          <GameButton variant="secondary" className="!w-auto px-4" onClick={onClose}>
-            Fechar
+          <GameButton
+            className="w-full"
+            disabled={!anythingChanged || saving}
+            onClick={() => void handleSave()}
+          >
+            {saving ? 'Salvando...' : 'Salvar'}
           </GameButton>
         </footer>
       </div>

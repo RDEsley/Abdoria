@@ -37,6 +37,14 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     mensagem: 'Bem-vindo à família Abdoria! Recompensa exclusiva do Discord resgatada.',
     active: true,
   },
+  {
+    code: 'hexa2026',
+    xp: 0,
+    abdoria: 0,
+    desbloqueia: ['fundo_brasil'],
+    mensagem: 'Hexa! Banner Brasil desbloqueado — vista as cores da torcida no seu perfil.',
+    active: true,
+  },
 ];
 
 export const GIFT_CODE_BY_KEY = Object.fromEntries(

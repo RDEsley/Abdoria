@@ -25,12 +25,17 @@
 
 .game-card-banner--vulcao {
   background:
-    radial-gradient(ellipse 70% 35% at 50% 92%, rgba(251, 146, 60, 0.75), transparent 72%),
-    radial-gradient(ellipse 40% 28% at 35% 88%, rgba(239, 68, 68, 0.55), transparent 60%),
-    radial-gradient(ellipse 40% 28% at 65% 90%, rgba(253, 186, 116, 0.45), transparent 58%),
-    radial-gradient(circle at 50% 16%, rgba(253, 224, 71, 0.32), transparent 38%),
-    radial-gradient(circle at 50% 8%, rgba(254, 243, 199, 0.18) 0 2px, transparent 3px),
-    linear-gradient(180deg, transparent 52%, rgba(69, 10, 10, 0.88) 52%, rgba(45, 8, 8, 0.98) 100%),
+    /* fagulhas subindo contra o céu escuro */
+    radial-gradient(circle at 46% 10%, rgba(254, 240, 138, 0.55) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 62% 16%, rgba(254, 202, 87, 0.45) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 34% 22%, rgba(253, 224, 71, 0.4) 0 1px, transparent 2px),
+    radial-gradient(ellipse 70% 35% at 50% 92%, rgba(251, 146, 60, 0.8), transparent 72%),
+    radial-gradient(ellipse 40% 28% at 35% 88%, rgba(239, 68, 68, 0.58), transparent 60%),
+    radial-gradient(ellipse 40% 28% at 65% 90%, rgba(253, 186, 116, 0.48), transparent 58%),
+    radial-gradient(circle at 50% 18%, rgba(253, 224, 71, 0.35), transparent 40%),
+    /* silhueta dupla de picos vulcânicos */
+    linear-gradient(97deg, transparent 44%, rgba(69, 10, 10, 0.92) 44.8%, rgba(45, 8, 8, 0.98) 100%),
+    linear-gradient(83deg, transparent 40%, rgba(69, 10, 10, 0.9) 40.8%, transparent 41.6%),
     repeating-linear-gradient(90deg, rgba(127, 29, 29, 0.15) 0 18px, transparent 18px 36px),
     linear-gradient(160deg, #450a0a, #991b1b 38%, #dc2626 62%, #f97316 100%);
   color: #fff7ed;
@@ -56,49 +61,46 @@
 
 .game-card-banner--dojo {
   background:
-    radial-gradient(ellipse 88% 46% at 50% -6%, rgba(254, 243, 199, 0.52), transparent 58%),
-    radial-gradient(ellipse 42% 24% at 50% 4%, rgba(251, 191, 36, 0.22), transparent 68%),
-    linear-gradient(
-      90deg,
-      rgba(28, 25, 23, 0.94) 0%,
-      rgba(68, 64, 60, 0.45) 10%,
-      rgba(254, 249, 195, 0.16) 20%,
-      rgba(254, 249, 195, 0.24) 50%,
-      rgba(254, 249, 195, 0.16) 80%,
-      rgba(68, 64, 60, 0.45) 90%,
-      rgba(28, 25, 23, 0.94) 100%
-    ),
+    /* brilho quente de lanterna atrás do shoji */
+    radial-gradient(ellipse 52% 36% at 50% 14%, rgba(254, 215, 170, 0.65), transparent 70%),
+    radial-gradient(circle at 80% 18%, rgba(248, 113, 113, 0.3), transparent 42%),
+    /* divisórias de madeira do shoji */
+    repeating-linear-gradient(90deg, rgba(28, 25, 23, 0.55) 0 4px, transparent 4px 17%),
+    /* linha do chão separando parede de tatame */
     linear-gradient(
       180deg,
-      transparent 46%,
-      rgba(63, 63, 70, 0.28) 46%,
-      rgba(39, 39, 42, 0.42) 52%,
-      rgba(22, 101, 52, 0.18) 52%
+      transparent 42%,
+      rgba(28, 25, 23, 0.5) 44%,
+      rgba(20, 18, 16, 0.82) 47%,
+      transparent 47.6%
     ),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 42px),
-    repeating-linear-gradient(0deg, rgba(190, 242, 100, 0.06) 0 1px, transparent 1px 22px),
-    radial-gradient(ellipse 110% 70% at 50% 28%, rgba(87, 83, 78, 0.35), transparent 58%),
+    /* tecelagem do tatame */
+    repeating-linear-gradient(90deg, rgba(120, 53, 15, 0.16) 0 2px, transparent 2px 34px),
+    repeating-linear-gradient(0deg, rgba(146, 64, 14, 0.12) 0 2px, transparent 2px 30px),
     linear-gradient(
       180deg,
-      #44403c 0%,
-      #292524 40%,
-      #1c1917 46%,
-      #365314 46%,
-      #4d7c0f 74%,
-      #3f6212 100%
+      #fffbeb 0%,
+      #fef3c7 38%,
+      #f3c88a 45%,
+      #d97706 60%,
+      #92400e 82%,
+      #78350f 100%
     );
   color: #fef9c3;
 }
 
 .game-card-banner--floresta {
   background:
+    /* raios de sol filtrando pela copa */
+    repeating-linear-gradient(100deg, rgba(255, 251, 235, 0.14) 0 3px, transparent 3px 46px),
+    /* troncos esparsos */
+    repeating-linear-gradient(4deg, rgba(5, 46, 22, 0.4) 0 5px, transparent 5px 15%),
     radial-gradient(ellipse 28% 65% at 8% 100%, rgba(21, 128, 61, 0.85), transparent 72%),
     radial-gradient(ellipse 24% 58% at 92% 100%, rgba(22, 101, 52, 0.8), transparent 70%),
     radial-gradient(ellipse 22% 50% at 50% 100%, rgba(34, 197, 94, 0.35), transparent 68%),
-    radial-gradient(ellipse 55% 30% at 50% 0%, rgba(251, 191, 36, 0.42), transparent 72%),
-    radial-gradient(circle at 72% 28%, rgba(134, 239, 172, 0.15), transparent 35%),
+    radial-gradient(ellipse 55% 30% at 50% 0%, rgba(251, 191, 36, 0.48), transparent 72%),
+    radial-gradient(circle at 72% 24%, rgba(254, 240, 138, 0.3), transparent 32%),
     linear-gradient(180deg, #7c2d12 0%, transparent 32%),
-    repeating-linear-gradient(118deg, rgba(255, 255, 255, 0.02) 0 4px, transparent 4px 32px),
     linear-gradient(160deg, #14532d, #166534 42%, #052e16 78%, #022c22 100%);
   color: #ecfdf5;
 }
@@ -157,15 +159,93 @@
 
 .game-card-banner--neon {
   background:
+    linear-gradient(180deg, transparent 62%, rgba(2, 6, 23, 0.6) 66%, rgba(2, 6, 23, 0.95) 78%),
     linear-gradient(180deg, transparent 66%, rgba(15, 23, 42, 0.92) 66%),
-    repeating-linear-gradient(90deg, rgba(244, 114, 182, 0.42) 0 2px, transparent 2px 44px),
-    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.28) 0 2px, transparent 2px 32px),
-    radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.52), transparent 48%),
-    radial-gradient(circle at 80% 28%, rgba(34, 211, 238, 0.42), transparent 42%),
-    radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.12), transparent 55%),
-    radial-gradient(ellipse 80% 20% at 50% 100%, rgba(236, 72, 153, 0.35), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(244, 114, 182, 0.48) 0 2px, transparent 2px 44px),
+    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.32) 0 2px, transparent 2px 32px),
+    radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.55), transparent 48%),
+    radial-gradient(circle at 80% 28%, rgba(34, 211, 238, 0.45), transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.14), transparent 55%),
+    radial-gradient(ellipse 80% 20% at 50% 100%, rgba(236, 72, 153, 0.4), transparent 70%),
     linear-gradient(160deg, #020617, #1e1b4b 48%, #831843 78%, #500724 100%);
   color: #fae8ff;
+}
+
+.game-card-banner--oceano {
+  background:
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.85) 0 2px, transparent 3px),
+    radial-gradient(ellipse 30% 10% at 20% 46%, rgba(255, 255, 255, 0.35), transparent 70%),
+    radial-gradient(ellipse 24% 8% at 62% 58%, rgba(255, 255, 255, 0.3), transparent 68%),
+    radial-gradient(ellipse 34% 9% at 40% 70%, rgba(255, 255, 255, 0.25), transparent 68%),
+    radial-gradient(ellipse 60% 22% at 78% 20%, rgba(224, 242, 254, 0.5), transparent 70%),
+    linear-gradient(180deg, transparent 34%, rgba(2, 132, 199, 0.35) 36%, transparent 42%),
+    linear-gradient(180deg, transparent 52%, rgba(3, 105, 161, 0.4) 54%, transparent 62%),
+    linear-gradient(160deg, #7dd3fc 0%, #38bdf8 30%, #0284c7 55%, #075985 78%, #0c4a6e 100%);
+  color: #f0f9ff;
+}
+
+.game-card-banner--ceu {
+  background:
+    radial-gradient(
+      circle at 78% 24%,
+      rgba(255, 251, 235, 0.9),
+      rgba(254, 240, 138, 0.25) 30%,
+      transparent 45%
+    ),
+    radial-gradient(ellipse 34% 12% at 22% 30%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(ellipse 26% 10% at 34% 34%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(ellipse 30% 11% at 62% 62%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(ellipse 22% 9% at 74% 66%, rgba(255, 255, 255, 0.6), transparent 70%),
+    radial-gradient(ellipse 36% 13% at 45% 82%, rgba(255, 255, 255, 0.55), transparent 72%),
+    linear-gradient(180deg, #7dd3fc 0%, #bae6fd 45%, #e0f2fe 75%, #f0f9ff 100%);
+  color: #0c4a6e;
+}
+
+.game-card-banner--montanhas {
+  background:
+    radial-gradient(ellipse 45% 20% at 50% 8%, rgba(254, 215, 170, 0.5), transparent 70%),
+    /* pico distante, mais claro */
+    linear-gradient(115deg, transparent 36%, rgba(199, 210, 254, 0.65) 37%, transparent 38%),
+    linear-gradient(105deg, transparent 30%, rgba(199, 210, 254, 0.55) 31%, transparent 32%),
+    linear-gradient(180deg, transparent 46%, rgba(165, 180, 252, 0.5) 46%, transparent 54%),
+    /* pico do meio */
+    linear-gradient(100deg, transparent 48%, rgba(99, 102, 241, 0.7) 49%, transparent 50%),
+    linear-gradient(180deg, transparent 50%, rgba(79, 70, 229, 0.55) 50%, transparent 60%),
+    /* pico da frente, mais escuro, com base sólida */
+    linear-gradient(96deg, transparent 58%, rgba(49, 46, 129, 0.92) 59%, rgba(30, 27, 75, 0.98) 100%),
+    linear-gradient(84deg, transparent 54%, rgba(49, 46, 129, 0.9) 55%, transparent 56%),
+    linear-gradient(160deg, #fef3c7 0%, #fda4af 22%, #a5b4fc 48%, #4f46e5 74%, #1e1b4b 100%);
+  color: #eef2ff;
+}
+
+.game-card-banner--nevasca {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95) 0 1px, transparent 2px),
+    radial-gradient(circle at 28% 42%, rgba(255, 255, 255, 0.85) 0 1px, transparent 2px),
+    radial-gradient(circle at 46% 12%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 62% 36%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 20%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 90% 48%, rgba(255, 255, 255, 0.75) 0 1px, transparent 2px),
+    radial-gradient(circle at 20% 68%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 54% 78%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+    radial-gradient(circle at 70% 62%, rgba(255, 255, 255, 0.65) 0 1px, transparent 2px),
+    radial-gradient(circle at 36% 88%, rgba(255, 255, 255, 0.6) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 84%, rgba(255, 255, 255, 0.55) 0 1px, transparent 2px),
+    linear-gradient(180deg, transparent 78%, rgba(51, 65, 85, 0.35) 82%, rgba(30, 41, 59, 0.55) 100%),
+    radial-gradient(ellipse 60% 30% at 50% 30%, rgba(255, 255, 255, 0.4), transparent 70%),
+    linear-gradient(160deg, #cbd5e1 0%, #94a3b8 45%, #64748b 75%, #475569 100%);
+  color: #f1f5f9;
+}
+
+/* Losango + faixa curva não dá pra desenhar com gradientes só (viravam
+   manchas borradas) — usa um SVG embutido, com o mesmo <clipPath> que a
+   bandeira real usa pra recortar a faixa branca dentro do globo. */
+.game-card-banner--brasil {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 210'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2315803d'/%3E%3Cstop offset='.45' stop-color='%2316a34a'/%3E%3Cstop offset='.8' stop-color='%23166534'/%3E%3Cstop offset='1' stop-color='%2314532d'/%3E%3C/linearGradient%3E%3CclipPath id='globe'%3E%3Ccircle cx='150' cy='105' r='53'/%3E%3C/clipPath%3E%3C/defs%3E%3Crect width='300' height='210' fill='url(%23bg)'/%3E%3Cpolygon points='150,19 274,105 150,191 26,105' fill='%23fbbf24'/%3E%3Cg clip-path='url(%23globe)'%3E%3Ccircle cx='150' cy='105' r='53' fill='%231e3a8a'/%3E%3Cg fill='%23f8fafc'%3E%3Ccircle cx='127' cy='78' r='2.1'/%3E%3Ccircle cx='137' cy='70' r='1.7'/%3E%3Ccircle cx='146' cy='86' r='1.6'/%3E%3Ccircle cx='132' cy='93' r='1.4'/%3E%3Ccircle cx='118' cy='88' r='1.3'/%3E%3Ccircle cx='176' cy='72' r='1.5'/%3E%3Ccircle cx='190' cy='90' r='1.3'/%3E%3Ccircle cx='168' cy='130' r='1.4'/%3E%3Ccircle cx='150' cy='140' r='1.6'/%3E%3Ccircle cx='122' cy='125' r='1.3'/%3E%3C/g%3E%3Crect x='88' y='98.5' width='124' height='14' fill='%23f8fafc' transform='rotate(-18 150 105)'/%3E%3Ctext x='150' y='108' transform='rotate(-18 150 105)' text-anchor='middle' font-family='Arial,sans-serif' font-size='6.5' font-weight='700' fill='%2315803d' letter-spacing='.2'%3EORDEM E PROGRESSO%3C/text%3E%3C/g%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #f0fdf4;
 }
 
 .game-profile-hero-shell {
