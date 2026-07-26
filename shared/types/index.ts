@@ -457,6 +457,13 @@ export interface Gamificacao {
   streak_congelamentos?: string[];
   /** Aviso único para exibir toast de proteção de streak no próximo acesso. */
   streak_freeze_notice_pending?: boolean;
+  /** Quantas vezes o streak já quebrou de verdade (sem Frozen Streak) na vida
+      da conta — libera "Recuperar Streak" ao chegar em STREAK_RECOVERY_UNLOCK_LOSSES. */
+  streak_perdas_total?: number;
+  /** Oferta ativa de "pagar pra recuperar o streak perdido" (ver shared/streak/recovery.ts) —
+      só existe depois do desbloqueio; some ao ser resgatada ou quando o jogador
+      reconstrói o streak sozinho até o mesmo tamanho. */
+  streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;
   total_minutos: number;
   conquistas: string[];
   /** Inimigos derrotados pela primeira vez no Bestiário. */
@@ -915,7 +922,7 @@ export function isShopHiddenCosmetic(id: string): boolean {
   return (SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(id);
 }
 
-export const INVENTORY_STACK_CAP = 24;
+export const INVENTORY_STACK_CAP = 99;
 export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [
   FROZEN_STREAK_ITEM_ID,
   ROUTE_DRINK_ITEM_ID,
@@ -1251,6 +1258,8 @@ export interface DashboardStats {
   doria_bag_count: number;
   /** Toast único: Frozen Streak salvou a ofensiva no último sync. */
   streak_frozen_notice?: boolean;
+  /** Oferta ativa de "pagar pra recuperar o streak perdido" (ver shared/streak/recovery.ts). */
+  streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;
   bestiario_desbloqueados: AfkEnemyId[];
   bestiario_bonus_cap: number;
   conquistas: Achievement[];
@@ -1481,6 +1490,8 @@ export interface LeaderboardEntry {
   avatar_url?: string | null;
   moldura_loja_equipada: string;
   moldura_equipada?: MolduraId | null;
+  /** Qual borda o avatar de identidade mostra (ver `Cosmeticos.borda_perfil_fonte`). */
+  borda_perfil_fonte?: 'podio' | 'loja';
   /** Contador sobreposto à moldura (pódios naquela posição). */
   moldura_count?: number | null;
   /** Fundo de perfil equipado (ex.: 'fundo_padrao') — estiliza a própria linha/pódio no ranking. */

@@ -15,12 +15,12 @@ function simulateStackAdd(
   return { added, overflow, final: current + added };
 }
 
-const energy = simulateStackAdd(22, 5);
-assert.equal(energy.added, 2);
-assert.equal(energy.overflow, 3);
+const energy = simulateStackAdd(INVENTORY_STACK_CAP - 3, 5);
+assert.equal(energy.added, 3);
+assert.equal(energy.overflow, 2);
 assert.equal(energy.final, INVENTORY_STACK_CAP);
 
-const route = simulateStackAdd(24, 1);
+const route = simulateStackAdd(INVENTORY_STACK_CAP, 1);
 assert.equal(route.added, 0);
 assert.equal(route.overflow, 1);
 

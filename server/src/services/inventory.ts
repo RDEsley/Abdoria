@@ -209,34 +209,33 @@ export function useExpInstant(
   return { ok: true, xp_ganho: xpGanho, quantity_used: useQty };
 }
 
-/** Bolsa de Dorias: 4–21 Dorias aleatórias por unidade. */
+/** Bolsa de Dorias: 4–21 Dorias aleatórias por unidade (ou toda a stack — a bolsa não tem stack cap). */
 export function useDoriaBag(
   user: UserRecord,
-  quantity = 1,
+  quantity?: number,
 ):
   | { ok: true; abdoria_ganha: number; rolls: number[]; quantity_used: number }
   | { ok: false; error: string } {
-  if (quantity < 1) return { ok: false, error: 'Quantidade inválida.' };
-
   const available = getItemCount(user, DORIA_BAG_ITEM_ID);
-  if (available < quantity) {
-    return { ok: false, error: `Você não tem ${DORIA_BAG_LABEL} suficiente.` };
+  if (available < 1) {
+    return { ok: false, error: `Você não tem ${DORIA_BAG_LABEL}.` };
   }
 
-  if (!consumeInventoryItem(user, DORIA_BAG_ITEM_ID, quantity)) {
+  const useQty = quantity == null ? available : Math.max(1, Math.min(quantity, available));
+  if (!consumeInventoryItem(user, DORIA_BAG_ITEM_ID, useQty)) {
     return { ok: false, error: 'Não foi possível consumir o item.' };
   }
 
   const rolls: number[] = [];
   let total = 0;
   const baseSalt = Date.now() % 1_000_000;
-  for (let i = 0; i < quantity; i += 1) {
+  for (let i = 0; i < useQty; i += 1) {
     const amount = rollDoriaBagAmount(user, baseSalt + i + 1);
     rolls.push(amount);
     total += amount;
   }
   grantMoeda(user, total);
-  return { ok: true, abdoria_ganha: total, rolls, quantity_used: quantity };
+  return { ok: true, abdoria_ganha: total, rolls, quantity_used: useQty };
 }
 
 export function readInventarioSummary(user: UserRecord) {
