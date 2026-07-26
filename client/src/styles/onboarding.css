@@ -1,3 +1,24 @@
+/* Card de cada passo do onboarding — rola por dentro só quando o
+   conteúdo do passo é mais alto que o espaço livre da tela (telas curtas,
+   ex. notebook); em telas normais o conteúdo cabe e nenhuma barra aparece,
+   já que `overflow-y: auto` só desenha a barra quando realmente precisa. */
+.onb-step-card {
+  max-height: calc(100dvh - 13rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #a8a29e transparent;
+}
+
+.onb-step-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.onb-step-card::-webkit-scrollbar-thumb {
+  background: #a8a29e;
+  border-radius: 999px;
+}
+
 /* Onboarding — cabeçalho padrão de passo */
 .onb-header {
   display: flex;

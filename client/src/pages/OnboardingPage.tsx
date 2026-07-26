@@ -418,7 +418,7 @@ export function OnboardingPage() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -30 }}
-            className={`relative rounded-2xl border border-stone-200 bg-white p-6 shadow-md${invalid ? ' onb-invalid' : ''}`}
+            className={`onb-step-card relative rounded-2xl border border-stone-200 bg-white p-6 shadow-md${invalid ? ' onb-invalid' : ''}`}
           >
             {stepId === 'terms' && (
               <>
@@ -441,15 +441,15 @@ export function OnboardingPage() {
               <>
                 <StepHeader
                   icon={<Gamepad2 size={22} />}
-                  title="Como você quer jogar?"
-                  subtitle="Dá pra trocar depois nas Opções — isso só muda o tom dos textos, não o que o app faz."
+                  title="Como você prefere?"
+                  subtitle="Dá pra trocar depois nas Opções"
                 />
                 <div className="mt-4 flex flex-col gap-2">
                   <OptionCard
                     selected={tomTexto === 'jogo'}
                     onClick={() => setTomTexto('jogo')}
                     icon={<Gamepad2 size={18} />}
-                    title="Linguagem de Jogo"
+                    title="Modo Gamer"
                     subtitle="HP, XP, Heroi e o resto do vocabulário RPG — a experiência completa."
                     recommended
                   />
@@ -457,7 +457,7 @@ export function OnboardingPage() {
                     selected={tomTexto === 'normal'}
                     onClick={() => setTomTexto('normal')}
                     icon={<MessageSquareText size={18} />}
-                    title="Linguagem normal"
+                    title="Modo Normal"
                     subtitle="Tudo em português direto, sem termos de jogo — pra quem só quer treinar."
                   />
                 </div>

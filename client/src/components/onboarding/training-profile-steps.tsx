@@ -166,7 +166,7 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
           onChange({ diasSemana: [...DIAS_RECOMENDADOS], frequencia: DIAS_RECOMENDADOS.length })
         }
         icon={<Flame size={18} />}
-        title="4 dias — Seg · Qua · Sex · Sáb"
+        title="4 dias"
         subtitle="Treino e descanso bem distribuídos na semana."
         recommended
       />
