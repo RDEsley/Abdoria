@@ -70,7 +70,7 @@ function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: Leaderb
       {metric === 'xp'
         ? `${entry.week_value ?? entry.nivel_xp} XP`
         : metric === 'streak'
-          ? `${entry.streak_atual}d`
+          ? `${entry.week_value ?? entry.streak_atual}d`
           : `${entry.week_value ?? entry.moedas} ${CURRENCY_NAME}`}
     </span>
   );
@@ -140,14 +140,16 @@ export function LeaderboardPage() {
   const isAdmin = user?.role === 'admin';
   const adminVisivel = user?.preferencias?.admin_visivel_ranking === true;
 
-  // Streak não tem ciclo — período só se aplica a XP/Coins.
-  const effectivePeriod: LeaderboardPeriod = metric === 'streak' ? 'semanal' : period;
+  // Dias seguidos também tem Global x Semanal: Semanal = sequência em
+  // andamento, Global = recorde (streak_maior) — só não tem recompensa
+  // semanal em coins (ver WeeklyRewardBadge), já que não existe acumulador
+  // que reseta toda semana pra essa métrica.
 
   useEffect(() => {
     setLoading(true);
     void Promise.all([
-      getLeaderboard(metric, effectivePeriod),
-      getMyLeaderboardRank(metric, effectivePeriod),
+      getLeaderboard(metric, period),
+      getMyLeaderboardRank(metric, period),
     ])
       .then(([list, myRank]) => {
         setEntries(list);
@@ -161,7 +163,7 @@ export function LeaderboardPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [metric, effectivePeriod, reloadTick]);
+  }, [metric, period, reloadTick]);
 
   useEffect(() => {
     const updateScrollState = () => {
@@ -243,13 +245,7 @@ export function LeaderboardPage() {
       <div className="flex items-start justify-between gap-3">
         <GamePageHeader
           eyebrow="Comunidade Abdoria"
-          title={
-            metric === 'streak'
-              ? 'Classificação'
-              : effectivePeriod === 'global'
-                ? 'Classificação Global'
-                : 'Classificação Semanal'
-          }
+          title={period === 'global' ? 'Classificação Global' : 'Classificação Semanal'}
         />
         {isAdmin && (
           <button
@@ -272,29 +268,27 @@ export function LeaderboardPage() {
         )}
       </div>
 
-      {metric !== 'streak' && (
-        <div
-          className="game-rank-period game-rank-period--split"
-          role="radiogroup"
-          aria-label="Período da classificação"
-        >
-          {PERIODS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={period === id}
-              onClick={() => setPeriod(id)}
-              className={`game-rank-period__btn${period === id ? ' game-rank-period__btn--active' : ''}`}
-            >
-              <Icon size={14} aria-hidden />
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div
+        className="game-rank-period game-rank-period--split"
+        role="radiogroup"
+        aria-label="Período da classificação"
+      >
+        {PERIODS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-checked={period === id}
+            onClick={() => setPeriod(id)}
+            className={`game-rank-period__btn${period === id ? ' game-rank-period__btn--active' : ''}`}
+          >
+            <Icon size={14} aria-hidden />
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {metric !== 'streak' && effectivePeriod === 'semanal' && <LeaderboardResetCountdown />}
+      {metric !== 'streak' && period === 'semanal' && <LeaderboardResetCountdown />}
 
       <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
         {METRICS.map(({ id, label }) => (
@@ -333,7 +327,7 @@ export function LeaderboardPage() {
                   key={entry.user_id}
                   entry={entry}
                   metric={metric}
-                  period={effectivePeriod}
+                  period={period}
                   onOpen={() => openProfile(entry)}
                 />
               ))}
@@ -362,7 +356,7 @@ export function LeaderboardPage() {
               <RankRow
                 entry={me}
                 metric={metric}
-                period={effectivePeriod}
+                period={period}
                 label="Você"
                 rankLabel={isMeInTop ? undefined : formatRankBand(me.rank, me.total)}
                 onOpen={isMeInTop ? scrollToMyRow : undefined}

@@ -51,6 +51,8 @@ function toSocialEntry(
     nome: user.nome,
     avatar_url: user.avatar_url ?? null,
     moldura_equipada: moldura,
+    moldura_loja_equipada: user.cosmeticos?.moldura_loja_equipada ?? 'borda_basica',
+    borda_perfil_fonte: user.cosmeticos?.borda_perfil_fonte ?? undefined,
     moldura_count: molduraCountFor(podium, moldura),
     level: xpLevelFromTotal(user.gamificacao.nivel_xp),
     streak_atual: user.gamificacao.streak_atual,

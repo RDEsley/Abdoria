@@ -6,6 +6,9 @@ export interface SocialUserEntry {
   nome: string;
   avatar_url: string | null;
   moldura_equipada: MolduraId | null;
+  moldura_loja_equipada?: string;
+  /** Qual borda o avatar de identidade mostra (ver `Cosmeticos.borda_perfil_fonte`). */
+  borda_perfil_fonte?: 'podio' | 'loja';
   moldura_count: number | null;
   level: number;
   streak_atual: number;

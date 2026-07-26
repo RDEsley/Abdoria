@@ -43,9 +43,14 @@ function globalMetricValue(
   return readLifetimeMoedas(user);
 }
 
-function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
+function metricSort(metric: LeaderboardMetric, period: LeaderboardPeriod): Record<string, 1 | -1> {
   if (metric === 'streak') {
-    return { 'gamificacao.streak_atual': -1 };
+    // Semanal = sequência em andamento; Global = recorde (streak_maior) —
+    // streak não tem acumulador que reseta toda semana, então "semanal" aqui
+    // é só a sequência atual, sem relação com o ciclo semanal de recompensa.
+    return period === 'global'
+      ? { 'gamificacao.streak_maior': -1 }
+      : { 'gamificacao.streak_atual': -1 };
   }
   if (metric === 'moedas') {
     return { 'cosmeticos.moedas': -1 };
@@ -53,15 +58,24 @@ function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
   return { 'gamificacao.nivel_xp': -1 };
 }
 
+/** Sequência exibida conforme o período: atual (semanal) ou recorde (global). */
+function streakMetricValue(
+  user: { gamificacao: { streak_atual: number; streak_maior: number } },
+  period: LeaderboardPeriod,
+): number {
+  return period === 'global' ? user.gamificacao.streak_maior : user.gamificacao.streak_atual;
+}
+
 type EntryUser = {
   id: string;
   nome: string;
   avatar_url?: string | null;
-  gamificacao: { nivel_xp: number; streak_atual: number };
+  gamificacao: { nivel_xp: number; streak_atual: number; streak_maior: number };
   cosmeticos?: {
     moedas?: number | null;
     moldura_loja_equipada?: string | null;
     moldura_equipada?: MolduraId | null;
+    borda_perfil_fonte?: 'podio' | 'loja' | null;
     banner_equipado?: string | null;
   } | null;
 };
@@ -94,6 +108,7 @@ function toEntry(
     avatar_url: user.avatar_url ?? null,
     moldura_loja_equipada: user.cosmeticos?.moldura_loja_equipada ?? 'borda_basica',
     moldura_equipada: moldura,
+    borda_perfil_fonte: user.cosmeticos?.borda_perfil_fonte ?? undefined,
     banner_equipado: user.cosmeticos?.banner_equipado ?? 'fundo_padrao',
     // A moldura especial mostra a contagem de itens secretos — não vem do pódio;
     // no ranking exibimos só o contador de pódio (especial fica sem número).
@@ -136,7 +151,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     if (metric === 'streak') {
       // Busca com folga porque admins ocultos são removidos depois da query.
       const fetched = await User.find(leaderboardFilter, {
-        sort: metricSort(metric),
+        sort: metricSort(metric, period),
         limit: limit + 10,
       });
       const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
@@ -145,7 +160,13 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       );
       res.json(
         users.map((user, index) =>
-          toEntry(user, index + 1, user.id === req.userId, null, podiums.get(user.id)),
+          toEntry(
+            user,
+            index + 1,
+            user.id === req.userId,
+            streakMetricValue(user, period),
+            podiums.get(user.id),
+          ),
         ),
       );
       return;
@@ -207,10 +228,13 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
 
     if (metric === 'streak') {
       const [rank, total] = await Promise.all([
-        User.countLeaderboardRank(user, metric),
+        User.countLeaderboardRank(user, metric, period),
         User.countDocuments(leaderboardFilter),
       ]);
-      res.json({ ...toEntry(user, rank, true, null, myPodium), total });
+      res.json({
+        ...toEntry(user, rank, true, streakMetricValue(user, period), myPodium),
+        total,
+      });
       return;
     }
 

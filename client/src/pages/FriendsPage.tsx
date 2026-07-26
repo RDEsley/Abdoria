@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Flame, Search, Share2, Trophy, UserPlus, X } from 'lucide-react';
 import { UserAvatar } from '@/components/profile/UserAvatar';
+import { resolveIdentityBorder } from '@/lib/identity-border';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -174,7 +175,13 @@ export function FriendsPage() {
     );
   };
 
-  const renderRow = (entry: SocialUserEntry, index: number) => (
+  const renderRow = (entry: SocialUserEntry, index: number) => {
+    const identityBorder = resolveIdentityBorder({
+      borda_perfil_fonte: entry.borda_perfil_fonte,
+      moldura_equipada: entry.moldura_equipada,
+      moldura_loja_equipada: entry.moldura_loja_equipada,
+    });
+    return (
     <li key={entry.user_id}>
       <div
         role="button"
@@ -189,7 +196,8 @@ export function FriendsPage() {
         <UserAvatar
           nome={entry.nome}
           avatarUrl={entry.avatar_url}
-          moldura={entry.moldura_equipada}
+          moldura={identityBorder.moldura}
+          borderLoja={identityBorder.borderLoja}
           molduraCount={entry.moldura_count}
           size="sm"
         />
@@ -223,7 +231,8 @@ export function FriendsPage() {
         )}
       </div>
     </li>
-  );
+    );
+  };
 
   const emptyMessage =
     tab === 'amigos'

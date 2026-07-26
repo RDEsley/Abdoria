@@ -495,10 +495,11 @@ export const User = {
     user: {
       id: string;
       nome: string;
-      gamificacao: { nivel_xp: number; streak_atual: number };
+      gamificacao: { nivel_xp: number; streak_atual: number; streak_maior: number };
       cosmeticos?: { moedas?: number | null } | null;
     },
     metric: 'xp' | 'streak' | 'moedas',
+    period: 'semanal' | 'global' = 'semanal',
   ): Promise<number> {
     const sb = getSupabase();
     const base = () =>
@@ -518,9 +519,14 @@ export const User = {
     }
 
     if (metric === 'streak') {
-      const value = user.gamificacao.streak_atual;
-      const { count } = await base().gt('gamificacao->streak_atual', value);
-      return (count ?? 0) + 1;
+      // Semanal = sequência em andamento; Global = recorde (streak_maior).
+      const field = period === 'global' ? 'streak_maior' : 'streak_atual';
+      const value = period === 'global' ? user.gamificacao.streak_maior : user.gamificacao.streak_atual;
+      const [{ count: higher }, { count: tiedName }] = await Promise.all([
+        base().gt(`gamificacao->${field}`, value),
+        base().eq(`gamificacao->${field}`, value).lt('nome', user.nome),
+      ]);
+      return (higher ?? 0) + (tiedName ?? 0) + 1;
     }
 
     const value = user.cosmeticos?.moedas ?? 0;
