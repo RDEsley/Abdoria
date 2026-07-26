@@ -792,6 +792,30 @@
   cursor: pointer;
 }
 
+/* Bolinhas de XP (estilo Minecraft) voando até a barra do topo — camada
+   global acima de tudo (até de modais), já que o ganho pode partir de
+   dentro de um. */
+.xp-orb-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  pointer-events: none;
+}
+
+.xp-orb-layer__orb {
+  position: fixed;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-left: -0.425rem;
+  margin-top: -0.425rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fef9c3 0%, #4ade80 55%, #16a34a 100%);
+  box-shadow:
+    0 0 6px rgba(74, 222, 128, 0.85),
+    0 0 14px rgba(74, 222, 128, 0.45);
+  will-change: transform, opacity;
+}
+
 .level-up-overlay__backdrop {
   position: absolute;
   inset: 0;

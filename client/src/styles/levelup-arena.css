@@ -435,6 +435,7 @@
   min-width: 0;
   flex: 1;
   flex-direction: column;
+  align-items: center;
   gap: 0.3rem;
 }
 
@@ -444,6 +445,7 @@
   color: #047857;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  text-align: center;
 }
 
 .game-rank-countdown__values {

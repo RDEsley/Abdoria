@@ -5,6 +5,7 @@ import { completeAtividade, updateMe } from '@/lib/api';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { playCompleteSet } from '@/lib/sounds';
+import { emitXpEarned } from '@/lib/xp-orbs';
 import { toLocalDateKey } from '@/lib/utils';
 import { formatMetricas } from '@/lib/atividade-format';
 import {
@@ -123,6 +124,7 @@ export function useAtividadesFlow() {
       acumulado.current.xp += res.xp_ganho;
       acumulado.current.moedas += res.abdoria_ganha;
       acumulado.current.total += 1;
+      emitXpEarned(res.xp_ganho);
       acumulado.current.feitas.push({ nome: atividade.nome, detalhe: formatMetricas(dados.metricas) });
       if (res.streak_celebration) acumulado.current.streakCelebration = res.streak_celebration.streak_atual;
       if (res.level_up) {

@@ -128,6 +128,7 @@ export function TopNavbar({
             </div>
             <div
               className="top-navbar__xp-track"
+              data-xp-bar-target
               role="progressbar"
               aria-valuenow={userXp}
               aria-valuemin={0}

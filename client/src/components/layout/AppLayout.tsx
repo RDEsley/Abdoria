@@ -8,6 +8,7 @@ import { GameToastHost } from '@/components/ui/GameToast';
 import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
+import { XpOrbLayer } from '@/components/effects/XpOrbLayer';
 import { CosmeticUnlockCelebration } from '@/components/cosmetics/CosmeticUnlockCelebration';
 import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
@@ -62,12 +63,23 @@ export function AppLayout() {
   useAfkBackgroundSync(Boolean(user));
 
   useEffect(() => {
+    // Espera as bolinhas de XP (ver XpOrbLayer) terminarem de convergir na
+    // barra do topo antes de tomar a tela inteira — sem isso a celebração
+    // cobria a animação de preenchimento e o jogador nunca via a barra subir.
+    const LEVEL_UP_DELAY_MS = 1250;
+    let timer: number | null = null;
     const onLevelUp = (event: Event) => {
       const detail = (event as CustomEvent<LevelUpData>).detail;
-      if (detail?.level_novo) setLevelUpLevel(detail.level_novo);
+      const levelNovo = detail?.level_novo;
+      if (!levelNovo) return;
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => setLevelUpLevel(levelNovo), LEVEL_UP_DELAY_MS);
     };
     window.addEventListener('abdoria:level-up', onLevelUp);
-    return () => window.removeEventListener('abdoria:level-up', onLevelUp);
+    return () => {
+      window.removeEventListener('abdoria:level-up', onLevelUp);
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -201,6 +213,7 @@ export function AppLayout() {
 
         {isHomePage && <AfkFab />}
 
+        <XpOrbLayer />
         <CosmeticUnlockCelebration />
         <GameToastHost />
       </div>

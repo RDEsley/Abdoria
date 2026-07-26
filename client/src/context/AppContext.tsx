@@ -17,6 +17,7 @@ import {
   mergeUserDadosSalvos,
 } from '@/lib/user-dados';
 import { AppContext } from '@/context/app-context';
+import { emitXpEarned } from '@/lib/xp-orbs';
 import type {
   CompleteWorkoutPayload,
   DashboardStats,
@@ -450,6 +451,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           new CustomEvent('abdoria:coins-earned', { detail: { amount: abdoriaGanha } }),
         );
       }
+      emitXpEarned(result.xp_ganho ?? 0);
       if (result.level_up) {
         window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: result.level_up }));
       }

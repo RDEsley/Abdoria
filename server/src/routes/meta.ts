@@ -14,7 +14,7 @@ import {
   touchAfkPresence,
 } from '../services/afk.js';
 import { readBestiaryResponse } from '../services/bestiario.js';
-import { DORIA_BAG_LABEL } from '../types/index.js';
+import { DORIA_BAG_LABEL, INVENTORY_STACK_CAP, xpLevelFromTotal } from '../types/index.js';
 import {
   readInventarioSummary,
   usePatrolCache,
@@ -68,7 +68,11 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Nenhuma recompensa AFK para coletar.' });
       return;
     }
+    const levelBefore = xpLevelFromTotal(user.gamificacao.nivel_xp);
     const { claimed, overflow_to_dorias } = claimAfkRewards(user);
+    const levelAfter = xpLevelFromTotal(user.gamificacao.nivel_xp);
+    const levelUp =
+      levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null;
     awardMoedaFromXp(user);
     await user.save();
     res.json({
@@ -76,6 +80,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       claimed,
       overflow_to_dorias,
       bestiario_novos,
+      level_up: levelUp,
     });
   } catch (error) {
     console.error('POST /api/meta/afk/claim error:', error);
@@ -177,7 +182,7 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
     const useAll = req.body?.use_all == null ? true : Boolean(req.body.use_all);
     const quantity = useAll
       ? undefined
-      : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
+      : Math.max(1, Math.min(INVENTORY_STACK_CAP, Number(req.body?.quantity) || 1));
     const result = useRouteDrinkInExploration(user, quantity);
     if (!result.ok) {
       res.status(400).json({ error: result.error });
@@ -213,7 +218,7 @@ metaRouter.post('/inventory/exp-instant', async (req: AuthRequest, res) => {
     const useAll = Boolean(req.body?.use_all);
     const quantity = useAll
       ? undefined
-      : Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
+      : Math.max(1, Math.min(INVENTORY_STACK_CAP, Number(req.body?.quantity) || 1));
     const result = useExpInstant(user, quantity);
     if (!result.ok) {
       res.status(400).json({ error: result.error });
@@ -239,7 +244,10 @@ metaRouter.post('/inventory/doria-bag', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
-    const quantity = Math.max(1, Math.min(24, Number(req.body?.quantity) || 1));
+    const useAll = Boolean(req.body?.use_all);
+    const quantity = useAll
+      ? undefined
+      : Math.max(1, Math.min(INVENTORY_STACK_CAP, Number(req.body?.quantity) || 1));
     const result = useDoriaBag(user, quantity);
     if (!result.ok) {
       res.status(400).json({ error: result.error });

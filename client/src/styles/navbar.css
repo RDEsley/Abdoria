@@ -36,6 +36,13 @@
   height: 3.15rem;
 }
 
+/* Empurra nome + barra de XP pro final do bloco (em vez de centralizado
+   contra o avatar) — a barra desce até a base do avatar, que é mais baixa
+   que o fundo das pills de Coins/Gems ao lado. */
+.top-navbar__identity {
+  align-self: flex-end;
+}
+
 .top-navbar__avatar {
   width: 100%;
   height: 100%;

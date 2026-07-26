@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -22,6 +22,7 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { useRewardPresentation } from '@/context/RewardPresentationContext';
+import { emitXpEarned } from '@/lib/xp-orbs';
 import type { AfkPendingReward } from '@/types';
 import {
   CURRENCY_NAME,
@@ -65,6 +66,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const [bagShake, setBagShake] = useState(false);
   const [coinPops, setCoinPops] = useState<number[]>([]);
   const [selected, setSelected] = useState<SelectedItem>(null);
+  const expInstantSlotRef = useRef<HTMLButtonElement | null>(null);
 
   const applyCounts = useCallback(
     (data: {
@@ -137,6 +139,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
       applyUser(res.user);
       await refreshApp();
       applyCounts(res.inventario);
+      emitXpEarned(res.xp_ganho, expInstantSlotRef.current);
       showGameToast(`+${res.xp_ganho} XP instantâneo!`, { variant: 'success' });
       setSelected(null);
     } catch (err) {
@@ -148,12 +151,12 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     }
   };
 
-  const handleUseDoriaBag = async (bagQuantity = 1) => {
-    if (doriaBagCount < 1 || bagQuantity < 1) return;
+  const handleUseDoriaBag = async (bagQuantity = 1, useAll = false) => {
+    if (doriaBagCount < 1 || (!useAll && bagQuantity < 1)) return;
     setUsingDoriaBag(true);
     setBagShake(true);
     try {
-      const res = await consumeDoriaBag(bagQuantity);
+      const res = await consumeDoriaBag(bagQuantity, useAll);
       applyUser(res.user);
       await refreshApp();
       applyCounts(res.inventario);
@@ -282,6 +285,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
             </button>
 
             <button
+              ref={expInstantSlotRef}
               type="button"
               className={`game-inventory-slot${expInstantCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'exp_instant' ? ' game-inventory-slot--active' : ''}`}
               disabled={loading}
@@ -447,7 +451,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                         {usingDoriaBag ? 'Abrindo...' : 'Usar 1 bolsa'}
                       </GameButton>
                       <GameButton
-                        onClick={() => void handleUseDoriaBag(doriaBagCount)}
+                        onClick={() => void handleUseDoriaBag(doriaBagCount, true)}
                         disabled={usingDoriaBag}
                       >
                         {usingDoriaBag ? 'Abrindo...' : `Utilizar todas (${doriaBagCount})`}
