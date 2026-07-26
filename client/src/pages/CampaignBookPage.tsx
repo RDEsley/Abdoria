@@ -112,6 +112,10 @@ export function CampaignBookPage() {
   return (
     <div className="game-campaign-book game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
       <header className="campaign-book__header">
+        <span className="w-9" aria-hidden />
+        <p className="campaign-book__header-title">
+          <Feather size={19} aria-hidden /> Diário de Campanha
+        </p>
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -121,10 +125,6 @@ export function CampaignBookPage() {
         >
           <X size={20} />
         </button>
-        <p className="campaign-book__header-title">
-          <Feather size={13} aria-hidden /> Diário de Campanha
-        </p>
-        <span className="w-9" aria-hidden />
       </header>
 
       <div className="campaign-book__stage">
@@ -139,6 +139,8 @@ export function CampaignBookPage() {
             transition={{ duration: 0.38, ease: 'easeInOut' }}
             className="campaign-book__page"
           >
+            <span className="campaign-book__rod campaign-book__rod--top" aria-hidden />
+            <span className="campaign-book__rod campaign-book__rod--bottom" aria-hidden />
             <span className="campaign-book__fold" aria-hidden />
             {isEndingPage ? (
               <div className="campaign-book__ending">
