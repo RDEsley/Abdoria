@@ -68,23 +68,32 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
   - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
   - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
   - **Bestiário** — derrote inimigos para desbloquear entradas e aumentar o teto diário de XP
-  - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Dorias**
+  - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Coins**
   - **Rei Slime** (boss) a cada **99 kills**, com loot bônus
   - Baú com contagem de **drops por kill** (cada loot de inimigo conta separado)
-  - **Loja da Exploração** — compre arcos e equipe **arco ou espada** no combate (espada básica grátis; upgrades em breve)
-  - Herói mascote com **sprites animados** por arma (arco, espada; magia em breve)
+  - **Loja da Exploração** — três modos de combate (**arco, espada ou magia**), cada um com catálogo próprio de itens por raridade (comum até Mítico/Secreto)
+  - Herói mascote com **sprites animados** por arma equipada
   - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da exploração ou no onboarding
   - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a exploração)
-- **Níveis**, **streak**, **conquistas** e **ranking** (XP, dias seguidos ou Dorias)
-  - Abas de critério em **largura total** com **recompensas semanais** em Dorias para o top 10
+- **Níveis**, **streak**, **conquistas** e **ranking** (XP, Coins ou dias seguidos)
+  - Ranking com alternância **Global × Semanal** em todos os critérios (XP/Coins/streak): Semanal
+    usa acumuladores que resetam toda semana (com **recompensas semanais** em Coins pro top 10);
+    Global usa totais vitalícios (streak Global mostra o recorde, sem recompensa semanal)
   - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
   - **Sua posição fixada** — se sua linha está fora da tela, ela aparece fixa embaixo; toque para rolar até ela
   - **Amigos** — ranking entre quem você segue (level, streak e foto), com **perfil público** ao tocar em alguém
 
 ### Personalizar e recompensar
-- **Loja Abdoria** — bordas, fundos de HUD, títulos, sons e efeitos visuais (prévia ao vivo por item)
-- **Loja da Exploração** — arcos compráveis com Dorias; **espada básica grátis** e aba de espadas (upgrades em breve); magias em breve
-- **Inventário** — Energy Drinks, cosméticos, itens da exploração e gestão de **overflow** (itens além do limite)
+
+- **Personalização do Perfil** — bordas, banners, títulos e efeitos visuais no formulário de Editar
+  Perfil (prévia ao vivo por item); a maioria vem de conquistas, códigos e eventos, não é comprável
+  com Coins — exceção: **sons**, comprados nas Opções (Áudio)
+- **Banners de perfil** — mais de uma dezena de cenários (Aurora, Vulcão, Dojo, Floresta, Praia,
+  Templo, Neon City, Galáxia, Oceano, Céu, Montanhas, Nevasca, Brasil…), a maioria desbloqueada por
+  conquista/código/evento
+- **Loja da Exploração** — arcos, espadas e magias por raridade, comprados com Coins
+- **Inventário** — Frozen Streaks, Route Drink, EXP Instantâneo, itens da exploração e gestão de
+  **overflow** (itens além do limite de estoque)
 - **Código presente** — resgate em **Opções**
 - **Toasts de feedback** — notificações globais ao fixar/bloquear exercícios ou treinos, salvar treino, comprar itens, resgatar códigos e equipar cosméticos
 - **Perfil do herói** — abas **Dados**, **Progresso** (estatísticas e zonas musculares) e **Definição** (simulador educativo)
@@ -101,7 +110,10 @@ Pense em **dois tipos de pontos**:
 | **XP diário** | Pontos dos exercícios do treino | Máx. = **100 + 1 × nível** (+ **1** por inimigo no bestiário) |
 | **XP extra** | Bônus de streak, conquistas, habilidades (+1 XP por habilidade nova) | Sem máx. diário |
 
-A moeda **Dorias** você usa na loja de cosméticos e na loja da exploração. Você ganha **1 Doria a cada 10 XP** totais acumulados (conversão passiva ao longo do progresso).
+A moeda **Coins** você usa na loja da Exploração (arcos, espadas e magias) e em pacotes de som nas
+Opções — os demais cosméticos (bordas, banners, títulos, efeitos) não são compráveis com Coins, só
+por conquista, código ou evento. Você ganha **1 Coin a cada 10 XP** totais acumulados (conversão
+passiva ao longo do progresso).
 
 Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
@@ -120,8 +132,8 @@ Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 | Recompensa | % do drop | Comum (efetivo/kill) | Elite | Boss |
 |------------|-----------|----------------------|-------|------|
 | +1 XP | 85% | 3,40% | 5,10% | 8,50% |
-| +1 Dorias | 11% | 0,44% | 0,66% | 1,10% |
-| +1 Energy Drink | 4% | 0,16% | 0,24% | 0,40% |
+| +1 Coins | 11% | 0,44% | 0,66% | 1,10% |
+| +1 Frozen Streak | 4% | 0,16% | 0,24% | 0,40% |
 | Cosmético lendário | 0,04% / 0,08% boss | ~0,0016% | ~0,0024% | ~0,008% |
 | Título secreto | 0,01% | ~0,0004% | ~0,0006% | ~0,001% |
 
@@ -132,12 +144,14 @@ Offline: ~**8 kills/min** de exploração. Boss a cada **99** inimigos com loot 
 | Inimigo | Como aparece | Recompensa |
 |---------|----------------|------------|
 | Elite | ~12% dos spawns | Loot com chance **6%** por kill |
-| **Golden Slime** | **1 em 1000** inimigos | **10 Dorias** garantidos (sem rolagem normal de loot) |
+| **Golden Slime** | **1 em 1000** inimigos | **10 Coins** garantidos (sem rolagem normal de loot) |
 | **Rei Slime** (boss) | A cada **99** kills | Loot com chance **10%** por kill |
 
-**Loja da Exploração** (`/api/patrol-shop`): arcos compráveis com Dorias; **espada de treino** grátis com alternância arco/espada no combate. Upgrades de espada e magias estão marcados como *em breve*.
+**Loja da Exploração** (`/api/patrol-shop`): arcos, espadas e magias compráveis com Coins, com
+catálogo por raridade (comum até Mítico/Secreto — arma de nível 9 é Mítica, a de nível 10 é
+Secreta). Arco/espada básicos são grátis; magia entra como 3º modo de combate.
 
-**Combate por arma:** arco dispara mais rápido com maior chance de crítico (~**18%**, streak crescente); espada causa mais dano por golpe com crítico ~**6%** (+4). O bônus da arma equipada na loja soma ao dano base.
+**Combate por arma:** arco dispara mais rápido com maior chance de crítico (~**18%**, streak crescente); espada causa mais dano por golpe com crítico ~**6%** (+4); magia tem passiva própria de +chance de drop raro a partir de raridade Épica. O bônus da arma equipada na loja soma ao dano base.
 
 ---
 

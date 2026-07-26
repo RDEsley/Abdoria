@@ -22,7 +22,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 | **Biblioteca** | Ver todos os exercícios e desbloquear novos |
 | **Player** | Executar o treino com timer e descanso |
 | **Conquistas** | Ver metas e o que já desbloqueou |
-| **Classificação** | Ranking por XP, dias seguidos ou Dorias |
+| **Classificação** | Ranking por XP, dias seguidos ou Coins |
 | **Perfil** | Seus dados, estatísticas e simulador |
 | **Opções** | Som, descanso, ciclo de treinos, **código presente** e sair |
 
@@ -65,20 +65,22 @@ No painel você vê **dois indicadores**: um amarelo (diário) e um roxo (extra)
 
 ---
 
-## Dorias (moeda)
+## Coins (moeda)
 
-- Moeda do jogo para a **Loja Abdoria** (visual do perfil) e a **Loja da Exploração**.
-- Você ganha Dorias passivamente conforme sobe de XP total (**1 Doria a cada 10 XP**).
+- Moeda do jogo para a **Loja da Exploração** (arco, espada e magia) e pacotes de **som** nas Opções.
+- Você ganha Coins passivamente conforme sobe de XP total (**1 Coin a cada 10 XP**).
 
 ---
 
 ## Loja e personalização
 
-### Loja Abdoria
-Abra pelo seu **avatar** no topo. Lá você:
-- Testa bordas, títulos, sons e efeitos antes de comprar
-- Gasta **Dorias** em itens premium
-- Desbloqueia itens por nível ou conquista
+### Personalização do Perfil
+
+Toque na sua **foto** no Perfil para abrir o formulário de Editar Perfil. Lá você:
+
+- Testa e equipa bordas, banners, títulos e efeitos
+- A maioria dos itens vem de **conquistas, códigos ou eventos** — não são comprados com Coins
+- Sons são a exceção: compre pacotes de som nas **Opções → Áudio**
 
 ### Código presente
 Em **Opções → Código presente**, digite um código promocional (se tiver um).
@@ -88,9 +90,14 @@ Em **Opções → Código presente**, digite um código promocional (se tiver um
 ## Ranking
 
 Em **Classificação**, alterne entre:
+
 - **Pontos (XP)** — quem treinou mais no total
 - **Dias seguidos** — maior streak
-- **Dorias** — quem tem mais moedas
+- **Coins** — quem tem mais moedas
+
+Cada critério também tem **Semanal × Global**: Semanal reseta todo domingo (com recompensa em
+Coins pro top 10); Global mostra o total vitalício (no caso de Dias seguidos, o seu recorde —
+sem recompensa semanal nessa métrica).
 
 Aparecem até **25** posições; se você estiver fora do top, sua linha aparece no final.
 
@@ -112,7 +119,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 | Não ganhei XP diário | Treino tinha menos de 3 exercícios? |
 | XP parou em 100 | Limite diário de exercícios — o resto vai para XP extra se for bônus |
 | Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta |
-| Item da loja bloqueado | Veja o requisito (nível, conquista ou Dorias) |
+| Item da loja bloqueado | Veja o requisito (nível, conquista ou Coins) |
 | Dados não salvaram | Confira conexão; treinos e progresso ficam na **conta logada** |
 
 ---
