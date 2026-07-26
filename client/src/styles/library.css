@@ -360,10 +360,8 @@
 
 /* Biblioteca — Meus Equipamentos (dropdown) */
 .library-equipment {
-  border: var(--border-card);
   border-radius: var(--radius-card);
   background: var(--game-paper);
-  box-shadow: var(--shadow-resting);
   overflow: hidden;
 }
 
@@ -373,10 +371,23 @@
   gap: 0.6rem;
   width: 100%;
   padding: 0.75rem 0.9rem;
-  border: none;
-  background: none;
+  border: 2px solid var(--game-ink);
+  border-radius: var(--radius-card);
+  background: var(--game-paper);
+  box-shadow: 2px 2px 0 var(--game-ink);
   text-align: left;
   cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.08s ease;
+}
+
+.library-equipment__toggle:hover {
+  box-shadow: 3px 3px 0 var(--game-ink);
+}
+
+.library-equipment__toggle:active {
+  transform: scale(0.99);
 }
 
 .library-equipment__icon {

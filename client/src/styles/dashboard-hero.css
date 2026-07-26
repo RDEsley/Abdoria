@@ -990,9 +990,9 @@
   font: inherit;
   color: var(--game-ink);
   background: var(--game-paper);
-  border: var(--border-card);
+  border: 2px solid var(--game-ink);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-resting);
+  box-shadow: 2px 2px 0 var(--game-ink);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -1001,7 +1001,7 @@
 }
 
 .game-disclosure:hover {
-  border-color: var(--game-green-dark);
+  box-shadow: 3px 3px 0 var(--game-ink);
 }
 
 .game-disclosure:active {
@@ -1011,7 +1011,7 @@
 .game-disclosure--open {
   border-color: var(--game-green-dark);
   background: linear-gradient(180deg, #ecfdf5 0%, var(--game-paper) 100%);
-  box-shadow: var(--shadow-raised);
+  box-shadow: 2px 2px 0 var(--game-green-dark);
 }
 
 .game-disclosure__icon {
