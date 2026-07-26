@@ -122,9 +122,9 @@
 }
 
 .game-bestiary-fs__tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
   flex-shrink: 0;
   padding: 0.42rem 0.75rem;
   border: 1.5px solid rgba(28, 25, 23, 0.14);
@@ -134,10 +134,30 @@
   font-size: 0.72rem;
   font-weight: 800;
   cursor: pointer;
+  overflow: hidden;
   transition:
-    background 0.12s ease,
     border-color 0.12s ease,
     color 0.12s ease;
+}
+
+.game-bestiary-fs__tab-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: #1c1917;
+}
+
+.game-bestiary-fs__tab--golden .game-bestiary-fs__tab-bg {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.game-bestiary-fs__tab-text {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .game-bestiary-fs__tab:hover {
@@ -145,13 +165,11 @@
 }
 
 .game-bestiary-fs__tab--active {
-  background: #1c1917;
   border-color: #1c1917;
   color: #fff;
 }
 
 .game-bestiary-fs__tab--golden.game-bestiary-fs__tab--active {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
   border-color: #d97706;
 }
 
@@ -180,18 +198,12 @@
   cursor: pointer;
   transition:
     border-color 0.14s ease,
-    transform 0.1s ease,
     box-shadow 0.14s ease;
 }
 
 .game-bestiary-tile:hover {
   border-color: rgba(16, 185, 129, 0.45);
-  transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(28, 25, 23, 0.08);
-}
-
-.game-bestiary-tile:active {
-  transform: scale(0.97);
 }
 
 .game-bestiary-tile--locked {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { ArrowLeft, BookOpen, Sparkles, X, Zap } from 'lucide-react';
 import { getBestiary, type BestiaryResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -27,13 +27,14 @@ type BestiaryEntry = BestiaryResponse['categorias'][number]['entries'][number];
 interface BestiaryTileProps {
   entry: BestiaryEntry;
   categoryId: string;
+  index: number;
   onSelect: (entryId: string) => void;
 }
 
-function BestiaryTile({ entry, categoryId, onSelect }: BestiaryTileProps) {
+function BestiaryTile({ entry, categoryId, index, onSelect }: BestiaryTileProps) {
   const isGolden = categoryId === 'golden';
   return (
-    <button
+    <motion.button
       type="button"
       className={[
         'game-bestiary-tile',
@@ -43,14 +44,36 @@ function BestiaryTile({ entry, categoryId, onSelect }: BestiaryTileProps) {
         .filter(Boolean)
         .join(' ')}
       onClick={() => onSelect(entry.id)}
+      initial={{ opacity: 0, y: 12, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.24, ease: 'easeOut', delay: Math.min(index, 16) * 0.025 }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.95 }}
     >
       <span className="game-bestiary-tile__portrait">
         <SlimePortrait enemyId={entry.id as AfkEnemyId} locked={!entry.desbloqueado} />
       </span>
       <span className="game-bestiary-tile__name">{entry.desbloqueado ? entry.label : '???'}</span>
-    </button>
+    </motion.button>
   );
 }
+
+const bestiaryDetailContentVariants: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.07, delayChildren: 0.06 },
+  },
+};
+
+const bestiaryDetailItemVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: 'easeOut' } },
+};
+
+const bestiaryDetailPortraitVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.55 },
+  show: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 260, damping: 18 } },
+};
 
 interface BestiaryDetailProps {
   entry: BestiaryEntry;
@@ -73,29 +96,44 @@ function BestiaryDetail({ entry, categoryId, onBack }: BestiaryDetailProps) {
         <ArrowLeft size={16} aria-hidden /> Voltar à lista
       </button>
 
-      <div
-        className={`game-bestiary-detail__portrait-wrap${isGolden ? ' game-bestiary-detail__portrait-wrap--golden' : ''}`}
+      <motion.div
+        variants={bestiaryDetailContentVariants}
+        initial="hidden"
+        animate="show"
+        style={{ display: 'contents' }}
       >
-        <SlimePortrait enemyId={entry.id as AfkEnemyId} locked={!entry.desbloqueado} />
-      </div>
+        <motion.div
+          variants={bestiaryDetailPortraitVariants}
+          className={`game-bestiary-detail__portrait-wrap${isGolden ? ' game-bestiary-detail__portrait-wrap--golden' : ''}`}
+        >
+          <SlimePortrait enemyId={entry.id as AfkEnemyId} locked={!entry.desbloqueado} />
+        </motion.div>
 
-      <span
-        className={`game-bestiary-detail__tier game-bestiary-detail__tier--${entry.desbloqueado ? entry.tier : 'locked'}`}
-      >
-        {entry.desbloqueado ? tierLabel(entry.tier) : 'Desconhecido'}
-      </span>
-      <h3 className="game-bestiary-detail__name">{entry.desbloqueado ? entry.label : '???'}</h3>
+        <motion.span
+          variants={bestiaryDetailItemVariants}
+          className={`game-bestiary-detail__tier game-bestiary-detail__tier--${entry.desbloqueado ? entry.tier : 'locked'}`}
+        >
+          {entry.desbloqueado ? tierLabel(entry.tier) : 'Desconhecido'}
+        </motion.span>
+        <motion.h3 variants={bestiaryDetailItemVariants} className="game-bestiary-detail__name">
+          {entry.desbloqueado ? entry.label : '???'}
+        </motion.h3>
 
-      {entry.desbloqueado ? (
-        <>
-          <p className="game-bestiary-detail__hp">
-            <Zap size={13} aria-hidden /> {entry.max_hp.toLocaleString('pt-BR')} HP
-          </p>
-          <BestiaryDropList drops={entry.drops} />
-        </>
-      ) : (
-        <p className="game-bestiary-detail__locked-hint">Derrote na Exploração para revelar.</p>
-      )}
+        {entry.desbloqueado ? (
+          <>
+            <motion.p variants={bestiaryDetailItemVariants} className="game-bestiary-detail__hp">
+              <Zap size={13} aria-hidden /> {entry.max_hp.toLocaleString('pt-BR')} HP
+            </motion.p>
+            <motion.div variants={bestiaryDetailItemVariants} style={{ width: '100%' }}>
+              <BestiaryDropList drops={entry.drops} />
+            </motion.div>
+          </>
+        ) : (
+          <motion.p variants={bestiaryDetailItemVariants} className="game-bestiary-detail__locked-hint">
+            Derrote na Exploração para revelar.
+          </motion.p>
+        )}
+      </motion.div>
     </motion.div>
   );
 }
@@ -225,22 +263,32 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
                 <nav className="game-bestiary-fs__tabs" aria-label="Categorias do bestiário">
                   {categories.map((category) => {
                     const unlockedInCat = category.entries.filter((e) => e.desbloqueado).length;
+                    const isActive = category.id === activeCategory?.id;
                     return (
                       <button
                         key={category.id}
                         type="button"
                         className={[
                           'game-bestiary-fs__tab',
-                          category.id === activeCategory?.id ? 'game-bestiary-fs__tab--active' : '',
+                          isActive ? 'game-bestiary-fs__tab--active' : '',
                           category.id === 'golden' ? 'game-bestiary-fs__tab--golden' : '',
                         ]
                           .filter(Boolean)
                           .join(' ')}
                         onClick={() => setActiveCategoryId(category.id)}
                       >
-                        {category.label}
-                        <span className="game-bestiary-fs__tab-count tabular-nums">
-                          {unlockedInCat}/{category.entries.length}
+                        {isActive && (
+                          <motion.span
+                            layoutId="bestiary-tab-active-bg"
+                            className="game-bestiary-fs__tab-bg"
+                            transition={{ type: 'spring', stiffness: 480, damping: 34 }}
+                          />
+                        )}
+                        <span className="game-bestiary-fs__tab-text">
+                          {category.label}
+                          <span className="game-bestiary-fs__tab-count tabular-nums">
+                            {unlockedInCat}/{category.entries.length}
+                          </span>
                         </span>
                       </button>
                     );
@@ -248,16 +296,26 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
                 </nav>
 
                 {activeCategory && (
-                  <div className="game-bestiary-fs__grid">
-                    {activeCategory.entries.map((entry) => (
-                      <BestiaryTile
-                        key={entry.id}
-                        entry={entry}
-                        categoryId={activeCategory.id}
-                        onSelect={setSelectedEntryId}
-                      />
-                    ))}
-                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeCategory.id}
+                      className="game-bestiary-fs__grid"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.16 }}
+                    >
+                      {activeCategory.entries.map((entry, index) => (
+                        <BestiaryTile
+                          key={entry.id}
+                          entry={entry}
+                          categoryId={activeCategory.id}
+                          index={index}
+                          onSelect={setSelectedEntryId}
+                        />
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
                 )}
               </motion.div>
             )}
