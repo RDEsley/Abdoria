@@ -157,12 +157,12 @@ export function HistoricoPage() {
             />
           </label>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Tipo">
+          <div className="flex gap-1.5" role="group" aria-label="Tipo">
             {TYPE_FILTERS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
-                className={`game-tab game-tab--scroll${typeFilter === id ? ' game-tab--active' : ''}`}
+                className={`game-tab${typeFilter === id ? ' game-tab--active' : ''}`}
                 onClick={() => setTypeFilter(id)}
               >
                 {id === 'treinos' && <Dumbbell size={12} className="mr-1 inline" aria-hidden />}
@@ -172,12 +172,12 @@ export function HistoricoPage() {
             ))}
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Período">
+          <div className="flex gap-1.5" role="group" aria-label="Período">
             {PERIOD_FILTERS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
-                className={`game-tab game-tab--scroll${periodFilter === id ? ' game-tab--active' : ''}`}
+                className={`game-tab${periodFilter === id ? ' game-tab--active' : ''}`}
                 onClick={() => setPeriodFilter(id)}
               >
                 {label}

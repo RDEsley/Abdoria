@@ -39,6 +39,7 @@ export function AchievementsPage() {
         title={copy('conquistas_title')}
         onBack={() => navigate(-1)}
         backIcon="x"
+        backAlign="right"
       />
 
       <div className="game-quest-card flex items-center gap-3">
