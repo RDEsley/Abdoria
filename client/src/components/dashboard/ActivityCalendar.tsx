@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Flame, Snowflake, Sparkles } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
@@ -87,6 +87,13 @@ export function ActivityCalendar() {
   });
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
+  // Mede a altura real da grade do calendário (varia com a largura da tela e
+  // com o número de semanas do mês) e trava essa altura no card — sem isso,
+  // abrir o detalhe de um dia com pouco conteúdo encolhia o card inteiro,
+  // e ele "pulava" de tamanho de novo ao voltar pro calendário.
+  const calendarViewRef = useRef<HTMLDivElement>(null);
+  const [minHeight, setMinHeight] = useState<number | undefined>(undefined);
+
   useEffect(() => {
     void ensureHistory();
   }, [ensureHistory]);
@@ -155,6 +162,17 @@ export function ActivityCalendar() {
   const selectedMeta = selectedDay ? dayMeta.get(selectedDay) : null;
   const selectedFrozen = !selectedMeta && !!selectedDay && frozenSet.has(selectedDay);
 
+  useLayoutEffect(() => {
+    if (selectedDay !== null) return undefined;
+    const el = calendarViewRef.current;
+    if (!el) return undefined;
+
+    const measure = () => setMinHeight(el.getBoundingClientRect().height);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [selectedDay, cells]);
+
   const shiftMonth = (delta: number) => {
     setSelectedDay(null);
     setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
@@ -169,7 +187,7 @@ export function ActivityCalendar() {
   }
 
   return (
-    <div className="workout-calendar">
+    <div className="workout-calendar" style={{ minHeight }}>
       <AnimatePresence mode="wait" initial={false}>
         {selectedDay ? (
           <motion.div
@@ -254,6 +272,7 @@ export function ActivityCalendar() {
         ) : (
           <motion.div
             key="calendar"
+            ref={calendarViewRef}
             initial={{ opacity: 0, x: -18 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -18 }}
@@ -329,7 +348,11 @@ export function ActivityCalendar() {
                       </span>
                     ) : hasTreino ? (
                       <span className="workout-calendar__cell-icon" aria-hidden>
-                        <Flame size={14} className="workout-calendar__cell-flame" />
+                        <Flame
+                          size={14}
+                          className="workout-calendar__cell-flame"
+                          fill="currentColor"
+                        />
                       </span>
                     ) : hasAtividade ? (
                       <span className="workout-calendar__cell-icon" aria-hidden>
