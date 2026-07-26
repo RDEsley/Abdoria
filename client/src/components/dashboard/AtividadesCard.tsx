@@ -7,7 +7,7 @@ import {
   ChevronDown,
   ChevronUp,
   Dumbbell,
-  ListChecks,
+  ListTodo,
   Pencil,
   Plus,
   RotateCcw,
@@ -401,11 +401,11 @@ export function AtividadesCard() {
 
   return (
     <section ref={sectionRef} className="glass-card p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="game-section-title !mb-0 flex items-center gap-2">
-          <ListChecks size={14} aria-hidden /> Atividades
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="game-section-title !mb-0 flex items-center gap-2 leading-none">
+          <ListTodo size={15} aria-hidden /> Atividades
         </h3>
-        <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             className="atividade-action-btn atividade-action-btn--agenda"
@@ -438,7 +438,7 @@ export function AtividadesCard() {
         </div>
       </div>
 
-      <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-stone-500">
+      <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-stone-500">
         {diaDeTreino ? (
           <>
             <Dumbbell size={12} aria-hidden /> Dia de treino — XP e streak vêm do treino
