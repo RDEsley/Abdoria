@@ -9,6 +9,7 @@ import { COSMETIC_BY_ID, COSMETICS, DEFAULT_BORDA_ID, REMOVED_COSMETIC_IDS } fro
 import {
   CONJUNTO_FLAMEJANTE_IDS,
   PATROL_WEAPON_BY_ID,
+  PATROL_WEAPONS,
   resolvePatrolArmas,
 } from '../../../shared/patrol/shop.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
@@ -400,6 +401,15 @@ async function redeemMasterUnlockCode(user: UserDoc) {
     exercicios_desbloqueados: todosExercicios,
   });
 
+  // Arcos, espadas e magias da Exploração são um catálogo à parte do de
+  // cosméticos — sem isso, o código master deixava de fora tudo que só se
+  // pega ali (ex.: tier Mítico, magias novas). "futuro" fica de fora: são
+  // itens ainda sem conteúdo real por trás, nem a loja normal vende.
+  const armas = resolvePatrolArmas(user.preferencias.patrol_armas);
+  const todasArmas = PATROL_WEAPONS.filter((w) => w.unlock.tipo !== 'futuro').map((w) => w.id);
+  armas.desbloqueados = [...new Set([...armas.desbloqueados, ...todasArmas])];
+  user.preferencias.patrol_armas = armas;
+
   await user.save();
 
   return {
@@ -409,7 +419,7 @@ async function redeemMasterUnlockCode(user: UserDoc) {
     abdoria_ganha: 0,
     itens_desbloqueados: todosCosmeticos,
     titulo: undefined as string | undefined,
-    mensagem: `Tudo desbloqueado: ${todosCosmeticos.length} cosméticos e ${todosExercicios.length} exercícios.`,
+    mensagem: `Tudo desbloqueado: ${todosCosmeticos.length} cosméticos, ${todasArmas.length} armas/magias e ${todosExercicios.length} exercícios.`,
     recompensas: [{ tipo: 'cosmetico' as const, nome: 'Absolutamente tudo' }],
   };
 }
