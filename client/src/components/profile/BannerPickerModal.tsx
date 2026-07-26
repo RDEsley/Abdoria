@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Lock, X } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -97,6 +98,9 @@ export function BannerPickerModal({ open, onClose, onChanged }: Props) {
     ? [...banners].sort((a, b) => Number(b.desbloqueada) - Number(a.desbloqueada))
     : null;
 
+  const selectedItem = orderedBanners?.find((item) => item.id === selectedId) ?? null;
+  const selectedKey = selectedItem?.id.replace('fundo_', '') ?? null;
+
   return createPortal(
     <div className="game-modal-overlay" role="presentation" onClick={onClose}>
       <div
@@ -128,38 +132,60 @@ export function BannerPickerModal({ open, onClose, onChanged }: Props) {
               <span className="profile-banner-picker__spinner" />
             </div>
           ) : (
-            <div className="profile-banner-grid">
-              {orderedBanners.map((item) => {
-                const key = item.id.replace('fundo_', '');
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`profile-banner-option${item.id === selectedId ? ' profile-banner-option--active' : ''}${!item.desbloqueada ? ' profile-banner-option--locked' : ''}`}
-                    disabled={saving}
-                    title={item.desbloqueada ? item.nome : `${item.nome} — ${item.unlock_label}`}
-                    onClick={() => handleSelect(item)}
+            <>
+              <AnimatePresence mode="wait" initial={false}>
+                {selectedItem && (
+                  <motion.div
+                    key={selectedItem.id}
+                    className={`profile-banner-preview game-card-banner--${selectedKey}`}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.16, ease: 'easeOut' }}
                   >
-                    <span
-                      className={`profile-banner-option__swatch game-card-banner--${key}`}
-                      aria-hidden
+                    <span className="profile-banner-preview__name">{selectedItem.nome}</span>
+                    {!selectedItem.desbloqueada && (
+                      <span className="profile-banner-preview__lock">
+                        <Lock size={11} aria-hidden /> {selectedItem.unlock_label}
+                      </span>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="profile-banner-grid">
+                {orderedBanners.map((item) => {
+                  const key = item.id.replace('fundo_', '');
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`profile-banner-option${item.id === selectedId ? ' profile-banner-option--active' : ''}${!item.desbloqueada ? ' profile-banner-option--locked' : ''}`}
+                      disabled={saving}
+                      title={item.desbloqueada ? item.nome : `${item.nome} — ${item.unlock_label}`}
+                      onClick={() => handleSelect(item)}
                     >
-                      {item.id === selectedId && (
-                        <span className="profile-banner-option__badge">
-                          <Check size={12} aria-hidden />
-                        </span>
-                      )}
-                      {!item.desbloqueada && (
-                        <span className="profile-banner-option__lock" aria-hidden>
-                          <Lock size={12} />
-                        </span>
-                      )}
-                    </span>
-                    <span className="profile-banner-option__name">{item.nome}</span>
-                  </button>
-                );
-              })}
-            </div>
+                      <span
+                        className={`profile-banner-option__swatch game-card-banner--${key}`}
+                        aria-hidden
+                      >
+                        {item.id === selectedId && (
+                          <span className="profile-banner-option__badge">
+                            <Check size={12} aria-hidden />
+                          </span>
+                        )}
+                        {!item.desbloqueada && (
+                          <span className="profile-banner-option__lock" aria-hidden>
+                            <Lock size={12} />
+                          </span>
+                        )}
+                      </span>
+                      <span className="profile-banner-option__name">{item.nome}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
