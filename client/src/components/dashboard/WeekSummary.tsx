@@ -1,7 +1,8 @@
 import { useEffect, useMemo, type CSSProperties } from 'react';
+import { Check, Flame, Snowflake } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { showGameToast } from '@/components/ui/GameToast';
-import { formatTrainingDuration } from '@/lib/utils';
+import { formatTrainingDurationCompact } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { FROZEN_STREAK_LABEL } from '@/types';
@@ -79,7 +80,7 @@ export function WeekSummary() {
             {day.frozen ? (
               <button
                 type="button"
-                className="h-7 w-7 cursor-pointer rounded-lg border-2 border-sky-400 bg-sky-300"
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border-2 border-sky-400 bg-sky-300"
                 title={`Dia congelado — um ${FROZEN_STREAK_LABEL} foi usado`}
                 aria-label={`Dia congelado por ${FROZEN_STREAK_LABEL}`}
                 onClick={() =>
@@ -88,11 +89,22 @@ export function WeekSummary() {
                     { variant: 'info' },
                   )
                 }
-              />
+              >
+                <Snowflake size={14} className="text-sky-700" aria-hidden />
+              </button>
             ) : (
               <span
                 aria-hidden
-                className={`h-7 w-7 rounded-lg border-2 ${
+                title={
+                  day.trained
+                    ? 'Dia treinado'
+                    : day.isToday
+                      ? 'Hoje — ainda dá tempo de treinar'
+                      : day.isFuture
+                        ? 'Dia futuro'
+                        : 'Dia sem treino'
+                }
+                className={`flex h-7 w-7 items-center justify-center rounded-lg border-2 ${
                   day.trained
                     ? 'border-emerald-500 bg-emerald-400'
                     : day.isToday
@@ -101,7 +113,10 @@ export function WeekSummary() {
                         ? 'border-stone-200 bg-transparent'
                         : 'border-stone-200 bg-stone-100'
                 }`}
-              />
+              >
+                {day.trained && <Check size={14} className="text-white" strokeWidth={3} />}
+                {!day.trained && day.isToday && <Flame size={13} className="text-emerald-600" />}
+              </span>
             )}
           </div>
         ))}
@@ -120,7 +135,7 @@ export function WeekSummary() {
         </div>
         <div>
           {(() => {
-            const tempo = historyLoading ? '—' : formatTrainingDuration(totals.seconds);
+            const tempo = historyLoading ? '—' : formatTrainingDurationCompact(totals.seconds);
             return (
               <p className="stat-number" style={{ '--val-len': tempo.length } as CSSProperties}>
                 {tempo}

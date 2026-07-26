@@ -17,6 +17,20 @@ export function formatTrainingDuration(totalSeconds: number): string {
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
 }
 
+/** Versão compacta de {@link formatTrainingDuration} para grids apertados
+    (ex.: cards de resumo semanal) — sem espaços nem "seg"/"min" por extenso. */
+export function formatTrainingDurationCompact(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  if (seconds < 60) return `${seconds}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}h${remainingMinutes}` : `${hours}h`;
+}
+
 /** Formata segundos no padrão `m:ss` para timers do player. */
 export function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);

@@ -1,11 +1,29 @@
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  MoveHorizontal,
+  Anchor,
+  PersonStanding,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from 'lucide-react';
 import type { MusculoPrincipal } from '@/types';
-import { MuscleZoneLabel } from '@/components/library/MuscleZoneLabel';
+import { MUSCULO_TAG_LABELS } from '@/types';
 
 interface Props {
   muscles: Record<MusculoPrincipal, number>;
 }
 
 const MUSCLE_ORDER: MusculoPrincipal[] = ['superior', 'inferior', 'obliquos', 'core', 'completo'];
+
+const MUSCLE_ICONS: Record<MusculoPrincipal, LucideIcon> = {
+  superior: ArrowUpCircle,
+  inferior: ArrowDownCircle,
+  obliquos: MoveHorizontal,
+  core: Anchor,
+  completo: PersonStanding,
+};
 
 export function MuscleBarChart({ muscles }: Props) {
   const maxMuscle = Math.max(...Object.values(muscles), 1);
@@ -19,40 +37,58 @@ export function MuscleBarChart({ muscles }: Props) {
     .reduce((best, item) => (item.count < best.count ? item : best), mostTrained);
 
   return (
-    <div className="muscle-bar-chart flex flex-col gap-5">
-      <div className="muscle-bar-chart__chips flex flex-wrap gap-2">
-        {mostTrained.count > 0 && (
-          <span className="muscle-bar-chart__chip muscle-bar-chart__chip--most">
-            Mais treinada: <MuscleZoneLabel muscle={mostTrained.muscle} />
+    <div className="flex flex-col gap-4">
+      {mostTrained.count > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[0.65rem] font-extrabold text-emerald-800">
+            <TrendingUp size={12} aria-hidden />
+            {MUSCULO_TAG_LABELS[mostTrained.muscle]}
           </span>
-        )}
-        {leastTrained && leastTrained.count > 0 && leastTrained.muscle !== mostTrained.muscle && (
-          <span className="muscle-bar-chart__chip muscle-bar-chart__chip--least">
-            Menos treinada: <MuscleZoneLabel muscle={leastTrained.muscle} />
-          </span>
-        )}
-      </div>
+          {leastTrained && leastTrained.muscle !== mostTrained.muscle && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-[0.65rem] font-extrabold text-stone-600">
+              <TrendingDown size={12} aria-hidden />
+              {MUSCULO_TAG_LABELS[leastTrained.muscle]}
+            </span>
+          )}
+        </div>
+      )}
 
-      <div className="muscle-bar-chart__bars flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5">
         {MUSCLE_ORDER.map((muscle) => {
           const count = muscles[muscle];
           const pct = (count / maxMuscle) * 100;
           const isMost = muscle === mostTrained.muscle && count > 0;
           const isLeast =
             muscle === leastTrained?.muscle && count > 0 && muscle !== mostTrained.muscle;
+          const Icon = MUSCLE_ICONS[muscle];
           return (
-            <div key={muscle} className="muscle-bar-chart__row">
-              <div className="mb-1.5 flex items-start justify-between gap-2 text-xs">
-                <MuscleZoneLabel muscle={muscle} showHint />
-                <span className="shrink-0 font-bold text-stone-500">{count}x</span>
-              </div>
-              <div className="muscle-bar-chart__track h-2.5 overflow-hidden rounded-full bg-stone-200">
-                <div
-                  className={`muscle-bar-chart__fill h-full rounded-full transition-all ${
-                    isMost ? 'bg-emerald-600' : isLeast ? 'bg-amber-500' : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${pct}%` }}
-                />
+            <div key={muscle} className="flex items-center gap-2.5">
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                  isMost
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : isLeast
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-stone-100 text-stone-500'
+                }`}
+              >
+                <Icon size={14} aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                  <span className="truncate font-bold text-stone-700">
+                    {MUSCULO_TAG_LABELS[muscle]}
+                  </span>
+                  <span className="shrink-0 font-bold text-stone-400">{count}x</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-stone-200">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      isMost ? 'bg-emerald-600' : isLeast ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
               </div>
             </div>
           );

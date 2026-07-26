@@ -16,9 +16,13 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 800;
   /* `--val-len` (WeekSummary.tsx) reduz a fonte conforme o texto cresce —
-     evita quebra de linha de valores longos ("12h 34min") no grid de 3 colunas. */
-  font-size: clamp(1rem, calc(2.75rem - var(--val-len, 3) * 0.14rem), 2.75rem);
-  line-height: 1.05;
+     piso bem baixo pra SEMPRE encolher em vez de cortar com "..." quando o
+     valor for muito comprido (ellipsis abaixo é só rede de segurança). */
+  font-size: clamp(0.62rem, calc(2.75rem - var(--val-len, 3) * 0.16rem), 2.75rem);
+  /* 1.05 cortava descendentes/ascendentes em negrito 800 (ex.: "g" de "seg",
+     "d" de streak) — 1.2 dá folga pra métrica real da fonte sem re-empurrar
+     o layout dos tiles. */
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   color: var(--game-ink);
   white-space: nowrap;

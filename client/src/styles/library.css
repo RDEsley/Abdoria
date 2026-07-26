@@ -85,6 +85,14 @@
   color: #57534e;
 }
 
+/* Espaçador invisível — mantém o título centralizado no header do
+   detalhe do dia, que só tem um botão de voltar (não dois como o
+   header do calendário com setas de mês nos dois lados). */
+.workout-calendar__nav--ghost {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .workout-calendar__month {
   font-size: 0.9rem;
   font-weight: 800;
@@ -163,37 +171,36 @@
   box-shadow: 2px 2px 0 rgba(6, 78, 59, 0.4);
 }
 
-.workout-calendar__cell--selected {
-  border-color: var(--game-ink);
-  transform: scale(1.12);
-  box-shadow: 2.5px 2.5px 0 var(--game-ink);
-  z-index: 1;
-}
-
-.workout-calendar__icons {
-  position: absolute;
-  bottom: 2px;
+/* O ícone entra NO LUGAR do número do dia (não num selo por cima) — sem
+   fundo/box-shadow próprio, como se ele fosse o próprio número: herda a cor
+   de texto da célula (escura nas claras, branca na l4 verde-vivo). */
+.workout-calendar__cell-icon {
   display: flex;
   align-items: center;
-  gap: 1px;
-  color: currentcolor;
-  opacity: 0.85;
+  justify-content: center;
+  color: inherit;
+  pointer-events: none;
 }
 
-.workout-calendar__icons--frozen {
-  color: #0369a1;
-  opacity: 1;
+.workout-calendar__cell-flame {
+  color: #f97316;
 }
 
-.workout-calendar__detail {
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.75rem;
+.workout-calendar__day-detail {
+  padding: 0.75rem 0.85rem;
   border-radius: 0.65rem;
   border: 2px solid #e7e5e4;
   background: #fafaf9;
 }
 
+.workout-calendar__day-detail + .workout-calendar__day-detail {
+  margin-top: 0.5rem;
+}
+
 .workout-calendar__detail-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.7rem;
   font-weight: 800;
   color: #44403c;
@@ -255,11 +262,19 @@
   cursor: pointer;
 }
 
-/* Chips de músculo — linha horizontal com scroll, cabe em telas estreitas
-   sem quebrar layout (reusa .game-tab, mesma linguagem visual das abas do
-   Perfil e da Loja). */
+/* Linha do "Filtros" fixo à esquerda + chips de músculo rolando à direita
+   dele, no mesmo espaço (reusa .game-tab, mesma linguagem visual das abas
+   do Perfil e da Loja). */
+.library-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .library-muscle-tabs {
   display: flex;
+  flex: 1;
+  min-width: 0;
   gap: 0.4rem;
   overflow-x: auto;
   padding-bottom: 0.2rem;
@@ -270,34 +285,12 @@
   display: none;
 }
 
-.library-toolbar__row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
+/* Mesmo .game-tab dos chips de músculo ao lado — só acrescenta o layout
+   ícone + rótulo + contador que os outros chips não precisam. */
 .library-filter-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--game-ink);
-  background: #fff;
-  border: 1.5px solid rgba(28, 25, 23, 0.16);
-  border-radius: 0.65rem;
-  box-shadow: var(--shadow-resting);
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-}
-
-.library-filter-btn--active {
-  color: #047857;
-  background: #ecfdf5;
-  border-color: #6ee7b7;
 }
 
 .library-filter-btn__badge {
