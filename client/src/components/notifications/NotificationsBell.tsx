@@ -3,6 +3,7 @@ import {
   Bell,
   Coins,
   Dumbbell,
+  Flame,
   Medal,
   Snowflake,
   Sparkles,
@@ -33,6 +34,7 @@ function iconForTipo(tipo: string) {
   if (tipo === 'ranking_premio') return <Coins size={16} aria-hidden />;
   if (tipo === 'streak_frozen' || tipo === 'frozen_baixo') return <Snowflake size={16} aria-hidden />;
   if (tipo === 'streak_reset') return <TimerReset size={16} aria-hidden />;
+  if (tipo === 'streak_recovery_available') return <Flame size={16} aria-hidden />;
   if (tipo === 'lembrete_treino') return <Dumbbell size={16} aria-hidden />;
   if (tipo === 'novo_seguidor') return <UserPlus size={16} aria-hidden />;
   return <Sparkles size={16} aria-hidden />;

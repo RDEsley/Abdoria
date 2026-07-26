@@ -11,6 +11,7 @@ import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { RatingPrompt } from '@/components/dashboard/RatingPrompt';
 import { SuggestionPrompt } from '@/components/dashboard/SuggestionPrompt';
 import { NotificationOptInPrompt } from '@/components/dashboard/NotificationOptInPrompt';
+import { StreakRecoveryPrompt } from '@/components/dashboard/StreakRecoveryPrompt';
 import { AtividadesCard } from '@/components/dashboard/AtividadesCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -22,7 +23,6 @@ import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { useApp } from '@/hooks/useApp';
 import { useCopy } from '@/hooks/useCopy';
 import {
-  MUSCULO_LABELS,
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
   dailyFullExercisesForCap,
@@ -92,6 +92,7 @@ export function DashboardPage() {
       animate="show"
       className="relative flex flex-col gap-5"
     >
+      <StreakRecoveryPrompt />
       <RatingPrompt />
       <SuggestionPrompt />
       {stats.streak_atual < 3 && <NotificationOptInPrompt />}
@@ -143,9 +144,12 @@ export function DashboardPage() {
               <p className="text-xs font-extrabold text-stone-700">
                 {formatExerciseName(sugerido.exercicios[0])}
                 {sugerido.exercicios.length > 1 && (
-                  <span className="ml-1 font-bold text-stone-400">
-                    +{sugerido.exercicios.length - 1}
-                  </span>
+                  <>
+                    {' '}
+                    <Link to={playLink} className="game-link-btn ml-1 text-[0.7rem]">
+                      +{sugerido.exercicios.length - 1} · Ver mais
+                    </Link>
+                  </>
                 )}
               </p>
             )}
@@ -242,28 +246,18 @@ export function DashboardPage() {
         <Suspense fallback={<PageLoader />}>
           <ActivityCalendar />
         </Suspense>
-        <Link to="/historico" className="game-link-btn mt-3 inline-flex">
-          Ver histórico completo →
-        </Link>
+        <GameButton
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate('/historico')}
+          className="mt-3 w-full"
+        >
+          Ver histórico completo
+        </GameButton>
       </motion.section>
 
       <motion.section variants={item} className="glass-card p-4">
-        <h3 className="game-section-title">Zonas da semana</h3>
-        <p className="mb-4 text-xs font-bold leading-relaxed text-stone-500">
-          Volume desta semana por região.
-        </p>
-        {stats.area_mais_treinada && (
-          <div className="mb-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[0.65rem] font-extrabold text-emerald-800">
-              + {MUSCULO_LABELS[stats.area_mais_treinada]}
-            </span>
-            {stats.area_menos_treinada && (
-              <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[0.65rem] font-extrabold text-stone-600">
-                − {MUSCULO_LABELS[stats.area_menos_treinada]}
-              </span>
-            )}
-          </div>
-        )}
+        <h3 className="game-section-title mb-3">Zonas da semana</h3>
         <MuscleBarChart muscles={stats.musculos_semana} />
       </motion.section>
     </motion.div>

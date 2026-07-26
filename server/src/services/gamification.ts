@@ -7,6 +7,11 @@ import {
   workoutDayKey,
 } from '../../../shared/streak/protection.js';
 import {
+  STREAK_RECOVERY_UNLOCK_LOSSES,
+  buildStreakRecoveryOffer,
+  type StreakRecoveryOffer,
+} from '../../../shared/streak/recovery.js';
+import {
   ATIVIDADES_MIN_DESCANSO,
   isAtividadeHistory,
   isDiaDeTreino,
@@ -401,18 +406,72 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
   const streakAfterFreeze = computeStreakFromHistories(streakHistories, frozenDates);
 
+  const previousStreak = user.gamificacao.streak_atual;
   user.gamificacao.total_minutos = Math.floor(totalSeconds / 60);
   user.gamificacao.streak_atual = streakAfterFreeze.atual;
   user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streakAfterFreeze.maior);
   user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
+
+  const newRecoveryOffer = updateStreakRecoveryState(
+    user,
+    previousStreak,
+    streakAfterFreeze.atual,
+  );
 
   await user.save();
 
   if (frozenDays.length > 0) {
     await notifyStreakFrozen(userId, frozenDays);
   }
+  if (newRecoveryOffer) {
+    await notifyStreakRecoveryAvailable(userId, newRecoveryOffer);
+  }
 
   return user;
+}
+
+/**
+ * Detecta perda REAL de streak (não coberta por Frozen Streak) e mantém o
+ * sistema de "Recuperar Streak" em dia: expira a oferta ativa se o jogador já
+ * reconstruiu a sequência sozinho até o mesmo tamanho, e cria uma oferta nova
+ * se a conta já perdeu o streak `STREAK_RECOVERY_UNLOCK_LOSSES` vezes na vida
+ * dela (contando a perda de agora). Retorna a oferta recém-criada (pra
+ * disparar notificação) ou null se nada novo aconteceu.
+ */
+function updateStreakRecoveryState(
+  user: UserRecord,
+  previousStreak: number,
+  newStreak: number,
+): StreakRecoveryOffer | null {
+  const existingOffer = user.gamificacao.streak_recovery_offer ?? null;
+  if (existingOffer && newStreak >= existingOffer.dias_perdidos) {
+    user.gamificacao.streak_recovery_offer = null;
+  }
+
+  // Sem perda real agora (streak continua, ou já estava zerado antes).
+  if (previousStreak <= 0 || newStreak !== 0) return null;
+
+  user.gamificacao.streak_perdas_total = (user.gamificacao.streak_perdas_total ?? 0) + 1;
+  if (user.gamificacao.streak_perdas_total < STREAK_RECOVERY_UNLOCK_LOSSES) return null;
+
+  const offer = buildStreakRecoveryOffer(previousStreak, getTodaySaoPaulo());
+  user.gamificacao.streak_recovery_offer = offer;
+  return offer;
+}
+
+async function notifyStreakRecoveryAvailable(
+  userId: string,
+  offer: StreakRecoveryOffer,
+): Promise<void> {
+  await Notifications.createMany([
+    {
+      user_id: userId,
+      tipo: 'streak_recovery_available',
+      titulo: 'Recupere sua sequência!',
+      corpo: `Você perdeu uma sequência de ${offer.dias_perdidos} dia(s) — recupere por ${offer.custo_coins} Coins antes que expire.`,
+      payload: { dias_perdidos: offer.dias_perdidos, custo_coins: offer.custo_coins },
+    },
+  ]);
 }
 
 async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise<void> {

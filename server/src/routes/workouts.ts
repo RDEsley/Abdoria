@@ -21,6 +21,7 @@ import {
   calculateWorkoutXpBreakdown,
   getDailyXpCapBreakdownForUser,
   grantMoeda,
+  readMoedaBalance,
 } from '../services/economy.js';
 import {
   getSuggestedWorkout,
@@ -256,6 +257,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       total_minutos: Math.floor(totalSegundos / 60),
       streak_atual: user.gamificacao.streak_atual,
       streak_maior: user.gamificacao.streak_maior,
+      streak_recovery_offer: user.gamificacao.streak_recovery_offer ?? null,
       nivel_xp: user.gamificacao.nivel_xp,
       xp_hoje: user.xp_diario?.ganho_hoje ?? 0,
       xp_diario_limite: xpCap.total,
@@ -291,6 +293,47 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('GET /api/workouts/stats error:', error);
     res.status(500).json({ error: 'Erro ao buscar estatísticas.' });
+  }
+});
+
+/** Paga Coins pra restaurar a sequência da oferta ativa de "Recuperar Streak"
+    (ver shared/streak/recovery.ts) — some da conta ao ser resgatada. */
+workoutsRouter.post('/streak/recover', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const offer = user.gamificacao.streak_recovery_offer;
+    if (!offer) {
+      res.status(400).json({ error: 'Nenhuma oferta de recuperação de streak disponível.' });
+      return;
+    }
+
+    const saldo = readMoedaBalance(user);
+    if (saldo < offer.custo_coins) {
+      res.status(400).json({
+        error: `Coins insuficientes. Faltam ${offer.custo_coins - saldo} Coins.`,
+      });
+      return;
+    }
+
+    user.cosmeticos.moedas = saldo - offer.custo_coins;
+    user.gamificacao.streak_atual = offer.dias_perdidos;
+    user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, offer.dias_perdidos);
+    user.gamificacao.streak_recovery_offer = null;
+
+    await user.save();
+
+    res.json({
+      user: sanitizeUser(user),
+      streak_atual: user.gamificacao.streak_atual,
+    });
+  } catch (error) {
+    console.error('POST /api/workouts/streak/recover error:', error);
+    res.status(500).json({ error: 'Erro ao recuperar a sequência.' });
   }
 });
 

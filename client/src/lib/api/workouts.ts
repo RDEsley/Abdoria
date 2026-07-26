@@ -2,6 +2,7 @@ import type {
   CompleteWorkoutPayload,
   CompleteWorkoutResponse,
   DashboardStats,
+  IUserDocument,
   IWorkoutHistoryDocument,
   IWorkoutPresetDocument,
   TreinoBase,
@@ -14,6 +15,11 @@ import { fetchJson } from './client';
 
 export function getDashboardStats(): Promise<DashboardStats> {
   return fetchJson('/workouts/stats');
+}
+
+/** Paga a oferta ativa de "Recuperar Streak" (ver DashboardStats.streak_recovery_offer). */
+export function recoverStreak(): Promise<{ user: IUserDocument; streak_atual: number }> {
+  return fetchJson('/workouts/streak/recover', { method: 'POST' });
 }
 
 export function getDashboardRecommendations(): Promise<
