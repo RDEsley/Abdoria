@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bike,
   BookOpen,
@@ -58,6 +59,107 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Zap> = {
 };
 
 const ICONES_COLAPSADO = 6;
+
+/**
+ * Campo "Tipo" como dropdown (era uma grade de 13 chips soltas — ocupava
+ * espaço demais e não deixava claro qual estava selecionada de relance).
+ * Reusa o visual de .game-wheel-picker (gatilho fechado com valor atual +
+ * chevron) e .game-picker-sheet (folha de opções), mesmo padrão já usado
+ * no seletor numérico do app.
+ */
+function AtividadeTipoField({
+  value,
+  onChange,
+}: {
+  value: AtividadeTipo;
+  onChange: (tipo: AtividadeTipo) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const CurrentIcon = TIPO_ICONS[value];
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
+
+  return (
+    <div className="game-wheel-picker mt-2">
+      <button
+        type="button"
+        className="game-wheel-picker__field"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Tipo: ${ATIVIDADE_TIPO_LABELS[value]}`}
+      >
+        <span className="atividade-tipo-select__current">
+          <CurrentIcon size={15} aria-hidden />
+          {ATIVIDADE_TIPO_LABELS[value]}
+        </span>
+        <ChevronDown size={16} className="game-wheel-picker__chevron" aria-hidden />
+      </button>
+
+      {open &&
+        createPortal(
+          <div
+            className="game-picker-sheet-overlay"
+            onClick={() => setOpen(false)}
+            role="presentation"
+          >
+            <div
+              className="game-picker-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="atividade-tipo-sheet-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="game-picker-sheet__handle" aria-hidden />
+              <h2 id="atividade-tipo-sheet-title" className="game-picker-sheet__title">
+                Tipo da atividade
+              </h2>
+              <div
+                className="atividade-tipo-select__list"
+                role="listbox"
+                aria-label="Tipo da atividade"
+              >
+                {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((t) => {
+                  const TipoIcon = TIPO_ICONS[t];
+                  const ativo = value === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      role="option"
+                      aria-selected={ativo}
+                      className={`atividade-tipo-select__option${ativo ? ' atividade-tipo-select__option--active' : ''}`}
+                      onClick={() => {
+                        playClick();
+                        onChange(t);
+                        setOpen(false);
+                      }}
+                    >
+                      <TipoIcon size={16} aria-hidden />
+                      {ATIVIDADE_TIPO_LABELS[t]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
 
 /**
  * Criar/editar uma Atividade: ícone, nome, tipo (opcional — define o
@@ -268,31 +370,12 @@ export function AtividadeFormModal({
 
         <div>
           <p className="flex items-center gap-1 text-sm font-semibold">
-            Tipos <span className="text-xs font-medium text-stone-400">(opcional)</span>
+            Tipo <span className="text-xs font-medium text-stone-400">(opcional)</span>
           </p>
           <p className="mt-0.5 text-[0.68rem] font-medium text-stone-400">
             Ajusta o que perguntamos ao concluir — pode deixar em "Outro".
           </p>
-          <div className="atividade-tipo-grid mt-2">
-            {(Object.keys(ATIVIDADE_TIPO_LABELS) as AtividadeTipo[]).map((t) => {
-              const TipoIcon = TIPO_ICONS[t];
-              const ativo = tipo === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  aria-pressed={ativo}
-                  onClick={() => {
-                    playClick();
-                    setTipo(t);
-                  }}
-                  className={`atividade-tipo-chip${ativo ? ' atividade-tipo-chip--active' : ''}`}
-                >
-                  <TipoIcon size={12} aria-hidden /> {ATIVIDADE_TIPO_LABELS[t]}
-                </button>
-              );
-            })}
-          </div>
+          <AtividadeTipoField value={tipo} onChange={setTipo} />
         </div>
 
         <label className="block text-sm font-semibold">
