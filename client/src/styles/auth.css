@@ -593,6 +593,15 @@
   }
 }
 
+/* Depois de duas rodadas mais transparentes (0.58, depois gradiente até
+   0.42) o contraste ficou ruim de verdade — sobre o céu escuro do cadastro
+   branco translúcido puxa pro cinza sujo, não importa quanto blur/saturate
+   se empilhe em cima. Prioridade agora é legibilidade: opacidade alta o
+   bastante pra garantir contraste em qualquer trecho do céu por trás, com
+   só um resto de transparência/blur pra não ficar 100% chapado. var(--game-ink,
+   #1c1917) com fallback — esse token só existe dentro de `.game-app`, e a
+   tela de auth fica fora dessa classe; sem o fallback o valor não resolve
+   e a borda simplesmente não desenha. */
 .game-login__panel {
   position: relative;
   z-index: 2;
@@ -600,10 +609,14 @@
   max-width: 340px;
   padding: 1.75rem 1.5rem 1.5rem;
   text-align: center;
-  background: #fff;
-  border: var(--border-card);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.86) 100%);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border: 2px solid var(--game-ink, #1c1917);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-raised);
+  box-shadow:
+    var(--shadow-raised),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .game-login__logo {
@@ -790,15 +803,38 @@
   letter-spacing: 0.02em;
 }
 
+/* Borda padronizada com o resto do sistema (ink 2px) em vez da borda fina
+   genérica de .game-input. A sombra dura "2px 2px 0" repetida em 4 campos
+   empilhados ficava pesada/quadrada demais — trocada por uma sombra suave
+   em repouso, reservando o "bloco de jogo" (offset + leve translate, mesmo
+   toque de .game-btn--primary:hover mais abaixo neste arquivo) só pro
+   campo focado, o que também cria hierarquia: o olho vai direto pro campo
+   ativo. var(--game-ink, #1c1917) com fallback — esse token só existe
+   dentro de `.game-app`, e a tela de auth fica fora dessa classe; sem o
+   fallback o valor não resolve e a borda não desenha (bug real visto com
+   o painel já translúcido — a borda "sumia" de vez). */
 .game-auth-field__input.game-input {
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.7rem 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid var(--game-ink, #1c1917);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.1);
   transition:
     border-color 0.15s,
     background 0.15s,
-    box-shadow 0.15s;
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.game-auth-field__input.game-input:focus {
+  border-color: #10b981;
+  background: #fff;
+  transform: translate(-1px, -1px);
+  box-shadow:
+    2px 2px 0 #10b981,
+    0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .game-auth-field__input.game-input::placeholder {
@@ -844,19 +880,22 @@
 .game-auth-field--invalid .game-auth-field__input.game-input {
   border-color: #ef4444;
   background: #fff5f5;
+  box-shadow: 2px 2px 0 #ef4444;
 }
 
 .game-auth-field--invalid .game-auth-field__input.game-input:focus {
   background: #fff1f2;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  box-shadow:
+    2px 2px 0 #ef4444,
+    0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
 .game-auth-field__hint {
   margin: 0;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
-  color: #78716c;
+  color: #57534e;
 }
 
 .game-auth-field__error {
@@ -897,6 +936,13 @@
 .game-login__panel > .game-toast-banner {
   margin-top: 0.75rem;
   text-align: left;
+}
+
+/* Sombra sólida (cor do próprio alerta, via currentColor) nos avisos das
+   telas de auth — mesma linguagem de borda+sombra do resto do sistema,
+   em vez da sombra cinza genérica que o toast usa nas outras telas. */
+.game-login__panel .game-toast-banner {
+  box-shadow: 2px 2px 0 currentColor;
 }
 
 .game-btn {
@@ -1089,12 +1135,6 @@ a.game-btn {
 
 .game-login__panel--register {
   max-width: 360px;
-}
-
-/* Sem logo acima (showLogo=false): o título é o primeiro elemento, não
-   precisa do respiro extra que existia pra separar da logo. */
-.game-login__panel--register .game-login__title {
-  margin-top: 0;
 }
 
 .game-modal-overlay {
