@@ -292,6 +292,22 @@
     inset: -10px;
   }
 
+  /* Olhos/boca eram um tamanho fixo em px pensado pro rosto de 88px — no
+     rosto de 56px (mount acima) sobrava pouco espaço entre eles e a base do
+     olho acabava encostando no topo da boca. Escala proporcional (~0.64x)
+     mantém a mesma folga visual do tamanho grande. */
+  .game-celestial__eye {
+    width: 6px;
+    height: 9px;
+  }
+
+  .game-celestial__mouth {
+    width: 13px;
+    height: 7px;
+    margin-left: -6.5px;
+    border-width: 2px;
+  }
+
   .game-login__logo--lg {
     width: clamp(6.5rem, 18vw + 3rem, 9rem);
     height: clamp(6.5rem, 18vw + 3rem, 9rem);
