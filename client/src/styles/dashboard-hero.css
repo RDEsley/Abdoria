@@ -443,6 +443,23 @@
   color: #047857;
 }
 
+.game-xp-section__hero-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(28, 25, 23, 0.1);
+}
+
+.game-xp-section__hero--skinned .game-xp-section__hero-bar {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.game-xp-section__hero-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #10b981;
+}
+
 /* Telas bem estreitas (iPhone SE, Android compacto ~320-360px): anel menor
    e menos padding, pra sobrar espaço real pro nome/XP ao lado dele. */
 @media (max-width: 360px) {

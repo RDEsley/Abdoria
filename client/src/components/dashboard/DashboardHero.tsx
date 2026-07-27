@@ -89,6 +89,19 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
             <strong>{xpInLevel}</strong> / {xpToNext} {copy('xp_unit')} · faltam{' '}
             <strong>{xpParaLevelUp}</strong> para o nível {level + 1}
           </p>
+          <div
+            className="game-xp-section__hero-bar mt-2"
+            role="progressbar"
+            aria-valuenow={xpInLevel}
+            aria-valuemin={0}
+            aria-valuemax={xpToNext}
+            aria-label={`XP ${xpInLevel} de ${xpToNext}`}
+          >
+            {/* Largura já vem animada via JS (displayPct, mesma fonte do
+                anel) — sem transition CSS aqui, senão o preenchimento fica
+                "chicoteando" atrás dos frames do RAF em vez de acompanhar. */}
+            <div className="game-xp-section__hero-bar-fill" style={{ width: `${displayPct}%` }} />
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
             <StreakCountdown
