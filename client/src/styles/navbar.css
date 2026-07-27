@@ -8,8 +8,12 @@
   box-shadow: var(--shadow-resting);
 }
 
+/* Hugging a altura real do conteúdo (avatar 3.15rem + padding vertical
+   1.25rem) em vez de um min-height maior que sobrava como espaço morto
+   embaixo do avatar/nome — era esse vão que empurrava a barra de XP (linha
+   de baixo) longe demais do resto do conteúdo. */
 .top-navbar__inner {
-  min-height: 5.15rem;
+  min-height: 4.4rem;
 }
 
 .top-navbar__profile {
@@ -36,12 +40,17 @@
   height: 3.15rem;
 }
 
+/* align-self: stretch (não center) + justify-content: flex-end — o nome
+   centralizado dentro dos 3.15rem do avatar deixava ~0.7rem de espaço morto
+   embaixo dele antes da barra de XP começar (a barra em si já colava certo
+   no fim da row, mas o nome "flutuava" longe dela). Ancorando o bloco
+   nome/título embaixo, o nome fica colado onde a barra de XP começa. */
 .top-navbar__identity {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.05rem;
-  align-self: center;
+  align-self: stretch;
   min-width: 0;
 }
 
@@ -269,11 +278,11 @@
 
 @media (min-width: 640px) {
   :root {
-    --top-navbar-height: calc(6.5rem + env(safe-area-inset-top, 0px));
+    --top-navbar-height: calc(5.85rem + env(safe-area-inset-top, 0px));
   }
 
   .top-navbar__inner {
-    min-height: 5.5rem;
+    min-height: 4.85rem;
   }
 
   .top-navbar__avatar-wrap {
