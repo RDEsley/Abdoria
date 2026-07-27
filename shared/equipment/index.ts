@@ -29,28 +29,28 @@ export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
       'push-up-board-back',
       'push-up-board-back-wide',
     ],
-    purchaseUrl:
-      'https://www.mercadolivre.com.br/p/MLB64302822?matt_tool=38524122&pdp_filters=item_id:MLB4421861011&ua=nUCtTuSuVgT4qRpEAHq-vjywSt8yB7Ta5KFEOXFQFUmZBxZE#origin=share&sid=share&wid=MLB4421861011&action=copy',
+    purchaseUrl: 'https://meli.la/1dBLVev',
   },
   {
     id: 'pull_up_bar',
     nome: 'Barra Fixa',
     descricao: 'Puxadas, chin-ups e suspensão isométrica para costas e grip.',
     exerciseSlugs: ['dead-hang', 'scapular-pull-up', 'pull-up', 'chin-up'],
+    purchaseUrl: 'https://meli.la/1roA2gm',
   },
   {
     id: 'ab_wheel',
     nome: 'Roda Abdominal (Rolinho)',
     descricao: 'Rollouts no joelho, amplitude completa e progressões avançadas.',
     exerciseSlugs: ['ab-wheel-knees', 'ab-wheel', 'ab-wheel-standing'],
-    purchaseUrl:
-      'https://www.mercadolivre.com.br/p/MLB26054619?matt_tool=38524122&pdp_filters=item_id:MLB3411770569&ua=964TOli9qe-gWQK7zlIWU1UyY_MlpNh3Pu1QQMdrij9E_r0P#origin=share&sid=share&wid=MLB3411770569&action=copy',
+    purchaseUrl: 'https://meli.la/253cfab',
   },
   {
     id: 'stability_ball',
     nome: 'Bola Suíça',
     descricao: 'Abdominais sobre a bola — maior amplitude e ativação do core.',
     exerciseSlugs: ['stability-ball-crunch'],
+    purchaseUrl: 'https://meli.la/1wmqQLh',
   },
 ] as const;
 
