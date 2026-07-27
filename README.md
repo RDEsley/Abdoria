@@ -21,31 +21,31 @@ Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas
 
 ---
 
-## O que é o Abdoria?
+## 🎯 O que é o Abdoria?
 
 O **Abdoria** é um aplicativo web de treinos de **abdômen com peso corporal**. Você monta ou recebe treinos, executa exercício por exercício com timer e descanso, e acompanha sua evolução como se fosse um jogo.
 
 Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
-> **Importante:** o Abdoria é educacional e de entretenimento. **Não substitui** acompanhamento médico, nutricional ou de educação física.
+> ⚠️ **Importante:** o Abdoria é educacional e de entretenimento. **Não substitui** acompanhamento médico, nutricional ou de educação física.
 
 ---
 
-## Para quem é?
+## 🙋 Para quem é?
 
 | Perfil | O que você ganha |
 |--------|------------------|
-| **Iniciante** | Treinos sugeridos, exercícios explicados e progressão suave |
-| **Quem treina em casa** | Biblioteca de exercícios, montagem de treino e player guiado |
-| **Quem gosta de metas** | XP, streak, conquistas e ranking |
-| **Quem quer constância** | Calendário de treinos, exploração AFK e recompensas diárias |
+| 🌱 **Iniciante** | Treinos sugeridos, exercícios explicados e progressão suave |
+| 🏠 **Quem treina em casa** | Biblioteca de exercícios, montagem de treino e player guiado |
+| 🏆 **Quem gosta de metas** | XP, streak, conquistas e ranking |
+| 📅 **Quem quer constância** | Calendário de treinos, exploração AFK e recompensas diárias |
 
 ---
 
-## O que você pode fazer no app
+## 🕹️ O que você pode fazer no app
 
-### Treinar de verdade
-- Biblioteca com dezenas de exercícios de core (superior, inferior, oblíquos, flexões, etc.)
+### 💪 Treinar de verdade
+- Biblioteca com dezenas de exercícios de core (superior, inferior, oblíquos, flexões etc.)
 - **Equipamentos opcionais** — marque na biblioteca **prancha de flexão**, **barra fixa** ou **roda abdominal** para liberar exercícios extras
 - Nomes em inglês com **tradução em português** entre parênteses
 - **Construtor em duas abas** — **Treinar Agora** (ciclos e sugestões) e **Criar/Personalizar** (monte o seu)
@@ -57,10 +57,10 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **Treinos fixos / bloqueados** — priorize ou exclua treinos inteiros nas recomendações
 - **Rodada de ciclos** — ao completar todos os ciclos ativos, escolha manter ou sortear um novo set
 - **Banner de teto de XP** — aviso quando o limite diário já foi atingido (o treino continua liberado)
-- **Player interativo**: séries por tempo ou repetições, descanso configurável, botões na barra inferior
+- **Player interativo** — séries por tempo ou repetições, descanso configurável, botões na barra inferior
 - Salve treinos favoritos na sua conta
 
-### Evoluir e se motivar
+### ⚡ Evoluir e se motivar
 - **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
 - **Máx. diário** — **100 XP + 1 por nível** (+ **1 XP** por inimigo único no bestiário)
 - **XP extra** — streak, conquistas e habilidades desbloqueadas (sem limite diário)
@@ -87,8 +87,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
   - **Recuperar Streak** — perdeu a sequência de verdade (sem Frozen Streak pra cobrir)? Depois de
     algumas perdas, pague em Coins pra voltar exatamente de onde parou
 
-### Atividades e Bloco de Notas
-
+### 📝 Atividades e Bloco de Notas
 - **Atividades de bem-estar** no Início — crie, edite, reordene e exclua tarefas fora do treino
   (leitura, corrida, meditação, estudo, alongamento…), com formulário contextual por tipo
 - Cada atividade concluída dá **+15 XP** (até 3 por dia); da 4ª em diante vira **+5 Coins**
@@ -100,8 +99,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 - **Histórico de 30 dias** do Bloco de Notas com tela própria e rolagem; concluídas também aparecem
   no calendário de treinos
 
-### Personalizar e recompensar
-
+### 🎨 Personalizar e recompensar
 - **Personalização do Perfil** — bordas, banners, títulos e efeitos visuais no formulário de Editar
   Perfil (prévia ao vivo por item); a maioria vem de conquistas, códigos e eventos, não é comprável
   com Coins — exceção: **sons**, comprados nas Opções (Áudio)
@@ -118,7 +116,7 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
 
 ---
 
-## Como funciona a “gamificação”?
+## 🧮 Como funciona a "gamificação"?
 
 Pense em **dois tipos de pontos**:
 
@@ -134,7 +132,7 @@ passiva ao longo do progresso).
 
 Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 
-### Exploração — loot por kill
+### 🗺️ Exploração — loot por kill
 
 **Chance de dropar algo (por kill):**
 
@@ -172,7 +170,7 @@ Secreta). Arco/espada básicos são grátis; magia entra como 3º modo de combat
 
 ---
 
-## Estrutura do projeto
+## 🗂️ Estrutura do projeto
 
 ```
 Abdoria/
@@ -198,16 +196,16 @@ Abdoria/
 
 ---
 
-## Instalação rápida
+## ⚙️ Instalação rápida
 
 > Seção para **desenvolvedores** ou quem for rodar o app no próprio computador.
 
-### Pré-requisitos
+### ✅ Pré-requisitos
 
 - [Node.js](https://nodejs.org/) **20.x** (veja [`.nvmrc`](./.nvmrc))
 - Projeto no [Supabase](https://supabase.com/) com Postgres
 
-### Banco de dados (Supabase Postgres)
+### 🗄️ Banco de dados (Supabase Postgres)
 
 O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`, aplique o schema:
 
@@ -218,7 +216,7 @@ O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`,
    - `20250627120000_exercise_equipment.sql` (coluna `equipamento` nos exercícios)  
    (ou use `supabase db push` se tiver o [Supabase CLI](https://supabase.com/docs/guides/cli) linkado ao projeto)
 
-### Passos
+### 🚶 Passos
 
 ```bash
 git clone https://github.com/RDEsley/Abdoria.git
@@ -236,17 +234,9 @@ npm run dev
 | API | http://localhost:3001 |
 | Saúde da API | http://localhost:3001/api/health |
 
-**Conta demo** (após `npm run seed` em ambiente **não produção**):
-
-| E-mail | Senha |
-|--------|-------|
-| `admin@abdoria.local` | `admin123` |
-
-> Em produção o seed **não** cria usuários demo. Nunca use senhas fracas em deploy real.
-
 **Cadastro:** ao criar conta, você é redirecionado para o **login** (sessão só inicia após entrar). Use **Lembrar de mim** para manter o token no dispositivo e pré-preencher o email. Erros de email/senha incorretos aparecem **inline** no formulário.
 
-### Scripts úteis
+### 📜 Scripts úteis
 
 | Comando | O que faz |
 |---------|-----------|
@@ -267,7 +257,7 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 | `npx tsx scripts/dev/verify-patrol-weapons.ts` | Valida catálogo e dano das armas da exploração |
 | `npx tsx scripts/dev/validate-equipment.ts` | Valida catálogo de equipamentos e slugs liberados |
 | `npx tsx scripts/dev/verify-inventory-bestiario.ts` | Valida inventário, overflow e bestiário |
-| `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
+| `npx tsx scripts/dev/verify-remember-me.ts` | Valida "Lembrar de mim" (token e email) |
 | `node client/scripts/validate-similar-presets.mjs` | Valida pontuação de treinos similares por músculo |
 | `node client/scripts/validate-slime-appearance.mjs` | Valida aparência (fixa, igual ao Bestiário) dos slimes |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
@@ -275,13 +265,13 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 
 ---
 
-## Deploy na Vercel
+## ☁️ Deploy na Vercel
 
 O projeto está configurado para deploy contínuo a partir da branch `main`.
 
 **URL de produção:** https://abdoria-project.vercel.app
 
-### Variáveis obrigatórias (Project Settings → Environment Variables)
+### 🔑 Variáveis obrigatórias (Project Settings → Environment Variables)
 
 | Variável | Descrição |
 |----------|-----------|
@@ -293,9 +283,9 @@ O projeto está configurado para deploy contínuo a partir da branch `main`.
 
 Modelo completo em [`.env.example`](./.env.example).
 
-Confirme que o schema Postgres está aplicado no Supabase (ver [Banco de dados](#banco-de-dados-supabase-postgres)) e que `/api/health` retorna `"database": "connected"`.
+Confirme que o schema Postgres está aplicado no Supabase (ver [Banco de dados](#-banco-de-dados-supabase-postgres)) e que `/api/health` retorna `"database": "connected"`.
 
-### Build
+### 🏗️ Build
 
 - **Install:** `npm install`
 - **Build:** `npm run build:vercel`
@@ -304,7 +294,7 @@ Confirme que o schema Postgres está aplicado no Supabase (ver [Banco de dados](
 
 Após o primeiro deploy com Supabase configurado, rode `npm run seed` uma vez (local ou CI) para popular exercícios e presets.
 
-### Manter o Supabase ativo (free tier)
+### 🔄 Manter o Supabase ativo (free tier)
 
 O workflow [`.github/workflows/keep-supabase-alive.yml`](./.github/workflows/keep-supabase-alive.yml) faz ping diário às **00:00 (Brasília)** para evitar pausa por inatividade. Configure estes **GitHub Secrets** no repositório:
 
@@ -318,7 +308,7 @@ Dispare manualmente em **Actions → Keep Supabase Alive → Run workflow** para
 
 ---
 
-## Documentação
+## 📚 Documentação
 
 | Documento | Público |
 |-----------|---------|
@@ -327,13 +317,13 @@ Dispare manualmente em **Actions → Keep Supabase Alive → Run workflow** para
 
 ---
 
-## Tecnologias
+## 🧩 Tecnologias
 
 React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion · Express 5 · Supabase Postgres · JWT · Vercel Serverless
 
 ---
 
-## Licença
+## 📄 Licença
 
 [MIT](./LICENSE)
 
@@ -341,7 +331,7 @@ React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion · Express 5 · 
 
 <a id="desenvolvedor"></a>
 
-## Desenvolvedor
+## 👨‍💻 Desenvolvedor
 
 <div align="center">
 
