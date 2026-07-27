@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CalendarCog, Dumbbell, Info, Moon } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CalendarCog, ChevronDown, Dumbbell, Info, Moon } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -25,6 +26,7 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
   const [dias, setDias] = useState<number[]>(inicial.dias);
   const [juntoComTreino, setJuntoComTreino] = useState(inicial.junto_com_treino);
   const [busy, setBusy] = useState(false);
+  const [comoFuncionaAberto, setComoFuncionaAberto] = useState(false);
 
   const diasTreino = user?.perfil_treino?.dias_semana ?? [];
   const temDiasTreino = diasTreino.length > 0;
@@ -73,22 +75,49 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
         <CalendarCog size={16} aria-hidden /> Quando fazer atividades
       </h2>
 
-      <div className="atividade-info-card mt-3">
-        <p className="atividade-info-card__head">
-          <Info size={13} aria-hidden /> Como funciona
-        </p>
-        <p className="atividade-info-card__text">
-          Toda atividade dá{' '}
-          <strong className="atividade-info-card__pill atividade-info-card__pill--xp">
-            +{ATIVIDADE_XP_POR_UNIDADE} XP
-          </strong>
-          , até {ATIVIDADES_MIN_DESCANSO} por dia — da próxima em diante vira{' '}
-          <strong className="atividade-info-card__pill atividade-info-card__pill--coins">
-            +{ATIVIDADE_COINS_EXTRA} Coins
-          </strong>
-          . Em dia de treino, a sequência (streak) continua vindo só do treino; nos outros dias, as
-          atividades também mantêm a sequência.
-        </p>
+      <div className="atividade-info-card atividade-info-card--collapsible mt-3">
+        <button
+          type="button"
+          className="atividade-info-card__head atividade-info-card__head--btn"
+          aria-expanded={comoFuncionaAberto}
+          onClick={() => {
+            playClick();
+            setComoFuncionaAberto((v) => !v);
+          }}
+        >
+          <span className="flex items-center gap-1.5">
+            <Info size={13} aria-hidden /> Como funciona
+          </span>
+          <ChevronDown
+            size={14}
+            className={`atividade-info-card__chevron${comoFuncionaAberto ? ' atividade-info-card__chevron--open' : ''}`}
+            aria-hidden
+          />
+        </button>
+        <AnimatePresence initial={false}>
+          {comoFuncionaAberto && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="atividade-info-card__collapse"
+            >
+              <p className="atividade-info-card__text">
+                Toda atividade dá{' '}
+                <strong className="atividade-info-card__pill atividade-info-card__pill--xp">
+                  +{ATIVIDADE_XP_POR_UNIDADE} XP
+                </strong>
+                , até {ATIVIDADES_MIN_DESCANSO} por dia — da próxima em diante vira{' '}
+                <strong className="atividade-info-card__pill atividade-info-card__pill--coins">
+                  +{ATIVIDADE_COINS_EXTRA} Coins
+                </strong>
+                . Em dia de treino, a sequência (streak) continua vindo só do treino; nos outros
+                dias, as atividades também mantêm a sequência.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="mt-3 flex flex-col gap-2">

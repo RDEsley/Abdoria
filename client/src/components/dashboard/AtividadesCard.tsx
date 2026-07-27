@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useAnimationControls } from 'framer-motion';
+import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import {
   CalendarClock,
   Check,
@@ -8,9 +8,11 @@ import {
   ChevronUp,
   Dumbbell,
   ListTodo,
+  NotebookPen,
   Pencil,
   Plus,
   RotateCcw,
+  Settings,
   Sparkles,
   Square,
   SquareCheck,
@@ -18,16 +20,13 @@ import {
   X,
 } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
-import { getErrorMessage } from '@/lib/api-errors';
-import { updateMe } from '@/lib/api';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
-import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
 import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
+import { usePreferencesPersist } from '@/hooks/usePreferencesPersist';
 import { playClick } from '@/lib/sounds';
 import { AtividadeFormModal } from './AtividadeFormModal';
 import { AtividadesAgendaModal } from './AtividadesAgendaModal';
+import { BlocoNotasCard } from './BlocoNotasCard';
 import {
   ATIVIDADES_CATALOGO,
   ATIVIDADES_LIMITE_MSG,
@@ -210,8 +209,7 @@ function AtividadeItem({
  * registradas (quem paga o dia é o treino).
  */
 export function AtividadesCard() {
-  const { user, refresh, applyUser: applyAppUser } = useApp();
-  const { applyUser } = useAuth();
+  const { user, persist } = usePreferencesPersist();
   const navigate = useNavigate();
   const flow = useAtividadesFlow();
 
@@ -220,6 +218,26 @@ export function AtividadesCard() {
   const [editando, setEditando] = useState<AtividadeExtra | 'nova' | null>(null);
   const [mostrarAgenda, setMostrarAgenda] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Alternância Atividades ↔ Bloco de Notas — persistente (não volta sozinha
+  // pro modo Atividades). Hidrata uma vez quando `user` chega (pode ainda
+  // estar null no primeiro render).
+  const [modo, setModo] = useState<'atividades' | 'notas'>(() =>
+    user?.preferencias?.atividades_modo_notas ? 'notas' : 'atividades',
+  );
+  const modoHidratadoRef = useRef(false);
+  useEffect(() => {
+    if (modoHidratadoRef.current || !user) return;
+    modoHidratadoRef.current = true;
+    setModo(user.preferencias?.atividades_modo_notas ? 'notas' : 'atividades');
+  }, [user]);
+
+  const alternarModo = () => {
+    playClick();
+    const proximo = modo === 'atividades' ? 'notas' : 'atividades';
+    setModo(proximo);
+    persist({ atividades_modo_notas: proximo === 'notas' });
+  };
 
   const { atividades, fila, hojeNaAgenda, diaDeTreino, concluidasHoje, filaPendente } = flow;
 
@@ -250,47 +268,6 @@ export function AtividadesCard() {
   }, [modoEdicao, editando, mostrarAgenda]);
 
   /* ------------- persistência otimista (CRUD da lista + fila) ------------- */
-
-  // A UI atualiza NA HORA com o estado otimista; o updateMe roda em segundo
-  // plano numa fila serializada (cliques rápidos chegam ao servidor em ordem).
-  // `userRef` evita closure velha em cliques na mesma frame; `seqRef` garante
-  // que só a ÚLTIMA resposta do servidor reconcilia o estado (respostas
-  // antigas não regridem um otimista mais novo). Falha => volta pro servidor.
-  const userRef = useRef(user);
-  useEffect(() => {
-    userRef.current = user;
-  }, [user]);
-  const persistChain = useRef<Promise<unknown>>(Promise.resolve());
-  const seqRef = useRef(0);
-
-  const persist = (patch: Record<string, unknown>, mensagem?: string): void => {
-    const base = userRef.current;
-    if (!base) return;
-
-    const preferencias = { ...base.preferencias, ...patch };
-    const otimista = { ...base, preferencias };
-    userRef.current = otimista;
-    applyUser(otimista);
-    applyAppUser(otimista);
-    if (mensagem) showGameToast(mensagem, { variant: 'success' });
-
-    const seq = ++seqRef.current;
-    persistChain.current = persistChain.current
-      .then(() => updateMe({ preferencias }))
-      .then((atualizado) => {
-        if (seq !== seqRef.current) return;
-        userRef.current = atualizado;
-        applyUser(atualizado);
-        applyAppUser(atualizado);
-      })
-      .catch((err) => {
-        if (seq !== seqRef.current) return;
-        showGameToast(getErrorMessage(err, 'Não foi possível salvar — desfazendo.'), {
-          variant: 'error',
-        });
-        void refresh();
-      });
-  };
 
   const salvarLista = (lista: AtividadeExtra[], mensagem?: string) =>
     persist({ atividades: lista }, mensagem);
@@ -403,21 +380,24 @@ export function AtividadesCard() {
     <section ref={sectionRef} className="glass-card p-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="game-section-title !mb-0 flex items-center gap-2 leading-none">
-          <ListTodo size={15} aria-hidden /> Atividades
-        </h3>
-        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            className="atividade-action-btn atividade-action-btn--agenda"
-            aria-label="Quando fazer atividades"
-            title="Quando fazer atividades"
-            onClick={() => setMostrarAgenda(true)}
+            className={`atividades-mode-toggle${modo === 'notas' ? ' atividades-mode-toggle--notas' : ''}`}
+            aria-pressed={modo === 'notas'}
+            aria-label={modo === 'notas' ? 'Ver Atividades' : 'Ver Bloco de Notas'}
+            title={modo === 'notas' ? 'Ver Atividades' : 'Ver Bloco de Notas'}
+            onClick={alternarModo}
           >
-            <span className="atividade-action-btn__icon" aria-hidden>
-              <CalendarClock size={13} />
-            </span>
-            Agenda
+            {modo === 'notas' ? (
+              <ListTodo size={15} aria-hidden />
+            ) : (
+              <NotebookPen size={15} aria-hidden />
+            )}
           </button>
+          {modo === 'notas' ? 'Bloco de Notas' : 'Atividades'}
+        </h3>
+        {modo === 'atividades' && (
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             className={`atividade-action-btn${modoEdicao ? ' atividade-action-btn--active' : ''}`}
@@ -435,10 +415,45 @@ export function AtividadesCard() {
             </span>
             {modoEdicao ? 'Concluir' : 'Editar'}
           </button>
+          <button
+            type="button"
+            className="atividade-action-btn atividade-action-btn--agenda"
+            aria-label="Configurações de atividades"
+            title="Configurações de atividades"
+            onClick={() => setMostrarAgenda(true)}
+          >
+            <span className="atividade-action-btn__icon" aria-hidden>
+              <Settings size={13} />
+            </span>
+            Config
+          </button>
         </div>
+        )}
       </div>
 
-      <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-stone-500">
+      <div className="atividades-flip-viewport">
+        <AnimatePresence mode="wait" initial={false}>
+          {modo === 'notas' ? (
+            <motion.div
+              key="notas"
+              className="atividades-flip-panel"
+              initial={{ rotateY: -100, opacity: 0 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              exit={{ rotateY: 100, opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.34, 1.15, 0.64, 1] }}
+            >
+              <BlocoNotasCard />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="atividades"
+              className="atividades-flip-panel"
+              initial={{ rotateY: -100, opacity: 0 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              exit={{ rotateY: 100, opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.34, 1.15, 0.64, 1] }}
+            >
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-stone-500">
         {diaDeTreino ? (
           <>
             <Dumbbell size={12} aria-hidden /> Dia de treino — XP e streak vêm do treino
@@ -548,6 +563,10 @@ export function AtividadesCard() {
           <RotateCcw size={15} aria-hidden /> Restaurar atividades padrão
         </GameButton>
       )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {editando && (
         <AtividadeFormModal

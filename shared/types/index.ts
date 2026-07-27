@@ -264,6 +264,16 @@ export interface UserPreferencias {
       recompensa parada pra coletar. Padrão: false (o jogador entra na
       Home e decide se quer abrir pelo botão). */
   exploracao_auto_abrir?: boolean;
+  /** true = a seção Atividades do Início mostra o Bloco de Notas em vez da
+      lista de atividades de bem-estar. Persistente — não volta sozinho
+      pra Atividades. */
+  atividades_modo_notas?: boolean;
+  /** Itens do Bloco de Notas — lista de tarefas livre (não só atividades de
+      bem-estar; qualquer coisa que o jogador queira anotar). */
+  bloco_notas?: import('../bloco-notas.js').NotaItem[];
+  /** Histórico de itens concluídos do Bloco de Notas (30 dias, separado da
+      lista ativa — sobrevive a "Limpar tudo"/exclusão individual). */
+  bloco_notas_historico?: import('../bloco-notas.js').NotaHistoricoItem[];
 }
 
 export type Idioma = 'pt' | 'en' | 'es';

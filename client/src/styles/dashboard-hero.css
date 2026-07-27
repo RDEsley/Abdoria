@@ -1728,6 +1728,31 @@
   color: #0369a1;
 }
 
+/* Recolhido por padrão — só o rótulo "Como funciona" aparece; o texto
+   explicativo abre num dropdown ao clicar, em vez de ficar sempre visível. */
+.atividade-info-card__head--btn {
+  width: 100%;
+  justify-content: space-between;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.atividade-info-card__chevron {
+  flex-shrink: 0;
+  color: #0369a1;
+  transition: transform 0.2s ease;
+}
+
+.atividade-info-card__chevron--open {
+  transform: rotate(180deg);
+}
+
+.atividade-info-card__collapse {
+  overflow: hidden;
+}
+
 .atividade-info-card__text {
   margin: 0.4rem 0 0;
   font-size: 0.72rem;
@@ -1817,6 +1842,330 @@
 .atividade-action-btn--active .atividade-action-btn__icon {
   color: #047857;
   background: #a7f3d0;
+}
+
+/* Alternância Atividades ↔ Bloco de Notas — botão que substitui o ícone
+   estático ao lado do título; roxo no modo Notas pra ficar claro que é um
+   modo diferente (não é só uma cor a mais no verde de Atividades). Borda +
+   sombra "de bloco" (mesma linguagem de .atividade-action-btn) pra ficar
+   claro que é clicável, não só um ícone decorativo. */
+.atividades-mode-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  color: #57534e;
+  background: #fff;
+  border: var(--border-card);
+  border-radius: 0.6rem;
+  box-shadow: var(--shadow-resting);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.atividades-mode-toggle:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0 rgba(28, 25, 23, 0.35);
+}
+
+.atividades-mode-toggle:active {
+  transform: scale(0.92);
+  box-shadow: var(--shadow-resting);
+}
+
+.atividades-mode-toggle--notas {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #7c3aed;
+}
+
+.atividades-mode-toggle--notas:hover {
+  box-shadow: 2.5px 2.5px 0 rgba(124, 58, 237, 0.45);
+}
+
+/* "Flip" entre Atividades e Bloco de Notas — desenho animado de virar a
+   página, no lugar de um crossfade genérico. */
+.atividades-flip-viewport {
+  perspective: 1400px;
+}
+
+.atividades-flip-panel {
+  padding-top: 0.5rem;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Bloco de Notas — lista de tarefas livre (não só bem-estar) */
+.bloco-notas__resumo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.bloco-notas__resumo {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #57534e;
+}
+
+.bloco-notas__resumo strong {
+  color: #7c3aed;
+}
+
+.bloco-notas__historico-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  padding: 0.2rem 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: #7c3aed;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.bloco-notas__historico-link:hover {
+  color: #6d28d9;
+  text-decoration: underline;
+}
+
+.bloco-notas-historico__scroll {
+  max-height: min(50vh, 22rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.bloco-notas-historico__grupo + .bloco-notas-historico__grupo {
+  margin-top: 0.75rem;
+}
+
+.bloco-notas-historico__data {
+  margin: 0 0 0.3rem;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #a8a29e;
+}
+
+.bloco-notas-historico__item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #44403c;
+  border-bottom: 1px solid #f5f5f4;
+}
+
+.bloco-notas-historico__item svg {
+  flex-shrink: 0;
+  color: #7c3aed;
+}
+
+.bloco-notas__add {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.bloco-notas__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--game-ink);
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.75rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.bloco-notas__input:focus {
+  border-color: #7c3aed;
+}
+
+.bloco-notas__add-btn {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  color: #fff;
+  background: linear-gradient(180deg, #a78bfa, #7c3aed);
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    opacity 0.15s ease;
+}
+
+.bloco-notas__add-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.bloco-notas__add-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.bloco-notas__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.75rem 1rem;
+  text-align: center;
+  color: #a8a29e;
+}
+
+.bloco-notas__empty p {
+  max-width: 22rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #78716c;
+}
+
+.bloco-notas__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bloco-notas__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.85rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.bloco-notas__item--feita {
+  background: #faf5ff;
+  border-color: rgba(124, 58, 237, 0.25);
+}
+
+.bloco-notas__check {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  color: #d6d3d1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.bloco-notas__check:active {
+  transform: scale(0.85);
+}
+
+.bloco-notas__item--feita .bloco-notas__check {
+  color: #7c3aed;
+}
+
+.bloco-notas__texto {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #292524;
+}
+
+.bloco-notas__item--feita .bloco-notas__texto {
+  color: #a8a29e;
+}
+
+/* Risco animado — mais satisfatório que um text-decoration estático, que
+   não dá pra transicionar suavemente entre navegadores. */
+.bloco-notas__strike {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: #a78bfa;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease-out;
+}
+
+.bloco-notas__item--feita .bloco-notas__strike {
+  transform: scaleX(1);
+}
+
+.bloco-notas__delete {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #d6d3d1;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.bloco-notas__delete:hover {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.bloco-notas__footer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+/* Partículas do "pop" ao concluir — decorativo, desligado no modo minimalista. */
+.nota-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+}
+
+.nota-burst__spark {
+  position: absolute;
+  top: -0.2rem;
+  left: -0.2rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #a78bfa;
 }
 
 .atividade-dia {

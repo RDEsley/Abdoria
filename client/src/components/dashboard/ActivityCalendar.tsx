@@ -1,12 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Flame, Snowflake, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Flame, NotebookPen, Snowflake, Sparkles } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 import { formatMetricas } from '@/lib/atividade-format';
 import { getTodaySaoPaulo, addDaysSaoPaulo } from '@shared/utils/timezone';
 import { ATIVIDADES_MIN_DESCANSO } from '@shared/atividades';
+import { resolveBlocoNotasHistorico } from '@shared/bloco-notas';
 
 const MONTH_NAMES = [
   'Janeiro',
@@ -159,7 +160,27 @@ export function ActivityCalendar() {
     return { cells, dayMeta, summary: { activeDays: dayMeta.size, totalWorkouts } };
   }, [history, visibleMonth]);
 
+  // Bloco de Notas concluídas do mês visível — só informativo (não mexe em
+  // streak/level do calendário, que continua vindo só de treino/atividade);
+  // vem de `preferencias` (histórico de 30 dias), não do workout_history do
+  // servidor, então é montado à parte em vez de entrar em `dayMeta`.
+  const notasPerDay = useMemo(() => {
+    const year = visibleMonth.getFullYear();
+    const monthIndex = visibleMonth.getMonth();
+    const map = new Map<string, string[]>();
+    for (const item of resolveBlocoNotasHistorico(user?.preferencias)) {
+      const key = item.concluida_em.slice(0, 10);
+      const [keyYear, keyMonth] = key.split('-').map(Number);
+      if (keyYear !== year || keyMonth - 1 !== monthIndex) continue;
+      const lista = map.get(key) ?? [];
+      lista.push(item.texto);
+      map.set(key, lista);
+    }
+    return map;
+  }, [user?.preferencias, visibleMonth]);
+
   const selectedMeta = selectedDay ? dayMeta.get(selectedDay) : null;
+  const selectedNotas = selectedDay ? (notasPerDay.get(selectedDay) ?? []) : [];
   const selectedFrozen = !selectedMeta && !!selectedDay && frozenSet.has(selectedDay);
 
   useLayoutEffect(() => {
@@ -261,7 +282,21 @@ export function ActivityCalendar() {
               </div>
             )}
 
-            {!selectedMeta && !selectedFrozen && (
+            {selectedNotas.length > 0 && (
+              <div className="workout-calendar__day-detail">
+                <p className="workout-calendar__detail-title">
+                  <NotebookPen size={14} className="text-violet-600" aria-hidden /> Bloco de Notas —{' '}
+                  {selectedNotas.length} concluída{selectedNotas.length === 1 ? '' : 's'}
+                </p>
+                <ul className="workout-calendar__detail-list">
+                  {selectedNotas.map((texto, i) => (
+                    <li key={`${selectedDay}-n-${i}`}>{texto}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {!selectedMeta && !selectedFrozen && selectedNotas.length === 0 && (
               <div className="workout-calendar__day-detail">
                 <p className="workout-calendar__detail-list">
                   Nenhum treino ou atividade registrado neste dia.
