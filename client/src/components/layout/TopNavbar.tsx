@@ -122,10 +122,8 @@ export function TopNavbar({
           </div>
 
           <div className="top-navbar__identity min-w-0 flex-1">
-            <div className="top-navbar__name-row flex min-w-0 items-baseline gap-1.5">
-              <span className="top-navbar__name truncate">{userName}</span>
-              {userTitle}
-            </div>
+            {userTitle}
+            <span className="top-navbar__name truncate">{userName}</span>
           </div>
         </button>
 
@@ -141,9 +139,11 @@ export function TopNavbar({
       </div>
 
       {/* Fora da coluna "profile" de propósito: presa só no lado do nome, a
-          barra parava bem antes do fim das pills de Coins/Gems. Em largura
-          total ela acompanha o container inteiro, terminando junto com elas. */}
-      <div className="top-navbar__xp-row px-3 sm:px-4">
+          barra parava bem antes do fim das pills de Coins/Gems. O
+          padding-left (navbar.css) alinha o início dela com o nome (depois
+          do avatar), não com a borda crua do container; o fim acompanha as
+          pills de Coins/Gems. */}
+      <div className="top-navbar__xp-row">
         <div
           className="top-navbar__xp-track"
           data-xp-bar-target

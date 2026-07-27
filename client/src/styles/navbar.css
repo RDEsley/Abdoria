@@ -37,7 +37,12 @@
 }
 
 .top-navbar__identity {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.05rem;
   align-self: center;
+  min-width: 0;
 }
 
 .top-navbar__avatar {
@@ -96,6 +101,7 @@
 }
 
 .top-navbar__title {
+  display: block;
   font-size: 0.52rem;
   font-weight: 800;
   letter-spacing: 0.03em;
@@ -108,8 +114,14 @@
   font-size: 0.52rem;
 }
 
+/* padding-left = padding do container (px-3) + largura do avatar (3.15rem)
+   + gap (2.5) — alinha o início da barra com o nome, não com a borda crua
+   do container. padding-right = padding do container, pra terminar junto
+   das pills de Coins/Gems. */
 .top-navbar__xp-row {
   padding-bottom: 0.55rem;
+  padding-left: calc(0.75rem + 3.15rem + 0.625rem);
+  padding-right: 0.75rem;
 }
 
 .top-navbar__xp-track {
@@ -223,6 +235,10 @@
     width: 2.85rem;
     height: 2.85rem;
   }
+
+  .top-navbar__xp-row {
+    padding-left: calc(0.75rem + 2.85rem + 0.625rem);
+  }
 }
 
 /* Telas bem estreitas (ex.: iPhone SE): mais um degrau de compactação nas
@@ -263,6 +279,11 @@
   .top-navbar__avatar-wrap {
     width: 3.35rem;
     height: 3.35rem;
+  }
+
+  .top-navbar__xp-row {
+    padding-left: calc(1rem + 3.35rem + 0.75rem);
+    padding-right: 1rem;
   }
 
   .top-navbar__pill {
