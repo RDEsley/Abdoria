@@ -5,6 +5,7 @@ import { User, sanitizeUser } from '../domain/User.js';
 import { signToken } from '../middleware/auth.js';
 import { DEFAULT_PREFERENCIAS, DEFAULT_XP_DIARIO, isBanimentoAtivo } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
+import { verifyEmailIsReal } from '../services/email-verification.js';
 
 export const authRouter = Router();
 
@@ -26,9 +27,17 @@ authRouter.post('/register', async (req, res) => {
       return;
     }
 
-    const exists = await User.findOne({ email: email.toLowerCase().trim() });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const exists = await User.findOne({ email: normalizedEmail });
     if (exists) {
       res.status(409).json({ error: 'Email já cadastrado.' });
+      return;
+    }
+
+    const verification = await verifyEmailIsReal(normalizedEmail);
+    if (!verification.valid) {
+      res.status(400).json({ error: verification.reason ?? 'Email inválido.' });
       return;
     }
 
@@ -36,7 +45,7 @@ authRouter.post('/register', async (req, res) => {
     const today = getTodaySaoPaulo();
 
     const user = await User.create({
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       passwordHash,
       nome: nome.trim(),
       preferencias: DEFAULT_PREFERENCIAS,
