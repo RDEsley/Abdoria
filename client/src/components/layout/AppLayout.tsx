@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import { Dumbbell, Home, Layers, Settings, Trophy, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
-import { GameToastHost } from '@/components/ui/GameToast';
 import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
-import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
-import { XpOrbLayer } from '@/components/effects/XpOrbLayer';
-import { CosmeticUnlockCelebration } from '@/components/cosmetics/CosmeticUnlockCelebration';
 import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
@@ -20,7 +15,6 @@ import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
-import type { LevelUpCelebration as LevelUpData } from '@/types';
 
 // Ícone da Home padronizado com os demais itens de navegação (linha simples,
 // mesmo peso visual — Castle destoava, era mais ilustrativo que os outros).
@@ -51,7 +45,6 @@ export function AppLayout() {
     return sessionStorage.getItem(VIEWPORT_NOTICE_KEY) === '1';
   });
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
-  const [levelUpLevel, setLevelUpLevel] = useState<number | null>(null);
 
   const handleMidnightRefresh = useCallback(() => {
     void refreshApp();
@@ -61,26 +54,6 @@ export function AppLayout() {
   useMidnightRefresh(handleMidnightRefresh);
 
   useAfkBackgroundSync(Boolean(user));
-
-  useEffect(() => {
-    // Espera as bolinhas de XP (ver XpOrbLayer) terminarem de convergir na
-    // barra do topo antes de tomar a tela inteira — sem isso a celebração
-    // cobria a animação de preenchimento e o jogador nunca via a barra subir.
-    const LEVEL_UP_DELAY_MS = 1250;
-    let timer: number | null = null;
-    const onLevelUp = (event: Event) => {
-      const detail = (event as CustomEvent<LevelUpData>).detail;
-      const levelNovo = detail?.level_novo;
-      if (!levelNovo) return;
-      if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(() => setLevelUpLevel(levelNovo), LEVEL_UP_DELAY_MS);
-    };
-    window.addEventListener('abdoria:level-up', onLevelUp);
-    return () => {
-      window.removeEventListener('abdoria:level-up', onLevelUp);
-      if (timer) window.clearTimeout(timer);
-    };
-  }, []);
 
   useEffect(() => {
     setShowTutorial(shouldShowFirstTimeTutorial(user));
@@ -201,21 +174,7 @@ export function AppLayout() {
           slides={ONBOARDING_TUTORIAL_SLIDES}
         />
 
-        <AnimatePresence>
-          {levelUpLevel !== null && (
-            <LevelUpOverlay
-              key={levelUpLevel}
-              level={levelUpLevel}
-              onDone={() => setLevelUpLevel(null)}
-            />
-          )}
-        </AnimatePresence>
-
         {isHomePage && <AfkFab />}
-
-        <XpOrbLayer />
-        <CosmeticUnlockCelebration />
-        <GameToastHost />
       </div>
     </MidnightRefreshProvider>
   );
