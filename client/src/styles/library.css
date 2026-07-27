@@ -237,8 +237,8 @@
   width: 100%;
   padding: 0.6rem 2rem 0.6rem 2.25rem;
   border-radius: 0.75rem;
-  border: 1.5px solid rgba(28, 25, 23, 0.16);
-  box-shadow: var(--shadow-resting);
+  border: 2px solid var(--game-ink);
+  box-shadow: 2px 2px 0 var(--game-ink);
   background: #fff;
   font-size: 0.85rem;
   font-weight: 600;
@@ -251,7 +251,9 @@
 
 .library-search__input:focus {
   border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow:
+    2px 2px 0 #10b981,
+    0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
 .library-search__clear {

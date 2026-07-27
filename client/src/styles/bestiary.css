@@ -111,22 +111,18 @@
 .game-bestiary-fs__tabs {
   display: flex;
   gap: 0.4rem;
-  overflow-x: auto;
   padding-bottom: 0.85rem;
   margin-bottom: 0.15rem;
-  scrollbar-width: none;
-}
-
-.game-bestiary-fs__tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .game-bestiary-fs__tab {
   position: relative;
   display: inline-flex;
   align-items: center;
-  flex-shrink: 0;
-  padding: 0.42rem 0.75rem;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  padding: 0.42rem 0.4rem;
   border: 1.5px solid rgba(28, 25, 23, 0.14);
   border-radius: 999px;
   background: #fff;
@@ -158,6 +154,25 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Telas bem estreitas: 4 abas de largura igual apertam "Especial N/N" —
+   encolhe fonte e espaçamento em vez de deixar cortar/quebrar feio. */
+@media (max-width: 380px) {
+  .game-bestiary-fs__tab {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.64rem;
+  }
+
+  .game-bestiary-fs__tab-text {
+    gap: 0.2rem;
+  }
+
+  .game-bestiary-fs__tab-count {
+    font-size: 0.56rem;
+  }
 }
 
 .game-bestiary-fs__tab:hover {
