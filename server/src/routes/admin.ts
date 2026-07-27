@@ -5,8 +5,16 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
+import { UserReports, type UserReportRow } from '../repositories/report-repository.js';
+import { removeAvatar } from '../services/avatar-storage.js';
 import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
-import { NOME_MAX_LENGTH, NOME_MIN_LENGTH, type Banimento, type UserRole } from '../types/index.js';
+import {
+  NOME_MAX_LENGTH,
+  NOME_MIN_LENGTH,
+  type Banimento,
+  type ReportStatus,
+  type UserRole,
+} from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 
 export const adminRouter = Router();
@@ -64,19 +72,103 @@ function toAdminEntry(user: UserLean) {
 adminRouter.get('/overview', async (_req: AuthRequest, res) => {
   try {
     if (!requireAdmin(res)) return;
-    const [ratings, suggestions, users] = await Promise.all([
+    const [ratings, suggestions, users, pendingReports] = await Promise.all([
       Ratings.listAll(),
       Suggestions.listAll().catch(() => []),
       User.find({ is_demo_npc: false }, { limit: 500 }),
+      UserReports.countPending().catch(() => 0),
     ]);
     const media =
       ratings.length > 0
         ? Math.round((ratings.reduce((sum, r) => sum + r.estrelas, 0) / ratings.length) * 10) / 10
         : null;
-    res.json({ ratings, suggestions, media_estrelas: media, total_usuarios: users.length });
+    res.json({
+      ratings,
+      suggestions,
+      media_estrelas: media,
+      total_usuarios: users.length,
+      pending_reports: pendingReports,
+    });
   } catch (error) {
     console.error('GET /api/admin/overview error:', error);
     res.status(500).json({ error: 'Erro ao carregar o painel.' });
+  }
+});
+
+/** Contador leve pro badge do botão de admin — sem puxar avaliações/sugestões. */
+adminRouter.get('/reports/pending-count', async (_req: AuthRequest, res) => {
+  try {
+    if (!requireAdmin(res)) return;
+    const count = await UserReports.countPending();
+    res.json({ count });
+  } catch (error) {
+    console.error('GET /api/admin/reports/pending-count error:', error);
+    res.status(500).json({ error: 'Erro ao contar denúncias.' });
+  }
+});
+
+function toReportEntry(row: UserReportRow, names: Map<string, string>) {
+  return {
+    id: row.id,
+    reporter_id: row.reporter_id,
+    reporter_nome: names.get(row.reporter_id) ?? 'Usuário',
+    reported_id: row.reported_id,
+    reported_nome: names.get(row.reported_id) ?? 'Usuário',
+    motivo: row.motivo,
+    descricao: row.descricao,
+    status: row.status,
+    criado_em: row.criado_em,
+    revisado_por: row.revisado_por,
+    revisado_em: row.revisado_em,
+  };
+}
+
+adminRouter.get('/reports', async (req: AuthRequest, res) => {
+  try {
+    if (!requireAdmin(res)) return;
+    const statusParam = String(req.query.status ?? 'pendente');
+    const status: ReportStatus | 'todos' =
+      statusParam === 'revisado' || statusParam === 'arquivado' || statusParam === 'todos'
+        ? statusParam
+        : 'pendente';
+    const rows = await UserReports.listByStatus(status);
+
+    const ids = new Set<string>();
+    rows.forEach((row) => {
+      ids.add(row.reporter_id);
+      ids.add(row.reported_id);
+    });
+    const involved = await Promise.all([...ids].map((id) => User.findById(id, { lean: true })));
+    const names = new Map<string, string>();
+    involved.forEach((u) => {
+      if (u) names.set(u.id, u.nome);
+    });
+
+    res.json({ reports: rows.map((row) => toReportEntry(row, names)) });
+  } catch (error) {
+    console.error('GET /api/admin/reports error:', error);
+    res.status(500).json({ error: 'Erro ao listar denúncias.' });
+  }
+});
+
+/** Marca uma denúncia como revisada (ação tomada) ou arquivada (sem ação). */
+adminRouter.patch('/reports/:id', async (req: AuthRequest, res) => {
+  try {
+    if (!requireAdmin(res)) return;
+    const { status } = req.body as { status?: string };
+    if (status !== 'revisado' && status !== 'arquivado') {
+      res.status(400).json({ error: 'Status inválido.' });
+      return;
+    }
+    const row = await UserReports.resolve(String(req.params.id), status, actorOf(res).id);
+    if (!row) {
+      res.status(404).json({ error: 'Denúncia não encontrada.' });
+      return;
+    }
+    res.json({ report: row });
+  } catch (error) {
+    console.error('PATCH /api/admin/reports/:id error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar denúncia.' });
   }
 });
 
@@ -241,5 +333,34 @@ adminRouter.post('/users/:id/unban', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/admin/users/:id/unban error:', error);
     res.status(500).json({ error: 'Erro ao remover punição.' });
+  }
+});
+
+/** Apaga a conta de outro usuário em definitivo — mesma rota de cascade de DELETE /users/me. */
+adminRouter.delete('/users/:id', async (req: AuthRequest, res) => {
+  try {
+    if (!requireAdmin(res)) return;
+    const actor = actorOf(res);
+    const target = await User.findById(String(req.params.id));
+    if (!target) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    if (target.id === actor.id) {
+      res.status(400).json({ error: 'Use "Deletar minha conta" nas Configurações.' });
+      return;
+    }
+    if (roleOf(target) === 'admin') {
+      res.status(403).json({ error: 'Não é possível apagar outro administrador.' });
+      return;
+    }
+    if (target.avatar_url) {
+      await removeAvatar(target.id);
+    }
+    await User.deleteById(target.id);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('DELETE /api/admin/users/:id error:', error);
+    res.status(500).json({ error: 'Erro ao apagar a conta.' });
   }
 });

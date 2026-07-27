@@ -1,4 +1,4 @@
-import type { MolduraId } from '@/types';
+import type { MolduraId, ReportMotivo } from '@/types';
 import { fetchJson } from './client';
 
 export interface SocialUserEntry {
@@ -63,6 +63,18 @@ export function likeProfile(userId: string): Promise<LikeResponse> {
 
 export function unlikeProfile(userId: string): Promise<LikeResponse> {
   return fetchJson(`/social/like/${userId}`, { method: 'DELETE' });
+}
+
+/** Denunciar o perfil de outro jogador. */
+export function reportUser(
+  userId: string,
+  motivo: ReportMotivo,
+  descricao?: string,
+): Promise<{ ok: boolean }> {
+  return fetchJson('/social/report', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId, motivo, descricao }),
+  });
 }
 
 export function getMySocial(): Promise<{

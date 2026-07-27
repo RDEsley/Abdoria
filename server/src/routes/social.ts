@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { xpLevelFromTotal, type MolduraId } from '../types/index.js';
+import { REPORT_MOTIVOS, xpLevelFromTotal, type MolduraId, type ReportMotivo } from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 import { Follows } from '../repositories/follow-repository.js';
 import { ProfileLikes } from '../repositories/like-repository.js';
 import { ProfileViews } from '../repositories/view-repository.js';
 import { Notifications } from '../repositories/notification-repository.js';
+import { UserReports } from '../repositories/report-repository.js';
 import {
   LeaderboardPodiumHistory,
   type PodiumCounts,
@@ -252,6 +253,44 @@ socialRouter.delete('/like/:id', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('DELETE /api/social/like error:', error);
     res.status(500).json({ error: 'Erro ao remover curtida.' });
+  }
+});
+
+/** Denunciar um usuário — qualquer jogador pode reportar outro (nunca a si mesmo). */
+socialRouter.post('/report', async (req: AuthRequest, res) => {
+  try {
+    const targetId = typeof req.body?.user_id === 'string' ? req.body.user_id : '';
+    const motivo = req.body?.motivo as ReportMotivo;
+    const descricao =
+      typeof req.body?.descricao === 'string' ? req.body.descricao.trim().slice(0, 500) : null;
+
+    if (!targetId || targetId === req.userId) {
+      res.status(400).json({ error: 'Usuário inválido.' });
+      return;
+    }
+    if (!REPORT_MOTIVOS.includes(motivo)) {
+      res.status(400).json({ error: 'Selecione um motivo válido.' });
+      return;
+    }
+    const target = await User.findById(targetId, { lean: true });
+    if (!target) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    if (await UserReports.hasPending(req.userId!, targetId)) {
+      res.status(409).json({ error: 'Você já denunciou este usuário — aguarde a análise.' });
+      return;
+    }
+    await UserReports.create({
+      reporter_id: req.userId!,
+      reported_id: targetId,
+      motivo,
+      descricao,
+    });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('POST /api/social/report error:', error);
+    res.status(500).json({ error: 'Erro ao enviar denúncia.' });
   }
 });
 

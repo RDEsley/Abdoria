@@ -1,5 +1,5 @@
 import { fetchJson } from './client';
-import type { AppRatingEntry, Banimento, UserRole } from '@/types';
+import type { AppRatingEntry, Banimento, ReportMotivo, ReportStatus, UserRole } from '@/types';
 
 export interface AdminUserEntry {
   id: string;
@@ -28,6 +28,21 @@ export interface AdminOverviewResponse {
   suggestions: AppSuggestionEntry[];
   media_estrelas: number | null;
   total_usuarios: number;
+  pending_reports: number;
+}
+
+export interface AdminReportEntry {
+  id: string;
+  reporter_id: string;
+  reporter_nome: string;
+  reported_id: string;
+  reported_nome: string;
+  motivo: ReportMotivo;
+  descricao: string | null;
+  status: ReportStatus;
+  criado_em: string;
+  revisado_por: string | null;
+  revisado_em: string | null;
 }
 
 export function getAdminOverview(): Promise<AdminOverviewResponse> {
@@ -55,6 +70,28 @@ export function banAdminUser(
 
 export function unbanAdminUser(id: string): Promise<{ user: AdminUserEntry }> {
   return fetchJson(`/admin/users/${id}/unban`, { method: 'POST' });
+}
+
+/** Apaga a conta de outro usuário em definitivo (admin only). */
+export function deleteAdminUser(id: string): Promise<{ ok: boolean }> {
+  return fetchJson(`/admin/users/${id}`, { method: 'DELETE' });
+}
+
+export function getAdminReportsPendingCount(): Promise<{ count: number }> {
+  return fetchJson('/admin/reports/pending-count');
+}
+
+export function getAdminReports(
+  status: ReportStatus | 'todos' = 'pendente',
+): Promise<{ reports: AdminReportEntry[] }> {
+  return fetchJson(`/admin/reports?status=${status}`);
+}
+
+export function resolveAdminReport(
+  id: string,
+  status: 'revisado' | 'arquivado',
+): Promise<{ report: AdminReportEntry }> {
+  return fetchJson(`/admin/reports/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
 }
 
 export function submitAppRating(

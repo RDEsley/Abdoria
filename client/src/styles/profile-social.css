@@ -1289,6 +1289,71 @@ a.profile-counts__item:hover strong {
   color: #d6d3d1;
 }
 
+/* Painel admin — badge de contagem nas abas (ex.: denúncias pendentes) */
+.admin-tab-badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background: #ef4444;
+  border: 2px solid #fff;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.56rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Modal de denúncia de usuário (perfil público) */
+.report-modal__reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+
+.report-modal__reason {
+  padding: 0.65rem 0.85rem;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.75rem;
+  background: #fff;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #44403c;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.report-modal__reason:hover {
+  border-color: #d6d3d1;
+}
+
+.report-modal__reason--active {
+  border-color: #e11d48;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.report-modal__sent-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #059669;
+}
+
 /* Opções — links de redes sociais (código presente) */
 .settings-social-links {
   display: grid;

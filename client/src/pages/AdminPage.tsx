@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Ban,
   Coins,
+  Flag,
   Gem,
   KeyRound,
   Lightbulb,
@@ -12,8 +13,10 @@ import {
   Shield,
   ShieldCheck,
   Star,
+  Trash2,
   Users,
 } from 'lucide-react';
+import { AdminDeleteUserModal } from '@/components/admin/AdminDeleteUserModal';
 import { ModerationModal } from '@/components/admin/ModerationModal';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
@@ -23,14 +26,17 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import {
   getAdminOverview,
+  getAdminReports,
   getAdminUsers,
   patchAdminUser,
+  resolveAdminReport,
   type AdminOverviewResponse,
+  type AdminReportEntry,
   type AdminUserEntry,
 } from '@/lib/api';
-import { isBanimentoAtivo, NOME_MAX_LENGTH, type UserRole } from '@/types';
+import { isBanimentoAtivo, NOME_MAX_LENGTH, REPORT_MOTIVO_LABELS, type UserRole } from '@/types';
 
-type Tab = 'avaliacoes' | 'sugestoes' | 'usuarios';
+type Tab = 'avaliacoes' | 'sugestoes' | 'usuarios' | 'denuncias';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   user: 'Jogador',
@@ -60,19 +66,26 @@ export function AdminPage() {
   const [tab, setTab] = useState<Tab>('avaliacoes');
   const [overview, setOverview] = useState<AdminOverviewResponse | null>(null);
   const [users, setUsers] = useState<AdminUserEntry[]>([]);
+  const [reports, setReports] = useState<AdminReportEntry[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<AdminUserEntry | null>(null);
   const [moderating, setModerating] = useState<AdminUserEntry | null>(null);
+  const [deleting, setDeleting] = useState<AdminUserEntry | null>(null);
 
   const isAdmin = user?.role === 'admin';
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [ov, list] = await Promise.all([getAdminOverview(), getAdminUsers()]);
+      const [ov, list, reportList] = await Promise.all([
+        getAdminOverview(),
+        getAdminUsers(),
+        getAdminReports('pendente'),
+      ]);
       setOverview(ov);
       setUsers(list.users);
+      setReports(reportList.reports);
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível carregar o painel.'), {
         variant: 'error',
@@ -99,6 +112,17 @@ export function AdminPage() {
 
   const applyEntry = (entry: AdminUserEntry) => {
     setUsers((prev) => prev.map((item) => (item.id === entry.id ? entry : item)));
+  };
+
+  const resolveReport = async (id: string, status: 'revisado' | 'arquivado') => {
+    try {
+      await resolveAdminReport(id, status);
+      setReports((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível atualizar a denúncia.'), {
+        variant: 'error',
+      });
+    }
   };
 
   if (!isAdmin) {
@@ -133,25 +157,27 @@ export function AdminPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {(
           [
-            { id: 'avaliacoes', label: 'Avaliações', Icon: Star },
-            { id: 'sugestoes', label: 'Sugestões', Icon: Lightbulb },
-            { id: 'usuarios', label: 'Usuários', Icon: Users },
+            { id: 'avaliacoes', label: 'Avaliações', Icon: Star, count: 0 },
+            { id: 'sugestoes', label: 'Sugestões', Icon: Lightbulb, count: 0 },
+            { id: 'usuarios', label: 'Usuários', Icon: Users, count: 0 },
+            { id: 'denuncias', label: 'Denúncias', Icon: Flag, count: reports.length },
           ] as const
-        ).map(({ id, label, Icon }) => (
+        ).map(({ id, label, Icon, count }) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-full border-2 py-2 text-sm font-bold ${
+            className={`relative flex cursor-pointer items-center justify-center gap-1 rounded-full border-2 py-2 text-[0.7rem] font-bold ${
               tab === id
                 ? 'border-stone-900 bg-emerald-500 text-white shadow-[2px_2px_0_#1c1917]'
                 : 'border-stone-900 bg-white text-stone-700'
             }`}
           >
-            <Icon size={15} /> {label}
+            <Icon size={14} /> {label}
+            {count > 0 && <span className="admin-tab-badge">{count > 99 ? '99+' : count}</span>}
           </button>
         ))}
       </div>
@@ -203,7 +229,7 @@ export function AdminPage() {
             </article>
           ))}
         </section>
-      ) : (
+      ) : tab === 'usuarios' ? (
         <section className="flex flex-col gap-2">
           <label className="relative block">
             <Search
@@ -274,11 +300,89 @@ export function AdminPage() {
                         <Ban size={14} />
                       )}
                     </button>
+                    {entry.role !== 'admin' && entry.id !== user?.id && (
+                      <button
+                        type="button"
+                        className="game-icon-btn !h-8 !w-8 !text-rose-600"
+                        aria-label={`Apagar conta de ${entry.nome}`}
+                        title="Apagar conta"
+                        onClick={() => setDeleting(entry)}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </article>
             );
           })}
+        </section>
+      ) : (
+        <section className="flex flex-col gap-2">
+          {reports.length === 0 && (
+            <p className="py-8 text-center text-sm font-bold text-stone-500">
+              Nenhuma denúncia pendente — tudo tranquilo por aqui.
+            </p>
+          )}
+          {reports.map((report) => (
+            <article key={report.id} className="glass-card p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-extrabold text-stone-800">
+                  {report.reported_nome}
+                </p>
+                <span className="shrink-0 text-[0.62rem] font-bold text-stone-400">
+                  {new Date(report.criado_em).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <p className="mt-1 text-[0.65rem] font-bold text-rose-600">
+                {REPORT_MOTIVO_LABELS[report.motivo]}
+              </p>
+              <p className="mt-0.5 text-[0.65rem] font-semibold text-stone-500">
+                Denunciado por {report.reporter_nome}
+              </p>
+              {report.descricao && (
+                <p className="mt-1.5 text-xs font-medium leading-relaxed text-stone-600">
+                  {report.descricao}
+                </p>
+              )}
+              <div className="mt-2.5 flex gap-2">
+                <GameButton
+                  variant="secondary"
+                  className="!w-auto flex-1 !text-xs"
+                  onClick={() => void resolveReport(report.id, 'arquivado')}
+                >
+                  Arquivar
+                </GameButton>
+                <GameButton
+                  variant="danger"
+                  className="!w-auto flex-1 !text-xs"
+                  onClick={() =>
+                    setModerating({
+                      id: report.reported_id,
+                      nome: report.reported_nome,
+                      email: '',
+                      tag: null,
+                      role: 'user',
+                      coins: 0,
+                      gems: 0,
+                      nivel_xp: 0,
+                      streak_atual: 0,
+                      banimento: null,
+                      is_guest: false,
+                    })
+                  }
+                >
+                  Moderar
+                </GameButton>
+                <GameButton
+                  className="!w-auto flex-1 !text-xs"
+                  onClick={() => void resolveReport(report.id, 'revisado')}
+                >
+                  Revisado
+                </GameButton>
+              </div>
+            </article>
+          ))}
         </section>
       )}
 
@@ -301,6 +405,16 @@ export function AdminPage() {
           banimento={moderating.banimento}
           onClose={() => setModerating(null)}
           onChanged={(banimento) => applyEntry({ ...moderating, banimento })}
+        />
+      )}
+
+      {deleting && (
+        <AdminDeleteUserModal
+          open
+          userId={deleting.id}
+          userName={deleting.nome}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => setUsers((prev) => prev.filter((item) => item.id !== deleting.id))}
         />
       )}
     </div>

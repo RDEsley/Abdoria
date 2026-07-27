@@ -1,8 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, Flame, Gavel, Heart, Medal, Timer, Trophy, UserPlus } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  Flag,
+  Flame,
+  Gavel,
+  Heart,
+  Medal,
+  Timer,
+  Trophy,
+  UserPlus,
+} from 'lucide-react';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 import { ModerationModal } from '@/components/admin/ModerationModal';
+import { ReportUserModal } from '@/components/social/ReportUserModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -31,6 +43,7 @@ export function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [followBusy, setFollowBusy] = useState(false);
   const [showModeration, setShowModeration] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [likes, setLikes] = useState<{ total: number; eu_curti: boolean } | null>(null);
   const [likeBusy, setLikeBusy] = useState(false);
   const isStaff = me?.role === 'admin' || me?.role === 'moderador';
@@ -142,6 +155,17 @@ export function PublicProfilePage() {
               onClick={() => setShowModeration(true)}
             >
               <Gavel size={18} aria-hidden />
+            </button>
+          )}
+          {userId && (
+            <button
+              type="button"
+              className="game-icon-btn"
+              aria-label={`Denunciar ${profile.nome}`}
+              title="Denunciar usuário"
+              onClick={() => setShowReport(true)}
+            >
+              <Flag size={16} aria-hidden />
             </button>
           )}
           {relacao.segue_voce && !relacao.amigo && (
@@ -314,6 +338,15 @@ export function PublicProfilePage() {
           banimento={null}
           onClose={() => setShowModeration(false)}
           onChanged={() => undefined}
+        />
+      )}
+
+      {userId && (
+        <ReportUserModal
+          open={showReport}
+          userId={userId}
+          userName={profile.nome}
+          onClose={() => setShowReport(false)}
         />
       )}
     </div>

@@ -141,6 +141,51 @@ export function isBanimentoAtivo(banimento?: Banimento | null, now = new Date())
   return new Date(banimento.ate).getTime() > now.getTime();
 }
 
+export type ReportMotivo =
+  | 'nome_ofensivo'
+  | 'foto_inadequada'
+  | 'trapaca'
+  | 'assedio'
+  | 'spam'
+  | 'personificacao'
+  | 'outro';
+
+export const REPORT_MOTIVOS: ReportMotivo[] = [
+  'nome_ofensivo',
+  'foto_inadequada',
+  'trapaca',
+  'assedio',
+  'spam',
+  'personificacao',
+  'outro',
+];
+
+export const REPORT_MOTIVO_LABELS: Record<ReportMotivo, string> = {
+  nome_ofensivo: 'Nome ofensivo ou impróprio',
+  foto_inadequada: 'Foto de perfil inadequada',
+  trapaca: 'Trapaça ou uso de exploits',
+  assedio: 'Assédio ou comportamento abusivo',
+  spam: 'Spam ou conteúdo indesejado',
+  personificacao: 'Está se passando por outra pessoa',
+  outro: 'Outro motivo',
+};
+
+export type ReportStatus = 'pendente' | 'revisado' | 'arquivado';
+
+export interface UserReportEntry {
+  id: string;
+  reporter_id: string;
+  reporter_nome: string;
+  reported_id: string;
+  reported_nome: string;
+  motivo: ReportMotivo;
+  descricao: string | null;
+  status: ReportStatus;
+  criado_em: string;
+  revisado_por: string | null;
+  revisado_em: string | null;
+}
+
 export interface AppRatingEntry {
   id: string;
   user_id: string;

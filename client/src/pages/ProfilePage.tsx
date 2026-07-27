@@ -30,7 +30,7 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { useApp } from '@/hooks/useApp';
 import { useCopy } from '@/hooks/useCopy';
 import { useAuth } from '@/context/AuthContext';
-import { updateMe } from '@/lib/api';
+import { getAdminReportsPendingCount, updateMe } from '@/lib/api';
 import { getMySocial } from '@/lib/api/social';
 import { playTabSwitch } from '@/lib/sounds';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
@@ -73,6 +73,7 @@ export function ProfilePage() {
     likes_recebidos: number;
     visualizacoes_recebidas: number;
   } | null>(null);
+  const [pendingReports, setPendingReports] = useState(0);
 
   // Rascunho dos Dados: pré-preenchido com o que já veio do Onboarding
   // (profile.idade/peso_kg/altura_cm) e sincronizado se a conta mudar em
@@ -110,6 +111,21 @@ export function ProfilePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (user?.role !== 'admin') return undefined;
+    let cancelled = false;
+    getAdminReportsPendingCount()
+      .then((data) => {
+        if (!cancelled) setPendingReports(data.count);
+      })
+      .catch(() => {
+        /* badge é só um indicativo — falha silenciosa */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role]);
 
   if (!profile) {
     return <PageLoader />;
@@ -194,8 +210,13 @@ export function ProfilePage() {
         <GamePageHeader eyebrow={copy('perfil_eyebrow')} title="Perfil" />
         <div className="flex shrink-0 gap-2">
           {user?.role === 'admin' && (
-            <Link to="/admin" className="game-icon-btn" aria-label="Administração">
+            <Link to="/admin" className="game-icon-btn admin-entry-btn" aria-label="Administração">
               <ShieldCheck size={20} aria-hidden />
+              {pendingReports > 0 && (
+                <span className="admin-entry-btn__badge" aria-hidden>
+                  {pendingReports > 99 ? '99+' : pendingReports}
+                </span>
+              )}
             </Link>
           )}
           <button
