@@ -212,6 +212,9 @@ export interface UserPreferencias {
   /** Tom do texto: 'jogo' (RPG, padrão) ou 'normal' (direto, sem jargão de
       jogo) — independente do idioma escolhido. */
   tom_texto?: TomTexto;
+  /** false = não consumir Frozen Streak automaticamente ao perder um dia de
+      treino (o streak quebra normalmente). Padrão: true (ativado). */
+  frozen_streak_auto_usar?: boolean;
 }
 
 export type Idioma = 'pt' | 'en' | 'es';
@@ -1762,6 +1765,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   som_habilitado: true,
   sfx_volume: 0.7,
   confetti_animacoes_habilitadas: true,
+  frozen_streak_auto_usar: true,
   idioma: 'pt',
   tom_texto: 'jogo',
   ciclo_treinos: ['A', 'B', 'C'],

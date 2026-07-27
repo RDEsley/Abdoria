@@ -11,7 +11,13 @@ import {
   ExpInstantIcon,
   DoriaBagIcon,
 } from '@/lib/item-icons';
-import { getInventory, consumeExpInstant, consumeDoriaBag, consumeRouteDrink } from '@/lib/api';
+import {
+  getInventory,
+  consumeExpInstant,
+  consumeDoriaBag,
+  consumeRouteDrink,
+  updateMe,
+} from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { overflowToastMessage } from '@/lib/inventory-overflow';
 import {
@@ -49,7 +55,7 @@ interface Props {
 type SelectedItem = 'frozen_streak' | 'route_drink' | 'exp_instant' | 'doria_bag' | null;
 
 export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
-  const { applyUser } = useAuth();
+  const { user, applyUser } = useAuth();
   const { refresh: refreshApp, stats } = useApp();
   const { presentRewards } = useRewardPresentation();
   const [frozenStreakCount, setFrozenStreakCount] = useState(0);
@@ -66,6 +72,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const [bagShake, setBagShake] = useState(false);
   const [coinPops, setCoinPops] = useState<number[]>([]);
   const [selected, setSelected] = useState<SelectedItem>(null);
+  const [togglingAutoUse, setTogglingAutoUse] = useState(false);
   const expInstantSlotRef = useRef<HTMLButtonElement | null>(null);
 
   const applyCounts = useCallback(
@@ -196,6 +203,28 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     });
   }, [presentRewards]);
 
+  const frozenAutoUse = user?.preferencias?.frozen_streak_auto_usar ?? true;
+
+  const handleToggleFrozenAutoUse = async () => {
+    if (!user || togglingAutoUse) return;
+    const next = !frozenAutoUse;
+    setTogglingAutoUse(true);
+    applyUser({ ...user, preferencias: { ...user.preferencias, frozen_streak_auto_usar: next } });
+    try {
+      const updated = await updateMe({
+        preferencias: { ...user.preferencias, frozen_streak_auto_usar: next },
+      });
+      applyUser(updated);
+    } catch (err) {
+      applyUser(user);
+      showGameToast(getErrorMessage(err, 'Não foi possível salvar a preferência.'), {
+        variant: 'error',
+      });
+    } finally {
+      setTogglingAutoUse(false);
+    }
+  };
+
   const handleUseRouteDrink = async () => {
     if (routeCount < 1) return;
     setUsingRouteDrink(true);
@@ -258,7 +287,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               type="button"
               className={`game-inventory-slot${frozenStreakCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'frozen_streak' ? ' game-inventory-slot--active' : ''}`}
               disabled={loading}
-              onClick={() => setSelected('frozen_streak')}
+              onClick={() => setSelected((prev) => (prev === 'frozen_streak' ? null : 'frozen_streak'))}
               aria-label={`${FROZEN_STREAK_LABEL}, ${frozenStreakCount} em estoque`}
             >
               <span className="game-inventory-slot__icon">
@@ -273,7 +302,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               type="button"
               className={`game-inventory-slot${routeCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'route_drink' ? ' game-inventory-slot--active' : ''}`}
               disabled={loading}
-              onClick={() => setSelected('route_drink')}
+              onClick={() => setSelected((prev) => (prev === 'route_drink' ? null : 'route_drink'))}
               aria-label={`${ROUTE_DRINK_LABEL}, ${routeCount} em estoque`}
             >
               <span className="game-inventory-slot__icon">
@@ -289,7 +318,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               type="button"
               className={`game-inventory-slot${expInstantCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'exp_instant' ? ' game-inventory-slot--active' : ''}`}
               disabled={loading}
-              onClick={() => setSelected('exp_instant')}
+              onClick={() => setSelected((prev) => (prev === 'exp_instant' ? null : 'exp_instant'))}
               aria-label={`${EXP_INSTANT_LABEL}, ${expInstantCount} em estoque`}
             >
               <span className="game-inventory-slot__icon">
@@ -304,7 +333,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               type="button"
               className={`game-inventory-slot${doriaBagCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'doria_bag' ? ' game-inventory-slot--active' : ''}${bagShake ? ' reward-doria-bag-shake' : ''}`}
               disabled={loading}
-              onClick={() => setSelected('doria_bag')}
+              onClick={() => setSelected((prev) => (prev === 'doria_bag' ? null : 'doria_bag'))}
               aria-label={`${DORIA_BAG_LABEL}, ${doriaBagCount} em estoque`}
             >
               <span className="game-inventory-slot__icon relative">
@@ -340,13 +369,24 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                 <h3 className="game-inventory-detail__title">{FROZEN_STREAK_LABEL}</h3>
                 <p className="game-inventory-detail__desc">{formatFrozenStreakDescription()}</p>
                 <p className="game-inventory-detail__desc game-inventory-detail__desc--muted">
-                  Consumido automaticamente se você perder um dia de treino. Você tem{' '}
-                  {frozenStreakCount} em estoque (máx. {stackCap}).
+                  {frozenAutoUse
+                    ? 'Consumido automaticamente se você perder um dia de treino.'
+                    : 'Uso automático desativado — o streak vai quebrar normalmente se você perder um dia.'}{' '}
+                  Você tem {frozenStreakCount} em estoque (máx. {stackCap}).
                 </p>
-                <div className="game-inventory-detail__actions">
-                  <GameButton variant="secondary" onClick={() => setSelected(null)}>
-                    Voltar
-                  </GameButton>
+                <div className="game-inventory-detail__toggle-row">
+                  <span className="game-inventory-detail__toggle-label">Uso automático</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={frozenAutoUse}
+                    aria-label={frozenAutoUse ? 'Desativar uso automático' : 'Ativar uso automático'}
+                    disabled={togglingAutoUse}
+                    className={`library-equipment__switch${frozenAutoUse ? ' library-equipment__switch--on' : ''}`}
+                    onClick={() => void handleToggleFrozenAutoUse()}
+                  >
+                    <span className="library-equipment__switch-thumb" aria-hidden />
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -365,13 +405,6 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                   (máx. {stackCap}).
                 </p>
                 <div className="game-inventory-detail__actions">
-                  <GameButton
-                    variant="secondary"
-                    onClick={() => setSelected(null)}
-                    disabled={usingRouteDrink}
-                  >
-                    Voltar
-                  </GameButton>
                   <GameButton
                     onClick={() => setRouteDrinkConfirmOpen(true)}
                     disabled={usingRouteDrink}
@@ -395,13 +428,6 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                   em estoque (máx. {stackCap}).
                 </p>
                 <div className="game-inventory-detail__actions">
-                  <GameButton
-                    variant="secondary"
-                    onClick={() => setSelected(null)}
-                    disabled={usingExpInstant}
-                  >
-                    Voltar
-                  </GameButton>
                   <GameButton
                     onClick={() => void handleUseExpInstantAll()}
                     disabled={usingExpInstant}
@@ -435,33 +461,15 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                 </p>
                 <div className="game-inventory-detail__actions">
                   <GameButton
-                    variant="secondary"
-                    onClick={() => setSelected(null)}
+                    onClick={() => void handleUseDoriaBag(doriaBagCount, true)}
                     disabled={usingDoriaBag}
                   >
-                    Voltar
+                    {usingDoriaBag
+                      ? 'Abrindo...'
+                      : doriaBagCount > 1
+                        ? `Utilizar todas (${doriaBagCount})`
+                        : 'Usar bolsa'}
                   </GameButton>
-                  {doriaBagCount > 1 ? (
-                    <>
-                      <GameButton
-                        variant="secondary"
-                        onClick={() => void handleUseDoriaBag(1)}
-                        disabled={usingDoriaBag}
-                      >
-                        {usingDoriaBag ? 'Abrindo...' : 'Usar 1 bolsa'}
-                      </GameButton>
-                      <GameButton
-                        onClick={() => void handleUseDoriaBag(doriaBagCount, true)}
-                        disabled={usingDoriaBag}
-                      >
-                        {usingDoriaBag ? 'Abrindo...' : `Utilizar todas (${doriaBagCount})`}
-                      </GameButton>
-                    </>
-                  ) : (
-                    <GameButton onClick={() => void handleUseDoriaBag(1)} disabled={usingDoriaBag}>
-                      {usingDoriaBag ? 'Abrindo...' : 'Usar bolsa'}
-                    </GameButton>
-                  )}
                 </div>
               </motion.div>
             )}

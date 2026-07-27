@@ -243,6 +243,22 @@
   flex: 1;
 }
 
+.game-inventory-detail__toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(28, 25, 23, 0.1);
+}
+
+.game-inventory-detail__toggle-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #1c1917;
+}
+
 .game-profile-hero .game-nav-item,
 header .game-nav-item {
   position: relative;

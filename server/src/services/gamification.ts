@@ -111,6 +111,11 @@ export function applyStreakFreezeProtection(
     user.gamificacao.streak_congelamentos = [];
   }
 
+  // Opt-out: jogador desativou o uso automático no inventário — o streak
+  // quebra normalmente em vez de consumir o item sozinho. `undefined` (contas
+  // antigas, sem o campo) conta como ativado, que é o padrão.
+  if (user.preferencias.frozen_streak_auto_usar === false) return [];
+
   const frozenDates = user.gamificacao.streak_congelamentos;
   const maxFreezes = getItemCount(user, FROZEN_STREAK_ITEM_ID);
   const missedDays = findStreakMissedDaysForFreeze(histories, frozenDates, maxFreezes);
