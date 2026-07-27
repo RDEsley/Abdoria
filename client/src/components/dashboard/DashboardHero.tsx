@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, type CSSProperties } from 'react';
+﻿import { useEffect, useState, type CSSProperties } from 'react';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { StreakCountdown } from '@/components/gamification/StreakCountdown';
@@ -37,30 +37,41 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
   const minimal = !(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
 
-  // O anel enche do zero até o valor real toda vez que a Home é montada (o
-  // usuário entra na tela) — depois disso, mudanças de XP no mesmo mount só
-  // atualizam direto, sem repetir a animação de entrada.
+  // O anel/barra enchem do zero até o valor real toda vez que a Home é
+  // montada (o usuário entra na tela). Sem ref pra "já animou uma vez": um
+  // guard desse tipo, mutado direto dentro do efeito, quebra sob o
+  // StrictMode do React em dev — o efeito roda 2x (mount, cleanup, mount de
+  // novo), o cleanup da 1ª rodada cancela o RAF antes dele disparar, e a 2ª
+  // rodada já encontra o guard como "true" e pula a animação inteira, indo
+  // direto pro valor final sem o usuário nunca ver o preenchimento. Cada
+  // execução do efeito agora usa seu próprio `cancelled` local (fechado
+  // nessa run específica), então a 2ª invocação do StrictMode sempre roda
+  // sua própria animação limpa, sem interferência da 1ª.
   const [displayPct, setDisplayPct] = useState(minimal ? levelPct : 0);
-  const hasEnteredRef = useRef(minimal);
 
   useEffect(() => {
-    if (!hasEnteredRef.current) {
-      hasEnteredRef.current = true;
-      let raf = 0;
-      const start = performance.now();
-      const duration = 900;
-      const tick = (now: number) => {
-        const t = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - t, 3);
-        setDisplayPct(levelPct * eased);
-        if (t < 1) raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
-      return () => cancelAnimationFrame(raf);
+    if (minimal) {
+      setDisplayPct(levelPct);
+      return undefined;
     }
-    setDisplayPct(levelPct);
-    return undefined;
-  }, [levelPct]);
+    let cancelled = false;
+    let raf = 0;
+    setDisplayPct(0);
+    const start = performance.now();
+    const duration = 900;
+    const tick = (now: number) => {
+      if (cancelled) return;
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayPct(levelPct * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [levelPct, minimal]);
 
   return (
     <section className="game-xp-section glass-card overflow-hidden">

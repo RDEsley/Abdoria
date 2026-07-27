@@ -169,9 +169,13 @@
 .game-xp-section__hero {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  /* Alinhado ao topo (não mais centralizado) — com bio + XP + barra + streak
+     empilhados, centralizar o anel contra o bloco inteiro fazia o "Nível"
+     não bater visualmente com a linha do nome. Alinhado no topo, o anel
+     acompanha o nome como em qualquer card de perfil "avatar + info". */
+  align-items: flex-start;
   gap: 1rem 1.25rem;
-  padding: 1rem 1.1rem;
+  padding: 1.1rem;
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 45%, #fde68a 100%);
   border-bottom: var(--border-card);
 }
@@ -432,7 +436,10 @@
 }
 
 .game-xp-section__subtitle {
-  margin: 0.45rem 0 0;
+  /* Mais respiro que bio→subtitle (0.3rem lá embaixo): separa o grupo de
+     identidade (nome/título/bio) do grupo de progresso (texto de XP +
+     barra) em vez de tudo grudado numa coluna só. */
+  margin: 0.7rem 0 0;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.4;
@@ -444,20 +451,26 @@
 }
 
 .game-xp-section__hero-bar {
-  height: 0.5rem;
+  position: relative;
+  height: 0.55rem;
+  margin-top: 0.4rem;
   border-radius: 999px;
   overflow: hidden;
   background: rgba(28, 25, 23, 0.1);
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  box-shadow: inset 0 1px 2px rgba(28, 25, 23, 0.12);
 }
 
 .game-xp-section__hero--skinned .game-xp-section__hero-bar {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .game-xp-section__hero-bar-fill {
   height: 100%;
   border-radius: inherit;
-  background: #10b981;
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
 }
 
 /* Telas bem estreitas (iPhone SE, Android compacto ~320-360px): anel menor
