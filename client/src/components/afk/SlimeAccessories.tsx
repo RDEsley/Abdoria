@@ -13,7 +13,8 @@ const KIND_CLASS: Record<SlimeAccessoryKind, string> = {
   horn: 'game-afk-slime__horn',
   'horn-l': 'game-afk-slime__horn game-afk-slime__horn--l',
   'horn-r': 'game-afk-slime__horn game-afk-slime__horn--r',
-  scar: 'game-afk-slime__scar',
+  'ear-l': 'game-afk-slime__ear game-afk-slime__ear--l',
+  'ear-r': 'game-afk-slime__ear game-afk-slime__ear--r',
   'bone-a': 'game-afk-slime__bone game-afk-slime__bone--a',
   'bone-b': 'game-afk-slime__bone game-afk-slime__bone--b',
   skull: 'game-afk-slime__skull',
@@ -33,6 +34,14 @@ const KIND_CLASS: Record<SlimeAccessoryKind, string> = {
   wand: 'game-afk-slime__wand',
   'crystal-shard': 'game-afk-slime__crystal-shard',
   'storm-bolt': 'game-afk-slime__storm-bolt',
+  'cowboy-hat': 'game-afk-slime__cowboy-hat',
+  'party-hat': 'game-afk-slime__party-hat',
+  bandana: 'game-afk-slime__bandana',
+  headphones: 'game-afk-slime__headphones',
+  antenna: 'game-afk-slime__antenna',
+  antennae: 'game-afk-slime__antennae',
+  monocle: 'game-afk-slime__monocle',
+  scarf: 'game-afk-slime__scarf',
 };
 
 const BACK_LAYER: ReadonlySet<SlimeAccessoryKind> = new Set([
@@ -43,7 +52,6 @@ const BACK_LAYER: ReadonlySet<SlimeAccessoryKind> = new Set([
   'wing-r',
   'bone-a',
   'bone-b',
-  'scar',
   'staff',
   'crystal-shard',
   'storm-bolt',
@@ -54,7 +62,7 @@ export function isBackSlimeAccessory(kind: SlimeAccessoryKind): boolean {
 }
 
 export function isFaceSlimeAccessory(kind: SlimeAccessoryKind): boolean {
-  return kind === 'glasses' || kind === 'patch';
+  return kind === 'glasses' || kind === 'patch' || kind === 'monocle';
 }
 
 interface AccessoryProps {

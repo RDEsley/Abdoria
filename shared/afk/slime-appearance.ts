@@ -17,7 +17,8 @@ export type SlimeAccessoryKind =
   | 'horn'
   | 'horn-l'
   | 'horn-r'
-  | 'scar'
+  | 'ear-l'
+  | 'ear-r'
   | 'bone-a'
   | 'bone-b'
   | 'skull'
@@ -36,27 +37,21 @@ export type SlimeAccessoryKind =
   | 'wizard-hat'
   | 'wand'
   | 'crystal-shard'
-  | 'storm-bolt';
+  | 'storm-bolt'
+  | 'cowboy-hat'
+  | 'party-hat'
+  | 'bandana'
+  | 'headphones'
+  | 'antenna'
+  | 'antennae'
+  | 'monocle'
+  | 'scarf';
 
 export interface SlimeAppearance {
   eyes: SlimeEyeStyle;
   mouth: SlimeMouthStyle;
   extra: SlimeExtraAccessory;
 }
-
-const EYE_STYLES: SlimeEyeStyle[] = ['round', 'happy', 'sleepy', 'wide', 'star', 'anime'];
-const MOUTH_STYLES: SlimeMouthStyle[] = ['smile', 'o', 'cat', 'grin', 'flat', 'vampire'];
-const EXTRA_POOL: SlimeExtraAccessory[] = [
-  'aura',
-  'glasses',
-  'leaf',
-  'beanie',
-  'flower',
-  'halo',
-  'bow',
-  'patch',
-  'sparkle',
-];
 
 const EXTRA_TO_KIND: Record<Exclude<SlimeExtraAccessory, 'none'>, SlimeAccessoryKind> = {
   aura: 'aura',
@@ -70,71 +65,79 @@ const EXTRA_TO_KIND: Record<Exclude<SlimeExtraAccessory, 'none'>, SlimeAccessory
   sparkle: 'sparkle',
 };
 
-export function resolveSlimeAppearance(
+/**
+ * Cosméticos sorteados por spawn — só em comuns e elites (boss nunca, pra não
+ * competir com a coroa/capuz que é identidade do chefe). São puramente
+ * visuais: não mudam HP, dano nem loot.
+ */
+export const SLIME_COSMETIC_POOL: SlimeAccessoryKind[] = [
+  'cowboy-hat',
+  'party-hat',
+  'bandana',
+  'headphones',
+  'cap',
+  'beanie',
+  'antenna',
+  'antennae',
+  'glasses',
+  'monocle',
+  'flower',
+  'bow',
+  'scarf',
+  'halo',
+];
+
+/** Chance (%) de um spawn comum/elite vir com um cosmético sorteado. */
+export const SLIME_COSMETIC_CHANCE = 38;
+
+/** Ocupam o topo da cabeça — só cabe um por slime. */
+const HEAD_SLOT: ReadonlySet<SlimeAccessoryKind> = new Set([
+  'crown',
+  'hood',
+  'helm',
+  'helm-knight',
+  'wizard-hat',
+  'cap',
+  'beanie',
+  'cowboy-hat',
+  'party-hat',
+  'bandana',
+  'headphones',
+  'antenna',
+  'antennae',
+  'halo',
+]);
+
+/** Ficam sobre o rosto — só cabe um por slime. */
+const FACE_SLOT: ReadonlySet<SlimeAccessoryKind> = new Set(['glasses', 'monocle', 'patch']);
+
+/**
+ * Sorteia um cosmético pro spawn, respeitando os slots já ocupados pelos
+ * acessórios de identidade da criatura (ex.: o Blindado já usa o topo com o
+ * elmo, então nunca ganha chapéu por cima — sobra óculos, cachecol e afins).
+ */
+export function rollSlimeCosmetic(
   seed: number,
-  enemyId: AfkEnemyId,
   isBoss: boolean,
-  elite: boolean,
-): SlimeAppearance {
+  identity: SlimeAccessoryKind[],
+): SlimeAccessoryKind | null {
+  if (isBoss) return null;
+
   const s = seed >>> 0;
+  if ((s >>> 16) % 100 >= SLIME_COSMETIC_CHANCE) return null;
 
-  if (isBoss && enemyId === 'boss_colossus') {
-    return { eyes: 'wide', mouth: 'grin', extra: 'none' };
-  }
-  if (isBoss && enemyId === 'boss_lich') {
-    return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
-  }
-  if (isBoss && enemyId === 'boss_hydra') {
-    return { eyes: 'wide', mouth: 'grin', extra: 'none' };
-  }
-  if (isBoss && enemyId === 'boss_golem') {
-    return { eyes: 'wide', mouth: 'grin', extra: 'none' };
-  }
-  if (enemyId === 'golden_slime') {
-    return { eyes: 'star', mouth: 'o', extra: 'aura' };
-  }
-  if (enemyId === 'magic_rabbit') {
-    return { eyes: 'star', mouth: 'smile', extra: 'sparkle' };
-  }
-  if (enemyId === 'slime_enigma' || enemyId === 'slime_binario') {
-    return { eyes: 'round', mouth: 'flat', extra: 'none' };
-  }
-  if (enemyId === 'skeleton') {
-    return { eyes: 'round', mouth: 'flat', extra: 'none' };
-  }
-  if (enemyId === 'armored_skeleton') {
-    return { eyes: 'round', mouth: 'flat', extra: 'none' };
-  }
-  if (enemyId === 'slime_chumbo') {
-    return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
-  }
-  if (isBoss && enemyId === 'boss_procrastinador') {
-    return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
-  }
-  if (isBoss && enemyId === 'boss_preguica') {
-    return { eyes: 'sleepy', mouth: 'o', extra: 'none' };
-  }
+  const headTaken = identity.some((kind) => HEAD_SLOT.has(kind));
+  const faceTaken = identity.some((kind) => FACE_SLOT.has(kind));
 
-  let eyes = EYE_STYLES[s % EYE_STYLES.length]!;
-  let mouth = MOUTH_STYLES[(s >>> 8) % MOUTH_STYLES.length]!;
+  const pool = SLIME_COSMETIC_POOL.filter((kind) => {
+    if (identity.includes(kind)) return false;
+    if (headTaken && HEAD_SLOT.has(kind)) return false;
+    if (faceTaken && FACE_SLOT.has(kind)) return false;
+    return true;
+  });
+  if (pool.length === 0) return null;
 
-  if (enemyId === 'zombie' && (s >>> 10) % 3 === 0) {
-    mouth = 'vampire';
-  }
-  if (enemyId === 'crystal_slime' && (s >>> 14) % 4 === 0) {
-    eyes = 'wide';
-  }
-  if (enemyId === 'storm_slime' && (s >>> 14) % 3 === 0) {
-    eyes = 'anime';
-  }
-  const extraRoll = (s >>> 16) % 100;
-
-  let extra: SlimeExtraAccessory = 'none';
-  if (!isBoss && (elite || extraRoll < 32)) {
-    extra = EXTRA_POOL[(s >>> 24) % EXTRA_POOL.length]!;
-  }
-
-  return { eyes, mouth, extra };
+  return pool[(s >>> 24) % pool.length]!;
 }
 
 export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance {
@@ -142,7 +145,7 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
     case 'bat':
       return { eyes: 'round', mouth: 'smile', extra: 'none' };
     case 'zombie':
-      return { eyes: 'sleepy', mouth: 'vampire', extra: 'none' };
+      return { eyes: 'sleepy', mouth: 'smile', extra: 'none' };
     case 'skeleton':
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
     case 'slime_macaco':
@@ -187,10 +190,15 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
   }
 }
 
+/**
+ * Acessórios de IDENTIDADE da criatura (asas do Morcego, orelhas do Macaco,
+ * ossos do Esqueleto, coroa do chefe...) — fixos, aparecem no combate e no
+ * Bestiário. Cosmético sorteado por spawn é outra coisa: ver
+ * {@link rollSlimeCosmetic}.
+ */
 export function collectSlimeAccessories(
   enemyId: AfkEnemyId,
   isBoss: boolean,
-  elite: boolean,
   appearance: SlimeAppearance,
 ): SlimeAccessoryKind[] {
   const items: SlimeAccessoryKind[] = [];
@@ -229,7 +237,10 @@ export function collectSlimeAccessories(
       items.push('wing-l', 'wing-r');
       break;
     case 'zombie':
-      items.push('scar');
+      items.push('leaf');
+      break;
+    case 'slime_macaco':
+      items.push('ear-l', 'ear-r');
       break;
     case 'skeleton':
       items.push('bone-a', 'bone-b');
@@ -247,7 +258,6 @@ export function collectSlimeAccessories(
       items.push('helm-knight');
       break;
     default:
-      if (elite) items.push('cap');
       break;
   }
 

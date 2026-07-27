@@ -5,15 +5,26 @@ export function AfkBossProgressPanel({
   killsUntilBoss,
   bossActive,
   overlay = false,
+  bossHp,
+  bossMaxHp,
+  bossHit = false,
 }: {
   killsUntilBoss: number;
   bossActive: boolean;
   overlay?: boolean;
+  /** Vida atual do boss — só faz sentido (e só é usado) quando `bossActive`.
+      Essa barra vira a barra de vida real do boss durante a luta; ele não
+      tem a barrinha flutuante em cima da cabeça que os outros slimes têm. */
+  bossHp?: number;
+  bossMaxHp?: number;
+  bossHit?: boolean;
 }) {
-  const bossProgressPct = Math.max(
-    0,
-    Math.min(100, (killsUntilBoss / (AFK_BOSS_INTERVAL - 1)) * 100),
-  );
+  const bossProgressPct = Math.max(0, Math.min(100, (killsUntilBoss / AFK_BOSS_INTERVAL) * 100));
+  const bossHpPct =
+    bossActive && bossMaxHp && bossMaxHp > 0
+      ? Math.max(0, Math.min(100, ((bossHp ?? bossMaxHp) / bossMaxHp) * 100))
+      : 100;
+  const bossHpStage = bossHpPct > 50 ? 'high' : bossHpPct > 25 ? 'mid' : 'low';
 
   return (
     <div
@@ -24,25 +35,28 @@ export function AfkBossProgressPanel({
           {bossActive ? 'Boss em combate' : 'Próximo boss'}
         </span>
         <span className="game-afk-combat-hud__boss-count tabular-nums">
-          {bossActive ? '👑' : `${killsUntilBoss}/${AFK_BOSS_INTERVAL - 1}`}
+          {bossActive
+            ? `${Math.max(0, Math.round(bossHp ?? 0)).toLocaleString('pt-BR')} HP`
+            : `${killsUntilBoss}/${AFK_BOSS_INTERVAL}`}
         </span>
       </div>
       <div
-        className="game-afk-combat-hud__boss-track"
+        className={`game-afk-combat-hud__boss-track${bossActive ? ` game-afk-combat-hud__boss-track--${bossHpStage}` : ''}${bossActive && bossHit ? ' game-afk-combat-hud__boss-track--hit' : ''}`}
         role="progressbar"
-        aria-valuenow={killsUntilBoss}
+        aria-valuenow={bossActive ? (bossHp ?? 0) : killsUntilBoss}
         aria-valuemin={0}
-        aria-valuemax={AFK_BOSS_INTERVAL - 1}
+        aria-valuemax={bossActive ? (bossMaxHp ?? 0) : AFK_BOSS_INTERVAL}
         aria-label={
           bossActive
-            ? 'Boss em combate'
-            : `Progresso até o boss: ${killsUntilBoss} de ${AFK_BOSS_INTERVAL - 1}`
+            ? `Vida do boss: ${bossHp ?? 0} de ${bossMaxHp ?? 0}`
+            : `Progresso até o boss: ${killsUntilBoss} de ${AFK_BOSS_INTERVAL}`
         }
       >
         <div
           className="game-afk-combat-hud__boss-fill"
-          style={{ width: `${bossActive ? 100 : bossProgressPct}%` }}
+          style={{ width: `${bossActive ? bossHpPct : bossProgressPct}%` }}
         />
+        {bossActive && <span className="game-afk-combat-hud__boss-flash" aria-hidden />}
       </div>
     </div>
   );

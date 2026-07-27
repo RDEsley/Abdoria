@@ -11,6 +11,8 @@ import {
   resolvePatrolCritChancePercent,
 } from '@/types';
 import { useMobileViewport } from '@/hooks/useMobileViewport';
+import { emitAfkLootOrbs } from '@/lib/afk-loot-orbs';
+import { AfkLootOrbLayer } from '@/components/afk/AfkLootOrbLayer';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
 import { AfkEnemySprite } from '@/components/afk/AfkEnemySprite';
 import { AfkSpellEffect } from '@/components/afk/AfkSpellEffect';
@@ -59,6 +61,18 @@ export function AfkCombatScene({
   const [phase, setPhase] = useState<'idle' | 'attack'>('idle');
   const [enemyHit, setEnemyHit] = useState(false);
   const [displayHp, setDisplayHp] = useState(combat?.enemy_hp ?? 90);
+  // Vida ANTES do golpe mais recente — alimenta o "rastro" da barra de vida
+  // (a parte clara que ainda mostra o pedaço perdido por um instante antes de
+  // escorregar pro valor novo). É lido no render, então é state, não ref.
+  const [previousDisplayHp, setPreviousDisplayHp] = useState(combat?.enemy_hp ?? 90);
+  // Fonte de verdade da vida pra LÓGICA de combate. O state `displayHp` serve
+  // só pra desenhar: o React invoca updaters de state mais de uma vez
+  // (StrictMode em dev, e concorrência em geral), então qualquer efeito
+  // colateral dentro de `setDisplayHp(fn)` roda duplicado — era isso que
+  // agendava dois respawns por abate e contava +2 no contador de boss.
+  const displayHpRef = useRef(combat?.enemy_hp ?? 90);
+  /** Trava o abate a um por spawn, mesmo se um golpe chegar atrasado. */
+  const killHandledRef = useRef(false);
   const [dying, setDying] = useState(false);
   const [looting, setLooting] = useState(false);
   const [lootDropSeq, setLootDropSeq] = useState(0);
@@ -72,6 +86,13 @@ export function AfkCombatScene({
   const critStreakRef = useRef(0);
   const localEnemyIdRef = useRef(localEnemyId);
   const localIsBossRef = useRef(localIsBoss);
+  const localIsEliteRef = useRef(localIsElite);
+  const localKillsUntilBossRef = useRef(combat?.kills_until_boss ?? 0);
+  /** Sobe no INSTANTE do impacto (não no início do ataque) — as animações de
+      dano da barra de vida são chaveadas nele, senão em magia (impacto 620ms
+      depois do início, cauda de 1,5s) o flash/rastro tocava fora de hora. */
+  const [hitSeq, setHitSeq] = useState(0);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<number[]>([]);
   const { floaters, pushDamage } = useDamageFloaters();
 
@@ -103,7 +124,8 @@ export function AfkCombatScene({
   useEffect(() => {
     localIsBossRef.current = localIsBoss;
     localEnemyIdRef.current = localEnemyId;
-  }, [localIsBoss, localEnemyId]);
+    localIsEliteRef.current = localIsElite;
+  }, [localIsBoss, localEnemyId, localIsElite]);
 
   useEffect(() => {
     hasLootRef.current = hasLoot;
@@ -140,7 +162,11 @@ export function AfkCombatScene({
       setSpawnKillsTotal(combat.kills_total);
       localIsBossRef.current = combat.is_boss;
       localEnemyIdRef.current = combat.enemy_id;
+      localKillsUntilBossRef.current = combat.kills_until_boss;
       setDisplayHp(combat.enemy_hp);
+      setPreviousDisplayHp(combat.enemy_hp);
+      displayHpRef.current = combat.enemy_hp;
+      killHandledRef.current = false;
       return;
     }
 
@@ -157,7 +183,14 @@ export function AfkCombatScene({
       setSpawnKillsTotal(killsTotal);
       localIsBossRef.current = picked.is_boss;
       localEnemyIdRef.current = picked.enemy_id;
-      setDisplayHp(getEnemyMaxHp(picked.enemy_id));
+      const freshHp = getEnemyMaxHp(picked.enemy_id);
+      setDisplayHp(freshHp);
+      // Inimigo novo: sem isso, o rastro da barra "puxava" do valor quase
+      // zero do bicho anterior até o HP cheio do novo, parecendo a barra
+      // enchendo em vez de só aparecer cheia.
+      setPreviousDisplayHp(freshHp);
+      displayHpRef.current = freshHp;
+      killHandledRef.current = false;
     },
     [userId],
   );
@@ -176,6 +209,9 @@ export function AfkCombatScene({
     const serverKills = serverSnapshot.kills_total;
     if (serverKills > killsTotalRef.current) {
       setDisplayHp(serverSnapshot.enemy_hp);
+      setPreviousDisplayHp(serverSnapshot.enemy_hp);
+      displayHpRef.current = serverSnapshot.enemy_hp;
+      killHandledRef.current = false;
       setDying(false);
       setLooting(false);
       setEnemyHit(false);
@@ -205,36 +241,59 @@ export function AfkCombatScene({
       setPhase('attack');
       setEnemyHit(false);
       schedule(() => {
-        setEnemyHit(true);
+        // Golpe atrasado chegando depois do abate (a cauda da magia é longa)
+        // não pode reabrir a sequência de morte.
+        if (killHandledRef.current) return;
+
         const hitDamage = attack.damage;
+        const hpBefore = displayHpRef.current;
+        const next = attack.isHitKill ? 0 : hpBefore - hitDamage;
+
+        setPreviousDisplayHp(hpBefore);
+        displayHpRef.current = Math.max(0, next);
+
+        setEnemyHit(true);
+        setHitSeq((n) => n + 1);
         pushDamage(hitDamage, isCrit);
-        setDisplayHp((hp) => {
-          const next = attack.isHitKill ? 0 : hp - hitDamage;
-          if (next <= 0) {
-            critStreakRef.current = 0;
-            setDying(true);
-            schedule(() => setLooting(true), 120);
-            // Drop ao vivo: quando há loot acumulado, mostra um item saltando do slime.
-            if (hasLootRef.current && Math.random() < 0.4) {
-              schedule(() => setLootDropSeq((n) => n + 1), 150);
-            }
-            schedule(() => {
-              const wasBoss = localIsBossRef.current;
-              const nextKillsTotal = killsTotalRef.current + 1;
-              setLocalKillsUntilBoss((prev) => {
-                const nextKills = advanceKillsUntilBoss(prev, wasBoss);
-                respawnLocalEnemy(nextKills, nextKillsTotal);
-                return nextKills;
-              });
-              killsTotalRef.current = nextKillsTotal;
-              setDying(false);
-              setLooting(false);
-              setEnemyHit(false);
-            }, 720);
-            return 0;
-          }
-          return next;
-        });
+        setDisplayHp(Math.max(0, next));
+
+        if (next > 0) return;
+
+        killHandledRef.current = true;
+        critStreakRef.current = 0;
+        setDying(true);
+        // Sequência da morte: o slime encolhe (dying) → os acessórios se
+        // soltam e caem (looting) → o item pula → vira bolinha e voa pro
+        // baú, que dá uma mexida a cada chegada.
+        schedule(() => setLooting(true), 120);
+
+        const wasBossKill = localIsBossRef.current;
+        const wasEliteKill = localIsEliteRef.current;
+        const orbCount = wasBossKill ? 5 : wasEliteKill ? 3 : 2;
+        // Boss/elite sempre rendem a cena inteira; comum entra em parte dos
+        // abates pra não virar poluição visual a cada 2 segundos.
+        const showDrop =
+          hasLootRef.current && (wasBossKill || wasEliteKill || Math.random() < 0.45);
+
+        if (showDrop) {
+          schedule(() => setLootDropSeq((n) => n + 1), 150);
+          schedule(() => {
+            const enemyEl = viewportRef.current?.querySelector('.game-afk-enemy');
+            emitAfkLootOrbs(orbCount, enemyEl);
+          }, 300);
+        }
+
+        schedule(() => {
+          const nextKillsTotal = killsTotalRef.current + 1;
+          const nextKills = advanceKillsUntilBoss(localKillsUntilBossRef.current, wasBossKill);
+          localKillsUntilBossRef.current = nextKills;
+          killsTotalRef.current = nextKillsTotal;
+          setLocalKillsUntilBoss(nextKills);
+          respawnLocalEnemy(nextKills, nextKillsTotal);
+          setDying(false);
+          setLooting(false);
+          setEnemyHit(false);
+        }, 720);
       }, impactDelay);
 
       schedule(() => {
@@ -269,7 +328,9 @@ export function AfkCombatScene({
 
   return (
     <div className="game-afk-scene">
+      <AfkLootOrbLayer />
       <div
+        ref={viewportRef}
         className={[
           'game-afk-scene__viewport',
           `game-afk-scene__viewport--enemy-${localEnemyId}`,
@@ -282,6 +343,9 @@ export function AfkCombatScene({
           weapon === 'arco' && attacking && attackIsCrit
             ? 'game-afk-scene__viewport--arrow-crit-hit'
             : '',
+          weapon === 'magia' && attacking && weaponId === 'magia_buraco_negro'
+            ? 'game-afk-scene__viewport--blackhole-cast'
+            : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -292,6 +356,9 @@ export function AfkCombatScene({
         <AfkBossProgressPanel
           killsUntilBoss={localKillsUntilBoss}
           bossActive={localIsBoss}
+          bossHp={displayHp}
+          bossMaxHp={snapshot.enemy_max_hp}
+          bossHit={enemyHit}
           overlay
         />
 
@@ -419,8 +486,10 @@ export function AfkCombatScene({
           critHit={enemyHit && attackIsCrit}
           dying={dying}
           looting={looting}
-          hitKey={attackSeq}
+          hitKey={hitSeq}
           displayHp={displayHp}
+          previousDisplayHp={previousDisplayHp}
+          showHpBar={!snapshot.is_boss}
         />
 
         {lootDropSeq > 0 && (

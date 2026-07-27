@@ -114,7 +114,7 @@ export const AFK_BOSS_LEGENDARY_WEAPON_ROLL = 9987;
 export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
   bat: { id: 'bat', tier: 'common', maxHp: 200, label: 'Slime Morcego' },
   zombie: { id: 'zombie', tier: 'common', maxHp: 245, label: 'Slime Musgo' },
-  skeleton: { id: 'skeleton', tier: 'common', maxHp: 300, label: 'Slime Ósseo' },
+  skeleton: { id: 'skeleton', tier: 'common', maxHp: 300, label: 'Slime Esqueleto' },
   slime_macaco: { id: 'slime_macaco', tier: 'common', maxHp: 215, label: 'Slime Macaco' },
   slime_agua: { id: 'slime_agua', tier: 'common', maxHp: 260, label: 'Slime de Água' },
   slime_doce: { id: 'slime_doce', tier: 'common', maxHp: 230, label: 'Slime de Doce' },
@@ -131,14 +131,14 @@ export const AFK_ENEMIES: Record<AfkEnemyId, AfkEnemyDefinition> = {
   boss_colossus: { id: 'boss_colossus', tier: 'boss', maxHp: 7000, label: 'Rei Slime' },
   boss_lich: { id: 'boss_lich', tier: 'boss', maxHp: 7400, label: 'Slime Lich' },
   boss_hydra: { id: 'boss_hydra', tier: 'boss', maxHp: 8000, label: 'Hidra Slime' },
-  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 7800, label: 'Golem de Pedra' },
+  boss_golem: { id: 'boss_golem', tier: 'boss', maxHp: 8400, label: 'Golem de Pedra' },
   boss_procrastinador: {
     id: 'boss_procrastinador',
     tier: 'boss',
-    maxHp: 7200,
+    maxHp: 9000,
     label: 'Slime Procrastinador',
   },
-  boss_preguica: { id: 'boss_preguica', tier: 'boss', maxHp: 7600, label: 'Slime Preguiça' },
+  boss_preguica: { id: 'boss_preguica', tier: 'boss', maxHp: 10000, label: 'Slime Preguiçoso' },
 };
 
 export const AFK_MAGIC_RABBIT_CHANCE = 2304;
@@ -272,15 +272,18 @@ export function resolveNextSpawn(
   return pickNextEnemy(seed, { isBoss, isElite: elite, previousEnemyId });
 }
 
+/** Boss aparece a cada AFK_BOSS_INTERVAL (100) mortes — o gatilho é bater
+    exatamente esse número, não "99" (o -1 antigo fazia o boss chegar um
+    kill antes do contador "X/100" realmente zerar). */
 export function shouldSpawnBoss(killsUntilBoss: number): boolean {
-  return killsUntilBoss >= AFK_BOSS_INTERVAL - 1;
+  return killsUntilBoss >= AFK_BOSS_INTERVAL;
 }
 
 /** Espelha o incremento de kills_until_boss ao derrotar um inimigo (servidor + UI). */
 export function advanceKillsUntilBoss(killsUntilBoss: number, wasBoss: boolean): number {
   if (wasBoss) return 0;
   const next = killsUntilBoss + 1;
-  if (next >= AFK_BOSS_INTERVAL) return AFK_BOSS_INTERVAL - 1;
+  if (next >= AFK_BOSS_INTERVAL) return AFK_BOSS_INTERVAL;
   return next;
 }
 

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Gift } from 'lucide-react';
+import { AFK_CHEST_RECEIVED_EVENT } from '@/lib/afk-loot-orbs';
 import { AfkPatrolChest } from '@/components/afk/AfkPatrolChest';
 import { AfkLootTooltip } from '@/components/afk/AfkLootTooltip';
 import { LottieView } from '@/components/ui/LottieView';
@@ -169,8 +170,38 @@ export function AfkRewardGrid({
   const items = buildAfkRewardItems(pending);
   const hasLoot = items.length > 0;
   const dropCount = countAfkDropEvents(pending);
+  // O contador do baú "vaza" a raridade do melhor item lá dentro: arco-íris
+  // quando tem Mítico, preto-e-branco piscando quando tem Secret. É a isca
+  // pra abrir — o jogador vê que tem algo grande antes mesmo de coletar.
+  const hasSecret = items.some(
+    (item) => item.rarity === 'secret' || item.rarity === 'golden_secret',
+  );
+  const hasMitico = items.some((item) => item.rarity === 'mitico');
+  const badgeTier = hasSecret ? 'secret' : hasMitico ? 'mitico' : null;
   const showLootFromChest = withChest && (chestOpen || chestOpening);
   const chestGlowData = useLottieAsset(CHEST_GLOW_LOTTIE_URL);
+  const [bump, setBump] = useState(false);
+  const bumpTimerRef = useRef<number | undefined>(undefined);
+
+  // Cada bolinha de loot que chega dá uma mexida no baú. O timer é reiniciado
+  // a cada chegada (em vez de acumular): com várias bolinhas em sequência a
+  // mexida vira uma só, contínua, em vez de engasgar remontando a animação.
+  useEffect(() => {
+    if (!withChest) return undefined;
+
+    const onReceived = () => {
+      setBump(false);
+      window.clearTimeout(bumpTimerRef.current);
+      requestAnimationFrame(() => setBump(true));
+      bumpTimerRef.current = window.setTimeout(() => setBump(false), 340);
+    };
+
+    window.addEventListener(AFK_CHEST_RECEIVED_EVENT, onReceived);
+    return () => {
+      window.removeEventListener(AFK_CHEST_RECEIVED_EVENT, onReceived);
+      window.clearTimeout(bumpTimerRef.current);
+    };
+  }, [withChest]);
 
   const iconGrid = hasLoot ? (
     <RewardIconGrid
@@ -216,6 +247,9 @@ export function AfkRewardGrid({
           celebrate={chestCelebrate}
           itemCount={hasLoot && !showLoot ? dropCount : 0}
           size={chestOpen || chestOpening || chestShaking || chestCharged ? 'lg' : 'sm'}
+          orbTarget={!chestCelebrate}
+          bump={bump}
+          badgeTier={badgeTier}
         />
       </div>
     );

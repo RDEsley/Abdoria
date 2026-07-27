@@ -1,3 +1,5 @@
+import { AFK_CHEST_TARGET_ATTR } from '@/lib/afk-loot-orbs';
+
 interface Props {
   open?: boolean;
   opening?: boolean;
@@ -8,6 +10,12 @@ interface Props {
   celebrate?: boolean;
   size?: 'sm' | 'lg';
   itemCount?: number;
+  /** Marca este baú como alvo das bolinhas de loot (só o do dock). */
+  orbTarget?: boolean;
+  /** Mexidinha ao receber uma bolinha de loot. */
+  bump?: boolean;
+  /** Raridade do melhor item dentro do baú — pinta o contador. */
+  badgeTier?: 'mitico' | 'secret' | null;
 }
 
 export function AfkPatrolChest({
@@ -20,6 +28,9 @@ export function AfkPatrolChest({
   celebrate = false,
   size = 'sm',
   itemCount = 0,
+  orbTarget = false,
+  bump = false,
+  badgeTier = null,
 }: Props) {
   const stateClass = open
     ? 'game-afk-chest--open'
@@ -41,9 +52,11 @@ export function AfkPatrolChest({
         stateClass,
         celebrate ? 'game-afk-chest--celebrate' : '',
         shaking ? 'game-afk-chest--shaking' : '',
+        bump ? 'game-afk-chest--bump' : '',
       ]
         .filter(Boolean)
         .join(' ')}
+      {...(orbTarget ? { [AFK_CHEST_TARGET_ATTR]: '' } : {})}
       aria-hidden
     >
       {(opening || open) && (
@@ -58,8 +71,19 @@ export function AfkPatrolChest({
       )}
       {itemCount > 0 && !open && !opening && (
         <span
-          className="game-afk-chest__count-badge tabular-nums"
-          aria-label={`${itemCount} drop${itemCount === 1 ? '' : 's'} de inimigos`}
+          className={[
+            'game-afk-chest__count-badge tabular-nums',
+            badgeTier ? `game-afk-chest__count-badge--${badgeTier}` : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          aria-label={`${itemCount} drop${itemCount === 1 ? '' : 's'} de inimigos${
+            badgeTier === 'secret'
+              ? ' — inclui item Secret!'
+              : badgeTier === 'mitico'
+                ? ' — inclui item Mítico!'
+                : ''
+          }`}
         >
           {itemCount}
         </span>

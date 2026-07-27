@@ -248,11 +248,15 @@ const uOffline = mockUser(0);
 const kills = simulateOfflineKills(uOffline, 12);
 assert.equal(kills, Math.floor(12 * AFK_KILLS_PER_MINUTE), '12 min offline kills');
 
-assert.ok(shouldSpawnBoss(99), 'spawn boss at 99 progress');
+// Boss é a cada 100 mortes de verdade (não 99 — o -1 antigo fazia o boss
+// chegar um kill antes do contador "X/100" realmente bater no teto).
+assert.ok(!shouldSpawnBoss(99), 'não spawna boss ainda em 99 progresso');
+assert.ok(shouldSpawnBoss(100), 'spawn boss ao bater 100 progresso');
 assert.equal(advanceKillsUntilBoss(60, false), 61);
 assert.equal(advanceKillsUntilBoss(98, false), 99);
-assert.equal(advanceKillsUntilBoss(99, false), 99);
-assert.equal(advanceKillsUntilBoss(99, true), 0);
+assert.equal(advanceKillsUntilBoss(99, false), 100);
+assert.equal(advanceKillsUntilBoss(100, false), 100);
+assert.equal(advanceKillsUntilBoss(100, true), 0);
 
 assert.equal(afkKillsForHours(PATROL_CACHE_HOURS), PATROL_CACHE_HOURS * 60 * AFK_KILLS_PER_MINUTE);
 

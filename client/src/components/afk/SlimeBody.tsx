@@ -60,6 +60,7 @@ export function SlimeBody({
 
   const hasGlasses = accessories.includes('glasses');
   const hasPatch = accessories.includes('patch');
+  const hasMonocle = accessories.includes('monocle');
 
   const faceClass = [
     'game-afk-slime__face',
@@ -128,6 +129,7 @@ export function SlimeBody({
             </>
           )}
           {hasGlasses && !looting && <SlimeAccessoryPart kind="glasses" />}
+          {hasMonocle && !looting && <SlimeAccessoryPart kind="monocle" />}
           {hasPatch && !looting && <SlimeAccessoryPart kind="patch" />}
         </div>
       )}
@@ -146,6 +148,9 @@ export function buildSlimePortraitData(enemyId: AfkEnemyId) {
     'slime_chumbo',
   ].includes(enemyId);
   const appearance = resolvePortraitAppearance(enemyId);
-  const accessories = collectSlimeAccessories(enemyId, isBoss, elite, appearance);
+  // Elite entra no Bestiário como slime "puro": os acessórios dele viraram
+  // cosméticos sorteados por spawn, então mostrar um fixo aqui prometeria um
+  // visual que o jogador não vai reencontrar no combate.
+  const accessories = elite ? [] : collectSlimeAccessories(enemyId, isBoss, appearance);
   return { isBoss, elite, appearance, accessories };
 }

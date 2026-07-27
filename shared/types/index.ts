@@ -425,10 +425,12 @@ export {
 } from '../afk/combat.js';
 
 export {
-  resolveSlimeAppearance,
   resolvePortraitAppearance,
   collectSlimeAccessories,
+  rollSlimeCosmetic,
   accessoryDropMotion,
+  SLIME_COSMETIC_POOL,
+  SLIME_COSMETIC_CHANCE,
 } from '../afk/slime-appearance.js';
 
 export interface XpDiario {

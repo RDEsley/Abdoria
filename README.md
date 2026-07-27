@@ -252,7 +252,7 @@ Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
 | `npx tsx scripts/dev/verify-inventory-bestiario.ts` | Valida inventário, overflow e bestiário |
 | `npx tsx scripts/dev/verify-remember-me.ts` | Valida “Lembrar de mim” (token e email) |
 | `node client/scripts/validate-similar-presets.mjs` | Valida pontuação de treinos similares por músculo |
-| `node client/scripts/validate-slime-appearance.mjs` | Valida aparência procedural dos slimes |
+| `node client/scripts/validate-slime-appearance.mjs` | Valida aparência (fixa, igual ao Bestiário) dos slimes |
 | `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
 | `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |
 
