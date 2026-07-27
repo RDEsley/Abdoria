@@ -32,7 +32,7 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import type { AfkPendingReward, ArmaPreferida, PersonagemGenero } from '@/types';
+import type { AfkPendingReward, ArmaPreferida, LevelUpCelebration, PersonagemGenero } from '@/types';
 import { ALL_BESTIARY_ENEMY_IDS, resolvePatrolArmas } from '@/types';
 
 interface Props {
@@ -68,6 +68,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const sceneTransitionTimerRef = useRef<number | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
+  /** XP/level-up ficam represados até o jogador fechar a celebração do baú —
+      disparar na hora do claim fazia as bolinhas de XP voarem (e o level up
+      tomar a tela) por baixo do modal de recompensas, sem o jogador nunca ver. */
+  const pendingXpEffectsRef = useRef<{ xp: number; levelUp: LevelUpCelebration | null } | null>(
+    null,
+  );
   const loadedAtRef = useRef(0);
   const syncedMinutosRef = useRef<number | null>(null);
   /** true depois da 1ª carga bem-sucedida — refreshes em segundo plano (poll,
@@ -312,6 +318,15 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       }
       return null;
     });
+
+    const pending = pendingXpEffectsRef.current;
+    if (pending) {
+      pendingXpEffectsRef.current = null;
+      emitXpEarned(pending.xp);
+      if (pending.levelUp) {
+        window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: pending.levelUp }));
+      }
+    }
   }, [presentRewards]);
 
   const handleClaim = async () => {
@@ -321,10 +336,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       const res = await claimAfkRewards();
       applyUser(res.user);
       await refreshApp();
-      emitXpEarned(res.claimed.xp);
-      if (res.level_up) {
-        window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: res.level_up }));
-      }
+      pendingXpEffectsRef.current = { xp: res.claimed.xp, levelUp: res.level_up ?? null };
       showClaimedCelebration(res.claimed, res.overflow_to_dorias);
       await load();
     } catch (err) {
