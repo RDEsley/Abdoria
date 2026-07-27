@@ -5,7 +5,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
-import { syncAdminMoldura } from '../services/shop.js';
+import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
 import { NOME_MAX_LENGTH, NOME_MIN_LENGTH, type Banimento, type UserRole } from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 
@@ -146,6 +146,8 @@ adminRouter.patch('/users/:id', async (req: AuthRequest, res) => {
       syncAdminMoldura(user);
       if (role === 'admin') {
         user.preferencias = { ...user.preferencias, admin_visivel_ranking: false };
+        // ADM sempre entra com tudo desbloqueado — sem precisar de código.
+        unlockEverythingForUser(user);
       }
     }
 
