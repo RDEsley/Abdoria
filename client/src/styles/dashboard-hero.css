@@ -254,29 +254,35 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 5.2rem;
+  height: 5.2rem;
   border-radius: 50%;
+  /* Trilho de fundo sutil atrás do arco — sem ele o arco parecia flutuar
+     sozinho, sem nenhuma superfície "colada" no medalhão. */
+  box-shadow: inset 0 0 0 0.42rem rgba(28, 25, 23, 0.08);
 }
 
-/* Anel fino: arco de progresso desenhado só na borda externa */
+/* Anel grosso e colado no medalhão: arco de progresso ocupa quase toda a
+   distância até o medalhão central, em vez de um traço fino flutuando
+   longe dele (era o efeito "desgrudado" reportado). */
 .game-xp-section__ring::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 50%;
   background: conic-gradient(
-    #38bdf8 0deg,
+    #22d3ee 0deg,
     #0ea5e9 calc(var(--level-pct, 0) * 3.6deg),
-    #1c1917 calc(var(--level-pct, 0) * 3.6deg),
-    #1c1917 360deg
+    transparent calc(var(--level-pct, 0) * 3.6deg),
+    transparent 360deg
   );
   -webkit-mask: radial-gradient(
     farthest-side,
-    transparent calc(100% - 0.3rem),
-    #000 calc(100% - 0.3rem)
+    transparent calc(100% - 0.42rem),
+    #000 calc(100% - 0.42rem)
   );
-  mask: radial-gradient(farthest-side, transparent calc(100% - 0.3rem), #000 calc(100% - 0.3rem));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 0.42rem), #000 calc(100% - 0.42rem));
+  filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.45));
 }
 
 /* Medalhão central — número do nível centralizado, sem caixa quadrada */
@@ -288,14 +294,15 @@
   align-items: center;
   justify-content: center;
   gap: 0.05rem;
-  width: 4.4rem;
-  height: 4.4rem;
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 34%, #fffdf7 0%, #fef3c7 62%, #fde68a 100%);
   box-shadow:
     inset 0 2px 3px rgba(255, 255, 255, 0.85),
     inset 0 -4px 8px rgba(217, 119, 6, 0.2),
-    0 2px 7px rgba(28, 25, 23, 0.14);
+    0 2px 7px rgba(28, 25, 23, 0.14),
+    0 0 0 2px rgba(255, 255, 255, 0.65);
 }
 
 .game-xp-section__level-label {
@@ -409,6 +416,21 @@
   color: #fcd34d;
 }
 
+/* Descrição/bio equipada, mesma linguagem visual do card de Perfil. */
+.game-xp-section__bio {
+  margin: 0.3rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #57534e;
+  opacity: 0.92;
+  overflow-wrap: anywhere;
+}
+
+.game-xp-section__hero--skinned .game-xp-section__bio {
+  color: #e7e5e4;
+}
+
 .game-xp-section__subtitle {
   margin: 0.45rem 0 0;
   font-size: 0.72rem;
@@ -435,8 +457,8 @@
   }
 
   .game-xp-section__level {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 3.7rem;
+    height: 3.7rem;
   }
 
   .game-xp-section__level-num {
