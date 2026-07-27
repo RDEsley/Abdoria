@@ -79,7 +79,6 @@ export const SLIME_COSMETIC_POOL: SlimeAccessoryKind[] = [
   'beanie',
   'antenna',
   'antennae',
-  'glasses',
   'monocle',
   'flower',
   'bow',
@@ -233,9 +232,6 @@ export function collectSlimeAccessories(
   }
 
   switch (enemyId) {
-    case 'bat':
-      items.push('wing-l', 'wing-r');
-      break;
     case 'zombie':
       items.push('leaf');
       break;
