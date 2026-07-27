@@ -29,7 +29,6 @@ export function RouteDrinkSuggestModal({
     <Modal
       open
       onClose={onCancel}
-      variant="wide"
       labelledBy="route-drink-suggest-title"
       overlayClassName={layer === 'modal' ? 'game-modal-overlay--modal' : ''}
       disableDismiss={using}
@@ -41,7 +40,7 @@ export function RouteDrinkSuggestModal({
         {canUse ? (
           <>
             Receba na hora o loot de {routeDrinkCount * ROUTE_DRINK_HOURS}h de Exploração (
-            {ROUTE_DRINK_HOURS}h por unidade) — baú animado e itens aplicados direto na conta.
+            {ROUTE_DRINK_HOURS}h por unidade).
           </>
         ) : (
           <>Você não tem {ROUTE_DRINK_LABEL} no inventário.</>
