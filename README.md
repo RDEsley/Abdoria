@@ -9,7 +9,7 @@
 Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas, personalizar o perfil e disputar o ranking — tudo de um jeito simples e motivador.
 
 [![Demo](https://img.shields.io/badge/Demo-abdoria--project.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://abdoria-project.vercel.app)
-[![Release](https://img.shields.io/badge/release-v1.8.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
+[![Release](https://img.shields.io/badge/release-v5.0.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -82,6 +82,23 @@ Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
   - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
   - **Sua posição fixada** — se sua linha está fora da tela, ela aparece fixa embaixo; toque para rolar até ela
   - **Amigos** — ranking entre quem você segue (level, streak e foto), com **perfil público** ao tocar em alguém
+  - **Perfil público** — curta o perfil de outros jogadores e denuncie comportamento impróprio
+    (nome ofensivo, trapaça, assédio…); moderação com banimento/suspensão estilo Discord
+  - **Recuperar Streak** — perdeu a sequência de verdade (sem Frozen Streak pra cobrir)? Depois de
+    algumas perdas, pague em Coins pra voltar exatamente de onde parou
+
+### Atividades e Bloco de Notas
+
+- **Atividades de bem-estar** no Início — crie, edite, reordene e exclua tarefas fora do treino
+  (leitura, corrida, meditação, estudo, alongamento…), com formulário contextual por tipo
+- Cada atividade concluída dá **+15 XP** (até 3 por dia); da 4ª em diante vira **+5 Coins**
+- **Dia de descanso** — atividades sustentam a sequência a partir da 3ª concluída no dia
+- **Agenda configurável** — todo dia ou só em dias específicos, junto do treino ou separada
+- **Bloco de Notas** — alterne o mesmo card pra uma lista de tarefas livre (não só bem-estar):
+  afazeres do dia a dia, lista de compras, lembretes, o que você quiser. Concluir risca o item
+  (com som e efeito de partículas) e ele desce pro fim da lista
+- **Histórico de 30 dias** do Bloco de Notas com tela própria e rolagem; concluídas também aparecem
+  no calendário de treinos
 
 ### Personalizar e recompensar
 
