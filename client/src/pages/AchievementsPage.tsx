@@ -43,8 +43,8 @@ export function AchievementsPage() {
       />
 
       <div className="game-quest-card flex items-center gap-3">
-        <div className="game-level-badge !h-12 !w-12">
-          <Trophy size={22} className="mx-auto text-amber-500" />
+        <div className="game-achievements-trophy" aria-hidden>
+          <Trophy size={26} className="game-achievements-trophy__icon" fill="currentColor" fillOpacity={0.25} />
         </div>
         <div>
           <p className="text-sm font-extrabold text-stone-800">

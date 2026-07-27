@@ -19,6 +19,10 @@ export function ProfileProgressPanel({ stats }: Props) {
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(stats.nivel_xp);
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
   const unlockedAchievements = stats.conquistas.filter((c) => c.desbloqueada).length;
+  const achievementsPct =
+    stats.conquistas.length > 0
+      ? Math.round((unlockedAchievements / stats.conquistas.length) * 100)
+      : 0;
   const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP/exercício · mín. ${XP_DAILY_MIN_EXERCISES} · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
 
   return (
@@ -46,7 +50,11 @@ export function ProfileProgressPanel({ stats }: Props) {
           icon={<Trophy className="text-amber-600" size={20} fill="currentColor" fillOpacity={0.18} />}
           title="Conquistas"
           value={`${unlockedAchievements}/${stats.conquistas.length}`}
-          hint="Desbloqueadas no jogo"
+          hint={
+            unlockedAchievements > 0
+              ? `${achievementsPct}% da jornada conquistada`
+              : 'Sua jornada de herói começa agora'
+          }
         />
       </div>
 

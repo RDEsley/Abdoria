@@ -98,11 +98,45 @@
   line-height: 1.2;
 }
 
-.game-achievement__meta {
-  font-size: 0.58rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #78716c;
+/* Medalhão de troféu no topo da página de Conquistas — antes reaproveitava
+   o badge quadrado genérico do nível (.game-level-badge) com um ícone
+   pequeno solto dentro; agora é uma peça própria (medalha redonda, brilho
+   e relevo) proporcional ao peso que a página de Conquistas merece. */
+.game-achievements-trophy {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #fef9c3 0%, #fbbf24 55%, #d97706 100%);
+  border: 3px solid var(--game-ink);
+  box-shadow:
+    3px 3px 0 var(--game-ink),
+    inset 0 2px 3px rgba(255, 255, 255, 0.75),
+    inset 0 -4px 7px rgba(146, 64, 14, 0.4);
+}
+
+.game-achievements-trophy::after {
+  content: '';
+  position: absolute;
+  top: 0.5rem;
+  left: 0.7rem;
+  width: 0.85rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  filter: blur(1px);
+  transform: rotate(-30deg);
+}
+
+.game-achievements-trophy__icon {
+  position: relative;
+  z-index: 1;
+  color: #fffbeb;
+  filter: drop-shadow(0 1px 1.5px rgba(120, 53, 15, 0.55));
 }
 
 .game-achievement--locked {
