@@ -341,7 +341,7 @@ export const additionalExercises = [
     tempo_recomendado: 30,
     prioridade: 'A',
     descricao: 'Flexão com joelhos apoiados no chão — versão de entrada para ganhar força.',
-    media: { gif: 'push-up.gif' },
+    media: { gif: 'knee-push-up.gif' },
     ativo: true,
   },
   {
