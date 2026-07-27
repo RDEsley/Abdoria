@@ -440,7 +440,15 @@ export const User = {
 
   async find(
     filter: Record<string, unknown>,
-    options?: { sort?: Record<string, 1 | -1>; limit?: number; select?: string },
+    options?: {
+      sort?: Record<string, 1 | -1>;
+      limit?: number;
+      select?: string;
+      /** true = pula o fetch em lote de user_afk_state — economiza uma
+          segunda ida ao banco pra quem só precisa de gamificacao/cosmeticos
+          (ex.: ranking, que nunca lê `.afk` do resultado). */
+      skipAfk?: boolean;
+    },
   ): Promise<UserLean[]> {
     const sb = getSupabase();
     let query = sb.from('profiles').select('*');
@@ -457,6 +465,8 @@ export const User = {
         query = query.order('gamificacao->streak_atual', { ascending: dir === 1 });
       } else if (field === 'cosmeticos.moedas') {
         query = query.order('cosmeticos->moedas', { ascending: dir === 1 });
+      } else if (field === 'cosmeticos.moedas_total_ganhas') {
+        query = query.order('cosmeticos->moedas_total_ganhas', { ascending: dir === 1 });
       }
     }
 
@@ -466,8 +476,20 @@ export const User = {
     if (error || !data) return [];
 
     const profiles = data as ProfileRow[];
+    if (options?.skipAfk) return profiles.map((p) => rowToUser(p, null));
     const afkMap = await fetchAfkBatch(profiles.map((p) => p.id));
     return profiles.map((p) => rowToUser(p, afkMap.get(p.id) ?? null));
+  },
+
+  /** Update direto, sem reler o registro depois (ao contrário de
+      `findByIdAndUpdate`) — pra chamadas em lote onde o valor de retorno
+      não importa e o custo de uma leitura extra por item é desperdício. */
+  async updateFieldsById(id: string, patch: Record<string, unknown>): Promise<void> {
+    const sb = getSupabase();
+    await sb
+      .from('profiles')
+      .update(mapPatchToRow(patch))
+      .eq('id', id);
   },
 
   /** Busca por nome (case-insensitive, parcial) — contas reais e onboarded. */

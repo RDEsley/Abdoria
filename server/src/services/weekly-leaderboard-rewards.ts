@@ -51,9 +51,13 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
 
   for (const metric of WEEKLY_METRICS) {
     const key = payoutKey(payoutWeek, metric);
-    if (await LeaderboardWeekPayout.findById(key)) continue;
+    // claim() reivindica ANTES de processar (insert com dedupe por PRIMARY
+    // KEY) — fecha a corrida de duas requisições concorrentes pagando o
+    // prêmio semanal 2x (o find-then-create-no-fim antigo deixava ambas
+    // passarem pelo check antes de qualquer uma commitar).
+    if (!(await LeaderboardWeekPayout.claim(key))) continue;
 
-    const all = await User.find(leaderboardFilter);
+    const all = await User.find(leaderboardFilter, { skipAfk: true });
     const ranked = all
       .map((user) => ({ user, value: weeklyMetricValue(user, metric, payoutWeek) }))
       .filter((row) => row.value > 0)
@@ -99,10 +103,12 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
 
     await LeaderboardPodiumHistory.createMany(podium);
     await Notifications.createMany(avisos);
-    await LeaderboardWeekPayout.create({ _id: key });
   }
 
-  await LeaderboardWeekPayout.create({ _id: runKey });
+  // Marcador só de fast-path (evita refazer os checks por métrica no resto
+  // da semana) — não é mais o que garante exclusão mútua, então uma falha
+  // de conflito aqui (outra execução chegou ao fim ao mesmo tempo) é inofensiva.
+  await LeaderboardWeekPayout.create({ _id: runKey }).catch(() => undefined);
   return paidCount;
 }
 

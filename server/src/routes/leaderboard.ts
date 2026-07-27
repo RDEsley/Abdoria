@@ -153,6 +153,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       const fetched = await User.find(leaderboardFilter, {
         sort: metricSort(metric, period),
         limit: limit + 10,
+        skipAfk: true,
       });
       const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
       const podiums = await LeaderboardPodiumHistory.countsForUsers(
@@ -172,12 +173,47 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    // Semanal ordena pelos acumuladores da semana; Global pelos totais vitalícios.
-    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
-    const valueOf = (user: (typeof all)[number]) =>
-      period === 'global' ? globalMetricValue(user, metric) : weeklyMetricValue(user, metric);
+    if (period === 'global') {
+      // Global usa totais vitalícios, que já são colunas simples (nivel_xp /
+      // moedas_total_ganhas) — mesma estratégia do streak: sort+limit no
+      // banco, sem puxar a tabela inteira pra ordenar em JS. Diferente da
+      // semanal, que precisa da atividade sintética dos NPCs demo (calculada
+      // em JS a partir de um hash, sem coluna equivalente pra ordenar no banco).
+      const sortField: Record<string, 1 | -1> =
+        metric === 'xp'
+          ? { 'gamificacao.nivel_xp': -1 }
+          : { 'cosmeticos.moedas_total_ganhas': -1 };
+      const fetched = await User.find(leaderboardFilter, {
+        sort: sortField,
+        limit: limit + 10,
+        skipAfk: true,
+      });
+      const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
+      const podiums = await LeaderboardPodiumHistory.countsForUsers(
+        users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
+      );
+      res.json(
+        users.map((user, index) =>
+          toEntry(
+            user,
+            index + 1,
+            user.id === req.userId,
+            globalMetricValue(user, metric),
+            podiums.get(user.id),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Semanal ordena pelos acumuladores da semana — precisa da atividade
+    // sintética dos NPCs demo (hash em JS, sem coluna equivalente no banco),
+    // então continua puxando a tabela inteira pra ordenar em JS.
+    const all = (await User.find(leaderboardFilter, { skipAfk: true })).filter(
+      (u) => !isHiddenAdmin(u),
+    );
     const ranked = all
-      .map((user) => ({ user, value: valueOf(user) }))
+      .map((user) => ({ user, value: weeklyMetricValue(user, metric) }))
       .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
       .slice(0, limit);
 
@@ -238,7 +274,9 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
-    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
+    const all = (await User.find(leaderboardFilter, { skipAfk: true })).filter(
+      (u) => !isHiddenAdmin(u),
+    );
     const valueOf = (target: (typeof all)[number]) =>
       period === 'global' ? globalMetricValue(target, metric) : weeklyMetricValue(target, metric);
     const myValue = valueOf(user);
