@@ -40,17 +40,16 @@
   height: 3.15rem;
 }
 
-/* align-self: stretch (não center) + justify-content: flex-end — o nome
-   centralizado dentro dos 3.15rem do avatar deixava ~0.7rem de espaço morto
-   embaixo dele antes da barra de XP começar (a barra em si já colava certo
-   no fim da row, mas o nome "flutuava" longe dela). Ancorando o bloco
-   nome/título embaixo, o nome fica colado onde a barra de XP começa. */
+/* Volta pro formato pequeno: barra de XP embutida na própria coluna do
+   nome (não mais uma faixa própria de largura total embaixo de tudo) —
+   por isso center de novo é o certo aqui, o bloco título+nome+barrinha
+   centraliza como uma unidade só dentro da altura do avatar. */
 .top-navbar__identity {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.05rem;
-  align-self: stretch;
+  justify-content: center;
+  gap: 0.2rem;
+  align-self: center;
   min-width: 0;
 }
 
@@ -123,18 +122,14 @@
   font-size: 0.52rem;
 }
 
-/* padding-left = padding do container (px-3) + largura do avatar (3.15rem)
-   + gap (2.5) — alinha o início da barra com o nome, não com a borda crua
-   do container. padding-right = padding do container, pra terminar junto
-   das pills de Coins/Gems. */
-.top-navbar__xp-row {
-  padding-bottom: 0.55rem;
-  padding-left: calc(0.75rem + 3.15rem + 0.625rem);
-  padding-right: 0.75rem;
-}
-
+/* Pequena, embutida embaixo do nome — largura fixa curta (não acompanha o
+   container inteiro), do jeito que era antes da tentativa de barra em
+   faixa única embaixo de tudo. */
 .top-navbar__xp-track {
-  height: 0.45rem;
+  width: 5.5rem;
+  max-width: 100%;
+  height: 0.3rem;
+  margin-top: 0.05rem;
   border-radius: 999px;
   overflow: hidden;
   background: #e7e5e4;
@@ -244,10 +239,6 @@
     width: 2.85rem;
     height: 2.85rem;
   }
-
-  .top-navbar__xp-row {
-    padding-left: calc(0.75rem + 2.85rem + 0.625rem);
-  }
 }
 
 /* Telas bem estreitas (ex.: iPhone SE): mais um degrau de compactação nas
@@ -278,7 +269,7 @@
 
 @media (min-width: 640px) {
   :root {
-    --top-navbar-height: calc(5.85rem + env(safe-area-inset-top, 0px));
+    --top-navbar-height: calc(4.85rem + env(safe-area-inset-top, 0px));
   }
 
   .top-navbar__inner {
@@ -290,9 +281,8 @@
     height: 3.35rem;
   }
 
-  .top-navbar__xp-row {
-    padding-left: calc(1rem + 3.35rem + 0.75rem);
-    padding-right: 1rem;
+  .top-navbar__xp-track {
+    width: 6rem;
   }
 
   .top-navbar__pill {

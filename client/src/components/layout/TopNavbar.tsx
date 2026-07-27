@@ -124,6 +124,17 @@ export function TopNavbar({
           <div className="top-navbar__identity min-w-0 flex-1">
             {userTitle}
             <span className="top-navbar__name truncate">{userName}</span>
+            <div
+              className="top-navbar__xp-track"
+              data-xp-bar-target
+              role="progressbar"
+              aria-valuenow={userXp}
+              aria-valuemin={0}
+              aria-valuemax={xpMax}
+              aria-label={`XP ${userXp} de ${xpMax}`}
+            >
+              <div className="top-navbar__xp-fill" style={{ width: `${xpPct}%` }} />
+            </div>
           </div>
         </button>
 
@@ -135,25 +146,6 @@ export function TopNavbar({
           />
           <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} />
           {actions}
-        </div>
-      </div>
-
-      {/* Fora da coluna "profile" de propósito: presa só no lado do nome, a
-          barra parava bem antes do fim das pills de Coins/Gems. O
-          padding-left (navbar.css) alinha o início dela com o nome (depois
-          do avatar), não com a borda crua do container; o fim acompanha as
-          pills de Coins/Gems. */}
-      <div className="top-navbar__xp-row">
-        <div
-          className="top-navbar__xp-track"
-          data-xp-bar-target
-          role="progressbar"
-          aria-valuenow={userXp}
-          aria-valuemin={0}
-          aria-valuemax={xpMax}
-          aria-label={`XP ${userXp} de ${xpMax}`}
-        >
-          <div className="top-navbar__xp-fill" style={{ width: `${xpPct}%` }} />
         </div>
       </div>
     </header>
