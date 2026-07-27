@@ -36,11 +36,8 @@
   height: 3.15rem;
 }
 
-/* Empurra nome + barra de XP pro final do bloco (em vez de centralizado
-   contra o avatar) — a barra desce até a base do avatar, que é mais baixa
-   que o fundo das pills de Coins/Gems ao lado. */
 .top-navbar__identity {
-  align-self: flex-end;
+  align-self: center;
 }
 
 .top-navbar__avatar {
@@ -111,8 +108,11 @@
   font-size: 0.52rem;
 }
 
+.top-navbar__xp-row {
+  padding-bottom: 0.55rem;
+}
+
 .top-navbar__xp-track {
-  margin-top: 0.35rem;
   height: 0.45rem;
   border-radius: 999px;
   overflow: hidden;
@@ -253,7 +253,7 @@
 
 @media (min-width: 640px) {
   :root {
-    --top-navbar-height: calc(5.5rem + env(safe-area-inset-top, 0px));
+    --top-navbar-height: calc(6.5rem + env(safe-area-inset-top, 0px));
   }
 
   .top-navbar__inner {

@@ -14,7 +14,9 @@
 
   --color-brand-glow: rgba(13, 148, 136, 0.12);
   --color-warm-glow: rgba(234, 88, 12, 0.08);
-  --top-navbar-height: calc(5.15rem + env(safe-area-inset-top, 0px));
+  /* 5.15rem da linha do perfil/pills + 1rem da barra de XP, que agora fica
+     numa faixa própria embaixo (largura total, junto com AppLayout.tsx). */
+  --top-navbar-height: calc(6.15rem + env(safe-area-inset-top, 0px));
 
   /* Fase 8 — tokens de design system, em :root (não .game-app) pra resolver
      também fora do app logado (Login/Registro não têm a classe .game-app). */
