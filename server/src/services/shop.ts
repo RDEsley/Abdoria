@@ -1,4 +1,4 @@
-﻿import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
+﻿import { ACHIEVEMENT_BY_ID, ACHIEVEMENTS } from '../data/achievements.js';
 import {
   GIFT_CODE_BY_KEY,
   hasGiftCodeRewards,
@@ -14,9 +14,11 @@ import {
 } from '../../../shared/patrol/shop.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
 import { User } from '../domain/User.js';
+import { unlockBestiaryEnemy } from './bestiario.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import type { CosmeticDefinition, CosmeticKind, ShopCatalogItem, ShopResponse } from '../types/index.js';
 import {
+  ALL_BESTIARY_ENEMY_IDS,
   MOEDA_XP_STEP,
   CURRENCY_NAME,
   ADMIN_MOLDURA_ID,
@@ -31,6 +33,7 @@ import {
   sortCosmeticCatalogItems,
   spendableXpForShop,
   xpLevelFromTotal,
+  xpProgressFromTotal,
 } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import {
@@ -384,14 +387,17 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
 /** Código master de dev/dono: desbloqueia literalmente tudo (cosméticos + exercícios). */
 const MASTER_UNLOCK_CODE = 'violadearco';
 
-async function redeemMasterUnlockCode(user: UserDoc) {
-  const redeemed = new Set(user.cosmeticos.codigos_resgatados ?? []);
-  if (redeemed.has(MASTER_UNLOCK_CODE)) {
-    return { error: 'Você já resgatou este código nesta conta.', status: 400 as const };
-  }
-  redeemed.add(MASTER_UNLOCK_CODE);
-  user.cosmeticos.codigos_resgatados = [...redeemed];
-
+/**
+ * Desbloqueia cosméticos, exercícios, armas/magias da Exploração e o
+ * Bestiário inteiro. Não salva — quem chama decide quando dar `user.save()`.
+ * Reusado pelo código master `violadearco` e pela promoção a ADM (ADM
+ * sempre entra com tudo liberado, sem precisar resgatar código nenhum).
+ */
+export function unlockEverythingForUser(user: UserMutable): {
+  cosmeticCount: number;
+  weaponCount: number;
+  exerciseCount: number;
+} {
   const todosCosmeticos = COSMETICS.map((item) => item.id);
   user.cosmeticos.desbloqueados = todosCosmeticos;
   syncGiftCodeAbdoriaBlocks(user);
@@ -402,13 +408,70 @@ async function redeemMasterUnlockCode(user: UserDoc) {
   });
 
   // Arcos, espadas e magias da Exploração são um catálogo à parte do de
-  // cosméticos — sem isso, o código master deixava de fora tudo que só se
-  // pega ali (ex.: tier Mítico, magias novas). "futuro" fica de fora: são
-  // itens ainda sem conteúdo real por trás, nem a loja normal vende.
+  // cosméticos — sem isso, ficava de fora tudo que só se pega ali (ex.:
+  // tier Mítico, magias novas). "futuro" fica de fora: são itens ainda sem
+  // conteúdo real por trás, nem a loja normal vende.
   const armas = resolvePatrolArmas(user.preferencias.patrol_armas);
   const todasArmas = PATROL_WEAPONS.filter((w) => w.unlock.tipo !== 'futuro').map((w) => w.id);
   armas.desbloqueados = [...new Set([...armas.desbloqueados, ...todasArmas])];
   user.preferencias.patrol_armas = armas;
+
+  for (const enemyId of ALL_BESTIARY_ENEMY_IDS) {
+    unlockBestiaryEnemy(user, enemyId);
+  }
+
+  // Sem isso, a própria página de Conquistas mostrava "0/N desbloqueadas"
+  // pro ADM mesmo com todos os cosméticos de recompensa já liberados — as
+  // duas listas são independentes (uma não implica a outra).
+  const todasConquistas = ACHIEVEMENTS.map((a) => a.id);
+  user.gamificacao.conquistas = [...new Set([...user.gamificacao.conquistas, ...todasConquistas])];
+
+  return {
+    cosmeticCount: todosCosmeticos.length,
+    weaponCount: todasArmas.length,
+    exerciseCount: todosExercicios.length,
+  };
+}
+
+/**
+ * Código de dev/dono sem limite de usos: cada resgate dá exatamente o XP que
+ * falta pro próximo nível. Não entra em `codigos_resgatados` (senão o
+ * segundo uso seria barrado) e não passa por `awardDailyXp`, que aplicaria o
+ * teto diário de XP e impediria o level up prometido.
+ */
+const LEVEL_UP_CODE = 'levelup';
+
+async function redeemLevelUpCode(user: UserDoc) {
+  const antes = xpProgressFromTotal(user.gamificacao.nivel_xp);
+  const faltando = Math.max(1, antes.xpToNext - antes.xpInLevel);
+
+  user.gamificacao.nivel_xp += faltando;
+  syncGiftCodeAbdoriaBlocks(user);
+  await user.save();
+
+  const nivelNovo = xpLevelFromTotal(user.gamificacao.nivel_xp);
+
+  return {
+    user,
+    codigo: LEVEL_UP_CODE,
+    xp_ganho: faltando,
+    abdoria_ganha: 0,
+    itens_desbloqueados: [] as string[],
+    titulo: undefined as string | undefined,
+    mensagem: `Level up! Você subiu para o nível ${nivelNovo} (+${faltando} XP).`,
+    recompensas: [{ tipo: 'xp' as const, valor: faltando }],
+  };
+}
+
+async function redeemMasterUnlockCode(user: UserDoc) {
+  const redeemed = new Set(user.cosmeticos.codigos_resgatados ?? []);
+  if (redeemed.has(MASTER_UNLOCK_CODE)) {
+    return { error: 'Você já resgatou este código nesta conta.', status: 400 as const };
+  }
+  redeemed.add(MASTER_UNLOCK_CODE);
+  user.cosmeticos.codigos_resgatados = [...redeemed];
+
+  const { cosmeticCount, weaponCount, exerciseCount } = unlockEverythingForUser(user);
 
   await user.save();
 
@@ -417,9 +480,9 @@ async function redeemMasterUnlockCode(user: UserDoc) {
     codigo: MASTER_UNLOCK_CODE,
     xp_ganho: 0,
     abdoria_ganha: 0,
-    itens_desbloqueados: todosCosmeticos,
+    itens_desbloqueados: COSMETICS.map((item) => item.id),
     titulo: undefined as string | undefined,
-    mensagem: `Tudo desbloqueado: ${todosCosmeticos.length} cosméticos, ${todasArmas.length} armas/magias e ${todosExercicios.length} exercícios.`,
+    mensagem: `Tudo desbloqueado: ${cosmeticCount} cosméticos, ${weaponCount} armas/magias e ${exerciseCount} exercícios.`,
     recompensas: [{ tipo: 'cosmetico' as const, nome: 'Absolutamente tudo' }],
   };
 }
@@ -435,6 +498,10 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
 
   if (code === MASTER_UNLOCK_CODE) {
     return redeemMasterUnlockCode(user);
+  }
+
+  if (code === LEVEL_UP_CODE) {
+    return redeemLevelUpCode(user);
   }
 
   const definition = GIFT_CODE_BY_KEY[code];
@@ -479,6 +546,12 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
 
   if (definition.titulo_equipar && unlocked.has(definition.titulo_equipar)) {
     user.cosmeticos.titulo_equipado = definition.titulo_equipar;
+  }
+
+  if (definition.unlock_bestiary) {
+    for (const enemyId of ALL_BESTIARY_ENEMY_IDS) {
+      unlockBestiaryEnemy(user, enemyId);
+    }
   }
 
   await user.save();

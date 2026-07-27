@@ -11,6 +11,8 @@ export interface GiftCodeDefinition {
   frozen_streaks?: number;
   /** Gemas (moeda premium) concedidas direto na conta. */
   gems?: number;
+  /** true = desbloqueia todas as entradas do Bestiário de uma vez. */
+  unlock_bestiary?: boolean;
   /** Se false, o código não pode mais ser resgatado. */
   active?: boolean;
   /** Data limite ISO (America/Sao_Paulo, inclusive até o fim do dia). */
@@ -45,6 +47,15 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     mensagem: 'Hexa! Banner Brasil desbloqueado — vista as cores da torcida no seu perfil.',
     active: true,
   },
+  {
+    code: 'slimesss',
+    xp: 0,
+    abdoria: 0,
+    desbloqueia: [],
+    unlock_bestiary: true,
+    mensagem: 'Bestiário completo desbloqueado! Todos os slimes já aparecem no seu catálogo.',
+    active: true,
+  },
 ];
 
 export const GIFT_CODE_BY_KEY = Object.fromEntries(
@@ -62,6 +73,7 @@ export function hasGiftCodeRewards(definition: GiftCodeDefinition): boolean {
     definition.abdoria > 0 ||
     definition.desbloqueia.length > 0 ||
     (definition.frozen_streaks ?? 0) > 0 ||
-    (definition.gems ?? 0) > 0
+    (definition.gems ?? 0) > 0 ||
+    definition.unlock_bestiary === true
   );
 }

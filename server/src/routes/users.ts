@@ -4,6 +4,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   ADMIN_MOLDURA_ID,
+  ALL_BESTIARY_ENEMY_IDS,
   CURRENCY_NAME,
   NAME_CHANGE_COST,
   calcImc,
@@ -11,7 +12,9 @@ import {
   suggestNivel,
   type MolduraId,
 } from '../types/index.js';
-import { syncAdminMoldura } from '../services/shop.js';
+import { COSMETICS } from '../data/cosmetics.js';
+import { PATROL_WEAPONS } from '../../../shared/patrol/shop.js';
+import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
 import { ensureMoedaWallet, readMoedaBalance } from '../services/economy.js';
@@ -56,6 +59,34 @@ function adminMolduraNeedsSync(user: {
   return user.role === 'admin' ? !tem : tem;
 }
 
+/**
+ * true quando a conta é ADM mas ainda não tem tudo desbloqueado — cobre o
+ * caso do primeiro ADM (promovido direto no Supabase via migração SQL, sem
+ * passar pelo painel), que nunca chamaria `unlockEverythingForUser` sozinho.
+ * ADM tem que estar sempre com tudo liberado, não só a partir da promoção
+ * pelo painel.
+ */
+function adminUnlockNeedsSync(user: {
+  role?: string | null;
+  cosmeticos?: { desbloqueados?: string[] } | null;
+  gamificacao?: { bestiario_desbloqueados?: string[]; conquistas?: string[] } | null;
+  preferencias?: { patrol_armas?: { desbloqueados?: string[] } | null } | null;
+}): boolean {
+  if (user.role !== 'admin') return false;
+
+  const cosmeticsOk = (user.cosmeticos?.desbloqueados?.length ?? 0) >= COSMETICS.length;
+  const bestiaryOk =
+    (user.gamificacao?.bestiario_desbloqueados?.length ?? 0) >= ALL_BESTIARY_ENEMY_IDS.length;
+  const achievementsOk = (user.gamificacao?.conquistas?.length ?? 0) >= ACHIEVEMENTS.length;
+  // Armas/magias da Exploração são um catálogo à parte — sem checar aqui, um
+  // ADM com os cosméticos completos nunca reconciliava a loja da Exploração.
+  const buyableWeapons = PATROL_WEAPONS.filter((w) => w.unlock.tipo !== 'futuro').length;
+  const weaponsOk =
+    (user.preferencias?.patrol_armas?.desbloqueados?.length ?? 0) >= buyableWeapons;
+
+  return !cosmeticsOk || !bestiaryOk || !weaponsOk || !achievementsOk;
+}
+
 usersRouter.get('/me', async (req: AuthRequest, res) => {
   try {
     const user = await loadCurrentUser(req.userId!);
@@ -71,10 +102,15 @@ usersRouter.get('/me', async (req: AuthRequest, res) => {
 
     // Promoção/rebaixamento feito direto no Supabase precisa refletir a moldura
     // de admin já na primeira carga do perfil — reconcilia se estiver defasada.
-    if (adminMolduraNeedsSync(user)) {
+    // Mesma lógica pro desbloqueio completo: ADM tem que estar sempre com tudo
+    // liberado, mesmo quem virou admin direto no banco (sem passar pelo painel).
+    if (adminMolduraNeedsSync(user) || adminUnlockNeedsSync(user)) {
       const mutable = await User.findById(req.userId!);
       if (mutable) {
         syncAdminMoldura(mutable);
+        if (adminUnlockNeedsSync(mutable)) {
+          unlockEverythingForUser(mutable);
+        }
         await mutable.save();
         res.json(sanitizeUser(mutable));
         return;
