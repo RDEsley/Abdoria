@@ -571,10 +571,16 @@
 
 .profile-edit-modal__footer {
   display: flex;
-  justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.75rem 1.15rem 1rem;
   border-top: 1px solid rgba(28, 25, 23, 0.08);
+}
+
+/* Cancelar e Salvar dividem a largura em 50/50 (base 0 pra ignorar a
+   diferença de largura do texto e ficarem realmente iguais). */
+.profile-edit-modal__footer .game-btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Ranking — linha do usuário fixada embaixo */
