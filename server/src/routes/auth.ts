@@ -36,8 +36,8 @@ authRouter.post('/register', async (req, res) => {
       return;
     }
 
-    if (password.length < 6) {
-      res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres.' });
+    if (password.length < 8) {
+      res.status(400).json({ error: 'Senha deve ter pelo menos 8 caracteres.' });
       return;
     }
 

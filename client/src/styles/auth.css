@@ -619,6 +619,17 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
+/* Login usa o céu claro do dia (variant="day") — fundo translúcido mais
+   baixo aqui não sofre o mesmo problema de contraste do cadastro (céu
+   escuro da noite): branco sobre um azul claro continua legível bem antes
+   da opacidade alta que o cadastro precisa. Cadastro fica com o valor
+   base acima (var(--game-login__panel), sem override). */
+.game-login__panel--login {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.5) 100%);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
 .game-login__logo {
   margin: 0 auto;
   display: block;
@@ -842,14 +853,36 @@
   color: #a8a29e;
 }
 
-.game-auth-field__password {
+/* Wrapper sempre presente (não só quando tem toggle de senha) — dá o
+   position:relative pro ícone à esquerda e o botão de olho à direita
+   posicionarem por cima do input sem depender de qual variante o campo é. */
+.game-auth-field__control {
   position: relative;
   display: flex;
   align-items: stretch;
 }
 
-.game-auth-field__password .game-auth-field__input {
+.game-auth-field__control .game-auth-field__input {
   width: 100%;
+}
+
+.game-auth-field__icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #78716c;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.game-auth-field__input--with-icon {
+  padding-left: 2.35rem;
+}
+
+.game-auth-field__input--with-toggle {
   padding-right: 2.65rem;
 }
 
@@ -896,6 +929,69 @@
   font-weight: 700;
   line-height: 1.4;
   color: #57534e;
+}
+
+/* Medidor de força da senha — 4 segmentos + rótulo, cor sobe conforme
+   critérios batem (comprimento, maiúsc+minúsc, número, símbolo). */
+.game-password-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.game-password-strength__track {
+  display: flex;
+  flex: 1;
+  gap: 0.3rem;
+}
+
+.game-password-strength__seg {
+  flex: 1;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.12);
+  transition: background 0.2s ease;
+}
+
+.game-password-strength__seg--weak {
+  background: #ef4444;
+}
+
+.game-password-strength__seg--fair {
+  background: #f59e0b;
+}
+
+.game-password-strength__seg--good {
+  background: #84cc16;
+}
+
+.game-password-strength__seg--strong {
+  background: #10b981;
+}
+
+.game-password-strength__label {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.game-password-strength__label--weak {
+  color: #dc2626;
+}
+
+.game-password-strength__label--fair {
+  color: #d97706;
+}
+
+.game-password-strength__label--good {
+  color: #65a30d;
+}
+
+.game-password-strength__label--strong {
+  color: #059669;
 }
 
 .game-auth-field__error {

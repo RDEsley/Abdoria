@@ -117,7 +117,7 @@ export function LoginPage() {
 
   return (
     <GameAuthScene variant="day">
-      <GameAuthPanel logoSize="lg">
+      <GameAuthPanel logoSize="lg" className="game-login__panel--login">
         {registerState?.accountCreated && (
           <GameAlertBanner
             variant="success"

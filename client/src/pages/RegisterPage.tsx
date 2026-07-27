@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Lock, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { AuthField } from '@/components/auth/AuthField';
 import { GameAuthPanel, GameAuthScene } from '@/components/auth/GameAuthScene';
+import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
 import { GameAlertBanner } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import {
@@ -69,6 +71,7 @@ export function RegisterPage() {
           <AuthField
             label="Nome no jogo"
             name="nome"
+            icon={<UserRound size={16} aria-hidden />}
             value={nome}
             onChange={(e) => {
               setNome(e.target.value);
@@ -90,6 +93,7 @@ export function RegisterPage() {
             label="Email"
             name="email"
             type="email"
+            icon={<Mail size={16} aria-hidden />}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -110,6 +114,8 @@ export function RegisterPage() {
             label="Senha"
             name="password"
             type="password"
+            showPasswordToggle
+            icon={<Lock size={16} aria-hidden />}
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -124,7 +130,8 @@ export function RegisterPage() {
               );
             }}
             error={fieldErrors.password}
-            hint="Mínimo de 6 caracteres."
+            hint="Mínimo de 8 caracteres."
+            extra={<PasswordStrengthMeter value={password} />}
             placeholder="Crie uma senha segura"
             autoComplete="new-password"
           />
@@ -132,6 +139,8 @@ export function RegisterPage() {
             label="Confirmar senha"
             name="confirmPassword"
             type="password"
+            showPasswordToggle
+            icon={<ShieldCheck size={16} aria-hidden />}
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);

@@ -13,7 +13,7 @@ export function validateEmail(value: string): string | undefined {
   return undefined;
 }
 
-export function validatePassword(value: string, minLength = 6): string | undefined {
+export function validatePassword(value: string, minLength = 8): string | undefined {
   if (!value) return 'Informe sua senha.';
   if (value.length < minLength) return `A senha precisa ter pelo menos ${minLength} caracteres.`;
   return undefined;

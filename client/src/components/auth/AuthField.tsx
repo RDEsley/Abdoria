@@ -1,4 +1,4 @@
-import { useState, type InputHTMLAttributes } from 'react';
+import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'type'> {
@@ -9,6 +9,11 @@ interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'cl
   highlight?: boolean;
   type?: InputHTMLAttributes<HTMLInputElement>['type'];
   showPasswordToggle?: boolean;
+  /** Ícone à esquerda dentro do campo (ex.: <UserRound size={16} />). */
+  icon?: ReactNode;
+  /** Conteúdo extra abaixo do campo (ex.: medidor de força da senha) — some
+      junto com o hint/erro pra não empilhar tudo de uma vez. */
+  extra?: ReactNode;
 }
 
 export function AuthField({
@@ -19,6 +24,8 @@ export function AuthField({
   id,
   type = 'text',
   showPasswordToggle = false,
+  icon,
+  extra,
   ...inputProps
 }: AuthFieldProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -34,12 +41,24 @@ export function AuthField({
       <label htmlFor={fieldId} className="game-auth-field__label">
         {label}
       </label>
-      <div className={isPassword && showPasswordToggle ? 'game-auth-field__password' : undefined}>
+      <div className="game-auth-field__control">
+        {icon && (
+          <span className="game-auth-field__icon" aria-hidden>
+            {icon}
+          </span>
+        )}
         <input
           {...inputProps}
           id={fieldId}
           type={inputType}
-          className="game-input game-auth-field__input"
+          className={[
+            'game-input',
+            'game-auth-field__input',
+            icon ? 'game-auth-field__input--with-icon' : '',
+            isPassword && showPasswordToggle ? 'game-auth-field__input--with-toggle' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           aria-invalid={isInvalid ? true : undefined}
           aria-describedby={
             [hintId, errorId, inputProps['aria-describedby']].filter(Boolean).join(' ') || undefined
@@ -69,6 +88,7 @@ export function AuthField({
           </button>
         )}
       </div>
+      {extra}
       {hint && !error && (
         <p id={hintId} className="game-auth-field__hint">
           {hint}
