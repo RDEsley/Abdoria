@@ -73,6 +73,24 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
         <CalendarCog size={16} aria-hidden /> Quando fazer atividades
       </h2>
 
+      <div className="atividade-info-card mt-3">
+        <p className="atividade-info-card__head">
+          <Info size={13} aria-hidden /> Como funciona
+        </p>
+        <p className="atividade-info-card__text">
+          Toda atividade dá{' '}
+          <strong className="atividade-info-card__pill atividade-info-card__pill--xp">
+            +{ATIVIDADE_XP_POR_UNIDADE} XP
+          </strong>
+          , até {ATIVIDADES_MIN_DESCANSO} por dia — da próxima em diante vira{' '}
+          <strong className="atividade-info-card__pill atividade-info-card__pill--coins">
+            +{ATIVIDADE_COINS_EXTRA} Coins
+          </strong>
+          . Em dia de treino, a sequência (streak) continua vindo só do treino; nos outros dias, as
+          atividades também mantêm a sequência.
+        </p>
+      </div>
+
       <div className="mt-3 flex flex-col gap-2">
         <button
           type="button"
@@ -160,13 +178,6 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
           </small>
         </span>
       </label>
-
-      <p className="mt-3 flex items-start gap-2 rounded-xl border-2 border-sky-100 bg-sky-50 p-2.5 text-[0.68rem] font-semibold text-sky-800">
-        <Info size={13} className="mt-0.5 shrink-0" aria-hidden />
-        Toda atividade dá +{ATIVIDADE_XP_POR_UNIDADE} XP, até {ATIVIDADES_MIN_DESCANSO} por dia — da
-        próxima em diante vira +{ATIVIDADE_COINS_EXTRA} Coins. Em dia de treino, a sequência (streak)
-        continua vindo só do treino; nos outros dias, as atividades também mantêm a sequência.
-      </p>
 
       <div className="mt-4 flex gap-2">
         <GameButton variant="secondary" className="!w-auto flex-1" onClick={onClose}>
