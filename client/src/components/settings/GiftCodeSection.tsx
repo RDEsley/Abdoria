@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';
+import { emitXpEarned } from '@/lib/xp-orbs';
 
 const GIFT_CODE_PATTERN = /^[a-z0-9_-]+$/;
 const GIFT_CODE_MIN_LENGTH = 3;
@@ -67,6 +68,20 @@ export function GiftCodeSection() {
     }
   };
 
+  // XP/level up só disparam ao fechar a tela de revelação — na hora do
+  // resgate, as bolinhas de XP e a celebração de level up ficariam por
+  // baixo desse mesmo modal, escondidas (mesmo ajuste feito no claim da
+  // Exploração).
+  const handleCloseReveal = () => {
+    const reveal = rewardReveal;
+    setRewardReveal(null);
+    if (!reveal) return;
+    if (reveal.xp_ganho > 0) emitXpEarned(reveal.xp_ganho);
+    if (reveal.level_up) {
+      window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: reveal.level_up }));
+    }
+  };
+
   return (
     <>
       <section className="glass-card p-4">
@@ -106,7 +121,7 @@ export function GiftCodeSection() {
         <GiftCodeRewardReveal
           result={rewardReveal}
           effectId={cosmeticos.efeito_equipado}
-          onClose={() => setRewardReveal(null)}
+          onClose={handleCloseReveal}
         />
       )}
     </>

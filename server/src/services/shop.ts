@@ -487,6 +487,13 @@ async function redeemMasterUnlockCode(user: UserDoc) {
   };
 }
 
+/**
+ * Nível antes/depois é medido em volta de QUALQUER caminho de resgate (não
+ * só o código `levelup`) — todo código com recompensa de XP pode empurrar
+ * o jogador pra outro nível, e sem isso a celebração de level up (e as
+ * bolinhas de XP) nunca disparavam ao resgatar um código pelo formulário
+ * de Configurações.
+ */
 export async function redeemGiftCode(userId: string, rawCode: string) {
   const user = await loadUserForShop(userId);
   if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
@@ -496,6 +503,18 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
     return { error: giftCodeFormatError(), status: 400 as const };
   }
 
+  const levelBefore = xpLevelFromTotal(user.gamificacao.nivel_xp);
+  const result = await redeemGiftCodeForUser(user, code);
+  if ('error' in result) return result;
+
+  const levelAfter = xpLevelFromTotal(user.gamificacao.nivel_xp);
+  const level_up =
+    levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null;
+
+  return { ...result, level_up };
+}
+
+async function redeemGiftCodeForUser(user: UserDoc, code: string) {
   if (code === MASTER_UNLOCK_CODE) {
     return redeemMasterUnlockCode(user);
   }

@@ -795,6 +795,7 @@ export interface RedeemCodeResponse {
   titulo?: string;
   mensagem?: string;
   recompensas: GiftCodeRewardLine[];
+  level_up?: LevelUpCelebration | null;
 }
 
 export interface PurchaseCosmeticResponse {
