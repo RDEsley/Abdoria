@@ -255,12 +255,20 @@ export function LibraryPage() {
       <EquipmentPanel onEquipmentChange={refreshRecommendations} />
 
       <div className="flex items-center justify-between gap-2">
-        <p className="library-results-count text-xs font-bold text-stone-500">
-          <Dumbbell size={13} aria-hidden />
-          {exercisesLoading
-            ? 'Carregando itens...'
-            : `${filtered.length} habilidade(s) · ${filteredUnlockedCount} desbloqueada(s)`}
-        </p>
+        {exercisesLoading ? (
+          <p className="library-results-count text-xs font-bold text-stone-500">
+            Carregando itens...
+          </p>
+        ) : (
+          <p className="library-results-count">
+            <span className="library-results-count__icon" aria-hidden>
+              <Dumbbell size={12} />
+            </span>
+            <strong>{filteredUnlockedCount}</strong>
+            <span className="library-results-count__slash">/{filtered.length}</span>
+            <span className="library-results-count__label">desbloqueadas</span>
+          </p>
+        )}
         {!exercisesLoading && lockedInView.length > 0 && (
           <GameButton
             size="sm"
