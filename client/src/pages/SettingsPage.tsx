@@ -7,6 +7,7 @@ import {
   Check,
   ChevronDown,
   ClipboardList,
+  Compass,
   Copy,
   Dumbbell,
   Gamepad2,
@@ -98,6 +99,9 @@ export function SettingsPage() {
   const [confetti, setConfetti] = useState(
     user?.preferencias?.confetti_animacoes_habilitadas ?? true,
   );
+  const [exploracaoAutoAbrir, setExploracaoAutoAbrir] = useState(
+    user?.preferencias?.exploracao_auto_abrir ?? false,
+  );
   const [tomTexto, setTomTexto] = useState<TomTexto>(user?.preferencias?.tom_texto ?? 'jogo');
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
   const [ciclo, setCiclo] = useState<TreinoBase[]>(
@@ -113,17 +117,19 @@ export function SettingsPage() {
       som !== (prefs?.som_habilitado ?? true) ||
       volume !== (prefs?.sfx_volume ?? 0.7) ||
       confetti !== (prefs?.confetti_animacoes_habilitadas ?? true) ||
+      exploracaoAutoAbrir !== (prefs?.exploracao_auto_abrir ?? false) ||
       tomTexto !== (prefs?.tom_texto ?? 'jogo') ||
       descanso !== (prefs?.descanso_padrao_seg ?? 30) ||
       normalizeCicloTreinos(ciclo).join('') !==
         normalizeCicloTreinos(prefs?.ciclo_treinos).join('')
     );
-  }, [user, som, volume, confetti, tomTexto, descanso, ciclo]);
+  }, [user, som, volume, confetti, exploracaoAutoAbrir, tomTexto, descanso, ciclo]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
     setConfetti(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
+    setExploracaoAutoAbrir(user?.preferencias?.exploracao_auto_abrir ?? false);
     setTomTexto(user?.preferencias?.tom_texto ?? 'jogo');
     setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
     setCiclo(normalizeCicloTreinos(user?.preferencias?.ciclo_treinos));
@@ -138,6 +144,7 @@ export function SettingsPage() {
           som_habilitado: som,
           sfx_volume: volume,
           confetti_animacoes_habilitadas: confetti,
+          exploracao_auto_abrir: exploracaoAutoAbrir,
           tom_texto: tomTexto,
           descanso_padrao_seg: descanso,
           ciclo_treinos: normalizeCicloTreinos(ciclo),
@@ -376,6 +383,27 @@ export function SettingsPage() {
           </span>
           <span className="text-xs font-extrabold uppercase tracking-wide text-stone-500">
             {confetti ? 'Ligadas' : 'Desligadas'}
+          </span>
+        </GameButton>
+      </section>
+
+      <section className="glass-card p-4">
+        <h3 className="game-section-title mb-3 flex items-center gap-2">
+          <Compass size={14} /> Exploração
+        </h3>
+        <GameButton
+          type="button"
+          variant={exploracaoAutoAbrir ? 'secondary' : 'ghost'}
+          className="flex w-full items-center justify-between gap-3"
+          onClick={() => setExploracaoAutoAbrir((value) => !value)}
+          aria-pressed={exploracaoAutoAbrir}
+        >
+          <span className="flex items-center gap-2 text-left">
+            <Compass size={16} aria-hidden />
+            Abrir Exploração automaticamente ao entrar
+          </span>
+          <span className="text-xs font-extrabold uppercase tracking-wide text-stone-500">
+            {exploracaoAutoAbrir ? 'Ligado' : 'Desligado'}
           </span>
         </GameButton>
       </section>

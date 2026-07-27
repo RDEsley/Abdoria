@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { useApp } from '@/hooks/useApp';
+import { useAuth } from '@/context/AuthContext';
 import { hasAfkRewardsToClaim } from '@shared/utils/afk';
 
 const AFK_AUTO_OPEN_KEY = 'abdoria_afk_auto_opened';
@@ -10,6 +11,7 @@ const SCROLL_HIDE_THRESHOLD = 48;
 
 export function AfkFab() {
   const { stats } = useApp();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [hidden, setHidden] = useState(false);
   const autoOpenedRef = useRef(false);
@@ -25,13 +27,16 @@ export function AfkFab() {
   const hasRewards =
     stats?.afk?.has_rewards ?? (stats?.afk ? hasAfkRewardsToClaim(stats.afk) : false);
 
+  // Desligado por padrão (Configurações → Exploração) — entrar no app não
+  // deve levar direto pra Exploração sem o jogador escolher; quem prefere o
+  // comportamento antigo liga a preferência.
   useEffect(() => {
-    if (!hasRewards || autoOpenedRef.current) return;
+    if (!hasRewards || !user?.preferencias?.exploracao_auto_abrir || autoOpenedRef.current) return;
     if (sessionStorage.getItem(AFK_AUTO_OPEN_KEY) === '1') return;
     autoOpenedRef.current = true;
     sessionStorage.setItem(AFK_AUTO_OPEN_KEY, '1');
     navigate('/exploracao');
-  }, [hasRewards, navigate]);
+  }, [hasRewards, navigate, user?.preferencias?.exploracao_auto_abrir]);
 
   return (
     <button

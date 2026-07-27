@@ -260,6 +260,10 @@ export interface UserPreferencias {
   /** false = não consumir Frozen Streak automaticamente ao perder um dia de
       treino (o streak quebra normalmente). Padrão: true (ativado). */
   frozen_streak_auto_usar?: boolean;
+  /** true = abrir a Exploração automaticamente ao entrar no app quando há
+      recompensa parada pra coletar. Padrão: false (o jogador entra na
+      Home e decide se quer abrir pelo botão). */
+  exploracao_auto_abrir?: boolean;
 }
 
 export type Idioma = 'pt' | 'en' | 'es';
