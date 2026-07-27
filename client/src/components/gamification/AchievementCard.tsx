@@ -77,10 +77,14 @@ export function pickAchievementPreview(conquistas: Achievement[], limit: number)
   return picked.slice(0, limit);
 }
 
-/** Lista única (sem seções por dificuldade): desbloqueadas primeiro, depois por % real desc. */
+/** Lista única (sem seções por dificuldade): desbloqueadas primeiro, depois por
+    % real ASC (as mais raras — menor % de jogadores — vêm primeiro). Vale
+    tanto pra lista cheia quanto pro preview (pickAchievementPreview), que
+    reusa esse sort — mostrar a conquista rara logo de cara é bem mais
+    interessante do que a mais comum. */
 export function sortAchievements(conquistas: Achievement[]): Achievement[] {
   return [...conquistas].sort((a, b) => {
     if (a.desbloqueada !== b.desbloqueada) return a.desbloqueada ? -1 : 1;
-    return b.pct_jogadores - a.pct_jogadores;
+    return a.pct_jogadores - b.pct_jogadores;
   });
 }
