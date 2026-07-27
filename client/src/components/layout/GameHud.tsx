@@ -85,7 +85,13 @@ export function GameHud() {
       }
       userTitle={<AnimatedTitleText title={resolvedTitle} className="top-navbar__title truncate" />}
       coinsEarnedPulse={coinsEarnedPulse}
-      onProfileClick={() => navigate('/perfil')}
+      onProfileClick={() => {
+        // Sem scroll-restoration global no app: sem isso, o Perfil montava
+        // na MESMA posição de rolagem da página anterior, em vez de abrir
+        // do topo (o esperado ao entrar numa página nova pelo avatar/nome).
+        window.scrollTo(0, 0);
+        navigate('/perfil');
+      }}
       actions={<NotificationsBell />}
     />
   );
