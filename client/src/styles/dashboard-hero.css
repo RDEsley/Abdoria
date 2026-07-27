@@ -1451,6 +1451,137 @@
   border-color: #10b981;
 }
 
+/* Nova atividade (redesenho) — identidade: gatilho de ícone circular + nome
+   lado a lado, no lugar da grade de ícones sempre visível. */
+.atividade-identity-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.atividade-identity-row__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.atividade-icon-trigger {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.85rem;
+  height: 2.85rem;
+  margin-top: 1.35rem;
+  color: #047857;
+  background: #ecfdf5;
+  border: 2px solid #10b981;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.atividade-icon-trigger:active {
+  transform: scale(0.94);
+}
+
+.atividade-icon-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.4rem;
+  max-height: min(50vh, 20rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.atividade-icon-sheet-option {
+  display: flex;
+  height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e7e5e4;
+  border-radius: 0.75rem;
+  color: #78716c;
+  background: #fff;
+  cursor: pointer;
+}
+
+.atividade-icon-sheet-option--active {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+/* Meta (tempo/número) num único bloco visual, em vez de duas seções
+   soltas cada uma com título próprio. */
+.atividade-meta-card {
+  padding: 0.85rem;
+  background: #fafaf9;
+  border: 1.5px dashed rgba(28, 25, 23, 0.16);
+  border-radius: 0.9rem;
+}
+
+.atividade-meta-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+  padding: 0.25rem;
+  background: #fff;
+  border: 2px solid #e7e5e4;
+  border-radius: 999px;
+}
+
+.atividade-meta-segmented__btn {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #78716c;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+}
+
+.atividade-meta-segmented__btn--active {
+  color: #fff;
+  background: linear-gradient(180deg, #34d399, #10b981);
+}
+
+/* "Mais detalhes" — tipo e descrição, opcionais, recolhidos por padrão pra
+   não competir visualmente com os campos essenciais (nome/ícone/meta). */
+.atividade-form-modal__advanced-toggle {
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.85rem;
+  background: #fff;
+  border: 2px dashed rgba(28, 25, 23, 0.16);
+  border-radius: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #57534e;
+  text-align: left;
+}
+
+.atividade-form-modal__advanced-toggle:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #047857;
+}
+
+.atividade-form-modal__advanced-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.atividade-form-modal__advanced-chevron--open {
+  transform: rotate(180deg);
+}
+
 /* Modal de conclusão: campo com sufixo de unidade — número e unidade ficam
    juntos à esquerda (não esticam pra ocupar a caixa toda, senão a unidade
    fica solta lá longe, à direita, sem relação visual com o número). */
@@ -1749,28 +1880,6 @@
   flex-shrink: 0;
   gap: 0.5rem;
   padding-top: 1rem;
-}
-
-.atividade-form-modal__ver-mais {
-  display: flex;
-  width: 100%;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  margin-top: 0.5rem;
-  padding: 0.4rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #57534e;
-  background: #f5f5f4;
-  border: none;
-  border-radius: 0.65rem;
-}
-
-.atividade-form-modal__ver-mais:hover {
-  color: #047857;
-  background: #ecfdf5;
 }
 
 /* Modal de concluir atividade: mais largo, mesma régua do form de criar. */

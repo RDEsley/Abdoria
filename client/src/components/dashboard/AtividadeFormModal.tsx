@@ -4,9 +4,7 @@ import {
   Bike,
   BookOpen,
   ChevronDown,
-  ChevronUp,
   Clock3,
-  Footprints,
   GraduationCap,
   Hash,
   Heart,
@@ -46,7 +44,7 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Zap> = {
   leitura: BookOpen,
   corrida: Zap,
   pedalada: Bike,
-  caminhada: Footprints,
+  caminhada: MoreHorizontal,
   natacao: Waves,
   meditacao: Moon,
   alongamento: Heart,
@@ -58,7 +56,27 @@ const TIPO_ICONS: Record<AtividadeTipo, typeof Zap> = {
   generico: MoreHorizontal,
 };
 
-const ICONES_COLAPSADO = 6;
+/** Sheet genérico de opções (mesma folha usada pelo Tipo e pelos Ícones) —
+    trigger fechado com valor atual + chevron, folha rolável com as opções. */
+function usePickerSheet() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
+
+  return { open, setOpen };
+}
 
 /**
  * Campo "Tipo" como dropdown (era uma grade de 13 chips soltas — ocupava
@@ -74,25 +92,11 @@ function AtividadeTipoField({
   value: AtividadeTipo;
   onChange: (tipo: AtividadeTipo) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = usePickerSheet();
   const CurrentIcon = TIPO_ICONS[value];
 
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
-
   return (
-    <div className="game-wheel-picker mt-2">
+    <div className="game-wheel-picker">
       <button
         type="button"
         className="game-wheel-picker__field"
@@ -162,9 +166,91 @@ function AtividadeTipoField({
 }
 
 /**
- * Criar/editar uma Atividade: ícone, nome, tipo (opcional — define o
- * formulário de conclusão) e a meta, por tempo em minutos ou uma contagem
- * livre (páginas, km, vezes...).
+ * Ícone da atividade como um gatilho circular (mostra o ícone escolhido) ao
+ * lado do campo Nome — troca a grade de 6-13 botões sempre visível (que
+ * empurrava o resto do form pra baixo) por uma folha só quando o jogador
+ * realmente quer trocar o ícone.
+ */
+function AtividadeIconField({
+  value,
+  onChange,
+}: {
+  value: AchievementIcon;
+  onChange: (icon: AchievementIcon) => void;
+}) {
+  const { open, setOpen } = usePickerSheet();
+  const CurrentIcon = ACHIEVEMENT_ICON_COMPONENTS[value];
+
+  return (
+    <>
+      <button
+        type="button"
+        className="atividade-icon-trigger"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label="Escolher ícone da atividade"
+      >
+        <CurrentIcon size={20} aria-hidden />
+      </button>
+
+      {open &&
+        createPortal(
+          <div
+            className="game-picker-sheet-overlay"
+            onClick={() => setOpen(false)}
+            role="presentation"
+          >
+            <div
+              className="game-picker-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="atividade-icon-sheet-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="game-picker-sheet__handle" aria-hidden />
+              <h2 id="atividade-icon-sheet-title" className="game-picker-sheet__title">
+                Ícone da atividade
+              </h2>
+              <div className="atividade-icon-sheet-grid" role="listbox" aria-label="Ícone da atividade">
+                {ATIVIDADE_ICONES.map((option) => {
+                  const Icon = ACHIEVEMENT_ICON_COMPONENTS[option];
+                  const ativo = value === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      role="option"
+                      aria-selected={ativo}
+                      aria-label={`Ícone ${option}`}
+                      className={`atividade-icon-sheet-option${ativo ? ' atividade-icon-sheet-option--active' : ''}`}
+                      onClick={() => {
+                        playClick();
+                        onChange(option);
+                        setOpen(false);
+                      }}
+                    >
+                      <Icon size={18} aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+/**
+ * Criar/editar uma Atividade. Redesenhado (era 6 seções sempre visíveis,
+ * cada uma com título próprio — nome, grade de ícones, "como medir",
+ * duração/meta, tipo, descrição — visualmente pesado e confuso demais pra
+ * um form de "crie sua atividade"): agora são 2 blocos essenciais sempre
+ * visíveis (identidade: ícone + nome · meta: tempo ou número) e um bloco
+ * opcional recolhido por padrão (tipo + descrição), que só abre sozinho se
+ * a atividade editada já usa um deles.
  */
 export function AtividadeFormModal({
   atividade,
@@ -179,7 +265,6 @@ export function AtividadeFormModal({
   const [nome, setNome] = useState(atividade?.nome ?? '');
   const [descricao, setDescricao] = useState(atividade?.descricao ?? '');
   const [icon, setIcon] = useState<AchievementIcon>(atividade?.icon ?? 'star');
-  const [iconesExpandidos, setIconesExpandidos] = useState(false);
   const [tipo, setTipo] = useState<AtividadeTipo>(atividade?.tipo ?? 'generico');
   const [metaTipo, setMetaTipo] = useState<AtividadeMetaTipo>(atividade?.meta_tipo ?? 'tempo');
   const [minutos, setMinutos] = useState(
@@ -191,6 +276,9 @@ export function AtividadeFormModal({
     atividade?.meta_tipo === 'numero' ? String(atividade.meta_valor) : '',
   );
   const [unidade, setUnidade] = useState(atividade?.meta_unidade ?? '');
+  const [detalhesAbertos, setDetalhesAbertos] = useState(
+    Boolean(atividade && ((atividade.tipo && atividade.tipo !== 'generico') || atividade.descricao)),
+  );
   const descricaoRef = useRef<HTMLTextAreaElement>(null);
 
   /** Textarea cresce junto com o texto — sem barra de rolagem própria. */
@@ -200,12 +288,8 @@ export function AtividadeFormModal({
   };
 
   useEffect(() => {
-    if (descricaoRef.current) ajustarAlturaDescricao(descricaoRef.current);
-  }, []);
-
-  const iconesVisiveis = iconesExpandidos
-    ? ATIVIDADE_ICONES
-    : ATIVIDADE_ICONES.slice(0, ICONES_COLAPSADO);
+    if (detalhesAbertos && descricaoRef.current) ajustarAlturaDescricao(descricaoRef.current);
+  }, [detalhesAbertos]);
 
   const salvar = () => {
     if (nome.trim().length < 2) {
@@ -231,8 +315,6 @@ export function AtividadeFormModal({
     });
   };
 
-  const maisIcones = ATIVIDADE_ICONES.length - ICONES_COLAPSADO;
-
   return (
     <Modal open onClose={onClose} labelledBy="atividade-form-title" panelClassName="atividade-form-modal">
       <div className="atividade-form-modal__head">
@@ -242,157 +324,136 @@ export function AtividadeFormModal({
       </div>
 
       <div className="atividade-form-modal__body flex flex-col gap-4">
-        <label className="block text-sm font-semibold">
-          Nome
-          <input
-            value={nome}
-            onChange={(e) => setNome(e.target.value.slice(0, ATIVIDADE_NOME_MAX))}
-            placeholder="Ex.: Tocar violão"
-            className={fieldClass}
-          />
-        </label>
-
-        <div>
-          <p className="text-sm font-semibold">Ícones</p>
-          <div className="mt-2 grid grid-cols-6 gap-1.5">
-            {iconesVisiveis.map((option) => {
-              const Icon = ACHIEVEMENT_ICON_COMPONENTS[option];
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  aria-label={`Ícone ${option}`}
-                  aria-pressed={icon === option}
-                  className={`flex h-9 cursor-pointer items-center justify-center rounded-xl border-2 ${
-                    icon === option
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-stone-200 text-stone-500 hover:border-emerald-300'
-                  }`}
-                  onClick={() => {
-                    playClick();
-                    setIcon(option);
-                  }}
-                >
-                  <Icon size={16} aria-hidden />
-                </button>
-              );
-            })}
-          </div>
-          {maisIcones > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                playClick();
-                setIconesExpandidos((v) => !v);
-              }}
-              className="atividade-form-modal__ver-mais"
-            >
-              {iconesExpandidos ? (
-                <>
-                  <ChevronUp size={13} aria-hidden /> Ver menos ícones
-                </>
-              ) : (
-                <>
-                  <ChevronDown size={13} aria-hidden /> Ver mais ícones (+{maisIcones})
-                </>
-              )}
-            </button>
-          )}
+        <div className="atividade-identity-row">
+          <AtividadeIconField value={icon} onChange={setIcon} />
+          <label className="atividade-identity-row__name block text-sm font-semibold">
+            Nome da atividade
+            <input
+              value={nome}
+              onChange={(e) => setNome(e.target.value.slice(0, ATIVIDADE_NOME_MAX))}
+              placeholder="Ex.: Tocar violão"
+              className={fieldClass}
+            />
+          </label>
         </div>
 
-        <div>
-          <p className="text-sm font-semibold">Como você mede essa atividade?</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="atividade-meta-card">
+          <div className="atividade-meta-segmented" role="tablist" aria-label="Como medir a atividade">
             <button
               type="button"
-              aria-pressed={metaTipo === 'tempo'}
+              role="tab"
+              aria-selected={metaTipo === 'tempo'}
               onClick={() => {
                 playClick();
                 setMetaTipo('tempo');
               }}
-              className={`atividade-meta-btn${metaTipo === 'tempo' ? ' atividade-meta-btn--active' : ''}`}
+              className={`atividade-meta-segmented__btn${metaTipo === 'tempo' ? ' atividade-meta-segmented__btn--active' : ''}`}
             >
-              <Clock3 size={15} aria-hidden /> Por tempo
+              <Clock3 size={14} aria-hidden /> Por tempo
             </button>
             <button
               type="button"
-              aria-pressed={metaTipo === 'numero'}
+              role="tab"
+              aria-selected={metaTipo === 'numero'}
               onClick={() => {
                 playClick();
                 setMetaTipo('numero');
               }}
-              className={`atividade-meta-btn${metaTipo === 'numero' ? ' atividade-meta-btn--active' : ''}`}
+              className={`atividade-meta-segmented__btn${metaTipo === 'numero' ? ' atividade-meta-segmented__btn--active' : ''}`}
             >
-              <Hash size={15} aria-hidden /> Por número
+              <Hash size={14} aria-hidden /> Por número
             </button>
           </div>
-        </div>
 
-        {metaTipo === 'tempo' ? (
-          <label className="block text-sm font-semibold">
-            Duração: {minutos} min
-            <input
-              type="range"
-              min={ATIVIDADE_DURACAO_MIN}
-              max={ATIVIDADE_DURACAO_MAX}
-              step={5}
-              value={minutos}
-              onChange={(e) => setMinutos(Number(e.target.value))}
-              className="mt-2 w-full cursor-pointer"
-            />
-          </label>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <label className="block text-sm font-semibold">
-              Meta
+          {metaTipo === 'tempo' ? (
+            <label className="mt-3 block text-sm font-semibold">
+              Duração: {minutos} min
               <input
-                type="number"
-                inputMode="numeric"
-                min={ATIVIDADE_NUMERO_MIN}
-                max={ATIVIDADE_NUMERO_MAX}
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-                placeholder="Ex.: 5"
-                className={fieldClass}
+                type="range"
+                min={ATIVIDADE_DURACAO_MIN}
+                max={ATIVIDADE_DURACAO_MAX}
+                step={5}
+                value={minutos}
+                onChange={(e) => setMinutos(Number(e.target.value))}
+                className="mt-2 w-full cursor-pointer"
               />
             </label>
-            <label className="block text-sm font-semibold">
-              Unidade
-              <input
-                value={unidade}
-                onChange={(e) => setUnidade(e.target.value.slice(0, 20))}
-                placeholder="páginas, km..."
-                className={fieldClass}
-              />
-            </label>
-          </div>
-        )}
-
-        <div>
-          <p className="flex items-center gap-1 text-sm font-semibold">
-            Tipo <span className="text-xs font-medium text-stone-400">(opcional)</span>
-          </p>
-          <p className="mt-0.5 text-[0.68rem] font-medium text-stone-400">
-            Ajusta o que perguntamos ao concluir — pode deixar em "Outro".
-          </p>
-          <AtividadeTipoField value={tipo} onChange={setTipo} />
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <label className="block text-sm font-semibold">
+                Meta
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={ATIVIDADE_NUMERO_MIN}
+                  max={ATIVIDADE_NUMERO_MAX}
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(e.target.value)}
+                  placeholder="Ex.: 5"
+                  className={fieldClass}
+                />
+              </label>
+              <label className="block text-sm font-semibold">
+                Unidade
+                <input
+                  value={unidade}
+                  onChange={(e) => setUnidade(e.target.value.slice(0, 20))}
+                  placeholder="páginas, km..."
+                  className={fieldClass}
+                />
+              </label>
+            </div>
+          )}
         </div>
 
-        <label className="block text-sm font-semibold">
-          Descrição <span className="text-xs font-medium text-stone-400">(opcional)</span>
-          <textarea
-            ref={descricaoRef}
-            value={descricao}
-            onChange={(e) => {
-              setDescricao(e.target.value.slice(0, ATIVIDADE_DESCRICAO_MAX));
-              ajustarAlturaDescricao(e.target);
-            }}
-            placeholder="Ex.: Praticar 3 músicas novas"
-            rows={2}
-            maxLength={ATIVIDADE_DESCRICAO_MAX}
-            className={`${fieldClass} resize-none overflow-hidden`}
+        <button
+          type="button"
+          className="atividade-form-modal__advanced-toggle"
+          aria-expanded={detalhesAbertos}
+          onClick={() => {
+            playClick();
+            setDetalhesAbertos((v) => !v);
+          }}
+        >
+          <span>Mais detalhes <span className="text-stone-400 font-medium">(tipo, descrição)</span></span>
+          <ChevronDown
+            size={16}
+            className={`atividade-form-modal__advanced-chevron${detalhesAbertos ? ' atividade-form-modal__advanced-chevron--open' : ''}`}
+            aria-hidden
           />
-        </label>
+        </button>
+
+        {detalhesAbertos && (
+          <>
+            <div>
+              <p className="flex items-center gap-1 text-sm font-semibold">
+                Tipo <span className="text-xs font-medium text-stone-400">(opcional)</span>
+              </p>
+              <p className="mt-0.5 text-[0.68rem] font-medium text-stone-400">
+                Ajusta o que perguntamos ao concluir — pode deixar em "Outro".
+              </p>
+              <div className="mt-2">
+                <AtividadeTipoField value={tipo} onChange={setTipo} />
+              </div>
+            </div>
+
+            <label className="block text-sm font-semibold">
+              Descrição <span className="text-xs font-medium text-stone-400">(opcional)</span>
+              <textarea
+                ref={descricaoRef}
+                value={descricao}
+                onChange={(e) => {
+                  setDescricao(e.target.value.slice(0, ATIVIDADE_DESCRICAO_MAX));
+                  ajustarAlturaDescricao(e.target);
+                }}
+                placeholder="Ex.: Praticar 3 músicas novas"
+                rows={2}
+                maxLength={ATIVIDADE_DESCRICAO_MAX}
+                className={`${fieldClass} resize-none overflow-hidden`}
+              />
+            </label>
+          </>
+        )}
       </div>
 
       <div className="atividade-form-modal__footer">
