@@ -24,6 +24,8 @@ import {
   CURRENCY_NAME,
   MOLDURA_LABELS,
   NAME_CHANGE_COST,
+  NOME_MAX_LENGTH,
+  NOME_MIN_LENGTH,
   type IUserDocument,
   type MolduraId,
   type ShopResponse,
@@ -154,8 +156,11 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
 
   const handleSave = async () => {
     const nome = nameDraft.trim();
-    if (nameChanged && nome.length < 2) {
-      showGameToast('Nome deve ter pelo menos 2 caracteres.', { variant: 'error' });
+    if (nameChanged && (nome.length < NOME_MIN_LENGTH || nome.length > NOME_MAX_LENGTH)) {
+      showGameToast(
+        `Nome deve ter entre ${NOME_MIN_LENGTH} e ${NOME_MAX_LENGTH} caracteres.`,
+        { variant: 'error' },
+      );
       return;
     }
 
@@ -304,9 +309,12 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
             <input
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
-              maxLength={40}
+              maxLength={NOME_MAX_LENGTH}
               className="profile-edit-field__input"
             />
+            <span className="profile-edit-field__hint profile-edit-field__hint--count">
+              {nameDraft.length}/{NOME_MAX_LENGTH}
+            </span>
             {nameChanged && nameChangeIsPaid && (
               <span className="profile-edit-field__hint">
                 Trocar o nome custa {NAME_CHANGE_COST.toLocaleString('pt-BR')} {CURRENCY_NAME}.

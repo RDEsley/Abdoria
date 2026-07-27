@@ -855,6 +855,12 @@ export const CURRENCY_NAME = 'Coins';
 /** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
 export const NAME_CHANGE_COST = 10_000;
 
+/** Tamanho máximo do nome de exibição (cadastro e troca de nome) — nomes já
+    salvos antes dessa regra (2026-07-26) continuam valendo como estão, a
+    restrição só passa a valer em novas escritas. */
+export const NOME_MAX_LENGTH = 10;
+export const NOME_MIN_LENGTH = 2;
+
 export const FROZEN_STREAK_ITEM_ID: InventoryItemId = 'frozen_streak';
 export const FROZEN_STREAK_LABEL = 'Frozen Streak';
 export const FROZEN_STREAK_SHOP_PRICE = 25;

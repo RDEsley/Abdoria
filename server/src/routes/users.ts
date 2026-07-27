@@ -7,6 +7,8 @@ import {
   ALL_BESTIARY_ENEMY_IDS,
   CURRENCY_NAME,
   NAME_CHANGE_COST,
+  NOME_MAX_LENGTH,
+  NOME_MIN_LENGTH,
   calcImc,
   isBanimentoAtivo,
   suggestNivel,
@@ -389,8 +391,10 @@ usersRouter.post('/me/moldura', async (req: AuthRequest, res) => {
 usersRouter.post('/me/name', async (req: AuthRequest, res) => {
   try {
     const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : '';
-    if (nome.length < 2 || nome.length > 40) {
-      res.status(400).json({ error: 'Nome deve ter entre 2 e 40 caracteres.' });
+    if (nome.length < NOME_MIN_LENGTH || nome.length > NOME_MAX_LENGTH) {
+      res.status(400).json({
+        error: `Nome deve ter entre ${NOME_MIN_LENGTH} e ${NOME_MAX_LENGTH} caracteres.`,
+      });
       return;
     }
 

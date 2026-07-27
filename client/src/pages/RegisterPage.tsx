@@ -13,6 +13,7 @@ import {
   type AuthFieldErrors,
 } from '@/lib/auth-validation';
 import { useAuth } from '@/context/AuthContext';
+import { NOME_MAX_LENGTH } from '@/types';
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -84,7 +85,7 @@ export function RegisterPage() {
             error={fieldErrors.nome}
             placeholder="Como quer ser chamado"
             autoComplete="name"
-            maxLength={40}
+            maxLength={NOME_MAX_LENGTH}
           />
           <AuthField
             label="Email"

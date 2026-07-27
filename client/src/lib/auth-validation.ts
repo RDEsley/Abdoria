@@ -1,3 +1,5 @@
+import { NOME_MAX_LENGTH, NOME_MIN_LENGTH } from '@/types';
+
 export type AuthFieldKey = 'nome' | 'email' | 'password' | 'confirmPassword';
 
 export type AuthFieldErrors = Partial<Record<AuthFieldKey, string>>;
@@ -20,8 +22,12 @@ export function validatePassword(value: string, minLength = 6): string | undefin
 export function validateRegisterNome(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed) return 'Informe seu nome.';
-  if (trimmed.length < 2) return 'O nome precisa ter pelo menos 2 caracteres.';
-  if (trimmed.length > 40) return 'Use um nome com até 40 caracteres.';
+  if (trimmed.length < NOME_MIN_LENGTH) {
+    return `O nome precisa ter pelo menos ${NOME_MIN_LENGTH} caracteres.`;
+  }
+  if (trimmed.length > NOME_MAX_LENGTH) {
+    return `Use um nome com até ${NOME_MAX_LENGTH} caracteres.`;
+  }
   return undefined;
 }
 

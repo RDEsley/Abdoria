@@ -28,7 +28,7 @@ import {
   type AdminOverviewResponse,
   type AdminUserEntry,
 } from '@/lib/api';
-import { isBanimentoAtivo, type UserRole } from '@/types';
+import { isBanimentoAtivo, NOME_MAX_LENGTH, type UserRole } from '@/types';
 
 type Tab = 'avaliacoes' | 'sugestoes' | 'usuarios';
 
@@ -353,7 +353,12 @@ function AdminEditModal({
       <div className="mt-3 flex flex-col gap-3">
         <label className="block text-sm font-semibold">
           Nome
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className={fieldClass} />
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            maxLength={NOME_MAX_LENGTH}
+            className={fieldClass}
+          />
         </label>
         <label className="block text-sm font-semibold">
           <span className="flex items-center gap-1">

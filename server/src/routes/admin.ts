@@ -6,7 +6,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
 import { syncAdminMoldura } from '../services/shop.js';
-import type { Banimento, UserRole } from '../types/index.js';
+import { NOME_MAX_LENGTH, NOME_MIN_LENGTH, type Banimento, type UserRole } from '../types/index.js';
 import type { UserLean } from '../types/user-record.js';
 
 export const adminRouter = Router();
@@ -111,7 +111,11 @@ adminRouter.patch('/users/:id', async (req: AuthRequest, res) => {
       role?: string;
     };
 
-    if (typeof nome === 'string' && nome.trim().length >= 2) {
+    if (
+      typeof nome === 'string' &&
+      nome.trim().length >= NOME_MIN_LENGTH &&
+      nome.trim().length <= NOME_MAX_LENGTH
+    ) {
       user.nome = nome.trim();
     }
     if (typeof senha === 'string' && senha.length >= 6) {

@@ -3,7 +3,13 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { User, sanitizeUser } from '../domain/User.js';
 import { signToken } from '../middleware/auth.js';
-import { DEFAULT_PREFERENCIAS, DEFAULT_XP_DIARIO, isBanimentoAtivo } from '../types/index.js';
+import {
+  DEFAULT_PREFERENCIAS,
+  DEFAULT_XP_DIARIO,
+  isBanimentoAtivo,
+  NOME_MAX_LENGTH,
+  NOME_MIN_LENGTH,
+} from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { verifyEmailIsReal } from '../services/email-verification.js';
 
@@ -19,6 +25,14 @@ authRouter.post('/register', async (req, res) => {
 
     if (!email || !password || !nome) {
       res.status(400).json({ error: 'Email, senha e nome são obrigatórios.' });
+      return;
+    }
+
+    const nomeTrimmed = nome.trim();
+    if (nomeTrimmed.length < NOME_MIN_LENGTH || nomeTrimmed.length > NOME_MAX_LENGTH) {
+      res.status(400).json({
+        error: `Nome deve ter entre ${NOME_MIN_LENGTH} e ${NOME_MAX_LENGTH} caracteres.`,
+      });
       return;
     }
 
@@ -47,7 +61,7 @@ authRouter.post('/register', async (req, res) => {
     const user = await User.create({
       email: normalizedEmail,
       passwordHash,
-      nome: nome.trim(),
+      nome: nomeTrimmed,
       preferencias: DEFAULT_PREFERENCIAS,
       xp_diario: { ...DEFAULT_XP_DIARIO, data_reset: today },
       onboarding_completed: false,
@@ -120,7 +134,9 @@ authRouter.post('/guest', async (_req, res) => {
     const user = await User.create({
       email,
       passwordHash,
-      nome: `Visitante ${suffix.slice(0, 4).toUpperCase()}`,
+      // "Visitante XXXX" passava do novo limite de NOME_MAX_LENGTH — nome
+      // curto o bastante pra caber dentro da regra sem precisar truncar.
+      nome: `Visit${suffix.slice(0, 4).toUpperCase()}`,
       is_guest: true,
       preferencias: DEFAULT_PREFERENCIAS,
       xp_diario: { ...DEFAULT_XP_DIARIO, data_reset: today },
