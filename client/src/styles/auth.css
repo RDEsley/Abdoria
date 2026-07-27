@@ -878,11 +878,16 @@
   pointer-events: none;
 }
 
-.game-auth-field__input--with-icon {
+/* Precisa bater (ou superar) a especificidade de `.game-auth-field__input.
+   game-input` (0,2,0) acima — como classe isolada (0,1,0), o padding-left
+   de 2.35rem nunca vencia o padding:0.7rem 0.75rem do input base, então o
+   texto sempre começava embaixo do ícone (bug real: ícone sobrepondo a
+   primeira letra do placeholder em todos os campos do cadastro). */
+.game-auth-field__input.game-input.game-auth-field__input--with-icon {
   padding-left: 2.35rem;
 }
 
-.game-auth-field__input--with-toggle {
+.game-auth-field__input.game-input.game-auth-field__input--with-toggle {
   padding-right: 2.65rem;
 }
 
