@@ -800,6 +800,157 @@
     3px 3px 0 rgba(28, 25, 23, 0.22);
 }
 
+/* Espaço reservado enquanto o servidor confirma qual cena mostrar (vila x
+   floresta) — sem isso a tela nascia sempre na vila (valor inicial do
+   estado) e só corrigia depois que o fetch assíncrono voltava, causando um
+   flash visível da vila antes da cena real pra quem já estava explorando. */
+.game-afk-scene__viewport--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.game-afk-scene__loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #fff;
+  animation: game-afk-scene-loading-spin 0.7s linear infinite;
+}
+
+@keyframes game-afk-scene-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.game-afk-scene__loading-text {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(28, 25, 23, 0.4);
+}
+
+/* Intervalo de busca entre abates (AfkSearchOverlay) — sem inimigo em cena,
+   a lupa "procura" o próximo alvo trocando de lugar 3 vezes no cenário
+   enquanto o texto pulsa embaixo. Existe pra dar um respiro real entre
+   abates (o herói parava de atirar) em vez de trocar de inimigo instantâneo. */
+.game-afk-search {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.game-afk-search__lupa {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  width: 4.25rem;
+  height: 4.25rem;
+  transform: translate(-50%, -50%);
+  transition:
+    top 1s cubic-bezier(0.34, 1.15, 0.4, 1),
+    left 1s cubic-bezier(0.34, 1.15, 0.4, 1);
+  filter: drop-shadow(2px 3px 0 rgba(28, 25, 23, 0.35));
+}
+
+.game-afk-search__lupa--spot-0 {
+  top: 30%;
+  left: 24%;
+}
+
+.game-afk-search__lupa--spot-1 {
+  top: 48%;
+  left: 74%;
+}
+
+.game-afk-search__lupa--spot-2 {
+  top: 64%;
+  left: 42%;
+}
+
+.game-afk-search__lupa-glow {
+  position: absolute;
+  inset: -0.75rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.45), transparent 70%);
+  animation: game-afk-search-glow-pulse 1.5s ease-in-out infinite;
+}
+
+.game-afk-search__lupa-ring {
+  position: absolute;
+  inset: -0.2rem;
+  border-radius: 999px;
+  border: 2px dashed rgba(251, 191, 36, 0.6);
+  animation: game-afk-search-ring-spin 6s linear infinite;
+}
+
+@keyframes game-afk-search-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes game-afk-search-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.game-afk-search__text {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 3px rgba(28, 25, 23, 0.55);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.game-afk-search__text span {
+  display: inline-block;
+  animation: game-afk-search-text-bounce 1.2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.06s);
+}
+
+@keyframes game-afk-search-text-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-afk-search__lupa,
+  .game-afk-search__lupa-glow,
+  .game-afk-search__lupa-ring,
+  .game-afk-search__text span {
+    animation: none;
+    transition: none;
+  }
+}
+
 .game-afk-scene__viewport--sword-hit {
   animation: game-afk-scene-sword-shake 0.32s ease-out 0.2s;
 }

@@ -15,6 +15,7 @@ import { emitAfkLootOrbs } from '@/lib/afk-loot-orbs';
 import { AfkLootOrbLayer } from '@/components/afk/AfkLootOrbLayer';
 import { AfkMascotHero } from '@/components/afk/AfkMascotHero';
 import { AfkEnemySprite } from '@/components/afk/AfkEnemySprite';
+import { AfkSearchOverlay } from '@/components/afk/AfkSearchOverlay';
 import { AfkSpellEffect } from '@/components/afk/AfkSpellEffect';
 import { AfkBossProgressPanel, useDamageFloaters } from '@/components/afk/AfkCombatHud';
 import { AfkSkyCycle } from '@/components/afk/AfkSkyCycle';
@@ -92,6 +93,14 @@ export function AfkCombatScene({
       dano da barra de vida são chaveadas nele, senão em magia (impacto 620ms
       depois do início, cauda de 1,5s) o flash/rastro tocava fora de hora. */
   const [hitSeq, setHitSeq] = useState(0);
+  /** Intervalo entre abates: personagem procura o próximo inimigo (lupa) em
+      vez de já aparecer com o próximo alvo na mira — sem isso o herói ficava
+      atirando sem parar, sem nenhum respiro entre um abate e outro. `Ref`
+      é checado dentro de runAttack (senão o loop do ataque continuaria
+      disparando); `state` só pra desenhar a lupa/texto na tela. */
+  const [searching, setSearching] = useState(false);
+  const searchingRef = useRef(false);
+  const [searchSpot, setSearchSpot] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<number[]>([]);
   const { floaters, pushDamage } = useDamageFloaters();
@@ -224,6 +233,10 @@ export function AfkCombatScene({
     clearTimers();
 
     const runAttack = () => {
+      // Sem inimigo em cena (procurando o próximo) — o intervalo continua
+      // rodando de fundo, só não faz nada até a busca terminar.
+      if (searchingRef.current) return;
+
       const enemyId = localEnemyIdRef.current;
       const critChance = resolvePatrolCritChancePercent(critKind, weaponId, enemyId);
       const isCrit = critChance > 0 && Math.random() < critChance / 100;
@@ -289,10 +302,25 @@ export function AfkCombatScene({
           localKillsUntilBossRef.current = nextKills;
           killsTotalRef.current = nextKillsTotal;
           setLocalKillsUntilBoss(nextKills);
-          respawnLocalEnemy(nextKills, nextKillsTotal);
           setDying(false);
           setLooting(false);
           setEnemyHit(false);
+
+          // Intervalo de busca (5-10s) antes do próximo inimigo aparecer — a
+          // lupa troca de lugar 2x nesse meio tempo (3 posições ao todo).
+          // Sem inimigo em cena e com runAttack pulando enquanto searchingRef
+          // está true, o herói para de atirar até achar o próximo alvo.
+          searchingRef.current = true;
+          setSearching(true);
+          setSearchSpot(0);
+          const searchDuration = 5000 + Math.random() * 5000;
+          schedule(() => setSearchSpot(1), searchDuration / 3);
+          schedule(() => setSearchSpot(2), (searchDuration * 2) / 3);
+          schedule(() => {
+            searchingRef.current = false;
+            setSearching(false);
+            respawnLocalEnemy(nextKills, nextKillsTotal);
+          }, searchDuration);
         }, 720);
       }, impactDelay);
 
@@ -478,19 +506,23 @@ export function AfkCombatScene({
           </span>
         )}
 
-        <AfkEnemySprite
-          combat={snapshot}
-          userId={userId}
-          spawnKillsTotal={spawnKillsTotal}
-          hit={enemyHit}
-          critHit={enemyHit && attackIsCrit}
-          dying={dying}
-          looting={looting}
-          hitKey={hitSeq}
-          displayHp={displayHp}
-          previousDisplayHp={previousDisplayHp}
-          showHpBar={!snapshot.is_boss}
-        />
+        {searching ? (
+          <AfkSearchOverlay spot={searchSpot} />
+        ) : (
+          <AfkEnemySprite
+            combat={snapshot}
+            userId={userId}
+            spawnKillsTotal={spawnKillsTotal}
+            hit={enemyHit}
+            critHit={enemyHit && attackIsCrit}
+            dying={dying}
+            looting={looting}
+            hitKey={hitSeq}
+            displayHp={displayHp}
+            previousDisplayHp={previousDisplayHp}
+            showHpBar={!snapshot.is_boss}
+          />
+        )}
 
         {lootDropSeq > 0 && (
           <span key={`loot-drop-${lootDropSeq}`} className="game-afk-scene__loot-drop" aria-hidden>

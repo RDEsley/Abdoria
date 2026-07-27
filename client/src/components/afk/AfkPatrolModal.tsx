@@ -48,7 +48,11 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const { user, applyUser } = useAuth();
   const { refresh: refreshApp, stats } = useApp();
   const [meta, setMeta] = useState<AfkMetaResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  // Começa true de propósito: a 1ª renderização acontece ANTES do load()
+  // assíncrono terminar, e sceneMode nasce sempre 'village' (valor inicial
+  // fixo) — sem esse gate, quem estava explorando via um flash da vila até
+  // o servidor confirmar a cena real e trocar pra 'exploring'.
+  const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const { presentRewards } = useRewardPresentation();
   const [elapsedSinceSyncMin, setElapsedSinceSyncMin] = useState(0);
@@ -171,6 +175,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     if (!open) {
       syncedMinutosRef.current = null;
       hasLoadedRef.current = false;
+      // Rearma o gate de loading pra próxima abertura — sem isso, reabrir a
+      // tela (se o componente ficar montado entre fechamentos) já nasceria
+      // com loading=false do ciclo anterior e voltaria a piscar a vila.
+      setLoading(true);
       setShopOpen(false);
       setBestiaryOpen(false);
       setInventoryOpen(false);
@@ -409,7 +417,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             <>
               <div className="game-afk-modal__topbar game-afk-modal__topbar--main">
             <div className="game-afk-modal__topbar-side game-afk-modal__topbar-side--start">
-              {sceneMode === 'exploring' && (
+              {!loading && sceneMode === 'exploring' && (
                 <button
                   type="button"
                   className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--village"
@@ -426,7 +434,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                   </span>
                 </button>
               )}
-              {sceneMode === 'village' && (
+              {!loading && sceneMode === 'village' && (
                 <button
                   type="button"
                   className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
@@ -454,7 +462,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
               )}
             </div>
             <h2 id="afk-patrol-title" className="game-afk-modal__title">
-              {sceneMode === 'village' ? 'Vila Abdoria' : 'Exploração'}
+              {loading ? 'Exploração' : sceneMode === 'village' ? 'Vila Abdoria' : 'Exploração'}
             </h2>
             <div className="game-afk-modal__toolbar">
               <button
@@ -469,7 +477,14 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             </div>
           </div>
 
-          {sceneMode === 'village' ? (
+          {loading ? (
+            <div className="game-afk-scene">
+              <div className="game-afk-scene__viewport game-afk-scene__viewport--loading">
+                <span className="game-afk-scene__loading-spinner" aria-hidden />
+                <p className="game-afk-scene__loading-text">Carregando exploração...</p>
+              </div>
+            </div>
+          ) : sceneMode === 'village' ? (
             <AfkVillageScene
               bestiaryUnlocked={stats?.bestiario_desbloqueados?.length ?? 0}
               bestiaryTotal={ALL_BESTIARY_ENEMY_IDS.length}

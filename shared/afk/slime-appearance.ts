@@ -79,7 +79,6 @@ export const SLIME_COSMETIC_POOL: SlimeAccessoryKind[] = [
   'beanie',
   'antenna',
   'antennae',
-  'monocle',
   'flower',
   'bow',
   'scarf',

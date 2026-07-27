@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 interface Props {
@@ -8,13 +9,48 @@ interface Props {
   onContinue: () => void;
 }
 
+const VILLAGE_IMAGES = ['/assets/loja-da-vila.png', '/assets/museu-da-vila-bestiario.png'];
+
+/** Módulo: uma vez carregadas nesta sessão, as próximas visitas à vila não
+    esperam de novo (evita até o flash do loading num cache já quente). */
+let villageImagesLoaded = false;
+
+/** Pré-carrega loja/museu antes de revelar a vila — sem isso o fundo (CSS,
+    instantâneo) aparecia primeiro e as duas imagens "pipocavam" visíveis
+    chegando depois, sozinhas, por cima do cenário já pronto. */
+function useVillageImagesReady(): boolean {
+  const [ready, setReady] = useState(villageImagesLoaded);
+
+  useEffect(() => {
+    if (villageImagesLoaded) return undefined;
+    let cancelled = false;
+    let remaining = VILLAGE_IMAGES.length;
+    const onSettle = () => {
+      remaining -= 1;
+      if (remaining > 0 || cancelled) return;
+      villageImagesLoaded = true;
+      setReady(true);
+    };
+    VILLAGE_IMAGES.forEach((src) => {
+      const img = new Image();
+      img.onload = onSettle;
+      img.onerror = onSettle;
+      img.src = src;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return ready;
+}
+
 /**
- * Cena de hub entre patrulhas: a vila. Cenário é a imagem `vila-background`
- * (céu, montanhas, floresta, grama sobre terra estilo Terraria, casinhas e
- * árvores já pintadas) — a loja e o museu (bestiário) ficam sobrepostos
- * exatamente em cima dos recortes tracejados da própria arte, ambos
- * clicáveis. Sem personagem em cena: a vila é só o hub de navegação, o
- * herói só aparece de verdade na exploração.
+ * Cena de hub entre patrulhas: a vila. Fundo é 100% CSS (céu/grama/colinas) —
+ * a loja e o museu (bestiário) são as duas únicas imagens de verdade,
+ * sobrepostas nas posições certas, ambas clicáveis. Sem personagem em cena:
+ * a vila é só o hub de navegação, o herói só aparece de verdade na
+ * exploração.
  */
 export function AfkVillageScene({
   bestiaryUnlocked,
@@ -23,6 +59,19 @@ export function AfkVillageScene({
   onOpenBestiary,
   onContinue,
 }: Props) {
+  const imagesReady = useVillageImagesReady();
+
+  if (!imagesReady) {
+    return (
+      <div className="game-afk-scene">
+        <div className="game-afk-scene__viewport game-afk-scene__viewport--loading">
+          <span className="game-afk-scene__loading-spinner" aria-hidden />
+          <p className="game-afk-scene__loading-text">Carregando vila...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="game-afk-scene">
       <div className="game-afk-scene__viewport game-afk-village">
