@@ -293,6 +293,23 @@
   box-shadow: 1.5px 1.5px 0 var(--game-green-dark);
 }
 
+/* :hover sozinho (0,2,0) tem mais especificidade que qualquer modificador
+   isolado (0,1,0) — sem essas regras, passar o mouse num chip já
+   destacado (feito/sugerido/selecionado) sobrescrevia o fundo colorido
+   pelo fundo genérico de hover (#f0fdf4), como se ele "apagasse" ao
+   passar o mouse. */
+.game-builder-cycle-chip--done:hover {
+  background: #ecfdf5;
+}
+
+.game-builder-cycle-chip--next:hover {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.game-builder-cycle-chip--active:hover {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
 .game-builder-next-banner {
   display: flex;
   align-items: center;
