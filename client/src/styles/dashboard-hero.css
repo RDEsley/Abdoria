@@ -420,26 +420,8 @@
   color: #fcd34d;
 }
 
-/* Descrição/bio equipada, mesma linguagem visual do card de Perfil. */
-.game-xp-section__bio {
-  margin: 0.3rem 0 0;
-  font-size: 0.68rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #57534e;
-  opacity: 0.92;
-  overflow-wrap: anywhere;
-}
-
-.game-xp-section__hero--skinned .game-xp-section__bio {
-  color: #e7e5e4;
-}
-
 .game-xp-section__subtitle {
-  /* Mais respiro que bio→subtitle (0.3rem lá embaixo): separa o grupo de
-     identidade (nome/título/bio) do grupo de progresso (texto de XP +
-     barra) em vez de tudo grudado numa coluna só. */
-  margin: 0.7rem 0 0;
+  margin: 0.45rem 0 0;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.4;

@@ -95,7 +95,6 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
             <h2 className="game-xp-section__title min-w-0 truncate">{user?.nome ?? 'Atleta'}</h2>
             <AnimatedTitleText title={resolvedTitle} className="game-xp-section__player-title" />
           </div>
-          {user?.descricao && <p className="game-xp-section__bio">{user.descricao}</p>}
           <p className="game-xp-section__subtitle">
             <strong>{xpInLevel}</strong> / {xpToNext} {copy('xp_unit')} · faltam{' '}
             <strong>{xpParaLevelUp}</strong> para o nível {level + 1}
