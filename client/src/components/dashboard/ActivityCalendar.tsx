@@ -332,7 +332,7 @@ export function ActivityCalendar() {
                   <button
                     key={cell.date}
                     type="button"
-                    className={`workout-calendar__cell workout-calendar__cell--l${cell.level} ${frozen ? 'workout-calendar__cell--frozen' : ''}`}
+                    className={`workout-calendar__cell ${cell.level > 0 ? 'workout-calendar__cell--active' : ''} ${frozen ? 'workout-calendar__cell--frozen' : ''}`}
                     onClick={() => setSelectedDay(cell.date)}
                     title={
                       frozen

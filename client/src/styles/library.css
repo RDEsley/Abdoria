@@ -149,26 +149,14 @@
   cursor: default;
 }
 
-.workout-calendar__cell--l1 {
-  background: #ecfdf5;
-  border-color: #bbf7d0;
-  box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.2);
-}
-.workout-calendar__cell--l2 {
+/* Um verde só pra "dia ativo" (era uma escala de 4 tons por quantidade de
+   registros no dia — dava a entender que os tons significavam algo
+   diferente, tipo bom/ruim, quando é só "teve ou não teve"; o ícone dentro
+   da célula (chama/flocos/brilho) já diz o que foi). */
+.workout-calendar__cell--active {
   background: #bbf7d0;
-  border-color: #86efac;
-  box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.28);
-}
-.workout-calendar__cell--l3 {
-  background: #86efac;
   border-color: #34d399;
-  box-shadow: 2px 2px 0 rgba(4, 120, 87, 0.32);
-}
-.workout-calendar__cell--l4 {
-  background: linear-gradient(145deg, #34d399, #059669);
-  border-color: var(--game-ink);
-  color: #fff;
-  box-shadow: 2px 2px 0 rgba(6, 78, 59, 0.4);
+  box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.28);
 }
 
 /* O ícone entra NO LUGAR do número do dia (não num selo por cima) — sem
