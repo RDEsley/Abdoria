@@ -394,11 +394,11 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
         </div>
 
         <footer className="profile-edit-modal__footer">
-          <GameButton variant="secondary" className="!w-auto px-4" onClick={onClose}>
+          <GameButton variant="secondary" className="w-full" onClick={onClose}>
             Cancelar
           </GameButton>
           <GameButton
-            className="!w-auto px-5"
+            className="w-full"
             disabled={saving || !anythingChanged}
             onClick={() => void handleSave()}
           >
