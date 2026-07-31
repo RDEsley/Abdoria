@@ -504,7 +504,7 @@ export interface AtividadesAgenda {
 export const DEFAULT_ATIVIDADES_AGENDA: AtividadesAgenda = {
   modo: 'todos_dias',
   dias: [],
-  junto_com_treino: true,
+  junto_com_treino: false,
 };
 
 export function resolveAgenda(preferencias?: UserPreferencias | null): AtividadesAgenda {
@@ -515,7 +515,7 @@ export function resolveAgenda(preferencias?: UserPreferencias | null): Atividade
     dias: Array.isArray(raw.dias)
       ? [...new Set(raw.dias.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))]
       : [],
-    junto_com_treino: raw.junto_com_treino !== false,
+    junto_com_treino: raw.junto_com_treino === true,
   };
 }
 

@@ -1833,6 +1833,14 @@
   background: #e0f2fe;
 }
 
+/* Editar (fora do modo edição) — cor própria, senão ficava com o mesmo
+   cinza genérico de qualquer botão sem estado, difícil de diferenciar do
+   Config à primeira vista. */
+.atividade-action-btn--editar .atividade-action-btn__icon {
+  color: #b45309;
+  background: #fef3c7;
+}
+
 .atividade-action-btn--active {
   color: #047857;
   background: #d1fae5;
@@ -1850,6 +1858,7 @@
    sombra "de bloco" (mesma linguagem de .atividade-action-btn) pra ficar
    claro que é clicável, não só um ícone decorativo. */
 .atividades-mode-toggle {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
@@ -1868,6 +1877,26 @@
     border-color 0.15s ease,
     transform 0.1s ease,
     box-shadow 0.1s ease;
+}
+
+/* Avisa (em modo Atividades) que há pendências esperando no Bloco de Notas. */
+.atividades-mode-toggle__badge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  background: #7c3aed;
+  border: 2px solid #fff;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.56rem;
+  font-weight: 800;
+  color: #fff;
 }
 
 .atividades-mode-toggle:hover {

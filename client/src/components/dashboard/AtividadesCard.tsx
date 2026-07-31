@@ -27,6 +27,7 @@ import { playClick } from '@/lib/sounds';
 import { AtividadeFormModal } from './AtividadeFormModal';
 import { AtividadesAgendaModal } from './AtividadesAgendaModal';
 import { BlocoNotasCard } from './BlocoNotasCard';
+import { resolveBlocoNotas } from '@shared/bloco-notas';
 import {
   ATIVIDADES_CATALOGO,
   ATIVIDADES_LIMITE_MSG,
@@ -239,6 +240,10 @@ export function AtividadesCard() {
     persist({ atividades_modo_notas: proximo === 'notas' });
   };
 
+  // Badge no botão de alternar — visível só em modo Atividades, avisando que
+  // há itens pendentes esperando no Bloco de Notas do outro lado.
+  const notasPendentes = resolveBlocoNotas(user?.preferencias).filter((n) => !n.feita).length;
+
   const { atividades, fila, hojeNaAgenda, diaDeTreino, concluidasHoje, filaPendente } = flow;
 
   const noLimite = atividades.length >= ATIVIDADES_MAX;
@@ -393,6 +398,11 @@ export function AtividadesCard() {
             ) : (
               <NotebookPen size={15} aria-hidden />
             )}
+            {modo === 'atividades' && notasPendentes > 0 && (
+              <span className="atividades-mode-toggle__badge" aria-hidden>
+                {notasPendentes > 9 ? '9+' : notasPendentes}
+              </span>
+            )}
           </button>
           {modo === 'notas' ? 'Bloco de Notas' : 'Atividades'}
         </h3>
@@ -400,7 +410,7 @@ export function AtividadesCard() {
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            className={`atividade-action-btn${modoEdicao ? ' atividade-action-btn--active' : ''}`}
+            className={`atividade-action-btn${modoEdicao ? ' atividade-action-btn--active' : ' atividade-action-btn--editar'}`}
             aria-label={modoEdicao ? 'Concluir edição da lista' : 'Editar lista de atividades'}
             aria-pressed={modoEdicao}
             title={modoEdicao ? 'Concluir edição' : 'Editar lista'}
