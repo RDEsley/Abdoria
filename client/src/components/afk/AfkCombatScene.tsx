@@ -3,6 +3,8 @@ import { ArrowLeft, Sparkles } from 'lucide-react';
 import type { AfkCombatSnapshot, AfkEnemyId, ArmaPreferida, PersonagemGenero } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
+  AFK_SEARCH_DURATION_MAX_MS,
+  AFK_SEARCH_DURATION_MIN_MS,
   advanceKillsUntilBoss,
   getEnemyMaxHp,
   resolveNextSpawn,
@@ -101,6 +103,7 @@ export function AfkCombatScene({
   const [searching, setSearching] = useState(false);
   const searchingRef = useRef(false);
   const [searchSpot, setSearchSpot] = useState(0);
+  const [searchDurationMs, setSearchDurationMs] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<number[]>([]);
   const { floaters, pushDamage } = useDamageFloaters();
@@ -215,21 +218,6 @@ export function AfkCombatScene({
   }, []);
 
   useEffect(() => {
-    const serverKills = serverSnapshot.kills_total;
-    if (serverKills > killsTotalRef.current) {
-      setDisplayHp(serverSnapshot.enemy_hp);
-      setPreviousDisplayHp(serverSnapshot.enemy_hp);
-      displayHpRef.current = serverSnapshot.enemy_hp;
-      killHandledRef.current = false;
-      setDying(false);
-      setLooting(false);
-      setEnemyHit(false);
-      setPhase('idle');
-      setAttackIsCrit(false);
-    }
-  }, [serverSnapshot.enemy_id, serverSnapshot.kills_total, serverSnapshot.enemy_hp]);
-
-  useEffect(() => {
     clearTimers();
 
     const runAttack = () => {
@@ -272,56 +260,68 @@ export function AfkCombatScene({
 
         if (next > 0) return;
 
+        // Trava o abate JÁ (evita golpe atrasado reabrindo a sequência ou
+        // dobrando a contagem) — mas o visual de "dying" espera a barra de
+        // vida terminar de esvaziar (transition de 0.15s) antes de sumir.
+        // `dying` tira a barra do DOM na hora; sem esse atraso, o slime
+        // "morria" com a barra ainda a meio caminho, nunca chegando a 0%.
         killHandledRef.current = true;
         critStreakRef.current = 0;
-        setDying(true);
-        // Sequência da morte: o slime encolhe (dying) → os acessórios se
-        // soltam e caem (looting) → o item pula → vira bolinha e voa pro
-        // baú, que dá uma mexida a cada chegada.
-        schedule(() => setLooting(true), 120);
-
-        const wasBossKill = localIsBossRef.current;
-        const wasEliteKill = localIsEliteRef.current;
-        const orbCount = wasBossKill ? 5 : wasEliteKill ? 3 : 2;
-        // Boss/elite sempre rendem a cena inteira; comum entra em parte dos
-        // abates pra não virar poluição visual a cada 2 segundos.
-        const showDrop =
-          hasLootRef.current && (wasBossKill || wasEliteKill || Math.random() < 0.45);
-
-        if (showDrop) {
-          schedule(() => setLootDropSeq((n) => n + 1), 150);
-          schedule(() => {
-            const enemyEl = viewportRef.current?.querySelector('.game-afk-enemy');
-            emitAfkLootOrbs(orbCount, enemyEl);
-          }, 300);
-        }
 
         schedule(() => {
-          const nextKillsTotal = killsTotalRef.current + 1;
-          const nextKills = advanceKillsUntilBoss(localKillsUntilBossRef.current, wasBossKill);
-          localKillsUntilBossRef.current = nextKills;
-          killsTotalRef.current = nextKillsTotal;
-          setLocalKillsUntilBoss(nextKills);
-          setDying(false);
-          setLooting(false);
-          setEnemyHit(false);
+          setDying(true);
+          // Sequência da morte: o slime encolhe (dying) → os acessórios se
+          // soltam e caem (looting) → o item pula → vira bolinha e voa pro
+          // baú, que dá uma mexida a cada chegada.
+          schedule(() => setLooting(true), 120);
 
-          // Intervalo de busca (5-10s) antes do próximo inimigo aparecer — a
-          // lupa troca de lugar 2x nesse meio tempo (3 posições ao todo).
-          // Sem inimigo em cena e com runAttack pulando enquanto searchingRef
-          // está true, o herói para de atirar até achar o próximo alvo.
-          searchingRef.current = true;
-          setSearching(true);
-          setSearchSpot(0);
-          const searchDuration = 5000 + Math.random() * 5000;
-          schedule(() => setSearchSpot(1), searchDuration / 3);
-          schedule(() => setSearchSpot(2), (searchDuration * 2) / 3);
+          const wasBossKill = localIsBossRef.current;
+          const wasEliteKill = localIsEliteRef.current;
+          const orbCount = wasBossKill ? 5 : wasEliteKill ? 3 : 2;
+          // Boss/elite sempre rendem a cena inteira; comum entra em parte dos
+          // abates pra não virar poluição visual a cada 2 segundos.
+          const showDrop =
+            hasLootRef.current && (wasBossKill || wasEliteKill || Math.random() < 0.45);
+
+          if (showDrop) {
+            schedule(() => setLootDropSeq((n) => n + 1), 150);
+            schedule(() => {
+              const enemyEl = viewportRef.current?.querySelector('.game-afk-enemy');
+              emitAfkLootOrbs(orbCount, enemyEl);
+            }, 300);
+          }
+
           schedule(() => {
-            searchingRef.current = false;
-            setSearching(false);
-            respawnLocalEnemy(nextKills, nextKillsTotal);
-          }, searchDuration);
-        }, 720);
+            const nextKillsTotal = killsTotalRef.current + 1;
+            const nextKills = advanceKillsUntilBoss(localKillsUntilBossRef.current, wasBossKill);
+            localKillsUntilBossRef.current = nextKills;
+            killsTotalRef.current = nextKillsTotal;
+            setLocalKillsUntilBoss(nextKills);
+            setDying(false);
+            setLooting(false);
+            setEnemyHit(false);
+
+            // Intervalo de busca (5-10s) antes do próximo inimigo aparecer —
+            // a lupa troca de lugar 2x nesse meio tempo (3 posições ao todo).
+            // Sem inimigo em cena e com runAttack pulando enquanto
+            // searchingRef está true, o herói para de atirar até achar o
+            // próximo alvo.
+            searchingRef.current = true;
+            setSearching(true);
+            setSearchSpot(0);
+            const searchDuration =
+              AFK_SEARCH_DURATION_MIN_MS +
+              Math.random() * (AFK_SEARCH_DURATION_MAX_MS - AFK_SEARCH_DURATION_MIN_MS);
+            setSearchDurationMs(searchDuration);
+            schedule(() => setSearchSpot(1), searchDuration / 3);
+            schedule(() => setSearchSpot(2), (searchDuration * 2) / 3);
+            schedule(() => {
+              searchingRef.current = false;
+              setSearching(false);
+              respawnLocalEnemy(nextKills, nextKillsTotal);
+            }, searchDuration);
+          }, 720);
+        }, 180);
       }, impactDelay);
 
       schedule(() => {
@@ -336,6 +336,12 @@ export function AfkCombatScene({
     return () => {
       window.clearInterval(combatTimer);
       clearTimers();
+      // Defesa contra "procurando" travar pra sempre: se o efeito reiniciar
+      // (troca de arma, respawn) bem no meio da busca, clearTimers() acima
+      // cancela o timer que a encerraria, sem nada resetar searchingRef —
+      // o herói ficava preso na animação da lupa sem nunca voltar a atacar.
+      searchingRef.current = false;
+      setSearching(false);
     };
   }, [
     attackInterval,
@@ -402,6 +408,7 @@ export function AfkCombatScene({
           attacking={attacking}
           attackSeq={attackSeq}
           isCrit={attackIsCrit}
+          searching={searching}
         />
 
         {weapon === 'arco' && attacking && (
@@ -507,7 +514,7 @@ export function AfkCombatScene({
         )}
 
         {searching ? (
-          <AfkSearchOverlay spot={searchSpot} />
+          <AfkSearchOverlay spot={searchSpot} durationMs={searchDurationMs} />
         ) : (
           <AfkEnemySprite
             combat={snapshot}

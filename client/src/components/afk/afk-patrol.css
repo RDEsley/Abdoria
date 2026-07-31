@@ -845,32 +845,37 @@
   pointer-events: none;
 }
 
+/* Ancorada perto de onde o inimigo aparece (mesma área de .game-afk-enemy,
+   right/bottom em vez de top/left) — antes viajava pela cena inteira, o que
+   não fazia sentido (o herói fica olhando pro lado errado). Os 3 "spots" são
+   só um jitter pequeno em volta desse ponto, pra parecer "procurando ali
+   perto", não "atravessando o mapa". */
 .game-afk-search__lupa {
   position: absolute;
-  top: 42%;
-  left: 50%;
-  width: 4.25rem;
-  height: 4.25rem;
-  transform: translate(-50%, -50%);
+  right: 13%;
+  bottom: 30%;
+  width: 3.55rem;
+  height: 3.55rem;
+  transform: translate(50%, 50%);
   transition:
-    top 1s cubic-bezier(0.34, 1.15, 0.4, 1),
-    left 1s cubic-bezier(0.34, 1.15, 0.4, 1);
+    right 1s cubic-bezier(0.34, 1.15, 0.4, 1),
+    bottom 1s cubic-bezier(0.34, 1.15, 0.4, 1);
   filter: drop-shadow(2px 3px 0 rgba(28, 25, 23, 0.35));
 }
 
 .game-afk-search__lupa--spot-0 {
-  top: 30%;
-  left: 24%;
+  right: 17%;
+  bottom: 35%;
 }
 
 .game-afk-search__lupa--spot-1 {
-  top: 48%;
-  left: 74%;
+  right: 8%;
+  bottom: 24%;
 }
 
 .game-afk-search__lupa--spot-2 {
-  top: 64%;
-  left: 42%;
+  right: 15%;
+  bottom: 42%;
 }
 
 .game-afk-search__lupa-glow {
@@ -907,14 +912,15 @@
   }
 }
 
+/* Fica embaixo da lupa (mesma área do inimigo), não mais centralizada no
+   fim da cena inteira. */
 .game-afk-search__text {
   position: absolute;
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 5%;
+  bottom: 15%;
   display: flex;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 2px 3px rgba(28, 25, 23, 0.55);
@@ -926,6 +932,22 @@
   display: inline-block;
   animation: game-afk-search-text-bounce 1.2s ease-in-out infinite;
   animation-delay: calc(var(--i) * 0.06s);
+}
+
+/* Contador regressivo — feedback real de quanto falta pra achar o próximo
+   inimigo, não só uma animação sem fim visível. */
+.game-afk-search__countdown {
+  position: absolute;
+  right: 5%;
+  bottom: 6.5%;
+  padding: 0.12rem 0.5rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: #fff7ed;
+  background: rgba(28, 25, 23, 0.55);
+  border-radius: 999px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes game-afk-search-text-bounce {
@@ -1719,10 +1741,6 @@
   user-select: none;
 }
 
-.game-afk-mascot--idle .game-afk-mascot__figure {
-  animation: game-afk-mascot-breathe 2.4s ease-in-out infinite;
-}
-
 .game-afk-mascot--attack .game-afk-mascot__figure {
   animation: none;
 }
@@ -1741,6 +1759,17 @@
 
 .game-afk-mascot--espada.game-afk-mascot--attack .game-afk-mascot__shadow {
   animation: game-afk-mascot-sword-shadow 0.58s ease-out forwards;
+}
+
+/* Enquanto procura o próximo inimigo, o herói usa o sprite parado da vila
+   — nenhuma animação de golpe (arco/espada/magia) pode tocar em cima dele,
+   nem no resto do "attacking" que ainda não zerou (a troca de fase é levemente
+   atrasada em relação ao início da busca). 3 classes de especificidade pra
+   vencer as regras --arco/--espada/--magia.--attack acima, seja qual for a
+   ordem no arquivo. */
+.game-afk-mascot--searching.game-afk-mascot--attack .game-afk-mascot__figure,
+.game-afk-mascot--searching.game-afk-mascot--attack .game-afk-mascot__shadow {
+  animation: none;
 }
 
 @keyframes game-afk-mascot-sword-strike {
@@ -1915,16 +1944,6 @@
 .game-afk-mascot--arco.game-afk-mascot--attack,
 .game-afk-mascot--espada.game-afk-mascot--attack {
   animation: none;
-}
-
-@keyframes game-afk-mascot-breathe {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
 }
 
 .game-afk-mascot__cape,

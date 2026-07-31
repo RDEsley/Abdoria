@@ -14,12 +14,18 @@ const MASCOT_SPRITE_SRC_FEMALE: Record<MascotSpriteWeapon, string> = {
   magia: '/assets/patrol-mascot-female-magia.png',
 };
 
+const MASCOT_SPRITE_SRC_VILLAGE = '/assets/patrol-mascot-village.png';
+const MASCOT_SPRITE_SRC_VILLAGE_FEMALE = '/assets/patrol-mascot-female-village.png';
+
 interface Props {
   weapon: MascotSpriteWeapon;
   attacking: boolean;
   attackSeq: number;
   isCrit?: boolean;
   genero?: PersonagemGenero;
+  /** Enquanto procura o próximo inimigo (lupa), o herói troca pro sprite
+      "parado" da vila em vez do sprite de combate com a arma em riste. */
+  searching?: boolean;
 }
 
 export function AfkMascotHero({
@@ -28,12 +34,20 @@ export function AfkMascotHero({
   attackSeq,
   isCrit = false,
   genero = 'masculino',
+  searching = false,
 }: Props) {
-  const spriteSrc =
-    genero === 'feminino' ? MASCOT_SPRITE_SRC_FEMALE[weapon] : MASCOT_SPRITE_SRC[weapon];
+  const feminino = genero === 'feminino';
+  const spriteSrc = searching
+    ? feminino
+      ? MASCOT_SPRITE_SRC_VILLAGE_FEMALE
+      : MASCOT_SPRITE_SRC_VILLAGE
+    : feminino
+      ? MASCOT_SPRITE_SRC_FEMALE[weapon]
+      : MASCOT_SPRITE_SRC[weapon];
   const heroClass = [
     'game-afk-mascot',
     `game-afk-mascot--${weapon}`,
+    searching ? 'game-afk-mascot--searching' : '',
     attacking ? 'game-afk-mascot--attack' : 'game-afk-mascot--idle',
     attacking && isCrit ? 'game-afk-mascot--crit' : '',
   ]
@@ -50,17 +64,17 @@ export function AfkMascotHero({
           className="game-afk-mascot__sprite-img"
           draggable={false}
         />
-        {weapon === 'magia' && attacking && (
+        {!searching && weapon === 'magia' && attacking && (
           <span key={`magic-${attackSeq}`} className="game-afk-mascot__magic-burst" aria-hidden />
         )}
-        {weapon === 'arco' && attacking && (
+        {!searching && weapon === 'arco' && attacking && (
           <span
             key={`bow-flash-${attackSeq}`}
             className={`game-afk-mascot__bow-release${isCrit ? ' game-afk-mascot__bow-release--crit' : ''}`}
             aria-hidden
           />
         )}
-        {weapon === 'espada' && attacking && (
+        {!searching && weapon === 'espada' && attacking && (
           <span
             key={`sword-release-${attackSeq}`}
             className={`game-afk-mascot__sword-release${isCrit ? ' game-afk-mascot__sword-release--crit' : ''}`}
