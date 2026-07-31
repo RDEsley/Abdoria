@@ -1,35 +1,49 @@
 import { useCallback } from 'react';
+import { showGameToast } from '@/components/ui/GameToast';
+import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { updateMe } from '@/lib/api';
 import { EQUIPMENT_CATALOG, resolveUserEquipment, type EquipmentId } from '@/types';
 
 export function useEquipment(onUpdated?: () => void) {
-  const { user, refreshUser } = useAuth();
-  const { ensureExercises, loadRecommendations } = useApp();
+  const { user, applyUser, refreshUser } = useAuth();
+  const { applyUser: applyAppUser, ensureExercises, loadRecommendations } = useApp();
 
   const equipment = resolveUserEquipment(user?.preferencias);
 
   const setEquipmentOwned = useCallback(
     async (id: EquipmentId, owned: boolean) => {
       if (!user) return;
-      const nextEquipamentos = {
-        ...user.preferencias?.equipamentos,
-        [id]: owned,
+
+      // Otimista: o switch muda na hora. Antes esperava 3 idas ao servidor
+      // em sequência (updateMe → refreshUser → refetch de exercícios) antes
+      // de QUALQUER feedback visual — dava a sensação de app travado, ainda
+      // mais em conexão ruim.
+      const preferencias = {
+        ...user.preferencias,
+        equipamentos: { ...user.preferencias?.equipamentos, [id]: owned },
       };
-      await updateMe({
-        preferencias: {
-          ...user.preferencias,
-          equipamentos: nextEquipamentos,
-        },
-      });
-      await refreshUser();
-      // Rebusca o catálogo: exercícios do equipamento desmarcado somem da Biblioteca na hora.
-      await ensureExercises({ force: true });
-      void loadRecommendations({ force: true });
-      onUpdated?.();
+      const otimista = { ...user, preferencias };
+      applyUser(otimista);
+      applyAppUser(otimista);
+
+      try {
+        await updateMe({ preferencias });
+        await refreshUser();
+        // Rebusca o catálogo: exercícios do equipamento desmarcado somem da Biblioteca.
+        await ensureExercises({ force: true });
+        void loadRecommendations({ force: true });
+        onUpdated?.();
+      } catch (err) {
+        applyUser(user);
+        applyAppUser(user);
+        showGameToast(getErrorMessage(err, 'Não foi possível salvar — desfazendo.'), {
+          variant: 'error',
+        });
+      }
     },
-    [user, refreshUser, ensureExercises, loadRecommendations, onUpdated],
+    [user, applyUser, applyAppUser, refreshUser, ensureExercises, loadRecommendations, onUpdated],
   );
 
   return {
