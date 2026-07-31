@@ -2053,19 +2053,21 @@
 
 /* ---- Magias: cada feitiço tem sua própria encenação ---- */
 
-/* Buraco negro — orbe nasce no slime, engole meia tela e implode */
-/* Buraco negro de verdade precisa de DUAS coisas que a versão antiga não
-   tinha: um horizonte de eventos realmente preto (sem gradiente vazando pra
-   roxo, que lia como "nebulosa" e não "buraco") e um disco de acreção —
-   anel achatado e brilhante ao redor, estilo Interstellar/Gargantua. O anel
-   é uma ELIPSE (mais larga que alta) atrás da esfera: como é mais estreita
-   que a esfera na vertical, some atrás dela em cima/embaixo sozinha, e só
-   as pontas (mais largas que a esfera) aparecem dos lados — o efeito
-   "anel de Saturno" sai de graça, sem precisar de mask/clip. */
+/* Buraco negro — orbe nasce centrado no slime, engole meia tela e implode.
+   Camadas de trás pra frente: brilho externo pulsante > disco de acreção
+   (elipse achatada, estilo Interstellar/Gargantua — some atrás da esfera em
+   cima/embaixo, só as pontas mais largas aparecem dos lados, efeito "anel de
+   Saturno" sem precisar de mask/clip) > detritos sendo sugados pra dentro
+   (reforça "puxando matéria", que a versão antiga não tinha nenhum indício
+   de movimento além do disco girando) > anel de distorção fino > horizonte
+   de eventos, preto de verdade (sem gradiente vazando pra roxo, que lia como
+   "nebulosa" e não "buraco"). Posição alinhada ao centro real do inimigo
+   (`.game-afk-enemy`: right 12% + metade da largura, bottom 22% + metade da
+   altura), não mais um chute solto — por isso os `calc()` abaixo. */
 .game-afk-spell-blackhole {
   position: absolute;
-  right: calc(10% - 6.5rem);
-  top: calc(52% - 6.5rem);
+  right: calc(12% - 5.025rem);
+  bottom: calc(22% - 4.95rem);
   z-index: 10;
   width: 13rem;
   height: 13rem;
@@ -2075,13 +2077,28 @@
   pointer-events: none;
 }
 
-/* Disco de acreção — atrás da esfera (z-index menor), elipse achatada. */
+/* Brilho externo — pulsa devagar, dá a sensação de campo gravitacional vivo. */
+.game-afk-spell-blackhole__glow {
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(129, 140, 248, 0.32) 0%,
+    rgba(99, 102, 241, 0.16) 45%,
+    transparent 72%
+  );
+  animation: game-afk-spell-blackhole-glow 1.3s ease-in-out infinite;
+}
+
+/* Disco de acreção — atrás da esfera, elipse achatada. */
 .game-afk-spell-blackhole::before {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  z-index: 0;
+  z-index: 1;
   width: 148%;
   height: 46%;
   margin: -23% 0 0 -74%;
@@ -2102,12 +2119,60 @@
   animation: game-afk-spell-blackhole-disk 1.1s linear infinite;
 }
 
+/* Detritos sendo sugados — 4 farpas de luz que nascem longe e são puxadas
+   pro centro encolhendo, uma em cada quadrante, com atraso escalonado pra
+   nunca ficarem alinhadas (leria como "decoração" em vez de "sucção"). */
+.game-afk-spell-blackhole__debris {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 1.6rem;
+  height: 0.16rem;
+  margin-top: -0.08rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(224, 231, 255, 0.95));
+  /* Pivô na ponta interna (a que fica presa ao centro) — `rotate` só define
+     o ângulo, `translateX` desliza o farpa nesse eixo em direção ao centro. */
+  transform-origin: 0% 50%;
+  opacity: 0;
+  animation: game-afk-spell-blackhole-debris 0.85s ease-in infinite;
+}
+
+.game-afk-spell-blackhole__debris--1 {
+  --angle: 20deg;
+  animation-delay: 0s;
+}
+.game-afk-spell-blackhole__debris--2 {
+  --angle: 115deg;
+  animation-delay: 0.21s;
+}
+.game-afk-spell-blackhole__debris--3 {
+  --angle: 200deg;
+  animation-delay: 0.42s;
+}
+.game-afk-spell-blackhole__debris--4 {
+  --angle: 300deg;
+  animation-delay: 0.63s;
+}
+
+/* Anel de distorção — gira em sentido oposto ao disco, dá profundidade
+   (lente gravitacional dobrando a luz ao redor do horizonte de eventos). */
+.game-afk-spell-blackhole__ring {
+  position: absolute;
+  inset: 6%;
+  z-index: 3;
+  border-radius: 999px;
+  border: 1.5px dashed rgba(196, 181, 253, 0.55);
+  animation: game-afk-spell-blackhole-ring 2.4s linear infinite reverse;
+}
+
 /* Esfera — horizonte de eventos, preto puro com um fio de luz azulada
    dobrando na borda (lente gravitacional, bem sutil). */
 .game-afk-spell-blackhole__swirl {
   position: absolute;
-  inset: 0;
-  z-index: 1;
+  inset: 12%;
+  z-index: 4;
   display: block;
   border-radius: 999px;
   background: radial-gradient(circle at 50% 50%, #000 0%, #000 82%, transparent 84%);
@@ -2143,6 +2208,41 @@
 @keyframes game-afk-spell-blackhole-disk {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes game-afk-spell-blackhole-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes game-afk-spell-blackhole-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes game-afk-spell-blackhole-debris {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(6.2rem);
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(0.3rem);
   }
 }
 
@@ -2317,8 +2417,11 @@
 /* Fogo — labaredas nascem debaixo do slime e crescem em frames */
 .game-afk-spell-fire {
   position: absolute;
-  right: calc(11% - 2.75rem);
-  top: calc(66% - 4.2rem);
+  /* As chamas nascem do chão (`__flame` é `bottom:0`) — alinha a base da
+     caixa com a base do inimigo (mesmo `bottom` de `.game-afk-enemy`), só
+     centraliza no eixo horizontal. */
+  right: calc(12% - 1.275rem);
+  bottom: 22%;
   z-index: 8;
   width: 5.5rem;
   height: 4.2rem;
@@ -2419,8 +2522,10 @@
 /* Gelo — cristal cresce congelando o slime inteiro */
 .game-afk-spell-ice {
   position: absolute;
-  right: calc(12% - 2.9rem);
-  top: calc(60% - 5.4rem);
+  /* Cristal cresce do chão (`transform-origin: bottom center`) — mesma base
+     do inimigo, só centraliza no eixo horizontal. */
+  right: calc(12% - 1.425rem);
+  bottom: 22%;
   z-index: 10;
   width: 5.8rem;
   height: 6rem;
@@ -2517,8 +2622,10 @@
 /* Terra — uma montanha nasce debaixo do slime e depois afunda */
 .game-afk-spell-mountain {
   position: absolute;
-  right: calc(11% - 3.4rem);
-  top: calc(68% - 5rem);
+  /* Pico cresce do chão (`transform-origin: bottom center`) — mesma base
+     do inimigo, só centraliza no eixo horizontal. */
+  right: calc(12% - 1.925rem);
+  bottom: 22%;
   z-index: 8;
   width: 6.8rem;
   height: 5rem;
@@ -10199,8 +10306,11 @@ button.game-afk-reward-chip {
 /* Explosão (Secret) — detonação única centrada no slime, estilo Megumin */
 .game-afk-spell-explosion {
   position: absolute;
-  right: calc(10% - 7rem);
-  top: calc(52% - 7rem);
+  /* Centrado no inimigo de verdade: right/bottom do `.game-afk-enemy` (12%,
+     22%) mais a metade da caixa do bicho (~1.475rem, 1.55rem), menos a
+     metade desta caixa (7rem) — não é mais um chute de olho. */
+  right: calc(12% - 5.525rem);
+  bottom: calc(22% - 5.45rem);
   width: 14rem;
   height: 14rem;
   z-index: 10;

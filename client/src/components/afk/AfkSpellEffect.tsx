@@ -24,6 +24,12 @@ export function AfkSpellEffect({ spellId }: { spellId: string }) {
     case 'magia_buraco_negro':
       return (
         <span className="game-afk-spell-blackhole" aria-hidden>
+          <i className="game-afk-spell-blackhole__glow" />
+          <i className="game-afk-spell-blackhole__debris game-afk-spell-blackhole__debris--1" />
+          <i className="game-afk-spell-blackhole__debris game-afk-spell-blackhole__debris--2" />
+          <i className="game-afk-spell-blackhole__debris game-afk-spell-blackhole__debris--3" />
+          <i className="game-afk-spell-blackhole__debris game-afk-spell-blackhole__debris--4" />
+          <i className="game-afk-spell-blackhole__ring" />
           <i className="game-afk-spell-blackhole__swirl" />
         </span>
       );
