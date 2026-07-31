@@ -71,6 +71,11 @@ export function deleteAccount(): Promise<{ ok: boolean }> {
   return fetchJson('/users/me', { method: 'DELETE' });
 }
 
+/** Concluir um Lembrete — XP fixo, sem toast próprio (ver shared/bloco-notas). */
+export function grantLembreteXp(): Promise<{ user: IUserDocument; xp_ganho: number }> {
+  return fetchJson('/users/me/lembrete-xp', { method: 'POST' });
+}
+
 export function getMolduraStatus(): Promise<MolduraStatusResponse> {
   return fetchJson('/users/me/molduras');
 }

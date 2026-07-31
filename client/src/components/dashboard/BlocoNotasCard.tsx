@@ -4,7 +4,11 @@ import { CheckCircle2, History, NotebookPen, Plus, Trash2, X } from 'lucide-reac
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
+import { useAuth } from '@/context/AuthContext';
+import { useApp } from '@/hooks/useApp';
 import { usePreferencesPersist } from '@/hooks/usePreferencesPersist';
+import { grantLembreteXp } from '@/lib/api/users';
+import { emitXpEarned } from '@/lib/xp-orbs';
 import { playClick, playSuccess } from '@/lib/sounds';
 import {
   BLOCO_NOTAS_HISTORICO_DIAS,
@@ -51,14 +55,17 @@ function NotaBurst() {
 }
 
 /**
- * Bloco de Notas — lista de tarefas livre dentro da seção Atividades: não é
- * sobre bem-estar/XP, é pra qualquer coisa que o jogador queira anotar
- * (afazeres, lista de compras, lembretes...). Concluir dá um empurrãozinho
- * de dopamina (som + partículas + risco animado) e o item desce pro fim da
- * lista — igual a qualquer app de tarefas que vicia de usar.
+ * Lembretes (ex-"Bloco de Notas") — lista de tarefas livre dentro da seção
+ * Atividades: não é sobre bem-estar, é pra qualquer coisa que o jogador
+ * queira anotar (afazeres, lista de compras, lembretes...). Concluir dá um
+ * empurrãozinho de dopamina (som + partículas + risco animado) e o item
+ * desce pro fim da lista — igual a qualquer app de tarefas que vicia de
+ * usar. Nunca sustenta streak; dá XP fixo (silencioso, sem toast) por item.
  */
 export function BlocoNotasCard() {
   const { user, persist } = usePreferencesPersist();
+  const { applyUser } = useAuth();
+  const { applyUser: applyAppUser } = useApp();
   const [novoTexto, setNovoTexto] = useState('');
   const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
   const [confirmarLimparTudo, setConfirmarLimparTudo] = useState(false);
@@ -137,6 +144,21 @@ export function BlocoNotasCard() {
       ]);
     }
     persist(patch);
+
+    // XP silencioso (sem toast) por lembrete concluído — nunca ao desmarcar.
+    // Rota própria (não a fila de preferências) porque XP é sempre
+    // server-authoritative, com teto diário.
+    if (marcarFeita) {
+      void grantLembreteXp()
+        .then((res) => {
+          applyUser(res.user);
+          applyAppUser(res.user);
+          if (res.xp_ganho > 0) emitXpEarned(res.xp_ganho);
+        })
+        .catch(() => {
+          /* XP de lembrete é um bônus discreto — falha silenciosa, sem toast de erro */
+        });
+    }
   };
 
   const excluir = (id: string) => {
@@ -149,7 +171,7 @@ export function BlocoNotasCard() {
   };
 
   const limparTudo = () => {
-    persist({ bloco_notas: [] }, 'Bloco de notas limpo.');
+    persist({ bloco_notas: [] }, 'Lembretes limpos.');
     setConfirmarLimparTudo(false);
   };
 
@@ -186,7 +208,7 @@ export function BlocoNotasCard() {
           }}
           placeholder="O que você quer anotar?"
           maxLength={NOTA_TEXTO_MAX}
-          aria-label="Novo item do bloco de notas"
+          aria-label="Novo lembrete"
           className="bloco-notas__input"
         />
         <button
@@ -337,7 +359,7 @@ export function BlocoNotasCard() {
         labelledBy="bloco-notas-clear-title"
       >
         <h2 id="bloco-notas-clear-title" className="text-base font-extrabold text-stone-800">
-          Limpar todo o bloco de notas?
+          Limpar todos os lembretes?
         </h2>
         <p className="mt-2 text-sm font-medium text-stone-600">
           Isso apaga os {notas.length} itens da lista, feitos e pendentes. Não dá pra desfazer.

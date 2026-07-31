@@ -520,9 +520,10 @@ export function SettingsPage() {
                     <strong>+{ATIVIDADE_COINS_EXTRA} {CURRENCY_NAME}</strong> em vez de XP.
                   </li>
                   <li>
-                    Sequência (streak): em dia de descanso, atividades mantêm a sequência a partir da{' '}
-                    {ATIVIDADES_MIN_DESCANSO}ª concluída no dia. Em dia de treino, a sequência vem só
-                    do treino.
+                    Sequência (streak): uma única atividade concluída já mantém a sequência, em
+                    qualquer dia — treino ou descanso. Treino e atividades não se substituem: os
+                    dois contam pra streak, mas concluir atividades não marca a missão de treino
+                    do dia como feita.
                   </li>
                 </ul>
                 <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>

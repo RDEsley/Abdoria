@@ -285,7 +285,7 @@ export function ActivityCalendar() {
             {selectedNotas.length > 0 && (
               <div className="workout-calendar__day-detail">
                 <p className="workout-calendar__detail-title">
-                  <NotebookPen size={14} className="text-violet-600" aria-hidden /> Bloco de Notas —{' '}
+                  <NotebookPen size={14} className="text-violet-600" aria-hidden /> Lembretes —{' '}
                   {selectedNotas.length} concluída{selectedNotas.length === 1 ? '' : 's'}
                 </p>
                 <ul className="workout-calendar__detail-list">
@@ -363,11 +363,12 @@ export function ActivityCalendar() {
                 const hasTreino = (meta?.treinos ?? 0) > 0;
                 const hasAtividade = (meta?.atividades.length ?? 0) > 0;
                 const streakNum = streakAtDay.get(cell.date);
+                const isToday = cell.date === getTodaySaoPaulo();
                 return (
                   <button
                     key={cell.date}
                     type="button"
-                    className={`workout-calendar__cell ${cell.level > 0 ? 'workout-calendar__cell--active' : ''} ${frozen ? 'workout-calendar__cell--frozen' : ''}`}
+                    className={`workout-calendar__cell ${cell.level > 0 ? 'workout-calendar__cell--active' : ''} ${frozen ? 'workout-calendar__cell--frozen' : ''} ${isToday ? 'workout-calendar__cell--today' : ''}`}
                     onClick={() => setSelectedDay(cell.date)}
                     title={
                       frozen

@@ -98,11 +98,17 @@ export function useAtividadesFlow() {
       const res = await completeAtividade(atividade.id, dados);
       applyUser(res.user);
 
+      // Histórico não depende da fila — dispara já, em paralelo com a
+      // limpeza da fila abaixo, em vez de esperar aquela chamada terminar
+      // pra só então começar esta (cada RTT a menos no caminho crítico conta:
+      // era essa fila de chamadas em série que fazia "concluir" parecer lento).
+      const historyPromise = ensureHistory({ force: true });
+
       // Tira da fila persistida assim que conclui — sem isso ela nunca
       // encolhia (nada mais removia o id de lá) e a tela de atividades
       // parecia travada. Pra repetir, o usuário adiciona de volta na hora.
-      // Roda ANTES do refresh: o refresh único abaixo já lê a fila limpa,
-      // dispensando o segundo refresh que dobrava a espera de cada conclusão.
+      // Essa, sim, precisa terminar ANTES do refresh: o refresh único abaixo
+      // já lê a fila limpa, dispensando um segundo refresh.
       if (user && fila.includes(atividade.id)) {
         try {
           const semAtual = fila.filter((id) => id !== atividade.id);
@@ -116,10 +122,11 @@ export function useAtividadesFlow() {
         }
       }
 
-      // `refresh()` não busca o histórico (só usuário/stats) — sem forçar o
-      // reload aqui, `concluidasHoje`/`filaPendente` ficavam presos no
+      // `refresh()` não busca o histórico (só usuário/stats) — sem esperar
+      // por ele aqui, `concluidasHoje`/`filaPendente` ficavam presos no
       // estado de antes da conclusão, como se nada tivesse acontecido.
-      await Promise.all([refresh(), ensureHistory({ force: true })]);
+      // `historyPromise` já está em voo desde o início da função.
+      await Promise.all([refresh(), historyPromise]);
 
       acumulado.current.xp += res.xp_ganho;
       acumulado.current.moedas += res.abdoria_ganha;

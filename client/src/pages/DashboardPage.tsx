@@ -18,7 +18,7 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatTrainingDuration } from '@/lib/utils';
 import { isRestDay } from '@shared/training-plan';
-import { ATIVIDADES_MIN_DESCANSO, resolveFila } from '@shared/atividades';
+import { resolveFila } from '@shared/atividades';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { useApp } from '@/hooks/useApp';
 import { useCopy } from '@/hooks/useCopy';
@@ -79,8 +79,8 @@ export function DashboardPage() {
   // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
   const diaDescanso =
     !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
-  // No descanso, Atividades (alongamento e afins) sustentam a streak a partir de
-  // ATIVIDADES_MIN_DESCANSO concluídas — não existe mais um "aquecimento" próprio.
+  // Uma única Atividade (alongamento e afins) já sustenta a streak, em
+  // qualquer dia — não existe mais um "aquecimento" próprio.
   const filaHojeCount = diaDescanso
     ? resolveFila(user?.preferencias, getTodaySaoPaulo()).length
     : 0;
@@ -129,7 +129,7 @@ export function DashboardPage() {
           <p className="mt-2 text-[0.68rem] font-semibold text-stone-500">
             {filaHojeCount > 0
               ? `Você já tem ${filaHojeCount} atividade${filaHojeCount === 1 ? '' : 's'} na fila de hoje — elas mantêm sua sequência sem pesar no seu descanso.`
-              : `Hoje o ideal é descansar de verdade: escolha ${ATIVIDADES_MIN_DESCANSO}+ Atividades logo abaixo — alongamento é uma ótima pedida — elas mantêm sua sequência sem conflitar com o descanso que seu corpo precisa.`}
+              : 'Hoje o ideal é descansar de verdade: escolha uma Atividade logo abaixo — alongamento é uma ótima pedida — ela mantém sua sequência sem conflitar com o descanso que seu corpo precisa.'}
           </p>
         )}
         {!stats.treino_hoje && !diaDescanso && sugerido && (

@@ -3,18 +3,31 @@ import { motion } from 'framer-motion';
 import { MessageSquareText, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_OBS_MAX,
   camposParaAtividade,
+  type AtividadeCampo,
   type AtividadeExtra,
 } from '@shared/atividades';
 
 export interface AtividadeConclusao {
   metricas: Record<string, number | string>;
   obs?: string;
+}
+
+/** Sugestões rápidas (toque, sem abrir teclado) pra campos numéricos, a
+    partir do valor-referência do placeholder — metade / referência / uma vez
+    e meia. Campos de texto não ganham chip (não dá pra sugerir um "livro"). */
+function chipsDoCampo(campo: AtividadeCampo): string[] {
+  if (campo.formato === 'texto') return [];
+  const base = Number(campo.placeholder);
+  if (!Number.isFinite(base) || base <= 0) return [];
+  const arredonda = (v: number) =>
+    campo.formato === 'decimal' ? Math.round(v * 10) / 10 : Math.max(1, Math.round(v));
+  const valores = [arredonda(base * 0.5), arredonda(base), arredonda(base * 1.5)];
+  return [...new Set(valores)].map(String);
 }
 
 /**
@@ -61,12 +74,6 @@ export function AtividadeCompleteModal({
   const Icon = ACHIEVEMENT_ICON_COMPONENTS[atividade.icon];
 
   const confirmar = () => {
-    const faltando = campos.find((campo) => campo.obrigatorio && !valores[campo.id]?.trim());
-    if (faltando) {
-      showGameToast(`Preencha: ${faltando.label}`, { variant: 'warn' });
-      return;
-    }
-
     const metricas: Record<string, number | string> = {};
     for (const campo of campos) {
       const bruto = valores[campo.id]?.trim();
@@ -133,30 +140,55 @@ export function AtividadeCompleteModal({
         )}
       </div>
 
-      <div className="mt-4 flex flex-col gap-4 text-left">
-        {campos.map((campo) => (
-          <label key={campo.id} className="block text-sm font-semibold">
-            {campo.label}
-            {!campo.obrigatorio && (
-              <span className="ml-1 text-[0.68rem] font-medium text-stone-400">(opcional)</span>
-            )}
-            <span className={`atividade-campo${campo.unidade ? '' : ' atividade-campo--texto'}`}>
-              <input
-                value={valores[campo.id] ?? ''}
-                onChange={(e) => setValores((v) => ({ ...v, [campo.id]: e.target.value }))}
-                inputMode={campo.formato === 'texto' ? 'text' : 'decimal'}
-                placeholder={campo.placeholder}
-                maxLength={campo.formato === 'texto' ? 60 : 6}
-              />
-              {campo.unidade && <span className="atividade-campo__unidade">{campo.unidade}</span>}
-            </span>
-          </label>
-        ))}
+      <p className="atividade-complete-hint">
+        Tudo abaixo é opcional — toque em um valor sugerido ou digite o seu, e conclua quando quiser.
+      </p>
+
+      <div className="mt-3 flex flex-col gap-4 text-left">
+        {campos.map((campo) => {
+          const chips = chipsDoCampo(campo);
+          const valorAtual = valores[campo.id] ?? '';
+          return (
+            <label key={campo.id} className="block text-sm font-semibold">
+              {campo.label}
+              <span className={`atividade-campo${campo.unidade ? '' : ' atividade-campo--texto'}`}>
+                <input
+                  value={valorAtual}
+                  onChange={(e) => setValores((v) => ({ ...v, [campo.id]: e.target.value }))}
+                  inputMode={campo.formato === 'texto' ? 'text' : 'decimal'}
+                  placeholder={campo.placeholder}
+                  maxLength={campo.formato === 'texto' ? 60 : 6}
+                />
+                {campo.unidade && <span className="atividade-campo__unidade">{campo.unidade}</span>}
+              </span>
+              {chips.length > 0 && (
+                <span className="atividade-campo-chips" role="group" aria-label={`Sugestões para ${campo.label}`}>
+                  {chips.map((valor) => (
+                    <button
+                      key={valor}
+                      type="button"
+                      className={`atividade-campo-chip${valorAtual === valor ? ' is-active' : ''}`}
+                      onClick={(e) => {
+                        // Sem isso, o clique borbulha pro <label> e o navegador foca o
+                        // <input> associado por padrão — abrindo o teclado numérico
+                        // mesmo assim, exatamente o que o chip existe pra evitar.
+                        e.preventDefault();
+                        setValores((v) => ({ ...v, [campo.id]: valor }));
+                      }}
+                    >
+                      {valor}
+                      {campo.unidade ? ` ${campo.unidade}` : ''}
+                    </button>
+                  ))}
+                </span>
+              )}
+            </label>
+          );
+        })}
 
         <label className="block text-sm font-semibold">
           <span className="flex items-center gap-1.5">
             <MessageSquareText size={13} aria-hidden /> Observações
-            <span className="text-[0.68rem] font-medium text-stone-400">(opcional)</span>
           </span>
           <textarea
             value={obs}

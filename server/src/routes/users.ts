@@ -26,7 +26,13 @@ import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.
 import { focoToObjetivo, sanitizePerfilTreino } from '../utils/training-profile.js';
 import { buildPlanoTreino } from '../../../shared/training-plan.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
-import { awardMoedaFromXp, awardSkillUnlockXp, countNewSkillUnlocks } from '../services/economy.js';
+import {
+  awardDailyXp,
+  awardMoedaFromXp,
+  awardSkillUnlockXp,
+  countNewSkillUnlocks,
+} from '../services/economy.js';
+import { NOTA_XP_POR_CHECK } from '../../../shared/bloco-notas.js';
 import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
 import { sanitizePublicProfile } from '../utils/sanitize-user.js';
@@ -536,6 +542,26 @@ usersRouter.patch('/me/dados', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/users/me/dados error:', error);
     res.status(500).json({ error: 'Erro ao salvar dados da conta.' });
+  }
+});
+
+/** Concluir um Lembrete dá XP fixo (teto diário normal) — sem toast/aviso
+    próprio, ao contrário de Atividades. Nunca mexe na streak. */
+usersRouter.post('/me/lembrete-xp', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const xp_ganho = awardDailyXp(user, NOTA_XP_POR_CHECK);
+    await user.save();
+
+    res.json({ user: sanitizeUser(user), xp_ganho });
+  } catch (error) {
+    console.error('POST /api/users/me/lembrete-xp error:', error);
+    res.status(500).json({ error: 'Erro ao conceder XP.' });
   }
 });
 

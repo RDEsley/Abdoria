@@ -1,10 +1,12 @@
 import type { UserPreferencias } from './types/index.js';
 
 /**
- * Bloco de Notas: lista de tarefas livre da seção Atividades — não é sobre
- * bem-estar/XP como as Atividades, é uma lista de qualquer coisa que o
- * jogador queira anotar (afazeres do dia, lista de compras, lembretes...).
- * Sem XP/streak — a recompensa aqui é só a satisfação de riscar o item.
+ * Lembretes (ex-"Bloco de Notas"): lista de tarefas livre da seção
+ * Atividades — não é sobre bem-estar como as Atividades, é uma lista de
+ * qualquer coisa que o jogador queira anotar (afazeres do dia, lista de
+ * compras, lembretes...). Nunca sustenta streak; cada item concluído dá
+ * `NOTA_XP_POR_CHECK` XP (dentro do teto diário normal), sem toast/aviso —
+ * a recompensa "visível" aqui é só a satisfação de riscar o item.
  */
 export interface NotaItem {
   id: string;
@@ -19,6 +21,9 @@ export const NOTA_TEXTO_MAX = 140;
 export const BLOCO_NOTAS_MAX = 60;
 export const BLOCO_NOTAS_LIMITE_MSG =
   'Limite de itens atingido. Limpe alguns para adicionar outros.';
+/** XP silencioso por lembrete concluído — some no teto diário normal, sem
+    toast/celebração própria (diferente de Atividades, que avisa). */
+export const NOTA_XP_POR_CHECK = 5;
 
 function sanitizeNota(entry: unknown): NotaItem | null {
   if (!entry || typeof entry !== 'object') return null;

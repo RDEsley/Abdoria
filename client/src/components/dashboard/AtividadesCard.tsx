@@ -389,8 +389,8 @@ export function AtividadesCard() {
             type="button"
             className={`atividades-mode-toggle${modo === 'notas' ? ' atividades-mode-toggle--notas' : ''}`}
             aria-pressed={modo === 'notas'}
-            aria-label={modo === 'notas' ? 'Ver Atividades' : 'Ver Bloco de Notas'}
-            title={modo === 'notas' ? 'Ver Atividades' : 'Ver Bloco de Notas'}
+            aria-label={modo === 'notas' ? 'Ver Atividades' : 'Ver Lembretes'}
+            title={modo === 'notas' ? 'Ver Atividades' : 'Ver Lembretes'}
             onClick={alternarModo}
           >
             {modo === 'notas' ? (
@@ -404,7 +404,7 @@ export function AtividadesCard() {
               </span>
             )}
           </button>
-          {modo === 'notas' ? 'Bloco de Notas' : 'Atividades'}
+          {modo === 'notas' ? 'Lembretes' : 'Atividades'}
         </h3>
         {modo === 'atividades' && (
         <div className="flex shrink-0 items-center gap-2">
@@ -466,7 +466,8 @@ export function AtividadesCard() {
       <p className="flex items-center gap-1.5 text-xs font-semibold text-stone-500">
         {diaDeTreino ? (
           <>
-            <Dumbbell size={12} aria-hidden /> Dia de treino — XP e streak vêm do treino
+            <Dumbbell size={12} aria-hidden /> Dia de treino — o treino ou qualquer Atividade
+            concluída mantêm sua sequência
           </>
         ) : hojeNaAgenda ? (
           <>
