@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Coins, Lock, Volume2 } from 'lucide-react';
+import { Check, Coins, Lock, Volume2 } from 'lucide-react';
 import {
   PurchaseConfirmDialog,
   type PurchaseConfirmDetails,
@@ -11,16 +11,12 @@ import { useAuth } from '@/context/AuthContext';
 import { playEquip, playPurchase, previewSfxPack, setSfxPack } from '@/lib/sounds';
 import { CURRENCY_NAME, type ShopCatalogItem } from '@/types';
 
-/** Quantos pacotes mostrar antes de precisar tocar em "Ver mais". */
-const SONS_VISIVEIS_COLAPSADO = 6;
-
 /** Pacotes de som do jogo — escolhidos aqui nas Opções (não na personalização). */
 export function SoundPackSection() {
   const { applyUser } = useAuth();
   const [sons, setSons] = useState<ShopCatalogItem[] | null>(null);
   const [saldo, setSaldo] = useState<number | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [expandido, setExpandido] = useState(false);
   const [purchaseConfirm, setPurchaseConfirm] = useState<{
     item: ShopCatalogItem;
     details: PurchaseConfirmDetails;
@@ -103,23 +99,14 @@ export function SoundPackSection() {
     return <p className="mt-4 text-xs font-bold text-stone-400">Carregando pacotes de som...</p>;
   }
 
-  // O pacote em uso sempre aparece, mesmo colapsado — nunca esconde o que
-  // já está ativo atrás do "Ver mais".
-  const sonsVisiveis = expandido ? sons : sons.slice(0, SONS_VISIVEIS_COLAPSADO);
-  const equipadoEscondido = sons.find((s) => s.equipada && !sonsVisiveis.includes(s));
-  if (!expandido && equipadoEscondido) {
-    sonsVisiveis.splice(SONS_VISIVEIS_COLAPSADO - 1, 1, equipadoEscondido);
-  }
-  const temMais = sons.length > SONS_VISIVEIS_COLAPSADO;
-
   return (
     <div className="mt-5">
       <p className="text-sm font-bold">Pacote de sons</p>
       <p className="mt-1 mb-2 text-xs font-medium text-stone-500">
         Toque em ouvir para testar antes de ativar.
       </p>
-      <ul className="flex flex-col gap-1.5">
-        {sonsVisiveis.map((item) => (
+      <ul className="settings-sound-list flex flex-col gap-1.5">
+        {sons.map((item) => (
           <li key={item.id} className="settings-sound">
             <button
               type="button"
@@ -161,24 +148,6 @@ export function SoundPackSection() {
           </li>
         ))}
       </ul>
-
-      {temMais && (
-        <button
-          type="button"
-          className="settings-sound__toggle"
-          onClick={() => setExpandido((v) => !v)}
-        >
-          {expandido ? (
-            <>
-              <ChevronUp size={14} aria-hidden /> Ver menos
-            </>
-          ) : (
-            <>
-              <ChevronDown size={14} aria-hidden /> Ver mais ({sons.length - SONS_VISIVEIS_COLAPSADO})
-            </>
-          )}
-        </button>
-      )}
 
       <PurchaseConfirmDialog
         open={!!purchaseConfirm}

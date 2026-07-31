@@ -975,7 +975,29 @@ a.profile-counts__item:hover strong {
   color: #047857;
 }
 
-/* Opções — pacotes de som */
+/* Opções — pacotes de som. Scroll próprio (não mais "Ver mais"/"Ver menos")
+   — a lista inteira já fica ali, só rolando, igual às listas de Atividades
+   e Lembretes. */
+.settings-sound-list {
+  max-height: 16rem;
+  margin: 0;
+  padding: 0.1rem 0.15rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.settings-sound-list::-webkit-scrollbar {
+  width: 0.35rem;
+}
+
+.settings-sound-list::-webkit-scrollbar-thumb {
+  background: #e7e5e4;
+  border-radius: 999px;
+}
+
 .settings-sound {
   display: flex;
   align-items: center;
@@ -1064,28 +1086,6 @@ a.profile-counts__item:hover strong {
   font-size: 0.62rem;
   font-weight: 700;
   color: #a8a29e;
-}
-
-.settings-sound__toggle {
-  display: flex;
-  width: 100%;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  margin-top: 0.6rem;
-  padding: 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #57534e;
-  background: #f5f5f4;
-  border: none;
-  border-radius: 0.75rem;
-  transition: background 0.12s ease;
-}
-
-.settings-sound__toggle:hover {
-  background: #e7e5e4;
 }
 
 /* Opções — seção recolhível */
