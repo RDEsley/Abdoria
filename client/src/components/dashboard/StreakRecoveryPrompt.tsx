@@ -52,12 +52,12 @@ export function StreakRecoveryPrompt() {
     try {
       const res = await recoverStreak();
       applyUser(res.user);
-      await refresh();
       showGameToast(
         `Sequência de ${res.streak_atual} dia${res.streak_atual !== 1 ? 's' : ''} recuperada!`,
         { variant: 'success' },
       );
       setVisible(false);
+      void refresh();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível recuperar a sequência.'), {
         variant: 'error',

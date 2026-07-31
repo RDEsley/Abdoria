@@ -342,11 +342,14 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     setClaiming(true);
     try {
       const res = await claimAfkRewards();
+      // A celebração só precisa do que `claimAfkRewards` já devolveu — mostra
+      // na hora em vez de esperar mais duas chamadas (refresh geral + reload
+      // do meta AFK) que só servem pra sincronizar estado em segundo plano.
       applyUser(res.user);
-      await refreshApp();
       pendingXpEffectsRef.current = { xp: res.claimed.xp, levelUp: res.level_up ?? null };
       showClaimedCelebration(res.claimed, res.overflow_to_dorias);
-      await load();
+      void refreshApp();
+      void load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível coletar recompensas.'), {
         variant: 'error',

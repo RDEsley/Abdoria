@@ -83,14 +83,14 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     try {
       const res = await purchasePatrolWeapon(item.id);
       applyUser(res.user);
-      await refreshApp();
       playPurchase();
       setCelebrating(true);
       window.setTimeout(() => setCelebrating(false), 1200);
       showGameToast(`${item.nome} comprado!`, { variant: 'success' });
       onWeaponChange?.(item.kind);
       setPurchaseConfirm(null);
-      await load();
+      void refreshApp();
+      void load();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível comprar este item.'), {
         variant: 'error',

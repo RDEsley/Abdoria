@@ -56,9 +56,9 @@ export function GiftCodeSection() {
       const res = await redeemGiftCode(normalized);
       applyUser(res.user);
       setSfxPack(res.user.cosmeticos?.som_equipado ?? 'som_classico');
-      await refreshApp();
       setGiftCode('');
       setRewardReveal(res);
+      void refreshApp();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Código inválido ou já usado nesta conta.'), {
         variant: 'error',

@@ -143,12 +143,16 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     setUsingExpInstant(true);
     try {
       const res = await consumeExpInstant(true);
+      // `res.inventario`/`res.xp_ganho` já bastam pro feedback imediato — o
+      // refresh geral do app só sincroniza estado em segundo plano, sem
+      // travar a resposta visual (era essa espera extra que fazia usar um
+      // item parecer lento pelo inventário).
       applyUser(res.user);
-      await refreshApp();
       applyCounts(res.inventario);
       emitXpEarned(res.xp_ganho, expInstantSlotRef.current);
       showGameToast(`+${res.xp_ganho} XP instantâneo!`, { variant: 'success' });
       setSelected(null);
+      void refreshApp();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível usar EXP Instantâneo.'), {
         variant: 'error',
@@ -165,7 +169,6 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     try {
       const res = await consumeDoriaBag(bagQuantity, useAll);
       applyUser(res.user);
-      await refreshApp();
       applyCounts(res.inventario);
       setCoinPops(res.rolls.slice(0, 8));
       window.setTimeout(() => setCoinPops([]), 800);
@@ -175,6 +178,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
           : `+${res.abdoria_ganha} ${CURRENCY_NAME} da bolsa!`;
       showGameToast(label, { variant: 'success' });
       setSelected(null);
+      void refreshApp();
     } catch (err) {
       showGameToast(getErrorMessage(err, `Não foi possível usar ${DORIA_BAG_LABEL}.`), {
         variant: 'error',
@@ -231,12 +235,12 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     try {
       const res = await consumeRouteDrink(true);
       applyUser(res.user);
-      await refreshApp();
       applyCounts(res.inventario);
       setRouteDrinkConfirmOpen(false);
       setSelected(null);
       window.dispatchEvent(new CustomEvent('abdoria:afk-sync', { detail: res }));
       showClaimedCelebration(res.claimed, res.overflow_to_dorias ?? 0);
+      void refreshApp();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível usar o Route Drink.'), {
         variant: 'error',
