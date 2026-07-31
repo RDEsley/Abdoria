@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Swords } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -37,6 +37,15 @@ function weaponsFor(
   ];
 }
 
+/** Todas as imagens dos dois passos (gênero + as 4 combinações de arma) —
+    carregadas de antemão pra escolher a arma não mostrar a imagem surgindo
+    do zero na transição entre os passos. */
+const TODAS_AS_IMAGENS = [
+  ...GENEROS.map((g) => g.img),
+  ...weaponsFor('masculino').map((w) => w.img),
+  ...weaponsFor('feminino').map((w) => w.img),
+];
+
 /**
  * Fluxo de 1ª entrada na Exploração: escolher o personagem (gênero, depois
  * arma) antes de qualquer coisa — saiu do Onboarding pra viver aqui, já que
@@ -48,6 +57,13 @@ export function ExplorationIntroFlow({ onDone }: Props) {
   const [genero, setGenero] = useState<PersonagemGenero | null>(null);
   const [arma, setArma] = useState<ArmaPreferida | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    for (const src of TODAS_AS_IMAGENS) {
+      const img = new Image();
+      img.src = src;
+    }
+  }, []);
 
   const step: 'genero' | 'arma' = genero === null ? 'genero' : 'arma';
 

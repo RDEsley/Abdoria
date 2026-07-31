@@ -273,9 +273,13 @@
 
 /* O retrato normal ancora o sprite embaixo (sobra espaço em cima pra auras
    de boss) — nessa caixa quadrada e pequena do toast isso ficava puxado
-   pra baixo em vez de centralizado. */
-.achievement-toast__icon-wrap .game-afk-portrait.game-afk-enemy {
+   pra baixo/lado em vez de centralizado. Bug real: o seletor daqui exigia
+   a classe solta `.game-afk-enemy`, que o componente nunca aplica (só usa
+   o modificador `.game-afk-enemy--{id}`) — a regra nunca batia em nada. */
+.achievement-toast__icon-wrap .game-afk-portrait {
+  display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .achievement-toast__copy {

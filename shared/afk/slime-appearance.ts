@@ -231,6 +231,9 @@ export function collectSlimeAccessories(
   }
 
   switch (enemyId) {
+    case 'bat':
+      items.push('wing-l', 'wing-r');
+      break;
     case 'zombie':
       items.push('leaf');
       break;
