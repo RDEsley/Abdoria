@@ -9,15 +9,19 @@ interface Props {
   onContinue: () => void;
 }
 
-const VILLAGE_IMAGES = ['/assets/loja-da-vila.png', '/assets/museu-da-vila-bestiario.png'];
+const VILLAGE_IMAGES = [
+  '/assets/background-afk-banner.png',
+  '/assets/loja-da-vila.png',
+  '/assets/museu-da-vila-bestiario.png',
+];
 
 /** Módulo: uma vez carregadas nesta sessão, as próximas visitas à vila não
     esperam de novo (evita até o flash do loading num cache já quente). */
 let villageImagesLoaded = false;
 
-/** Pré-carrega loja/museu antes de revelar a vila — sem isso o fundo (CSS,
-    instantâneo) aparecia primeiro e as duas imagens "pipocavam" visíveis
-    chegando depois, sozinhas, por cima do cenário já pronto. */
+/** Pré-carrega fundo/loja/museu antes de revelar a vila — faltava o fundo
+    nessa lista (só loja+museu eram esperados), então ele "pipocava" depois
+    dos outros dois já prontos, mesmo com o loading em tela. */
 function useVillageImagesReady(): boolean {
   const [ready, setReady] = useState(villageImagesLoaded);
 
@@ -46,11 +50,11 @@ function useVillageImagesReady(): boolean {
 }
 
 /**
- * Cena de hub entre patrulhas: a vila. Fundo é 100% CSS (céu/grama/colinas) —
- * a loja e o museu (bestiário) são as duas únicas imagens de verdade,
- * sobrepostas nas posições certas, ambas clicáveis. Sem personagem em cena:
- * a vila é só o hub de navegação, o herói só aparece de verdade na
- * exploração.
+ * Cena de hub entre patrulhas: a vila. Fundo é a imagem
+ * background-afk-banner.png (via CSS); a loja e o museu (bestiário) são
+ * duas imagens sobrepostas nas posições certas, ambas clicáveis. Sem
+ * personagem em cena: a vila é só o hub de navegação, o herói só aparece de
+ * verdade na exploração.
  */
 export function AfkVillageScene({
   bestiaryUnlocked,
