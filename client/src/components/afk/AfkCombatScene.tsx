@@ -392,7 +392,7 @@ export function AfkCombatScene({
 
         {localIsBoss && (
           <div className="game-afk-scene__boss-callout" role="status">
-            Luta com Boss! Loot Bônus ao Derrotar!
+            Luta contra Boss! Chance de Drop Aumentada...
           </div>
         )}
 

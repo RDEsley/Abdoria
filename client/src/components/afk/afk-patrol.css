@@ -1645,11 +1645,14 @@
   }
 }
 
+/* Abaixo do painel de vida do boss (que ocupa do topo até ~1.65rem, z-index
+   15) — antes começava em 0.55rem com z-index 8, ficando embaixo da barra
+   de vida e sobrepondo o mesmo espaço (bug real de sobreposição). */
 .game-afk-scene__boss-callout {
   position: absolute;
-  top: 0.55rem;
+  top: 2.35rem;
   left: 50%;
-  z-index: 8;
+  z-index: 16;
   max-width: calc(100% - 1.2rem);
   padding: 0.32rem 0.65rem;
   font-size: 0.58rem;
