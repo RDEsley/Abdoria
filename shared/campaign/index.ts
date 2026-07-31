@@ -206,11 +206,13 @@ function compareCandidates(a: ExerciseCandidate, b: ExerciseCandidate): number {
   return a.index - b.index;
 }
 
+export type CapituloMarco = { tipo: 'primeiro' } | { tipo: 'streak'; dias: number };
+
 interface SessionWinner {
   tipo: CampaignEventType;
   candidate: ExerciseCandidate | null;
   /** Só em capitulo: qual marco narrar. */
-  marco?: { tipo: 'primeiro' } | { tipo: 'streak'; dias: number };
+  marco?: CapituloMarco;
 }
 
 function pickSessionWinner(
@@ -462,17 +464,41 @@ function buildAtividadePost(
   };
 }
 
+/**
+ * Override explícito de marco de capítulo pra UMA sessão — usado por quem só
+ * enxerga a sessão do dia isolada (telas de role play pós-treino/atividades),
+ * sem o histórico completo pra deixar `computeCapituloMarcos` decidir sozinho
+ * (que trataria a única sessão da lista como se fosse sempre a primeira da
+ * conta). Quando fornecido (mesmo `null`), substitui o auto-detect por
+ * completo — assim a sessão só vira "capítulo" quando o chamador confirma
+ * (via streak real do servidor) que o marco é genuíno.
+ */
+export interface CapituloOverride {
+  sessionId: string;
+  marco: CapituloMarco;
+}
+
 export function buildCampaignPosts(
   sessions: CampaignSession[],
   catalogBySlug: Map<string, CampaignCatalogInfo>,
   ctx: CampaignContext,
+  capituloOverride?: CapituloOverride | null,
 ): CampaignPost[] {
   const validSessions = sessions.filter((s) => s.exercicios.length > 0 || s.isAtividade);
   const ascending = [...validSessions].sort(
     (a, b) => new Date(a.concluido_em).getTime() - new Date(b.concluido_em).getTime(),
   );
   const prSlugsBySession = computeSessionPrSlugs(ascending);
-  const capituloMarcos = computeCapituloMarcos(ascending);
+  // `undefined` = parâmetro omitido (chamador quer o auto-detect de sempre,
+  // baseado no histórico completo). `null` explícito = chamador confirmou
+  // que NENHUM marco se aplica agora — não cai no auto-detect (que trataria
+  // a sessão isolada como se fosse sempre a primeira da conta).
+  const capituloMarcos =
+    capituloOverride !== undefined
+      ? new Map<string, CapituloMarco>(
+          capituloOverride ? [[capituloOverride.sessionId, capituloOverride.marco]] : [],
+        )
+      : computeCapituloMarcos(ascending);
 
   const lugares = placesForLevel(ctx.level);
   const inimigos = enemyPools(ctx);
@@ -528,20 +554,33 @@ export function buildCampaignPosts(
 
       if (template.inimigo === 'chefe') valores.inimigo = pick(inimigos.chefes, seed);
       else if (template.inimigo === 'comum') valores.inimigo = pick(inimigos.comuns, seed);
+    } else if (session.isAtividade) {
+      // Capítulo (marco) num dia de Atividades: não tem exercício-destaque
+      // pra classificar, mas ainda vale mencionar o que foi feito no dia —
+      // só como chip informativo, a narrativa do marco não muda.
+      const [principal] = session.atividadesFeitas ?? [];
+      if (principal) {
+        exercicioInfo = { slug: 'atividade-principal', nome: principal.nome, detalhe: principal.detalhe };
+      }
     }
 
-    // Demais exercícios da sessão (exclui só o índice do vencedor, se houver um
-    // exercício-destaque) — puramente informativo, não influencia a narrativa.
+    // Demais exercícios/atividades da sessão (exclui só o índice do vencedor,
+    // se houver um exercício-destaque) — puramente informativo, não influencia
+    // a narrativa.
     const winnerIndex = winner.candidate?.index;
-    const outrosExercicios: CampaignExerciseSummary[] = session.exercicios
-      .map((entry, idx) => ({ entry, idx }))
-      .filter(({ idx }) => idx !== winnerIndex)
-      .map(({ entry }) => {
-        const info = catalogBySlug.get(entry.slug);
-        const nome =
-          resolveExerciseNomePt({ slug: entry.slug, nome_pt: info?.nome_pt }) ?? entry.nome;
-        return { slug: entry.slug, nome, detalhe: detalheDoExercicio(entry) };
-      });
+    const outrosExercicios: CampaignExerciseSummary[] = session.isAtividade
+      ? (session.atividadesFeitas ?? [])
+          .slice(exercicioInfo ? 1 : 0)
+          .map((a, idx) => ({ slug: `atividade-extra-${idx}`, nome: a.nome, detalhe: a.detalhe }))
+      : session.exercicios
+          .map((entry, idx) => ({ entry, idx }))
+          .filter(({ idx }) => idx !== winnerIndex)
+          .map(({ entry }) => {
+            const info = catalogBySlug.get(entry.slug);
+            const nome =
+              resolveExerciseNomePt({ slug: entry.slug, nome_pt: info?.nome_pt }) ?? entry.nome;
+            return { slug: entry.slug, nome, detalhe: detalheDoExercicio(entry) };
+          });
 
     if (winner.tipo === 'vila_salva') {
       valores.feitos = contagem(session.exercicios.length, 'feito');

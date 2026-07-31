@@ -21,9 +21,13 @@ import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
 import {
   buildCampaignPosts,
+  CAMPAIGN_STREAK_MILESTONES,
+  CAMPAIGN_STREAK_NARRATIVE_MIN,
   type CampaignCatalogInfo,
   type CampaignPost,
+  type CapituloOverride,
 } from '@shared/campaign';
+import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
@@ -104,6 +108,12 @@ export function PlayerPage() {
   const [saved, setSaved] = useState(false);
   const [storyPost, setStoryPost] = useState<CampaignPost | null>(null);
   const [showStory, setShowStory] = useState(false);
+  // Snapshot pré-treino (só roda no mount, via inicializador de useState): se
+  // a conta nunca teve streak nenhum, esta sessão (treino ou atividade) é
+  // genuinamente a primeira da vida da conta — capturado uma única vez pra
+  // não virar "sempre primeiro" caso `authUser` seja atualizado em segundo
+  // plano depois do save.
+  const [isFirstEver] = useState(() => (authUser?.gamificacao?.streak_maior ?? 0) === 0);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const [countdownEnabled, setCountdownEnabled] = useState(
     () => authUser?.preferencias?.contagem_regressiva_habilitada ?? true,
@@ -359,9 +369,26 @@ export function PlayerPage() {
     setPhase('done');
   };
 
-  /** Capítulo de campanha gerado pela missão recém-concluída (mesma lógica do feed). */
-  const buildStoryPost = (xpGanho: number, duracao: number): CampaignPost | null => {
+  /** Capítulo de campanha gerado pela missão recém-concluída (mesma lógica do feed).
+      `streakAtualHoje` só vem preenchido quando o servidor confirma que ESTA
+      sessão de fato estendeu o streak (ver `streak_celebration` na resposta
+      de salvar) — sem isso, nunca forçamos um marco de capítulo. Sessão
+      chaveada por dia (não por timestamp) pra repetir o MESMO capítulo se o
+      usuário passar pela tela de novo no mesmo dia, em vez de sortear outro. */
+  const buildStoryPost = (
+    xpGanho: number,
+    duracao: number,
+    streakAtualHoje: number | null,
+  ): CampaignPost | null => {
     if (!workout || !authUser) return null;
+    const sessionId = `sessao-${getTodaySaoPaulo()}`;
+    const capituloOverride: CapituloOverride | null = isFirstEver
+      ? { sessionId, marco: { tipo: 'primeiro' } }
+      : streakAtualHoje != null &&
+          streakAtualHoje >= CAMPAIGN_STREAK_NARRATIVE_MIN &&
+          CAMPAIGN_STREAK_MILESTONES.includes(streakAtualHoje)
+        ? { sessionId, marco: { tipo: 'streak', dias: streakAtualHoje } }
+        : null;
     const catalogBySlug = new Map<string, CampaignCatalogInfo>(
       exercises.map((ex) => [
         ex.slug,
@@ -377,7 +404,7 @@ export function PlayerPage() {
     const posts = buildCampaignPosts(
       [
         {
-          id: `sessao-${Date.now()}`,
+          id: sessionId,
           treino_nome: workout.treino_nome,
           exercicios: workout.queue.map((item) => ({
             exercicio_id: item.exercicio_id ?? '',
@@ -405,6 +432,7 @@ export function PlayerPage() {
         bestiarioDesbloqueados: (authUser.gamificacao?.bestiario_desbloqueados ??
           []) as AfkEnemyId[],
       },
+      capituloOverride,
     );
     return posts[0] ?? null;
   };
@@ -457,7 +485,13 @@ export function PlayerPage() {
       sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
       clearWorkoutDurationSession();
       setSaved(true);
-      setStoryPost(buildStoryPost(result.xp_ganho ?? 0, Math.max(duration, 1)));
+      setStoryPost(
+        buildStoryPost(
+          result.xp_ganho ?? 0,
+          Math.max(duration, 1),
+          result.streak_celebration?.streak_atual ?? null,
+        ),
+      );
       if (result.rodada_completa) {
         setShowRodadaModal(true);
       }

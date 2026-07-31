@@ -10,21 +10,42 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { useAtividadesFlow, type AtividadesFluxoResumo } from '@/hooks/useAtividadesFlow';
 import { useAuth } from '@/context/AuthContext';
 import { ATIVIDADES_MIN_DESCANSO, type AtividadeExtra } from '@shared/atividades';
-import { buildCampaignPosts, type CampaignCatalogInfo, type CampaignPost } from '@shared/campaign';
+import {
+  buildCampaignPosts,
+  CAMPAIGN_STREAK_MILESTONES,
+  CAMPAIGN_STREAK_NARRATIVE_MIN,
+  type CampaignCatalogInfo,
+  type CampaignPost,
+  type CapituloOverride,
+} from '@shared/campaign';
+import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { CURRENCY_NAME, resolveCosmeticos, xpLevelFromTotal, type AfkEnemyId } from '@/types';
 
-/** Capítulo de campanha da leva de atividades recém-concluída (mesma lógica do feed). */
+/** Capítulo de campanha da leva de atividades recém-concluída (mesma lógica do feed).
+    `isFirstEver`/sessão chaveada por dia: mesmas garantias do fluxo de treino
+    (ver PlayerPage.buildStoryPost) — só vira "capítulo" com um marco real
+    confirmado pelo servidor, e repetir a tela no mesmo dia mostra o mesmo
+    capítulo em vez de sortear outro. */
 function buildAtividadesStoryPost(
   resumo: AtividadesFluxoResumo,
   heroi: string,
   level: number,
   bestiarioDesbloqueados: AfkEnemyId[],
+  isFirstEver: boolean,
 ): CampaignPost | null {
   if (resumo.feitas.length === 0) return null;
+  const sessionId = `atividades-${getTodaySaoPaulo()}`;
+  const capituloOverride: CapituloOverride | null = isFirstEver
+    ? { sessionId, marco: { tipo: 'primeiro' } }
+    : resumo.streakCelebration != null &&
+        resumo.streakCelebration >= CAMPAIGN_STREAK_NARRATIVE_MIN &&
+        CAMPAIGN_STREAK_MILESTONES.includes(resumo.streakCelebration)
+      ? { sessionId, marco: { tipo: 'streak', dias: resumo.streakCelebration } }
+      : null;
   const posts = buildCampaignPosts(
     [
       {
-        id: `atividades-${Date.now()}`,
+        id: sessionId,
         treino_nome: 'Atividades',
         exercicios: [],
         duracao_total_segundos: 0,
@@ -36,6 +57,7 @@ function buildAtividadesStoryPost(
     ],
     new Map<string, CampaignCatalogInfo>(),
     { heroi, level, bestiarioDesbloqueados },
+    capituloOverride,
   );
   return posts[0] ?? null;
 }
@@ -58,6 +80,10 @@ export function AtividadesPlayerPage() {
   const [resumoFinal, setResumoFinal] = useState<AtividadesFluxoResumo | null>(null);
   const [showStory, setShowStory] = useState(false);
   const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
+  // Snapshot pré-fluxo (só roda no mount, via inicializador de useState): mesma
+  // lógica do PlayerPage — `applyUser` roda a cada atividade concluída, então
+  // captura uma vez só, antes da primeira conclusão.
+  const [isFirstEver] = useState(() => (authUser?.gamificacao?.streak_maior ?? 0) === 0);
 
   // Guarda de entrada: sem fila pendente, não tem o que fazer aqui.
   useEffect(() => {
@@ -88,6 +114,7 @@ export function AtividadesPlayerPage() {
           authUser.nome?.split(' ')[0] ?? 'O herói',
           xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
           (authUser.gamificacao?.bestiario_desbloqueados ?? []) as AfkEnemyId[],
+          isFirstEver,
         )
       : null;
 
