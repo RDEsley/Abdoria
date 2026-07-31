@@ -106,7 +106,11 @@ async function buildPinnedRows(user: UserRecord, blocked: Set<string>) {
   }));
 }
 
-async function presetToSugerido(preset: PresetDoc, user: UserRecord): Promise<TreinoSugerido> {
+async function presetToSugerido(
+  preset: PresetDoc,
+  user: UserRecord,
+  blocked: Set<string>,
+): Promise<TreinoSugerido> {
   const slugs = preset.exercicios.map((e) => e.slug);
   const catalog = await findExercisesForUserDocument(user);
   const exercises = catalog.filter((ex) => slugs.includes(ex.slug));
@@ -118,7 +122,7 @@ async function presetToSugerido(preset: PresetDoc, user: UserRecord): Promise<Tr
   );
 
   const exercicios = preset.exercicios
-    .filter((pe) => nameBySlug.has(pe.slug))
+    .filter((pe) => nameBySlug.has(pe.slug) && !blocked.has(pe.slug))
     .map((pe) => ({
       slug: pe.slug,
       nome: nameBySlug.get(pe.slug) ?? pe.slug,
@@ -323,7 +327,7 @@ export async function recommendWorkout(
 
   const pinnedPreset = await resolvePinnedPreset(user, excludePresetId);
   if (pinnedPreset) {
-    return presetToSugerido(pinnedPreset, user);
+    return presetToSugerido(pinnedPreset, user, blocked);
   }
 
   const last = await WorkoutHistory.findOne(
@@ -444,6 +448,7 @@ export async function recommendWorkout(
       exercicios: exercicioRows,
     },
     user,
+    blocked,
   );
 }
 
