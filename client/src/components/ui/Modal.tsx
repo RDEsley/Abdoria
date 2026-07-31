@@ -39,6 +39,20 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
+  // `onClose`/`disableDismiss` quase sempre chegam como closure nova a cada
+  // render do dono do modal (ex.: `onClose={() => setX(null)}`). Se o efeito
+  // abaixo dependesse deles, qualquer re-render do pai (inclusive um efeito
+  // colateral irrelevante, tipo um `applyUser` em progresso) reexecutava o
+  // "roubo de foco" (linha do `.focus()`) e derrubava o teclado numérico
+  // do celular no meio da digitação — por isso ficam numa ref, só pra sempre
+  // ler a versão mais recente sem disparar o efeito de novo.
+  const onCloseRef = useRef(onClose);
+  const disableDismissRef = useRef(disableDismiss);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    disableDismissRef.current = disableDismiss;
+  });
+
   useEffect(() => {
     if (!open) return undefined;
 
@@ -51,9 +65,9 @@ export function Modal({
     (focusable ?? panel)?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (disableDismiss) return;
+      if (disableDismissRef.current) return;
       if (event.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== 'Tab' || !panel) return;
@@ -78,7 +92,7 @@ export function Modal({
       document.body.style.overflow = prevOverflow;
       previouslyFocused.current?.focus();
     };
-  }, [open, onClose, disableDismiss]);
+  }, [open]);
 
   if (!open) return null;
 
