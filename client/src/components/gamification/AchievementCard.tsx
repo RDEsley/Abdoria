@@ -60,10 +60,15 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
   );
 }
 
+/** As desbloqueadas do preview são sempre as MAIS RECENTES (não as mais
+    raras) — o jogador quer ver o que acabou de conquistar, não uma vitrine
+    de raridade. `desbloqueada_ordem` maior = desbloqueada depois; ausente
+    (conquista de antes desse rastreio existir) fica por último. */
 export function pickAchievementPreview(conquistas: Achievement[], limit: number): Achievement[] {
-  const sorted = sortAchievements(conquistas);
-  const unlocked = sorted.filter((c) => c.desbloqueada);
-  const locked = sorted.filter((c) => !c.desbloqueada);
+  const unlocked = conquistas
+    .filter((c) => c.desbloqueada)
+    .sort((a, b) => (b.desbloqueada_ordem ?? -1) - (a.desbloqueada_ordem ?? -1));
+  const locked = sortAchievements(conquistas).filter((c) => !c.desbloqueada);
   const picked: Achievement[] = [];
 
   for (const item of unlocked.slice(0, limit - 1)) {

@@ -3,15 +3,16 @@ import type { AchievementIcon, UserPreferencias } from './types/index.js';
 /**
  * Atividades: tarefas de bem-estar que o usuário enfileira na Missão Diária.
  *
- * Regra de negócio (2026-07-20, XP revisto — streak intocada desde 2026-07-19):
+ * Regra de negócio (2026-07-31, streak revista):
  * - XP: toda atividade concluída dá `ATIVIDADE_XP_POR_UNIDADE` XP, em
  *   QUALQUER dia (treino ou descanso), até `ATIVIDADES_MIN_DESCANSO` por dia
  *   (`ATIVIDADES_XP_MAX_DIARIO` no total). Atividade extra além desse limite
  *   não dá XP — dá `ATIVIDADE_COINS_EXTRA` Coins.
- * - Streak: Dia de DESCANSO (sem treino agendado) — as atividades contam
- *   streak, desde que o usuário conclua no mínimo `ATIVIDADES_MIN_DESCANSO`.
- *   Dia de TREINO — streak vem só do treino; atividades ficam registradas
- *   (calendário/conquistas) mas não mexem na streak.
+ * - Streak: uma única atividade concluída já mantém a sequência, em
+ *   QUALQUER dia (treino ou descanso) — não tem mais mínimo de 3 nem
+ *   distinção por tipo de dia. Treino e Atividades não se substituem: os
+ *   dois contam pra streak, mas concluir Atividades nunca marca a Missão
+ *   de treino do dia como feita (só um treino de verdade faz isso).
  *
  * A lista é do usuário: começa como cópia do catálogo padrão e vira uma
  * lista própria e ordenável assim que ele cria/edita/exclui/reordena algo.
@@ -119,7 +120,6 @@ export interface AtividadeCampo {
   formato: 'inteiro' | 'decimal' | 'texto';
   unidade?: string;
   placeholder?: string;
-  obrigatorio?: boolean;
 }
 
 const CAMPO_TEMPO: AtividadeCampo = {
@@ -128,10 +128,11 @@ const CAMPO_TEMPO: AtividadeCampo = {
   formato: 'inteiro',
   unidade: 'min',
   placeholder: '20',
-  obrigatorio: true,
 };
 
-/** Campos por tipo — o que perguntamos ao concluir cada atividade. */
+/** Campos por tipo — o que perguntamos ao concluir cada atividade. Todos
+    opcionais: servem só pro registro no calendário/campanha, nunca bloqueiam
+    a conclusão (XP e streak não dependem de nenhum valor preenchido aqui). */
 export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
   leitura: [
     {
@@ -140,9 +141,8 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
       formato: 'inteiro',
       unidade: 'páginas',
       placeholder: '10',
-      obrigatorio: true,
     },
-    { id: 'obra', label: 'Qual livro/material?', formato: 'texto', placeholder: 'Opcional' },
+    { id: 'obra', label: 'Qual livro/material?', formato: 'texto', placeholder: 'Ex.: Hábitos Atômicos' },
     CAMPO_TEMPO,
   ],
   corrida: [
@@ -152,7 +152,6 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
       formato: 'decimal',
       unidade: 'km',
       placeholder: '5',
-      obrigatorio: true,
     },
     CAMPO_TEMPO,
   ],
@@ -163,7 +162,6 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
       formato: 'decimal',
       unidade: 'km',
       placeholder: '12',
-      obrigatorio: true,
     },
     CAMPO_TEMPO,
   ],
@@ -196,7 +194,6 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
       label: 'O que você estudou?',
       formato: 'texto',
       placeholder: 'Matéria, concurso, curso...',
-      obrigatorio: true,
     },
     { ...CAMPO_TEMPO, label: 'Por quanto tempo estudou?' },
   ],
@@ -206,16 +203,15 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
       label: 'Qual esporte?',
       formato: 'texto',
       placeholder: 'Futebol, vôlei, basquete...',
-      obrigatorio: true,
     },
     CAMPO_TEMPO,
   ],
   escrita: [
-    { id: 'tema', label: 'Sobre o que você escreveu?', formato: 'texto', placeholder: 'Opcional' },
+    { id: 'tema', label: 'Sobre o que você escreveu?', formato: 'texto', placeholder: 'Ex.: Diário pessoal' },
     CAMPO_TEMPO,
   ],
   organizacao: [
-    { id: 'local', label: 'O que você organizou?', formato: 'texto', placeholder: 'Opcional' },
+    { id: 'local', label: 'O que você organizou?', formato: 'texto', placeholder: 'Ex.: Guarda-roupa' },
     CAMPO_TEMPO,
   ],
   generico: [CAMPO_TEMPO],
@@ -242,7 +238,6 @@ export function camposParaAtividade(atividade: AtividadeExtra): AtividadeCampo[]
       formato: 'inteiro',
       unidade,
       placeholder: String(atividade.meta_valor),
-      obrigatorio: true,
     },
     ...base,
   ];
@@ -454,11 +449,18 @@ export function sanitizeAtividades(raw: unknown): AtividadeExtra[] {
 
 /**
  * Lista de atividades do usuário, na ordem escolhida por ele. Enquanto ele
- * não mexer em nada, é o catálogo padrão; depois vira a lista salva.
+ * não mexer em nada (campo nunca salvo, `undefined`), é o catálogo padrão;
+ * depois vira a lista salva, mesmo que o usuário tenha apagado tudo (lista
+ * vazia de propósito) — checar por `undefined`, não por `.length > 0`, é o
+ * que diferencia os dois casos. Bug real corrigido aqui: excluir todas as
+ * atividades de uma vez salvava `atividades: []`, e o `.length > 0` fazia
+ * isso cair de volta pro catálogo padrão — parecendo que nada tinha sido
+ * apagado.
  */
 export function resolveAtividades(preferencias?: UserPreferencias | null): AtividadeExtra[] {
-  const salvas = sanitizeAtividades(preferencias?.atividades);
-  if (salvas.length > 0) return salvas;
+  if (preferencias?.atividades !== undefined) {
+    return sanitizeAtividades(preferencias.atividades);
+  }
   return ATIVIDADES_CATALOGO.map((a) => ({ ...a }));
 }
 

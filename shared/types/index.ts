@@ -532,6 +532,10 @@ export interface Gamificacao {
   streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;
   total_minutos: number;
   conquistas: string[];
+  /** Mesmos ids de `conquistas`, na ordem em que foram desbloqueadas (mais
+      recente por último) — usado pra mostrar "as 3 últimas" no preview do
+      Início em vez de ordenar por raridade. */
+  conquistas_ordem?: string[];
   /** Inimigos derrotados pela primeira vez no Bestiário. */
   bestiario_desbloqueados?: AfkEnemyId[];
   /** Drops já obtidos de cada inimigo (para revelar loot no bestiário). */
@@ -1261,6 +1265,10 @@ export interface Achievement extends AchievementDefinition {
   desbloqueada: boolean;
   /** Percentual real de jogadores (elegíveis) que têm essa conquista — computado no servidor. */
   pct_jogadores: number;
+  /** Posição na ordem de desbloqueio do jogador (maior = mais recente);
+      ausente pra quem ainda não tem essa conquista ou desbloqueou antes de
+      esse rastreio existir. Usado pra mostrar "as últimas 3" no preview. */
+  desbloqueada_ordem?: number;
 }
 
 export interface TreinoSugeridoExercicio {

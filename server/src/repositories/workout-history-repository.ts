@@ -180,6 +180,9 @@ export const WorkoutHistory = {
   async exists(filter: {
     usuario_id: string;
     concluido_em?: Record<string, unknown>;
+    /** true = só conta treino de verdade (atividade IS NULL) — sem isso,
+        concluir só Atividades também batia como "treinou hoje". */
+    somenteTreino?: boolean;
   }): Promise<boolean> {
     const sb = getSupabase();
     let query = sb
@@ -192,7 +195,19 @@ export const WorkoutHistory = {
     if (filter.concluido_em && '$lt' in filter.concluido_em) {
       query = query.lt('concluido_em', filter.concluido_em.$lt as string);
     }
-    const { count } = await query;
+    if (filter.somenteTreino) {
+      query = query.is('atividade', null);
+    }
+    const { count, error } = await query;
+    if (error && filter.somenteTreino) {
+      // Coluna `atividade` ainda não migrada nesse ambiente — cai pro
+      // comportamento antigo (conta qualquer linha) em vez de nunca
+      // detectar treino nenhum.
+      return WorkoutHistory.exists({
+        usuario_id: filter.usuario_id,
+        concluido_em: filter.concluido_em,
+      });
+    }
     return (count ?? 0) > 0;
   },
 

@@ -11,11 +11,7 @@ import {
   buildStreakRecoveryOffer,
   type StreakRecoveryOffer,
 } from '../../../shared/streak/recovery.js';
-import {
-  ATIVIDADES_MIN_DESCANSO,
-  isAtividadeHistory,
-  isDiaDeTreino,
-} from '../../../shared/atividades.js';
+import { isAtividadeHistory } from '../../../shared/atividades.js';
 import { consumeInventoryItem, getItemCount } from './inventory.js';
 import { Notifications } from '../repositories/notification-repository.js';
 import { User, type UserRecord } from '../domain/User.js';
@@ -65,38 +61,11 @@ function computeStreakFromHistories(
   return computeStreakWithFrozenDays(histories, frozenDates);
 }
 
-/**
- * Filtra o histórico pro cálculo de streak segundo as regras de Atividades:
- * - Treino real sempre sustenta o dia.
- * - Em dia de TREINO agendado, atividade nunca sustenta a streak — quem
- *   garante o dia é o treino (elas ficam só pro calendário/conquistas).
- * - Em dia de DESCANSO, as atividades sustentam o dia desde que o usuário
- *   tenha concluído pelo menos `ATIVIDADES_MIN_DESCANSO` naquele dia.
- * Usa o `dias_semana` atual do perfil como aproximação do que valia em cada data.
- */
-function historiesEligibleForStreak(
-  histories: HistorySummary[],
-  diasSemana: number[] | null | undefined,
-): HistorySummary[] {
-  const porDia = new Map<string, { treino: boolean; atividades: number }>();
-  for (const h of histories) {
-    const key = workoutDayKey(h.concluido_em);
-    const dia = porDia.get(key) ?? { treino: false, atividades: 0 };
-    if (isAtividadeHistory(h.treino_nome)) dia.atividades += 1;
-    else dia.treino = true;
-    porDia.set(key, dia);
-  }
-
-  return histories.filter((h) => {
-    if (!isAtividadeHistory(h.treino_nome)) return true;
-    const dia = porDia.get(workoutDayKey(h.concluido_em));
-    if (!dia) return false;
-    if (dia.treino) return true; // o dia já está garantido pelo treino
-    const weekday = getSaoPauloWeekday(new Date(h.concluido_em));
-    if (isDiaDeTreino(diasSemana, weekday)) return false;
-    return dia.atividades >= ATIVIDADES_MIN_DESCANSO;
-  });
-}
+// Streak: treino real sempre sustenta o dia; uma única Atividade concluída
+// TAMBÉM sustenta, em qualquer tipo de dia (treino ou descanso) — não tem
+// mais "mínimo 3" nem "não conta em dia de treino". Toda entrada de
+// WorkoutHistory (treino ou atividade) já entra direto no cálculo da
+// streak; nenhum filtro extra é necessário.
 
 /**
  * Tenta consumir Frozen Streak para cobrir dias perdidos (1 ou mais consecutivos, até o
@@ -266,11 +235,7 @@ export function evaluateAchievementsFromHistories(
   const totalWorkouts = summary.length;
   const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
   const totalMinutes = user.gamificacao.total_minutos;
-  const streakHistories = historiesEligibleForStreak(summary, user.perfil_treino?.dias_semana);
-  const streak = computeStreakFromHistories(
-    streakHistories,
-    user.gamificacao.streak_congelamentos ?? [],
-  );
+  const streak = computeStreakFromHistories(summary, user.gamificacao.streak_congelamentos ?? []);
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
 
   const weeklyHistories = summary.filter((h) => new Date(h.concluido_em) >= since);
@@ -404,18 +369,29 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
   )) as HistorySummary[];
 
   const totalSeconds = histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
-  const streakHistories = historiesEligibleForStreak(histories, user.perfil_treino?.dias_semana);
 
-  const frozenDays = applyStreakFreezeProtection(user, streakHistories);
+  const frozenDays = applyStreakFreezeProtection(user, histories);
 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
-  const streakAfterFreeze = computeStreakFromHistories(streakHistories, frozenDates);
+  const streakAfterFreeze = computeStreakFromHistories(histories, frozenDates);
 
   const previousStreak = user.gamificacao.streak_atual;
   user.gamificacao.total_minutos = Math.floor(totalSeconds / 60);
   user.gamificacao.streak_atual = streakAfterFreeze.atual;
   user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streakAfterFreeze.maior);
+  const conquistasAntes = new Set(user.gamificacao.conquistas);
   user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
+  // Ordem de desbloqueio (mais recente por último) — só pra saber "quais são
+  // as últimas 3" no preview do Início; `evaluateAchievementsFromHistories`
+  // é cumulativo (nunca remove), então o que é novo aqui é o que acabou de
+  // desbloquear nesta sincronização.
+  const novasConquistas = user.gamificacao.conquistas.filter((id) => !conquistasAntes.has(id));
+  if (novasConquistas.length > 0) {
+    const ordemAnterior = (user.gamificacao.conquistas_ordem ?? []).filter(
+      (id) => !novasConquistas.includes(id),
+    );
+    user.gamificacao.conquistas_ordem = [...ordemAnterior, ...novasConquistas];
+  }
 
   const newRecoveryOffer = updateStreakRecoveryState(
     user,
@@ -492,6 +468,9 @@ async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise
   ]);
 }
 
+/** "Treinou hoje" = treino de verdade, não Atividades — uma sozinha nunca
+    marca a Missão Diária como concluída (ela sustenta a streak, mas não
+    "completa" o card de treino; só um treino de verdade faz isso). */
 export function hasTrainedToday(userId: string): Promise<boolean> {
   const todayStart = startOfDaySaoPaulo();
   const tomorrow = endOfDaySaoPaulo();
@@ -499,5 +478,6 @@ export function hasTrainedToday(userId: string): Promise<boolean> {
   return WorkoutHistory.exists({
     usuario_id: userId,
     concluido_em: { $gte: todayStart.toISOString(), $lt: tomorrow.toISOString() },
+    somenteTreino: true,
   });
 }
