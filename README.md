@@ -152,7 +152,7 @@ Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
 | Cosmético lendário | 0,04% / 0,08% boss | ~0,0016% | ~0,0024% | ~0,008% |
 | Título secreto | 0,01% | ~0,0004% | ~0,0006% | ~0,001% |
 
-Offline: ~**8 kills/min** de exploração. Boss a cada **99** inimigos com loot bônus.
+Offline: ~**4 kills/min** de exploração (combate + tempo de busca do próximo alvo). Boss a cada **99** inimigos com loot bônus.
 
 **Inimigos especiais:**
 

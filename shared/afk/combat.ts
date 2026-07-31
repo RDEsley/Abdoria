@@ -96,7 +96,22 @@ export function formatPatrolCritChancePercent(chance: number): string {
   const value = Math.round(chance * 10) / 10;
   return Number.isInteger(value) ? `${value}%` : `${value.toFixed(1).replace(/\.0$/, '')}%`;
 }
-export const AFK_KILLS_PER_MINUTE = 8;
+/** Janela de busca do próximo alvo (Lupa) entre abates, ao vivo em
+    AfkCombatScene.tsx — centralizada aqui pra não desalinhar do ritmo
+    offline abaixo (que precisa contar esse tempo também, senão o AFK
+    rendia mais kills/min do que dá pra ver com a tela aberta). */
+export const AFK_SEARCH_DURATION_MIN_MS = 5000;
+export const AFK_SEARCH_DURATION_MAX_MS = 10000;
+
+/** Segundos médios de combate por abate (golpes até matar, sem contar a
+    busca do próximo alvo) — valor histórico calibrado antes da fase de
+    busca existir. */
+const AFK_FIGHT_SECONDS_PER_KILL = 7.5;
+const AFK_SEARCH_SECONDS_AVG =
+  (AFK_SEARCH_DURATION_MIN_MS + AFK_SEARCH_DURATION_MAX_MS) / 2 / 1000;
+/** Ritmo do AFK offline — combate + busca, pra bater com o que o jogador
+    veria se estivesse com a tela aberta o tempo todo. */
+export const AFK_KILLS_PER_MINUTE = 60 / (AFK_FIGHT_SECONDS_PER_KILL + AFK_SEARCH_SECONDS_AVG);
 export const AFK_BOSS_INTERVAL = 100;
 export const AFK_ELITE_CHANCE = 12;
 export const AFK_GOLDEN_SLIME_CHANCE = 5000;
