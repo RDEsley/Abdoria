@@ -29,6 +29,7 @@ import {
   markCycleCompleted,
 } from '../services/recommendation.js';
 import { isPlanoUser, markPlanoDayCompleted } from '../services/plan-generator.js';
+import { STREAK_RECORD_MATCH_COST } from '../../../shared/streak/recovery.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
@@ -231,11 +232,16 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     const sorted = [...trained].sort((a, b) => b[1] - a[1]);
 
     const achievementPct = await getAchievementUnlockPercentages();
-    const conquistas = ACHIEVEMENTS.map((a) => ({
-      ...a,
-      desbloqueada: user.gamificacao.conquistas.includes(a.id),
-      pct_jogadores: achievementPct[a.id] ?? 0,
-    }));
+    const conquistasOrdem = user.gamificacao.conquistas_ordem ?? [];
+    const conquistas = ACHIEVEMENTS.map((a) => {
+      const ordem = conquistasOrdem.indexOf(a.id);
+      return {
+        ...a,
+        desbloqueada: user.gamificacao.conquistas.includes(a.id),
+        pct_jogadores: achievementPct[a.id] ?? 0,
+        ...(ordem >= 0 ? { desbloqueada_ordem: ordem } : {}),
+      };
+    });
 
     const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
     const pending = normalizePending(user.afk?.pending);
@@ -334,6 +340,45 @@ workoutsRouter.post('/streak/recover', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/workouts/streak/recover error:', error);
     res.status(500).json({ error: 'Erro ao recuperar a sequência.' });
+  }
+});
+
+/** Paga `STREAK_RECORD_MATCH_COST` Coins pra puxar a sequência atual direto
+    pro recorde pessoal (tile de Streak na Evolução do perfil). */
+workoutsRouter.post('/streak/match-record', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const { streak_atual, streak_maior } = user.gamificacao;
+    if (streak_atual >= streak_maior) {
+      res.status(400).json({ error: 'Sua sequência já está no recorde.' });
+      return;
+    }
+
+    const saldo = readMoedaBalance(user);
+    if (saldo < STREAK_RECORD_MATCH_COST) {
+      res.status(400).json({
+        error: `Coins insuficientes. Faltam ${STREAK_RECORD_MATCH_COST - saldo} Coins.`,
+      });
+      return;
+    }
+
+    user.cosmeticos.moedas = saldo - STREAK_RECORD_MATCH_COST;
+    user.gamificacao.streak_atual = streak_maior;
+
+    await user.save();
+
+    res.json({
+      user: sanitizeUser(user),
+      streak_atual: user.gamificacao.streak_atual,
+    });
+  } catch (error) {
+    console.error('POST /api/workouts/streak/match-record error:', error);
+    res.status(500).json({ error: 'Erro ao igualar a sequência ao recorde.' });
   }
 });
 
@@ -539,9 +584,9 @@ function sanitizeMetricas(
  *   `ATIVIDADES_MIN_DESCANSO` atividades no dia — da 4ª em diante vira
  *   `ATIVIDADE_COINS_EXTRA` Coins em vez de XP. Ainda sujeito ao teto diário
  *   geral de XP (`awardDailyXp` corta se o orçamento do dia já estourou).
- * - Streak: só em dia de DESCANSO, sustentada a partir da 3ª atividade
- *   (regra em `historiesEligibleForStreak`, em services/gamification.ts).
- *   Dia de TREINO: streak vem só do treino, atividade não mexe nela.
+ * - Streak: uma única atividade concluída já sustenta a sequência, em
+ *   qualquer dia (treino ou descanso) — mas nunca marca a Missão de treino
+ *   do dia como concluída (`hasTrainedToday` exige treino de verdade).
  */
 workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
   try {

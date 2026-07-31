@@ -13,6 +13,24 @@
   box-shadow: var(--shadow-resting);
 }
 
+.game-stat--clickable {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.game-stat--clickable:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0 rgba(28, 25, 23, 0.3);
+}
+
+.game-stat--clickable:active {
+  transform: scale(0.98);
+}
+
 .game-stat__head {
   display: flex;
   align-items: center;

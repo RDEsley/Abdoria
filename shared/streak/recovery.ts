@@ -16,6 +16,14 @@
 export const STREAK_RECOVERY_COST_PER_DAY = 500;
 export const STREAK_RECOVERY_UNLOCK_LOSSES = 3;
 
+/**
+ * "Igualar ao recorde" — clicar no tile de Streak (recorde) na Evolução do
+ * perfil paga um valor fixo pra puxar `streak_atual` até `streak_maior` na
+ * hora, sem precisar reconstruir a sequência dia a dia. Só disponível
+ * quando o streak atual está abaixo do recorde (senão não há o que igualar).
+ */
+export const STREAK_RECORD_MATCH_COST = 10000;
+
 export interface StreakRecoveryOffer {
   /** Dias de streak perdidos — também define o custo (dias × custo por dia). */
   dias_perdidos: number;

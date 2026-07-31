@@ -22,6 +22,11 @@ export function recoverStreak(): Promise<{ user: IUserDocument; streak_atual: nu
   return fetchJson('/workouts/streak/recover', { method: 'POST' });
 }
 
+/** Paga STREAK_RECORD_MATCH_COST Coins pra puxar a sequência atual pro recorde pessoal. */
+export function matchStreakRecord(): Promise<{ user: IUserDocument; streak_atual: number }> {
+  return fetchJson('/workouts/streak/match-record', { method: 'POST' });
+}
+
 export function getDashboardRecommendations(): Promise<
   Pick<DashboardStats, 'treino_sugerido' | 'alertas_recomendacao' | 'proximo_treino'>
 > {
