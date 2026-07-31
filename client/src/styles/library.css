@@ -1,6 +1,15 @@
-/* Botão "Desbloquear tudo" — ação em lote, merece se destacar dos outros */
+/* Linha do contador + botão de desbloqueio em lote — quebra pra 2 linhas em
+   telas bem estreitas em vez de estourar a largura da tela (bug real: o
+   botão "Desbloquear tudo" não cabia ao lado do contador em telas
+   pequenas). */
+.library-results-row {
+  flex-wrap: wrap;
+}
+
+/* Botão "Desbloquear" — ação em lote, merece se destacar dos outros */
 .library-unlock-all-btn {
   display: inline-flex !important;
+  flex-shrink: 0;
   align-items: center;
   gap: 0.4rem;
   background: linear-gradient(135deg, #a855f7, #6366f1) !important;
@@ -157,6 +166,14 @@
   background: #bbf7d0;
   border-color: #34d399;
   box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.28);
+}
+
+/* Indicador do dia atual — tracejado (outline, não border, pra não brigar
+   com o verde de "dia ativo" quando os dois coincidem), mesma linguagem
+   visual do dia de hoje em "Sua Semana". */
+.workout-calendar__cell--today {
+  outline: 2px dashed #059669;
+  outline-offset: 1px;
 }
 
 /* O ícone entra NO LUGAR do número do dia (não num selo por cima) — sem

@@ -254,7 +254,7 @@ export function LibraryPage() {
 
       <EquipmentPanel onEquipmentChange={refreshRecommendations} />
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="library-results-row flex items-center justify-between gap-2">
         {exercisesLoading ? (
           <p className="library-results-count text-xs font-bold text-stone-500">
             Carregando itens...
@@ -278,7 +278,7 @@ export function LibraryPage() {
             <span className="library-unlock-all-btn__icon" aria-hidden>
               <Sparkles size={13} />
             </span>
-            Desbloquear tudo
+            Desbloquear
             <span className="library-unlock-all-btn__count">{lockedInView.length}</span>
           </GameButton>
         )}
