@@ -79,6 +79,33 @@
 .game-cycle-card__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+/* X pra tirar o treino recomendado da fila — mesmo botão de "não recomendar"
+   que já existe embaixo do card, só que num lugar bem mais óbvio de achar. */
+.game-cycle-card__remove {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #a8a29e;
+  background: #fff;
+  border: 1.5px solid rgba(28, 25, 23, 0.14);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.game-cycle-card__remove:hover {
+  color: #dc2626;
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 
 .game-cycle-card__badge {

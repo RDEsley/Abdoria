@@ -1,11 +1,12 @@
 import { Fragment } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Play, Swords } from 'lucide-react';
+import { Check, Play, Swords, X } from 'lucide-react';
 import { MuscleTagGroup } from '@/components/builder/MuscleTag';
 import { getPresetPrimaryMuscles } from '@/components/builder/builder-muscles';
 import { presetSummary } from '@/components/builder/queue-utils';
 import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
 import { GameButton } from '@/components/ui/GameButton';
+import { showGameToast, WORKOUT_BLOCK_OFF, WORKOUT_BLOCK_ON } from '@/components/ui/GameToast';
 import type {
   IExerciseDocument,
   IWorkoutPresetDocument,
@@ -183,6 +184,21 @@ export function TrainPresetSection({
                 <span className="game-cycle-card__badge">
                   <Swords size={11} aria-hidden /> Ciclo {selectedPreset.ciclo_id}
                 </span>
+                <button
+                  type="button"
+                  className="game-cycle-card__remove"
+                  aria-label="Remover este treino das recomendações"
+                  title="Remover das recomendações"
+                  onClick={() => {
+                    const next = !blockedWorkoutIds.includes(selectedPreset.id);
+                    showGameToast(next ? WORKOUT_BLOCK_ON : WORKOUT_BLOCK_OFF, {
+                      variant: 'info',
+                    });
+                    onToggleWorkoutBlock(selectedPreset.id);
+                  }}
+                >
+                  <X size={14} aria-hidden />
+                </button>
               </div>
               <p className="game-cycle-card__title">
                 {selectedPreset.nome.split('—')[1]?.trim() ?? selectedPreset.nome}

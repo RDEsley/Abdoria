@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { IExerciseDocument } from '@/types';
-import { formatExerciseName } from '@/types';
+import type { IExerciseDocument, MusculoPrincipal } from '@/types';
+import { formatExerciseName, MUSCULO_TAG_LABELS } from '@/types';
 import { GameButton } from '@/components/ui/GameButton';
 import { MuscleTag } from '@/components/builder/MuscleTag';
 
@@ -13,16 +13,24 @@ interface Props {
 
 export function ExercisePicker({ exercises, loading, onAdd }: Props) {
   const [query, setQuery] = useState('');
+  const [muscleFilter, setMuscleFilter] = useState<MusculoPrincipal | null>(null);
   const [selectedSlug, setSelectedSlug] = useState('');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return exercises;
     return exercises.filter((ex) => {
+      if (
+        muscleFilter &&
+        ex.musculo_principal !== muscleFilter &&
+        !ex.musculos_secundarios?.includes(muscleFilter)
+      ) {
+        return false;
+      }
+      if (!q) return true;
       const name = formatExerciseName(ex).toLowerCase();
       return name.includes(q) || ex.slug.includes(q);
     });
-  }, [exercises, query]);
+  }, [exercises, muscleFilter, query]);
 
   const handleAdd = () => {
     if (!selectedSlug) return;
@@ -47,6 +55,30 @@ export function ExercisePicker({ exercises, loading, onAdd }: Props) {
           className="w-full rounded-xl border border-stone-300 bg-white py-2.5 pl-9 pr-3 text-sm font-medium text-stone-800 placeholder:text-stone-400"
           aria-label="Buscar exercício"
         />
+      </div>
+
+      <div
+        className="flex gap-1.5 overflow-x-auto pb-0.5"
+        role="group"
+        aria-label="Filtrar por músculo"
+      >
+        <button
+          type="button"
+          className={`game-tab game-tab--scroll${!muscleFilter ? ' game-tab--active' : ''}`}
+          onClick={() => setMuscleFilter(null)}
+        >
+          Todos
+        </button>
+        {(Object.keys(MUSCULO_TAG_LABELS) as MusculoPrincipal[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            className={`game-tab game-tab--scroll${muscleFilter === m ? ' game-tab--active' : ''}`}
+            onClick={() => setMuscleFilter(muscleFilter === m ? null : m)}
+          >
+            {MUSCULO_TAG_LABELS[m]}
+          </button>
+        ))}
       </div>
 
       <div className="max-h-52 overflow-y-auto rounded-xl border border-stone-200 bg-white">
