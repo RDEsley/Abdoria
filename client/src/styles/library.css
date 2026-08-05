@@ -173,7 +173,7 @@
    visual do dia de hoje em "Sua Semana". */
 .workout-calendar__cell--today {
   outline: 2px dashed #059669;
-  outline-offset: 1px;
+  outline-offset: -3px;
 }
 
 /* O ícone entra NO LUGAR do número do dia (não num selo por cima) — sem
