@@ -50,8 +50,10 @@ export function AfkSearchOverlay({ spot, durationMs }: Props) {
     <div className="game-afk-search" role="status" aria-live="polite">
       <div className={`game-afk-search__lupa game-afk-search__lupa--spot-${spot}`}>
         <span className="game-afk-search__lupa-glow" aria-hidden />
-        <span className="game-afk-search__lupa-ring" aria-hidden />
         {lupaData ? <LottieView data={lupaData} loop /> : null}
+        <span className="game-afk-search__countdown tabular-nums" aria-hidden>
+          {remainingSec}s
+        </span>
       </div>
       <p className="game-afk-search__text">
         {SEARCH_TEXT.split('').map((char, i) => (
@@ -61,9 +63,6 @@ export function AfkSearchOverlay({ spot, durationMs }: Props) {
         ))}
         <span className="sr-only">{SEARCH_TEXT}</span>
       </p>
-      <span className="game-afk-search__countdown tabular-nums" aria-hidden>
-        {remainingSec}s
-      </span>
     </div>
   );
 }
