@@ -168,12 +168,36 @@
   box-shadow: 1.5px 1.5px 0 rgba(4, 120, 87, 0.28);
 }
 
-/* Indicador do dia atual — tracejado (outline, não border, pra não brigar
-   com o verde de "dia ativo" quando os dois coincidem), mesma linguagem
-   visual do dia de hoje em "Sua Semana". */
-.workout-calendar__cell--today {
-  outline: 2px dashed #059669;
-  outline-offset: -3px;
+/* Indicador do dia atual — anel sólido (não tracejado) num ::after
+   separado do border/background da célula, igual Google Calendar/Strava:
+   não compete com o verde de "dia ativo" nem o azul de "congelado" (mesma
+   especificidade de classe, então uma dessas cores sempre vencia e apagava
+   a outra) porque é uma camada própria por cima, não uma mudança de cor da
+   célula em si. Pulsa bem sutil pra chamar o olho sem virar distração. */
+.workout-calendar__cell--today::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid #2563eb;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: workout-calendar-today-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes workout-calendar-today-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workout-calendar__cell--today::after {
+    animation: none;
+  }
 }
 
 /* O ícone entra NO LUGAR do número do dia (não num selo por cima) — sem
