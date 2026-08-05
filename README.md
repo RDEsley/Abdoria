@@ -179,8 +179,6 @@ O usuário também pode enviar seu herói para exploração, concluir atividades
 
 <div align="center">
 
-<!-- Substitua pelos screenshots oficiais do projeto -->
-
 <img src="./docs/assets/preview-home.png" width="48%" alt="Tela inicial do Abdoria" />
 <img src="./docs/assets/preview-training.png" width="48%" alt="Tela de treino do Abdoria" />
 
