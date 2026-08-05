@@ -1660,6 +1660,97 @@
   border-color: #10b981;
 }
 
+/* Cobre o form enquanto a conclusão está em voo — a espera do servidor não
+   dá pra cortar, então em vez de travar a tela com "Salvando...", mantém o
+   olho ocupado até a resposta chegar. */
+.atividade-saving-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(2px);
+  border-radius: inherit;
+  text-align: center;
+}
+
+.atividade-saving-overlay__stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.atividade-saving-overlay__particula {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #10b981;
+}
+
+.atividade-saving-overlay__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  color: #059669;
+  background: #d1fae5;
+  border: 2px solid #6ee7b7;
+  border-radius: 1.1rem;
+}
+
+.atividade-saving-overlay__nome {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 16rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #292524;
+}
+
+.atividade-saving-overlay__letra {
+  display: inline-block;
+  white-space: pre;
+}
+
+.atividade-saving-overlay__msg {
+  min-height: 1.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #78716c;
+}
+
+.atividade-saving-overlay__bar {
+  position: relative;
+  width: 8rem;
+  height: 0.28rem;
+  margin-top: 0.4rem;
+  overflow: hidden;
+  background: #e7e5e4;
+  border-radius: 999px;
+}
+
+.atividade-saving-overlay__bar-fill {
+  position: absolute;
+  inset: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  border-radius: 999px;
+}
+
 .atividade-complete-hint {
   margin-top: 0.75rem;
   text-align: center;

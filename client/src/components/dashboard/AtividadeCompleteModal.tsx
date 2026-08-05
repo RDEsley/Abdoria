@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { MessageSquareText, Sparkles, Zap } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
+import { AtividadeSavingOverlay } from './AtividadeSavingOverlay';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_OBS_MAX,
@@ -108,6 +109,10 @@ export function AtividadeCompleteModal({
       labelledBy="atividade-complete-title"
       panelClassName="atividade-complete-modal"
     >
+      <AnimatePresence>
+        {busy && <AtividadeSavingOverlay nome={atividade.nome} Icon={Icon} />}
+      </AnimatePresence>
+
       <div className="text-center">
         {passo != null && totalPassos != null && totalPassos > 1 && (
           <p className="mb-2 text-[0.68rem] font-extrabold tracking-wide text-emerald-600 uppercase">
