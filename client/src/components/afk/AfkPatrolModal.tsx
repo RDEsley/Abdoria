@@ -293,10 +293,25 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     return () => window.clearInterval(timer);
   }, [open, meta?.capped, sceneMode]);
 
+  const handleTutorialClose = useCallback(() => {
+    window.localStorage.setItem(EXPLORATION_TUTORIAL_KEY, '1');
+    setShowTutorial(false);
+  }, []);
+
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      // Precisa vir antes do onClose geral: o tutorial cobre a tela por
+      // cima (z-index), mas isso não bloqueia esse listener de teclado — sem
+      // essa checagem, Esc fechava a Exploração inteira por baixo do
+      // tutorial sem passar por handleTutorialClose, que é o único lugar que
+      // grava "já visto" no localStorage. Resultado: o tutorial nunca era
+      // marcado como visto e voltava a aparecer na próxima entrada.
+      if (showTutorial) {
+        handleTutorialClose();
+        return;
+      }
       if (shopOpen) {
         setShopOpen(false);
         return;
@@ -309,12 +324,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, shopOpen, inventoryOpen]);
-
-  const handleTutorialClose = useCallback(() => {
-    window.localStorage.setItem(EXPLORATION_TUTORIAL_KEY, '1');
-    setShowTutorial(false);
-  }, []);
+  }, [open, onClose, shopOpen, inventoryOpen, showTutorial, handleTutorialClose]);
 
   const handleCelebrationClose = useCallback(() => {
     setCelebrationClaimed((claimed) => {
