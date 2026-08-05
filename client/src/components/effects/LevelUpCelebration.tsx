@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Crown } from 'lucide-react';
 import { playLevelUp } from '@/lib/sounds';
 
 interface Props {
@@ -29,55 +28,60 @@ export function LevelUpCelebration({ level, compact = false }: Props) {
       className={`level-up-celebration${compact ? ' level-up-celebration--compact' : ''}`}
       aria-live="polite"
     >
-      <motion.div
-        className="level-up-celebration__rays"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-        aria-hidden
-      />
-
-      <motion.div
-        className="level-up-celebration__ring"
-        initial={{ scale: 0.4, opacity: 0 }}
-        animate={{ scale: [0.4, 1.35, 1], opacity: [0, 0.9, 0.35] }}
-        transition={{ duration: 0.7, times: [0, 0.45, 1], ease: 'easeOut' }}
-        aria-hidden
-      />
-
-      <motion.div
-        className="level-up-celebration__badge"
-        initial={{ scale: 0.2, rotate: -12, opacity: 0 }}
-        animate={{ scale: 1, rotate: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 14, delay: 0.12 }}
-      >
-        <Crown size={compact ? 16 : 22} className="level-up-celebration__icon" aria-hidden />
-        <motion.span
-          className="level-up-celebration__level"
-          key={level}
-          initial={{ scale: 0.5, y: 8 }}
-          animate={{ scale: [0.5, 1.25, 1], y: 0 }}
-          transition={{ duration: 0.55, times: [0, 0.55, 1], delay: 0.28 }}
-        >
-          {level}
-        </motion.span>
-        <span className="level-up-celebration__shine" aria-hidden />
-      </motion.div>
-
-      {SPARKS.map((spark) => (
-        <motion.span
-          key={spark.id}
-          className="level-up-celebration__spark"
-          style={{ rotate: `${spark.angle}deg` }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [0, 1, 0.2],
-            y: [0, -spark.distance],
-          }}
-          transition={{ duration: 0.75, delay: spark.delay, ease: 'easeOut' }}
+      {/* Palco de tamanho fixo — rays/ring/sparks centralizam nele via
+          inset + margin auto, não por transform (esse fica livre pra
+          rotação/escala do framer-motion, sem os dois brigarem pela mesma
+          propriedade CSS e o efeito saindo do lugar). */}
+      <div className="level-up-celebration__stage">
+        <motion.div
+          className="level-up-celebration__rays"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
           aria-hidden
         />
-      ))}
+
+        <motion.div
+          className="level-up-celebration__ring"
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: [0.4, 1.35, 1], opacity: [0, 0.9, 0.35] }}
+          transition={{ duration: 0.7, times: [0, 0.45, 1], ease: 'easeOut' }}
+          aria-hidden
+        />
+
+        <motion.div
+          className="level-up-celebration__badge"
+          initial={{ scale: 0.2, rotate: -12, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 14, delay: 0.12 }}
+        >
+          <motion.span
+            className="level-up-celebration__level"
+            key={level}
+            initial={{ scale: 0.5, y: 8 }}
+            animate={{ scale: [0.5, 1.25, 1], y: 0 }}
+            transition={{ duration: 0.55, times: [0, 0.55, 1], delay: 0.28 }}
+          >
+            {level}
+          </motion.span>
+          <span className="level-up-celebration__shine" aria-hidden />
+        </motion.div>
+
+        {SPARKS.map((spark) => (
+          <motion.span
+            key={spark.id}
+            className="level-up-celebration__spark"
+            style={{ rotate: `${spark.angle}deg` }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0, 1, 0.2],
+              y: [0, -spark.distance],
+            }}
+            transition={{ duration: 0.75, delay: spark.delay, ease: 'easeOut' }}
+            aria-hidden
+          />
+        ))}
+      </div>
 
       <motion.p
         className="level-up-celebration__label"

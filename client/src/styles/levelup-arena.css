@@ -14,10 +14,28 @@
   margin: 0.75rem 0 0;
 }
 
-.level-up-celebration__rays {
-  position: absolute;
+/* Palco de tamanho fixo — todo efeito (rays/ring/sparks) centraliza aqui
+   dentro via inset + margin: auto, nunca por transform: essa propriedade
+   fica livre pro framer-motion animar rotação/escala sem os dois brigarem
+   e o efeito saindo do centro (era esse o bug: os efeitos ficavam soltos,
+   fora de trás do número). */
+.level-up-celebration__stage {
+  position: relative;
   width: 9rem;
   height: 9rem;
+}
+
+.level-up-celebration--compact .level-up-celebration__stage {
+  width: 6.5rem;
+  height: 6.5rem;
+}
+
+.level-up-celebration__rays {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  height: 100%;
   background: repeating-conic-gradient(
     from 0deg,
     rgba(251, 191, 36, 0.28) 0deg 6deg,
@@ -27,35 +45,29 @@
   pointer-events: none;
 }
 
-.level-up-celebration--compact .level-up-celebration__rays {
-  width: 6.5rem;
-  height: 6.5rem;
-}
-
 .level-up-celebration__ring {
   position: absolute;
-  width: 6.5rem;
-  height: 6.5rem;
+  inset: 0;
+  margin: auto;
+  width: 72%;
+  height: 72%;
   border-radius: 999px;
   border: 3px solid #fbbf24;
   box-shadow: 0 0 24px rgba(251, 191, 36, 0.55);
 }
 
-.level-up-celebration--compact .level-up-celebration__ring {
-  width: 4.5rem;
-  height: 4.5rem;
-}
-
 .level-up-celebration__badge {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
+  margin: auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
+  width: 50%;
+  height: 50%;
   min-width: 4.5rem;
   min-height: 4.5rem;
-  padding: 0.5rem 0.85rem;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   border-radius: 999px;
   border: 3px solid #78350f;
@@ -68,12 +80,6 @@
 .level-up-celebration--compact .level-up-celebration__badge {
   min-width: 3.25rem;
   min-height: 3.25rem;
-  padding: 0.35rem 0.55rem;
-}
-
-.level-up-celebration__icon {
-  color: #78350f;
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.45));
 }
 
 .level-up-celebration__shine {
@@ -89,14 +95,14 @@
 
 .level-up-celebration__level {
   font-family: 'Press Start 2P', monospace;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   line-height: 1;
   color: #78350f;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .level-up-celebration--compact .level-up-celebration__level {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .level-up-celebration__spark {
