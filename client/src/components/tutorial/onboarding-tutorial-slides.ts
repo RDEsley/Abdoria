@@ -18,7 +18,7 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: ListChecks,
     title: 'Dia de descanso tem Atividade',
-    body: 'Sem treino hoje? Escolha Atividades como leitura, corrida ou meditação na Home — elas mantêm sua sequência sem pular o descanso.',
+    body: 'Sem treino hoje? Uma Atividade só, como leitura ou meditação, já mantém sua sequência — escolha na Home.',
   },
   {
     icon: CalendarDays,

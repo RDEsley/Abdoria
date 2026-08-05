@@ -118,7 +118,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 |----------|-------------|
 | Não ganhei XP diário | Treino tinha menos de 3 exercícios? |
 | XP parou em 100 | Limite diário de exercícios — o resto vai para XP extra se for bônus |
-| Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta |
+| Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta. Em dia de descanso, concluir uma Atividade (Início → Atividades) também mantém a sequência |
 | Item da loja bloqueado | Veja o requisito (nível, conquista ou Coins) |
 | Dados não salvaram | Confira conexão; treinos e progresso ficam na **conta logada** |
 
