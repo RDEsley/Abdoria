@@ -122,14 +122,14 @@ export function DashboardPage() {
           {stats.treino_hoje
             ? 'Treino de hoje concluído.'
             : diaDescanso
-              ? 'Hoje é dia de recuperar — um alongamento ou outra Atividade leve mantém sua sequência.'
+              ? 'Uma Atividade leve — um alongamento, por exemplo — já mantém sua sequência hoje.'
               : stats.proximo_treino}
         </p>
         {diaDescanso && (
           <p className="mt-2 text-[0.68rem] font-semibold text-stone-500">
             {filaHojeCount > 0
-              ? `Você já tem ${filaHojeCount} atividade${filaHojeCount === 1 ? '' : 's'} na fila de hoje — elas mantêm sua sequência sem pesar no seu descanso.`
-              : 'Hoje o ideal é descansar de verdade: escolha uma Atividade logo abaixo — alongamento é uma ótima pedida — ela mantém sua sequência sem conflitar com o descanso que seu corpo precisa.'}
+              ? `Você já tem ${filaHojeCount} atividade${filaHojeCount === 1 ? '' : 's'} na fila de hoje.`
+              : 'Escolha uma Atividade abaixo pra manter sua sequência sem abrir mão do descanso — alongamento é uma ótima pedida.'}
           </p>
         )}
         {!stats.treino_hoje && !diaDescanso && sugerido && (

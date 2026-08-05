@@ -752,8 +752,8 @@ export function OnboardingPage() {
                     >
                       <Flame size={15} />
                     </span>
-                    Nos dias de descanso, Atividades como alongamento, leitura, corrida ou
-                    meditação mantêm sua sequência.
+                    Sem treino hoje? Uma Atividade como alongamento ou leitura já mantém sua
+                    sequência.
                   </li>
                 </motion.ul>
               </div>
