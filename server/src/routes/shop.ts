@@ -124,6 +124,11 @@ shopRouter.post('/redeem-code', async (req: AuthRequest, res) => {
       titulo: result.titulo,
       mensagem: result.mensagem,
       recompensas: result.recompensas,
+      // `redeemGiftCode` calcula isso comparando o nível antes/depois; sem
+      // repassar aqui, o cliente nunca recebia e a celebração de level up
+      // não acontecia ao resgatar um código (inclusive o `levelup`, cujo
+      // propósito é justamente subir de nível).
+      level_up: result.level_up ?? null,
     });
   } catch (error) {
     console.error('POST /api/shop/redeem-code error:', error);

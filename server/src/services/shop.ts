@@ -505,7 +505,10 @@ export async function redeemGiftCode(userId: string, rawCode: string) {
 
   const levelBefore = xpLevelFromTotal(user.gamificacao.nivel_xp);
   const result = await redeemGiftCodeForUser(user, code);
-  if ('error' in result) return result;
+  // Reconstrói o erro num objeto próprio em vez de repassar `result` cru:
+  // devolvido cru, a união de retorno passava a incluir as formas de sucesso
+  // sem `level_up`, e quem consome perdia o campo na tipagem.
+  if ('error' in result) return { error: result.error, status: result.status };
 
   const levelAfter = xpLevelFromTotal(user.gamificacao.nivel_xp);
   const level_up =
