@@ -1898,6 +1898,16 @@
    modo diferente (não é só uma cor a mais no verde de Atividades). Borda +
    sombra "de bloco" (mesma linguagem de .atividade-action-btn) pra ficar
    claro que é clicável, não só um ícone decorativo. */
+/* Wrapper só de posicionamento — o botão em si mantém `overflow: hidden`
+   (precisa pro brilho não vazar dos cantos arredondados), então o badge de
+   notificação (que fica de propósito pra fora do canto) mora aqui fora,
+   senão o próprio botão corta a bolinha ao meio. */
+.atividades-mode-toggle-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
 .atividades-mode-toggle {
   position: relative;
   display: inline-flex;

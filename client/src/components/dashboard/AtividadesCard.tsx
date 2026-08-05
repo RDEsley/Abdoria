@@ -385,25 +385,27 @@ export function AtividadesCard() {
     <section ref={sectionRef} className="glass-card p-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="game-section-title !mb-0 flex items-center gap-2 leading-none">
-          <button
-            type="button"
-            className={`atividades-mode-toggle${modo === 'notas' ? ' atividades-mode-toggle--notas' : ''}`}
-            aria-pressed={modo === 'notas'}
-            aria-label={modo === 'notas' ? 'Ver Atividades' : 'Ver Lembretes'}
-            title={modo === 'notas' ? 'Ver Atividades' : 'Ver Lembretes'}
-            onClick={alternarModo}
-          >
-            {modo === 'notas' ? (
-              <ListTodo size={15} aria-hidden />
-            ) : (
-              <NotebookPen size={15} aria-hidden />
-            )}
+          <span className="atividades-mode-toggle-wrap">
+            <button
+              type="button"
+              className={`atividades-mode-toggle${modo === 'notas' ? ' atividades-mode-toggle--notas' : ''}`}
+              aria-pressed={modo === 'notas'}
+              aria-label={modo === 'notas' ? 'Ver Atividades' : 'Ver Lembretes'}
+              title={modo === 'notas' ? 'Ver Atividades' : 'Ver Lembretes'}
+              onClick={alternarModo}
+            >
+              {modo === 'notas' ? (
+                <ListTodo size={15} aria-hidden />
+              ) : (
+                <NotebookPen size={15} aria-hidden />
+              )}
+            </button>
             {modo === 'atividades' && notasPendentes > 0 && (
               <span className="atividades-mode-toggle__badge" aria-hidden>
                 {notasPendentes > 9 ? '9+' : notasPendentes}
               </span>
             )}
-          </button>
+          </span>
           {modo === 'notas' ? 'Lembretes' : 'Atividades'}
         </h3>
         {modo === 'atividades' && (
