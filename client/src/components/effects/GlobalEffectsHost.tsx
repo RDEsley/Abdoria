@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { XpOrbLayer } from '@/components/effects/XpOrbLayer';
 import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
+import { CursorEffects } from '@/components/effects/CursorEffects';
 import { CosmeticUnlockCelebration } from '@/components/cosmetics/CosmeticUnlockCelebration';
 import { GameToastHost } from '@/components/ui/GameToast';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
@@ -48,6 +49,7 @@ export function GlobalEffectsHost() {
         )}
       </AnimatePresence>
 
+      <CursorEffects />
       <XpOrbLayer />
       <CosmeticUnlockCelebration />
       <GameToastHost />

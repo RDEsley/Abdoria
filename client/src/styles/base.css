@@ -59,6 +59,37 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* Rastro do cursor + onda de clique — camada global sobre tudo, decorativa
+   só: nunca intercepta um clique de verdade. */
+.cursor-effects-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cursor-effects-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.75), rgba(16, 185, 129, 0));
+  will-change: transform;
+}
+
+.cursor-effects-ripple {
+  position: fixed;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin: -1.1rem;
+  border: 1.5px solid rgba(16, 185, 129, 0.55);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.16), transparent 70%);
+}
+
 /* Rolagem horizontal nativa — não bloqueia scroll vertical no celular */
 .game-swipe-scroll {
   overflow-x: auto;
