@@ -44,6 +44,11 @@ export function useAtividadesFlow() {
   const [busy, setBusy] = useState(false);
   const [passoFila, setPassoFila] = useState<number | null>(null);
   const [totalFluxo, setTotalFluxo] = useState(0);
+  // Concluídas nesta sessão, aplicadas na hora. A fila persistida e o
+  // histórico só refletem a conclusão depois de mais duas idas ao servidor;
+  // sem este registro local, a tela ficava parada esperando os dois — era a
+  // maior parte da lentidão percebida ao concluir uma atividade.
+  const [concluidasLocal, setConcluidasLocal] = useState<Set<string>>(new Set());
   const acumulado = useRef<{
     xp: number;
     moedas: number;
@@ -73,8 +78,14 @@ export function useAtividadesFlow() {
         nomes.add(entry.treino_nome.replace(/^Atividade:\s*/, ''));
       }
     }
+    // Junta as desta sessão que o histórico ainda não devolveu, pra marcação
+    // e contador reagirem no mesmo instante do clique.
+    for (const id of concluidasLocal) {
+      const atividade = atividades.find((a) => a.id === id);
+      if (atividade) nomes.add(atividade.nome);
+    }
     return nomes;
-  }, [history]);
+  }, [history, concluidasLocal, atividades]);
 
   // Não filtra mais por `concluidasHoje`: quem tira um id da fila pendente
   // é a própria conclusão (ver `enviarConclusao`), removendo-o da fila
@@ -85,8 +96,8 @@ export function useAtividadesFlow() {
   // não a ordem de inserção na fila — assim mover uma atividade de posição
   // no card também reorganiza a ordem no atividade-player.
   const filaPendente = useMemo(
-    () => atividades.filter((a) => fila.includes(a.id)),
-    [fila, atividades],
+    () => atividades.filter((a) => fila.includes(a.id) && !concluidasLocal.has(a.id)),
+    [fila, atividades, concluidasLocal],
   );
 
   const enviarConclusao = async (
@@ -98,35 +109,29 @@ export function useAtividadesFlow() {
       const res = await completeAtividade(atividade.id, dados);
       applyUser(res.user);
 
-      // Histórico não depende da fila — dispara já, em paralelo com a
-      // limpeza da fila abaixo, em vez de esperar aquela chamada terminar
-      // pra só então começar esta (cada RTT a menos no caminho crítico conta:
-      // era essa fila de chamadas em série que fazia "concluir" parecer lento).
-      const historyPromise = ensureHistory({ force: true });
+      // A partir daqui a conclusão JÁ VALEU no servidor (XP/streak salvos) e
+      // a resposta trouxe o usuário atualizado. Marca localmente e libera a
+      // tela na hora; limpeza da fila, refresh e histórico continuam em
+      // segundo plano. Antes, essas três chamadas ficavam no caminho crítico
+      // e o usuário esperava ~3 idas ao servidor por atividade concluída.
+      setConcluidasLocal((prev) => new Set(prev).add(atividade.id));
 
-      // Tira da fila persistida assim que conclui — sem isso ela nunca
-      // encolhia (nada mais removia o id de lá) e a tela de atividades
-      // parecia travada. Pra repetir, o usuário adiciona de volta na hora.
-      // Essa, sim, precisa terminar ANTES do refresh: o refresh único abaixo
-      // já lê a fila limpa, dispensando um segundo refresh.
+      // Tira da fila persistida — sem isso ela nunca encolhia (nada mais
+      // remove o id de lá). Pra repetir, o usuário adiciona de volta na hora.
       if (user && fila.includes(atividade.id)) {
-        try {
-          const semAtual = fila.filter((id) => id !== atividade.id);
-          const atualizado = await updateMe({
-            preferencias: { ...user.preferencias, atividades_fila: { data: hoje, ids: semAtual } },
+        const semAtual = fila.filter((id) => id !== atividade.id);
+        void updateMe({
+          preferencias: { ...user.preferencias, atividades_fila: { data: hoje, ids: semAtual } },
+        })
+          .then(() => refresh())
+          .catch(() => {
+            // Só a limpeza da fila falhou — a conclusão em si está salva, não
+            // vale travar o fluxo nem alarmar o usuário por isso.
           });
-          applyUser(atualizado);
-        } catch {
-          // A conclusão em si já valeu (XP/streak salvos) — se só a limpeza
-          // da fila falhar, não vale a pena travar o fluxo por isso.
-        }
+      } else {
+        void refresh();
       }
-
-      // `refresh()` não busca o histórico (só usuário/stats) — sem esperar
-      // por ele aqui, `concluidasHoje`/`filaPendente` ficavam presos no
-      // estado de antes da conclusão, como se nada tivesse acontecido.
-      // `historyPromise` já está em voo desde o início da função.
-      await Promise.all([refresh(), historyPromise]);
+      void ensureHistory({ force: true });
 
       acumulado.current.xp += res.xp_ganho;
       acumulado.current.moedas += res.abdoria_ganha;
@@ -161,6 +166,10 @@ export function useAtividadesFlow() {
   const fecharFluxo = (): AtividadesFluxoResumo => {
     const resumo: AtividadesFluxoResumo = { ...acumulado.current };
     setPassoFila(null);
+    // O histórico/fila do servidor já chegaram (ou chegam logo) com as
+    // conclusões; manter o registro local depois disso esconderia uma
+    // atividade re-enfileirada pra repetir no mesmo dia.
+    setConcluidasLocal(new Set());
     acumulado.current = {
       xp: 0,
       moedas: 0,

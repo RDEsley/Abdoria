@@ -1,3 +1,4 @@
+import type { AtividadeLog } from '@shared/atividades';
 import type {
   CompleteWorkoutPayload,
   CompleteWorkoutResponse,
@@ -84,6 +85,24 @@ export function completeAtividade(
     method: 'POST',
     body: JSON.stringify({
       atividade_id: atividadeId,
+      metricas: payload.metricas,
+      ...(payload.obs ? { obs: payload.obs } : {}),
+    }),
+  });
+}
+
+/**
+ * Preenche/corrige os dados de uma atividade já registrada. Serve pra quem
+ * concluiu sem informar nada na hora e quer completar depois — não recalcula
+ * XP/Coins/streak, só o conteúdo do registro.
+ */
+export function updateAtividadeHistorico(
+  historicoId: string,
+  payload: { metricas: Record<string, number | string>; obs?: string },
+): Promise<{ atividade: AtividadeLog }> {
+  return fetchJson(`/workouts/historico/${historicoId}/atividade`, {
+    method: 'PATCH',
+    body: JSON.stringify({
       metricas: payload.metricas,
       ...(payload.obs ? { obs: payload.obs } : {}),
     }),

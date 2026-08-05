@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquareText, Sparkles } from 'lucide-react';
+import { MessageSquareText, Sparkles, Zap } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
@@ -89,6 +89,8 @@ export function AtividadeCompleteModal({
     onConfirm({ metricas, obs: obs.trim() || undefined });
   };
 
+  const temDados = Object.values(valores).some((v) => v.trim()) || obs.trim().length > 0;
+
   const ganhaXp = metaHoje == null || progressoHoje == null || progressoHoje < metaHoje;
   const ganhaStreak = !diaDeTreino;
   const hint = ganhaXp
@@ -141,7 +143,7 @@ export function AtividadeCompleteModal({
       </div>
 
       <p className="atividade-complete-hint">
-        Tudo abaixo é opcional — toque em um valor sugerido ou digite o seu, e conclua quando quiser.
+        Tudo abaixo é opcional — pode concluir direto e preencher depois, editando no histórico.
       </p>
 
       <div className="mt-3 flex flex-col gap-4 text-left">
@@ -210,8 +212,23 @@ export function AtividadeCompleteModal({
         disabled={busy}
         onClick={confirmar}
       >
-        {busy ? 'Salvando...' : 'Concluir atividade'}
+        {busy ? 'Salvando...' : temDados ? 'Concluir atividade' : 'Concluir agora'}
       </GameButton>
+
+      {/* Atalho pra quem só quer registrar que fez: pula os campos e salva
+          sem métrica nenhuma. Aparece só quando há algo digitado — sem nada
+          preenchido o botão principal já faz exatamente isso. */}
+      {temDados && (
+        <button
+          type="button"
+          className="atividade-complete-skip"
+          disabled={busy}
+          onClick={() => onConfirm({ metricas: {} })}
+        >
+          <Zap size={13} aria-hidden /> Concluir sem registrar os dados
+        </button>
+      )}
+
       <button
         type="button"
         className="mt-3 block w-full cursor-pointer text-center text-xs font-bold text-stone-500 hover:text-stone-700"

@@ -6,6 +6,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
+import { AtividadeHistoricoEditor } from '@/components/dashboard/AtividadeHistoricoEditor';
 import { getWorkoutHistoryFeed, getWorkoutHistorySessionDetail } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -258,6 +259,14 @@ export function HistoricoPage() {
                 {(detail.session.xp_ganho ?? 0) > 0 && ` · +${detail.session.xp_ganho} XP`}
               </p>
             </div>
+
+            {detail.session.atividade && (
+              <AtividadeHistoricoEditor
+                key={detail.session.id}
+                historicoId={detail.session.id}
+                atividade={detail.session.atividade}
+              />
+            )}
 
             {detail.personal_records_hit.length > 0 && (
               <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3">

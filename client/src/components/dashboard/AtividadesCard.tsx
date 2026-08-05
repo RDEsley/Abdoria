@@ -248,6 +248,11 @@ export function AtividadesCard() {
 
   const noLimite = atividades.length >= ATIVIDADES_MAX;
 
+  // Conta só as que ainda existem na lista do usuário — `concluidasHoje` é
+  // indexado por nome e guarda o histórico do dia inteiro, então incluiria
+  // atividades já excluídas e o total passaria do denominador.
+  const feitasHoje = atividades.filter((a) => concluidasHoje.has(a.nome)).length;
+
   const sairDoModoEdicao = () => {
     setModoEdicao(false);
     setSelecionados(new Set());
@@ -465,6 +470,12 @@ export function AtividadesCard() {
               exit={{ rotateY: 100, opacity: 0 }}
               transition={{ duration: 0.45, ease: [0.34, 1.15, 0.64, 1] }}
             >
+      {atividades.length > 0 && (
+        <p className="atividades-resumo">
+          <strong>{feitasHoje}</strong>/{atividades.length} concluídas hoje
+        </p>
+      )}
+
       <p className="flex items-center gap-1.5 text-xs font-semibold text-stone-500">
         {diaDeTreino ? (
           <>
