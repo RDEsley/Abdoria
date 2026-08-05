@@ -1,349 +1,437 @@
 <div align="center">
 
-# Abdoria · Core Quest
+<img src="./docs/assets/abdoria-logo.png" width="220" alt="Logo do Abdoria Core Quest" />
 
-<img src="./docs/assets/abdoria-logo.png" width="220" alt="Abdoria · Core Quest" />
+# ⚔️ Abdoria · Core Quest
 
-**Seu treino de abdômen virou uma aventura.**
+### Transforme seus treinos de abdômen em uma aventura.
 
-Desenvolvi o Abdoria para treinar em casa, ganhar pontos, desbloquear conquistas, personalizar o perfil e disputar o ranking — tudo de um jeito simples e motivador.
+O **Abdoria** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução de personagem, recompensas, exploração e desafios para tornar a constância muito mais divertida.
 
-[![Demo](https://img.shields.io/badge/Demo-abdoria--project.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://abdoria-project.vercel.app)
-[![Release](https://img.shields.io/badge/release-v5.0.0-10b981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Supabase](https://img.shields.io/badge/Supabase_Postgres-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Acessar o app](https://img.shields.io/badge/ACESSAR_O_APP-000000?style=for-the-badge\&logo=vercel\&logoColor=white)](https://abdoria-project.vercel.app)
+[![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
+[![Licença](https://img.shields.io/badge/LICENÇA-MIT-blue?style=for-the-badge)](./LICENSE)
 
-[App ao vivo](https://abdoria-project.vercel.app) · [Guia para quem vai usar o app](./docs/GUIA-DO-USUARIO.md) · [Instalação para desenvolvedores](#-instalação-rápida) · [Desenvolvedor](#desenvolvedor)
+<br>
+
+[🌐 Demonstração](https://abdoria-project.vercel.app) •
+[📖 Guia do usuário](./docs/GUIA-DO-USUARIO.md) •
+[⚙️ Instalação](#️-instalação) •
+[👨‍💻 Desenvolvedor](#-desenvolvedor)
 
 </div>
 
 ---
 
-## 🎯 O que é o Abdoria?
+## 🎯 Sobre o projeto
 
-O **Abdoria** é um aplicativo web de treinos de **abdômen com peso corporal**. Você monta ou recebe treinos, executa exercício por exercício com timer e descanso, e acompanha sua evolução como se fosse um jogo.
+O **Abdoria · Core Quest** foi criado para ajudar pessoas a manterem uma rotina de exercícios por meio de uma experiência inspirada em jogos.
 
-Basta criar uma conta, passar pelo cadastro inicial e começar a treinar.
+No aplicativo, o usuário pode montar treinos, seguir sessões guiadas, acumular experiência, desbloquear conquistas, disputar posições no ranking e evoluir um herói durante sua jornada.
 
-> ⚠️ **Importante:** o Abdoria é educacional e de entretenimento. **Não substitui** acompanhamento médico, nutricional ou de educação física.
+Mais do que registrar exercícios, o Abdoria transforma cada treino em progresso dentro de uma aventura.
 
----
-
-## 🙋 Para quem é?
-
-| Perfil | O que você ganha |
-|--------|------------------|
-| 🌱 **Iniciante** | Treinos sugeridos, exercícios explicados e progressão suave |
-| 🏠 **Quem treina em casa** | Biblioteca de exercícios, montagem de treino e player guiado |
-| 🏆 **Quem gosta de metas** | XP, streak, conquistas e ranking |
-| 📅 **Quem quer constância** | Calendário de treinos, exploração AFK e recompensas diárias |
+> 🩺 O Abdoria possui finalidade educacional e de entretenimento. Ele não substitui o acompanhamento de profissionais de saúde ou educação física.
 
 ---
 
-## 🕹️ O que você pode fazer no app
+## ✨ Principais funcionalidades
 
-### 💪 Treinar de verdade
-- Biblioteca com dezenas de exercícios de core (superior, inferior, oblíquos, flexões etc.)
-- **Equipamentos opcionais** — marque na biblioteca **prancha de flexão**, **barra fixa** ou **roda abdominal** para liberar exercícios extras
-- Nomes em inglês com **tradução em português** entre parênteses
-- **Construtor em duas abas** — **Treinar Agora** (ciclos e sugestões) e **Criar/Personalizar** (monte o seu)
-- Treinos prontos por ciclo (**A, B, C…**) com **tags de músculo** e duração estimada na barra fixa inferior
-- **Treinos similares** — encontre opções com o mesmo foco muscular (presets e treinos salvos)
-- **Seletor de exercícios** e lista **arrastável** para montar a fila do treino
-- **Exercícios fixos** — marque na biblioteca o que sempre deve entrar na sugestão
-- **Bloqueio de recomendação** — oculte exercícios que não quer ver nos treinos sugeridos
-- **Treinos fixos / bloqueados** — priorize ou exclua treinos inteiros nas recomendações
-- **Rodada de ciclos** — ao completar todos os ciclos ativos, escolha manter ou sortear um novo set
-- **Banner de teto de XP** — aviso quando o limite diário já foi atingido (o treino continua liberado)
-- **Player interativo** — séries por tempo ou repetições, descanso configurável, botões na barra inferior
-- Salve treinos favoritos na sua conta
+### 💪 Treinos personalizados
 
-### ⚡ Evoluir e se motivar
-- **XP diário** — exercícios do treino (mín. **3 exercícios**; **20 XP** por exercício)
-- **Máx. diário** — **100 XP + 1 por nível** (+ **1 XP** por inimigo único no bestiário)
-- **XP extra** — streak, conquistas e habilidades desbloqueadas (sem limite diário)
-- **Exploração** — herói em combate automático enquanto você está fora (máx. **24h** de exploração)
-  - **Loot por kill:** **4%** comum · **6%** elite · **10%** boss
-  - Inimigos **slime** com variações de olhos, bocas e acessórios (chapéus, aura, coroa no boss)
-  - **Bestiário** — derrote inimigos para desbloquear entradas e aumentar o teto diário de XP
-  - **Golden Slime** raro — **1 em 1000** spawns, drop garantido de **10 Coins**
-  - **Rei Slime** (boss) a cada **99 kills**, com loot bônus
-  - Baú com contagem de **drops por kill** (cada loot de inimigo conta separado)
-  - **Loja da Exploração** — três modos de combate (**arco, espada ou magia**), cada um com catálogo próprio de itens por raridade (comum até Mítico/Secreto)
-  - Herói mascote com **sprites animados** por arma equipada
-  - Cenário com **ciclo dia/noite**; arma escolhida no **perfil**, na loja da exploração ou no onboarding
-  - Baú de recompensas com animação ao **Coletar Recompensas** (zera o timer e recomeça a exploração)
-- **Níveis**, **streak**, **conquistas** e **ranking** (XP, Coins ou dias seguidos)
-  - Ranking com alternância **Global × Semanal** em todos os critérios (XP/Coins/streak): Semanal
-    usa acumuladores que resetam toda semana (com **recompensas semanais** em Coins pro top 10);
-    Global usa totais vitalícios (streak Global mostra o recorde, sem recompensa semanal)
-  - **Countdown do reset semanal** — ranking reinicia todo **domingo às 00:00** (horário de Brasília)
-  - **Sua posição fixada** — se sua linha está fora da tela, ela aparece fixa embaixo; toque para rolar até ela
-  - **Amigos** — ranking entre quem você segue (level, streak e foto), com **perfil público** ao tocar em alguém
-  - **Perfil público** — curta o perfil de outros jogadores e denuncie comportamento impróprio
-    (nome ofensivo, trapaça, assédio…); moderação com banimento/suspensão estilo Discord
-  - **Recuperar Streak** — perdeu a sequência de verdade (sem Frozen Streak pra cobrir)? Depois de
-    algumas perdas, pague em Coins pra voltar exatamente de onde parou
+* Biblioteca com exercícios focados em abdômen e core
+* Treinos prontos para diferentes objetivos
+* Criação de rotinas personalizadas
+* Organização dos exercícios por arrastar e soltar
+* Exercícios realizados por tempo ou repetições
+* Timer de descanso e execução guiada
+* Equipamentos opcionais, como barra fixa, roda abdominal e prancha de flexão
+* Sistema de favoritos, preferências e bloqueios de recomendação
 
-### 📝 Atividades e Bloco de Notas
-- **Atividades de bem-estar** no Início — crie, edite, reordene e exclua tarefas fora do treino
-  (leitura, corrida, meditação, estudo, alongamento…), com formulário contextual por tipo
-- Cada atividade concluída dá **+15 XP** (até 3 por dia); da 4ª em diante vira **+5 Coins**
-- **Dia de descanso** — atividades sustentam a sequência a partir da 3ª concluída no dia
-- **Agenda configurável** — todo dia ou só em dias específicos, junto do treino ou separada
-- **Bloco de Notas** — alterne o mesmo card pra uma lista de tarefas livre (não só bem-estar):
-  afazeres do dia a dia, lista de compras, lembretes, o que você quiser. Concluir risca o item
-  (com som e efeito de partículas) e ele desce pro fim da lista
-- **Histórico de 30 dias** do Bloco de Notas com tela própria e rolagem; concluídas também aparecem
-  no calendário de treinos
+### 🎮 Progressão gamificada
 
-### 🎨 Personalizar e recompensar
-- **Personalização do Perfil** — bordas, banners, títulos e efeitos visuais no formulário de Editar
-  Perfil (prévia ao vivo por item); a maioria vem de conquistas, códigos e eventos, não é comprável
-  com Coins — exceção: **sons**, comprados nas Opções (Áudio)
-- **Banners de perfil** — mais de uma dezena de cenários (Aurora, Vulcão, Dojo, Floresta, Praia,
-  Templo, Neon City, Galáxia, Oceano, Céu, Montanhas, Nevasca, Brasil…), a maioria desbloqueada por
-  conquista/código/evento
-- **Loja da Exploração** — arcos, espadas e magias por raridade, comprados com Coins
-- **Inventário** — Frozen Streaks, Route Drink, EXP Instantâneo, itens da exploração e gestão de
-  **overflow** (itens além do limite de estoque)
-- **Código presente** — resgate em **Opções**
-- **Toasts de feedback** — notificações globais ao fixar/bloquear exercícios ou treinos, salvar treino, comprar itens, resgatar códigos e equipar cosméticos
-- **Perfil do herói** — abas **Dados**, **Progresso** (estatísticas e zonas musculares) e **Definição** (simulador educativo)
-- **Bestiário** — galeria de inimigos da exploração desbloqueados na ficha do herói
+* Experiência e evolução de nível
+* Sequência de dias treinados
+* Conquistas e recompensas
+* Moedas utilizadas dentro do aplicativo
+* Ranking global, semanal e entre amigos
+* Perfil público com estatísticas e personalizações
+* Calendário com histórico de atividades
+
+### 🗺️ Exploração automática
+
+Enquanto o usuário está longe, o herói continua explorando e enfrentando inimigos.
+
+A exploração permite:
+
+* Derrotar slimes e chefes
+* Encontrar inimigos raros
+* Coletar experiência, moedas e itens
+* Desbloquear registros no bestiário
+* Equipar arcos, espadas e magias
+* Encontrar equipamentos de diferentes raridades
+* Receber recompensas mesmo fora do aplicativo
+
+### 🏆 Rankings e comunidade
+
+O sistema competitivo permite comparar o progresso dos jogadores por:
+
+* Experiência acumulada
+* Moedas conquistadas
+* Sequência de treinos
+* Desempenho semanal
+* Ranking entre amigos
+
+Os jogadores também podem acessar perfis públicos, acompanhar conquistas e interagir com a comunidade.
+
+### 📝 Atividades e organização pessoal
+
+Além dos treinos, o Abdoria oferece ferramentas para ajudar na rotina:
+
+* Atividades de leitura, estudo, corrida, meditação e alongamento
+* Agenda configurável por dia da semana
+* Lista de tarefas personalizada
+* Histórico das atividades concluídas
+* Recompensas por manter hábitos saudáveis
+* Suporte para dias de descanso
+
+### 🎨 Personalização
+
+Cada jogador pode construir sua própria identidade dentro do aplicativo utilizando:
+
+* Fotos de perfil
+* Bordas
+* Banners
+* Títulos
+* Efeitos visuais
+* Sons
+* Armas
+* Cosméticos
+* Recompensas especiais
+
+Grande parte das personalizações é desbloqueada por conquistas, eventos e códigos especiais.
 
 ---
 
-## 🧮 Como funciona a "gamificação"?
+## 🚀 Por que usar o Abdoria?
 
-Pense em **dois tipos de pontos**:
+<table>
+<tr>
+<td width="50%" valign="top">
 
-| Tipo | O que é | Limite |
-|------|---------|--------|
-| **XP diário** | Pontos dos exercícios do treino | Máx. = **100 + 1 × nível** (+ **1** por inimigo no bestiário) |
-| **XP extra** | Bônus de streak, conquistas, habilidades (+1 XP por habilidade nova) | Sem máx. diário |
+### 🏠 Treine onde estiver
 
-A moeda **Coins** você usa na loja da Exploração (arcos, espadas e magias) e em pacotes de som nas
-Opções — os demais cosméticos (bordas, banners, títulos, efeitos) não são compráveis com Coins, só
-por conquista, código ou evento. Você ganha **1 Coin a cada 10 XP** totais acumulados (conversão
-passiva ao longo do progresso).
+Exercícios desenvolvidos para serem realizados principalmente em casa e utilizando o peso corporal.
 
-Detalhes completos no **[Guia do usuário](./docs/GUIA-DO-USUARIO.md)**.
+</td>
+<td width="50%" valign="top">
 
-### 🗺️ Exploração — loot por kill
+### 🎯 Mantenha o foco
 
-**Chance de dropar algo (por kill):**
+Metas, streaks, conquistas e recompensas ajudam a transformar o treino em um hábito.
 
-| Tier | Chance |
-|------|--------|
-| Comum | 4% |
-| Elite (~12% dos spawns) | 6% |
-| Boss (a cada 99 kills) | 10% |
+</td>
+</tr>
 
-**Quando o drop acerta:**
+<tr>
+<td width="50%" valign="top">
 
-| Recompensa | % do drop | Comum (efetivo/kill) | Elite | Boss |
-|------------|-----------|----------------------|-------|------|
-| +1 XP | 85% | 3,40% | 5,10% | 8,50% |
-| +1 Coins | 11% | 0,44% | 0,66% | 1,10% |
-| +1 Frozen Streak | 4% | 0,16% | 0,24% | 0,40% |
-| Cosmético lendário | 0,04% / 0,08% boss | ~0,0016% | ~0,0024% | ~0,008% |
-| Título secreto | 0,01% | ~0,0004% | ~0,0006% | ~0,001% |
+### ⚔️ Evolua jogando
 
-Offline: ~**4 kills/min** de exploração (combate + tempo de busca do próximo alvo). Boss a cada **99** inimigos com loot bônus.
+Cada atividade contribui para o crescimento do perfil e para a evolução do herói.
 
-**Inimigos especiais:**
+</td>
+<td width="50%" valign="top">
 
-| Inimigo | Como aparece | Recompensa |
-|---------|----------------|------------|
-| Elite | ~12% dos spawns | Loot com chance **6%** por kill |
-| **Golden Slime** | **1 em 1000** inimigos | **10 Coins** garantidos (sem rolagem normal de loot) |
-| **Rei Slime** (boss) | A cada **99** kills | Loot com chance **10%** por kill |
+### 📊 Acompanhe seu progresso
 
-**Loja da Exploração** (`/api/patrol-shop`): arcos, espadas e magias compráveis com Coins, com
-catálogo por raridade (comum até Mítico/Secreto — arma de nível 9 é Mítica, a de nível 10 é
-Secreta). Arco/espada básicos são grátis; magia entra como 3º modo de combate.
+Visualize estatísticas, calendário, zonas musculares trabalhadas e histórico de atividades.
 
-**Combate por arma:** arco dispara mais rápido com maior chance de crítico (~**18%**, streak crescente); espada causa mais dano por golpe com crítico ~**6%** (+4); magia tem passiva própria de +chance de drop raro a partir de raridade Épica. O bônus da arma equipada na loja soma ao dano base.
+</td>
+</tr>
+</table>
+
+---
+
+## 🕹️ Como funciona?
+
+O ciclo principal do Abdoria é simples:
+
+```text
+Escolha ou monte um treino
+            ↓
+Execute os exercícios
+            ↓
+Ganhe experiência e moedas
+            ↓
+Suba de nível
+            ↓
+Desbloqueie conquistas e itens
+            ↓
+Evolua seu herói e seu perfil
+```
+
+O usuário também pode enviar seu herói para exploração, concluir atividades pessoais, competir nos rankings e personalizar sua experiência.
+
+---
+
+## 🖼️ Preview
+
+<div align="center">
+
+<!-- Substitua pelos screenshots oficiais do projeto -->
+
+<img src="./docs/assets/preview-home.png" width="48%" alt="Tela inicial do Abdoria" />
+<img src="./docs/assets/preview-training.png" width="48%" alt="Tela de treino do Abdoria" />
+
+<br>
+
+<img src="./docs/assets/preview-exploration.png" width="48%" alt="Exploração do Abdoria" />
+<img src="./docs/assets/preview-profile.png" width="48%" alt="Perfil do jogador no Abdoria" />
+
+</div>
+
+---
+
+## 🧩 Tecnologias utilizadas
+
+<div align="center">
+
+![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=for-the-badge\&logo=typescript\&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge\&logo=vite\&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge\&logo=tailwindcss\&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge\&logo=framer\&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js_20-339933?style=for-the-badge\&logo=node.js\&logoColor=white)
+![Express](https://img.shields.io/badge/Express_5-000000?style=for-the-badge\&logo=express\&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase_Postgres-3FCF8E?style=for-the-badge\&logo=supabase\&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel_Serverless-000000?style=for-the-badge\&logo=vercel\&logoColor=white)
+
+</div>
+
+### Principais tecnologias
+
+* **React 19** para construção da interface
+* **TypeScript** para segurança e organização do código
+* **Vite** para desenvolvimento e build
+* **Tailwind CSS** para estilização
+* **Framer Motion** para animações
+* **Node.js e Express** no backend
+* **Supabase Postgres** como banco de dados
+* **JWT** para autenticação
+* **Vercel** para hospedagem e funções serverless
 
 ---
 
 ## 🗂️ Estrutura do projeto
 
-```
+```text
 Abdoria/
-├── .github/workflows/      → CI (ex.: keep-supabase-alive)
-├── client/                 → Interface (React + Vite + Tailwind)
+├── client/                 # Interface React
 ├── server/src/
-│   ├── domain/             → Facades de domínio (User, Exercise, …)
-│   ├── repositories/       → Acesso ao Postgres (Supabase)
-│   ├── db/seeds/           → Dados iniciais + `npm run seed`
-│   ├── routes/             → Endpoints REST
-│   └── services/           → Regras de negócio
+│   ├── domain/             # Regras e entidades de domínio
+│   ├── repositories/       # Acesso ao banco de dados
+│   ├── routes/             # Rotas da API
+│   ├── services/           # Regras de negócio
+│   └── db/seeds/           # Dados iniciais
 ├── shared/
-│   ├── afk/                → Combate AFK, bestiário, slimes, boss/loot
-│   ├── equipment/          → Catálogo de equipamentos opcionais
-│   ├── patrol/             → Catálogo da Loja da Exploração (arcos/espadas)
-│   ├── types/              → Contratos compartilhados (API, domínio)
-│   └── utils/              → Utilitários (timezone, user-dados, afk)
-├── supabase/migrations/    → Schema Postgres
-├── api/                    → Entrada serverless na Vercel
-├── docs/                   → Documentação amigável
-└── scripts/                → Setup, build e deploy (`scripts/dev/` = ferramentas locais)
+│   ├── afk/                # Exploração e combate automático
+│   ├── equipment/          # Equipamentos disponíveis
+│   ├── patrol/             # Armas e itens da exploração
+│   ├── types/              # Tipagens compartilhadas
+│   └── utils/              # Funções auxiliares
+├── supabase/migrations/    # Migrações do banco de dados
+├── api/                    # Entrada serverless da Vercel
+├── docs/                   # Documentação
+└── scripts/                # Scripts de configuração e manutenção
 ```
 
 ---
 
-## ⚙️ Instalação rápida
+## ⚙️ Instalação
 
-> Seção para **desenvolvedores** ou quem for rodar o app no próprio computador.
+### Pré-requisitos
 
-### ✅ Pré-requisitos
+Antes de começar, tenha instalado:
 
-- [Node.js](https://nodejs.org/) **20.x** (veja [`.nvmrc`](./.nvmrc))
-- Projeto no [Supabase](https://supabase.com/) com Postgres
+* [Node.js](https://nodejs.org/) 20.x
+* Git
+* Uma conta e um projeto no [Supabase](https://supabase.com/)
 
-### 🗄️ Banco de dados (Supabase Postgres)
-
-O Abdoria usa **Supabase Postgres** como único banco. Antes do primeiro `seed`, aplique o schema:
-
-1. Crie um projeto em [supabase.com](https://supabase.com/)
-2. No **SQL Editor**, execute os arquivos em [`supabase/migrations/`](./supabase/migrations/) na ordem:
-   - `20250620000000_initial_schema.sql`
-   - `20250620120000_afk_combat.sql` (coluna `combat` na exploração AFK)
-   - `20250627120000_exercise_equipment.sql` (coluna `equipamento` nos exercícios)  
-   (ou use `supabase db push` se tiver o [Supabase CLI](https://supabase.com/docs/guides/cli) linkado ao projeto)
-
-### 🚶 Passos
+### Clone o repositório
 
 ```bash
 git clone https://github.com/RDEsley/Abdoria.git
 cd Abdoria
+```
+
+### Instale as dependências
+
+```bash
 npm install
+```
+
+### Configure as variáveis de ambiente
+
+Copie o arquivo de exemplo:
+
+```bash
 cp server/.env.example server/.env
-# Edite server/.env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET
+```
+
+Configure as seguintes variáveis:
+
+```env
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_ANON_KEY=
+JWT_SECRET=
+JWT_EXPIRES_IN=7d
+```
+
+> 🔐 Nunca exponha a chave `SUPABASE_SERVICE_ROLE_KEY` no frontend ou em arquivos públicos.
+
+### Configure o banco de dados
+
+Aplique as migrações disponíveis na pasta:
+
+```text
+supabase/migrations/
+```
+
+Também é possível utilizar o Supabase CLI:
+
+```bash
+supabase db push
+```
+
+### Popule os dados iniciais
+
+```bash
 npm run seed
+```
+
+### Inicie o projeto
+
+```bash
 npm run dev
 ```
 
-| Serviço | Endereço local |
-|---------|----------------|
-| App (navegador) | http://localhost:5173 |
-| API | http://localhost:3001 |
-| Saúde da API | http://localhost:3001/api/health |
+O projeto ficará disponível nos seguintes endereços:
 
-**Cadastro:** ao criar conta, você é redirecionado para o **login** (sessão só inicia após entrar). Use **Lembrar de mim** para manter o token no dispositivo e pré-preencher o email. Erros de email/senha incorretos aparecem **inline** no formulário.
-
-### 📜 Scripts úteis
-
-| Comando | O que faz |
-|---------|-----------|
-| `npm run dev` | Sobe app + API juntos |
-| `npm run build` | Gera versão de produção (client + server) |
-| `npm run build:vercel` | Build usado no deploy (API serverless + client) |
-| `npm run seed` | Popula exercícios, presets e admin demo (dev) |
-| `npm run setup` | Assistente de configuração inicial |
-
-Variáveis de ambiente locais: [`server/.env.example`](./server/.env.example).
-
-**Ferramentas de manutenção local** (não fazem parte do app; em [`scripts/dev/`](./scripts/dev/)):
-
-| Script | Uso |
-|--------|-----|
-| `node scripts/dev/verify-xp-level.mjs` | Valida tabela de XP por nível |
-| `npx tsx scripts/dev/verify-afk.ts` | Valida exploração AFK, combate, Golden Slime e drops por kill |
-| `npx tsx scripts/dev/verify-patrol-weapons.ts` | Valida catálogo e dano das armas da exploração |
-| `npx tsx scripts/dev/validate-equipment.ts` | Valida catálogo de equipamentos e slugs liberados |
-| `npx tsx scripts/dev/verify-inventory-bestiario.ts` | Valida inventário, overflow e bestiário |
-| `npx tsx scripts/dev/verify-remember-me.ts` | Valida "Lembrar de mim" (token e email) |
-| `node client/scripts/validate-similar-presets.mjs` | Valida pontuação de treinos similares por músculo |
-| `node client/scripts/validate-slime-appearance.mjs` | Valida aparência (fixa, igual ao Bestiário) dos slimes |
-| `node scripts/dev/probe-vercel-env.mjs` | Testa conexão Supabase com `.env.vercel.production` (não versionar) |
-| `node scripts/dev/sync-vercel-env.mjs` | Sincroniza `server/.env` → Vercel (somente mantenedor) |
+| Serviço       | Endereço                           |
+| ------------- | ---------------------------------- |
+| Aplicação     | `http://localhost:5173`            |
+| API           | `http://localhost:3001`            |
+| Status da API | `http://localhost:3001/api/health` |
 
 ---
 
-## ☁️ Deploy na Vercel
+## 📜 Scripts principais
 
-O projeto está configurado para deploy contínuo a partir da branch `main`.
+| Comando                | Descrição                            |
+| ---------------------- | ------------------------------------ |
+| `npm run dev`          | Inicia o frontend e o backend        |
+| `npm run build`        | Gera a versão de produção            |
+| `npm run build:vercel` | Executa o build para a Vercel        |
+| `npm run seed`         | Popula o banco com dados iniciais    |
+| `npm run setup`        | Executa o assistente de configuração |
 
-**URL de produção:** https://abdoria-project.vercel.app
+---
 
-### 🔑 Variáveis obrigatórias (Project Settings → Environment Variables)
+## ☁️ Deploy
 
-| Variável | Descrição |
-|----------|-----------|
-| `SUPABASE_URL` | URL do projeto Supabase |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave service role (somente servidor — nunca no client) |
-| `SUPABASE_ANON_KEY` | Chave anon (opcional no server; útil se expandir client direto) |
-| `JWT_SECRET` | Chave longa e aleatória para tokens de sessão |
-| `JWT_EXPIRES_IN` | Ex.: `7d` (opcional; padrão no código) |
+O projeto está preparado para deploy contínuo na **Vercel**.
 
-Modelo completo em [`.env.example`](./.env.example).
+### Configuração do projeto
 
-Confirme que o schema Postgres está aplicado no Supabase (ver [Banco de dados](#-banco-de-dados-supabase-postgres)) e que `/api/health` retorna `"database": "connected"`.
+```text
+Install Command: npm install
+Build Command: npm run build:vercel
+Node.js: 20.x
+```
 
-### 🏗️ Build
+Configure no painel da Vercel as variáveis de ambiente utilizadas pelo backend.
 
-- **Install:** `npm install`
-- **Build:** `npm run build:vercel`
-- **Output:** `client/dist` + função em `api/index.mjs`
-- **Node:** `20.x`
+Após o deploy, confirme o funcionamento da API acessando:
 
-Após o primeiro deploy com Supabase configurado, rode `npm run seed` uma vez (local ou CI) para popular exercícios e presets.
+```text
+/api/health
+```
 
-### 🔄 Manter o Supabase ativo (free tier)
+### Produção
 
-O workflow [`.github/workflows/keep-supabase-alive.yml`](./.github/workflows/keep-supabase-alive.yml) faz ping diário às **00:00 (Brasília)** para evitar pausa por inatividade. Configure estes **GitHub Secrets** no repositório:
-
-| Secret | Uso |
-|--------|-----|
-| `SUPABASE_URL` | URL do projeto |
-| `SUPABASE_ANON_KEY` | Ping em `auth/v1/health` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Query leve em `rest/v1/profiles` |
-
-Dispare manualmente em **Actions → Keep Supabase Alive → Run workflow** para testar.
+🌐 **Aplicação:**
+https://abdoria-project.vercel.app
 
 ---
 
 ## 📚 Documentação
 
-| Documento | Público |
-|-----------|---------|
-| [Guia do usuário](./docs/GUIA-DO-USUARIO.md) | Quem vai **usar** o app |
-| [Contribuindo](./CONTRIBUTING.md) | Quem vai **desenvolver** |
+| Documento                                    | Descrição                                        |
+| -------------------------------------------- | ------------------------------------------------ |
+| [Guia do usuário](./docs/GUIA-DO-USUARIO.md) | Orientações para quem utiliza o aplicativo       |
+| [Guia de contribuição](./CONTRIBUTING.md)    | Informações para desenvolvedores e colaboradores |
+| [Licença](./LICENSE)                         | Termos de uso do projeto                         |
 
 ---
 
-## 🧩 Tecnologias
+## 🤝 Contribuindo
 
-React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion · Express 5 · Supabase Postgres · JWT · Vercel Serverless
+Contribuições são bem-vindas.
+
+Para contribuir:
+
+1. Faça um fork do projeto
+2. Crie uma nova branch
+3. Realize suas alterações
+4. Faça o commit
+5. Envie a branch
+6. Abra um Pull Request
+
+```bash
+git checkout -b feature/minha-funcionalidade
+git commit -m "feat: adiciona nova funcionalidade"
+git push origin feature/minha-funcionalidade
+```
+
+Consulte o arquivo [CONTRIBUTING.md](./CONTRIBUTING.md) para mais informações.
+
+---
+
+## 🗺️ Próximos passos
+
+* Novos exercícios e treinos
+* Mais inimigos para o bestiário
+* Novos equipamentos e cosméticos
+* Eventos e recompensas especiais
+* Expansão das funcionalidades sociais
+* Melhorias no acompanhamento de progresso
+* Novas áreas de exploração
 
 ---
 
 ## 📄 Licença
 
-[MIT](./LICENSE)
+Este projeto está sob a licença **MIT**.
+
+Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
 
 ---
-
-<a id="desenvolvedor"></a>
 
 ## 👨‍💻 Desenvolvedor
 
 <div align="center">
 
-<img src="https://github.com/RDEsley.png" width="100" alt="Richard Esley" />
+<img src="https://github.com/RDEsley.png" width="110" alt="Richard Esley" />
 
-**Richard Esley**
+### Richard Esley
 
-*Desenvolvedor Full Stack · UI/UX*
+**Desenvolvedor Full Stack · UI/UX**
 
-[![Portfólio](https://img.shields.io/badge/Portfólio-richardesley--dev.vercel.app-000?style=for-the-badge&logo=vercel&logoColor=white)](https://richardesley-dev.vercel.app/)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/RDEsley)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/richardesley/)
+[![Portfólio](https://img.shields.io/badge/Portfólio-000000?style=for-the-badge\&logo=vercel\&logoColor=white)](https://richardesley-dev.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge\&logo=github\&logoColor=white)](https://github.com/RDEsley)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge\&logo=linkedin\&logoColor=white)](https://www.linkedin.com/in/richardesley/)
 
 </div>
 
@@ -351,8 +439,18 @@ React 19 · TypeScript · Vite · Tailwind CSS · Framer Motion · Express 5 · 
 
 <div align="center">
 
+### ⚔️ Treine. Evolua. Conquiste.
+
 **Feito para transformar consistência em diversão.**
 
-[Abrir um issue](https://github.com/RDEsley/Abdoria/issues) · [Ver app ao vivo](https://abdoria-project.vercel.app) · [Guia do usuário](./docs/GUIA-DO-USUARIO.md) · [Desenvolvedor](#desenvolvedor)
+<br>
+
+[🌐 Abrir o aplicativo](https://abdoria-project.vercel.app) •
+[🐛 Reportar um problema](https://github.com/RDEsley/Abdoria/issues) •
+[📖 Guia do usuário](./docs/GUIA-DO-USUARIO.md)
+
+<br><br>
+
+⭐ Considere deixar uma estrela no repositório caso tenha gostado do projeto.
 
 </div>
