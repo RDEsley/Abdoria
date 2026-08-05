@@ -45,7 +45,12 @@ export function buildLocalNotices(stats: DashboardStats | null): AppNotification
   const seconds = secondsUntilSaoPauloMidnight();
   const notices: AppNotification[] = [];
 
-  if (!stats.treino_hoje && stats.streak_atual > 0 && seconds <= RESET_WINDOW_SECONDS) {
+  // Aviso de expiração olha `sequencia_garantida_hoje` (treino OU Atividade),
+  // não `treino_hoje`: quem sustentou o dia só com Atividades já está seguro e
+  // não pode receber alerta de que a sequência vai zerar.
+  const sequenciaGarantida = stats.sequencia_garantida_hoje ?? stats.treino_hoje;
+
+  if (!sequenciaGarantida && stats.streak_atual > 0 && seconds <= RESET_WINDOW_SECONDS) {
     if (stats.frozen_streak_count > 0) {
       notices.push({
         id: `local-frozen-uso-${today}`,
@@ -72,7 +77,11 @@ export function buildLocalNotices(stats: DashboardStats | null): AppNotification
       id: `local-lembrete-${today}`,
       tipo: 'lembrete_treino',
       titulo: 'Sua missão de hoje te espera',
-      corpo: 'Alguns minutos bastam pra manter a sequência viva e garantir o XP do dia.',
+      // Com o dia já garantido por Atividades, prometer "manter a sequência
+      // viva" seria mentira — o convite aqui é pelo XP do treino.
+      corpo: sequenciaGarantida
+        ? 'Sua sequência de hoje já está garantida. O treino ainda rende o XP do dia.'
+        : 'Alguns minutos bastam pra manter a sequência viva e garantir o XP do dia.',
       payload: {},
       lida_em: now,
       criada_em: now,

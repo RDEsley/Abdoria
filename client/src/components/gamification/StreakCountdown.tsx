@@ -9,7 +9,10 @@ const WINDOW_SECONDS = 5 * 3600;
 const URGENT_SECONDS = 3600;
 
 interface Props {
-  treinoHoje: boolean;
+  /** Dia já pago — treino OU Atividade concluída hoje. Nunca use
+      `treino_hoje` aqui: ele ignora Atividades, e quem só fez atividades
+      seguia vendo "pra manter a sequência" com a sequência já garantida. */
+  sequenciaGarantida: boolean;
   streak: number;
   frozenCount: number;
 }
@@ -21,7 +24,7 @@ interface Props {
  * Nos últimos 59min, o número fica vermelho independente do estado (urgência
  * visual crescente conforme o prazo aperta).
  */
-export function StreakCountdown({ treinoHoje, streak, frozenCount }: Props) {
+export function StreakCountdown({ sequenciaGarantida, streak, frozenCount }: Props) {
   const [seconds, setSeconds] = useState(() => secondsUntilSaoPauloMidnight());
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export function StreakCountdown({ treinoHoje, streak, frozenCount }: Props) {
     return () => window.clearInterval(timer);
   }, []);
 
-  if (treinoHoje || streak <= 0 || seconds > WINDOW_SECONDS) return null;
+  if (sequenciaGarantida || streak <= 0 || seconds > WINDOW_SECONDS) return null;
 
   const danger = frozenCount <= 0;
   const urgente = seconds < URGENT_SECONDS;

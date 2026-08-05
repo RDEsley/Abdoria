@@ -1315,6 +1315,10 @@ export interface RecommendationAlert {
 
 export interface DashboardStats {
   treino_hoje: boolean;
+  /** Já existe alguma entrada de hoje (treino OU Atividade), ou seja: a
+      sequência do dia está paga. Separado de `treino_hoje`, que só olha
+      treino de verdade e por isso não serve pra decidir avisos de streak. */
+  sequencia_garantida_hoje?: boolean;
   proximo_treino: string;
   treino_sugerido: TreinoSugerido | null;
   alertas_recomendacao?: RecommendationAlert[];

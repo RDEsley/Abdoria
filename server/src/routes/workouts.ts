@@ -9,6 +9,7 @@ import {
   ACHIEVEMENTS,
   getAchievementUnlockPercentages,
   getWeeklyMuscles,
+  hasStreakSecuredToday,
   hasTrainedToday,
   resetXpDiarioIfNeeded,
   syncUserGamification,
@@ -203,9 +204,17 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
 
-    const [treinoHoje, weeklyMuscles, monthly, totalExercisesAgg, totalDurationAgg] =
+    const [
+      treinoHoje,
+      sequenciaGarantidaHoje,
+      weeklyMuscles,
+      monthly,
+      totalExercisesAgg,
+      totalDurationAgg,
+    ] =
       await Promise.all([
         hasTrainedToday(userId),
+        hasStreakSecuredToday(userId),
         getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
         WorkoutHistory.aggregate([
           { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
@@ -256,6 +265,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
 
     res.json({
       treino_hoje: treinoHoje,
+      sequencia_garantida_hoje: sequenciaGarantidaHoje,
       proximo_treino: treinoHoje ? 'Descanso ativo' : 'Treino do dia',
       treino_sugerido: null,
       alertas_recomendacao: [],
@@ -575,6 +585,56 @@ function sanitizeMetricas(
 
   return metricas;
 }
+
+/**
+ * Edita os dados de uma Atividade já registrada (métricas + observação).
+ *
+ * Existe porque concluir uma atividade não exige preencher nada: quem só quer
+ * marcar que fez registra sem dado nenhum e completa depois, pelo histórico.
+ * Só mexe no conteúdo do log — XP, Coins e streak já foram apurados na
+ * conclusão e não são recalculados aqui (senão editar viraria uma forma de
+ * ganhar XP repetido).
+ */
+workoutsRouter.patch('/historico/:id/atividade', async (req: AuthRequest, res) => {
+  try {
+    const entry = await WorkoutHistory.findById(String(req.params.id), req.userId!);
+    if (!entry?.atividade) {
+      res.status(404).json({ error: 'Atividade não encontrada no histórico.' });
+      return;
+    }
+
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
+    const log = entry.atividade as unknown as AtividadeLog;
+    // A atividade pode ter sido excluída/renomeada desde a conclusão — nesse
+    // caso os campos vêm do próprio log, que guarda tipo e nome de então.
+    const base =
+      findAtividade(user.preferencias, log.atividade_id) ??
+      ({ ...log, meta_tipo: 'tempo', meta_valor: 0 } as unknown as AtividadeExtra);
+
+    const body = req.body as { metricas?: unknown; obs?: string };
+    const metricas = sanitizeMetricas(base, body.metricas);
+    const obs = String(body.obs ?? '')
+      .trim()
+      .slice(0, ATIVIDADE_OBS_MAX);
+
+    const atualizado: AtividadeLog = { ...log, metricas, ...(obs ? { obs } : {}) };
+    if (!obs) delete atualizado.obs;
+
+    await WorkoutHistory.updateById(entry.id, {
+      atividade: atualizado as unknown as Record<string, unknown>,
+    });
+
+    res.json({ atividade: atualizado });
+  } catch (error) {
+    console.error('PATCH /api/workouts/historico/:id/atividade error:', error);
+    res.status(500).json({ error: 'Erro ao editar atividade.' });
+  }
+});
 
 /**
  * Conclui uma Atividade da fila do dia.

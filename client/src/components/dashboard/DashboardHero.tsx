@@ -115,7 +115,7 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
             <StreakCountdown
-              treinoHoje={stats.treino_hoje}
+              sequenciaGarantida={stats.sequencia_garantida_hoje ?? stats.treino_hoje}
               streak={stats.streak_atual}
               frozenCount={stats.frozen_streak_count}
             />

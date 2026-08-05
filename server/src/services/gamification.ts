@@ -481,3 +481,20 @@ export function hasTrainedToday(userId: string): Promise<boolean> {
     somenteTreino: true,
   });
 }
+
+/** A sequência de hoje já está garantida? Ao contrário de `hasTrainedToday`,
+    aqui QUALQUER entrada do dia conta (treino ou Atividade), porque é
+    exatamente isso que sustenta a streak. Existe separado porque os dois
+    respondem perguntas diferentes: "a Missão de treino foi cumprida?" e "o
+    dia já está pago?" — usar o primeiro pelo segundo fazia o contador
+    regressivo alarmar "pra manter a sequência" com o dia já garantido por
+    atividades. */
+export function hasStreakSecuredToday(userId: string): Promise<boolean> {
+  const todayStart = startOfDaySaoPaulo();
+  const tomorrow = endOfDaySaoPaulo();
+
+  return WorkoutHistory.exists({
+    usuario_id: userId,
+    concluido_em: { $gte: todayStart.toISOString(), $lt: tomorrow.toISOString() },
+  });
+}
