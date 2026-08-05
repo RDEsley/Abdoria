@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Flame, NotebookPen, Snowflake, Sparkles } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
@@ -92,7 +92,13 @@ export function ActivityCalendar() {
   // com o número de semanas do mês) e trava essa altura no card — sem isso,
   // abrir o detalhe de um dia com pouco conteúdo encolhia o card inteiro,
   // e ele "pulava" de tamanho de novo ao voltar pro calendário.
-  const calendarViewRef = useRef<HTMLDivElement>(null);
+  //
+  // Ref por callback (não `useRef` comum): o AnimatePresence (mode="wait")
+  // atrasa a montagem da grade até a saída do detalhe terminar, então um
+  // `useLayoutEffect` disparado só por `selectedDay`/`cells` rodava ANTES do
+  // nó existir — a medição saía vazia e a altura antiga (de outro mês, com
+  // mais linhas) ficava travada, sobrando espaço vazio no fim do card.
+  const [calendarNode, setCalendarNode] = useState<HTMLDivElement | null>(null);
   const [minHeight, setMinHeight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -184,15 +190,12 @@ export function ActivityCalendar() {
   const selectedFrozen = !selectedMeta && !!selectedDay && frozenSet.has(selectedDay);
 
   useLayoutEffect(() => {
-    if (selectedDay !== null) return undefined;
-    const el = calendarViewRef.current;
-    if (!el) return undefined;
-
-    const measure = () => setMinHeight(el.getBoundingClientRect().height);
+    if (!calendarNode) return undefined;
+    const measure = () => setMinHeight(calendarNode.getBoundingClientRect().height);
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [selectedDay, cells]);
+  }, [calendarNode, cells]);
 
   const shiftMonth = (delta: number) => {
     setSelectedDay(null);
@@ -307,7 +310,7 @@ export function ActivityCalendar() {
         ) : (
           <motion.div
             key="calendar"
-            ref={calendarViewRef}
+            ref={setCalendarNode}
             initial={{ opacity: 0, x: -18 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -18 }}
