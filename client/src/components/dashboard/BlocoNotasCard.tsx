@@ -4,8 +4,6 @@ import { CheckCircle2, History, NotebookPen, Plus, Trash2, X } from 'lucide-reac
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
-import { useAuth } from '@/context/AuthContext';
-import { useApp } from '@/hooks/useApp';
 import { usePreferencesPersist } from '@/hooks/usePreferencesPersist';
 import { grantLembreteXp } from '@/lib/api/users';
 import { emitXpEarned } from '@/lib/xp-orbs';
@@ -63,9 +61,7 @@ function NotaBurst() {
  * usar. Nunca sustenta streak; dá XP fixo (silencioso, sem toast) por item.
  */
 export function BlocoNotasCard() {
-  const { user, persist } = usePreferencesPersist();
-  const { applyUser } = useAuth();
-  const { applyUser: applyAppUser } = useApp();
+  const { user, persist, applyServerUser } = usePreferencesPersist();
   const [novoTexto, setNovoTexto] = useState('');
   const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
   const [confirmarLimparTudo, setConfirmarLimparTudo] = useState(false);
@@ -147,12 +143,14 @@ export function BlocoNotasCard() {
 
     // XP silencioso (sem toast) por lembrete concluído — nunca ao desmarcar.
     // Rota própria (não a fila de preferências) porque XP é sempre
-    // server-authoritative, com teto diário.
+    // server-authoritative, com teto diário. `applyServerUser` (não
+    // `applyUser`) porque essa resposta carrega as `preferencias` de antes da
+    // marcação: aplicá-la crua desmarcava o item que o usuário acabou de
+    // riscar.
     if (marcarFeita) {
       void grantLembreteXp()
         .then((res) => {
-          applyUser(res.user);
-          applyAppUser(res.user);
+          applyServerUser(res.user);
           if (res.xp_ganho > 0) emitXpEarned(res.xp_ganho);
         })
         .catch(() => {
@@ -255,10 +253,7 @@ export function BlocoNotasCard() {
                   {justCompletedId === nota.id && <NotaBurst />}
                 </button>
 
-                <span className="bloco-notas__texto">
-                  {nota.texto}
-                  <span className="bloco-notas__strike" aria-hidden />
-                </span>
+                <span className="bloco-notas__texto">{nota.texto}</span>
 
                 <button
                   type="button"

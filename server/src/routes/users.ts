@@ -546,7 +546,12 @@ usersRouter.patch('/me/dados', async (req: AuthRequest, res) => {
 });
 
 /** Concluir um Lembrete dá XP fixo (teto diário normal) — sem toast/aviso
-    próprio, ao contrário de Atividades. Nunca mexe na streak. */
+    próprio, ao contrário de Atividades. Nunca mexe na streak.
+
+    Grava só as colunas de XP: o cliente marca o item e pede o XP em paralelo,
+    então um `save()` inteiro daqui devolveria `preferencias` como estava
+    ANTES da marcação e desfaria o check recém-salvo (o lembrete voltava a
+    aparecer como pendente, e no banco também). */
 usersRouter.post('/me/lembrete-xp', async (req: AuthRequest, res) => {
   try {
     const user = await User.findById(req.userId!);
@@ -556,7 +561,7 @@ usersRouter.post('/me/lembrete-xp', async (req: AuthRequest, res) => {
     }
 
     const xp_ganho = awardDailyXp(user, NOTA_XP_POR_CHECK);
-    await user.save();
+    await user.saveColumns(['gamificacao', 'xp_diario']);
 
     res.json({ user: sanitizeUser(user), xp_ganho });
   } catch (error) {

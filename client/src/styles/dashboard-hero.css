@@ -1668,6 +1668,38 @@
   color: #78716c;
 }
 
+/* Atalho "concluir sem os dados" — discreto de propósito: é a saída rápida,
+   não a ação principal. */
+.atividade-complete-skip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #059669;
+  background: #ecfdf5;
+  border: 2px solid #a7f3d0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.atividade-complete-skip:hover:not(:disabled) {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.atividade-complete-skip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* Agenda: opção em card e switch */
 .atividade-option {
   display: flex;
@@ -2015,6 +2047,19 @@
 }
 
 /* Bloco de Notas — lista de tarefas livre (não só bem-estar) */
+/* Mesmo contador de Lembretes, no verde de Atividades — as duas metades da
+   seção mostram progresso do dia da mesma forma. */
+.atividades-resumo {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #57534e;
+}
+
+.atividades-resumo strong {
+  color: #059669;
+}
+
 .bloco-notas__resumo-row {
   display: flex;
   align-items: center;
@@ -2218,36 +2263,30 @@
   color: #7c3aed;
 }
 
+/* O risco é `line-through` nativo com a COR animada (transparente → roxo),
+   não uma barra absoluta: como este span é `flex: 1`, ele estica até a borda
+   do card, então uma barra de `width: 100%` saía sempre do tamanho da linha
+   inteira em vez do tamanho do texto — itens curtos e longos ganhavam riscos
+   idênticos, que passavam longe da palavra. O nativo acompanha o texto exato
+   e continua certo quando o lembrete quebra em várias linhas. */
 .bloco-notas__texto {
-  position: relative;
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
   font-size: 0.85rem;
   font-weight: 600;
   color: #292524;
+  text-decoration-line: line-through;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  transition:
+    color 0.25s ease,
+    text-decoration-color 0.3s ease-out;
 }
 
 .bloco-notas__item--feita .bloco-notas__texto {
   color: #a8a29e;
-}
-
-/* Risco animado — mais satisfatório que um text-decoration estático, que
-   não dá pra transicionar suavemente entre navegadores. */
-.bloco-notas__strike {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: 1.5px;
-  background: #a78bfa;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease-out;
-}
-
-.bloco-notas__item--feita .bloco-notas__strike {
-  transform: scaleX(1);
+  text-decoration-color: #a78bfa;
 }
 
 .bloco-notas__delete {

@@ -361,6 +361,31 @@ export class UserMutable implements UserRecord {
     (this as Record<string, unknown>)[path] = value;
   }
 
+  /**
+   * Grava SÓ as colunas pedidas, a partir do estado atual em memória.
+   *
+   * `save()` reescreve a linha inteira de `profiles`, então qualquer rota que
+   * mexe num pedaço isolado (XP, moedas...) devolve junto o resto do perfil
+   * como estava no início da request — se o cliente disparou em paralelo
+   * outra escrita (ex.: `PATCH /me` salvando `preferencias`), a que terminar
+   * por último apaga a outra. Use este método quando a rota não é dona do
+   * perfil inteiro; assim escritas concorrentes em colunas diferentes não se
+   * atropelam.
+   */
+  async saveColumns(columns: (keyof ProfileRow)[]): Promise<UserMutable> {
+    const full = userToProfileRow(this);
+    const patch: Record<string, unknown> = {};
+    for (const column of columns) {
+      if (column === 'email' || column === 'id') continue;
+      if (column in full) patch[column] = full[column];
+    }
+    if (Object.keys(patch).length === 0) return this;
+
+    const { error } = await getSupabase().from('profiles').update(patch).eq('id', this.id);
+    if (error) throw error;
+    return this;
+  }
+
   async save(): Promise<UserMutable> {
     const sb = getSupabase();
     const profileUpdate = userToProfileRow(this);
