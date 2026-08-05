@@ -583,22 +583,28 @@
   min-width: 0;
 }
 
-/* Ranking — linha do usuário fixada embaixo */
+/* Ranking — linha do usuário fixada embaixo. Centraliza com `left/right` +
+   `margin-inline: auto` (não `left: 50%` + `transform: translateX(-50%)`):
+   esse elemento é o próprio `motion.div` que anima entrada/saída, e o
+   Framer Motion escreve `transform` inline pra isso — o que apagava
+   qualquer `transform` vindo do CSS e jogava o card sem centralização
+   nenhuma, cortado na lateral. */
 .game-rank-pinned {
   position: fixed;
-  left: 50%;
+  left: 1rem;
+  right: 1rem;
+  margin-inline: auto;
+  max-width: 32rem; /* = max-w-lg do <main> em AppLayout, mesma coluna da lista */
   bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  width: min(calc(100vw - 2rem), 30rem);
   z-index: 40;
   filter: drop-shadow(0 6px 14px rgba(28, 25, 23, 0.25));
 }
 
 @media (min-width: 768px) {
   .game-rank-pinned {
-    left: calc(50% + 8rem);
+    left: calc(16rem + 1rem); /* 16rem = largura da sidebar (w-64) */
+    max-width: 48rem; /* = md:max-w-3xl do <main> */
     bottom: 1.25rem;
-    width: min(calc(100vw - 18rem), 46rem);
   }
 }
 
