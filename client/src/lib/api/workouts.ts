@@ -64,9 +64,8 @@ export interface CompleteAtividadeResponse {
   /** true = hoje é dia de treino agendado — atividade ainda paga XP (até o teto diário), mas não mexe na streak. */
   dia_de_treino: boolean;
   atividades_hoje: number;
+  /** Teto de atividades que ainda pagam XP no dia (não é mínimo pra streak). */
   atividades_minimo: number;
-  /** true = bateu o mínimo de atividades do dia de descanso. */
-  meta_descanso_atingida: boolean;
   streak_celebration: { streak_atual: number; streak_anterior: number } | null;
   level_up: { level_anterior: number; level_novo: number } | null;
   new_achievements: { id: string; titulo: string; descricao: string; icon: string }[];

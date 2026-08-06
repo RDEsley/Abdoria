@@ -5,17 +5,20 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { updateAtividadeHistorico } from '@/lib/api';
 import { formatMetricas } from '@/lib/atividade-format';
+import { useAuth } from '@/context/AuthContext';
 import {
   ATIVIDADE_OBS_MAX,
   camposParaAtividade,
+  findAtividade,
   type AtividadeExtra,
   type AtividadeLog,
 } from '@shared/atividades';
 
-/** O log guarda só o que aconteceu; `camposParaAtividade` espera a atividade
-    do catálogo. Como ela pode ter sido excluída/editada depois, reconstrói o
-    mínimo a partir do próprio log — o que importa aqui é o `tipo`, que decide
-    quais campos existem. */
+/** Fallback para atividade excluída do catálogo desde a conclusão: o log só
+    guarda o que aconteceu, e `camposParaAtividade` precisa de uma atividade.
+    `meta_tipo: 'tempo'` aqui NÃO é palpite de conveniência — sem a atividade
+    original não dá pra saber a unidade da meta, e 'tempo' é o formato que não
+    inventa um campo de quantidade inexistente. */
 function atividadeDoLog(log: AtividadeLog): AtividadeExtra {
   return {
     id: log.atividade_id,
@@ -43,11 +46,22 @@ export function AtividadeHistoricoEditor({
   atividade: AtividadeLog;
   onSaved?: (atualizada: AtividadeLog) => void;
 }) {
+  const { user } = useAuth();
   const [log, setLog] = useState(atividade);
   const [editando, setEditando] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const campos = useMemo(() => camposParaAtividade(atividadeDoLog(log)), [log]);
+  // Prefere a atividade real do catálogo (mesma ordem do servidor) — derivar
+  // só do log perdia o `meta_tipo`, e com isso o campo de quantidade sumia do
+  // formulário de edição para atividades cadastradas por número: o usuário
+  // via menos campos aqui do que na hora de concluir.
+  const campos = useMemo(
+    () =>
+      camposParaAtividade(
+        findAtividade(user?.preferencias, log.atividade_id) ?? atividadeDoLog(log),
+      ),
+    [user?.preferencias, log],
+  );
   const [valores, setValores] = useState<Record<string, string>>(() =>
     Object.fromEntries(Object.entries(atividade.metricas ?? {}).map(([k, v]) => [k, String(v)])),
   );

@@ -35,7 +35,12 @@ import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
 import { readInventarioSummary } from '../services/inventory.js';
-import { hasAfkRewardsToClaim, syncAfkRewards } from '../services/afk.js';
+import {
+  afkProfileColumns,
+  hasAfkRewardsToClaim,
+  readFrozenDia,
+  syncAfkRewards,
+} from '../services/afk.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import type { TreinoBase, TreinoTipo, WorkoutExerciseEntry } from '../types/index.js';
 import { normalizePending } from '../repositories/user-repository.js';
@@ -191,12 +196,18 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       return;
     }
 
+    // Este GET escreve (reset de XP diário, acúmulo de AFK, aviso de streak
+    // congelada). Como o Início chama /stats a cada refresh, um `save()`
+    // completo aqui é um dos maiores atropelos possíveis às `preferencias`
+    // gravadas pelo cliente — daí o escopo explícito em cada escrita.
+    const frozenDiaAntes = readFrozenDia(user);
+
     if (resetXpDiarioIfNeeded(user)) {
-      await user.save();
+      await user.saveColumns(['xp_diario']);
     }
 
     syncAfkRewards(user);
-    await user.save();
+    await user.save({ profileColumns: afkProfileColumns(user, frozenDiaAntes) });
 
     const userId = user.id.toString();
 
@@ -258,7 +269,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     const streakFrozenNotice = Boolean(user.gamificacao.streak_freeze_notice_pending);
     if (streakFrozenNotice) {
       user.gamificacao.streak_freeze_notice_pending = false;
-      await user.save();
+      await user.saveColumns(['gamificacao']);
     }
 
     const xpCap = getDailyXpCapBreakdownForUser(user);
@@ -636,6 +647,10 @@ workoutsRouter.patch('/historico/:id/atividade', async (req: AuthRequest, res) =
   }
 });
 
+/** Janela anti-reenvio (duplo toque, retry de rede) para a MESMA atividade.
+    Não é regra de jogo — repetir mais tarde no mesmo dia é permitido. */
+const ATIVIDADE_REENVIO_MS = 20_000;
+
 /**
  * Conclui uma Atividade da fila do dia.
  *
@@ -672,8 +687,21 @@ workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
     };
     const sessoesHoje = await WorkoutHistory.find(todayFilter);
     const historyNome = nomeHistoricoAtividade(atividade.nome);
-    if (sessoesHoje.some((entry) => entry.treino_nome === historyNome)) {
-      res.status(400).json({ error: 'Você já concluiu essa atividade hoje.' });
+
+    // Repetir a mesma atividade no mesmo dia é permitido (ex.: duas sessões de
+    // leitura) — a interface convida a isso ("toque para repetir"), e bloquear
+    // deixava o item preso numa fila impossível de concluir. O XP não infla:
+    // o teto de `ATIVIDADES_MIN_DESCANSO` por dia e o `awardDailyXp` já
+    // limitam. O que ainda barramos é reenvio acidental (duplo toque, retry de
+    // rede), com uma janela curta.
+    const ultimaIgual = sessoesHoje
+      .filter((entry) => entry.treino_nome === historyNome)
+      .reduce<number>(
+        (maisRecente, entry) => Math.max(maisRecente, new Date(entry.concluido_em).getTime()),
+        0,
+      );
+    if (ultimaIgual > 0 && Date.now() - ultimaIgual < ATIVIDADE_REENVIO_MS) {
+      res.status(400).json({ error: 'Essa atividade acabou de ser registrada.' });
       return;
     }
 
@@ -757,7 +785,6 @@ workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
       dia_de_treino: diaDeTreino,
       atividades_hoje: atividadesHoje,
       atividades_minimo: ATIVIDADES_MIN_DESCANSO,
-      meta_descanso_atingida: !diaDeTreino && atividadesHoje >= ATIVIDADES_MIN_DESCANSO,
       streak_celebration:
         streakAfter > streakBefore
           ? { streak_atual: streakAfter, streak_anterior: streakBefore }
