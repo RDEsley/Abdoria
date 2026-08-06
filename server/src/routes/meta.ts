@@ -5,10 +5,12 @@ import { requireAuth } from '../middleware/auth.js';
 import { awardMoedaFromXp } from '../services/economy.js';
 import {
   activateAfk,
+  afkProfileColumns,
   claimAfkRewards,
   afkResponsePayload,
   hasAfkRewardsToClaim,
   pauseAfk,
+  readFrozenDia,
   resumeAfk,
   syncAfkRewards,
   touchAfkPresence,
@@ -29,6 +31,9 @@ export const metaRouter = Router();
 
 metaRouter.use(requireAuth);
 
+/** Colunas de `profiles` que consumir um item de inventário altera. */
+const ITEM_PROFILE_COLUMNS = ['gamificacao', 'inventario', 'cosmeticos'] as const;
+
 metaRouter.get('/afk', async (req: AuthRequest, res) => {
   try {
     const user = await User.findById(req.userId!);
@@ -37,9 +42,10 @@ metaRouter.get('/afk', async (req: AuthRequest, res) => {
       return;
     }
     // Abrir a tela de Exploração é o que liga o timer AFK da conta.
+    const frozenDiaAntes = readFrozenDia(user);
     activateAfk(user);
     const bestiario_novos = syncAfkRewards(user);
-    await user.save();
+    await user.save({ profileColumns: afkProfileColumns(user, frozenDiaAntes) });
     res.json(
       afkResponsePayload(
         user,
@@ -63,6 +69,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
+    const frozenDiaAntes = readFrozenDia(user);
     const bestiario_novos = syncAfkRewards(user);
     if (!hasAfkRewardsToClaim(user.afk)) {
       res.status(400).json({ error: 'Nenhuma recompensa AFK para coletar.' });
@@ -74,7 +81,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
     const levelUp =
       levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null;
     awardMoedaFromXp(user);
-    await user.save();
+    await user.save({ profileColumns: afkProfileColumns(user, frozenDiaAntes) });
     res.json({
       user: sanitizeUser(user),
       claimed,
@@ -102,13 +109,14 @@ metaRouter.post('/afk/scene', async (req: AuthRequest, res) => {
     }
     // Vila = tempo pausado (jogador não está explorando de verdade);
     // floresta = tempo volta a correr a partir de agora.
+    const frozenDiaAntes = readFrozenDia(user);
     if (mode === 'village') {
       pauseAfk(user);
     } else {
       resumeAfk(user);
     }
     const bestiario_novos = syncAfkRewards(user);
-    await user.save();
+    await user.save({ profileColumns: afkProfileColumns(user, frozenDiaAntes) });
     res.json({ ok: true, ...afkResponsePayload(user, undefined, bestiario_novos) });
   } catch (error) {
     console.error('POST /api/meta/afk/scene error:', error);
@@ -123,8 +131,9 @@ metaRouter.post('/afk/ping', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
+    const frozenDiaAntes = readFrozenDia(user);
     const bestiario_novos = touchAfkPresence(user);
-    await user.save();
+    await user.save({ profileColumns: afkProfileColumns(user, frozenDiaAntes) });
     res.json({ ok: true, ...afkResponsePayload(user, undefined, bestiario_novos) });
   } catch (error) {
     console.error('POST /api/meta/afk/ping error:', error);
@@ -159,7 +168,10 @@ metaRouter.post('/inventory/bau-patrulha', async (req: AuthRequest, res) => {
       return;
     }
     awardMoedaFromXp(user);
-    await user.save();
+    // Só as colunas que o consumo do item altera — `preferencias` fica de
+    // fora pra não desfazer o que o cliente gravou em paralelo. O estado de
+    // AFK continua sendo salvo: os itens simulam kills e mexem em `combat`.
+    await user.save({ profileColumns: ITEM_PROFILE_COLUMNS });
     res.json({
       user: sanitizeUser(user),
       claimed: result.claimed,
@@ -189,7 +201,7 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
       return;
     }
     awardMoedaFromXp(user);
-    await user.save();
+    await user.save({ profileColumns: ITEM_PROFILE_COLUMNS });
     res.json({
       user: sanitizeUser(user),
       hours: result.hours,
@@ -224,7 +236,7 @@ metaRouter.post('/inventory/exp-instant', async (req: AuthRequest, res) => {
       res.status(400).json({ error: result.error });
       return;
     }
-    await user.save();
+    await user.save({ profileColumns: ITEM_PROFILE_COLUMNS });
     res.json({
       user: sanitizeUser(user),
       xp_ganho: result.xp_ganho,
@@ -253,7 +265,7 @@ metaRouter.post('/inventory/doria-bag', async (req: AuthRequest, res) => {
       res.status(400).json({ error: result.error });
       return;
     }
-    await user.save();
+    await user.save({ profileColumns: ITEM_PROFILE_COLUMNS });
     res.json({
       user: sanitizeUser(user),
       abdoria_ganha: result.abdoria_ganha,
@@ -294,7 +306,11 @@ metaRouter.patch('/preferences', async (req: AuthRequest, res) => {
     if (req.body?.arma_preferida === 'arco' || req.body?.arma_preferida === 'espada') {
       user.preferencias.arma_preferida = req.body.arma_preferida;
     }
-    await user.save();
+    // Caso espelhado do problema acima: esta rota só mexe em `preferencias`,
+    // mas um `save()` completo levaria junto `gamificacao`/`cosmeticos` como
+    // estavam no início da request — apagando XP/Coins que o ping de AFK
+    // (a cada 60s) tivesse creditado nesse meio-tempo.
+    await user.saveColumns(['preferencias']);
     res.json(sanitizeUser(user));
   } catch (error) {
     console.error('PATCH /api/meta/preferences error:', error);

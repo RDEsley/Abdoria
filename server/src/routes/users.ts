@@ -149,7 +149,7 @@ usersRouter.post('/me/suggestion', async (req: AuthRequest, res) => {
     }
     await Suggestions.create(user.id, censorProfanity(texto));
     user.preferencias = { ...user.preferencias, sugestao_respondida: true };
-    await user.save();
+    await user.saveColumns(['preferencias']);
     res.json({ ok: true, user: sanitizeUser(user) });
   } catch (error) {
     console.error('POST /api/users/me/suggestion error:', error);
@@ -176,7 +176,7 @@ usersRouter.post('/me/rating', async (req: AuthRequest, res) => {
       .slice(0, 500);
     await Ratings.upsert(user.id, stars, texto ? censorProfanity(texto) : null);
     user.preferencias = { ...user.preferencias, avaliacao_respondida: true };
-    await user.save();
+    await user.saveColumns(['preferencias']);
     res.json({ ok: true, user: sanitizeUser(user) });
   } catch (error) {
     console.error('POST /api/users/me/rating error:', error);

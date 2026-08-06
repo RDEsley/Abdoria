@@ -191,6 +191,38 @@ function rollFrozenStreakOfTheDay(user: UserRecord, afk: AfkState): void {
   user.preferencias.afk_frozen_ultimo_dia = today;
 }
 
+/**
+ * Colunas de `profiles` que as rotas de AFK realmente alteram.
+ *
+ * Elas rodam o tempo todo (o ping de presença dispara a cada 60s em QUALQUER
+ * tela do app, ver `useAfkBackgroundSync`), então nunca podem salvar o perfil
+ * inteiro: um `save()` completo devolve `preferencias` como estavam no início
+ * da request e apaga, sem erro, o que o cliente gravou em paralelo — fila de
+ * atividades, lembretes, configurações, cosmético equipado.
+ *
+ * `preferencias` entra na lista só quando o roll diário de Frozen Streak
+ * acabou de marcar o dia ali (no máximo 1x por dia por usuário), que é a
+ * única escrita dessas rotas nessa coluna.
+ */
+export function afkProfileColumns(user: UserRecord, frozenDiaAntes?: string | null) {
+  const columns: ('gamificacao' | 'inventario' | 'cosmeticos' | 'preferencias')[] = [
+    'gamificacao',
+    'inventario',
+    'cosmeticos',
+  ];
+  // Compara já normalizado dos dois lados: o campo é `undefined` enquanto
+  // ninguém rolou Frozen Streak nessa conta, e `undefined !== null` faria
+  // TODO ping incluir `preferencias` — anulando exatamente a proteção que
+  // esta função existe pra dar.
+  if (readFrozenDia(user) !== (frozenDiaAntes ?? null)) columns.push('preferencias');
+  return columns;
+}
+
+/** Leia ANTES de mutar, pra comparar depois em `afkProfileColumns`. */
+export function readFrozenDia(user: UserRecord): string | null {
+  return user.preferencias?.afk_frozen_ultimo_dia ?? null;
+}
+
 export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[] {
   const before = new Set(ensureBestiario(user));
   const afk = ensureAfk(user);

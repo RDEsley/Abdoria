@@ -399,7 +399,11 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     streakAfterFreeze.atual,
   );
 
-  await user.save();
+  // Só o que esta função altera. É um dos caminhos de escrita mais quentes do
+  // app (roda em /stats, na conclusão de treino e de atividade), então salvar
+  // o perfil inteiro daqui apagaria `preferencias` gravadas em paralelo pelo
+  // cliente. `preferencias` aqui é apenas LIDA (frozen_streak_auto_usar).
+  await user.saveColumns(['gamificacao', 'inventario', 'xp_diario']);
 
   if (frozenDays.length > 0) {
     await notifyStreakFrozen(userId, frozenDays);

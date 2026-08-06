@@ -70,6 +70,8 @@ type ProfileRow = {
 type AfkRow = {
   user_id: string;
   last_seen_at?: string | null;
+  /** Presente só depois da migration `afk_paused_at`. */
+  paused_at?: string | null;
   minutos_acumulados: number;
   pending: Record<string, unknown>;
   combat?: Record<string, unknown>;
@@ -150,6 +152,7 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
   const pending = normalizePending(afk?.pending);
   const afkState: AfkState & { pending: AfkPendingReward } = {
     last_seen_at: afk?.last_seen_at ?? null,
+    paused_at: afk?.paused_at ?? null,
     minutos_acumulados: afk?.minutos_acumulados ?? 0,
     pending,
     combat: normalizeCombat(afk?.combat),
@@ -362,45 +365,62 @@ export class UserMutable implements UserRecord {
   }
 
   /**
-   * Grava SÓ as colunas pedidas, a partir do estado atual em memória.
-   *
-   * `save()` reescreve a linha inteira de `profiles`, então qualquer rota que
-   * mexe num pedaço isolado (XP, moedas...) devolve junto o resto do perfil
-   * como estava no início da request — se o cliente disparou em paralelo
-   * outra escrita (ex.: `PATCH /me` salvando `preferencias`), a que terminar
-   * por último apaga a outra. Use este método quando a rota não é dona do
-   * perfil inteiro; assim escritas concorrentes em colunas diferentes não se
-   * atropelam.
+   * Grava SÓ as colunas de `profiles` pedidas, sem tocar no estado de AFK.
+   * Atalho para `save({ profileColumns, skipAfk: true })` — ver o porquê lá.
    */
-  async saveColumns(columns: (keyof ProfileRow)[]): Promise<UserMutable> {
-    const full = userToProfileRow(this);
-    const patch: Record<string, unknown> = {};
-    for (const column of columns) {
-      if (column === 'email' || column === 'id') continue;
-      if (column in full) patch[column] = full[column];
-    }
-    if (Object.keys(patch).length === 0) return this;
-
-    const { error } = await getSupabase().from('profiles').update(patch).eq('id', this.id);
-    if (error) throw error;
-    return this;
+  async saveColumns(columns: readonly (keyof ProfileRow)[]): Promise<UserMutable> {
+    return this.save({ profileColumns: columns, skipAfk: true });
   }
 
-  async save(): Promise<UserMutable> {
+  /**
+   * Persiste o usuário.
+   *
+   * Por padrão reescreve a linha INTEIRA de `profiles` a partir do estado que
+   * a request leu no início. Isso só é seguro para rotas donas do perfil
+   * inteiro: se o cliente disparou em paralelo outra escrita (ex.: `PATCH /me`
+   * salvando `preferencias`), a que terminar por último apaga a outra, sem
+   * erro nenhum.
+   *
+   * `profileColumns` limita a escrita ao que a rota realmente alterou, então
+   * escritas concorrentes em colunas diferentes deixam de se atropelar.
+   * `skipAfk` pula o UPDATE em `user_afk_state` — mesma ideia: quem não mexeu
+   * no AFK não deve reescrevê-lo com um snapshot potencialmente velho.
+   */
+  async save(options?: {
+    profileColumns?: readonly (keyof ProfileRow)[];
+    skipAfk?: boolean;
+  }): Promise<UserMutable> {
     const sb = getSupabase();
-    const profileUpdate = userToProfileRow(this);
-    delete profileUpdate.email;
+    const full = userToProfileRow(this);
+    delete full.email;
 
-    const { error: profileError } = await sb
-      .from('profiles')
-      .update(profileUpdate)
-      .eq('id', this.id);
+    let profileUpdate: Record<string, unknown> = full;
+    if (options?.profileColumns) {
+      profileUpdate = {};
+      for (const column of options.profileColumns) {
+        if (column === 'email' || column === 'id') continue;
+        if (column in full) profileUpdate[column] = full[column];
+      }
+    }
 
-    if (profileError) throw profileError;
+    if (Object.keys(profileUpdate).length > 0) {
+      const { error: profileError } = await sb
+        .from('profiles')
+        .update(profileUpdate)
+        .eq('id', this.id);
+
+      if (profileError) throw profileError;
+    }
+
+    if (options?.skipAfk) return this;
 
     await ensureAfkRow(this.id);
-    const afkPayload = {
+    const afkPayload: Record<string, unknown> = {
       last_seen_at: this.afk.last_seen_at,
+      // Sem isto a pausa da vila só valia dentro da request que a criou: a
+      // seguinte lia `paused_at` como nulo e creditava como exploração todo o
+      // tempo parado na vila.
+      paused_at: this.afk.paused_at ?? null,
       minutos_acumulados: this.afk.minutos_acumulados ?? 0,
       pending: normalizePending(this.afk.pending),
       combat: normalizeCombat(this.afk.combat),
@@ -411,12 +431,20 @@ export class UserMutable implements UserRecord {
       .update(afkPayload)
       .eq('user_id', this.id);
 
-    if (afkError?.code === 'PGRST204' && String(afkError.message ?? '').includes('combat')) {
-      const { combat: _combat, ...legacyPayload } = afkPayload;
-      ({ error: afkError } = await sb
-        .from('user_afk_state')
-        .update(legacyPayload)
-        .eq('user_id', this.id));
+    // Ambiente sem as migrations `afk_combat`/`afk_paused_at` aplicadas:
+    // reenvia sem a(s) coluna(s) que faltam em vez de falhar a escrita toda.
+    if (afkError?.code === 'PGRST204') {
+      const message = String(afkError.message ?? '');
+      const legacyPayload = { ...afkPayload };
+      if (message.includes('combat')) delete legacyPayload.combat;
+      if (message.includes('paused_at')) delete legacyPayload.paused_at;
+
+      if (Object.keys(legacyPayload).length !== Object.keys(afkPayload).length) {
+        ({ error: afkError } = await sb
+          .from('user_afk_state')
+          .update(legacyPayload)
+          .eq('user_id', this.id));
+      }
     }
 
     if (afkError) throw afkError;
