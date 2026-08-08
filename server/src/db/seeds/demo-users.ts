@@ -212,7 +212,8 @@ function buildDemoUsers(): DemoUserSeed[] {
       objetivo: OBJETIVOS[Math.floor(rng() * OBJETIVOS.length)],
       gamificacao: {
         nivel_xp: nivelXp,
-        streak_atual: streakAtual,
+        // Reset current streak for demo NPCs so they don't hold live streaks
+        streak_atual: 0,
         streak_maior: streakMaior,
         total_minutos: totalMinutos,
         conquistas: conquistasFor(nivelXp, streakMaior),
