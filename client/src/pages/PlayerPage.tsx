@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
   Hourglass,
   ListChecks,
@@ -314,6 +315,26 @@ export function PlayerPage() {
   const completeSeries = () => {
     if (phase !== 'working') return;
     advanceAfterSeries();
+  };
+
+  const goToPreviousExercise = () => {
+    if (!workout || exerciseIndex === 0) return;
+
+    if (pauseStartedRef.current) {
+      pausedMsRef.current += Date.now() - pauseStartedRef.current;
+      pauseStartedRef.current = null;
+      persistWorkoutPausedMs(pausedMsRef.current);
+    }
+
+    tickHandledRef.current = false;
+    setExerciseIndex((index) => Math.max(index - 1, 0));
+    setSeriesIndex(0);
+    setPhase('ready');
+    setSecondsLeft(0);
+    setRestTotalSec(0);
+    setPaused(false);
+    setCountdownValue(null);
+    setMediaError(false);
   };
 
   const skipRest = () => {
@@ -865,6 +886,18 @@ export function PlayerPage() {
         </div>
 
         <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+          {exerciseIndex > 0 && (
+            <GameButton
+              size="lg"
+              variant="ghost"
+              className="w-full flex items-center justify-center gap-2"
+              onClick={goToPreviousExercise}
+            >
+              <ChevronLeft size={18} />
+              Voltar para o treino anterior
+            </GameButton>
+          )}
+
           {phase === 'ready' && (
             <GameButton
               size="lg"

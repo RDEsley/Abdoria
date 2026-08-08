@@ -176,9 +176,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     if (period === 'global') {
       // Global usa totais vitalícios, que já são colunas simples (nivel_xp /
       // moedas_total_ganhas) — mesma estratégia do streak: sort+limit no
-      // banco, sem puxar a tabela inteira pra ordenar em JS. Diferente da
-      // semanal, que precisa da atividade sintética dos NPCs demo (calculada
-      // em JS a partir de um hash, sem coluna equivalente pra ordenar no banco).
+      // banco, sem puxar a tabela inteira pra ordenar em JS.
       const sortField: Record<string, 1 | -1> =
         metric === 'xp'
           ? { 'gamificacao.nivel_xp': -1 }
@@ -206,9 +204,9 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    // Semanal ordena pelos acumuladores da semana — precisa da atividade
-    // sintética dos NPCs demo (hash em JS, sem coluna equivalente no banco),
-    // então continua puxando a tabela inteira pra ordenar em JS.
+    // Semanal ordena pelos acumuladores da semana em JS porque o valor pode
+    // vir do acumulador corrente ou do `week_stats_prev` ainda preservado no
+    // domingo até o payout fechar.
     const all = (await User.find(leaderboardFilter, { skipAfk: true })).filter(
       (u) => !isHiddenAdmin(u),
     );

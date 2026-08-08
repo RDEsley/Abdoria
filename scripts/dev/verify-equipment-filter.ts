@@ -15,21 +15,21 @@ const semEquip: UserPreferencias = {
   equipamentos: {},
   exercicios_nao_recomendar: [],
 } as UserPreferencias;
-const comPrancha: UserPreferencias = {
-  equipamentos: { push_up_board: true },
+const comBarra: UserPreferencias = {
+  equipamentos: { pull_up_bar: true },
   exercicios_nao_recomendar: [],
 } as UserPreferencias;
-const comPranchaBloqueado: UserPreferencias = {
-  equipamentos: { push_up_board: true },
-  exercicios_nao_recomendar: ['push-up-board-chest'],
+const comBarraBloqueada: UserPreferencias = {
+  equipamentos: { pull_up_bar: true },
+  exercicios_nao_recomendar: ['pull-up'],
 } as UserPreferencias;
 
 const exEquipAtivo = {
-  slug: 'push-up-board-chest',
+  slug: 'pull-up',
   ativo: true,
-  equipamento: 'push_up_board' as const,
+  equipamento: 'pull_up_bar' as const,
 };
-const exEquipGated = { slug: 'pull-up', ativo: false, equipamento: 'pull_up_bar' as const };
+const exEquipGated = { slug: 'ab-wheel', ativo: false, equipamento: 'ab_wheel' as const };
 const exLivreAtivo = { slug: 'crunch', ativo: true, equipamento: null };
 const exLivreInativo = { slug: 'legacy', ativo: false, equipamento: null };
 
@@ -46,9 +46,9 @@ assert.equal(
 );
 
 // Equipamento MARCADO inclui os exercícios normalmente.
-assert.equal(isExerciseAvailableForUser(exEquipAtivo, comPrancha), true, 'equip marcado aparece');
+assert.equal(isExerciseAvailableForUser(exEquipAtivo, comBarra), true, 'equip marcado aparece');
 assert.equal(
-  isExerciseAvailableForUser(exEquipGated, comPrancha),
+  isExerciseAvailableForUser(exEquipGated, comBarra),
   false,
   'outro equip continua desmarcado',
 );
@@ -59,12 +59,12 @@ assert.equal(isExerciseAvailableForUser(exLivreInativo, semEquip), false, 'livre
 
 // Bloqueio + equipamento atuam JUNTOS: marcado mas bloqueado ⇒ fora das recomendações.
 assert.equal(
-  isExerciseRecommendable(exEquipAtivo, comPrancha),
+  isExerciseRecommendable(exEquipAtivo, comBarra),
   true,
   'marcado e não bloqueado entra',
 );
 assert.equal(
-  isExerciseRecommendable(exEquipAtivo, comPranchaBloqueado),
+  isExerciseRecommendable(exEquipAtivo, comBarraBloqueada),
   false,
   'marcado mas bloqueado sai',
 );

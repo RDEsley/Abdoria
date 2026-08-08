@@ -44,33 +44,18 @@ export function addWeeklyMoedas(user: UserRecord, amount: number): void {
   ensureWeekStats(user).moedas += amount;
 }
 
-/** Hash determinístico simples pra atividade semanal dos NPCs demo. */
-function npcWeekSeed(userId: string, weekKey: string): number {
-  const input = `${userId}:${weekKey}`;
-  let hash = 2166136261;
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash);
-}
-
 /**
  * Valor semanal efetivo de um usuário pra métrica, sem mutar o documento.
- * NPCs demo ganham atividade semanal determinística (estável dentro da semana)
- * pra o ranking semanal não ficar vazio.
+ * Usa o acumulador da semana atual; se a semana virou, lê a anterior ainda
+ * preservada em `week_stats_prev` até o payout de domingo fechar.
  */
 export function weeklyMetricValue(
-  user: Pick<UserRecord, 'id' | 'is_demo_npc'> & {
+  user: Pick<UserRecord, 'id'> & {
     gamificacao: { week_stats?: WeekStats; week_stats_prev?: WeekStats };
   },
   metric: Exclude<LeaderboardMetric, 'streak'>,
   weekKey = getSundayWeekKey(),
 ): number {
-  if (user.is_demo_npc) {
-    const seed = npcWeekSeed(user.id, weekKey);
-    return metric === 'xp' ? 80 + (seed % 640) : 8 + (seed % 64);
-  }
   const stats =
     user.gamificacao.week_stats?.week_key === weekKey
       ? user.gamificacao.week_stats

@@ -16,17 +16,6 @@ export const EXERCISE_GRUPOS: Record<string, ParteCorpo[]> = {
   'incline-push-up': ['peito', 'bracos'],
   'decline-push-up': ['peito', 'ombros', 'bracos'],
 
-  // Prancha 9 em 1.
-  'push-up-board-chest': ['peito', 'bracos'],
-  'push-up-board-chest-wide': ['peito', 'bracos'],
-  'push-up-board-decline': ['peito', 'ombros', 'bracos'],
-  'push-up-board-triceps': ['bracos', 'peito'],
-  'push-up-board-triceps-diamond': ['bracos', 'peito'],
-  'push-up-board-shoulders': ['ombros', 'bracos'],
-  'push-up-board-shoulders-pike': ['ombros', 'bracos'],
-  'push-up-board-back': ['costas'],
-  'push-up-board-back-wide': ['costas'],
-
   // Barra fixa.
   'pull-up': ['costas', 'bracos'],
   'chin-up': ['costas', 'bracos'],
@@ -64,8 +53,6 @@ export const EXERCISE_CONTRAINDICACOES: Record<string, RestricaoFisica[]> = {
   'push-up': ['punhos'],
   'incline-push-up': ['punhos'],
   'decline-push-up': ['punhos', 'ombros'],
-  'push-up-board-shoulders': ['ombros'],
-  'push-up-board-shoulders-pike': ['ombros'],
   'pull-up': ['ombros'],
   'chin-up': ['ombros'],
   'dead-hang': ['ombros'],

@@ -62,15 +62,14 @@ describe('weekly-stats', () => {
     expect(weeklyMetricValue(user, 'moedas', '2026-07-05')).toBe(0);
   });
 
-  it('NPCs demo têm atividade semanal determinística e estável', () => {
+  it('NPCs demo ficam zerados no ranking semanal', () => {
     const npc = { id: 'npc-9', is_demo_npc: true, gamificacao: {} } as unknown as UserRecord;
     const a = weeklyMetricValue(npc, 'xp', '2026-07-05');
     const b = weeklyMetricValue(npc, 'xp', '2026-07-05');
     const otherWeek = weeklyMetricValue(npc, 'xp', '2026-07-12');
     expect(a).toBe(b);
-    expect(a).toBeGreaterThan(0);
-    expect(otherWeek).toBeGreaterThan(0);
-    expect(otherWeek).not.toBe(a);
+    expect(a).toBe(0);
+    expect(otherWeek).toBe(0);
   });
 
   it('getSundayWeekKey ancora no domingo', () => {

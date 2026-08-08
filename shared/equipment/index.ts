@@ -15,23 +15,6 @@ export interface EquipmentDefinition {
 
 export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
   {
-    id: 'push_up_board',
-    nome: 'Prancha de Flexão 9 em 1',
-    descricao: '9 variações de flexão por posição e cor — peito, ombros, costas e tríceps.',
-    exerciseSlugs: [
-      'push-up-board-chest',
-      'push-up-board-chest-wide',
-      'push-up-board-decline',
-      'push-up-board-triceps',
-      'push-up-board-triceps-diamond',
-      'push-up-board-shoulders',
-      'push-up-board-shoulders-pike',
-      'push-up-board-back',
-      'push-up-board-back-wide',
-    ],
-    purchaseUrl: 'https://meli.la/1dBLVev',
-  },
-  {
     id: 'pull_up_bar',
     nome: 'Barra Fixa',
     descricao: 'Puxadas, chin-ups e suspensão isométrica para costas e grip.',
