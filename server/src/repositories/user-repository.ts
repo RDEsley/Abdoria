@@ -571,11 +571,14 @@ export const User = {
         query = query.order('gamificacao->nivel_xp', { ascending: dir === 1 });
       } else if (field === 'gamificacao.streak_atual') {
         query = query.order('gamificacao->streak_atual', { ascending: dir === 1 });
+      } else if (field === 'gamificacao.streak_maior') {
+        query = query.order('gamificacao->streak_maior', { ascending: dir === 1 });
       } else if (field === 'cosmeticos.moedas') {
         query = query.order('cosmeticos->moedas', { ascending: dir === 1 });
       } else if (field === 'cosmeticos.moedas_total_ganhas') {
         query = query.order('cosmeticos->moedas_total_ganhas', { ascending: dir === 1 });
       }
+      query = query.order('nome', { ascending: true });
     }
 
     if (options?.limit) query = query.limit(options.limit);

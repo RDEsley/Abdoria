@@ -78,11 +78,15 @@ A exploração permite:
 
 O sistema competitivo permite comparar o progresso dos jogadores por:
 
-* Experiência acumulada
-* Moedas conquistadas
-* Sequência de treinos
-* Desempenho semanal
+* **XP semanal** — experiência conquistada desde o último domingo
+* **XP global** — experiência acumulada durante toda a jornada
+* **Coins semanais** — moedas conquistadas na semana, sem descontar compras
+* **Coins globais** — total vitalício de moedas conquistadas
+* **Dias seguidos (semanal)** — sequência de treinos atualmente ativa
+* **Dias seguidos (global)** — maior sequência já alcançada pelo jogador
 * Ranking entre amigos
+
+Os rankings semanais de XP e Coins são fechados aos domingos e concedem recompensas por posição. Dias seguidos não possuem premiação semanal. Os personagens fictícios usados para compor a comunidade permanecem visíveis como jogadores inativos, com streak atual e recorde zerados, sem conquistas de streak.
 
 Os jogadores também podem acessar perfis públicos, acompanhar conquistas e interagir com a comunidade.
 

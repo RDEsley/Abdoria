@@ -14,7 +14,7 @@ export { getSundayWeekKey };
 
 const leaderboardFilter = {
   onboarding_completed: true,
-  is_guest: { $ne: true },
+  is_guest: false,
 };
 
 /** Só XP e Dorias fecham semana — o ranking de streak é fixo e sem prêmio. */

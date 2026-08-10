@@ -73,7 +73,8 @@ function PostCard({ post }: { post: CampaignPost }) {
 
 /**
  * Feed narrativo do Mapa da Campanha — 1 post por sessão de treino (a
- * "missão do dia"). Exibe somente o capítulo atual e o imediatamente anterior.
+ * "missão do dia"). Exibe somente o capítulo mais recente, que permanece na
+ * Home até a chegada de um novo capítulo.
  *
  * O arquivo completo de capítulos continua preservado no projeto, mas está
  * temporariamente desativado e não possui acesso pelo front-end.
@@ -93,17 +94,15 @@ export function CampaignFeed() {
     );
   }
 
+  const currentPost = posts[0];
+
   return (
     <div className="mt-4 flex flex-col gap-2.5">
-      <AnimatePresence initial={false}>
-        {posts.slice(0, 2).map((post, index) => (
-          <div key={post.id} className="flex flex-col gap-1">
-            <span className="px-1 text-[0.58rem] font-extrabold uppercase tracking-[0.12em] text-stone-400">
-              {index === 0 ? 'Capítulo atual' : 'Capítulo anterior'}
-            </span>
-            <PostCard post={post} />
-          </div>
-        ))}
+      <span className="px-1 text-[0.58rem] font-extrabold uppercase tracking-[0.12em] text-stone-400">
+        Capítulo do dia
+      </span>
+      <AnimatePresence mode="wait" initial={false}>
+        <PostCard key={currentPost.id} post={currentPost} />
       </AnimatePresence>
     </div>
   );

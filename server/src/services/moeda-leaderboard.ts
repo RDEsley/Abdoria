@@ -3,7 +3,7 @@ import { MOEDA_XP_STEP, DEFAULT_COSMETICOS } from '../types/index.js';
 
 const leaderboardFilter = {
   onboarding_completed: true,
-  is_guest: { $ne: true },
+  is_guest: false,
 };
 
 function npcMoedasBonus(nivelXp: number): number {
@@ -37,14 +37,25 @@ async function doSync(): Promise<void> {
   const users = await User.find(leaderboardFilter, { skipAfk: true });
 
   const updates = users.flatMap((lean) => {
-    if (!lean.is_demo_npc) return [];
-    const target = npcMoedasBonus(lean.gamificacao.nivel_xp);
-    const atual = lean.cosmeticos?.moedas ?? 0;
-    if (atual >= target) return [];
+    const saldoAtual = lean.cosmeticos?.moedas ?? 0;
+    const saldo = lean.is_demo_npc
+      ? Math.max(saldoAtual, npcMoedasBonus(lean.gamificacao.nivel_xp))
+      : saldoAtual;
+    const totalAtual = lean.cosmeticos?.moedas_total_ganhas;
+    const totalGanhas = Math.max(
+      saldo,
+      typeof totalAtual === 'number' && !Number.isNaN(totalAtual) ? totalAtual : 0,
+    );
+
+    if (saldo === saldoAtual && totalGanhas === totalAtual) return [];
+
     const cosmeticos = {
       ...(lean.cosmeticos ?? DEFAULT_COSMETICOS),
-      moedas: target,
-      moedas_xp_blocos: Math.floor(lean.gamificacao.nivel_xp / MOEDA_XP_STEP),
+      moedas: saldo,
+      moedas_total_ganhas: totalGanhas,
+      ...(lean.is_demo_npc
+        ? { moedas_xp_blocos: Math.floor(lean.gamificacao.nivel_xp / MOEDA_XP_STEP) }
+        : {}),
     };
     return [User.updateFieldsById(lean.id, { cosmeticos })];
   });
@@ -57,6 +68,7 @@ export function buildNpcCosmeticos(nivelXp: number) {
   return {
     ...DEFAULT_COSMETICOS,
     moedas: blocks + 12,
+    moedas_total_ganhas: blocks + 12,
     moedas_xp_blocos: blocks,
   };
 }

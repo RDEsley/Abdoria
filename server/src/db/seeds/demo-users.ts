@@ -8,8 +8,8 @@ export interface DemoUserSeed {
   objetivo: Objetivo;
   gamificacao: {
     nivel_xp: number;
-    streak_atual: number;
-    streak_maior: number;
+    streak_atual: 0;
+    streak_maior: 0;
     total_minutos: number;
     conquistas: string[];
   };
@@ -135,30 +135,22 @@ const OBJETIVOS: Objetivo[] = ['definicao', 'forca', 'resistencia', 'manutencao'
 
 const CONQUISTAS_POR_MARCO: { minXp: number; ids: string[] }[] = [
   { minXp: 0, ids: ['primeiro_treino'] },
-  { minXp: 40, ids: ['streak_2'] },
-  { minXp: 90, ids: ['streak_3'] },
   { minXp: 150, ids: ['treinos_5', 'minutos_60'] },
-  { minXp: 260, ids: ['streak_7', 'exercicios_50'] },
+  { minXp: 260, ids: ['exercicios_50'] },
   { minXp: 420, ids: ['nivel_3', 'ciclo_ab'] },
-  { minXp: 620, ids: ['streak_14', 'treino_completo'] },
+  { minXp: 620, ids: ['treino_completo'] },
   { minXp: 900, ids: ['nivel_5', 'exercicios_100', 'treinos_25'] },
-  { minXp: 1400, ids: ['streak_30', 'ciclo_completo', 'minutos_500'] },
-  { minXp: 2200, ids: ['nivel_10', 'streak_60', 'semana_perfeita'] },
+  { minXp: 1400, ids: ['ciclo_completo', 'minutos_500'] },
+  { minXp: 2200, ids: ['nivel_10', 'semana_perfeita'] },
   { minXp: 3400, ids: ['treinos_100', 'exercicios_500'] },
-  { minXp: 5200, ids: ['streak_100', 'xp_mestre'] },
+  { minXp: 5200, ids: ['xp_mestre'] },
 ];
 
-function conquistasFor(nivelXp: number, streakMaior: number): string[] {
+function conquistasFor(nivelXp: number): string[] {
   const ids = new Set<string>();
   for (const marco of CONQUISTAS_POR_MARCO) {
     if (nivelXp >= marco.minXp) marco.ids.forEach((id) => ids.add(id));
   }
-  if (streakMaior >= 7) ids.add('streak_7');
-  if (streakMaior >= 14) ids.add('streak_14');
-  if (streakMaior >= 30) ids.add('streak_30');
-  if (streakMaior >= 60) ids.add('streak_60');
-  if (streakMaior >= 100) ids.add('streak_100');
-  if (streakMaior >= 365) ids.add('streak_365');
   return [...ids];
 }
 
@@ -192,10 +184,10 @@ function buildDemoUsers(): DemoUserSeed[] {
     const jitter = 0.75 + rng() * 0.5;
     const nivelXp = Math.max(30, Math.round(Math.pow(rankFactor, 2.4) * 8200 * jitter));
 
-    // Streaks altos concentrados no topo; alguns outliers com sequência enorme.
-    const streakBase = Math.round(Math.pow(rankFactor, 1.8) * 90 * (0.6 + rng() * 0.8));
-    const streakMaior = Math.max(1, streakBase + Math.round(rng() * 30 * rankFactor));
-    const streakAtual = Math.max(0, Math.round(streakBase * (0.4 + rng() * 0.6)));
+    // Preserva a sequência determinística usada pelos demais atributos dos NPCs.
+    rng();
+    rng();
+    rng();
 
     const totalMinutos = Math.round(nivelXp * (0.6 + rng() * 0.5));
     const idade = 17 + Math.floor(rng() * 33);
@@ -212,11 +204,10 @@ function buildDemoUsers(): DemoUserSeed[] {
       objetivo: OBJETIVOS[Math.floor(rng() * OBJETIVOS.length)],
       gamificacao: {
         nivel_xp: nivelXp,
-        // Reset current streak for demo NPCs so they don't hold live streaks
         streak_atual: 0,
-        streak_maior: streakMaior,
+        streak_maior: 0,
         total_minutos: totalMinutos,
-        conquistas: conquistasFor(nivelXp, streakMaior),
+        conquistas: conquistasFor(nivelXp),
       },
     };
   });
