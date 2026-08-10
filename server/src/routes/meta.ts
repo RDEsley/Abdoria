@@ -85,7 +85,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
       return;
     }
     const levelBefore = xpLevelFromTotal(user.gamificacao.nivel_xp);
-    const { claimed, overflow_to_dorias } = claimAfkRewards(user);
+    const { claimed, discarded_items } = claimAfkRewards(user);
     const levelAfter = xpLevelFromTotal(user.gamificacao.nivel_xp);
     const levelUp =
       levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null;
@@ -94,7 +94,7 @@ metaRouter.post('/afk/claim', async (req: AuthRequest, res) => {
     res.json({
       user: sanitizeUser(user),
       claimed,
-      overflow_to_dorias,
+      discarded_items,
       bestiario_novos,
       level_up: levelUp,
     });
@@ -374,7 +374,7 @@ metaRouter.post('/inventory/route-drink', async (req: AuthRequest, res) => {
       hours: result.hours,
       quantity_used: result.quantity_used,
       claimed: result.claimed,
-      overflow_to_dorias: result.overflow_to_dorias,
+      discarded_items: result.discarded_items,
       inventario: readInventarioSummary(user),
       ...afkResponsePayload(user, {
         arma_preferida: user.preferencias?.arma_preferida ?? 'arco',

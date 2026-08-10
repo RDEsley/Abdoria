@@ -30,7 +30,7 @@ const LEGACY_ENERGY_DRINK_ID = 'energy_drink';
 
 export interface AddInventoryResult {
   added: number;
-  overflow_to_dorias: number;
+  discarded: number;
 }
 
 export function isStackCappedItem(itemId: InventoryItemId): boolean {
@@ -88,7 +88,7 @@ function addInventoryItemInternal(
   itemId: InventoryItemId,
   amount: number,
 ): AddInventoryResult {
-  if (amount <= 0) return { added: 0, overflow_to_dorias: 0 };
+  if (amount <= 0) return { added: 0, discarded: 0 };
 
   const inv = ensureInventario(user);
   const entry = inv.itens.find(
@@ -97,12 +97,12 @@ function addInventoryItemInternal(
   const current = entry?.quantidade ?? 0;
 
   let added = amount;
-  let overflow = 0;
+  let discarded = 0;
 
   if (isStackCappedItem(itemId)) {
     const space = Math.max(0, INVENTORY_STACK_CAP - current);
     added = Math.min(amount, space);
-    overflow = amount - added;
+    discarded = amount - added;
   }
 
   if (added > 0) {
@@ -113,16 +113,7 @@ function addInventoryItemInternal(
     }
   }
 
-  let overflow_to_dorias = 0;
-  if (overflow > 0) {
-    const overflowUnitValue = isSlimeMaterialItemId(itemId)
-      ? SLIME_MATERIAL_BY_ID[itemId].sellPrice
-      : 1;
-    overflow_to_dorias = overflow * overflowUnitValue;
-    grantMoeda(user, overflow_to_dorias);
-  }
-
-  return { added, overflow_to_dorias };
+  return { added, discarded };
 }
 
 export function consumeInventoryItem(
@@ -207,7 +198,7 @@ export function useRouteDrinkInExploration(
       hours: number;
       quantity_used: number;
       claimed: AfkPendingReward;
-      overflow_to_dorias: number;
+      discarded_items: number;
     }
   | { ok: false; error: string } {
   const available = getItemCount(user, ROUTE_DRINK_ITEM_ID);
@@ -221,8 +212,8 @@ export function useRouteDrinkInExploration(
   }
 
   const hours = ROUTE_DRINK_HOURS * useQty;
-  const { claimed, overflow_to_dorias } = grantRouteDrinkRewards(user, hours);
-  return { ok: true, hours, quantity_used: useQty, claimed, overflow_to_dorias };
+  const { claimed, discarded_items } = grantRouteDrinkRewards(user, hours);
+  return { ok: true, hours, quantity_used: useQty, claimed, discarded_items };
 }
 
 function rollDoriaBagAmount(user: UserRecord, salt: number): number {

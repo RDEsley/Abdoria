@@ -16,7 +16,7 @@ import {
   updateMe,
 } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
-import { overflowToastMessage } from '@/lib/inventory-overflow';
+import { discardedItemsToastMessage } from '@/lib/inventory-discard';
 import {
   buildRewardPresentationFromAfk,
   partitionRewardPresentation,
@@ -198,10 +198,10 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     }
   };
 
-  const showClaimedCelebration = useCallback((claimed: AfkPendingReward, overflowToDorias = 0) => {
+  const showClaimedCelebration = useCallback((claimed: AfkPendingReward, discardedItems = 0) => {
     setCelebrationClaimed(claimed);
-    const overflowMsg = overflowToastMessage(overflowToDorias);
-    if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
+    const discardedMessage = discardedItemsToastMessage(discardedItems);
+    if (discardedMessage) showGameToast(discardedMessage, { variant: 'info' });
   }, []);
 
   const handleCelebrationClose = useCallback(() => {
@@ -248,7 +248,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
       setRouteDrinkConfirmOpen(false);
       setSelected(null);
       window.dispatchEvent(new CustomEvent('abdoria:afk-sync', { detail: res }));
-      showClaimedCelebration(res.claimed, res.overflow_to_dorias ?? 0);
+      showClaimedCelebration(res.claimed, res.discarded_items ?? 0);
       void refreshApp();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível usar o Route Drink.'), {
@@ -326,9 +326,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                 <span>
                   <Backpack size={17} /> Suprimentos
                 </span>
-                <small>
-                  Pilhas até {stackCap} · excedentes viram {CURRENCY_NAME}
-                </small>
+                <small>Pilhas até {stackCap} · excedentes são descartados</small>
               </header>
 
               <div className="game-inventory-pane__scroll">

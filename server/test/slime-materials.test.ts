@@ -80,14 +80,14 @@ describe('materiais exclusivos dos slimes', () => {
     });
   });
 
-  it('limita a pilha a 99, vende excedente e permite vender uma pilha inteira', () => {
+  it('limita a pilha a 99, descarta excedentes e permite vender uma pilha inteira', () => {
     const owner = user();
     const common = SLIME_MATERIAL_BY_ENEMY_ID.slime_doce;
     const boss = SLIME_MATERIAL_BY_ENEMY_ID.boss_colossus;
 
-    expect(addInventoryItem(owner, common.id, 120)).toEqual({ added: 99, overflow_to_dorias: 63 });
+    expect(addInventoryItem(owner, common.id, 120)).toEqual({ added: 99, discarded: 21 });
     expect(getItemCount(owner, common.id)).toBe(99);
-    expect(owner.cosmeticos.moedas).toBe(63);
+    expect(owner.cosmeticos.moedas).toBe(0);
 
     expect(sellSlimeMaterial(owner, common.id, 4)).toMatchObject({
       ok: true,
@@ -103,7 +103,7 @@ describe('materiais exclusivos dos slimes', () => {
       coins_gained: 30,
     });
     expect(getItemCount(owner, boss.id)).toBe(0);
-    expect(owner.cosmeticos.moedas).toBe(105);
+    expect(owner.cosmeticos.moedas).toBe(42);
   });
 
   it('mantém a rolagem de material independente e próxima das chances configuradas', () => {

@@ -56,7 +56,7 @@ export function getAfkMeta(): Promise<AfkMetaResponse> {
 export function claimAfkRewards(): Promise<{
   user: IUserDocument;
   claimed: AfkPendingReward;
-  overflow_to_dorias?: number;
+  discarded_items?: number;
   level_up?: LevelUpCelebration | null;
 }> {
   return fetchJson('/meta/afk/claim', { method: 'POST' });
@@ -153,7 +153,7 @@ export function consumeRouteDrink(useAll = true): Promise<
     hours: number;
     quantity_used: number;
     claimed: AfkPendingReward;
-    overflow_to_dorias?: number;
+    discarded_items?: number;
     inventario: InventarioSummary;
   }
 > {

@@ -44,7 +44,7 @@ import {
   unlockAfkSkill,
 } from '@/lib/api';
 import { DEV_REWARD_PREVIEW_EVENT } from '@/lib/dev-reward-preview';
-import { overflowToastMessage } from '@/lib/inventory-overflow';
+import { discardedItemsToastMessage } from '@/lib/inventory-discard';
 import { mergeAfkCombatSnapshot } from '@/lib/afk-combat-merge';
 import { preloadAfkImage, preloadVillageImages } from '@/lib/afk-image-preload';
 import { emitXpEarned } from '@/lib/xp-orbs';
@@ -388,10 +388,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     return () => window.removeEventListener(DEV_REWARD_PREVIEW_EVENT, onDevCelebration);
   }, []);
 
-  const showClaimedCelebration = useCallback((claimed: AfkPendingReward, overflowToDorias = 0) => {
+  const showClaimedCelebration = useCallback((claimed: AfkPendingReward, discardedItems = 0) => {
     setCelebrationClaimed(claimed);
-    const overflowMsg = overflowToastMessage(overflowToDorias);
-    if (overflowMsg) showGameToast(overflowMsg, { variant: 'info' });
+    const discardedMessage = discardedItemsToastMessage(discardedItems);
+    if (discardedMessage) showGameToast(discardedMessage, { variant: 'info' });
   }, []);
 
   // Na vila o tempo acumulado fica pausado no servidor (setAfkScene já cuida
@@ -605,7 +605,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       // do meta AFK) que só servem pra sincronizar estado em segundo plano.
       applyUser(res.user);
       pendingXpEffectsRef.current = { xp: res.claimed.xp, levelUp: res.level_up ?? null };
-      showClaimedCelebration(res.claimed, res.overflow_to_dorias);
+      showClaimedCelebration(res.claimed, res.discarded_items);
       void refreshApp();
       void load();
     } catch (err) {

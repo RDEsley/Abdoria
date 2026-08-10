@@ -74,10 +74,10 @@ function applyAfkRewardBundle(
   bundle: AfkPendingReward,
 ): {
   claimed: AfkPendingReward;
-  overflow_to_dorias: number;
+  discarded_items: number;
 } {
   const claimed = normalizePending(bundle);
-  let overflow_to_dorias = 0;
+  let discarded_items = 0;
 
   if (claimed.xp > 0) {
     user.gamificacao.nivel_xp += claimed.xp;
@@ -88,23 +88,23 @@ function applyAfkRewardBundle(
   }
   if (claimed.frozen_streaks > 0) {
     const result = addInventoryItem(user, FROZEN_STREAK_ITEM_ID, claimed.frozen_streaks);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   if (claimed.route_drinks > 0) {
     const result = addInventoryItem(user, ROUTE_DRINK_ITEM_ID, claimed.route_drinks);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   if (claimed.exp_instant > 0) {
     const result = addInventoryItem(user, EXP_INSTANT_ITEM_ID, claimed.exp_instant);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   if (claimed.doria_bags > 0) {
     const result = addInventoryItem(user, DORIA_BAG_ITEM_ID, claimed.doria_bags);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   for (const [itemId, amount] of Object.entries(claimed.material_items)) {
     const result = addInventoryItem(user, itemId, amount);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   for (const cosmeticId of claimed.cosmetic_ids) {
     if (!user.cosmeticos.desbloqueados.includes(cosmeticId)) {
@@ -124,7 +124,7 @@ function applyAfkRewardBundle(
     user.preferencias.patrol_armas = armas;
   }
 
-  return { claimed, overflow_to_dorias };
+  return { claimed, discarded_items };
 }
 
 function simulateKillsIntoPending(
@@ -150,7 +150,7 @@ export function grantPatrolCacheRewards(
 export function grantRouteDrinkRewards(
   user: UserRecord,
   hours = ROUTE_DRINK_HOURS,
-): { claimed: AfkPendingReward; overflow_to_dorias: number } {
+): { claimed: AfkPendingReward; discarded_items: number } {
   return grantExplorationHourRewards(user, hours, { noSelfRouteDrink: true });
 }
 
@@ -171,7 +171,7 @@ function grantExplorationHourRewards(
   user: UserRecord,
   hours: number,
   opts?: { noSelfRouteDrink?: boolean },
-): { claimed: AfkPendingReward; overflow_to_dorias: number } {
+): { claimed: AfkPendingReward; discarded_items: number } {
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
   simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
   if (opts?.noSelfRouteDrink) {
@@ -341,16 +341,16 @@ export function hasAfkRewardsToClaim(
 
 export function claimAfkRewards(user: UserRecord): {
   claimed: AfkPendingReward;
-  overflow_to_dorias: number;
+  discarded_items: number;
 } {
   const afk = ensureAfk(user);
-  const { claimed, overflow_to_dorias } = applyAfkRewardBundle(user, afk.pending);
+  const { claimed, discarded_items } = applyAfkRewardBundle(user, afk.pending);
 
   afk.pending = { ...EMPTY_AFK_PENDING };
   afk.minutos_acumulados = 0;
   afk.last_seen_at = new Date().toISOString();
 
-  return { claimed, overflow_to_dorias };
+  return { claimed, discarded_items };
 }
 
 export function touchAfkPresence(user: UserRecord): AfkEnemyId[] {
