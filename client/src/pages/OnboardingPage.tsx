@@ -24,6 +24,7 @@ import {
   SignalMedium,
   SkipForward,
   SlidersHorizontal,
+  Swords,
   UserCog,
   Weight,
 } from 'lucide-react';
@@ -601,10 +602,16 @@ export function OnboardingPage() {
                     <div
                       key={c}
                       className={
-                        i === CICLOS.length - 1 && CICLOS.length % 2 !== 0 ? 'col-span-2' : undefined
+                        i === CICLOS.length - 1 && CICLOS.length % 2 !== 0
+                          ? 'col-span-2'
+                          : undefined
                       }
                     >
-                      <CicloOptionCard ciclo={c} active={ciclo.includes(c)} onClick={() => toggleCiclo(c)} />
+                      <CicloOptionCard
+                        ciclo={c}
+                        active={ciclo.includes(c)}
+                        onClick={() => toggleCiclo(c)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -754,6 +761,15 @@ export function OnboardingPage() {
                     </span>
                     Sem treino hoje? Uma Atividade como alongamento ou leitura já mantém sua
                     sequência.
+                  </li>
+                  <li>
+                    <span
+                      className="onb-welcome-list__icon onb-welcome-list__icon--rpg"
+                      aria-hidden
+                    >
+                      <Swords size={15} />
+                    </span>
+                    Na Home, abra o RPG pelo botão de espadas no canto inferior direito.
                   </li>
                 </motion.ul>
               </div>

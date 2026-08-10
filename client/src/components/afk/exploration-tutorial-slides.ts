@@ -5,13 +5,13 @@ import type { TutorialSlide } from '@/components/tutorial/TutorialOverlay';
     separado do `preferencias.tutorial_visto` (onboarding geral, no servidor). */
 export const EXPLORATION_TUTORIAL_KEY = 'abdoria_exploracao_tutorial_visto';
 
-// Só o que é específico DESTA tela — o tutorial geral já apresenta o
-// conceito de exploração em segundo plano, sem redundância aqui.
+// O tutorial geral ensina onde fica o botão de entrada. Aqui começa a
+// orientação sobre os controles internos da Exploração.
 export const EXPLORATION_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: TreePine,
     title: 'Bem-vindo à vila',
-    body: 'Aqui ficam a loja de equipamentos e o museu com o bestiário — toque nos dois prédios pra abrir. Quando quiser partir, toque em "Explorar".',
+    body: 'Você chegou pelo botão de espadas da Home. Na vila ficam a Loja, o Bestiário e a Árvore de Habilidades. Quando quiser partir, toque em “Começar a aventura”.',
   },
   {
     icon: Sword,

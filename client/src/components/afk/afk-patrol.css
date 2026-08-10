@@ -10137,6 +10137,88 @@ button.game-afk-reward-chip {
   pointer-events: none;
 }
 
+.game-afk-fab--tutorial,
+.game-afk-fab--tutorial:disabled {
+  z-index: 110;
+  opacity: 1;
+  transform: none;
+  pointer-events: none;
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 0 5px rgba(236, 253, 245, 0.96),
+    0 0 0 10px rgba(52, 211, 153, 0.5),
+    0 0 32px rgba(16, 185, 129, 0.9),
+    3px 4px 0 rgba(6, 50, 32, 0.55);
+  animation: game-afk-fab-tutorial-pulse 1.35s ease-in-out infinite;
+}
+
+.game-afk-fab__tutorial-label {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.9rem);
+  display: grid;
+  width: min(13rem, calc(100vw - 2rem));
+  padding: 0.65rem 0.75rem;
+  border: 2px solid #064e3b;
+  border-radius: 0.9rem;
+  background: #ecfdf5;
+  color: #064e3b;
+  box-shadow: 3px 4px 0 rgba(6, 78, 59, 0.32);
+  text-align: left;
+}
+
+.game-afk-fab__tutorial-label::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 1.2rem;
+  border: 0.45rem solid transparent;
+  border-top-color: #064e3b;
+}
+
+.game-afk-fab__tutorial-label strong {
+  font-size: 0.74rem;
+  font-weight: 950;
+}
+
+.game-afk-fab__tutorial-label small {
+  margin-top: 0.12rem;
+  color: #57534e;
+  font-size: 0.62rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+@keyframes game-afk-fab-tutorial-pulse {
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(236, 253, 245, 0.96),
+      0 0 0 14px rgba(52, 211, 153, 0.22),
+      0 0 42px rgba(16, 185, 129, 1),
+      3px 4px 0 rgba(6, 50, 32, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-afk-fab--tutorial,
+  .game-afk-fab--tutorial:disabled {
+    animation: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .game-afk-fab__tutorial-label {
+    display: none;
+  }
+}
+
+@media (max-height: 600px) {
+  .game-afk-fab--tutorial,
+  .game-afk-fab--tutorial:disabled {
+    z-index: 90;
+  }
+}
+
 .game-afk-fab {
   width: 3.8rem;
   height: 3.8rem;
@@ -11319,12 +11401,24 @@ button.game-afk-reward-chip {
 .game-afk-enemy--boss {
   --boss-aura: #a855f7;
 }
-.game-afk-enemy--boss_colossus { --boss-aura: #5fe47e; }
-.game-afk-enemy--boss_crocodile { --boss-aura: #f5b942; }
-.game-afk-enemy--boss_lich { --boss-aura: #9b72ff; }
-.game-afk-enemy--boss_golem { --boss-aura: #ef8f48; }
-.game-afk-enemy--boss_procrastinador { --boss-aura: #ff5f9f; }
-.game-afk-enemy--boss_preguica { --boss-aura: #78a7ff; }
+.game-afk-enemy--boss_colossus {
+  --boss-aura: #5fe47e;
+}
+.game-afk-enemy--boss_crocodile {
+  --boss-aura: #f5b942;
+}
+.game-afk-enemy--boss_lich {
+  --boss-aura: #9b72ff;
+}
+.game-afk-enemy--boss_golem {
+  --boss-aura: #ef8f48;
+}
+.game-afk-enemy--boss_procrastinador {
+  --boss-aura: #ff5f9f;
+}
+.game-afk-enemy--boss_preguica {
+  --boss-aura: #78a7ff;
+}
 
 .game-afk-enemy__boss-aura {
   z-index: 0;
@@ -11333,7 +11427,11 @@ button.game-afk-reward-chip {
   border-radius: 50%;
   background:
     radial-gradient(circle, color-mix(in srgb, var(--boss-aura), white 28%) 0 7%, transparent 8%),
-    radial-gradient(circle, color-mix(in srgb, var(--boss-aura), transparent 55%) 0 42%, transparent 68%);
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--boss-aura), transparent 55%) 0 42%,
+      transparent 68%
+    );
   filter: drop-shadow(0 0 0.65rem var(--boss-aura));
   animation: game-afk-boss-aura-pulse 1.8s ease-in-out infinite;
 }
@@ -11356,21 +11454,37 @@ button.game-afk-reward-chip {
   bottom: 12%;
   height: 20%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--boss-aura), white 18%), transparent 68%);
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--boss-aura), white 18%),
+    transparent 68%
+  );
   filter: blur(0.22rem);
 }
-.game-afk-enemy__sprite { z-index: 2; }
-@keyframes game-afk-boss-aura-pulse {
-  50% { opacity: 0.72; transform: scale(1.08); filter: drop-shadow(0 0 1rem var(--boss-aura)); }
+.game-afk-enemy__sprite {
+  z-index: 2;
 }
-@keyframes game-afk-boss-runes { to { transform: rotate(360deg); } }
+@keyframes game-afk-boss-aura-pulse {
+  50% {
+    opacity: 0.72;
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 1rem var(--boss-aura));
+  }
+}
+@keyframes game-afk-boss-runes {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .game-afk-scene__damage--hero {
   left: 27%;
   right: auto;
   top: 48%;
   color: #ff7887;
-  text-shadow: 0 2px 0 #54101b, 0 0 7px #000;
+  text-shadow:
+    0 2px 0 #54101b,
+    0 0 7px #000;
 }
 
 .game-afk-dialogue__portrait img {
@@ -11408,8 +11522,14 @@ button.game-afk-reward-chip {
   display: flex;
   width: 100%;
 }
-.game-afk-map__stop--left { justify-content: flex-start; padding-right: 22%; }
-.game-afk-map__stop--right { justify-content: flex-end; padding-left: 22%; }
+.game-afk-map__stop--left {
+  justify-content: flex-start;
+  padding-right: 22%;
+}
+.game-afk-map__stop--right {
+  justify-content: flex-end;
+  padding-left: 22%;
+}
 .game-afk-map__path {
   z-index: 0;
   top: calc(100% - 0.15rem) !important;
@@ -11423,12 +11543,16 @@ button.game-afk-reward-chip {
 .game-afk-map__region {
   min-height: 7.4rem;
   border-radius: 1.1rem 1.1rem 1.8rem 1.8rem;
-  box-shadow: 0 0.38rem 0 #6f472b55, inset 0 0.12rem #fff9;
+  box-shadow:
+    0 0.38rem 0 #6f472b55,
+    inset 0 0.12rem #fff9;
 }
 .game-afk-map__node {
   width: 2.8rem;
   height: 2.8rem;
-  box-shadow: 0 0 0 0.3rem #fff9, 0 0.3rem 0 #51351d66;
+  box-shadow:
+    0 0 0 0.3rem #fff9,
+    0 0.3rem 0 #51351d66;
 }
 
 /* A hitbox acompanha o retângulo visível da arte, sem a coluna vazia antiga. */
@@ -11444,21 +11568,34 @@ button.game-afk-reward-chip {
 }
 
 @media (max-width: 560px) {
-  .game-afk-map { padding: 0.5rem; }
-  .game-afk-map__sheet { padding: 1rem; }
-  .game-afk-map__stop--left { padding-right: 12%; }
-  .game-afk-map__stop--right { padding-left: 12%; }
+  .game-afk-map {
+    padding: 0.5rem;
+  }
+  .game-afk-map__sheet {
+    padding: 1rem;
+  }
+  .game-afk-map__stop--left {
+    padding-right: 12%;
+  }
+  .game-afk-map__stop--right {
+    padding-left: 12%;
+  }
   .game-afk-village button.game-afk-village__skill-tree {
     bottom: 25%;
     width: clamp(9.2rem, 43.2vw, 11.25rem);
     height: auto;
   }
-  .game-afk-scene__damage--hero { left: 23%; top: 51%; }
+  .game-afk-scene__damage--hero {
+    left: 23%;
+    top: 51%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .game-afk-enemy__boss-aura,
-  .game-afk-enemy__boss-aura::before { animation: none; }
+  .game-afk-enemy__boss-aura::before {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -14007,9 +14144,18 @@ button.game-afk-reward-chip {
   width: min(34rem, 100%);
   margin: 1.5rem auto 0;
 }
-.game-afk-map__stop { display: flex; width: 100%; }
-.game-afk-map__stop--left { justify-content: flex-start; padding-right: 22%; }
-.game-afk-map__stop--right { justify-content: flex-end; padding-left: 22%; }
+.game-afk-map__stop {
+  display: flex;
+  width: 100%;
+}
+.game-afk-map__stop--left {
+  justify-content: flex-start;
+  padding-right: 22%;
+}
+.game-afk-map__stop--right {
+  justify-content: flex-end;
+  padding-left: 22%;
+}
 .game-afk-map__path,
 .game-afk-map__stop:nth-child(3) .game-afk-map__path,
 .game-afk-map__stop:nth-child(n + 4) .game-afk-map__path {
@@ -14037,12 +14183,18 @@ button.game-afk-reward-chip {
   bottom: calc(100% + 0.15rem);
 }
 @media (max-width: 560px) {
-  .game-afk-map__stop--left { padding-right: 12%; }
-  .game-afk-map__stop--right { padding-left: 12%; }
+  .game-afk-map__stop--left {
+    padding-right: 12%;
+  }
+  .game-afk-map__stop--right {
+    padding-left: 12%;
+  }
   .game-afk-village button.game-afk-village__skill-tree {
     bottom: 25%;
     width: clamp(9.2rem, 43.2vw, 11.25rem);
     height: auto;
   }
-  .game-afk-village__skill-tree strong { top: auto; }
+  .game-afk-village__skill-tree strong {
+    top: auto;
+  }
 }

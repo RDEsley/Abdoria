@@ -1,4 +1,13 @@
-import { CalendarDays, Coins, Compass, Dumbbell, Flame, ListChecks, Target, Trophy } from 'lucide-react';
+import {
+  CalendarDays,
+  Coins,
+  Dumbbell,
+  Flame,
+  ListChecks,
+  Swords,
+  Target,
+  Trophy,
+} from 'lucide-react';
 import type { TutorialSlide } from '@/components/tutorial/TutorialOverlay';
 
 // Ordem intencional: primeiro o que o app É (treino, missão diária,
@@ -36,9 +45,10 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
     body: 'Ganhe Moedas treinando e use na aba Áudio pra desbloquear pacotes de som. Molduras e títulos vêm de conquistas, códigos e eventos.',
   },
   {
-    icon: Compass,
-    title: 'Exploração',
-    body: 'Sua patrulha explora sozinha em segundo plano e traz recompensas — dá uma olhada de vez em quando pra coletar o que achou.',
+    icon: Swords,
+    title: 'Seu RPG fica aqui',
+    body: 'Na Home, toque no botão de espadas no canto inferior direito para entrar na Exploração. Sua patrulha luta em segundo plano, evolui e traz recompensas mesmo quando você sai do app.',
+    spotlight: 'rpg-fab',
   },
   {
     icon: Trophy,

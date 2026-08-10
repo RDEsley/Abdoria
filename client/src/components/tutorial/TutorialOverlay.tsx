@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X, type LucideIcon } from 'lucide-react';
+import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { GameButton } from '@/components/ui/GameButton';
 import { playClick, playCompleteSet } from '@/lib/sounds';
 
@@ -8,6 +9,7 @@ export interface TutorialSlide {
   icon: LucideIcon;
   title: string;
   body: string;
+  spotlight?: 'rpg-fab';
 }
 
 interface Props {
@@ -17,14 +19,26 @@ interface Props {
   slides: readonly TutorialSlide[];
   /** Rótulo do botão final. */
   ctaLabel?: string;
+  /** Permite que a tela destaque o controle real descrito pelo slide. */
+  onSpotlightChange?: (spotlight: TutorialSlide['spotlight'] | null) => void;
 }
 
-export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }: Props) {
+export function TutorialOverlay({
+  open,
+  onClose,
+  slides,
+  ctaLabel = 'Entendi!',
+  onSpotlightChange,
+}: Props) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (open) setStep(0);
   }, [open]);
+
+  useEffect(() => {
+    onSpotlightChange?.(open ? (slides[step]?.spotlight ?? null) : null);
+  }, [onSpotlightChange, open, slides, step]);
 
   if (!open) return null;
 
@@ -54,12 +68,16 @@ export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         className="glass-panel-strong relative w-full max-w-md rounded-3xl p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`tutorial-title-${step}`}
+        aria-describedby={`tutorial-body-${step}`}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Pular tutorial"
-          className="absolute right-4 top-4 cursor-pointer text-stone-400 hover:text-stone-600"
+          className="absolute right-3 top-3 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600"
         >
           <X size={24} />
         </button>
@@ -73,8 +91,26 @@ export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
               <Icon size={28} />
             </div>
-            <h3 className="text-xl font-extrabold text-stone-900">{Slide.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-stone-600">{Slide.body}</p>
+            <h3 id={`tutorial-title-${step}`} className="text-xl font-extrabold text-stone-900">
+              {Slide.title}
+            </h3>
+            <p id={`tutorial-body-${step}`} className="mt-2 text-sm leading-relaxed text-stone-600">
+              {Slide.body}
+            </p>
+            {Slide.spotlight === 'rpg-fab' ? (
+              <div
+                className="tutorial-rpg-location"
+                aria-label="Botão do RPG no canto inferior direito da Home"
+              >
+                <span className="tutorial-rpg-location__button" aria-hidden>
+                  <AfkFabSwords />
+                </span>
+                <span className="tutorial-rpg-location__copy">
+                  <strong>Botão do RPG</strong>
+                  <small>Home · canto inferior direito</small>
+                </span>
+              </div>
+            ) : null}
           </motion.div>
         </AnimatePresence>
 

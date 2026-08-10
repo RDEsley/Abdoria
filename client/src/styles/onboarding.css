@@ -516,6 +516,11 @@
   background: #ffedd5;
 }
 
+.onb-welcome-list__icon--rpg {
+  color: #047857;
+  background: #d1fae5;
+}
+
 /* Modal "Ajustar plano de treino" (Configurações) — precisa rolar por
    dentro em telas curtas (altura pequena), senão os botões de navegação
    ficam fora da área visível. */
