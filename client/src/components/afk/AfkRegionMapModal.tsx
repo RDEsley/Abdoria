@@ -34,7 +34,7 @@ export function AfkRegionMapModal({
           <div>
             <span>Atlas de Abdoria</span>
             <h2 id="afk-map-title">
-              <Map size={20} /> Mapa da campanha
+              <Map size={20} /> Mapa
             </h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fechar mapa">
@@ -43,13 +43,20 @@ export function AfkRegionMapModal({
         </header>
         <div className="game-afk-map__route">
           {AFK_REGIONS.map((region, index) => {
-            const isUnlocked = unlocked.has(region.id);
+            const previousRegion = index > 0 ? AFK_REGIONS[index - 1] : null;
+            const previousBossDefeated = previousRegion
+              ? Boolean(combat.region_progress[previousRegion.id]?.boss_defeated)
+              : true;
+            const isUnlocked = unlocked.has(region.id) && previousBossDefeated;
             const isCurrent = combat.region_id === region.id;
             const progress = combat.region_progress[region.id];
             const bossDefeated = Boolean(progress?.boss_defeated);
             const isTraveling = travelingRegionId === region.id;
             return (
-              <div key={region.id} className="game-afk-map__stop">
+              <div
+                key={region.id}
+                className={`game-afk-map__stop game-afk-map__stop--${index % 2 === 0 ? 'left' : 'right'}`}
+              >
                 {index < AFK_REGIONS.length - 1 ? (
                   <span className="game-afk-map__path" aria-hidden />
                 ) : null}

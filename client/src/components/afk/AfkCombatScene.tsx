@@ -9,6 +9,7 @@ import type {
 } from '@/types';
 import {
   AFK_BOSS_INTERVAL,
+  AFK_ENEMIES,
   AFK_REGIONS,
   AFK_SEARCH_DURATION_MAX_MS,
   AFK_SEARCH_DURATION_MIN_MS,
@@ -48,6 +49,7 @@ interface Props {
   onRegionChange?: (region: AfkRegionDefinition) => void;
   onOpenMap?: () => void;
   onEnemyDefeated?: (expectedKillsTotal: number, wasBoss: boolean) => void;
+  onEnemyDamaged?: (expectedKillsTotal: number, enemyId: AfkEnemyId, enemyHp: number) => void;
   onBackToVillage?: () => void;
   paused?: boolean;
 }
@@ -90,6 +92,7 @@ export function AfkCombatScene({
   onRegionChange,
   onOpenMap,
   onEnemyDefeated,
+  onEnemyDamaged,
   onBackToVillage,
   paused = false,
 }: Props) {
@@ -139,6 +142,7 @@ export function AfkCombatScene({
   const searchingRef = useRef(false);
   const [searchDurationMs, setSearchDurationMs] = useState(0);
   const [heroHp, setHeroHp] = useState(combat?.hero_hp ?? combat?.hero_max_hp ?? 250);
+  const heroHpRef = useRef(combat?.hero_hp ?? combat?.hero_max_hp ?? 250);
   const [heroDefeated, setHeroDefeated] = useState(false);
   const [reviveSeconds, setReviveSeconds] = useState(0);
   const [heroHit, setHeroHit] = useState(false);
@@ -220,6 +224,7 @@ export function AfkCombatScene({
 
   useEffect(() => {
     if (combatHeroHp == null) return;
+    heroHpRef.current = combatHeroHp;
     setHeroHp(combatHeroHp);
     const defeated = Boolean(
       combat?.hero_defeated_until && new Date(combat.hero_defeated_until).getTime() > Date.now(),
@@ -240,6 +245,7 @@ export function AfkCombatScene({
         heroDefeatedRef.current = false;
         heroDefeatedUntilRef.current = 0;
         setHeroDefeated(false);
+        heroHpRef.current = heroMaxHp;
         setHeroHp(heroMaxHp);
       }
     };
@@ -300,18 +306,20 @@ export function AfkCombatScene({
         setHeroHit(true);
         later(() => setHeroHit(false), 360);
         const damage = getEnemyAttackDamage(localEnemyIdRef.current, region.chapter, heroMaxHp);
-        setHeroHp((current) => {
-          const next = Number.isFinite(damage) ? Math.max(0, current - damage) : 0;
-          if (next <= 0) {
-            heroDefeatedRef.current = true;
-            setHeroDefeated(true);
-            const duration = afkDefeatDurationMs(skillNodes);
-            const defeatedUntil = Date.now() + duration;
-            heroDefeatedUntilRef.current = defeatedUntil;
-            setReviveSeconds(Math.ceil(duration / 1000));
-          }
-          return next;
-        });
+        const currentHp = heroHpRef.current;
+        const next = Number.isFinite(damage) ? Math.max(0, currentHp - damage) : 0;
+        const receivedDamage = Math.max(1, Math.ceil(currentHp - next));
+        heroHpRef.current = next;
+        setHeroHp(next);
+        pushDamage(receivedDamage, false, 'hero');
+        if (next <= 0) {
+          heroDefeatedRef.current = true;
+          setHeroDefeated(true);
+          const duration = afkDefeatDurationMs(skillNodes);
+          const defeatedUntil = Date.now() + duration;
+          heroDefeatedUntilRef.current = defeatedUntil;
+          setReviveSeconds(Math.ceil(duration / 1000));
+        }
       }, 260);
     };
     const timer = window.setInterval(attack, intervalMs);
@@ -319,7 +327,7 @@ export function AfkCombatScene({
       window.clearInterval(timer);
       pendingTimers.forEach((id) => window.clearTimeout(id));
     };
-  }, [heroMaxHp, localIsBoss, localIsElite, paused, region.chapter, skillNodes]);
+  }, [heroMaxHp, localIsBoss, localIsElite, paused, pushDamage, region.chapter, skillNodes]);
 
   useEffect(() => {
     localIsBossRef.current = localIsBoss;
@@ -389,10 +397,7 @@ export function AfkCombatScene({
       localIsBossRef.current = combat.is_boss;
       localEnemyIdRef.current = combat.enemy_id;
       localKillsUntilBossRef.current = combat.kills_until_boss;
-      const syncedEnemyHp =
-        combat.enemy_hp > 0
-          ? combat.enemy_hp
-          : getEnemyMaxHp(combat.enemy_id, getAfkRegionById(combat.region_id).chapter);
+      const syncedEnemyHp = Math.max(1, combat.enemy_hp);
       setDisplayHp(syncedEnemyHp);
       setPreviousDisplayHp(syncedEnemyHp);
       displayHpRef.current = syncedEnemyHp;
@@ -430,6 +435,24 @@ export function AfkCombatScene({
     },
     [region.chapter, region.id, userId],
   );
+
+  // Rede de segurança: nenhuma busca pode permanecer em 0s. Se um timer for
+  // cancelado por remount/troca de arma, encerra a lupa e materializa o alvo.
+  useEffect(() => {
+    if (!searching) return undefined;
+    const timer = window.setTimeout(
+      () => {
+        if (!searchingRef.current) return;
+        searchingRef.current = false;
+        setSearching(false);
+        if (killHandledRef.current) {
+          respawnLocalEnemy(localKillsUntilBossRef.current, killsTotalRef.current);
+        }
+      },
+      Math.max(250, searchDurationMs) + 750,
+    );
+    return () => window.clearTimeout(timer);
+  }, [respawnLocalEnemy, searchDurationMs, searching]);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => window.clearTimeout(id));
@@ -518,7 +541,10 @@ export function AfkCombatScene({
         pushDamage(hitDamage, isCrit);
         setDisplayHp(Math.max(0, next));
 
-        if (next > 0) return;
+        if (next > 0) {
+          onEnemyDamaged?.(killsTotalRef.current, enemyId, next);
+          return;
+        }
 
         // Trava o abate JÁ (evita golpe atrasado reabrindo a sequência ou
         // dobrando a contagem) — mas o visual de "dying" espera a barra de
@@ -623,6 +649,7 @@ export function AfkCombatScene({
     critKind,
     skillNodes,
     onEnemyDefeated,
+    onEnemyDamaged,
     paused,
     region.killsToBoss,
     scheduleSearch,
@@ -691,6 +718,7 @@ export function AfkCombatScene({
           bossHp={displayHp}
           bossMaxHp={snapshot.enemy_max_hp}
           bossHit={enemyHit}
+          bossName={AFK_ENEMIES[localEnemyId].label}
           overlay
         />
 
@@ -882,6 +910,7 @@ export function AfkCombatScene({
                 'game-afk-scene__damage',
                 snapshot.is_boss && !f.crit ? 'game-afk-scene__damage--boss' : '',
                 f.crit ? 'game-afk-scene__damage--crit' : '',
+                f.target === 'hero' ? 'game-afk-scene__damage--hero' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}

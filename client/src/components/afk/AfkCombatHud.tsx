@@ -8,6 +8,7 @@ export function AfkBossProgressPanel({
   bossHp,
   bossMaxHp,
   bossHit = false,
+  bossName,
 }: {
   killsUntilBoss: number;
   targetKills?: number;
@@ -19,6 +20,7 @@ export function AfkBossProgressPanel({
   bossHp?: number;
   bossMaxHp?: number;
   bossHit?: boolean;
+  bossName?: string;
 }) {
   const safeTargetKills = Math.max(1, targetKills);
   const bossProgressPct = Math.max(0, Math.min(100, (killsUntilBoss / safeTargetKills) * 100));
@@ -34,7 +36,7 @@ export function AfkBossProgressPanel({
     >
       <div className="game-afk-combat-hud__boss-header">
         <span className="game-afk-combat-hud__boss-label">
-          {bossActive ? 'Boss em combate' : 'Próximo boss'}
+          {bossActive ? (bossName ?? 'Chefe da região') : 'Próximo boss'}
         </span>
         <span className="game-afk-combat-hud__boss-count tabular-nums">
           {bossActive
@@ -50,7 +52,7 @@ export function AfkBossProgressPanel({
         aria-valuemax={bossActive ? (bossMaxHp ?? 0) : safeTargetKills}
         aria-label={
           bossActive
-            ? `Vida do boss: ${bossHp ?? 0} de ${bossMaxHp ?? 0}`
+            ? `Vida de ${bossName ?? 'chefe da região'}: ${bossHp ?? 0} de ${bossMaxHp ?? 0}`
             : `Progresso até o boss: ${Math.min(killsUntilBoss, safeTargetKills)} de ${safeTargetKills}`
         }
       >

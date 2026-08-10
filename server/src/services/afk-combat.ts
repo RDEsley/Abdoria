@@ -202,6 +202,22 @@ export function defeatCurrentEnemy(user: UserRecord, pending: AfkPendingReward):
   onEnemyDefeated(user, combat, pending);
 }
 
+/** Salva dano visual sem permitir cura, troca de alvo ou escrita atrasada. */
+export function persistCurrentEnemyHp(
+  user: UserRecord,
+  expectedKillsTotal: number,
+  expectedEnemyId: string,
+  requestedHp: number,
+): boolean {
+  const combat = ensureCombat(user);
+  if (combat.kills_total !== expectedKillsTotal || combat.enemy_id !== expectedEnemyId) return false;
+  if (!Number.isFinite(requestedHp) || requestedHp <= 0) return false;
+
+  const maxHp = getEnemyMaxHp(combat.enemy_id, getAfkRegionById(combat.region_id).chapter);
+  combat.enemy_hp = Math.max(1, Math.min(combat.enemy_hp, maxHp, Math.floor(requestedHp)));
+  return true;
+}
+
 export function applyKill(user: UserRecord): void {
   const combat = ensureCombat(user);
   combat.enemy_hp = 0;

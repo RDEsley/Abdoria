@@ -26,7 +26,11 @@ import {
 } from '../services/inventory.js';
 import { getItemCount } from '../services/inventory.js';
 import { ROUTE_DRINK_ITEM_ID } from '../types/index.js';
-import { defeatCurrentEnemy, ensureCombat } from '../services/afk-combat.js';
+import {
+  defeatCurrentEnemy,
+  ensureCombat,
+  persistCurrentEnemyHp,
+} from '../services/afk-combat.js';
 import {
   advanceAfkChapter,
   markAfkStoryFlag,
@@ -168,6 +172,27 @@ metaRouter.post('/afk/combat/defeat', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/meta/afk/combat/defeat error:', error);
     res.status(500).json({ error: 'Erro ao registrar a vitória.' });
+  }
+});
+
+metaRouter.patch('/afk/combat/enemy-hp', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const saved = persistCurrentEnemyHp(
+      user,
+      Math.max(0, Number(req.body?.expected_kills_total ?? -1)),
+      String(req.body?.enemy_id ?? ''),
+      Number(req.body?.enemy_hp),
+    );
+    if (saved) await user.save({ profileColumns: [] });
+    res.json({ ok: true, saved });
+  } catch (error) {
+    console.error('PATCH /api/meta/afk/combat/enemy-hp error:', error);
+    res.status(500).json({ error: 'Erro ao salvar o progresso do combate.' });
   }
 });
 

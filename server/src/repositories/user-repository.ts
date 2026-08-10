@@ -99,8 +99,9 @@ function normalizeCombat(raw: unknown): AfkCombatState {
   const maxHp = getEnemyMaxHp(enemy_id, region.chapter);
   const savedEnemyHp = Number(c.enemy_hp ?? maxHp);
   // HP zero nunca é um estado persistente válido: a derrota já deveria ter
-  // gerado o próximo encontro. Recupera saves interrompidos nessa janela.
-  const enemy_hp = savedEnemyHp > 0 ? Math.min(maxHp, savedEnemyHp) : maxHp;
+  // gerado o próximo encontro. Recupera com 1 HP para o próximo golpe concluir
+  // a vitória, sem ressuscitar um chefe quase derrotado com vida cheia.
+  const enemy_hp = savedEnemyHp > 0 ? Math.min(maxHp, savedEnemyHp) : 1;
   const rawProgress = c.region_progress ?? {};
   const region_progress = Object.fromEntries(
     AFK_REGIONS.map((entry) => {

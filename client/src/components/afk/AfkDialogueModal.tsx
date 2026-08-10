@@ -1,11 +1,46 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageCircle, X } from 'lucide-react';
 import { useState } from 'react';
+import type { AfkEnemyId, PersonagemGenero } from '@/types';
+import { collectSlimeAccessories, resolvePortraitAppearance } from '@/types';
+import { SlimeBody } from '@/components/afk/SlimeBody';
+
+export type AfkDialoguePortrait =
+  | { kind: 'hero'; gender: PersonagemGenero }
+  | { kind: 'boss'; enemyId: AfkEnemyId };
 
 export interface AfkDialogueLine {
   speaker: string;
   text: string;
   tone?: 'elder' | 'hero' | 'slime' | 'story';
+  portrait?: AfkDialoguePortrait;
+}
+
+function DialoguePortrait({ portrait }: { portrait: AfkDialoguePortrait | undefined }) {
+  if (!portrait) return <MessageCircle size={24} aria-hidden />;
+  if (portrait.kind === 'hero') {
+    return (
+      <img
+        src={
+          portrait.gender === 'feminino'
+            ? '/assets/patrol-mascot-female-village.png'
+            : '/assets/patrol-mascot-village.png'
+        }
+        alt=""
+      />
+    );
+  }
+  const appearance = resolvePortraitAppearance(portrait.enemyId);
+  return (
+    <SlimeBody
+      enemyId={portrait.enemyId}
+      isBoss
+      appearance={appearance}
+      accessories={collectSlimeAccessories(portrait.enemyId, true, appearance)}
+      looting={false}
+      portrait
+    />
+  );
 }
 
 interface Props {
@@ -53,9 +88,9 @@ export function AfkDialogueModal({ open, title, lines, onComplete, onDismiss }: 
         animate={{ opacity: 1, y: 0 }}
       >
         <div
-          className={`game-afk-dialogue__portrait game-afk-dialogue__portrait--${line.tone ?? 'story'}`}
+          className={`game-afk-dialogue__portrait game-afk-dialogue__portrait--${line.tone ?? 'story'}${line.portrait?.kind === 'boss' ? ` game-afk-enemy--${line.portrait.enemyId}` : ''}`}
         >
-          <MessageCircle size={24} aria-hidden />
+          <DialoguePortrait portrait={line.portrait} />
         </div>
         <div className="game-afk-dialogue__copy">
           <span className="game-afk-dialogue__title">{title}</span>

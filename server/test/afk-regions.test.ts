@@ -4,11 +4,11 @@ import {
   AFK_SKILL_NODES,
   getAfkRegionProgress,
   getEnemyAttackDamage,
-  getEnemyMaxHp,
   getNextAfkRegion,
 } from '../../shared/types/index.js';
 import { EMPTY_AFK_PENDING, normalizeCombat } from '../src/repositories/user-repository.js';
 import { selectAfkRegion } from '../src/services/afk-adventure.js';
+import { persistCurrentEnemyHp } from '../src/services/afk-combat.js';
 import type { UserRecord } from '../src/types/user-record.js';
 
 function createTravelUser(): UserRecord {
@@ -58,6 +58,9 @@ function createTravelUser(): UserRecord {
         adventure_started: true,
         paused_at: null,
         combat_last_at: now,
+        region_progress: {
+          'verdant-trail': { kills_until_boss: 0, boss_defeated: true, boss_kills: 1 },
+        },
       }),
     },
     onboarding_completed: true,
@@ -131,7 +134,21 @@ describe('Exploração AFK — campanha por regiões', () => {
       unlocked_regions: ['verdant-trail', 'sunspire-ruins'],
     });
 
-    expect(combat.enemy_hp).toBe(getEnemyMaxHp('sand_slime', 2));
+    expect(combat.enemy_hp).toBe(1);
+  });
+
+  it('salva dano parcial sem curar o alvo nem aceitar uma escrita atrasada', () => {
+    const user = createTravelUser();
+    const combat = user.afk.combat!;
+    const originalHp = combat.enemy_hp;
+
+    expect(persistCurrentEnemyHp(user, combat.kills_total, combat.enemy_id, originalHp - 7)).toBe(
+      true,
+    );
+    expect(user.afk.combat?.enemy_hp).toBe(originalHp - 7);
+    expect(persistCurrentEnemyHp(user, combat.kills_total, combat.enemy_id, originalHp)).toBe(true);
+    expect(user.afk.combat?.enemy_hp).toBe(originalHp - 7);
+    expect(persistCurrentEnemyHp(user, combat.kills_total + 1, combat.enemy_id, 1)).toBe(false);
   });
 
   it('derruba o herói em 10 ataques comuns, 8 de elite e 1 de chefe', () => {

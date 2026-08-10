@@ -11315,6 +11315,152 @@ button.game-afk-reward-chip {
   }
 }
 
+/* ===== Acabamento final: chefes, mapa e alvos interativos ===== */
+.game-afk-enemy--boss {
+  --boss-aura: #a855f7;
+}
+.game-afk-enemy--boss_colossus { --boss-aura: #5fe47e; }
+.game-afk-enemy--boss_crocodile { --boss-aura: #f5b942; }
+.game-afk-enemy--boss_lich { --boss-aura: #9b72ff; }
+.game-afk-enemy--boss_golem { --boss-aura: #ef8f48; }
+.game-afk-enemy--boss_procrastinador { --boss-aura: #ff5f9f; }
+.game-afk-enemy--boss_preguica { --boss-aura: #78a7ff; }
+
+.game-afk-enemy__boss-aura {
+  z-index: 0;
+  inset: -58%;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--boss-aura), white 28%) 0 7%, transparent 8%),
+    radial-gradient(circle, color-mix(in srgb, var(--boss-aura), transparent 55%) 0 42%, transparent 68%);
+  filter: drop-shadow(0 0 0.65rem var(--boss-aura));
+  animation: game-afk-boss-aura-pulse 1.8s ease-in-out infinite;
+}
+.game-afk-enemy__boss-aura::before {
+  content: '';
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, var(--boss-aura) 0 7deg, transparent 7deg 23deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 55%, #000 57% 65%, transparent 67%);
+  mask: radial-gradient(circle, transparent 0 55%, #000 57% 65%, transparent 67%);
+  opacity: 0.72;
+  animation: game-afk-boss-runes 9s linear infinite;
+}
+.game-afk-enemy__boss-aura::after {
+  content: '';
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 12%;
+  height: 20%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--boss-aura), white 18%), transparent 68%);
+  filter: blur(0.22rem);
+}
+.game-afk-enemy__sprite { z-index: 2; }
+@keyframes game-afk-boss-aura-pulse {
+  50% { opacity: 0.72; transform: scale(1.08); filter: drop-shadow(0 0 1rem var(--boss-aura)); }
+}
+@keyframes game-afk-boss-runes { to { transform: rotate(360deg); } }
+
+.game-afk-scene__damage--hero {
+  left: 27%;
+  right: auto;
+  top: 48%;
+  color: #ff7887;
+  text-shadow: 0 2px 0 #54101b, 0 0 7px #000;
+}
+
+.game-afk-dialogue__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.game-afk-dialogue__portrait {
+  position: relative;
+  overflow: visible;
+}
+.game-afk-dialogue__portrait .game-afk-slime__blob {
+  bottom: 7%;
+  width: 72%;
+  height: 64%;
+  margin-left: -36%;
+}
+
+.game-afk-map__sheet {
+  width: min(720px, 96vw);
+  background:
+    linear-gradient(rgba(239, 208, 145, 0.86), rgba(221, 181, 109, 0.9)),
+    radial-gradient(circle at 20% 10%, #fff7d0, transparent 32%);
+}
+.game-afk-map__route {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(34rem, 100%);
+  margin: 1.5rem auto 0;
+}
+.game-afk-map__stop {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+.game-afk-map__stop--left { justify-content: flex-start; padding-right: 22%; }
+.game-afk-map__stop--right { justify-content: flex-end; padding-left: 22%; }
+.game-afk-map__path {
+  z-index: 0;
+  top: calc(100% - 0.15rem) !important;
+  left: 50% !important;
+  width: 4px !important;
+  height: 1.35rem !important;
+  border: 0 !important;
+  border-left: 4px dotted rgba(83, 53, 24, 0.58) !important;
+  transform: none !important;
+}
+.game-afk-map__region {
+  min-height: 7.4rem;
+  border-radius: 1.1rem 1.1rem 1.8rem 1.8rem;
+  box-shadow: 0 0.38rem 0 #6f472b55, inset 0 0.12rem #fff9;
+}
+.game-afk-map__node {
+  width: 2.8rem;
+  height: 2.8rem;
+  box-shadow: 0 0 0 0.3rem #fff9, 0 0.3rem 0 #51351d66;
+}
+
+/* A hitbox acompanha o retângulo visível da arte, sem a coluna vazia antiga. */
+.game-afk-village button.game-afk-village__skill-tree {
+  bottom: 24%;
+  width: clamp(11.7rem, 34.2vw, 16.2rem);
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+.game-afk-village__skill-tree strong {
+  top: auto;
+  bottom: calc(100% + 0.15rem);
+}
+
+@media (max-width: 560px) {
+  .game-afk-map { padding: 0.5rem; }
+  .game-afk-map__sheet { padding: 1rem; }
+  .game-afk-map__stop--left { padding-right: 12%; }
+  .game-afk-map__stop--right { padding-left: 12%; }
+  .game-afk-village button.game-afk-village__skill-tree {
+    bottom: 25%;
+    width: clamp(9.2rem, 43.2vw, 11.25rem);
+    height: auto;
+  }
+  .game-afk-scene__damage--hero { left: 23%; top: 51%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-afk-enemy__boss-aura,
+  .game-afk-enemy__boss-aura::before { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .game-afk-loading__crest-ring,
   .game-afk-loading__bar span,
@@ -13712,4 +13858,54 @@ button.game-afk-reward-chip {
   .game-afk-village__skill-tree:focus-visible .game-afk-village__skill-tree-image {
     transform: translateY(-6.4%) scale(0.9135);
   }
+}
+
+/* Mantido no fim para vencer os blocos legados responsivos. */
+.game-afk-map__route {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: none;
+  gap: 1rem;
+  width: min(34rem, 100%);
+  margin: 1.5rem auto 0;
+}
+.game-afk-map__stop { display: flex; width: 100%; }
+.game-afk-map__stop--left { justify-content: flex-start; padding-right: 22%; }
+.game-afk-map__stop--right { justify-content: flex-end; padding-left: 22%; }
+.game-afk-map__path,
+.game-afk-map__stop:nth-child(3) .game-afk-map__path,
+.game-afk-map__stop:nth-child(n + 4) .game-afk-map__path {
+  top: calc(100% - 0.15rem);
+  left: 50%;
+  width: 4px;
+  height: 1.35rem;
+  border: 0;
+  border-left: 4px dotted rgba(83, 53, 24, 0.58);
+  transform: none;
+}
+.game-afk-map__region {
+  width: 100%;
+  min-height: 7.4rem;
+  border-radius: 1.1rem 1.1rem 1.8rem 1.8rem;
+}
+.game-afk-village button.game-afk-village__skill-tree {
+  bottom: 24%;
+  width: clamp(11.7rem, 34.2vw, 16.2rem);
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+.game-afk-village__skill-tree strong {
+  top: auto;
+  bottom: calc(100% + 0.15rem);
+}
+@media (max-width: 560px) {
+  .game-afk-map__stop--left { padding-right: 12%; }
+  .game-afk-map__stop--right { padding-left: 12%; }
+  .game-afk-village button.game-afk-village__skill-tree {
+    bottom: 25%;
+    width: clamp(9.2rem, 43.2vw, 11.25rem);
+    height: auto;
+  }
+  .game-afk-village__skill-tree strong { top: auto; }
 }

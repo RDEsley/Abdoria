@@ -99,6 +99,22 @@ export function recordAfkEnemyDefeat(expectedKillsTotal: number): Promise<AfkPin
   });
 }
 
+export function recordAfkEnemyHp(
+  expectedKillsTotal: number,
+  enemyId: AfkEnemyId,
+  enemyHp: number,
+): Promise<{ ok: true; saved: boolean }> {
+  return fetchJson('/meta/afk/combat/enemy-hp', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      expected_kills_total: expectedKillsTotal,
+      enemy_id: enemyId,
+      enemy_hp: enemyHp,
+    }),
+    keepalive: true,
+  });
+}
+
 export function selectAfkRegion(regionId: AfkRegionId): Promise<AfkPingResponse> {
   return fetchJson('/meta/afk/region', {
     method: 'POST',

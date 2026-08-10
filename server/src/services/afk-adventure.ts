@@ -35,6 +35,11 @@ export function selectAfkRegion(
   if (!(combat.unlocked_regions ?? []).includes(region.id)) {
     return { ok: false, error: 'Derrote o guardião anterior para liberar esta região.' };
   }
+  const regionIndex = AFK_REGIONS.findIndex((entry) => entry.id === region.id);
+  const previous = regionIndex > 0 ? AFK_REGIONS[regionIndex - 1] : null;
+  if (previous && !combat.region_progress?.[previous.id]?.boss_defeated) {
+    return { ok: false, error: 'Derrote o guardião anterior para liberar esta região.' };
+  }
   combat.region_id = region.id;
   const progress = combat.region_progress?.[region.id];
   combat.kills_until_boss = progress?.kills_until_boss ?? 0;

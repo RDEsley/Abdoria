@@ -34,6 +34,7 @@ import {
   getAfkMeta,
   markAfkStory,
   recordAfkEnemyDefeat,
+  recordAfkEnemyHp,
   resetAfkSkillTree,
   selectAfkRegion,
   setAfkAway,
@@ -145,6 +146,9 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   /** true depois da 1ª carga bem-sucedida — refreshes em segundo plano (poll,
       claim, troca de arma, fechar inventário) não devem mais piscar o loading. */
   const hasLoadedRef = useRef(false);
+  // Todas as escritas do encontro passam pela mesma fila para uma requisição
+  // de HP atrasada nunca sobrescrever a vitória/respawn seguinte.
+  const combatWriteQueueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   const reconcileTimerFromServer = useCallback((serverMinutos: number) => {
     const prev = syncedMinutosRef.current;
@@ -168,19 +172,20 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         ? patrolArmas.espada_equipada
         : (patrolArmas.magia_equipada ?? patrolArmas.arco_equipado);
   const userId = String(user?.id ?? 'guest');
+  const genero: PersonagemGenero = user?.preferencias?.personagem_genero ?? 'masculino';
 
   useEffect(() => {
     combatOrbsRef.current = meta?.combat.orbs ?? 0;
   }, [meta?.combat.orbs]);
 
   const applyAfkResponse = useCallback(
-    (data: AfkMetaResponse | AfkPingResponse) => {
+    (data: AfkMetaResponse | AfkPingResponse, replaceCombat = false) => {
       setMeta((prev) => ({
         ...(prev ?? (data as AfkMetaResponse)),
         ...data,
         arma_preferida:
           prev?.arma_preferida ?? ('arma_preferida' in data ? data.arma_preferida : 'arco'),
-        combat: mergeAfkCombatSnapshot(prev?.combat, data.combat),
+        combat: replaceCombat ? data.combat : mergeAfkCombatSnapshot(prev?.combat, data.combat),
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
     },
@@ -188,7 +193,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   );
 
   const handleExit = useCallback(() => {
-    void setAfkAway();
+    void combatWriteQueueRef.current.finally(() => setAfkAway());
     onClose();
   }, [onClose]);
 
@@ -212,6 +217,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     if (isInitialLoad) setLoading(true);
     try {
       const startedAt = Date.now();
+      await combatWriteQueueRef.current.catch(() => undefined);
       const data = await getAfkMeta();
       if (regionVersion !== regionChangeVersionRef.current) return;
       if (isInitialLoad) {
@@ -224,7 +230,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
           ),
         ]);
       }
-      applyAfkResponse(data);
+      applyAfkResponse(data, isInitialLoad);
       setActiveRegion(getAfkRegionById(data.combat.region_id));
       setRegionReady(true);
       // AFK de verdade: a cena que a tela abre é a que o servidor diz que
@@ -487,11 +493,13 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             {
               speaker: AFK_ENEMIES[region.bossId].label,
               tone: 'slime',
+              portrait: { kind: 'boss', enemyId: region.bossId },
               text: 'Finalmente você consegue nos compreender. Nós protegíamos estas terras do sono que se espalha.',
             },
             {
               speaker: 'Herói',
               tone: 'hero',
+              portrait: { kind: 'hero', gender: genero },
               text: 'Então eu ouvi ameaças onde havia um aviso. Ainda assim, preciso provar minha força.',
             },
           ]
@@ -499,11 +507,13 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             {
               speaker: AFK_ENEMIES[region.bossId].label,
               tone: 'slime',
+              portrait: { kind: 'boss', enemyId: region.bossId },
               text: 'Glub… mori fla blu, abdô-ria gruum!',
             },
             {
               speaker: 'Herói',
               tone: 'hero',
+              portrait: { kind: 'hero', gender: genero },
               text: 'Eu não entendi uma palavra. Mas parece que você quer lutar.',
             },
           ],
@@ -522,7 +532,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         );
       },
     });
-  }, [bossActive, dialogue, meta?.combat, regionReady, sceneMode, sceneTransition, mapOpen]);
+  }, [bossActive, dialogue, genero, meta?.combat, regionReady, sceneMode, sceneTransition, mapOpen]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -618,7 +628,6 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   };
 
   const needsCharacterSetup = !user?.preferencias?.personagem_genero;
-  const genero: PersonagemGenero = user?.preferencias?.personagem_genero ?? 'masculino';
   const capped = meta?.capped ?? false;
   const displayedRegion = activeRegion ?? getAfkRegionById(meta?.combat?.region_id);
   const displayedProgress = meta?.combat?.region_progress?.[displayedRegion.id];
@@ -714,7 +723,11 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
 
   const handleEnemyDefeated = useCallback(
     (expectedKillsTotal: number, wasBoss: boolean) => {
-      void recordAfkEnemyDefeat(expectedKillsTotal)
+      const request = combatWriteQueueRef.current.then(() =>
+        recordAfkEnemyDefeat(expectedKillsTotal),
+      );
+      combatWriteQueueRef.current = request;
+      void request
         .then((response) => {
           applyAfkResponse(response);
           if (wasBoss && response.combat.orbs > combatOrbsRef.current) {
@@ -724,29 +737,51 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
             });
           }
           const defeatedRegion = getAfkRegionById(response.combat.region_id);
-          if (
-            wasBoss &&
-            defeatedRegion.chapter === 6 &&
-            response.combat.slime_language_unlocked &&
-            !response.combat.story_flags.includes('chapter_6_reveal')
-          ) {
+          const victoryFlag = `boss_victory_${defeatedRegion.id}`;
+          if (wasBoss && !response.combat.story_flags.includes(victoryFlag)) {
+            const understandsSlimes = response.combat.slime_language_unlocked;
             setDialogue({
-              title: defeatedRegion.storyTitle,
+              title: `Vitória em ${defeatedRegion.name}`,
               lines: [
-                { speaker: 'Crônica de Abdoria', tone: 'story', text: defeatedRegion.story },
                 {
                   speaker: AFK_ENEMIES[defeatedRegion.bossId].label,
                   tone: 'slime',
-                  text: 'Agora você nos escuta. Volte aos antigos guardiões; eles também têm algo a dizer.',
+                  portrait: { kind: 'boss', enemyId: defeatedRegion.bossId },
+                  text: understandsSlimes
+                    ? defeatedRegion.chapter === 6
+                      ? 'Agora você nos escuta. Volte aos antigos guardiões; eles também têm algo a dizer.'
+                      : 'Você venceu. A rota adiante é perigosa, mas sua coragem é verdadeira.'
+                    : 'Glub... fra lum, abdô-ria nohm... glub.',
+                },
+                {
+                  speaker: 'Herói',
+                  tone: 'hero',
+                  portrait: { kind: 'hero', gender: genero },
+                  text: understandsSlimes
+                    ? 'Agora compreendo. Esta batalha não foi em vão.'
+                    : 'Ainda não entendo sua língua, mas reconheço sua honra. Seguiremos em frente.',
                 },
               ],
-              onComplete: () => void markAfkStory('chapter_6_reveal'),
+              onComplete: () => {
+                void markAfkStory(victoryFlag);
+                if (defeatedRegion.chapter === 6) void markAfkStory('chapter_6_reveal');
+              },
             });
           }
         })
         .catch(() => void load());
     },
-    [applyAfkResponse, load],
+    [applyAfkResponse, genero, load],
+  );
+
+  const handleEnemyDamaged = useCallback(
+    (expectedKillsTotal: number, enemyId: Parameters<typeof recordAfkEnemyHp>[1], enemyHp: number) => {
+      const request = combatWriteQueueRef.current.then(() =>
+        recordAfkEnemyHp(expectedKillsTotal, enemyId, enemyHp),
+      );
+      combatWriteQueueRef.current = request.catch(() => undefined);
+    },
+    [],
   );
 
   const handleSelectRegion = async (regionId: AfkRegionId) => {
@@ -764,6 +799,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     setMapOpen(false);
     const requestedRegion = getAfkRegionById(regionId);
     try {
+      await combatWriteQueueRef.current.catch(() => undefined);
       const [response] = await Promise.all([
         selectAfkRegion(regionId),
         prepareRegionTravel(requestedRegion),
@@ -798,6 +834,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     setRegionReady(false);
     setTravelingRegionId(nextRegion.id);
     try {
+      await combatWriteQueueRef.current.catch(() => undefined);
       const [response] = await Promise.all([advanceAfkChapter(), prepareRegionTravel(nextRegion)]);
       if (response.region_id !== nextRegion.id || response.combat.region_id !== nextRegion.id) {
         throw new Error('O servidor não confirmou o avanço de capítulo. Tente novamente.');
@@ -986,6 +1023,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                         onRegionChange={setActiveRegion}
                         onOpenMap={() => setMapOpen(true)}
                         onEnemyDefeated={handleEnemyDefeated}
+                        onEnemyDamaged={handleEnemyDamaged}
                         onBackToVillage={() => goToScene('village')}
                         paused={Boolean(
                           dialogue ||

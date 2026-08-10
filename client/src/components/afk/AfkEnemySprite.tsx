@@ -111,7 +111,7 @@ export function AfkEnemySprite({
           >
             <i />
           </span>
-          <span className="game-afk-enemy__name-tag">{label}</span>
+          {!combat.is_boss ? <span className="game-afk-enemy__name-tag">{label}</span> : null}
           {showHpBar && (
             <div className="game-afk-enemy__hp-shell">
               <div
