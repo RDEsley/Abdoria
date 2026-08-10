@@ -10,8 +10,9 @@ import { workoutPresets } from '../db/seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
+import { LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS } from '../../../shared/equipment/index.js';
 
-const RETIRED_EXERCISE_SLUGS = ['pallof-press'];
+const RETIRED_EXERCISE_SLUGS = ['pallof-press', ...LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS];
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em server/.env');

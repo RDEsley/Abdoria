@@ -9,7 +9,11 @@ const AFK_AUTO_OPEN_KEY = 'abdoria_afk_auto_opened';
 
 const SCROLL_HIDE_THRESHOLD = 48;
 
-export function AfkFab() {
+interface Props {
+  tutorialHighlight?: boolean;
+}
+
+export function AfkFab({ tutorialHighlight = false }: Props) {
   const { stats } = useApp();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -41,9 +45,10 @@ export function AfkFab() {
   return (
     <button
       type="button"
-      className={`game-afk-fab${hasRewards ? ' game-afk-fab--loot' : ''}${hidden ? ' game-afk-fab--hidden' : ''}`}
-      tabIndex={hidden ? -1 : undefined}
-      aria-hidden={hidden || undefined}
+      className={`game-afk-fab${hasRewards ? ' game-afk-fab--loot' : ''}${hidden && !tutorialHighlight ? ' game-afk-fab--hidden' : ''}${tutorialHighlight ? ' game-afk-fab--tutorial' : ''}`}
+      tabIndex={hidden || tutorialHighlight ? -1 : undefined}
+      aria-hidden={(hidden && !tutorialHighlight) || undefined}
+      disabled={tutorialHighlight}
       onClick={() => navigate('/exploracao')}
       aria-label={
         hasRewards
@@ -55,6 +60,12 @@ export function AfkFab() {
       <span className="game-afk-fab__icon" aria-hidden>
         <AfkFabSwords />
       </span>
+      {tutorialHighlight ? (
+        <span className="game-afk-fab__tutorial-label" aria-hidden>
+          <strong>RPG e Exploração</strong>
+          <small>Este botão fica sempre aqui na Home</small>
+        </span>
+      ) : null}
       {hasRewards && (
         <span className="game-afk-fab__badge" aria-hidden>
           <span className="game-afk-fab__badge-core" />

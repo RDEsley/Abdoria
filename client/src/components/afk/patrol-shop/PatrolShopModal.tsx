@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Coins, Store } from 'lucide-react';
+import {
+  BowArrow,
+  Coins,
+  PackageOpen,
+  Store,
+  Swords,
+  WandSparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import {
   PurchaseConfirmDialog,
   type PurchaseConfirmDetails,
@@ -8,9 +16,15 @@ import {
 import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
+import { PatrolMaterialMarket } from '@/components/afk/patrol-shop/PatrolMaterialMarket';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
-import { equipPatrolWeapon, getPatrolShop, purchasePatrolWeapon } from '@/lib/api';
+import {
+  equipPatrolWeapon,
+  getPatrolShop,
+  purchasePatrolWeapon,
+  sellPatrolMaterial,
+} from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { playEquip, playPurchase } from '@/lib/sounds';
@@ -20,6 +34,7 @@ import {
   type PatrolShopCatalogItem,
   type PatrolShopResponse,
   type PatrolWeaponKind,
+  type SlimeMaterialStockItem,
 } from '@/types';
 import './patrol-shop.css';
 
@@ -29,12 +44,18 @@ interface Props {
   onWeaponChange?: (weapon: ArmaPreferida) => void;
 }
 
-type TabId = PatrolWeaponKind;
+type TabId = PatrolWeaponKind | 'materials';
 
-const TABS: { id: TabId; label: string; kind: 'arco' | 'espada' | 'magia' }[] = [
-  { id: 'arco', label: 'Arcos', kind: 'arco' },
-  { id: 'espada', label: 'Espadas', kind: 'espada' },
-  { id: 'magia', label: 'Magias', kind: 'magia' },
+const TABS: {
+  id: TabId;
+  label: string;
+  kind: TabId;
+  icon: LucideIcon;
+}[] = [
+  { id: 'arco', label: 'Arcos', kind: 'arco', icon: BowArrow },
+  { id: 'espada', label: 'Espadas', kind: 'espada', icon: Swords },
+  { id: 'magia', label: 'Magias', kind: 'magia', icon: WandSparkles },
+  { id: 'materials', label: 'Materiais', kind: 'materials', icon: PackageOpen },
 ];
 
 export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
@@ -47,6 +68,11 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   const [celebrating, setCelebrating] = useState(false);
   const [purchaseConfirm, setPurchaseConfirm] = useState<{
     item: PatrolShopCatalogItem;
+    details: PurchaseConfirmDetails;
+  } | null>(null);
+  const [materialSaleConfirm, setMaterialSaleConfirm] = useState<{
+    item: SlimeMaterialStockItem;
+    quantity: number | 'all';
     details: PurchaseConfirmDetails;
   } | null>(null);
 
@@ -65,7 +91,13 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setPurchaseConfirm(null);
+      setMaterialSaleConfirm(null);
+      setBusyId(null);
+      setCelebrating(false);
+      return;
+    }
     void load();
   }, [open, load]);
 
@@ -146,14 +178,57 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     }
   };
 
+  const handleSellMaterial = async (item: SlimeMaterialStockItem, quantity: number | 'all') => {
+    setBusyId(item.id);
+    try {
+      const response = await sellPatrolMaterial(item.id, quantity);
+      applyUser(response.user);
+      setCatalog(response.shop);
+      playPurchase();
+      showGameToast(
+        `${response.quantity_sold}× ${item.name} vendido por ${response.coins_gained} Coins.`,
+        { variant: 'success' },
+      );
+      setMaterialSaleConfirm(null);
+      void refreshApp();
+    } catch (error) {
+      showGameToast(getErrorMessage(error, 'Não foi possível vender este material.'), {
+        variant: 'error',
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const requestMaterialSale = (item: SlimeMaterialStockItem, quantity: number | 'all') => {
+    const quantityToSell = quantity === 'all' ? item.quantity : Math.min(item.quantity, quantity);
+    if (quantityToSell <= 1 && item.tier !== 'boss') {
+      void handleSellMaterial(item, quantityToSell);
+      return;
+    }
+    setMaterialSaleConfirm({
+      item,
+      quantity,
+      details: {
+        itemName: `${quantityToSell}× ${item.name}`,
+        itemDescription:
+          'Os materiais vendidos serão removidos da mochila e não poderão ser recuperados.',
+        priceLabel: `Receber ${quantityToSell * item.sellPrice} Coins`,
+        balanceHint: `Estoque atual: ${item.quantity}/99`,
+      },
+    });
+  };
+
   if (!open) return null;
 
-  const items =
+  const weaponItems =
     activeTab === 'arco'
       ? (catalog?.arcos ?? [])
       : activeTab === 'espada'
         ? (catalog?.espadas ?? [])
-        : (catalog?.magias ?? []);
+        : activeTab === 'magia'
+          ? (catalog?.magias ?? [])
+          : [];
 
   return createPortal(
     <div
@@ -175,7 +250,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
                 <Store size={18} aria-hidden /> Loja da Exploração
               </h2>
               <p className="game-patrol-shop-header__subtitle">
-                Armas para sua exploração automática
+                Armas e comércio de materiais da sua jornada
               </p>
             </div>
             <span className="game-patrol-shop-header__coins">
@@ -186,13 +261,15 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
           <PatrolShopVendor celebrating={celebrating} />
 
           <nav className="game-patrol-shop-nav" aria-label="Categorias da loja">
-            {TABS.map(({ id, label, kind }) => (
+            {TABS.map(({ id, label, kind, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
                 className={`game-patrol-shop-nav__btn game-patrol-shop-nav__btn--${kind}${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
+                aria-pressed={activeTab === id}
                 onClick={() => setActiveTab(id)}
               >
+                <Icon size={15} aria-hidden />
                 {label}
               </button>
             ))}
@@ -200,12 +277,18 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
 
           <div className="game-patrol-shop-body">
             {loading ? (
-              <p className="game-loader">Carregando armas...</p>
-            ) : items.length === 0 ? (
+              <p className="game-loader">Carregando mercadorias...</p>
+            ) : activeTab === 'materials' ? (
+              <PatrolMaterialMarket
+                materials={catalog?.materials ?? []}
+                busyId={busyId}
+                onSell={requestMaterialSale}
+              />
+            ) : weaponItems.length === 0 ? (
               <p className="game-patrol-shop-empty">Nenhum item nesta categoria ainda.</p>
             ) : (
               <div className="game-patrol-shop-list">
-                {items.map((item) => (
+                {weaponItems.map((item) => (
                   <PatrolShopItemRow
                     key={item.id}
                     item={item}
@@ -237,6 +320,21 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
         onConfirm={() => purchaseConfirm && void handlePurchase(purchaseConfirm.item)}
         onCancel={() => {
           if (!busyId) setPurchaseConfirm(null);
+        }}
+      />
+      <PurchaseConfirmDialog
+        open={!!materialSaleConfirm}
+        details={materialSaleConfirm?.details ?? null}
+        busy={!!materialSaleConfirm && busyId === materialSaleConfirm.item.id}
+        title="Confirmar venda"
+        confirmLabel="Vender"
+        busyLabel="Vendendo…"
+        onConfirm={() =>
+          materialSaleConfirm &&
+          void handleSellMaterial(materialSaleConfirm.item, materialSaleConfirm.quantity)
+        }
+        onCancel={() => {
+          if (!busyId) setMaterialSaleConfirm(null);
         }}
       />
     </div>,

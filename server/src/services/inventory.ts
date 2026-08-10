@@ -12,9 +12,14 @@ import {
   PATROL_CACHE_ITEM_ID,
   ROUTE_DRINK_HOURS,
   ROUTE_DRINK_ITEM_ID,
+  SLIME_MATERIALS,
+  SLIME_MATERIAL_BY_ID,
+  isSlimeMaterialItemId,
   type Inventario,
   type InventoryItemId,
   type AfkPendingReward,
+  type SlimeMaterialItemId,
+  type SlimeMaterialStockItem,
 } from '../types/index.js';
 import { grantPatrolCacheRewards, grantRouteDrinkRewards } from './afk.js';
 import { grantMoeda } from './economy.js';
@@ -25,7 +30,7 @@ const LEGACY_ENERGY_DRINK_ID = 'energy_drink';
 
 export interface AddInventoryResult {
   added: number;
-  overflow_to_dorias: number;
+  discarded: number;
 }
 
 export function isStackCappedItem(itemId: InventoryItemId): boolean {
@@ -83,7 +88,7 @@ function addInventoryItemInternal(
   itemId: InventoryItemId,
   amount: number,
 ): AddInventoryResult {
-  if (amount <= 0) return { added: 0, overflow_to_dorias: 0 };
+  if (amount <= 0) return { added: 0, discarded: 0 };
 
   const inv = ensureInventario(user);
   const entry = inv.itens.find(
@@ -92,12 +97,12 @@ function addInventoryItemInternal(
   const current = entry?.quantidade ?? 0;
 
   let added = amount;
-  let overflow = 0;
+  let discarded = 0;
 
   if (isStackCappedItem(itemId)) {
     const space = Math.max(0, INVENTORY_STACK_CAP - current);
     added = Math.min(amount, space);
-    overflow = amount - added;
+    discarded = amount - added;
   }
 
   if (added > 0) {
@@ -108,11 +113,7 @@ function addInventoryItemInternal(
     }
   }
 
-  if (overflow > 0) {
-    grantMoeda(user, overflow);
-  }
-
-  return { added, overflow_to_dorias: overflow };
+  return { added, discarded };
 }
 
 export function consumeInventoryItem(
@@ -135,6 +136,39 @@ export function consumeInventoryItem(
     );
   }
   return true;
+}
+
+export function readSlimeMaterialStock(user: UserRecord): SlimeMaterialStockItem[] {
+  return SLIME_MATERIALS.map((material) => ({
+    ...material,
+    quantity: getItemCount(user, material.id),
+  }));
+}
+
+export function sellSlimeMaterial(
+  user: UserRecord,
+  itemId: string,
+  quantity: number | 'all',
+):
+  | { ok: true; item_id: SlimeMaterialItemId; quantity_sold: number; coins_gained: number }
+  | { ok: false; error: string } {
+  if (!isSlimeMaterialItemId(itemId)) {
+    return { ok: false, error: 'Material de slime desconhecido.' };
+  }
+  const available = getItemCount(user, itemId);
+  if (available < 1) return { ok: false, error: 'Você não possui este material.' };
+
+  const quantityToSell =
+    quantity === 'all'
+      ? available
+      : Math.max(1, Math.min(available, Math.floor(Number(quantity) || 1)));
+  if (!consumeInventoryItem(user, itemId, quantityToSell)) {
+    return { ok: false, error: 'Não foi possível remover o material do inventário.' };
+  }
+
+  const coins_gained = quantityToSell * SLIME_MATERIAL_BY_ID[itemId].sellPrice;
+  grantMoeda(user, coins_gained);
+  return { ok: true, item_id: itemId, quantity_sold: quantityToSell, coins_gained };
 }
 
 /** Usa Baú da Exploração: recompensas equivalentes a 6h de Exploração AFK. */
@@ -164,7 +198,7 @@ export function useRouteDrinkInExploration(
       hours: number;
       quantity_used: number;
       claimed: AfkPendingReward;
-      overflow_to_dorias: number;
+      discarded_items: number;
     }
   | { ok: false; error: string } {
   const available = getItemCount(user, ROUTE_DRINK_ITEM_ID);
@@ -178,8 +212,8 @@ export function useRouteDrinkInExploration(
   }
 
   const hours = ROUTE_DRINK_HOURS * useQty;
-  const { claimed, overflow_to_dorias } = grantRouteDrinkRewards(user, hours);
-  return { ok: true, hours, quantity_used: useQty, claimed, overflow_to_dorias };
+  const { claimed, discarded_items } = grantRouteDrinkRewards(user, hours);
+  return { ok: true, hours, quantity_used: useQty, claimed, discarded_items };
 }
 
 function rollDoriaBagAmount(user: UserRecord, salt: number): number {
@@ -247,6 +281,7 @@ export function readInventarioSummary(user: UserRecord) {
     exp_instant: getItemCount(user, EXP_INSTANT_ITEM_ID),
     doria_bag: getItemCount(user, DORIA_BAG_ITEM_ID),
     stack_cap: INVENTORY_STACK_CAP,
+    materials: readSlimeMaterialStock(user),
     itens: [...user.inventario!.itens],
   };
 }

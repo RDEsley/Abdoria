@@ -49,6 +49,12 @@ const unlocked = slugsUnlockedByEquipment(withBar);
 assert.ok(unlocked.includes('dead-hang'), 'dead-hang unlocked with pull_up_bar');
 assert.ok(!unlocked.includes('ab-wheel'), 'ab-wheel not unlocked without ab_wheel');
 
+const board = EQUIPMENT_CATALOG.find((item) => item.id === 'push_up_board');
+assert.ok(board, 'push_up_board remains selectable');
+assert.equal(board?.informationalOnly, true, 'push_up_board is informational only');
+assert.equal(board?.exerciseSlugs.length, 0, 'push_up_board unlocks no exercises');
+assert.equal(board?.compatibleExerciseSlugs?.length, 9, 'push_up_board lists compatible push-ups');
+
 const allSlugs = new Set(allExercises.map((e) => e.slug));
 for (const item of EQUIPMENT_CATALOG) {
   for (const slug of item.exerciseSlugs) {

@@ -67,6 +67,7 @@ function hasAfkPendingLoot(pending: AfkPendingReward): boolean {
     pending.route_drinks > 0 ||
     pending.exp_instant > 0 ||
     pending.doria_bags > 0 ||
+    Object.values(pending.material_items ?? {}).some((amount) => (amount ?? 0) > 0) ||
     pending.cosmetic_ids.length > 0 ||
     (pending.weapon_ids?.length ?? 0) > 0 ||
     pending.titulo_secreto
@@ -94,6 +95,10 @@ export function countAfkDropEvents(pending: AfkPendingReward | null | undefined)
     pending.xp +
     pending.frozen_streaks +
     pending.route_drinks +
+    Object.values(pending.material_items ?? {}).reduce(
+      (total, amount) => total + (amount ?? 0),
+      0,
+    ) +
     pending.cosmetic_ids.length +
     (pending.titulo_secreto ? 1 : 0) +
     pending.abdoria

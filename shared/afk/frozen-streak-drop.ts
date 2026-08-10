@@ -8,8 +8,8 @@
  * dia é uma chance nova e independente, sem estado extra além do dedupe.
  */
 
-/** 30% ao dia ⇒ ~2,1 Frozen Streaks por semana pra quem mantém a Exploração ativa. */
-export const AFK_FROZEN_STREAK_DAILY_THRESHOLD = 3000;
+/** 15% ao dia ⇒ média de 1,05 Frozen Streak por semana, limitada a uma por dia. */
+export const AFK_FROZEN_STREAK_DAILY_THRESHOLD = 1500;
 
 export function hashFrozenStreakSeed(userId: string, dayKey: string | number): number {
   let h = 2166136261;

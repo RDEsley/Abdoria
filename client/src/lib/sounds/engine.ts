@@ -149,6 +149,43 @@ export function playUnlock() {
   playSequence(getPack().unlock, 'square');
 }
 
+/** Abertura do baú: conserva a identidade do pacote de som equipado. */
+export function playChestOpening() {
+  const pack = getPack();
+  playStep({ ...pack.complete, dur: Math.max(pack.complete.dur ?? 0.1, 0.16) });
+  setTimeout(() => playStep(pack.unlock[0] ?? pack.click, 'triangle'), 150);
+  setTimeout(() => playStep(pack.unlock[1] ?? pack.complete, 'triangle'), 300);
+}
+
+export type ChestRewardRarity = 'lendario' | 'mitico' | 'secret';
+
+/** Assinaturas sonoras próprias para os três tiers mais raros do baú. */
+export function playChestRarity(rarity: ChestRewardRarity) {
+  if (rarity === 'lendario') {
+    playSequence([
+      { freq: 523.25, type: 'triangle', dur: 0.12, gap: 0, harmonic: 2 },
+      { freq: 659.25, type: 'triangle', dur: 0.14, gap: 85, harmonic: 2 },
+      { freq: 987.77, type: 'sine', dur: 0.32, gap: 100, harmonic: 2 },
+    ]);
+    return;
+  }
+  if (rarity === 'mitico') {
+    playSequence([
+      { freq: 392, type: 'sine', dur: 0.1, gap: 0, harmonic: 2 },
+      { freq: 622.25, type: 'triangle', dur: 0.12, gap: 65, harmonic: 2 },
+      { freq: 830.61, type: 'sine', dur: 0.15, gap: 65, harmonic: 2 },
+      { freq: 1244.51, type: 'triangle', dur: 0.36, gap: 80, harmonic: 2 },
+    ]);
+    return;
+  }
+  playSequence([
+    { freq: 92.5, type: 'sawtooth', dur: 0.24, gap: 0, harmonic: 2 },
+    { freq: 740, type: 'sine', dur: 0.08, gap: 130 },
+    { freq: 185, type: 'triangle', dur: 0.18, gap: 55, harmonic: 3 },
+    { freq: 1480, type: 'sine', dur: 0.4, gap: 90, harmonic: 2 },
+  ]);
+}
+
 /** Som de conquista — pack épico por padrão; usa o som equipado nas configurações. */
 export function playAchievementUnlock(customSoundUrl?: string) {
   if (!enabled) return;

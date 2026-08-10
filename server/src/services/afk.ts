@@ -19,7 +19,7 @@ import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-reposi
 import {
   combatSnapshot,
   ensureCombat,
-  simulateOfflineKills,
+  simulateOfflineCombat,
   defeatCurrentEnemy,
 } from './afk-combat.js';
 import { ensureBestiario } from './bestiario.js';
@@ -74,10 +74,10 @@ function applyAfkRewardBundle(
   bundle: AfkPendingReward,
 ): {
   claimed: AfkPendingReward;
-  overflow_to_dorias: number;
+  discarded_items: number;
 } {
   const claimed = normalizePending(bundle);
-  let overflow_to_dorias = 0;
+  let discarded_items = 0;
 
   if (claimed.xp > 0) {
     user.gamificacao.nivel_xp += claimed.xp;
@@ -88,19 +88,23 @@ function applyAfkRewardBundle(
   }
   if (claimed.frozen_streaks > 0) {
     const result = addInventoryItem(user, FROZEN_STREAK_ITEM_ID, claimed.frozen_streaks);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   if (claimed.route_drinks > 0) {
     const result = addInventoryItem(user, ROUTE_DRINK_ITEM_ID, claimed.route_drinks);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   if (claimed.exp_instant > 0) {
     const result = addInventoryItem(user, EXP_INSTANT_ITEM_ID, claimed.exp_instant);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
   }
   if (claimed.doria_bags > 0) {
     const result = addInventoryItem(user, DORIA_BAG_ITEM_ID, claimed.doria_bags);
-    overflow_to_dorias += result.overflow_to_dorias;
+    discarded_items += result.discarded;
+  }
+  for (const [itemId, amount] of Object.entries(claimed.material_items)) {
+    const result = addInventoryItem(user, itemId, amount);
+    discarded_items += result.discarded;
   }
   for (const cosmeticId of claimed.cosmetic_ids) {
     if (!user.cosmeticos.desbloqueados.includes(cosmeticId)) {
@@ -120,7 +124,7 @@ function applyAfkRewardBundle(
     user.preferencias.patrol_armas = armas;
   }
 
-  return { claimed, overflow_to_dorias };
+  return { claimed, discarded_items };
 }
 
 function simulateKillsIntoPending(
@@ -146,20 +150,13 @@ export function grantPatrolCacheRewards(
 export function grantRouteDrinkRewards(
   user: UserRecord,
   hours = ROUTE_DRINK_HOURS,
-): { claimed: AfkPendingReward; overflow_to_dorias: number } {
+): { claimed: AfkPendingReward; discarded_items: number } {
   return grantExplorationHourRewards(user, hours, { noSelfRouteDrink: true });
 }
 
-/**
- * Só ao usar o próprio Route Drink: nenhum dos kills simulados pode devolver
- * outro Route Drink de brinde — vira Frozen Streak (o outro drop de Elite)
- * no lugar. Sem isso o item nunca sairia do inventário de quem só usa Route
- * Drink pra tudo. Não mexe no Baú da Exploração nem no acúmulo passivo —
- * aqueles continuam podendo dropar Route Drink normalmente.
- */
-function substituteRouteDrinkSelfDrops(pending: AfkPendingReward): void {
+/** Impede que o uso de Route Drink gere outro Route Drink em cadeia. */
+function discardRouteDrinkSelfDrops(pending: AfkPendingReward): void {
   if (pending.route_drinks <= 0) return;
-  pending.frozen_streaks += pending.route_drinks;
   pending.route_drinks = 0;
 }
 
@@ -167,11 +164,11 @@ function grantExplorationHourRewards(
   user: UserRecord,
   hours: number,
   opts?: { noSelfRouteDrink?: boolean },
-): { claimed: AfkPendingReward; overflow_to_dorias: number } {
+): { claimed: AfkPendingReward; discarded_items: number } {
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
   simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
   if (opts?.noSelfRouteDrink) {
-    substituteRouteDrinkSelfDrops(pending);
+    discardRouteDrinkSelfDrops(pending);
   }
   return applyAfkRewardBundle(user, pending);
 }
@@ -212,7 +209,7 @@ export function afkProfileColumns(user: UserRecord, frozenDiaAntes?: string | nu
   ];
   // Compara já normalizado dos dois lados: o campo é `undefined` enquanto
   // ninguém rolou Frozen Streak nessa conta, e `undefined !== null` faria
-  // TODO ping incluir `preferencias` — anulando exatamente a proteção que
+  // todo ping incluiria `preferencias` — anulando exatamente a proteção que
   // esta função existe pra dar.
   if (readFrozenDia(user) !== (frozenDiaAntes ?? null)) columns.push('preferencias');
   return columns;
@@ -241,6 +238,18 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
     return collectNewBestiaryUnlocks(before, user);
   }
 
+  // Relógio próprio do combate: preserva HP do inimigo, procura, ataques dos
+  // slimes e tempo derrotado mesmo quando ainda não fechou um minuto de baú.
+  const combat = ensureCombat(user);
+  // Saves anteriores ao relógio de combate usam o cursor AFK já persistido;
+  // começar em `now` descartaria toda a primeira janela offline após a atualização.
+  const combatLastAt = combat.combat_last_at
+    ? new Date(combat.combat_last_at)
+    : new Date(afk.last_seen_at!);
+  const combatElapsedMs = Math.max(0, now.getTime() - combatLastAt.getTime());
+  if (combatElapsedMs > 0) simulateOfflineCombat(user, combatElapsedMs);
+  combat.combat_last_at = now.toISOString();
+
   const lastSeen = new Date(afk.last_seen_at!);
   const already = afk.minutos_acumulados ?? 0;
 
@@ -261,8 +270,6 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
   newMinutes = Math.min(newMinutes, room);
 
   const totalMinutes = already + newMinutes;
-
-  simulateOfflineKills(user, newMinutes);
 
   afk.minutos_acumulados = totalMinutes;
   // Avança last_seen_at exatamente pelos minutos consumidos — preserva segundos fracionários.
@@ -293,9 +300,14 @@ export function pauseAfk(user: UserRecord, now = new Date()): void {
  */
 export function resumeAfk(user: UserRecord, now = new Date()): void {
   const afk = ensureAfk(user);
-  if (!afk.paused_at) return;
+  const combat = ensureCombat(user);
+  if (!afk.paused_at) {
+    combat.combat_last_at ??= now.toISOString();
+    return;
+  }
   afk.paused_at = null;
   afk.last_seen_at = now.toISOString();
+  combat.combat_last_at = now.toISOString();
 }
 
 function collectNewBestiaryUnlocks(before: Set<AfkEnemyId>, user: UserRecord): AfkEnemyId[] {
@@ -313,6 +325,7 @@ export function hasAfkRewardsToClaim(
     p.route_drinks > 0 ||
     p.exp_instant > 0 ||
     p.doria_bags > 0 ||
+    Object.values(p.material_items).some((amount) => (amount ?? 0) > 0) ||
     p.cosmetic_ids.length > 0 ||
     p.weapon_ids.length > 0 ||
     p.titulo_secreto
@@ -321,16 +334,16 @@ export function hasAfkRewardsToClaim(
 
 export function claimAfkRewards(user: UserRecord): {
   claimed: AfkPendingReward;
-  overflow_to_dorias: number;
+  discarded_items: number;
 } {
   const afk = ensureAfk(user);
-  const { claimed, overflow_to_dorias } = applyAfkRewardBundle(user, afk.pending);
+  const { claimed, discarded_items } = applyAfkRewardBundle(user, afk.pending);
 
   afk.pending = { ...EMPTY_AFK_PENDING };
   afk.minutos_acumulados = 0;
   afk.last_seen_at = new Date().toISOString();
 
-  return { claimed, overflow_to_dorias };
+  return { claimed, discarded_items };
 }
 
 export function touchAfkPresence(user: UserRecord): AfkEnemyId[] {

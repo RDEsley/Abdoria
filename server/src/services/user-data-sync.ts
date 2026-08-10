@@ -3,8 +3,9 @@ import { User } from '../domain/User.js';
 import { MOEDA_XP_STEP } from '../types/index.js';
 import { ensureMoedaWallet } from './economy.js';
 import { addWeeklyMoedas } from './weekly-stats.js';
+import { LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS } from '../../../shared/equipment/index.js';
 
-const RETIRED_SLUGS = new Set(['pallof-press']);
+const RETIRED_SLUGS = new Set(['pallof-press', ...LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS]);
 
 export async function syncAllUsersProgressData(): Promise<{
   users: number;

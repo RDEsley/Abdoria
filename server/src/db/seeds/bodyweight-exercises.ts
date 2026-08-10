@@ -107,8 +107,7 @@ export const bodyweightExercises: IExercise[] = [
       musculo_principal: 'completo',
       tempo_recomendado: 30,
       prioridade: 'C',
-      descricao:
-        'Em pé, eleve os calcanhares o máximo possível e desça controlado — panturrilhas.',
+      descricao: 'Em pé, eleve os calcanhares o máximo possível e desça controlado — panturrilhas.',
       media: { gif: 'calf-raise.gif' },
       ativo: true,
       grupos: ['pernas'],
@@ -179,8 +178,7 @@ export const bodyweightExercises: IExercise[] = [
       musculos_secundarios: ['core'],
       tempo_recomendado: 30,
       prioridade: 'B',
-      descricao:
-        'Flexão em "V" invertido com o quadril alto — desça a cabeça entre as mãos, foco nos deltoides.',
+      descricao: 'Foco: ombros. Forme um V invertido e desça a cabeça entre as mãos.',
       media: { gif: 'pike-push-up.gif' },
       ativo: true,
       grupos: ['ombros', 'bracos'],

@@ -2,6 +2,7 @@ import { Exercise, type ExerciseDocument } from '../domain/Exercise.js';
 import type { UserRecord } from '../domain/User.js';
 import type { MusculoPrincipal, Prioridade, UserPreferencias } from '../types/index.js';
 import {
+  equipmentAffectsExerciseAvailability,
   getEnabledEquipmentIds,
   isExerciseAvailableForUser,
   type EquipmentId,
@@ -67,7 +68,12 @@ export async function findEquipmentLockedExercises(
   const enabled = new Set(getEnabledEquipmentIds(preferencias));
   const gated = await Exercise.find({ ativo: false }, { sort: { prioridade: 1, nome: 1 } });
   return gated
-    .filter((ex) => ex.equipamento && !enabled.has(ex.equipamento as EquipmentId))
+    .filter(
+      (ex) =>
+        ex.equipamento &&
+        equipmentAffectsExerciseAvailability(ex.equipamento as EquipmentId) &&
+        !enabled.has(ex.equipamento as EquipmentId),
+    )
     .sort(sortExercises);
 }
 

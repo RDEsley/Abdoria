@@ -7,7 +7,7 @@ import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
-import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
+import { TutorialOverlay, type TutorialSlide } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
 import { useCopy } from '@/hooks/useCopy';
 import { useAuth } from '@/context/AuthContext';
@@ -45,6 +45,9 @@ export function AppLayout() {
     return sessionStorage.getItem(VIEWPORT_NOTICE_KEY) === '1';
   });
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
+  const [tutorialSpotlight, setTutorialSpotlight] = useState<TutorialSlide['spotlight'] | null>(
+    null,
+  );
 
   const handleMidnightRefresh = useCallback(() => {
     void refreshApp();
@@ -172,9 +175,10 @@ export function AppLayout() {
           open={showTutorial}
           onClose={handleTutorialClose}
           slides={ONBOARDING_TUTORIAL_SLIDES}
+          onSpotlightChange={setTutorialSpotlight}
         />
 
-        {isHomePage && <AfkFab />}
+        {isHomePage && <AfkFab tutorialHighlight={tutorialSpotlight === 'rpg-fab'} />}
       </div>
     </MidnightRefreshProvider>
   );

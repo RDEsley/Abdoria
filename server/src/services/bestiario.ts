@@ -5,12 +5,19 @@ import {
   AFK_ENEMIES,
   XP_DAILY_CAP_PER_BESTIARY,
   CURRENCY_NAME,
+  AFK_REGIONS,
+  AFK_GOLDEN_SLIME_CHANCE,
+  AFK_MAGIC_RABBIT_CHANCE,
+  AFK_ENIGMA_CHANCE,
+  AFK_BINARIO_CHANCE,
+  getEnemyMaxHp,
   isBestiaryEnemyId,
   bestiaryDropsForEnemy,
   buildBestiaryDropCatalog,
   inferBestiaryDropsFromKill,
   mergeBestiaryDropDiscoveries,
   migrateBestiaryDropId,
+  getSlimeMaterialForEnemy,
   type AfkEnemyId,
   type BestiaryDropId,
   type BestiaryPendingSnapshot,
@@ -91,6 +98,8 @@ export interface BestiaryEntryResponse {
   max_hp: number;
   desbloqueado: boolean;
   drops: BestiaryDropEntryResponse[];
+  encounter_rate: string;
+  regions: string[];
 }
 
 export interface BestiaryCategoryResponse {
@@ -108,24 +117,49 @@ export function readBestiaryResponse(user: UserRecord): {
   const unlocked = new Set(ensureBestiario(user));
   const dropCatalog = buildBestiaryDropCatalog(CURRENCY_NAME);
   const discoveries = ensureBestiaryDropDiscoveries(user);
+  const encounterRate = (id: AfkEnemyId): string => {
+    if (id === 'golden_slime') return `1 em ${AFK_GOLDEN_SLIME_CHANCE.toLocaleString('pt-BR')}`;
+    if (id === 'magic_rabbit') return `1 em ${AFK_MAGIC_RABBIT_CHANCE.toLocaleString('pt-BR')}`;
+    if (id === 'slime_enigma') return `1 em ${AFK_ENIGMA_CHANCE.toLocaleString('pt-BR')}`;
+    if (id === 'slime_binario') return `1 em ${AFK_BINARIO_CHANCE.toLocaleString('pt-BR')}`;
+    const bossRegion = AFK_REGIONS.find((region) => region.bossId === id);
+    if (bossRegion) return `Após ${bossRegion.killsToBoss} vitórias`;
+    return AFK_ENEMIES[id].tier === 'elite' ? 'aprox. 1 em 8' : 'aprox. 1 em 5';
+  };
   const categorias: BestiaryCategoryResponse[] = BESTIARY_CATEGORIES.map((category) => ({
     id: category.id,
     label: category.label,
     entries: category.enemyIds.map((id) => {
       const def = AFK_ENEMIES[id];
       const discovered = new Set((discoveries[id] ?? []).map(migrateBestiaryDropId));
+      const material = getSlimeMaterialForEnemy(id);
+      const regions = AFK_REGIONS.filter(
+        (region) =>
+          region.bossId === id ||
+          region.commonEnemies.includes(id) ||
+          region.eliteEnemies.includes(id),
+      );
       return {
         id,
         label: def.label,
         tier: def.tier,
-        max_hp: def.maxHp,
+        max_hp: getEnemyMaxHp(id, regions[0]?.chapter ?? 1),
         desbloqueado: unlocked.has(id),
         drops: bestiaryDropsForEnemy(id).map((dropId) => ({
           id: dropId,
-          label: discovered.has(dropId) ? dropCatalog[dropId].label : null,
-          chance: dropCatalog[dropId].chance,
+          label: discovered.has(dropId)
+            ? dropId === 'material_unique'
+              ? material.name
+              : dropCatalog[dropId].label
+            : null,
+          chance:
+            dropId === 'material_unique'
+              ? `${material.dropChancePct}%`
+              : dropCatalog[dropId].chance,
           descoberto: discovered.has(dropId),
         })),
+        encounter_rate: encounterRate(id),
+        regions: regions.length > 0 ? regions.map((region) => region.name) : ['Todas as regiões'],
       };
     }),
   }));

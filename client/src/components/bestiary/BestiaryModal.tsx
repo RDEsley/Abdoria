@@ -124,12 +124,30 @@ function BestiaryDetail({ entry, categoryId, onBack }: BestiaryDetailProps) {
             <motion.p variants={bestiaryDetailItemVariants} className="game-bestiary-detail__hp">
               <Zap size={13} aria-hidden /> {entry.max_hp.toLocaleString('pt-BR')} HP
             </motion.p>
+            <motion.div
+              variants={bestiaryDetailItemVariants}
+              className="game-bestiary-detail__encounter"
+            >
+              <strong>Chance de encontro</strong>
+              <span>{entry.encounter_rate}</span>
+            </motion.div>
+            <motion.div
+              variants={bestiaryDetailItemVariants}
+              className="game-bestiary-detail__regions"
+            >
+              {entry.regions.map((region) => (
+                <span key={region}>{region}</span>
+              ))}
+            </motion.div>
             <motion.div variants={bestiaryDetailItemVariants} style={{ width: '100%' }}>
               <BestiaryDropList drops={entry.drops} />
             </motion.div>
           </>
         ) : (
-          <motion.p variants={bestiaryDetailItemVariants} className="game-bestiary-detail__locked-hint">
+          <motion.p
+            variants={bestiaryDetailItemVariants}
+            className="game-bestiary-detail__locked-hint"
+          >
             Derrote na Exploração para revelar.
           </motion.p>
         )}
@@ -193,11 +211,15 @@ export function BestiaryModal({ open, onClose, layer = 'default' }: Props) {
     [categories, activeCategoryId],
   );
   const flatEntries = useMemo(
-    () => categories.flatMap((category) => category.entries.map((entry) => ({ entry, categoryId: category.id }))),
+    () =>
+      categories.flatMap((category) =>
+        category.entries.map((entry) => ({ entry, categoryId: category.id })),
+      ),
     [categories],
   );
   const selectedEntry = useMemo(
-    () => (selectedEntryId ? (flatEntries.find((e) => e.entry.id === selectedEntryId) ?? null) : null),
+    () =>
+      selectedEntryId ? (flatEntries.find((e) => e.entry.id === selectedEntryId) ?? null) : null,
     [flatEntries, selectedEntryId],
   );
 

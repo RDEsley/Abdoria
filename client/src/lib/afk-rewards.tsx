@@ -13,12 +13,7 @@ import {
 } from 'lucide-react';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { PatrolBowIcon, PatrolSwordIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
-import {
-  FrozenStreakIcon,
-  RouteDrinkIcon,
-  ExpInstantIcon,
-  DoriaBagIcon,
-} from '@/lib/item-icons';
+import { FrozenStreakIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/item-icons';
 import { COSMETIC_BY_ID } from '@/lib/cosmetics-meta';
 import {
   CURRENCY_NAME,
@@ -27,6 +22,8 @@ import {
   FROZEN_STREAK_LABEL,
   PATROL_WEAPON_BY_ID,
   isGoldenSlimeSecretCosmetic,
+  SLIME_MATERIAL_BY_ID,
+  isSlimeMaterialItemId,
   type AchievementIcon,
   type AfkPendingReward,
 } from '@/types';
@@ -39,6 +36,7 @@ export type AfkRewardKind =
   | 'route_drink'
   | 'exp_instant'
   | 'doria_bag'
+  | 'material'
   | 'cosmetic'
   | 'secret'
   | 'weapon';
@@ -71,6 +69,7 @@ export interface AfkRewardItem {
   kind: AfkRewardKind;
   amount?: number;
   cosmeticId?: string;
+  materialId?: string;
   cosmeticIcon?: AchievementIcon;
   secret?: boolean;
   rarity?: AfkRewardRarity;
@@ -84,6 +83,10 @@ function rarityForItem(item: AfkRewardItem): AfkRewardRarity {
     return 'golden_secret';
   }
   if (item.secret || item.kind === 'secret') return 'secret';
+  if (item.kind === 'material' && item.materialId && isSlimeMaterialItemId(item.materialId)) {
+    const tier = SLIME_MATERIAL_BY_ID[item.materialId].tier;
+    return tier === 'boss' ? 'epico' : tier === 'elite' ? 'raro' : 'comum';
+  }
   if (item.kind === 'weapon' && item.cosmeticId) {
     const r = PATROL_WEAPON_BY_ID[item.cosmeticId]?.raridade;
     if (r === 'secreto') return 'secret';
@@ -115,6 +118,11 @@ function descriptionForItem(item: AfkRewardItem): string {
       return 'Concede XP instantâneo ao ser utilizado.';
     case 'doria_bag':
       return 'Saco com moedas extras de Abdoria.';
+    case 'material': {
+      if (!item.materialId || !isSlimeMaterialItemId(item.materialId)) return 'Material de slime.';
+      const material = SLIME_MATERIAL_BY_ID[item.materialId];
+      return `${material.description} Pode ser vendido por ${material.sellPrice} Coins.`;
+    }
     case 'weapon': {
       const w = item.cosmeticId ? PATROL_WEAPON_BY_ID[item.cosmeticId] : undefined;
       if (!w) return 'Arma rara dropada na exploração.';
@@ -188,6 +196,17 @@ export function buildAfkRewardItems(pending: AfkPendingReward | null | undefined
       ariaLabel: `${pending.doria_bags} ${DORIA_BAG_LABEL}`,
     });
   }
+  Object.entries(pending.material_items ?? {}).forEach(([materialId, amount]) => {
+    if (!isSlimeMaterialItemId(materialId) || !amount || amount < 1) return;
+    const material = SLIME_MATERIAL_BY_ID[materialId];
+    items.push({
+      key: materialId,
+      kind: 'material',
+      materialId,
+      amount,
+      ariaLabel: `${amount} ${material.name}`,
+    });
+  });
   (pending.cosmetic_ids ?? []).forEach((id) => {
     const meta = COSMETIC_BY_ID[id];
     const icon = (meta?.icon ?? 'star') as AchievementIcon;
@@ -238,6 +257,13 @@ export function AfkRewardIcon({ item, size = 22 }: { item: AfkRewardItem; size?:
   if (item.kind === 'route_drink') return <RouteDrinkIcon size={size} />;
   if (item.kind === 'exp_instant') return <ExpInstantIcon size={size} />;
   if (item.kind === 'doria_bag') return <DoriaBagIcon size={size} />;
+  if (item.kind === 'material' && item.materialId && isSlimeMaterialItemId(item.materialId)) {
+    return (
+      <span className="game-afk-material-icon" style={{ fontSize: `${size}px` }} aria-hidden>
+        {SLIME_MATERIAL_BY_ID[item.materialId].icon}
+      </span>
+    );
+  }
   if (item.kind === 'weapon' && item.cosmeticId) {
     if (item.cosmeticId.startsWith('magia_')) {
       const spellIcons: Record<string, React.ElementType> = {

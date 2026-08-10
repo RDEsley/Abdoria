@@ -26,6 +26,7 @@ interface Props {
   chestCelebrate?: boolean;
   chestShaking?: boolean;
   chestCharged?: boolean;
+  revealIndex?: number;
 }
 
 /** Camada de partículas/luzes por raridade ao redor do ícone do loot. */
@@ -148,7 +149,10 @@ function RewardIconGrid({
             style={{ animationDelay: `${index * 0.07}s` }}
             aria-label={`${item.ariaLabel} — toque para detalhes`}
             aria-expanded={selected}
-            onClick={() => setSelectedKey((prev) => (prev === item.key ? null : item.key))}
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedKey((prev) => (prev === item.key ? null : item.key));
+            }}
           >
             {content}
           </button>
@@ -166,8 +170,13 @@ export function AfkRewardGrid({
   chestCelebrate = false,
   chestShaking = false,
   chestCharged = false,
+  revealIndex,
 }: Props) {
   const items = buildAfkRewardItems(pending);
+  const visibleItems =
+    revealIndex != null && revealIndex < items.length ? [items[revealIndex]!] : items;
+  const spotlightItem =
+    revealIndex != null && revealIndex < items.length ? items[revealIndex] : null;
   const hasLoot = items.length > 0;
   const dropCount = countAfkDropEvents(pending);
   // O contador do baú "vaza" a raridade do melhor item lá dentro: arco-íris
@@ -205,7 +214,7 @@ export function AfkRewardGrid({
 
   const iconGrid = hasLoot ? (
     <RewardIconGrid
-      items={items}
+      items={visibleItems}
       amountPrefixPlus={showLootFromChest}
       interactive={showLootFromChest}
     />
@@ -218,7 +227,7 @@ export function AfkRewardGrid({
   );
 
   if (withChest) {
-    const showLoot = chestOpen || chestOpening;
+    const showLoot = chestOpen || (!chestCelebrate && chestOpening);
 
     return (
       <div
@@ -226,7 +235,7 @@ export function AfkRewardGrid({
       >
         {showLoot && iconGrid ? (
           <div
-            className={`game-afk-chest-loot-row${chestCelebrate ? ' game-afk-chest-loot-row--celebrate' : ' game-afk-chest-loot-row--visible'}`}
+            className={`game-afk-chest-loot-row${chestCelebrate ? ' game-afk-chest-loot-row--celebrate' : ' game-afk-chest-loot-row--visible'}${spotlightItem?.kind === 'weapon' || spotlightItem?.kind === 'cosmetic' ? ' game-afk-chest-loot-row--equipment' : ''}${revealIndex === items.length ? ' game-afk-chest-loot-row--summary' : ''}`}
             aria-live="polite"
           >
             {iconGrid}

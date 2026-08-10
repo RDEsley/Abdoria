@@ -25,6 +25,7 @@ function toAfkRewardItem(item: RewardPresentationItem): AfkRewardItem {
     kind: item.kind === 'secret_title' ? 'secret' : (item.kind as AfkRewardItem['kind']),
     amount: item.amount,
     cosmeticId: item.cosmeticId,
+    materialId: item.kind === 'material' ? item.id : undefined,
     cosmeticIcon: (item.icon ?? 'star') as AfkRewardItem['cosmeticIcon'],
     ariaLabel: item.name,
   };

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import {
@@ -253,6 +253,17 @@ export function AtividadesCard() {
   // atividades já excluídas e o total passaria do denominador.
   const feitasHoje = atividades.filter((a) => concluidasHoje.has(a.nome)).length;
 
+  // Particionamento estável: preserva a ordem personalizada dentro de cada
+  // grupo, mas mantém as pendentes sempre acima das já concluídas no dia.
+  const atividadesOrdenadas = useMemo(() => {
+    const pendentes: AtividadeExtra[] = [];
+    const concluidas: AtividadeExtra[] = [];
+    for (const atividade of atividades) {
+      (concluidasHoje.has(atividade.nome) ? concluidas : pendentes).push(atividade);
+    }
+    return [...pendentes, ...concluidas];
+  }, [atividades, concluidasHoje]);
+
   const sairDoModoEdicao = () => {
     setModoEdicao(false);
     setSelecionados(new Set());
@@ -339,13 +350,24 @@ export function AtividadesCard() {
 
   /** Move uma posição pra cima/baixo — clique é instantâneo, sem ambiguidade de gesto. */
   const moverAtividade = (id: string, direcao: 'cima' | 'baixo') => {
-    const index = atividades.findIndex((a) => a.id === id);
+    const index = atividadesOrdenadas.findIndex((a) => a.id === id);
     if (index === -1) return;
     const alvo = direcao === 'cima' ? index - 1 : index + 1;
-    if (alvo < 0 || alvo >= atividades.length) return;
+    if (alvo < 0 || alvo >= atividadesOrdenadas.length) return;
+    const atividadeAlvo = atividadesOrdenadas[alvo];
+    const atividadeAtual = atividadesOrdenadas[index];
+    if (concluidasHoje.has(atividadeAtual.nome) !== concluidasHoje.has(atividadeAlvo.nome)) {
+      return;
+    }
+
+    const indicePersistido = atividades.findIndex((a) => a.id === atividadeAtual.id);
+    const alvoPersistido = atividades.findIndex((a) => a.id === atividadeAlvo.id);
+    if (indicePersistido === -1 || alvoPersistido === -1) return;
     const lista = [...atividades];
-    const [item] = lista.splice(index, 1);
-    lista.splice(alvo, 0, item);
+    [lista[indicePersistido], lista[alvoPersistido]] = [
+      lista[alvoPersistido],
+      lista[indicePersistido],
+    ];
     salvarLista(lista);
   };
 
@@ -526,26 +548,31 @@ export function AtividadesCard() {
       )}
 
       <ul className="atividades-lista">
-        {atividades.map((atividade, index) => (
-          <AtividadeItem
-            key={atividade.id}
-            atividade={atividade}
-            feita={concluidasHoje.has(atividade.nome)}
-            naFila={fila.includes(atividade.id)}
-            modoEdicao={modoEdicao}
-            bloqueada={!hojeNaAgenda}
-            busy={false}
-            selecionado={selecionados.has(atividade.id)}
-            podeSubir={index > 0}
-            podeDescer={index < atividades.length - 1}
-            onToggleFila={() => alternarFila(atividade)}
-            onEdit={() => setEditando(atividade)}
-            onDelete={() => excluir(atividade.id)}
-            onToggleSelecionado={() => toggleSelecionado(atividade.id)}
-            onMoveUp={() => moverAtividade(atividade.id, 'cima')}
-            onMoveDown={() => moverAtividade(atividade.id, 'baixo')}
-          />
-        ))}
+        {atividadesOrdenadas.map((atividade, index) => {
+          const feita = concluidasHoje.has(atividade.nome);
+          const anterior = atividadesOrdenadas[index - 1];
+          const proxima = atividadesOrdenadas[index + 1];
+          return (
+            <AtividadeItem
+              key={atividade.id}
+              atividade={atividade}
+              feita={feita}
+              naFila={fila.includes(atividade.id)}
+              modoEdicao={modoEdicao}
+              bloqueada={!hojeNaAgenda}
+              busy={false}
+              selecionado={selecionados.has(atividade.id)}
+              podeSubir={Boolean(anterior) && concluidasHoje.has(anterior.nome) === feita}
+              podeDescer={Boolean(proxima) && concluidasHoje.has(proxima.nome) === feita}
+              onToggleFila={() => alternarFila(atividade)}
+              onEdit={() => setEditando(atividade)}
+              onDelete={() => excluir(atividade.id)}
+              onToggleSelecionado={() => toggleSelecionado(atividade.id)}
+              onMoveUp={() => moverAtividade(atividade.id, 'cima')}
+              onMoveDown={() => moverAtividade(atividade.id, 'baixo')}
+            />
+          );
+        })}
       </ul>
 
       {modoEdicao && selecionados.size > 0 && (

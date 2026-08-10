@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { updateMe } from '@/lib/api';
 import type { UserPreferencias } from '@/types';
@@ -6,10 +6,22 @@ import type { UserPreferencias } from '@/types';
 export function useUserPreferences(onUpdated?: () => void) {
   const { user, refreshUser } = useAuth();
 
-  const fixedExerciseSlugs = user?.preferencias?.exercicios_fixos ?? [];
-  const blockedExerciseSlugs = user?.preferencias?.exercicios_nao_recomendar ?? [];
-  const fixedWorkoutIds = user?.preferencias?.treinos_fixos ?? [];
-  const blockedWorkoutIds = user?.preferencias?.treinos_nao_recomendar ?? [];
+  const fixedExerciseSlugs = useMemo(
+    () => user?.preferencias?.exercicios_fixos ?? [],
+    [user?.preferencias?.exercicios_fixos],
+  );
+  const blockedExerciseSlugs = useMemo(
+    () => user?.preferencias?.exercicios_nao_recomendar ?? [],
+    [user?.preferencias?.exercicios_nao_recomendar],
+  );
+  const fixedWorkoutIds = useMemo(
+    () => user?.preferencias?.treinos_fixos ?? [],
+    [user?.preferencias?.treinos_fixos],
+  );
+  const blockedWorkoutIds = useMemo(
+    () => user?.preferencias?.treinos_nao_recomendar ?? [],
+    [user?.preferencias?.treinos_nao_recomendar],
+  );
 
   const patchPreferences = useCallback(
     async (patch: Partial<UserPreferencias>) => {

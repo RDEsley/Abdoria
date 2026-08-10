@@ -64,13 +64,15 @@ Enquanto o usuário está longe, o herói continua explorando e enfrentando inim
 
 A exploração permite:
 
-* Derrotar slimes e chefes
-* Encontrar inimigos raros
-* Coletar experiência, moedas e itens
-* Desbloquear registros no bestiário
-* Equipar arcos, espadas e magias
-* Encontrar equipamentos de diferentes raridades
-* Receber recompensas mesmo fora do aplicativo
+* Avançar por seis regiões com progresso e chefes próprios
+* Continuar o combate e a procura de inimigos mesmo fora do aplicativo
+* Encontrar slimes comuns, elites, especiais e chefes regionais
+* Coletar experiência, moedas, materiais exclusivos, armas, magias e Orbs
+* Evoluir habilidades em caminhos de espada, arco, magia e descoberta
+* Desbloquear registros e chances de drop no bestiário
+* Equipar e gerenciar armas diretamente pelo inventário
+* Abrir baús com revelação cinematográfica ou abertura rápida opcional
+* Receber no máximo um Frozen Streak por dia, com 15% de chance diária
 
 ### 🏆 Rankings e comunidade
 

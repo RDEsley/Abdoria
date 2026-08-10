@@ -311,10 +311,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const unlockedSlugsKey = userDados.exercicios_desbloqueados.join('\0');
   const unlockedExercises = useMemo(
     () => new Set(userDados.exercicios_desbloqueados),
-    [unlockedSlugsKey],
+    [userDados.exercicios_desbloqueados],
   );
 
   const setCustomWorkout = useCallback(

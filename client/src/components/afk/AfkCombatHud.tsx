@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
 import { AFK_BOSS_INTERVAL } from '@/types';
 
 export function AfkBossProgressPanel({
   killsUntilBoss,
+  targetKills = AFK_BOSS_INTERVAL,
   bossActive,
   overlay = false,
   bossHp,
   bossMaxHp,
   bossHit = false,
+  bossName,
 }: {
   killsUntilBoss: number;
+  targetKills?: number;
   bossActive: boolean;
   overlay?: boolean;
   /** Vida atual do boss — só faz sentido (e só é usado) quando `bossActive`.
@@ -18,8 +20,10 @@ export function AfkBossProgressPanel({
   bossHp?: number;
   bossMaxHp?: number;
   bossHit?: boolean;
+  bossName?: string;
 }) {
-  const bossProgressPct = Math.max(0, Math.min(100, (killsUntilBoss / AFK_BOSS_INTERVAL) * 100));
+  const safeTargetKills = Math.max(1, targetKills);
+  const bossProgressPct = Math.max(0, Math.min(100, (killsUntilBoss / safeTargetKills) * 100));
   const bossHpPct =
     bossActive && bossMaxHp && bossMaxHp > 0
       ? Math.max(0, Math.min(100, ((bossHp ?? bossMaxHp) / bossMaxHp) * 100))
@@ -32,12 +36,12 @@ export function AfkBossProgressPanel({
     >
       <div className="game-afk-combat-hud__boss-header">
         <span className="game-afk-combat-hud__boss-label">
-          {bossActive ? 'Boss em combate' : 'Próximo boss'}
+          {bossActive ? (bossName ?? 'Chefe da região') : 'Próximo boss'}
         </span>
         <span className="game-afk-combat-hud__boss-count tabular-nums">
           {bossActive
             ? `${Math.max(0, Math.round(bossHp ?? 0)).toLocaleString('pt-BR')} HP`
-            : `${killsUntilBoss}/${AFK_BOSS_INTERVAL}`}
+            : `${Math.min(killsUntilBoss, safeTargetKills)}/${safeTargetKills}`}
         </span>
       </div>
       <div
@@ -45,11 +49,11 @@ export function AfkBossProgressPanel({
         role="progressbar"
         aria-valuenow={bossActive ? (bossHp ?? 0) : killsUntilBoss}
         aria-valuemin={0}
-        aria-valuemax={bossActive ? (bossMaxHp ?? 0) : AFK_BOSS_INTERVAL}
+        aria-valuemax={bossActive ? (bossMaxHp ?? 0) : safeTargetKills}
         aria-label={
           bossActive
-            ? `Vida do boss: ${bossHp ?? 0} de ${bossMaxHp ?? 0}`
-            : `Progresso até o boss: ${killsUntilBoss} de ${AFK_BOSS_INTERVAL}`
+            ? `Vida de ${bossName ?? 'chefe da região'}: ${bossHp ?? 0} de ${bossMaxHp ?? 0}`
+            : `Progresso até o boss: ${Math.min(killsUntilBoss, safeTargetKills)} de ${safeTargetKills}`
         }
       >
         <div
@@ -60,26 +64,4 @@ export function AfkBossProgressPanel({
       </div>
     </div>
   );
-}
-
-export function useDamageFloaters() {
-  const [floaters, setFloaters] = useState<
-    { id: number; value: number; drift: number; crit: boolean }[]
-  >([]);
-
-  const pushDamage = useCallback((value: number, crit = false) => {
-    const id = Date.now() + Math.random();
-    const drift = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 16);
-    setFloaters((prev) => [...prev.slice(-3), { id, value, drift, crit }]);
-    window.setTimeout(
-      () => {
-        setFloaters((prev) => prev.filter((f) => f.id !== id));
-      },
-      crit ? 1050 : 950,
-    );
-  }, []);
-
-  useEffect(() => () => setFloaters([]), []);
-
-  return { floaters, pushDamage };
 }

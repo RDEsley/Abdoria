@@ -50,6 +50,7 @@ function emptyPending(): AfkPendingReward {
     weapon_ids: [],
     exp_instant: 0,
     doria_bags: 0,
+    material_items: {},
     titulo_secreto: false,
     drop_count: 0,
   };

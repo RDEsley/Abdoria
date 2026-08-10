@@ -10,7 +10,7 @@ import {
   spellRewardQuantityMultiplier,
 } from '../../../shared/patrol/shop.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
-import type { AfkEnemyTier } from '../types/index.js';
+import type { AfkEnemyId, AfkEnemyTier } from '../types/index.js';
 import {
   AFK_KILL_DROP_CHANCE_BOSS,
   AFK_KILL_DROP_CHANCE_COMMON,
@@ -19,6 +19,7 @@ import {
   AFK_SECRET_ROLL_EXACT,
   AFK_SECRET_WEAPON_GATE_MOD,
   GOLDEN_SLIME_SECRET_COSMETIC_IDS,
+  getSlimeMaterialForEnemy,
   isExplorationLegendaryCosmeticDrop,
   type AfkPendingReward,
 } from '../types/index.js';
@@ -49,12 +50,23 @@ function pickLegendaryCosmeticId(user: UserRecord, killIndex: number): string | 
 export interface RollLootOptions {
   bossBoost?: boolean;
   tier?: AfkEnemyTier;
+  chapter?: number;
+  bossId?: AfkEnemyId;
+  skillDropBonusPct?: number;
 }
 
-export function getKillDropChanceForTier(tier: AfkEnemyTier): number {
-  if (tier === 'boss') return AFK_KILL_DROP_CHANCE_BOSS;
-  if (tier === 'elite') return AFK_KILL_DROP_CHANCE_ELITE;
-  return AFK_KILL_DROP_CHANCE_COMMON;
+export function getKillDropChanceForTier(
+  tier: AfkEnemyTier,
+  chapter = 1,
+  skillBonusPct = 0,
+): number {
+  const base =
+    tier === 'boss'
+      ? AFK_KILL_DROP_CHANCE_BOSS
+      : tier === 'elite'
+        ? AFK_KILL_DROP_CHANCE_ELITE
+        : AFK_KILL_DROP_CHANCE_COMMON;
+  return base + Math.max(0, chapter - 1) * 0.015 + Math.max(0, skillBonusPct);
 }
 
 /**
@@ -116,11 +128,6 @@ function rollSecretPatrolWeapon(
   pending.weapon_ids.push(weaponId);
 }
 
-// Janelas raras do boss em /1.000.000, escaladas pela passiva da magia equipada.
-const BOSS_SECRET_TITLE_WINDOW_PER_MILLION = 100; // 0,01%
-const BOSS_SECRET_WEAPON_WINDOW_PER_MILLION = 100; // 0,01% antes do portão 1/3
-const BOSS_LEGENDARY_COSMETIC_WINDOW_PER_MILLION = 700; // 0,07%
-
 /** XP/Coins básicos — passiva da magia Secret dá 9% de chance de +1 extra. */
 function grantBasicLoot(
   user: UserRecord,
@@ -136,74 +143,81 @@ function grantBasicLoot(
   else pending.abdoria += 1 + extra;
 }
 
+function rollPercent(userId: string, killIndex: number, salt: number, chancePct: number): boolean {
+  return hashKillSeed(userId, killIndex + salt) % 10_000 < Math.round(chancePct * 100);
+}
+
 /**
  * Uma rolagem na tabela de loot da exploração, por tier do inimigo:
- * comum = XP/Coins/Bolsa/EXP Instantâneo; elite = XP/Coins (frozen/route têm
- * rolls próprios); boss = XP/Coins + janelas raras (lendário/secret).
+ * comum = XP/Coins/Bolsa/EXP Instantâneo; elite = XP/Coins;
+ * boss = XP/Coins + janelas raras (lendário/secret).
+ * Frozen Streak é exclusivamente diário e limitado a uma unidade.
  */
 export function rollLootTable(
   user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
   opts?: RollLootOptions,
-): void {
+): boolean {
   const tier = opts?.tier ?? (opts?.bossBoost ? 'boss' : 'common');
+  const chapter = Math.max(1, opts?.chapter ?? 1);
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const rareMult = spellRareDropMultiplier(armas.magia_equipada);
   const qtyMult = spellRewardQuantityMultiplier(armas.magia_equipada);
-  const roll = hashKillSeed(String(user.id), killIndex) % 10000;
+  const userId = String(user.id);
+  let dropped = false;
 
   if (tier === 'boss') {
-    const rare = hashKillSeed(String(user.id), killIndex + 4001) % 1_000_000;
-    const secretTitleEnd = Math.round(BOSS_SECRET_TITLE_WINDOW_PER_MILLION * rareMult);
-    const secretWeaponEnd =
-      secretTitleEnd + Math.round(BOSS_SECRET_WEAPON_WINDOW_PER_MILLION * rareMult);
-    const legendaryEnd =
-      secretWeaponEnd + Math.round(BOSS_LEGENDARY_COSMETIC_WINDOW_PER_MILLION * rareMult);
-
-    if (rare < secretTitleEnd) {
+    // Cada entrada tem uma rolagem própria: em uma vitória extremamente
+    // sortuda, recursos, cosmético, título e arma podem aparecer juntos.
+    if (chapter >= 5 && rollPercent(userId, killIndex, 4001, 0.01 * rareMult)) {
       pending.titulo_secreto = true;
-      return;
+      dropped = true;
     }
-    if (rare < secretWeaponEnd) {
+    if (chapter >= 5 && rollPercent(userId, killIndex, 4002, 0.01 * rareMult)) {
+      const before = pending.weapon_ids.length;
       rollSecretPatrolWeapon(user, killIndex, pending, new Set(armas.desbloqueados));
-      return;
+      dropped ||= pending.weapon_ids.length > before;
     }
-    if (rare < legendaryEnd) {
+    if (rollPercent(userId, killIndex, 4003, 0.07 * rareMult)) {
       const cosmeticId = pickLegendaryCosmeticId(user, killIndex);
-      if (cosmeticId) pending.cosmetic_ids.push(cosmeticId);
-      return;
+      if (cosmeticId && !pending.cosmetic_ids.includes(cosmeticId)) {
+        pending.cosmetic_ids.push(cosmeticId);
+        dropped = true;
+      }
     }
-    if (roll >= 8500) {
+    if (rollPercent(userId, killIndex, 4010, 15)) {
       grantBasicLoot(user, killIndex, pending, 'abdoria', qtyMult);
-      return;
+      dropped = true;
     }
-    grantBasicLoot(user, killIndex, pending, 'xp', qtyMult);
-    return;
+    if (rollPercent(userId, killIndex, 4011, 85)) {
+      grantBasicLoot(user, killIndex, pending, 'xp', qtyMult);
+      dropped = true;
+    }
+    return dropped;
   }
 
-  if (tier === 'elite') {
-    if (roll >= 8800) {
-      grantBasicLoot(user, killIndex, pending, 'abdoria', qtyMult);
-      return;
-    }
+  const xpChance = tier === 'elite' ? 88 : 85;
+  const coinChance = tier === 'elite' ? 12 : 15;
+  if (rollPercent(userId, killIndex, 4101, xpChance)) {
     grantBasicLoot(user, killIndex, pending, 'xp', qtyMult);
-    return;
+    dropped = true;
   }
-
-  if (roll >= 9500) {
-    pending.exp_instant = (pending.exp_instant ?? 0) + 1;
-    return;
-  }
-  if (roll >= 9300) {
-    pending.doria_bags = (pending.doria_bags ?? 0) + 1;
-    return;
-  }
-  if (roll >= 8500) {
+  if (rollPercent(userId, killIndex, 4102, coinChance)) {
     grantBasicLoot(user, killIndex, pending, 'abdoria', qtyMult);
-    return;
+    dropped = true;
   }
-  grantBasicLoot(user, killIndex, pending, 'xp', qtyMult);
+  if (tier === 'elite') return dropped;
+
+  if (rollPercent(userId, killIndex, 4104, 2)) {
+    pending.doria_bags = (pending.doria_bags ?? 0) + 1;
+    dropped = true;
+  }
+  if (rollPercent(userId, killIndex, 4105, 5)) {
+    pending.exp_instant = (pending.exp_instant ?? 0) + 1;
+    dropped = true;
+  }
+  return dropped;
 }
 
 /** Drop secreto do Golden Slime — mesma chance do título secreto (roll exato 9999). */
@@ -232,29 +246,28 @@ export function rollGoldenSlimeSecretCosmetic(
 
 /** Coins + Bolsas de Coins dados a cada kill repetida de "?"/Slime Binário depois
     do drop secreto já ter sido conquistado — pra a kill continuar valendo a pena. */
-const RARE_ENEMY_REPEAT_COINS = 500;
-const RARE_ENEMY_REPEAT_DORIA_BAGS = 5;
-
-function grantRareEnemyRepeatReward(pending: AfkPendingReward): void {
-  pending.abdoria += RARE_ENEMY_REPEAT_COINS;
-  pending.doria_bags = (pending.doria_bags ?? 0) + RARE_ENEMY_REPEAT_DORIA_BAGS;
-  pending.drop_count = (pending.drop_count ?? 0) + 1;
-}
-
 /** Drop do inimigo especial "?" (1 em 100.000): título único "???????". */
-export function rollEnigmaDrop(user: UserRecord, pending: AfkPendingReward): void {
+export function rollEnigmaDrop(
+  user: UserRecord,
+  killIndex: number,
+  pending: AfkPendingReward,
+): void {
   const titleId = 'titulo_enigma';
   const unlocked = new Set(user.cosmeticos?.desbloqueados ?? []);
   if (unlocked.has(titleId) || pending.cosmetic_ids.includes(titleId)) {
-    grantRareEnemyRepeatReward(pending);
     return;
   }
+  if (hashKillSeed(String(user.id), killIndex + 9101) % 100 >= 5) return;
   pending.cosmetic_ids.push(titleId);
   pending.drop_count = (pending.drop_count ?? 0) + 1;
 }
 
 /** Drop do Slime Binário (1 em 101.010): borda + título únicos, juntos na 1ª derrota. */
-export function rollBinarioDrop(user: UserRecord, pending: AfkPendingReward): void {
+export function rollBinarioDrop(
+  user: UserRecord,
+  killIndex: number,
+  pending: AfkPendingReward,
+): void {
   const borderId = 'borda_binario';
   const titleId = 'titulo_codigo_evolucao';
   const unlocked = new Set(user.cosmeticos?.desbloqueados ?? []);
@@ -264,9 +277,9 @@ export function rollBinarioDrop(user: UserRecord, pending: AfkPendingReward): vo
     pending.cosmetic_ids.includes(borderId) ||
     pending.cosmetic_ids.includes(titleId);
   if (alreadyOwned) {
-    grantRareEnemyRepeatReward(pending);
     return;
   }
+  if (hashKillSeed(String(user.id), killIndex + 9201) % 100 >= 5) return;
   pending.cosmetic_ids.push(borderId, titleId);
   pending.drop_count = (pending.drop_count ?? 0) + 1;
 }
@@ -290,20 +303,19 @@ function spellDropWeight(id: string): number {
  * diária. 220 (vs 160 na escala antiga) deixa magias mais difíceis no geral:
  * ~65% de chance no dia com a coleção vazia (era ~71%).
  */
-const SPELL_NO_DROP_WEIGHT = 220;
-
 /**
  * Drop do Slime Mágico. Regras:
  * - Cada magia só é conquistada uma vez: o pool nunca inclui magias já possuídas
  *   (nem já pendentes no baú) — progressão real rumo à coleção completa.
- * - No máximo UMA magia a cada 24h (dia SP), com chance proporcional à raridade
- *   restante: se só faltam as raras, o drop diário fica difícil de acontecer.
+ * - Cada encontro realiza uma rolagem independente de 25%; a raridade define
+ *   apenas qual magia sai quando a rolagem acerta.
  * - Coleção completa: todo drop de magia vira SPELL_DUPLICATE_DORIAS automaticamente.
  */
 export function rollMagicRabbitSpell(
   user: UserRecord,
   killIndex: number,
   pending: AfkPendingReward,
+  skillBonusPct = 0,
 ): void {
   const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const unlockedSpells = new Set(armas.desbloqueados);
@@ -318,14 +330,12 @@ export function rollMagicRabbitSpell(
     return;
   }
 
-  const today = getTodaySaoPaulo();
-  if (armas.ultimo_drop_magia === today) return;
-
+  // 25% por Slime Mágico; a árvore soma pequenos pontos percentuais.
+  const chancePerTenThousand = Math.round((25 + Math.max(0, skillBonusPct)) * 100);
+  if (hashKillSeed(String(user.id), killIndex + 6665) % 10_000 >= chancePerTenThousand) return;
   const weights = spellsNotOwned.map(spellDropWeight);
   const totalSpellWeight = weights.reduce((a, b) => a + b, 0);
-  const roll =
-    hashKillSeed(String(user.id), killIndex + 6666) % (totalSpellWeight + SPELL_NO_DROP_WEIGHT);
-  if (roll >= totalSpellWeight) return;
+  const roll = hashKillSeed(String(user.id), killIndex + 6666) % totalSpellWeight;
 
   let cumulative = 0;
   for (let i = 0; i < spellsNotOwned.length; i++) {
@@ -335,7 +345,7 @@ export function rollMagicRabbitSpell(
       if (spellId) {
         pending.weapon_ids.push(spellId);
         pending.drop_count = (pending.drop_count ?? 0) + 1;
-        armas.ultimo_drop_magia = today;
+        armas.ultimo_drop_magia = getTodaySaoPaulo();
         user.preferencias.patrol_armas = armas;
       }
       return;
@@ -376,9 +386,57 @@ export function rollKillDrop(
   opts?: RollLootOptions,
 ): void {
   const tier = opts?.tier ?? 'common';
-  const threshold = getKillDropChanceForTier(tier);
-  const proc = hashKillSeed(String(user.id), killIndex) % 100;
-  if (proc >= threshold) return;
+  const threshold = getKillDropChanceForTier(tier, opts?.chapter, opts?.skillDropBonusPct);
+  const proc = hashKillSeed(String(user.id), killIndex) % 100_000;
+  if (proc >= Math.round(threshold * 1000)) return;
+  if (rollLootTable(user, killIndex, pending, opts)) {
+    pending.drop_count = (pending.drop_count ?? 0) + 1;
+  }
+}
+
+/** Material exclusivo de cada espécie. A rolagem é independente da tabela
+ * principal, portanto pode vir junto de XP, Coins, consumíveis e armas. */
+export function rollSlimeMaterialDrop(
+  user: UserRecord,
+  enemyId: AfkEnemyId,
+  killIndex: number,
+  pending: AfkPendingReward,
+): boolean {
+  const material = getSlimeMaterialForEnemy(enemyId);
+  const roll = hashKillSeed(`${user.id}:${enemyId}:material`, killIndex + 12_001) % 10_000;
+  if (roll >= Math.round(material.dropChancePct * 100)) return false;
+
+  pending.material_items ??= {};
+  pending.material_items[material.id] = (pending.material_items[material.id] ?? 0) + 1;
   pending.drop_count = (pending.drop_count ?? 0) + 1;
-  rollLootTable(user, killIndex, pending, opts);
+  return true;
+}
+
+const BOSS_SIGNATURE_WEAPONS: Partial<Record<AfkEnemyId, string>> = {
+  boss_colossus: 'arco_04',
+  boss_crocodile: 'espada_05',
+  boss_lich: 'espada_04',
+  boss_golem: 'arco_07',
+  boss_procrastinador: 'arco_09',
+  boss_preguica: 'espada_09',
+};
+
+/** Cada guardião possui uma arma temática própria, com chance legível e repetível. */
+export function rollBossSignatureWeapon(
+  user: UserRecord,
+  bossId: AfkEnemyId,
+  killIndex: number,
+  pending: AfkPendingReward,
+  chapter: number,
+): void {
+  const weaponId = BOSS_SIGNATURE_WEAPONS[bossId];
+  if (!weaponId) return;
+  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
+  if (armas.desbloqueados.includes(weaponId) || pending.weapon_ids.includes(weaponId)) return;
+
+  const chancePct = Math.max(5, 13 - chapter * 1.25);
+  const roll = hashKillSeed(String(user.id), killIndex + 9300 + chapter) % 10_000;
+  if (roll >= Math.round(chancePct * 100)) return;
+  pending.weapon_ids.push(weaponId);
+  pending.drop_count = (pending.drop_count ?? 0) + 1;
 }

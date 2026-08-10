@@ -26,6 +26,8 @@ interface Props {
   /** Enquanto procura o próximo inimigo (lupa), o herói troca pro sprite
       "parado" da vila em vez do sprite de combate com a arma em riste. */
   searching?: boolean;
+  defeated?: boolean;
+  hit?: boolean;
 }
 
 export function AfkMascotHero({
@@ -35,9 +37,12 @@ export function AfkMascotHero({
   isCrit = false,
   genero = 'masculino',
   searching = false,
+  defeated = false,
+  hit = false,
 }: Props) {
   const feminino = genero === 'feminino';
-  const spriteSrc = searching
+  const useVillageSprite = searching || defeated;
+  const spriteSrc = useVillageSprite
     ? feminino
       ? MASCOT_SPRITE_SRC_VILLAGE_FEMALE
       : MASCOT_SPRITE_SRC_VILLAGE
@@ -50,6 +55,8 @@ export function AfkMascotHero({
     searching ? 'game-afk-mascot--searching' : '',
     attacking ? 'game-afk-mascot--attack' : 'game-afk-mascot--idle',
     attacking && isCrit ? 'game-afk-mascot--crit' : '',
+    defeated ? 'game-afk-mascot--defeated' : '',
+    hit ? 'game-afk-mascot--hit' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -58,12 +65,14 @@ export function AfkMascotHero({
     <div key={attackSeq} className={heroClass} aria-hidden>
       <div className="game-afk-mascot__shadow" />
       <div className="game-afk-mascot__figure">
-        <img
-          src={spriteSrc}
-          alt=""
-          className="game-afk-mascot__sprite-img"
-          draggable={false}
-        />
+        <img src={spriteSrc} alt="" className="game-afk-mascot__sprite-img" draggable={false} />
+        {defeated ? (
+          <span className="game-afk-mascot__stun" aria-hidden>
+            <i>★</i>
+            <i>✦</i>
+            <i>★</i>
+          </span>
+        ) : null}
         {!searching && weapon === 'magia' && attacking && (
           <span key={`magic-${attackSeq}`} className="game-afk-mascot__magic-burst" aria-hidden />
         )}

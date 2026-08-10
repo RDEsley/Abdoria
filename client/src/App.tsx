@@ -49,15 +49,19 @@ const AtividadesPlayerPage = lazy(() =>
   import('@/pages/AtividadesPlayerPage').then((m) => ({ default: m.AtividadesPlayerPage })),
 );
 const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })));
-const HistoricoPage = lazy(() =>
-  import('@/pages/HistoricoPage').then((m) => ({ default: m.HistoricoPage })),
-);
 const CampaignBookPage = lazy(() =>
   import('@/pages/CampaignBookPage').then((m) => ({ default: m.CampaignBookPage })),
 );
 const ExplorationPage = lazy(() =>
   import('@/pages/ExplorationPage').then((m) => ({ default: m.ExplorationPage })),
 );
+
+/**
+ * DESATIVADO TEMPORARIAMENTE: o arquivo com todos os capítulos anteriores da
+ * Campanha continua preservado, mas não deve possuir rota nem acesso no front-end.
+ * O Mapa de Campanha exibe somente o capítulo atual e o imediatamente anterior.
+ */
+const CAMPAIGN_ARCHIVE_ENABLED = false;
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
@@ -186,14 +190,6 @@ export default function App() {
                       }
                     />
                     <Route
-                      path="historico"
-                      element={
-                        <LazyPage>
-                          <HistoricoPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
                       path="admin"
                       element={
                         <LazyPage>
@@ -218,14 +214,16 @@ export default function App() {
                       </LazyPage>
                     }
                   />
-                  <Route
-                    path="campanha"
-                    element={
-                      <LazyPage>
-                        <CampaignBookPage />
-                      </LazyPage>
-                    }
-                  />
+                  {CAMPAIGN_ARCHIVE_ENABLED ? (
+                    <Route
+                      path="campanha"
+                      element={
+                        <LazyPage>
+                          <CampaignBookPage />
+                        </LazyPage>
+                      }
+                    />
+                  ) : null}
                   <Route
                     path="exploracao"
                     element={

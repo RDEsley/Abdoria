@@ -6,8 +6,6 @@ const LUPA_LOTTIE_URL = '/assets/Lupa.json';
 const SEARCH_TEXT = 'Explorando...';
 
 interface Props {
-  /** 0, 1 ou 2 — qual dos 3 pontos (perto de onde o inimigo aparece) a lupa está ocupando agora. */
-  spot: number;
   /** Duração total da busca (5-10s), pra alimentar o contador regressivo. */
   durationMs: number;
 }
@@ -39,16 +37,16 @@ function useCountdownSeconds(durationMs: number): number {
 /**
  * Intervalo entre abates: sem inimigo em cena, personagem parado (sem
  * atirar sem parar) enquanto a lupa "procura" o próximo, perto de onde o
- * inimigo costuma aparecer (não espalhada pela cena inteira), trocando de
- * lugar algumas vezes até o novo inimigo aparecer. Ver AfkCombatScene.
+ * inimigo costuma aparecer. A posição é fixa para a leitura da cena não
+ * saltar enquanto o contador avança. Ver AfkCombatScene.
  */
-export function AfkSearchOverlay({ spot, durationMs }: Props) {
+export function AfkSearchOverlay({ durationMs }: Props) {
   const lupaData = useLottieAsset(LUPA_LOTTIE_URL);
   const remainingSec = useCountdownSeconds(durationMs);
 
   return (
     <div className="game-afk-search" role="status" aria-live="polite">
-      <div className={`game-afk-search__lupa game-afk-search__lupa--spot-${spot}`}>
+      <div className="game-afk-search__lupa">
         <span className="game-afk-search__lupa-glow" aria-hidden />
         {lupaData ? <LottieView data={lupaData} loop /> : null}
         <span className="game-afk-search__countdown tabular-nums" aria-hidden>

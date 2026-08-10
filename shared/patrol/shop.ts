@@ -2,7 +2,10 @@ export type PatrolWeaponKind = 'arco' | 'espada' | 'magia';
 export type PatrolWeaponRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'mitico' | 'secreto';
 
 export type PatrolWeaponUnlock =
-  { tipo: 'gratis' } | { tipo: 'moedas'; preco_moedas: number } | { tipo: 'futuro' };
+  | { tipo: 'gratis' }
+  | { tipo: 'moedas'; preco_moedas: number }
+  | { tipo: 'boss'; boss_id: string; label: string }
+  | { tipo: 'futuro' };
 
 export interface PatrolWeaponDefinition {
   id: string;
@@ -132,8 +135,8 @@ const ARCO_SEEDS: WeaponSeed[] = [
     nivel: 7,
     preco: 12300,
     dano: 32,
-    nome: 'Arco Celestial',
-    descricao: 'Abençoado pelas constelações que vigiam a patrulha noturna.',
+    nome: 'Arco da Fortaleza',
+    descricao: 'Talhado no núcleo do Golem de Pedra; cada disparo ecoa como uma muralha ruindo.',
   },
   {
     nivel: 8,
@@ -146,8 +149,9 @@ const ARCO_SEEDS: WeaponSeed[] = [
     nivel: 9,
     preco: 55000,
     dano: 48,
-    nome: 'Arco Dracônico',
-    descricao: 'Escamas lendárias endurecem a madeira e multiplicam o impacto.',
+    nome: 'Arco do Tempo Perdido',
+    descricao:
+      'Relíquia do Slime Procrastinador; a flecha chega antes que o alvo possa adiar o combate.',
   },
   {
     nivel: 10,
@@ -185,14 +189,14 @@ const ESPADA_SEEDS: WeaponSeed[] = [
     preco: 2475,
     dano: 26,
     nome: 'Espada do Guardião',
-    descricao: 'Forjada para proteger exploradores nas rotas mais perigosas.',
+    descricao: 'Runa deixada pelo Slime Lich para quem atravessa o Pântano Cristalunar.',
   },
   {
     nivel: 5,
     preco: 4085,
     dano: 30,
-    nome: 'Espada de Aço Negro',
-    descricao: 'Equilíbrio perfeito entre peso e fio — implacável em combate corpo a corpo.',
+    nome: 'Lâmina das Dunas',
+    descricao: 'Presa cristalizada do Slime Crocodilo, afiada pela areia das ruínas solares.',
   },
   {
     nivel: 6,
@@ -219,8 +223,8 @@ const ESPADA_SEEDS: WeaponSeed[] = [
     nivel: 9,
     preco: 55135,
     dano: 50,
-    nome: 'Espada Flamejante',
-    descricao: 'Chama dracônica percorre a lâmina a cada impacto decisivo.',
+    nome: 'Lâmina do Sono Eterno',
+    descricao: 'Drop lendário do Slime Preguiçoso, envolto pela energia dos sonhos do bosque.',
   },
   {
     nivel: 10,
@@ -234,8 +238,22 @@ const ESPADA_SEEDS: WeaponSeed[] = [
 function buildWeapon(kind: 'arco' | 'espada', seed: WeaponSeed): PatrolWeaponDefinition {
   const prefix = kind === 'arco' ? 'arco' : 'espada';
   const id = `${prefix}_${String(seed.nivel).padStart(2, '0')}`;
-  const unlock: PatrolWeaponUnlock =
-    seed.nivel === 1 ? { tipo: 'gratis' } : { tipo: 'moedas', preco_moedas: seed.preco };
+  const bossUnlocks: Record<string, { boss_id: string; label: string }> = {
+    arco_04: { boss_id: 'boss_colossus', label: 'Drop do Rei Slime' },
+    espada_05: { boss_id: 'boss_crocodile', label: 'Drop do Slime Crocodilo' },
+    espada_04: { boss_id: 'boss_lich', label: 'Drop do Slime Lich' },
+    arco_07: { boss_id: 'boss_golem', label: 'Drop do Golem de Pedra' },
+    arco_09: { boss_id: 'boss_procrastinador', label: 'Drop do Slime Procrastinador' },
+    espada_09: { boss_id: 'boss_preguica', label: 'Drop do Slime Preguiçoso' },
+    arco_10: { boss_id: 'boss_procrastinador', label: 'Drop Secret dos guardiões finais' },
+    espada_10: { boss_id: 'boss_preguica', label: 'Drop Secret dos guardiões finais' },
+  };
+  const bossUnlock = bossUnlocks[id];
+  const unlock: PatrolWeaponUnlock = bossUnlock
+    ? { tipo: 'boss', ...bossUnlock }
+    : seed.nivel === 1
+      ? { tipo: 'gratis' }
+      : { tipo: 'moedas', preco_moedas: seed.preco };
 
   return {
     id,

@@ -69,6 +69,7 @@ export function buildDevRouteDrinkClaim(): AfkPendingReward {
     route_drinks: 0,
     exp_instant: 0,
     doria_bags: 1,
+    material_items: {},
     cosmetic_ids: [],
     weapon_ids: [],
     titulo_secreto: true,

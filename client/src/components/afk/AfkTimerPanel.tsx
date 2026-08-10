@@ -1,3 +1,4 @@
+import { Clock3, Sparkles } from 'lucide-react';
 import {
   afkDisplayMinutes,
   afkProgressToCap,
@@ -12,6 +13,7 @@ interface Props {
   elapsedSinceSyncMin: number;
   capped: boolean;
   loading?: boolean;
+  paused?: boolean;
   dropChances?: AfkKillDropChances;
 }
 
@@ -20,6 +22,7 @@ export function AfkTimerPanel({
   elapsedSinceSyncMin,
   capped,
   loading,
+  paused = false,
   dropChances,
 }: Props) {
   const display = afkDisplayMinutes(minutos, capped ? 0 : elapsedSinceSyncMin);
@@ -29,12 +32,13 @@ export function AfkTimerPanel({
   return (
     <div className={`game-afk-timer${capped ? ' game-afk-timer--capped' : ''}`} aria-live="polite">
       <div className="game-afk-timer__row">
-        <span className="game-afk-timer__label">Tempo acumulado</span>
-        {!capped && !loading && (
-          <span className="game-afk-timer__next">
-            Loot: {chances.common}% comum · {chances.elite}% elite · {chances.boss}% boss
-          </span>
-        )}
+        <span className="game-afk-timer__label">
+          <Clock3 size={14} aria-hidden />
+          Tempo de patrulha
+        </span>
+        <span className="game-afk-timer__status">
+          {paused ? 'Pausado' : capped ? 'Baú cheio' : 'Em andamento'}
+        </span>
       </div>
       <span className="game-afk-timer__value tabular-nums">
         {loading ? '--:--:--' : formatAfkTimer(display)}
@@ -52,19 +56,16 @@ export function AfkTimerPanel({
           style={{ width: `${Math.round(progress * 100)}%` }}
         />
       </div>
-      {!capped && (
-        <span
-          className="game-afk-timer__label"
-          style={{ textAlign: 'center', marginTop: '0.1rem' }}
-        >
-          Cada inimigo derrotado pode dropar loot
-        </span>
+      {!capped && !loading && (
+        <div className="game-afk-timer__loot-rates">
+          <Sparkles size={12} aria-hidden />
+          <span>{chances.common}% comum</span>
+          <span>{chances.elite}% elite</span>
+          <span>{chances.boss}% boss</span>
+        </div>
       )}
       {capped && (
-        <span
-          className="game-afk-timer__label game-afk-timer__capped-hint"
-          style={{ textAlign: 'center', marginTop: '0.1rem' }}
-        >
+        <span className="game-afk-timer__label game-afk-timer__capped-hint">
           Limite atingido — colete pra continuar explorando!
         </span>
       )}

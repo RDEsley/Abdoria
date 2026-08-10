@@ -753,3 +753,349 @@
     justify-content: center;
   }
 }
+.game-patrol-shop-overlay {
+  background: rgba(4, 8, 16, 0.82);
+  backdrop-filter: blur(9px);
+}
+.game-modal.game-patrol-shop-modal {
+  max-width: 30rem;
+  border: 1px solid #d9ad5c66;
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #20150f, #0e1720 70%);
+  box-shadow:
+    0 30px 90px #000c,
+    inset 0 0 45px #d58a1a11;
+  color: #f8e9ca;
+}
+.game-patrol-shop-modal .game-modal__close-btn {
+  border-color: #d9ad5c66;
+  background: #241912;
+  color: #ffe7ad;
+}
+.game-patrol-shop-modal .game-modal__title {
+  color: #ffe2a0;
+  font-family: Georgia, serif;
+}
+.game-patrol-shop-modal .game-modal__text {
+  color: #baa98e;
+}
+
+.game-patrol-shop-header__title {
+  color: #ffe6ad;
+  text-shadow: 0 2px 7px #000;
+}
+
+.game-patrol-shop-header__subtitle {
+  color: #d2c2a8;
+}
+
+.game-patrol-shop-body {
+  padding: 0.7rem;
+  border: 1px solid #e2bd7466;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, #f4dfb6, #dfbf88);
+  box-shadow:
+    inset 0 0 0 2px #fff1cf55,
+    inset 0 0 28px #74471922;
+}
+
+.game-patrol-shop-nav {
+  padding: 0.25rem;
+  border: 1px solid #d9ad5c44;
+  border-radius: 0.75rem;
+  background: #090f17a8;
+}
+
+.game-patrol-shop-nav__btn {
+  color: #d9e0e8;
+}
+
+.game-patrol-shop-row {
+  border-width: 2px;
+  border-color: #6d4928;
+  background: linear-gradient(180deg, #fffaf0, #f5e5c9);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 4px 0 #51331833;
+}
+
+.game-patrol-shop-row--raro {
+  border-color: #0ea5e9;
+}
+.game-patrol-shop-row--epico {
+  border-color: #9333ea;
+}
+.game-patrol-shop-row--lendario {
+  border-color: #d97706;
+}
+.game-patrol-shop-row--secreto {
+  border-color: #111827;
+}
+
+.game-patrol-shop-row__rarity {
+  border: 1px solid currentColor;
+  background: #e7e5e4;
+  color: #374151;
+}
+
+.game-patrol-shop-row__rarity--raro {
+  background: #dff5ff;
+  color: #075985;
+}
+.game-patrol-shop-row__rarity--epico {
+  background: #f0ddff;
+  color: #6b21a8;
+}
+.game-patrol-shop-row__rarity--lendario {
+  background: #fff0bd;
+  color: #92400e;
+}
+.game-patrol-shop-row__rarity--mitico {
+  border-color: #7c3aed;
+  background: linear-gradient(90deg, #fee2e2, #fef3c7, #dcfce7, #dbeafe, #ede9fe);
+  color: #581c87;
+  -webkit-text-fill-color: currentColor;
+}
+.game-patrol-shop-row__rarity--secreto {
+  background: #111827;
+  color: #fff;
+}
+
+.game-patrol-shop-modal__footer {
+  background: linear-gradient(180deg, rgba(21, 22, 24, 0.96), #0e151d);
+  border-top-color: #d9ad5c3d;
+}
+
+/* Categorias com contraste de HUD e identidade visual por tipo de arma. */
+.game-patrol-shop-nav {
+  gap: 0.35rem;
+  padding: 0.34rem;
+  border-color: rgba(245, 198, 106, 0.4);
+  background: linear-gradient(180deg, #111b25, #090f17);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.07);
+}
+
+.game-patrol-shop-nav__btn {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  border: 1px solid rgba(203, 213, 225, 0.23);
+  border-radius: 0.58rem;
+  background: linear-gradient(180deg, #293746, #192532);
+  color: #f8fafc;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.game-patrol-shop-nav__btn:hover:not(.game-patrol-shop-nav__btn--active) {
+  border-color: rgba(255, 232, 180, 0.58);
+  background: linear-gradient(180deg, #36495a, #223241);
+  color: #fff7e5;
+}
+
+.game-patrol-shop-nav__btn--active {
+  color: #071510;
+  text-shadow: none;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.5),
+    0 0 0 1px #0b1119,
+    0 0 0 2px #f4c966;
+}
+
+.game-patrol-shop-nav__btn--arco.game-patrol-shop-nav__btn--active {
+  border-color: #8ef0c4;
+  background: linear-gradient(180deg, #bff7dc, #63d4a2);
+}
+
+.game-patrol-shop-nav__btn--espada.game-patrol-shop-nav__btn--active {
+  border-color: #a9d5ff;
+  background: linear-gradient(180deg, #d9edff, #78baf1);
+}
+
+.game-patrol-shop-nav__btn--magia.game-patrol-shop-nav__btn--active {
+  border-color: #d9b9ff;
+  background: linear-gradient(180deg, #eadcff, #bc91ee);
+}
+
+.game-patrol-shop-nav__btn--materials.game-patrol-shop-nav__btn--active {
+  border-color: #f6c86b;
+  background: linear-gradient(180deg, #fff1bd, #e6b957);
+}
+
+.game-patrol-materials {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.game-patrol-material {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem;
+  border: 2px solid #6d4928;
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, #fffaf0, #f5e5c9);
+  box-shadow:
+    inset 0 1px #fff,
+    0 4px 0 rgba(81, 51, 24, 0.18);
+  color: #2d1b0d;
+}
+
+.game-patrol-material--elite {
+  border-color: #0e7490;
+  box-shadow:
+    inset 4px 0 #22d3ee,
+    0 4px 0 rgba(14, 116, 144, 0.2);
+}
+
+.game-patrol-material--boss {
+  border-color: #9333ea;
+  background: linear-gradient(135deg, #fff6dc, #f4e8ff);
+  box-shadow:
+    inset 4px 0 #c084fc,
+    0 4px 0 rgba(107, 33, 168, 0.2);
+}
+
+.game-patrol-material__icon {
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  place-items: center;
+  border: 1px solid rgba(120, 73, 24, 0.35);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 1.75rem;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+}
+
+.game-patrol-material__content {
+  min-width: 0;
+}
+
+.game-patrol-material__tier {
+  display: block;
+  color: #8b5e2c;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.game-patrol-material__content strong,
+.game-patrol-material__content small {
+  display: block;
+}
+
+.game-patrol-material__content strong {
+  margin-top: 0.08rem;
+  font-size: 0.76rem;
+}
+
+.game-patrol-material__content small {
+  margin-top: 0.16rem;
+  color: #6b4a2d;
+  font-size: 0.55rem;
+  line-height: 1.3;
+}
+
+.game-patrol-material__price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.3rem;
+  color: #92400e;
+  font-size: 0.57rem;
+  font-weight: 900;
+}
+
+.game-patrol-material__stock {
+  display: grid;
+  min-width: 5.6rem;
+  gap: 0.28rem;
+  text-align: center;
+}
+
+.game-patrol-material__stock > span {
+  color: #4b3621;
+  font-size: 0.58rem;
+  font-weight: 900;
+}
+
+.game-patrol-material__stock button {
+  min-height: 1.8rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #0f766e;
+  border-radius: 0.45rem;
+  background: linear-gradient(180deg, #34d399, #10b981);
+  color: #042f2e;
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+
+.game-patrol-material__stock button:disabled {
+  opacity: 0.55;
+}
+
+.game-patrol-material__stock .game-patrol-material__sell-all {
+  border-color: #92400e;
+  background: linear-gradient(180deg, #fde68a, #fbbf24);
+  color: #78350f;
+}
+
+.game-patrol-materials__empty {
+  display: grid;
+  min-height: 9rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.35rem;
+  padding: 1rem;
+  color: #6b4a2d;
+  text-align: center;
+}
+
+.game-patrol-materials__empty span {
+  max-width: 18rem;
+  font-size: 0.62rem;
+}
+
+@media (max-width: 480px) {
+  .game-patrol-shop-nav__btn {
+    gap: 0.2rem;
+    padding-inline: 0.2rem;
+    font-size: 0.58rem;
+  }
+
+  .game-patrol-material {
+    grid-template-columns: 2.7rem minmax(0, 1fr);
+  }
+
+  .game-patrol-material__icon {
+    width: 2.7rem;
+    height: 2.7rem;
+    font-size: 1.45rem;
+  }
+
+  .game-patrol-material__stock {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr 1fr;
+    align-items: center;
+  }
+}
+
+.game-patrol-shop-row--mitico {
+  border-color: #c084fc;
+  background: linear-gradient(125deg, #fff4e1, #f4e5ff 45%, #dcf6ee);
+  box-shadow:
+    inset 4px 0 #a855f7,
+    0 4px 0 rgba(88, 28, 135, 0.18),
+    0 0 16px rgba(168, 85, 247, 0.16);
+}
+
+.game-patrol-shop-row--mitico .game-patrol-shop-row__thumb {
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.38);
+}

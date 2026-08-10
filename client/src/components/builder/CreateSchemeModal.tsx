@@ -13,6 +13,10 @@ interface Props {
   onCreate: (scheme: RepSchemeRecommendation) => void;
 }
 
+function createCustomSchemeId(): string {
+  return `custom-${Date.now()}`;
+}
+
 export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
   const recommendations = REP_SCHEME_BY_NIVEL[nivel];
   const [series, setSeries] = useState(3);
@@ -25,7 +29,7 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
 
   const handleCustomCreate = () => {
     onCreate({
-      id: `custom-${Date.now()}`,
+      id: createCustomSchemeId(),
       label: schemeLabel,
       series,
       repeticoes,
@@ -39,7 +43,7 @@ export function CreateSchemeModal({ open, nivel, onClose, onCreate }: Props) {
   };
 
   const handlePickRecommendation = (scheme: RepSchemeRecommendation) => {
-    onCreate({ ...scheme, id: `custom-${Date.now()}` });
+    onCreate({ ...scheme, id: createCustomSchemeId() });
     onClose();
   };
 
