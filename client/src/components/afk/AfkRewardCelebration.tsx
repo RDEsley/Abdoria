@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { FastForward, PackageOpen } from 'lucide-react';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { CosmeticEffectLayer } from '@/components/shop/CosmeticEffectLayer';
+import { showGameToast } from '@/components/ui/GameToast';
 import { buildAfkRewardItems } from '@/lib/afk-rewards';
-import { playLevelUp, playUnlock } from '@/lib/sounds';
+import { playChestOpening, playChestRarity, type ChestRewardRarity } from '@/lib/sounds';
+import { updateMe } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { resolveCosmeticos, type AfkPendingReward } from '@/types';
 
@@ -23,15 +26,18 @@ function vibrate(pattern: number | number[]) {
 }
 
 export function AfkRewardCelebration({ claimed, onClose }: Props) {
-  const { user } = useAuth();
+  const { user, applyUser } = useAuth();
   const effectId = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp).efeito_equipado;
   const [phase, setPhase] = useState<ChestPhase>('closed');
   const items = useMemo(() => buildAfkRewardItems(claimed), [claimed]);
   const [revealIndex, setRevealIndex] = useState(0);
+  const [quickReveal, setQuickReveal] = useState(
+    user?.preferencias?.baus_abertura_rapida ?? false,
+  );
+  const [savingQuickReveal, setSavingQuickReveal] = useState(false);
+  const playedRarityRef = useRef(new Set<string>());
 
-  // Quanto melhor o loot, MAIS LONGO o build-up: a espera extra é o que dá
-  // valor ao prêmio (mesma lógica de caixa de loot de jogo — abrir rápido
-  // demais mata a expectativa). O jogador aprende que tremor longo = coisa boa.
+  // O tier mais alto governa a apresentação visual e sonora da abertura.
   const tier = useMemo(() => {
     if (items.some((i) => i.rarity === 'secret' || i.rarity === 'golden_secret')) return 'secret';
     if (items.some((i) => i.rarity === 'mitico')) return 'mitico';
@@ -43,19 +49,19 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
     if (phase !== 'open') return;
     if (revealIndex < items.length) {
       setRevealIndex((value) => value + 1);
-      playUnlock();
       return;
     }
     onClose();
   };
 
   useEffect(() => {
-    const extra =
-      tier === 'secret' ? 1400 : tier === 'mitico' ? 900 : tier === 'lendario' ? 450 : 0;
-    const shakeAt = 200;
-    const chargeAt = 1700 + extra;
-    const openAt = chargeAt + 400;
-    const revealAt = openAt + 600;
+    playedRarityRef.current.clear();
+    setPhase('closed');
+    setRevealIndex(quickReveal ? items.length : 0);
+    const shakeAt = quickReveal ? 100 : 350;
+    const chargeAt = quickReveal ? 400 : 3300;
+    const openAt = quickReveal ? 700 : 4200;
+    const revealAt = quickReveal ? 1100 : 5000;
 
     const timers = [
       window.setTimeout(() => setPhase('shaking'), shakeAt),
@@ -66,13 +72,50 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
       window.setTimeout(() => {
         setPhase('opening');
         vibrate(tier ? 90 : 40);
-        if (tier === 'secret' || tier === 'mitico') playLevelUp();
-        else playUnlock();
+        playChestOpening();
       }, openAt),
       window.setTimeout(() => setPhase('open'), revealAt),
     ];
     return () => timers.forEach((id) => window.clearTimeout(id));
-  }, [tier]);
+  }, [items.length, quickReveal, tier]);
+
+  useEffect(() => {
+    if (phase !== 'open') return;
+    const item = quickReveal ? items[items.length - 1] : items[revealIndex];
+    if (!item || playedRarityRef.current.has(item.key)) return;
+    const rarity: ChestRewardRarity | null =
+      item.rarity === 'lendario'
+        ? 'lendario'
+        : item.rarity === 'mitico'
+          ? 'mitico'
+          : item.rarity === 'secret' || item.rarity === 'golden_secret'
+            ? 'secret'
+            : null;
+    if (!rarity) return;
+    playedRarityRef.current.add(item.key);
+    playChestRarity(rarity);
+  }, [items, phase, quickReveal, revealIndex]);
+
+  const toggleQuickReveal = () => {
+    if (savingQuickReveal) return;
+    const next = !quickReveal;
+    setQuickReveal(next);
+    if (!user) return;
+    setSavingQuickReveal(true);
+    const optimisticUser = {
+      ...user,
+      preferencias: { ...user.preferencias, baus_abertura_rapida: next },
+    };
+    applyUser(optimisticUser);
+    void updateMe({ preferencias: optimisticUser.preferencias })
+      .then(applyUser)
+      .catch(() => {
+        setQuickReveal(!next);
+        applyUser(user);
+        showGameToast('Não foi possível salvar a abertura rápida.', { variant: 'error' });
+      })
+      .finally(() => setSavingQuickReveal(false));
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -117,6 +160,29 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
           Recompensas da exploração coletadas
         </h2>
 
+        <div className="game-afk-celebration-head">
+          <span>
+            <PackageOpen size={17} aria-hidden />
+            Baú da exploração
+          </span>
+          <button
+            type="button"
+            className={`game-afk-quick-reveal${quickReveal ? ' game-afk-quick-reveal--active' : ''}`}
+            aria-pressed={quickReveal}
+            aria-label={`Abertura rápida dos baús: ${quickReveal ? 'ligada' : 'desligada'}`}
+            disabled={phase === 'open' || savingQuickReveal}
+            aria-busy={savingQuickReveal}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleQuickReveal();
+            }}
+          >
+            <FastForward size={14} aria-hidden />
+            Abertura rápida
+            <strong>{quickReveal ? 'Ligada' : 'Desligada'}</strong>
+          </button>
+        </div>
+
         <AnimatePresence>
           {tier && phase === 'open' && (
             <motion.p
@@ -147,7 +213,9 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
           <p className="game-afk-celebration-hint">
             {revealIndex < items.length
               ? 'Toque para revelar o próximo item'
-              : 'Todos os itens · toque fora de um item para fechar'}
+              : quickReveal
+                ? 'Abertura rápida concluída · toque fora de um item para fechar'
+                : 'Todos os itens · toque fora de um item para fechar'}
           </p>
         ) : null}
       </motion.div>

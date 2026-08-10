@@ -78,7 +78,6 @@ export function BuilderPage() {
     removeRepScheme,
     selectedRepSchemeIds,
     setSelectedRepSchemeId,
-    repSchemesByNivel,
     flushPendingUserDados,
     exercisesLoading,
     ensureExercises,
@@ -129,6 +128,14 @@ export function BuilderPage() {
   const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
   const lastAppliedQueueKeyRef = useRef('');
   const lastSyncedSuggestedRef = useRef<string | null>(null);
+  const lastRestPreferenceRef = useRef(authUser?.preferencias?.descanso_padrao_seg ?? 30);
+
+  useEffect(() => {
+    const savedRest = authUser?.preferencias?.descanso_padrao_seg ?? 30;
+    if (savedRest === lastRestPreferenceRef.current) return;
+    lastRestPreferenceRef.current = savedRest;
+    setGlobalDescanso(savedRest);
+  }, [authUser?.preferencias?.descanso_padrao_seg]);
 
   const refreshRecommendations = useCallback(() => {
     void loadRecommendations({ force: true });
@@ -147,8 +154,7 @@ export function BuilderPage() {
 
   const nivel: NivelUsuario = user?.nivel ?? authUser?.nivel ?? 'iniciante';
   const objetivo: Objetivo = user?.objetivo ?? authUser?.objetivo ?? 'definicao';
-  const storedSchemeKey = repSchemesByNivel[nivel]?.map((scheme) => scheme.id).join('|') ?? '';
-  const schemes = useMemo(() => getRepSchemes(nivel), [getRepSchemes, nivel, storedSchemeKey]);
+  const schemes = getRepSchemes(nivel);
   const persistedSchemeId = selectedRepSchemeIds[nivel];
   const cicloTreinos = normalizeCicloTreinos(
     user?.preferencias?.ciclo_treinos ?? authUser?.preferencias?.ciclo_treinos,
@@ -199,7 +205,6 @@ export function BuilderPage() {
         }
       })
       .catch(() => setAllPresets([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega quando ciclos/nível mudam
   }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo]);
 
   useEffect(() => {
@@ -440,7 +445,7 @@ export function BuilderPage() {
     }
   };
 
-  const selectPreset = (id: string | 'custom') => {
+  const selectPreset = useCallback((id: string | 'custom') => {
     if (id === 'custom') {
       setActiveTab('customize');
       setSelectedPresetId('custom');
@@ -457,7 +462,7 @@ export function BuilderPage() {
     setCustomizedIndices(new Set());
     lastAppliedQueueKeyRef.current = '';
     scrollToSection('builder-queue-preview');
-  };
+  }, [customWorkout.length, scrollToSection]);
 
   const handleSelectCiclo = useCallback(
     (ciclo: TreinoBase) => {
@@ -469,7 +474,7 @@ export function BuilderPage() {
       selectPreset(preset.id);
       showGameToast(`Ciclo ${ciclo} — ${CICLO_LABELS[ciclo]}`, { variant: 'info' });
     },
-    [allPresets, nivel, objetivo],
+    [allPresets, nivel, objetivo, selectPreset],
   );
 
   const handleSelectDia = useCallback(

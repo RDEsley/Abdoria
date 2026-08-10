@@ -170,13 +170,11 @@ const pendingBoss = freshPending();
 rollLootTable(uBoss, 1, pendingBefore);
 rollLootTable(uBoss, 2, pendingBoss, { bossBoost: true });
 assert.ok(
-  pendingBoss.xp + pendingBoss.abdoria + pendingBoss.frozen_streaks >=
-    pendingBefore.xp + pendingBefore.abdoria + pendingBefore.frozen_streaks - 1,
+  pendingBoss.xp + pendingBoss.abdoria >= pendingBefore.xp + pendingBefore.abdoria - 1,
   'boss loot table runs',
 );
 
-// Tabelas por tier: comum nunca dropa item raro/frozen/route; elite nunca dropa
-// bolsa/EXP instantâneo nem item raro (frozen/route de elite têm rolls próprios).
+// Frozen Streak não pertence a nenhuma tabela por inimigo: é um roll diário.
 for (let i = 0; i < 3000; i += 1) {
   const trialCommon = freshPending();
   rollLootTable(uBoss, 50_000 + i, trialCommon, { tier: 'common' });
@@ -192,6 +190,11 @@ for (let i = 0; i < 3000; i += 1) {
   assert.equal(trialElite.doria_bags, 0, 'elite não dropa bolsa de coins');
   assert.equal(trialElite.cosmetic_ids.length, 0, 'elite não dropa cosmético');
   assert.ok(!trialElite.titulo_secreto, 'elite não dropa título secreto');
+  assert.equal(trialElite.frozen_streaks, 0, 'elite não dropa frozen streak');
+
+  const trialBoss = freshPending();
+  rollLootTable(uBoss, 120_000 + i, trialBoss, { tier: 'boss' });
+  assert.equal(trialBoss.frozen_streaks, 0, 'boss não dropa frozen streak');
 }
 
 let procMisses = 0;

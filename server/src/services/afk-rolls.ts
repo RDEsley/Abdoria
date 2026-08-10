@@ -149,8 +149,9 @@ function rollPercent(userId: string, killIndex: number, salt: number, chancePct:
 
 /**
  * Uma rolagem na tabela de loot da exploração, por tier do inimigo:
- * comum = XP/Coins/Bolsa/EXP Instantâneo; elite = XP/Coins (frozen/route têm
- * rolls próprios); boss = XP/Coins + janelas raras (lendário/secret).
+ * comum = XP/Coins/Bolsa/EXP Instantâneo; elite = XP/Coins;
+ * boss = XP/Coins + janelas raras (lendário/secret).
+ * Frozen Streak é exclusivamente diário e limitado a uma unidade.
  */
 export function rollLootTable(
   user: UserRecord,
@@ -193,10 +194,6 @@ export function rollLootTable(
       grantBasicLoot(user, killIndex, pending, 'xp', qtyMult);
       dropped = true;
     }
-    if (rollPercent(userId, killIndex, 4012, 30)) {
-      pending.frozen_streaks += 1;
-      dropped = true;
-    }
     return dropped;
   }
 
@@ -210,13 +207,7 @@ export function rollLootTable(
     grantBasicLoot(user, killIndex, pending, 'abdoria', qtyMult);
     dropped = true;
   }
-  if (tier === 'elite') {
-    if (rollPercent(userId, killIndex, 4103, 30)) {
-      pending.frozen_streaks += 1;
-      dropped = true;
-    }
-    return dropped;
-  }
+  if (tier === 'elite') return dropped;
 
   if (rollPercent(userId, killIndex, 4104, 2)) {
     pending.doria_bags = (pending.doria_bags ?? 0) + 1;

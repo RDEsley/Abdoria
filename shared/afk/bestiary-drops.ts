@@ -53,7 +53,7 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   abdoria_golden: '100%',
   doria_bag: '2%',
   exp_instant: '5%',
-  frozen_streak: '30%',
+  frozen_streak: '15% ao dia',
   route_drink: '0,04%',
   cosmetic_legendary: '0,07%',
   cosmetic_secret: '5%',
@@ -65,14 +65,14 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   material_unique: '5–20%',
 };
 
-// Loot por tier: comuns = recursos básicos; elites = sustain (frozen/route);
-// bosses = recursos + itens raros (lendário/mítico/secret).
+// Loot por tier: comuns = recursos básicos; elites = recursos + Route Drink;
+// bosses = recursos + itens raros (lendário/mítico/secret). Frozen Streak é
+// um bônus diário global da exploração, portanto não pertence a um inimigo.
 const COMMON_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'doria_bag', 'exp_instant'];
-const ELITE_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'frozen_streak', 'route_drink'];
+const ELITE_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'route_drink'];
 const BOSS_DROPS: BestiaryDropId[] = [
   'xp',
   'abdoria',
-  'frozen_streak',
   'cosmetic_legendary',
   'weapon_mythic',
 ];

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Flame, Medal, Sparkles, Trophy } from 'lucide-react';
 import { computePersonalRecords } from '@shared/personal-records';
@@ -22,6 +22,7 @@ const RANK_MEDALS = [
 /** Melhor volume (série × repetições ou série × tempo) já registrado por exercício. */
 export function PersonalRecordsPanel() {
   const { history, ensureHistory, historyLoading } = useApp();
+  const [openedAt] = useState(() => Date.now());
 
   useEffect(() => {
     void ensureHistory();
@@ -34,9 +35,8 @@ export function PersonalRecordsPanel() {
     );
   }, [history]);
 
-  const agora = Date.now();
-  const novoLimite = agora - NOVO_RECORDE_DIAS * 24 * 60 * 60 * 1000;
-  const quenteLimite = agora - RECORDE_QUENTE_HORAS * 60 * 60 * 1000;
+  const novoLimite = openedAt - NOVO_RECORDE_DIAS * 24 * 60 * 60 * 1000;
+  const quenteLimite = openedAt - RECORDE_QUENTE_HORAS * 60 * 60 * 1000;
 
   const novosCount = records.filter(
     (r) => new Date(r.concluido_em).getTime() >= novoLimite,

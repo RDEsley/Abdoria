@@ -10,6 +10,7 @@ import {
   Compass,
   Copy,
   Dumbbell,
+  FastForward,
   Gamepad2,
   HelpCircle,
   LogOut,
@@ -102,6 +103,9 @@ export function SettingsPage() {
   const [exploracaoAutoAbrir, setExploracaoAutoAbrir] = useState(
     user?.preferencias?.exploracao_auto_abrir ?? false,
   );
+  const [bausAberturaRapida, setBausAberturaRapida] = useState(
+    user?.preferencias?.baus_abertura_rapida ?? false,
+  );
   const [tomTexto, setTomTexto] = useState<TomTexto>(user?.preferencias?.tom_texto ?? 'jogo');
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
   const [ciclo, setCiclo] = useState<TreinoBase[]>(
@@ -118,18 +122,30 @@ export function SettingsPage() {
       volume !== (prefs?.sfx_volume ?? 0.7) ||
       confetti !== (prefs?.confetti_animacoes_habilitadas ?? true) ||
       exploracaoAutoAbrir !== (prefs?.exploracao_auto_abrir ?? false) ||
+      bausAberturaRapida !== (prefs?.baus_abertura_rapida ?? false) ||
       tomTexto !== (prefs?.tom_texto ?? 'jogo') ||
       descanso !== (prefs?.descanso_padrao_seg ?? 30) ||
       normalizeCicloTreinos(ciclo).join('') !==
         normalizeCicloTreinos(prefs?.ciclo_treinos).join('')
     );
-  }, [user, som, volume, confetti, exploracaoAutoAbrir, tomTexto, descanso, ciclo]);
+  }, [
+    user,
+    som,
+    volume,
+    confetti,
+    exploracaoAutoAbrir,
+    bausAberturaRapida,
+    tomTexto,
+    descanso,
+    ciclo,
+  ]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
     setConfetti(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
     setExploracaoAutoAbrir(user?.preferencias?.exploracao_auto_abrir ?? false);
+    setBausAberturaRapida(user?.preferencias?.baus_abertura_rapida ?? false);
     setTomTexto(user?.preferencias?.tom_texto ?? 'jogo');
     setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
     setCiclo(normalizeCicloTreinos(user?.preferencias?.ciclo_treinos));
@@ -145,6 +161,7 @@ export function SettingsPage() {
           sfx_volume: volume,
           confetti_animacoes_habilitadas: confetti,
           exploracao_auto_abrir: exploracaoAutoAbrir,
+          baus_abertura_rapida: bausAberturaRapida,
           tom_texto: tomTexto,
           descanso_padrao_seg: descanso,
           ciclo_treinos: normalizeCicloTreinos(ciclo),
@@ -404,6 +421,26 @@ export function SettingsPage() {
           </span>
           <span className="text-xs font-extrabold uppercase tracking-wide text-stone-500">
             {exploracaoAutoAbrir ? 'Ligado' : 'Desligado'}
+          </span>
+        </GameButton>
+        <GameButton
+          type="button"
+          variant={bausAberturaRapida ? 'secondary' : 'ghost'}
+          className="mt-2 flex w-full items-center justify-between gap-3"
+          onClick={() => setBausAberturaRapida((value) => !value)}
+          aria-pressed={bausAberturaRapida}
+        >
+          <span className="flex min-w-0 items-center gap-2 text-left">
+            <FastForward size={16} className="shrink-0" aria-hidden />
+            <span className="min-w-0">
+              <strong className="block text-xs">Abertura rápida dos baús</strong>
+              <small className="block text-[0.65rem] font-semibold text-stone-500">
+                Revela todos os itens em uma sequência curta
+              </small>
+            </span>
+          </span>
+          <span className="shrink-0 text-xs font-extrabold uppercase tracking-wide text-stone-500">
+            {bausAberturaRapida ? 'Ligada' : 'Desligada'}
           </span>
         </GameButton>
       </section>

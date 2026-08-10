@@ -259,6 +259,8 @@ export interface UserPreferencias {
       recompensa parada pra coletar. Padrão: false (o jogador entra na
       Home e decide se quer abrir pelo botão). */
   exploracao_auto_abrir?: boolean;
+  /** Revela todas as recompensas do baú em uma abertura curta. */
+  baus_abertura_rapida?: boolean;
   /** true = a seção Atividades do Início mostra o Bloco de Notas em vez da
       lista de atividades de bem-estar. Persistente — não volta sozinho
       pra Atividades. */
@@ -1872,6 +1874,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   sfx_volume: 0.7,
   confetti_animacoes_habilitadas: true,
   frozen_streak_auto_usar: true,
+  baus_abertura_rapida: false,
   idioma: 'pt',
   tom_texto: 'jogo',
   ciclo_treinos: ['A', 'B', 'C'],

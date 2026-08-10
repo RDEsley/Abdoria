@@ -21,6 +21,10 @@ export default defineConfig([
     rules: {
       // Carregar dados da API no mount é um padrão válido em providers/páginas.
       'react-hooks/set-state-in-effect': 'off',
+      // Alguns módulos públicos agrupam componente e helpers usados pelo app.
+      // O Vite recarrega o módulo inteiro nesses casos; mantenha o aviso sem
+      // bloquear lint, build ou CI por uma limitação exclusiva do HMR.
+      'react-refresh/only-export-components': 'warn',
     },
   },
 ]);

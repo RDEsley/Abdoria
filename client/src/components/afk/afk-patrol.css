@@ -12671,7 +12671,76 @@ button.game-afk-reward-chip {
 }
 
 .game-afk-celebration-card {
-  overflow: hidden;
+  width: min(22rem, calc(100vw - 1.25rem));
+  max-height: min(94dvh, 42rem);
+  overflow: visible;
+}
+.game-afk-celebration-head {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0 10px;
+}
+.game-afk-celebration-head > span,
+.game-afk-quick-reveal {
+  display: inline-flex;
+  align-items: center;
+}
+.game-afk-celebration-head > span {
+  gap: 6px;
+  color: #292524;
+  font-size: 11px;
+  font-weight: 900;
+}
+.game-afk-quick-reveal {
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 5px 8px;
+  border: 1px solid #d6d3d1;
+  border-radius: 999px;
+  background: #fffdf7;
+  color: #57534e;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+.game-afk-quick-reveal:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #10b981;
+}
+.game-afk-quick-reveal--active {
+  border-color: #047857;
+  background: #ecfdf5;
+  color: #065f46;
+}
+.game-afk-quick-reveal strong {
+  padding-left: 4px;
+  border-left: 1px solid currentColor;
+  opacity: 0.9;
+}
+.game-afk-quick-reveal:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+.game-afk-celebration-card .game-afk-loot-tooltip {
+  top: calc(100% + 0.6rem);
+  bottom: auto;
+  width: min(16rem, calc(100vw - 2rem));
+  max-width: min(16rem, calc(100vw - 2rem));
+  max-height: min(14rem, 38dvh);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.game-afk-celebration-card .game-afk-loot-tooltip::after {
+  display: none;
 }
 .game-afk-celebration-hint {
   position: relative;
@@ -12714,6 +12783,74 @@ button.game-afk-reward-chip {
   from {
     opacity: 0;
     transform: translateY(24px) scale(0.7);
+  }
+}
+
+/* Cada tier de alto valor tem leitura visual própria durante a abertura. */
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip--legendary {
+  animation:
+    game-afk-reward-pop-legendary 0.68s cubic-bezier(0.2, 1.5, 0.3, 1) backwards,
+    afk-rb-spin 3s linear infinite;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip--mitico {
+  animation:
+    game-afk-reward-pop-mythic 0.82s cubic-bezier(0.16, 1.35, 0.3, 1) backwards,
+    afk-rb-spin 2.4s linear infinite;
+}
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip--secret,
+.game-afk-celebration-card .game-afk-chest-loot-row .game-afk-reward-chip--golden-secret {
+  animation:
+    game-afk-reward-pop-secret 0.92s cubic-bezier(0.12, 1.35, 0.25, 1) backwards,
+    afk-secret-glow 2.2s ease-in-out infinite,
+    afk-rb-spin 3s linear infinite;
+}
+@keyframes game-afk-reward-pop-mythic {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.35) rotate(22deg);
+    filter: saturate(2.5) brightness(3);
+  }
+  58% {
+    opacity: 1;
+    transform: translateY(-9px) scale(1.24) rotate(-7deg);
+    filter: saturate(1.7) brightness(1.8);
+  }
+  78% {
+    transform: translateY(2px) scale(0.96) rotate(3deg);
+    filter: saturate(1.2) brightness(1.1);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (max-width: 360px), (max-height: 600px) {
+  .game-afk-celebration-card {
+    width: min(21rem, calc(100vw - 0.75rem));
+    padding: 0.8rem 0.7rem 1rem;
+  }
+  .game-afk-celebration-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .game-afk-quick-reveal {
+    width: 100%;
+  }
+  .game-afk-celebration-card .game-afk-loot-tooltip {
+    width: min(15rem, calc(100vw - 1.25rem));
+    max-width: min(15rem, calc(100vw - 1.25rem));
+    max-height: min(12rem, 34dvh);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-afk-celebration-card .game-afk-reward-chip,
+  .game-afk-celebration-card .game-afk-chest-loot-row,
+  .game-afk-celebration-card .game-afk-rewards__icon-grid {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 .game-afk-orb-drop {

@@ -154,16 +154,9 @@ export function grantRouteDrinkRewards(
   return grantExplorationHourRewards(user, hours, { noSelfRouteDrink: true });
 }
 
-/**
- * Só ao usar o próprio Route Drink: nenhum dos kills simulados pode devolver
- * outro Route Drink de brinde — vira Frozen Streak (o outro drop de Elite)
- * no lugar. Sem isso o item nunca sairia do inventário de quem só usa Route
- * Drink pra tudo. Não mexe no Baú da Exploração nem no acúmulo passivo —
- * aqueles continuam podendo dropar Route Drink normalmente.
- */
-function substituteRouteDrinkSelfDrops(pending: AfkPendingReward): void {
+/** Impede que o uso de Route Drink gere outro Route Drink em cadeia. */
+function discardRouteDrinkSelfDrops(pending: AfkPendingReward): void {
   if (pending.route_drinks <= 0) return;
-  pending.frozen_streaks += pending.route_drinks;
   pending.route_drinks = 0;
 }
 
@@ -175,7 +168,7 @@ function grantExplorationHourRewards(
   const pending: AfkPendingReward = { ...EMPTY_AFK_PENDING };
   simulateKillsIntoPending(user, pending, afkKillsForHours(hours));
   if (opts?.noSelfRouteDrink) {
-    substituteRouteDrinkSelfDrops(pending);
+    discardRouteDrinkSelfDrops(pending);
   }
   return applyAfkRewardBundle(user, pending);
 }
@@ -216,7 +209,7 @@ export function afkProfileColumns(user: UserRecord, frozenDiaAntes?: string | nu
   ];
   // Compara já normalizado dos dois lados: o campo é `undefined` enquanto
   // ninguém rolou Frozen Streak nessa conta, e `undefined !== null` faria
-  // TODO ping incluir `preferencias` — anulando exatamente a proteção que
+  // todo ping incluiria `preferencias` — anulando exatamente a proteção que
   // esta função existe pra dar.
   if (readFrozenDia(user) !== (frozenDiaAntes ?? null)) columns.push('preferencias');
   return columns;
