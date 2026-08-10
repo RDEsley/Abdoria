@@ -154,6 +154,18 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'happy', mouth: 'smile', extra: 'none' };
     case 'slime_chocolate':
       return { eyes: 'happy', mouth: 'cat', extra: 'none' };
+    case 'sand_slime':
+      return { eyes: 'round', mouth: 'flat', extra: 'none' };
+    case 'lich_slime':
+      return { eyes: 'sleepy', mouth: 'vampire', extra: 'none' };
+    case 'stone_slime':
+      return { eyes: 'wide', mouth: 'flat', extra: 'none' };
+    case 'clock_slime':
+      return { eyes: 'anime', mouth: 'o', extra: 'none' };
+    case 'sleepy_slime':
+      return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+    case 'dream_slime':
+      return { eyes: 'star', mouth: 'smile', extra: 'sparkle' };
     case 'armored_skeleton':
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
     case 'crystal_slime':
@@ -164,6 +176,16 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'round', mouth: 'smile', extra: 'none' };
     case 'slime_chumbo':
       return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
+    case 'dune_brute':
+      return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+    case 'necro_slime':
+      return { eyes: 'anime', mouth: 'vampire', extra: 'none' };
+    case 'stone_guardian':
+      return { eyes: 'wide', mouth: 'flat', extra: 'none' };
+    case 'chronos_slime':
+      return { eyes: 'star', mouth: 'flat', extra: 'none' };
+    case 'nightmare_slime':
+      return { eyes: 'sleepy', mouth: 'vampire', extra: 'none' };
     case 'golden_slime':
       return { eyes: 'star', mouth: 'o', extra: 'aura' };
     case 'magic_rabbit':
@@ -173,6 +195,8 @@ export function resolvePortraitAppearance(enemyId: AfkEnemyId): SlimeAppearance 
       return { eyes: 'round', mouth: 'flat', extra: 'none' };
     case 'boss_colossus':
       return { eyes: 'wide', mouth: 'grin', extra: 'none' };
+    case 'boss_crocodile':
+      return { eyes: 'wide', mouth: 'vampire', extra: 'none' };
     case 'boss_lich':
       return { eyes: 'sleepy', mouth: 'flat', extra: 'none' };
     case 'boss_hydra':
@@ -209,10 +233,19 @@ export function collectSlimeAccessories(
       case 'boss_lich':
         items.push('hood', 'staff');
         break;
+      case 'boss_crocodile':
+        items.push('crown', 'horn-l', 'horn-r');
+        break;
       case 'boss_hydra':
         break;
       case 'boss_golem':
         items.push('crown', 'horn-l', 'horn-r');
+        break;
+      case 'boss_procrastinador':
+        items.push('cap', 'headphones');
+        break;
+      case 'boss_preguica':
+        items.push('beanie', 'halo');
         break;
       default:
         items.push('crown');
@@ -254,6 +287,39 @@ export function collectSlimeAccessories(
       break;
     case 'slime_knight':
       items.push('helm-knight');
+      break;
+    case 'sand_slime':
+      items.push('bandana');
+      break;
+    case 'lich_slime':
+      items.push('wizard-hat');
+      break;
+    case 'stone_slime':
+      items.push('helm');
+      break;
+    case 'clock_slime':
+      items.push('monocle');
+      break;
+    case 'sleepy_slime':
+      items.push('beanie');
+      break;
+    case 'dream_slime':
+      items.push('halo');
+      break;
+    case 'dune_brute':
+      items.push('cowboy-hat', 'horn-l', 'horn-r');
+      break;
+    case 'necro_slime':
+      items.push('hood', 'wand');
+      break;
+    case 'stone_guardian':
+      items.push('helm-knight');
+      break;
+    case 'chronos_slime':
+      items.push('monocle', 'antennae');
+      break;
+    case 'nightmare_slime':
+      items.push('horn-l', 'horn-r', 'aura');
       break;
     default:
       break;

@@ -26,6 +26,8 @@ interface Props {
   /** Boss não mostra a barra flutuante — a vida dele fica na barra grande
       embaixo (AfkBossProgressPanel), pra não duplicar a mesma informação. */
   showHpBar?: boolean;
+  attacking?: boolean;
+  attackProgress?: number;
 }
 
 export function AfkEnemySprite({
@@ -40,13 +42,14 @@ export function AfkEnemySprite({
   displayHp,
   previousDisplayHp,
   showHpBar = true,
+  attacking = false,
+  attackProgress = 0,
 }: Props) {
   const enemyId = combat.enemy_id;
   const label = AFK_ENEMIES[enemyId]?.label ?? 'Inimigo';
   const maxHp = combat.enemy_max_hp;
   const hpPct = maxHp > 0 ? Math.max(0, Math.min(100, (displayHp / maxHp) * 100)) : 0;
-  const prevHpPct =
-    maxHp > 0 ? Math.max(0, Math.min(100, (previousDisplayHp / maxHp) * 100)) : 0;
+  const prevHpPct = maxHp > 0 ? Math.max(0, Math.min(100, (previousDisplayHp / maxHp) * 100)) : 0;
   // Verde > 50%, âmbar 25–50%, vermelho < 25% — os mesmos cortes usados na
   // maioria dos jogos (MOBA/ARPG) pra comunicar "perigo" sem precisar de texto.
   const hpStage = hpPct > 50 ? 'high' : hpPct > 25 ? 'mid' : 'low';
@@ -79,6 +82,7 @@ export function AfkEnemySprite({
     hit && !critHit ? 'game-afk-enemy--hit' : '',
     hit && critHit ? 'game-afk-enemy--crit-hit' : '',
     dying ? 'game-afk-enemy--dying' : '',
+    attacking ? 'game-afk-enemy--attacking' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -96,31 +100,52 @@ export function AfkEnemySprite({
 
       {!dying && !looting && (
         <>
+          <span
+            className="game-afk-attack-clock game-afk-attack-clock--enemy"
+            style={{ '--attack-angle': `${attackProgress * 360}deg` } as CSSProperties}
+            role="progressbar"
+            aria-label={`Tempo até o ataque de ${label}`}
+            aria-valuenow={Math.round(attackProgress * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <i />
+          </span>
           <span className="game-afk-enemy__name-tag">{label}</span>
           {showHpBar && (
-            <div
-              className={[
-                'game-afk-enemy__hp-track',
-                `game-afk-enemy__hp-track--${hpStage}`,
-                hit ? 'game-afk-enemy__hp-track--hit' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              role="progressbar"
-              aria-valuenow={displayHp}
-              aria-valuemin={0}
-              aria-valuemax={maxHp}
-              aria-label={`Vida de ${label}`}
-            >
-              {/* Rastro: mostra o pedaço de vida recém-perdido por um instante
-                  antes de escorregar pro valor novo — a barra principal já
-                  encolhe na hora. */}
+            <div className="game-afk-enemy__hp-shell">
               <div
-                className="game-afk-enemy__hp-ghost"
-                style={{ '--hp-ghost-from': `${prevHpPct}%`, '--hp-ghost-to': `${hpPct}%` } as CSSProperties}
-              />
-              <div className="game-afk-enemy__hp-fill" style={{ width: `${hpPct}%` }} />
-              <span className="game-afk-enemy__hp-flash" aria-hidden />
+                className={[
+                  'game-afk-enemy__hp-track',
+                  `game-afk-enemy__hp-track--${hpStage}`,
+                  hit ? 'game-afk-enemy__hp-track--hit' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                role="progressbar"
+                aria-valuenow={displayHp}
+                aria-valuemin={0}
+                aria-valuemax={maxHp}
+                aria-label={`Vida de ${label}`}
+              >
+                {/* Rastro: mostra o pedaço de vida recém-perdido por um instante
+                    antes de escorregar pro valor novo — a barra principal já
+                    encolhe na hora. */}
+                <div
+                  className="game-afk-enemy__hp-ghost"
+                  style={
+                    {
+                      '--hp-ghost-from': `${prevHpPct}%`,
+                      '--hp-ghost-to': `${hpPct}%`,
+                    } as CSSProperties
+                  }
+                />
+                <div className="game-afk-enemy__hp-fill" style={{ width: `${hpPct}%` }} />
+                <span className="game-afk-enemy__hp-flash" aria-hidden />
+              </div>
+              <span className="game-afk-enemy__hp-value tabular-nums">
+                {Math.max(0, Math.round(displayHp))}/{maxHp}
+              </span>
             </div>
           )}
         </>

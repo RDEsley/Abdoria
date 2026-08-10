@@ -7,6 +7,7 @@ export type RewardPresentationKind =
   | 'route_drink'
   | 'exp_instant'
   | 'doria_bag'
+  | 'material'
   | 'cosmetic'
   | 'weapon'
   | 'secret_title';

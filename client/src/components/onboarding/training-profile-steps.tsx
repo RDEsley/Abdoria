@@ -201,8 +201,8 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
           <p className="text-xs font-semibold leading-relaxed text-sky-900">
             <strong>{draft.diasSemana.length} dias é bastante!</strong> O descanso faz parte do
             resultado — é nele que o músculo se reconstrói. Se preferir, treine menos dias e
-            preencha os outros com <strong>Atividades</strong> (leitura, corrida, meditação...)
-            que mantêm sua sequência sem comprometer a recuperação.
+            preencha os outros com <strong>Atividades</strong> (leitura, corrida, meditação...) que
+            mantêm sua sequência sem comprometer a recuperação.
           </p>
         </div>
       )}
@@ -233,7 +233,7 @@ export function EquipamentoStep({ draft, onChange }: StepProps) {
       <StepHeader
         icon={<PackageOpen size={22} />}
         title="Equipamento em casa"
-        subtitle="Marca o que você tem — cada item desbloqueia exercícios novos no catálogo."
+        subtitle="Marca o que você tem para personalizar o treino. A prancha 9 em 1 é opcional e não bloqueia flexões."
       />
       <div className="mt-4 flex flex-col gap-2">
         <OptionCard

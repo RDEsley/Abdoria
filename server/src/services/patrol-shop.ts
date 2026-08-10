@@ -22,6 +22,10 @@ import type { UserMutable } from '../repositories/user-repository.js';
 import type { UserRecord } from '../types/user-record.js';
 import { User } from '../domain/User.js';
 import { readMoedaBalance } from './economy.js';
+import {
+  readSlimeMaterialStock,
+  sellSlimeMaterial as sellSlimeMaterialFromInventory,
+} from './inventory.js';
 
 function ensurePatrolArmas(user: UserMutable): PatrolArmasState {
   const resolved = resolvePatrolArmas(user.preferencias.patrol_armas);
@@ -33,6 +37,7 @@ function unlockLabel(def: PatrolWeaponDefinition, desbloqueada: boolean): string
   if (desbloqueada) return 'Desbloqueado';
   if (def.unlock.tipo === 'gratis') return 'Grátis';
   if (def.unlock.tipo === 'futuro') return 'Em breve';
+  if (def.unlock.tipo === 'boss') return def.unlock.label;
   return `${def.unlock.preco_moedas} ${CURRENCY_NAME}`;
 }
 
@@ -109,6 +114,7 @@ export function buildPatrolShopResponse(user: UserRecord): PatrolShopResponse {
     magias: patrolWeaponsByKind('magia').map((def) =>
       toCatalogItem(def, armas, abdoria, armaPreferida),
     ),
+    materials: readSlimeMaterialStock(user),
   };
 }
 
@@ -126,6 +132,9 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   }
   if (def.unlock.tipo === 'futuro') {
     return { error: 'Este item ainda não está disponível.', status: 400 as const };
+  }
+  if (def.unlock.tipo === 'boss') {
+    return { error: def.unlock.label, status: 400 as const };
   }
   if (def.unlock.tipo === 'gratis') {
     return { error: 'Este item já é gratuito.', status: 400 as const };
@@ -190,6 +199,22 @@ export async function equipPatrolWeapon(userId: string, kind: PatrolWeaponKind, 
   await user.save();
 
   return { user, item: def };
+}
+
+export async function sellPatrolMaterial(userId: string, itemId: string, quantity: number | 'all') {
+  const user = await User.findById(userId);
+  if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
+
+  const result = sellSlimeMaterialFromInventory(user, itemId, quantity);
+  if (!result.ok) return { error: result.error, status: 400 as const };
+
+  await user.save({ profileColumns: ['inventario', 'cosmeticos'] });
+  return {
+    user,
+    quantity_sold: result.quantity_sold,
+    coins_gained: result.coins_gained,
+    shop: buildPatrolShopResponse(user),
+  };
 }
 
 export { patrolHeroDamage, PATROL_WEAPON_RARITY_LABELS };

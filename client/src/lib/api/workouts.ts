@@ -1,4 +1,3 @@
-import type { AtividadeLog } from '@shared/atividades';
 import type {
   CompleteWorkoutPayload,
   CompleteWorkoutResponse,
@@ -8,9 +7,6 @@ import type {
   IWorkoutPresetDocument,
   TreinoBase,
   TreinoSugerido,
-  WorkoutHistoryFeedCursor,
-  WorkoutHistoryFeedPage,
-  WorkoutHistorySessionDetail,
 } from '@/types';
 import { fetchJson } from './client';
 
@@ -36,24 +32,6 @@ export function getDashboardRecommendations(): Promise<
 
 export function getWorkoutHistory(): Promise<IWorkoutHistoryDocument[]> {
   return fetchJson('/workouts/history');
-}
-
-export function getWorkoutHistoryFeed(options?: {
-  cursor?: WorkoutHistoryFeedCursor | null;
-  limit?: number;
-}): Promise<WorkoutHistoryFeedPage> {
-  const params = new URLSearchParams();
-  if (options?.cursor) {
-    params.set('cursor', options.cursor.concluido_em);
-    params.set('cursorId', options.cursor.id);
-  }
-  if (options?.limit) params.set('limit', String(options.limit));
-  const q = params.toString();
-  return fetchJson(`/workouts/history/feed${q ? `?${q}` : ''}`);
-}
-
-export function getWorkoutHistorySessionDetail(id: string): Promise<WorkoutHistorySessionDetail> {
-  return fetchJson(`/workouts/history/${id}`);
 }
 
 export interface CompleteAtividadeResponse {
@@ -95,19 +73,6 @@ export function completeAtividade(
  * concluiu sem informar nada na hora e quer completar depois — não recalcula
  * XP/Coins/streak, só o conteúdo do registro.
  */
-export function updateAtividadeHistorico(
-  historicoId: string,
-  payload: { metricas: Record<string, number | string>; obs?: string },
-): Promise<{ atividade: AtividadeLog }> {
-  return fetchJson(`/workouts/historico/${historicoId}/atividade`, {
-    method: 'PATCH',
-    body: JSON.stringify({
-      metricas: payload.metricas,
-      ...(payload.obs ? { obs: payload.obs } : {}),
-    }),
-  });
-}
-
 export function completeWorkout(payload: CompleteWorkoutPayload): Promise<CompleteWorkoutResponse> {
   return fetchJson('/workouts/complete', { method: 'POST', body: JSON.stringify(payload) });
 }

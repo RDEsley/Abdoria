@@ -7,6 +7,7 @@ import {
   equipPatrolWeapon,
   loadUserForPatrolShop,
   purchasePatrolWeapon,
+  sellPatrolMaterial,
 } from '../services/patrol-shop.js';
 import type { PatrolWeaponKind } from '../types/index.js';
 
@@ -72,5 +73,32 @@ patrolShopRouter.patch('/equip', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PATCH /api/patrol-shop/equip error:', error);
     res.status(500).json({ error: 'Erro ao equipar item.' });
+  }
+});
+
+patrolShopRouter.post('/materials/sell', async (req: AuthRequest, res) => {
+  try {
+    const itemId = String(req.body?.id ?? '');
+    const quantity = req.body?.quantity === 'all' ? 'all' : Number(req.body?.quantity ?? 1);
+    if (!itemId) {
+      res.status(400).json({ error: 'Informe o material que deseja vender.' });
+      return;
+    }
+
+    const result = await sellPatrolMaterial(req.userId!, itemId, quantity);
+    if ('error' in result) {
+      res.status(result.status ?? 400).json({ error: result.error });
+      return;
+    }
+
+    res.json({
+      user: sanitizeUser(result.user),
+      quantity_sold: result.quantity_sold,
+      coins_gained: result.coins_gained,
+      shop: result.shop,
+    });
+  } catch (error) {
+    console.error('POST /api/patrol-shop/materials/sell error:', error);
+    res.status(500).json({ error: 'Erro ao vender material.' });
   }
 });

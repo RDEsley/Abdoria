@@ -135,9 +135,7 @@ export function AtividadeCompleteModal({
           <p className="mt-1 text-sm font-medium text-stone-500">{atividade.descricao}</p>
         )}
         {metaHoje != null && progressoHoje != null && (
-          <p
-            className={`atividade-progresso-dia${progressoHoje >= metaHoje ? ' is-done' : ''}`}
-          >
+          <p className={`atividade-progresso-dia${progressoHoje >= metaHoje ? ' is-done' : ''}`}>
             {progressoHoje >= metaHoje
               ? `Teto de XP do dia já batido — essa dá +${ATIVIDADE_COINS_EXTRA} Coins de bônus!`
               : `${progressoHoje}/${metaHoje} com XP hoje · falta${
@@ -148,7 +146,7 @@ export function AtividadeCompleteModal({
       </div>
 
       <p className="atividade-complete-hint">
-        Tudo abaixo é opcional — pode concluir direto e preencher depois, editando no histórico.
+        Tudo abaixo é opcional e será exibido no detalhe deste dia no calendário.
       </p>
 
       <div className="mt-3 flex flex-col gap-4 text-left">
@@ -169,7 +167,11 @@ export function AtividadeCompleteModal({
                 {campo.unidade && <span className="atividade-campo__unidade">{campo.unidade}</span>}
               </span>
               {chips.length > 0 && (
-                <span className="atividade-campo-chips" role="group" aria-label={`Sugestões para ${campo.label}`}>
+                <span
+                  className="atividade-campo-chips"
+                  role="group"
+                  aria-label={`Sugestões para ${campo.label}`}
+                >
                   {chips.map((valor) => (
                     <button
                       key={valor}

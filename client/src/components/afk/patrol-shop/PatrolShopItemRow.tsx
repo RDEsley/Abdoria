@@ -51,7 +51,10 @@ const SPELL_ICONS: Record<string, LucideIcon> = {
 
 function WeaponThumb({ item }: { item: PatrolShopCatalogItem }) {
   const tier =
-    item.raridade === 'lendario' || item.raridade === 'epico'
+    item.raridade === 'secreto' ||
+    item.raridade === 'mitico' ||
+    item.raridade === 'lendario' ||
+    item.raridade === 'epico'
       ? 'epic'
       : item.raridade === 'raro'
         ? 'rare'
@@ -160,6 +163,10 @@ export function PatrolShopItemRow({ item, busy, onEquip, onPurchase }: Props) {
         ) : item.futuro ? (
           <GameButton size="sm" variant="secondary" className="game-patrol-shop-row__btn" disabled>
             <Sparkles size={14} /> Em breve
+          </GameButton>
+        ) : item.unlock.tipo === 'boss' ? (
+          <GameButton size="sm" variant="secondary" className="game-patrol-shop-row__btn" disabled>
+            <Swords size={14} /> {item.unlock.label}
           </GameButton>
         ) : item.unlock.tipo === 'moedas' ? (
           <GameButton

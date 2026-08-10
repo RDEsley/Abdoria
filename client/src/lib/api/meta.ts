@@ -2,10 +2,12 @@ import type {
   AfkCombatSnapshot,
   AfkEnemyId,
   AfkPendingReward,
+  AfkRegionId,
   ArmaPreferida,
   Inventario,
   IUserDocument,
   LevelUpCelebration,
+  SlimeMaterialStockItem,
 } from '@/types';
 import { fetchJson } from './client';
 
@@ -44,6 +46,7 @@ export interface InventarioSummary extends Inventario {
   exp_instant: number;
   doria_bag: number;
   stack_cap: number;
+  materials: SlimeMaterialStockItem[];
 }
 
 export function getAfkMeta(): Promise<AfkMetaResponse> {
@@ -79,6 +82,57 @@ export function pingAfk(): Promise<AfkPingResponse> {
 /** Vila pausa o tempo acumulado da Exploração; floresta ("exploring") retoma. */
 export function setAfkScene(mode: 'village' | 'exploring'): Promise<AfkPingResponse> {
   return fetchJson('/meta/afk/scene', { method: 'POST', body: JSON.stringify({ mode }) });
+}
+
+export function setAfkAway(): Promise<AfkPingResponse> {
+  return fetchJson('/meta/afk/away', { method: 'POST', keepalive: true });
+}
+
+export function startAfkAdventure(): Promise<AfkPingResponse> {
+  return fetchJson('/meta/afk/adventure/start', { method: 'POST' });
+}
+
+export function recordAfkEnemyDefeat(expectedKillsTotal: number): Promise<AfkPingResponse> {
+  return fetchJson('/meta/afk/combat/defeat', {
+    method: 'POST',
+    body: JSON.stringify({ expected_kills_total: expectedKillsTotal }),
+  });
+}
+
+export function selectAfkRegion(regionId: AfkRegionId): Promise<AfkPingResponse> {
+  return fetchJson('/meta/afk/region', {
+    method: 'POST',
+    body: JSON.stringify({ region_id: regionId }),
+  });
+}
+
+export function advanceAfkChapter(): Promise<
+  AfkPingResponse & { story: { title: string; body: string }; region_id: AfkRegionId }
+> {
+  return fetchJson('/meta/afk/chapter/advance', { method: 'POST' });
+}
+
+export function unlockAfkSkill(nodeId: string): Promise<AfkPingResponse> {
+  return fetchJson('/meta/afk/skill/unlock', {
+    method: 'POST',
+    body: JSON.stringify({ node_id: nodeId }),
+  });
+}
+
+export function resetAfkSkillTree(
+  currency: 'coins' | 'gems',
+): Promise<AfkPingResponse & { user: IUserDocument; payment: 'free' | 'coins' | 'gems' }> {
+  return fetchJson('/meta/afk/skill/reset', {
+    method: 'POST',
+    body: JSON.stringify({ currency }),
+  });
+}
+
+export function markAfkStory(flag: string): Promise<{ ok: true }> {
+  return fetchJson('/meta/afk/story', {
+    method: 'POST',
+    body: JSON.stringify({ flag }),
+  });
 }
 
 export function getInventory(): Promise<InventarioSummary> {
@@ -121,7 +175,10 @@ export function consumeExpInstant(useAll = false): Promise<{
   });
 }
 
-export function consumeDoriaBag(quantity = 1, useAll = false): Promise<{
+export function consumeDoriaBag(
+  quantity = 1,
+  useAll = false,
+): Promise<{
   user: IUserDocument;
   abdoria_ganha: number;
   rolls: number[];
@@ -148,6 +205,8 @@ export interface BestiaryEntry {
   max_hp: number;
   desbloqueado: boolean;
   drops: BestiaryDropEntry[];
+  encounter_rate: string;
+  regions: string[];
 }
 
 export interface BestiaryCategory {

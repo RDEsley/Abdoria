@@ -48,7 +48,6 @@ import {
   computePersonalRecords,
   diffNewPersonalRecords,
 } from '../../../shared/personal-records.js';
-import { buildFeedPage, parseFeedCursor } from '../services/workout-history-feed.js';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_DURACAO_MIN,
@@ -80,64 +79,6 @@ workoutsRouter.get('/history', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('GET /api/workouts/history error:', error);
     res.status(500).json({ error: 'Erro ao buscar histórico.' });
-  }
-});
-
-const HISTORY_FEED_DEFAULT_LIMIT = 20;
-const HISTORY_FEED_MAX_LIMIT = 50;
-
-/** Feed paginado por cursor composto (concluido_em, id) — cobre contas com mais de 365 treinos. */
-workoutsRouter.get('/history/feed', async (req: AuthRequest, res) => {
-  try {
-    const cursor = parseFeedCursor(req.query.cursor, req.query.cursorId);
-    if (cursor === 'invalid') {
-      res.status(400).json({ error: 'Cursor de paginação inválido.' });
-      return;
-    }
-
-    const requestedLimit = Number(req.query.limit);
-    const limit = Number.isFinite(requestedLimit)
-      ? Math.min(Math.max(1, requestedLimit), HISTORY_FEED_MAX_LIMIT)
-      : HISTORY_FEED_DEFAULT_LIMIT;
-
-    const fetched = await WorkoutHistory.findPage(req.userId!, cursor, limit + 1);
-    const { items, next_cursor } = buildFeedPage(fetched, limit);
-
-    res.json({ items, next_cursor });
-  } catch (error) {
-    console.error('GET /api/workouts/history/feed error:', error);
-    res.status(500).json({ error: 'Erro ao buscar histórico paginado.' });
-  }
-});
-
-/** Detalhe de uma sessão + PRs batidos naquele treino (recalculado contra o histórico anterior). */
-workoutsRouter.get('/history/:id', async (req: AuthRequest, res) => {
-  try {
-    const session = await WorkoutHistory.findById(String(req.params.id), req.userId!);
-    if (!session) {
-      res.status(404).json({ error: 'Sessão não encontrada.' });
-      return;
-    }
-
-    const priorHistories = await WorkoutHistory.find({
-      usuario_id: req.userId!,
-      concluido_em: { $lt: session.concluido_em },
-    });
-    const priorRecords = computePersonalRecords(
-      priorHistories as unknown as Array<{
-        exercicios: WorkoutExerciseEntry[];
-        concluido_em: Date | string;
-      }>,
-    );
-    const personalRecordsHit = diffNewPersonalRecords(
-      priorRecords,
-      session.exercicios as unknown as WorkoutExerciseEntry[],
-    );
-
-    res.json({ session, personal_records_hit: personalRecordsHit });
-  } catch (error) {
-    console.error('GET /api/workouts/history/:id error:', error);
-    res.status(500).json({ error: 'Erro ao buscar detalhe da sessão.' });
   }
 });
 
@@ -222,30 +163,29 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       monthly,
       totalExercisesAgg,
       totalDurationAgg,
-    ] =
-      await Promise.all([
-        hasTrainedToday(userId),
-        hasStreakSecuredToday(userId),
-        getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
-        WorkoutHistory.aggregate([
-          { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
-          {
-            $group: {
-              _id: { $dateToString: { format: '%Y-%m', date: '$concluido_em' } },
-              minutos: { $sum: { $divide: ['$duracao_total_segundos', 60] } },
-            },
+    ] = await Promise.all([
+      hasTrainedToday(userId),
+      hasStreakSecuredToday(userId),
+      getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
+      WorkoutHistory.aggregate([
+        { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m', date: '$concluido_em' } },
+            minutos: { $sum: { $divide: ['$duracao_total_segundos', 60] } },
           },
-          { $sort: { _id: 1 } },
-        ]),
-        WorkoutHistory.aggregate([
-          { $match: { usuario_id: user.id } },
-          { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
-        ]),
-        WorkoutHistory.aggregate([
-          { $match: { usuario_id: user.id } },
-          { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
-        ]),
-      ]);
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      WorkoutHistory.aggregate([
+        { $match: { usuario_id: user.id } },
+        { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
+      ]),
+      WorkoutHistory.aggregate([
+        { $match: { usuario_id: user.id } },
+        { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
+      ]),
+    ]);
 
     const muscles = Object.entries(weeklyMuscles) as [MusculoPrincipal, number][];
     const trained = muscles.filter(([, count]) => count > 0);
@@ -596,56 +536,6 @@ function sanitizeMetricas(
 
   return metricas;
 }
-
-/**
- * Edita os dados de uma Atividade já registrada (métricas + observação).
- *
- * Existe porque concluir uma atividade não exige preencher nada: quem só quer
- * marcar que fez registra sem dado nenhum e completa depois, pelo histórico.
- * Só mexe no conteúdo do log — XP, Coins e streak já foram apurados na
- * conclusão e não são recalculados aqui (senão editar viraria uma forma de
- * ganhar XP repetido).
- */
-workoutsRouter.patch('/historico/:id/atividade', async (req: AuthRequest, res) => {
-  try {
-    const entry = await WorkoutHistory.findById(String(req.params.id), req.userId!);
-    if (!entry?.atividade) {
-      res.status(404).json({ error: 'Atividade não encontrada no histórico.' });
-      return;
-    }
-
-    const user = await User.findById(req.userId!);
-    if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado.' });
-      return;
-    }
-
-    const log = entry.atividade as unknown as AtividadeLog;
-    // A atividade pode ter sido excluída/renomeada desde a conclusão — nesse
-    // caso os campos vêm do próprio log, que guarda tipo e nome de então.
-    const base =
-      findAtividade(user.preferencias, log.atividade_id) ??
-      ({ ...log, meta_tipo: 'tempo', meta_valor: 0 } as unknown as AtividadeExtra);
-
-    const body = req.body as { metricas?: unknown; obs?: string };
-    const metricas = sanitizeMetricas(base, body.metricas);
-    const obs = String(body.obs ?? '')
-      .trim()
-      .slice(0, ATIVIDADE_OBS_MAX);
-
-    const atualizado: AtividadeLog = { ...log, metricas, ...(obs ? { obs } : {}) };
-    if (!obs) delete atualizado.obs;
-
-    await WorkoutHistory.updateById(entry.id, {
-      atividade: atualizado as unknown as Record<string, unknown>,
-    });
-
-    res.json({ atividade: atualizado });
-  } catch (error) {
-    console.error('PATCH /api/workouts/historico/:id/atividade error:', error);
-    res.status(500).json({ error: 'Erro ao editar atividade.' });
-  }
-});
 
 /** Janela anti-reenvio (duplo toque, retry de rede) para a MESMA atividade.
     Não é regra de jogo — repetir mais tarde no mesmo dia é permitido. */

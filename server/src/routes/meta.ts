@@ -26,6 +26,15 @@ import {
 } from '../services/inventory.js';
 import { getItemCount } from '../services/inventory.js';
 import { ROUTE_DRINK_ITEM_ID } from '../types/index.js';
+import { defeatCurrentEnemy, ensureCombat } from '../services/afk-combat.js';
+import {
+  advanceAfkChapter,
+  markAfkStoryFlag,
+  resetAfkSkillTree,
+  selectAfkRegion,
+  startAfkAdventure,
+  unlockAfkSkill,
+} from '../services/afk-adventure.js';
 
 export const metaRouter = Router();
 
@@ -121,6 +130,164 @@ metaRouter.post('/afk/scene', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/meta/afk/scene error:', error);
     res.status(500).json({ error: 'Erro ao trocar de cena na Exploração.' });
+  }
+});
+
+/** Fechar a exploração, ocultar a aba ou sair do app sempre retoma a patrulha. */
+metaRouter.post('/afk/away', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const combat = ensureCombat(user);
+    if (combat.adventure_started) resumeAfk(user);
+    await user.save({ profileColumns: [] });
+    res.json({ ok: true, ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/away error:', error);
+    res.status(500).json({ error: 'Erro ao ativar a patrulha AFK.' });
+  }
+});
+
+metaRouter.post('/afk/combat/defeat', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const combat = ensureCombat(user);
+    const expected = Math.max(0, Number(req.body?.expected_kills_total ?? -1));
+    if (expected === combat.kills_total) {
+      defeatCurrentEnemy(user, user.afk.pending);
+      await user.save({ profileColumns: afkProfileColumns(user) });
+    }
+    res.json({ ok: true, ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/combat/defeat error:', error);
+    res.status(500).json({ error: 'Erro ao registrar a vitória.' });
+  }
+});
+
+metaRouter.post('/afk/adventure/start', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    startAfkAdventure(user);
+    await user.save({ profileColumns: [] });
+    res.json({ ok: true, ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/adventure/start error:', error);
+    res.status(500).json({ error: 'Erro ao começar a aventura.' });
+  }
+});
+
+metaRouter.post('/afk/region', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const previousRegion = user.afk.combat?.region_id ?? null;
+    const requestedRegion = String(req.body?.region_id ?? '');
+    const result = selectAfkRegion(user, requestedRegion);
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    await user.save({ profileColumns: afkProfileColumns(user) });
+    console.info('[afk:region] viagem persistida', {
+      from: previousRegion,
+      requested: requestedRegion,
+      confirmed: user.afk.combat?.region_id ?? null,
+    });
+    res.json({ ok: true, ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/region error:', error);
+    res.status(500).json({ error: 'Erro ao viajar para a região.' });
+  }
+});
+
+metaRouter.post('/afk/chapter/advance', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const result = advanceAfkChapter(user);
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    await user.save({ profileColumns: afkProfileColumns(user) });
+    res.json({ ...result, ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/chapter/advance error:', error);
+    res.status(500).json({ error: 'Erro ao avançar o capítulo.' });
+  }
+});
+
+metaRouter.post('/afk/skill/unlock', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const result = unlockAfkSkill(user, String(req.body?.node_id ?? ''));
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    await user.save({ profileColumns: [] });
+    res.json({ ok: true, ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/skill/unlock error:', error);
+    res.status(500).json({ error: 'Erro ao desbloquear habilidade.' });
+  }
+});
+
+metaRouter.post('/afk/skill/reset', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const currency = req.body?.currency === 'gems' ? 'gems' : 'coins';
+    const result = resetAfkSkillTree(user, currency);
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    await user.save({ profileColumns: ['cosmeticos', 'gems'] });
+    res.json({ ...result, user: sanitizeUser(user), ...afkResponsePayload(user) });
+  } catch (error) {
+    console.error('POST /api/meta/afk/skill/reset error:', error);
+    res.status(500).json({ error: 'Erro ao resetar a árvore.' });
+  }
+});
+
+metaRouter.post('/afk/story', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    markAfkStoryFlag(user, String(req.body?.flag ?? 'story'));
+    await user.save({ profileColumns: [] });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('POST /api/meta/afk/story error:', error);
+    res.status(500).json({ error: 'Erro ao salvar diálogo.' });
   }
 });
 

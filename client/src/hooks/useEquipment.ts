@@ -31,9 +31,12 @@ export function useEquipment(onUpdated?: () => void) {
       try {
         await updateMe({ preferencias });
         await refreshUser();
-        // Rebusca o catálogo: exercícios do equipamento desmarcado somem da Biblioteca.
-        await ensureExercises({ force: true });
-        void loadRecommendations({ force: true });
+        const changesExerciseCatalog = !EQUIPMENT_CATALOG.find((item) => item.id === id)
+          ?.informationalOnly;
+        if (changesExerciseCatalog) {
+          await ensureExercises({ force: true });
+          void loadRecommendations({ force: true });
+        }
         onUpdated?.();
       } catch (err) {
         applyUser(user);

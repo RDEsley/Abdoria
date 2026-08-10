@@ -18,3 +18,18 @@ export function equipPatrolWeapon(
 ): Promise<{ user: IUserDocument }> {
   return fetchJson('/patrol-shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });
 }
+
+export function sellPatrolMaterial(
+  id: string,
+  quantity: number | 'all',
+): Promise<{
+  user: IUserDocument;
+  quantity_sold: number;
+  coins_gained: number;
+  shop: PatrolShopResponse;
+}> {
+  return fetchJson('/patrol-shop/materials/sell', {
+    method: 'POST',
+    body: JSON.stringify({ id, quantity }),
+  });
+}

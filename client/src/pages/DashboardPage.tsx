@@ -77,8 +77,7 @@ export function DashboardPage() {
   const perfilTreino = user?.perfil_treino ?? null;
   const hoje = new Date().getDay();
   // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
-  const diaDescanso =
-    !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
+  const diaDescanso = !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
   // Uma única Atividade (alongamento e afins) já sustenta a streak, em
   // qualquer dia — não existe mais um "aquecimento" próprio.
   const filaHojeCount = diaDescanso
@@ -246,14 +245,6 @@ export function DashboardPage() {
         <Suspense fallback={<PageLoader />}>
           <ActivityCalendar />
         </Suspense>
-        <GameButton
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate('/historico')}
-          className="mt-3 w-full"
-        >
-          Ver histórico completo
-        </GameButton>
       </motion.section>
 
       <motion.section variants={item} className="glass-card p-4">

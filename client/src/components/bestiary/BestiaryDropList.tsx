@@ -1,10 +1,5 @@
-import { Coins, Crown, Gift, Sparkles, Zap } from 'lucide-react';
-import {
-  DoriaBagIcon,
-  FrozenStreakIcon,
-  ExpInstantIcon,
-  RouteDrinkIcon,
-} from '@/lib/item-icons';
+import { Coins, Crown, Gift, PackageOpen, Sparkles, Zap } from 'lucide-react';
+import { DoriaBagIcon, FrozenStreakIcon, ExpInstantIcon, RouteDrinkIcon } from '@/lib/item-icons';
 import { PatrolBowIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
 import type { BestiaryDropEntry } from '@/lib/api';
 
@@ -29,6 +24,8 @@ function BestiaryDropIcon({ dropId, size = 14 }: { dropId: string; size?: number
       return <Gift size={size} aria-hidden />;
     case 'titulo_secreto':
       return <Crown size={size} aria-hidden />;
+    case 'material_unique':
+      return <PackageOpen size={size} aria-hidden />;
     case 'weapon_legendary':
     case 'weapon_mythic':
       return <PatrolBowIcon className="game-bestiary-drop__weapon-icon" variant="arco_09" />;

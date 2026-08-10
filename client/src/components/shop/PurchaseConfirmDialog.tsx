@@ -15,9 +15,21 @@ interface Props {
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  title?: string;
+  confirmLabel?: string;
+  busyLabel?: string;
 }
 
-export function PurchaseConfirmDialog({ open, details, busy, onConfirm, onCancel }: Props) {
+export function PurchaseConfirmDialog({
+  open,
+  details,
+  busy,
+  onConfirm,
+  onCancel,
+  title = 'Confirmar compra',
+  confirmLabel = 'Confirmar',
+  busyLabel = 'Comprando…',
+}: Props) {
   if (!open || !details) return null;
 
   return (
@@ -32,7 +44,7 @@ export function PurchaseConfirmDialog({ open, details, busy, onConfirm, onCancel
       disableDismiss={busy}
     >
       <h2 id="purchase-confirm-title" className="game-modal__title game-purchase-confirm__title">
-        <ShoppingBag size={14} aria-hidden /> Confirmar compra
+        <ShoppingBag size={14} aria-hidden /> {title}
       </h2>
 
       <div className="game-purchase-confirm__card">
@@ -56,7 +68,7 @@ export function PurchaseConfirmDialog({ open, details, busy, onConfirm, onCancel
           Cancelar
         </GameButton>
         <GameButton className="flex-1" disabled={busy} onClick={onConfirm}>
-          {busy ? 'Comprando…' : 'Confirmar'}
+          {busy ? busyLabel : confirmLabel}
         </GameButton>
       </div>
     </Modal>

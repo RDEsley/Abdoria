@@ -38,7 +38,7 @@ assert.equal(AFK_CRIT_CHANCE_ARCO, 18);
 assert.equal(AFK_CRIT_CHANCE_ESPADA, 6);
 assert.equal(AFK_CRIT_STREAK_STEP_ARCO, 4);
 assert.equal(AFK_GOLDEN_SLIME_CHANCE, 5000);
-assert.equal(AFK_GOLDEN_SLIME_MOEDA_BONUS, 99);
+assert.equal(AFK_GOLDEN_SLIME_MOEDA_BONUS, 999);
 
 assert.equal(patrolWeaponsByKind('arco').length, 10);
 assert.equal(patrolWeaponsByKind('espada').length, 10);
@@ -62,12 +62,13 @@ const espada10 = PATROL_WEAPONS.find((w) => w.id === 'espada_10')!;
 assert.equal(arco10.raridade, 'secreto');
 assert.equal(espada10.raridade, 'secreto');
 
-// Nível 9 é Mítico (Arco Dracônico + Espada Flamejante, ex-Lâmina do Dragão).
+// Nível 9 é o drop lendário dos dois guardiões finais.
 const arco9 = PATROL_WEAPONS.find((w) => w.id === 'arco_09')!;
 const espada9 = PATROL_WEAPONS.find((w) => w.id === 'espada_09')!;
 assert.equal(arco9.raridade, 'mitico');
 assert.equal(espada9.raridade, 'mitico');
-assert.equal(espada9.nome, 'Espada Flamejante');
+assert.equal(arco9.nome, 'Arco do Tempo Perdido');
+assert.equal(espada9.nome, 'Lâmina do Sono Eterno');
 
 // Magias: -14 de dano base em troca da passiva de drops raros (épico+).
 const spellDamage = Object.fromEntries(
@@ -101,7 +102,7 @@ assert.equal(explosao.raridade, 'secreto');
 assert.equal(patrolHeroDamage('arco', 'arco_05'), 24);
 assert.equal(patrolHeroDamage('espada', 'espada_09'), 50);
 
-assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'bat'), 200);
+assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'bat'), 45);
 assert.ok(isPatrolHitKillTarget('bat'));
 assert.equal(resolvePatrolBaseDamage('arco', 'arco_10', 'armored_skeleton'), 52);
 assert.equal(resolvePatrolBaseDamage('espada', 'espada_10', 'golden_slime'), 60);

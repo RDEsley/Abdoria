@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { CosmeticEffectLayer } from '@/components/shop/CosmeticEffectLayer';
-import { GameButton } from '@/components/ui/GameButton';
 import { buildAfkRewardItems } from '@/lib/afk-rewards';
 import { playLevelUp, playUnlock } from '@/lib/sounds';
 import { useAuth } from '@/context/AuthContext';
@@ -27,20 +26,32 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
   const { user } = useAuth();
   const effectId = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp).efeito_equipado;
   const [phase, setPhase] = useState<ChestPhase>('closed');
+  const items = useMemo(() => buildAfkRewardItems(claimed), [claimed]);
+  const [revealIndex, setRevealIndex] = useState(0);
 
   // Quanto melhor o loot, MAIS LONGO o build-up: a espera extra é o que dá
   // valor ao prêmio (mesma lógica de caixa de loot de jogo — abrir rápido
   // demais mata a expectativa). O jogador aprende que tremor longo = coisa boa.
   const tier = useMemo(() => {
-    const items = buildAfkRewardItems(claimed);
     if (items.some((i) => i.rarity === 'secret' || i.rarity === 'golden_secret')) return 'secret';
     if (items.some((i) => i.rarity === 'mitico')) return 'mitico';
     if (items.some((i) => i.rarity === 'lendario')) return 'lendario';
     return null;
-  }, [claimed]);
+  }, [items]);
+
+  const handleBackdropClick = () => {
+    if (phase !== 'open') return;
+    if (revealIndex < items.length) {
+      setRevealIndex((value) => value + 1);
+      playUnlock();
+      return;
+    }
+    onClose();
+  };
 
   useEffect(() => {
-    const extra = tier === 'secret' ? 1400 : tier === 'mitico' ? 900 : tier === 'lendario' ? 450 : 0;
+    const extra =
+      tier === 'secret' ? 1400 : tier === 'mitico' ? 900 : tier === 'lendario' ? 450 : 0;
     const shakeAt = 200;
     const chargeAt = 1700 + extra;
     const openAt = chargeAt + 400;
@@ -77,7 +88,7 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="afk-reward-title"
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       <CosmeticEffectLayer effectId={effectId} mode="burst" />
 
@@ -101,7 +112,6 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
         initial={{ scale: 0.82, opacity: 0, y: 24 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 340, damping: 22 }}
-        onClick={(event) => event.stopPropagation()}
       >
         <h2 id="afk-reward-title" className="sr-only">
           Recompensas da exploração coletadas
@@ -130,15 +140,16 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
           chestCharged={phase === 'charged'}
           chestOpen={phase === 'open'}
           chestOpening={phase === 'opening'}
+          revealIndex={phase === 'open' ? revealIndex : undefined}
         />
 
-        <GameButton className="w-full mt-5" size="lg" onClick={onClose} disabled={phase !== 'open'}>
-          {phase === 'open'
-            ? 'Continuar'
-            : tier
-              ? 'Algo raro está saindo...'
-              : 'Abrindo baú...'}
-        </GameButton>
+        {phase === 'open' ? (
+          <p className="game-afk-celebration-hint">
+            {revealIndex < items.length
+              ? 'Toque para revelar o próximo item'
+              : 'Todos os itens · toque fora de um item para fechar'}
+          </p>
+        ) : null}
       </motion.div>
     </div>,
     document.body,

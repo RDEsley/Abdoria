@@ -79,7 +79,9 @@ export function EquipmentPanel({ onEquipmentChange }: Props) {
                         )}
                       </span>
                       <span className="library-equipment__count">
-                        {item.exerciseSlugs.length} exercício{item.exerciseSlugs.length !== 1 && 's'}
+                        {item.informationalOnly
+                          ? `${item.compatibleExerciseSlugs?.length ?? 0} flexões compatíveis · opcional`
+                          : `${item.exerciseSlugs.length} exercício${item.exerciseSlugs.length !== 1 ? 's' : ''}`}
                       </span>
                     </div>
                     <button
@@ -96,7 +98,9 @@ export function EquipmentPanel({ onEquipmentChange }: Props) {
                 );
               })}
             </ul>
-            <p className="library-equipment__hint">Ative o que você tem para liberar exercícios.</p>
+            <p className="library-equipment__hint">
+              Ative o que você tem. A prancha 9 em 1 é opcional e não bloqueia flexões.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

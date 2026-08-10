@@ -8,6 +8,8 @@ import {
   PATROL_WEAPON_BY_ID,
   ROUTE_DRINK_LABEL,
   FROZEN_STREAK_LABEL,
+  SLIME_MATERIAL_BY_ID,
+  isSlimeMaterialItemId,
 } from '@/types';
 import { COSMETIC_DISPLAY } from '@/lib/cosmetics-meta';
 import type { RewardPresentationItem } from '@shared/rewards/presentation';
@@ -73,6 +75,19 @@ export function buildRewardPresentationFromAfk(
       amount: pending.doria_bags,
     });
   }
+  Object.entries(pending.material_items ?? {}).forEach(([materialId, amount]) => {
+    if (!isSlimeMaterialItemId(materialId) || !amount || amount < 1) return;
+    const material = SLIME_MATERIAL_BY_ID[materialId];
+    items.push({
+      id: materialId,
+      kind: 'material',
+      rarity: material.tier === 'boss' ? 'epico' : material.tier === 'elite' ? 'raro' : 'comum',
+      name: material.name,
+      description: material.description,
+      amount,
+      icon: material.icon,
+    });
+  });
   (pending.weapon_ids ?? []).forEach((weaponId) => {
     const weapon = PATROL_WEAPON_BY_ID[weaponId];
     items.push({

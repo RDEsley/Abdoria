@@ -5,12 +5,19 @@ import {
   DEFAULT_PREFERENCIAS,
   DEFAULT_XP_DIARIO,
   DEFAULT_AFK_COMBAT,
+  AFK_ENEMIES,
+  AFK_REGIONS,
   FROZEN_STREAK_ITEM_ID,
   type AfkCombatState,
   type AfkEnemyId,
   type AfkPendingReward,
   type AfkState,
   getEnemyMaxHp,
+  getAfkRegionById,
+  getAfkRegionProgress,
+  afkHeroMaxHp,
+  isSlimeMaterialItemId,
+  type SlimeMaterialItemId,
 } from '../types/index.js';
 
 /** Todo jogador novo começa com 3 Frozen Streak — colchão inicial contra falhar a streak. */
@@ -26,6 +33,7 @@ const EMPTY_AFK_PENDING: AfkPendingReward = {
   weapon_ids: [],
   exp_instant: 0,
   doria_bags: 0,
+  material_items: {},
   titulo_secreto: false,
   drop_count: 0,
 };
@@ -77,41 +85,86 @@ type AfkRow = {
   combat?: Record<string, unknown>;
 };
 
-const VALID_ENEMY_IDS = new Set<string>([
-  'bat',
-  'zombie',
-  'skeleton',
-  'armored_skeleton',
-  'crystal_slime',
-  'storm_slime',
-  'slime_knight',
-  'golden_slime',
-  'magic_rabbit',
-  'boss_colossus',
-  'boss_lich',
-  'boss_hydra',
-  'boss_golem',
-]);
+const VALID_ENEMY_IDS = new Set<string>(Object.keys(AFK_ENEMIES));
 
 function normalizeCombat(raw: unknown): AfkCombatState {
   const c = (raw && typeof raw === 'object' ? raw : {}) as Partial<AfkCombatState>;
+  const legacyRegion = getAfkRegionProgress(Number(c.kills_total ?? 0)).region;
+  const region = getAfkRegionById(c.region_id ?? legacyRegion.id);
+  const skillNodes = Array.isArray(c.skill_nodes) ? c.skill_nodes.filter(Boolean) : [];
+  const heroMaxHp = afkHeroMaxHp(skillNodes);
   const enemy_id = VALID_ENEMY_IDS.has(String(c.enemy_id ?? ''))
     ? (c.enemy_id as AfkEnemyId)
     : DEFAULT_AFK_COMBAT.enemy_id;
-  const maxHp = getEnemyMaxHp(enemy_id);
-  const enemy_hp = Math.max(1, Math.min(maxHp, Number(c.enemy_hp ?? maxHp)));
+  const maxHp = getEnemyMaxHp(enemy_id, region.chapter);
+  const savedEnemyHp = Number(c.enemy_hp ?? maxHp);
+  // HP zero nunca é um estado persistente válido: a derrota já deveria ter
+  // gerado o próximo encontro. Recupera saves interrompidos nessa janela.
+  const enemy_hp = savedEnemyHp > 0 ? Math.min(maxHp, savedEnemyHp) : maxHp;
+  const rawProgress = c.region_progress ?? {};
+  const region_progress = Object.fromEntries(
+    AFK_REGIONS.map((entry) => {
+      const saved = rawProgress[entry.id];
+      const legacyKills = entry.id === region.id ? Number(c.kills_until_boss ?? 0) : 0;
+      return [
+        entry.id,
+        {
+          kills_until_boss: Math.max(
+            0,
+            Math.min(entry.killsToBoss, Number(saved?.kills_until_boss ?? legacyKills)),
+          ),
+          boss_defeated: Boolean(saved?.boss_defeated),
+          boss_kills: Math.max(0, Number(saved?.boss_kills ?? 0)),
+          orbs_earned: Math.max(0, Number(saved?.orbs_earned ?? 0)),
+        },
+      ];
+    }),
+  ) as NonNullable<AfkCombatState['region_progress']>;
+  const defaultUnlocked = AFK_REGIONS.filter((entry) => entry.chapter <= region.chapter).map(
+    (entry) => entry.id,
+  );
+  const unlocked = new Set(
+    (Array.isArray(c.unlocked_regions) ? c.unlocked_regions : defaultUnlocked).filter((id) =>
+      AFK_REGIONS.some((entry) => entry.id === id),
+    ),
+  );
+  unlocked.add('verdant-trail');
   return {
     kills_total: Math.max(0, Number(c.kills_total ?? 0)),
-    kills_until_boss: Math.max(0, Math.min(99, Number(c.kills_until_boss ?? 0))),
+    kills_until_boss: region_progress[region.id]?.kills_until_boss ?? 0,
     enemy_id,
     enemy_hp,
     is_boss: Boolean(c.is_boss),
     elite: Boolean(c.elite),
+    region_id: region.id,
+    region_progress,
+    unlocked_regions: AFK_REGIONS.filter((entry) => unlocked.has(entry.id)).map(
+      (entry) => entry.id,
+    ),
+    hero_hp: Math.max(0, Math.min(heroMaxHp, Number(c.hero_hp ?? heroMaxHp))),
+    hero_defeated_until: c.hero_defeated_until ?? null,
+    combat_last_at: c.combat_last_at ?? null,
+    search_remaining_ms: Math.max(0, Number(c.search_remaining_ms ?? 0)),
+    hero_attack_remaining_ms: Math.max(0, Number(c.hero_attack_remaining_ms ?? 0)),
+    enemy_attack_remaining_ms: Math.max(0, Number(c.enemy_attack_remaining_ms ?? 0)),
+    defeated_remaining_ms: Math.max(0, Number(c.defeated_remaining_ms ?? 0)),
+    orbs: Math.max(0, Number(c.orbs ?? 0)),
+    skill_nodes: skillNodes,
+    skill_tree_free_reset_used: Boolean(c.skill_tree_free_reset_used),
+    adventure_started: Boolean(c.adventure_started),
+    intro_seen: Boolean(c.intro_seen),
+    slime_language_unlocked: Boolean(c.slime_language_unlocked),
+    story_flags: Array.isArray(c.story_flags) ? c.story_flags.filter(Boolean) : [],
   };
 }
 
 function normalizePending(raw: unknown): AfkPendingReward {
   const p = (raw && typeof raw === 'object' ? raw : {}) as Partial<AfkPendingReward>;
+  const material_items = Object.fromEntries(
+    Object.entries(p.material_items ?? {})
+      .filter(([itemId, amount]) => isSlimeMaterialItemId(itemId) && Number(amount) > 0)
+      .map(([itemId, amount]) => [itemId, Math.max(0, Math.floor(Number(amount)))]),
+  ) as Partial<Record<SlimeMaterialItemId, number>>;
   return {
     xp: Number(p.xp ?? 0),
     abdoria: Number(p.abdoria ?? 0),
@@ -124,6 +177,7 @@ function normalizePending(raw: unknown): AfkPendingReward {
     weapon_ids: Array.isArray(p.weapon_ids) ? [...p.weapon_ids] : [],
     exp_instant: Math.max(0, Number(p.exp_instant ?? 0)),
     doria_bags: Math.max(0, Number(p.doria_bags ?? 0)),
+    material_items,
     titulo_secreto: Boolean(p.titulo_secreto),
     drop_count: Math.max(0, Number(p.drop_count ?? 0)),
   };
@@ -539,10 +593,7 @@ export const User = {
       não importa e o custo de uma leitura extra por item é desperdício. */
   async updateFieldsById(id: string, patch: Record<string, unknown>): Promise<void> {
     const sb = getSupabase();
-    await sb
-      .from('profiles')
-      .update(mapPatchToRow(patch))
-      .eq('id', id);
+    await sb.from('profiles').update(mapPatchToRow(patch)).eq('id', id);
   },
 
   /** Busca por nome (case-insensitive, parcial) — contas reais e onboarded. */
@@ -596,7 +647,8 @@ export const User = {
     if (metric === 'streak') {
       // Semanal = sequência em andamento; Global = recorde (streak_maior).
       const field = period === 'global' ? 'streak_maior' : 'streak_atual';
-      const value = period === 'global' ? user.gamificacao.streak_maior : user.gamificacao.streak_atual;
+      const value =
+        period === 'global' ? user.gamificacao.streak_maior : user.gamificacao.streak_atual;
       const [{ count: higher }, { count: tiedName }] = await Promise.all([
         base().gt(`gamificacao->${field}`, value),
         base().eq(`gamificacao->${field}`, value).lt('nome', user.nome),

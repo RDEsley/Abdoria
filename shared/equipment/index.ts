@@ -1,6 +1,6 @@
 import type { UserPreferencias } from '../types/index.js';
 
-/** Equipamentos opcionais que desbloqueiam exercícios no catálogo. */
+/** Equipamentos opcionais do perfil de treino. */
 export type EquipmentId = 'push_up_board' | 'pull_up_bar' | 'ab_wheel' | 'stability_ball';
 
 export interface EquipmentDefinition {
@@ -9,11 +9,51 @@ export interface EquipmentDefinition {
   descricao: string;
   /** Slugs liberados quando o usuário possui o equipamento. */
   exerciseSlugs: readonly string[];
+  /** Exercícios que combinam com o item, mas continuam livres sem ele. */
+  compatibleExerciseSlugs?: readonly string[];
+  /** Mantém o item no perfil/compra sem alterar a disponibilidade do catálogo. */
+  informationalOnly?: boolean;
   /** Link opcional para compra (ex.: Mercado Livre). */
   purchaseUrl?: string;
 }
 
+/** Slugs antigos do board. Nunca devem voltar ao catálogo ou à lista de bloqueados. */
+export const LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS = [
+  'push-up-board-chest',
+  'push-up-board-chest-wide',
+  'push-up-board-decline',
+  'push-up-board-triceps',
+  'push-up-board-triceps-diamond',
+  'push-up-board-shoulders',
+  'push-up-board-shoulders-pike',
+  'push-up-board-back',
+  'push-up-board-back-wide',
+] as const;
+
+/** Variações livres que reproduzem os nove focos/pegadas da prancha opcional. */
+export const ALWAYS_AVAILABLE_PUSH_UP_SLUGS = [
+  'push-up',
+  'wide-push-up',
+  'decline-push-up',
+  'close-grip-push-up',
+  'diamond-push-up',
+  'pike-push-up',
+  'pseudo-planche-push-up',
+  'scapular-push-up',
+  'wide-scapular-push-up',
+] as const;
+
 export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
+  {
+    id: 'push_up_board',
+    nome: 'Prancha de Flexão 9 em 1',
+    descricao:
+      'Opcional para orientar as pegadas por cor. Todas as variações de flexão continuam liberadas sem ela.',
+    exerciseSlugs: [],
+    compatibleExerciseSlugs: ALWAYS_AVAILABLE_PUSH_UP_SLUGS,
+    informationalOnly: true,
+    purchaseUrl: 'https://meli.la/1dBLVev',
+  },
   {
     id: 'pull_up_bar',
     nome: 'Barra Fixa',
@@ -68,6 +108,10 @@ export function getEnabledEquipmentIds(preferencias?: UserPreferencias | null): 
   return EQUIPMENT_IDS.filter((id) => state[id]);
 }
 
+export function equipmentAffectsExerciseAvailability(id: EquipmentId): boolean {
+  return !EQUIPMENT_CATALOG.find((item) => item.id === id)?.informationalOnly;
+}
+
 export function slugsUnlockedByEquipment(preferencias?: UserPreferencias | null): string[] {
   const enabled = getEnabledEquipmentIds(preferencias);
   const slugs = new Set<string>();
@@ -95,6 +139,7 @@ export function isExerciseAvailableForUser(
   preferencias?: UserPreferencias | null,
 ): boolean {
   if (exercise.equipamento) {
+    if (!equipmentAffectsExerciseAvailability(exercise.equipamento)) return exercise.ativo;
     const owned = resolveUserEquipment(preferencias);
     return Boolean(owned[exercise.equipamento]);
   }

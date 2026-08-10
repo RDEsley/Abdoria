@@ -12,9 +12,14 @@ import {
   PATROL_CACHE_ITEM_ID,
   ROUTE_DRINK_HOURS,
   ROUTE_DRINK_ITEM_ID,
+  SLIME_MATERIALS,
+  SLIME_MATERIAL_BY_ID,
+  isSlimeMaterialItemId,
   type Inventario,
   type InventoryItemId,
   type AfkPendingReward,
+  type SlimeMaterialItemId,
+  type SlimeMaterialStockItem,
 } from '../types/index.js';
 import { grantPatrolCacheRewards, grantRouteDrinkRewards } from './afk.js';
 import { grantMoeda } from './economy.js';
@@ -108,11 +113,16 @@ function addInventoryItemInternal(
     }
   }
 
+  let overflow_to_dorias = 0;
   if (overflow > 0) {
-    grantMoeda(user, overflow);
+    const overflowUnitValue = isSlimeMaterialItemId(itemId)
+      ? SLIME_MATERIAL_BY_ID[itemId].sellPrice
+      : 1;
+    overflow_to_dorias = overflow * overflowUnitValue;
+    grantMoeda(user, overflow_to_dorias);
   }
 
-  return { added, overflow_to_dorias: overflow };
+  return { added, overflow_to_dorias };
 }
 
 export function consumeInventoryItem(
@@ -135,6 +145,39 @@ export function consumeInventoryItem(
     );
   }
   return true;
+}
+
+export function readSlimeMaterialStock(user: UserRecord): SlimeMaterialStockItem[] {
+  return SLIME_MATERIALS.map((material) => ({
+    ...material,
+    quantity: getItemCount(user, material.id),
+  }));
+}
+
+export function sellSlimeMaterial(
+  user: UserRecord,
+  itemId: string,
+  quantity: number | 'all',
+):
+  | { ok: true; item_id: SlimeMaterialItemId; quantity_sold: number; coins_gained: number }
+  | { ok: false; error: string } {
+  if (!isSlimeMaterialItemId(itemId)) {
+    return { ok: false, error: 'Material de slime desconhecido.' };
+  }
+  const available = getItemCount(user, itemId);
+  if (available < 1) return { ok: false, error: 'Você não possui este material.' };
+
+  const quantityToSell =
+    quantity === 'all'
+      ? available
+      : Math.max(1, Math.min(available, Math.floor(Number(quantity) || 1)));
+  if (!consumeInventoryItem(user, itemId, quantityToSell)) {
+    return { ok: false, error: 'Não foi possível remover o material do inventário.' };
+  }
+
+  const coins_gained = quantityToSell * SLIME_MATERIAL_BY_ID[itemId].sellPrice;
+  grantMoeda(user, coins_gained);
+  return { ok: true, item_id: itemId, quantity_sold: quantityToSell, coins_gained };
 }
 
 /** Usa Baú da Exploração: recompensas equivalentes a 6h de Exploração AFK. */
@@ -247,6 +290,7 @@ export function readInventarioSummary(user: UserRecord) {
     exp_instant: getItemCount(user, EXP_INSTANT_ITEM_ID),
     doria_bag: getItemCount(user, DORIA_BAG_ITEM_ID),
     stack_cap: INVENTORY_STACK_CAP,
+    materials: readSlimeMaterialStock(user),
     itens: [...user.inventario!.itens],
   };
 }

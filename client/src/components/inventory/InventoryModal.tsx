@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Backpack, ShieldCheck, Sparkles, WandSparkles, X } from 'lucide-react';
 import { AfkRewardCelebration } from '@/components/afk/AfkRewardCelebration';
 import { RouteDrinkSuggestModal } from '@/components/afk/RouteDrinkSuggestModal';
 import { GameButton } from '@/components/ui/GameButton';
-import {
-  FrozenStreakIcon,
-  RouteDrinkIcon,
-  ExpInstantIcon,
-  DoriaBagIcon,
-} from '@/lib/item-icons';
+import { FrozenStreakIcon, RouteDrinkIcon, ExpInstantIcon, DoriaBagIcon } from '@/lib/item-icons';
 import {
   getInventory,
+  getPatrolShop,
+  equipPatrolWeapon,
   consumeExpInstant,
   consumeDoriaBag,
   consumeRouteDrink,
@@ -29,7 +26,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { useRewardPresentation } from '@/context/RewardPresentationContext';
 import { emitXpEarned } from '@/lib/xp-orbs';
-import type { AfkPendingReward } from '@/types';
+import type {
+  AfkPendingReward,
+  PatrolShopResponse,
+  PatrolWeaponKind,
+  SlimeMaterialStockItem,
+} from '@/types';
+import { PatrolBowIcon, PatrolSwordIcon } from '@/components/afk/patrol-shop/PatrolWeaponIcons';
 import {
   CURRENCY_NAME,
   FROZEN_STREAK_LABEL,
@@ -63,6 +66,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const [expInstantCount, setExpInstantCount] = useState(0);
   const [doriaBagCount, setDoriaBagCount] = useState(0);
   const [stackCap, setStackCap] = useState(INVENTORY_STACK_CAP);
+  const [materials, setMaterials] = useState<SlimeMaterialStockItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [usingExpInstant, setUsingExpInstant] = useState(false);
   const [usingDoriaBag, setUsingDoriaBag] = useState(false);
@@ -73,6 +77,8 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const [coinPops, setCoinPops] = useState<number[]>([]);
   const [selected, setSelected] = useState<SelectedItem>(null);
   const [togglingAutoUse, setTogglingAutoUse] = useState(false);
+  const [equipment, setEquipment] = useState<PatrolShopResponse | null>(null);
+  const [equippingId, setEquippingId] = useState<string | null>(null);
   const expInstantSlotRef = useRef<HTMLButtonElement | null>(null);
 
   const applyCounts = useCallback(
@@ -82,12 +88,14 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
       exp_instant?: number;
       doria_bag?: number;
       stack_cap?: number;
+      materials?: SlimeMaterialStockItem[];
     }) => {
       setFrozenStreakCount(data.frozen_streak);
       setRouteCount(data.route_drink);
       setExpInstantCount(data.exp_instant ?? 0);
       setDoriaBagCount(data.doria_bag ?? 0);
       setStackCap(data.stack_cap ?? INVENTORY_STACK_CAP);
+      if (data.materials) setMaterials(data.materials.filter((material) => material.quantity > 0));
     },
     [],
   );
@@ -95,8 +103,9 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getInventory();
+      const [data, shop] = await Promise.all([getInventory(), getPatrolShop()]);
       applyCounts(data);
+      setEquipment(shop);
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível carregar o inventário.'), {
         variant: 'error',
@@ -250,7 +259,25 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     }
   };
 
-  const totalItems = frozenStreakCount + routeCount + expInstantCount + doriaBagCount;
+  const materialCount = materials.reduce((total, material) => total + material.quantity, 0);
+  const totalItems =
+    frozenStreakCount + routeCount + expInstantCount + doriaBagCount + materialCount;
+
+  const handleEquipWeapon = async (kind: PatrolWeaponKind, id: string) => {
+    setEquippingId(id);
+    try {
+      const response = await equipPatrolWeapon(kind, id);
+      applyUser(response.user);
+      setEquipment(await getPatrolShop());
+      showGameToast('Equipamento atualizado.', { variant: 'success' });
+    } catch (error) {
+      showGameToast(getErrorMessage(error, 'Não foi possível equipar este item.'), {
+        variant: 'error',
+      });
+    } finally {
+      setEquippingId(null);
+    }
+  };
 
   if (!open) return null;
 
@@ -278,206 +305,345 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
             <X size={18} />
           </button>
 
-          <h2 id="inventory-title" className="game-modal__title">
-            Inventário
-          </h2>
-          <p className="game-modal__text">
-            Frozen Streak, Route Drink e EXP Instantâneo acumulam até {stackCap} unidades.
-            Excedentes viram {CURRENCY_NAME}.
-          </p>
+          <header className="game-inventory-header">
+            <span className="game-inventory-header__crest" aria-hidden>
+              <Backpack size={26} />
+            </span>
+            <div>
+              <span className="game-inventory-header__eyebrow">Mochila do aventureiro</span>
+              <h2 id="inventory-title" className="game-modal__title">
+                Inventário
+              </h2>
+              <p className="game-modal__text">
+                Gerencie suprimentos e equipe seu arsenal sem sair da jornada.
+              </p>
+            </div>
+          </header>
 
-          <div className="game-inventory-grid">
-            <button
-              type="button"
-              className={`game-inventory-slot${frozenStreakCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'frozen_streak' ? ' game-inventory-slot--active' : ''}`}
-              disabled={loading}
-              onClick={() => setSelected((prev) => (prev === 'frozen_streak' ? null : 'frozen_streak'))}
-              aria-label={`${FROZEN_STREAK_LABEL}, ${frozenStreakCount} em estoque`}
-            >
-              <span className="game-inventory-slot__icon">
-                <FrozenStreakIcon size={36} />
-              </span>
-              {frozenStreakCount > 0 && (
-                <span className="game-inventory-slot__qty tabular-nums">{frozenStreakCount}</span>
-              )}
-            </button>
+          <div className="game-inventory-layout">
+            <section className="game-inventory-pane game-inventory-pane--supplies">
+              <header className="game-inventory-pane__head">
+                <span>
+                  <Backpack size={17} /> Suprimentos
+                </span>
+                <small>
+                  Pilhas até {stackCap} · excedentes viram {CURRENCY_NAME}
+                </small>
+              </header>
 
-            <button
-              type="button"
-              className={`game-inventory-slot${routeCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'route_drink' ? ' game-inventory-slot--active' : ''}`}
-              disabled={loading}
-              onClick={() => setSelected((prev) => (prev === 'route_drink' ? null : 'route_drink'))}
-              aria-label={`${ROUTE_DRINK_LABEL}, ${routeCount} em estoque`}
-            >
-              <span className="game-inventory-slot__icon">
-                <RouteDrinkIcon size={36} />
-              </span>
-              {routeCount > 0 && (
-                <span className="game-inventory-slot__qty tabular-nums">{routeCount}</span>
-              )}
-            </button>
-
-            <button
-              ref={expInstantSlotRef}
-              type="button"
-              className={`game-inventory-slot${expInstantCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'exp_instant' ? ' game-inventory-slot--active' : ''}`}
-              disabled={loading}
-              onClick={() => setSelected((prev) => (prev === 'exp_instant' ? null : 'exp_instant'))}
-              aria-label={`${EXP_INSTANT_LABEL}, ${expInstantCount} em estoque`}
-            >
-              <span className="game-inventory-slot__icon">
-                <ExpInstantIcon size={36} />
-              </span>
-              {expInstantCount > 0 && (
-                <span className="game-inventory-slot__qty tabular-nums">{expInstantCount}</span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              className={`game-inventory-slot${doriaBagCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'doria_bag' ? ' game-inventory-slot--active' : ''}${bagShake ? ' reward-doria-bag-shake' : ''}`}
-              disabled={loading}
-              onClick={() => setSelected((prev) => (prev === 'doria_bag' ? null : 'doria_bag'))}
-              aria-label={`${DORIA_BAG_LABEL}, ${doriaBagCount} em estoque`}
-            >
-              <span className="game-inventory-slot__icon relative">
-                <DoriaBagIcon size={36} />
-                {coinPops.map((amount, index) => (
-                  <span
-                    key={`${amount}-${index}`}
-                    className="reward-doria-coin-pop"
-                    style={{ left: `${20 + index * 18}%`, top: '10%' }}
-                  >
-                    +{amount}
-                  </span>
-                ))}
-              </span>
-              {doriaBagCount > 0 && (
-                <span className="game-inventory-slot__qty tabular-nums">{doriaBagCount}</span>
-              )}
-            </button>
-          </div>
-
-          {totalItems < 1 && !loading && (
-            <p className="game-inventory-empty">Nenhum item consumível no inventário.</p>
-          )}
-
-          <AnimatePresence>
-            {selected === 'frozen_streak' && frozenStreakCount > 0 && (
-              <motion.div
-                className="game-inventory-detail"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-              >
-                <h3 className="game-inventory-detail__title">{FROZEN_STREAK_LABEL}</h3>
-                <p className="game-inventory-detail__desc">{formatFrozenStreakDescription()}</p>
-                <p className="game-inventory-detail__desc game-inventory-detail__desc--muted">
-                  {frozenAutoUse
-                    ? 'Consumido automaticamente se você perder um dia de treino.'
-                    : 'Uso automático desativado — o streak vai quebrar normalmente se você perder um dia.'}{' '}
-                  Você tem {frozenStreakCount} em estoque (máx. {stackCap}).
-                </p>
-                <div className="game-inventory-detail__toggle-row">
-                  <span className="game-inventory-detail__toggle-label">Uso automático</span>
+              <div className="game-inventory-pane__scroll">
+                <div className="game-inventory-grid">
                   <button
                     type="button"
-                    role="switch"
-                    aria-checked={frozenAutoUse}
-                    aria-label={frozenAutoUse ? 'Desativar uso automático' : 'Ativar uso automático'}
-                    disabled={togglingAutoUse}
-                    className={`library-equipment__switch${frozenAutoUse ? ' library-equipment__switch--on' : ''}`}
-                    onClick={() => void handleToggleFrozenAutoUse()}
+                    className={`game-inventory-slot${frozenStreakCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'frozen_streak' ? ' game-inventory-slot--active' : ''}`}
+                    disabled={loading}
+                    onClick={() =>
+                      setSelected((prev) => (prev === 'frozen_streak' ? null : 'frozen_streak'))
+                    }
+                    aria-label={`${FROZEN_STREAK_LABEL}, ${frozenStreakCount} em estoque`}
                   >
-                    <span className="library-equipment__switch-thumb" aria-hidden />
+                    <span className="game-inventory-slot__icon">
+                      <FrozenStreakIcon size={36} />
+                    </span>
+                    {frozenStreakCount > 0 && (
+                      <span className="game-inventory-slot__qty tabular-nums">
+                        {frozenStreakCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`game-inventory-slot${routeCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'route_drink' ? ' game-inventory-slot--active' : ''}`}
+                    disabled={loading}
+                    onClick={() =>
+                      setSelected((prev) => (prev === 'route_drink' ? null : 'route_drink'))
+                    }
+                    aria-label={`${ROUTE_DRINK_LABEL}, ${routeCount} em estoque`}
+                  >
+                    <span className="game-inventory-slot__icon">
+                      <RouteDrinkIcon size={36} />
+                    </span>
+                    {routeCount > 0 && (
+                      <span className="game-inventory-slot__qty tabular-nums">{routeCount}</span>
+                    )}
+                  </button>
+
+                  <button
+                    ref={expInstantSlotRef}
+                    type="button"
+                    className={`game-inventory-slot${expInstantCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'exp_instant' ? ' game-inventory-slot--active' : ''}`}
+                    disabled={loading}
+                    onClick={() =>
+                      setSelected((prev) => (prev === 'exp_instant' ? null : 'exp_instant'))
+                    }
+                    aria-label={`${EXP_INSTANT_LABEL}, ${expInstantCount} em estoque`}
+                  >
+                    <span className="game-inventory-slot__icon">
+                      <ExpInstantIcon size={36} />
+                    </span>
+                    {expInstantCount > 0 && (
+                      <span className="game-inventory-slot__qty tabular-nums">
+                        {expInstantCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`game-inventory-slot${doriaBagCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'doria_bag' ? ' game-inventory-slot--active' : ''}${bagShake ? ' reward-doria-bag-shake' : ''}`}
+                    disabled={loading}
+                    onClick={() =>
+                      setSelected((prev) => (prev === 'doria_bag' ? null : 'doria_bag'))
+                    }
+                    aria-label={`${DORIA_BAG_LABEL}, ${doriaBagCount} em estoque`}
+                  >
+                    <span className="game-inventory-slot__icon relative">
+                      <DoriaBagIcon size={36} />
+                      {coinPops.map((amount, index) => (
+                        <span
+                          key={`${amount}-${index}`}
+                          className="reward-doria-coin-pop"
+                          style={{ left: `${20 + index * 18}%`, top: '10%' }}
+                        >
+                          +{amount}
+                        </span>
+                      ))}
+                    </span>
+                    {doriaBagCount > 0 && (
+                      <span className="game-inventory-slot__qty tabular-nums">{doriaBagCount}</span>
+                    )}
                   </button>
                 </div>
-              </motion.div>
-            )}
 
-            {selected === 'route_drink' && routeCount > 0 && (
-              <motion.div
-                className="game-inventory-detail"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-              >
-                <h3 className="game-inventory-detail__title">{ROUTE_DRINK_LABEL}</h3>
-                <p className="game-inventory-detail__desc">
-                  Aplica na hora o loot de {ROUTE_DRINK_HOURS}h de Exploração por unidade — usar
-                  todos rende {routeCount * ROUTE_DRINK_HOURS}h. Você tem {routeCount} em estoque
-                  (máx. {stackCap}).
-                </p>
-                <div className="game-inventory-detail__actions">
-                  <GameButton
-                    onClick={() => setRouteDrinkConfirmOpen(true)}
-                    disabled={usingRouteDrink}
+                {materials.length > 0 ? (
+                  <section
+                    className="game-inventory-materials"
+                    aria-labelledby="inventory-materials-title"
                   >
-                    {usingRouteDrink ? 'Usando...' : 'Usar Todos'}
-                  </GameButton>
-                </div>
-              </motion.div>
-            )}
+                    <div className="game-inventory-materials__head">
+                      <strong id="inventory-materials-title">Materiais de slime</strong>
+                      <small>Venda estes itens na Loja da Vila.</small>
+                    </div>
+                    <div className="game-inventory-grid game-inventory-grid--materials">
+                      {materials.map((material) => (
+                        <div
+                          key={material.id}
+                          className={`game-inventory-slot game-inventory-material-slot game-inventory-material-slot--${material.tier}`}
+                          aria-label={`${material.name}, ${material.quantity} em estoque`}
+                          title={`${material.name} · vale ${material.sellPrice} Coins`}
+                        >
+                          <span className="game-inventory-slot__icon" aria-hidden>
+                            {material.icon}
+                          </span>
+                          <span className="game-inventory-slot__qty tabular-nums">
+                            {material.quantity}
+                          </span>
+                          <small>{material.name}</small>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
 
-            {selected === 'exp_instant' && expInstantCount > 0 && (
-              <motion.div
-                className="game-inventory-detail"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-              >
-                <h3 className="game-inventory-detail__title">{EXP_INSTANT_LABEL}</h3>
-                <p className="game-inventory-detail__desc">
-                  Concede +{EXP_INSTANT_XP} XP imediatamente por unidade. Você tem {expInstantCount}{' '}
-                  em estoque (máx. {stackCap}).
-                </p>
-                <div className="game-inventory-detail__actions">
-                  <GameButton
-                    onClick={() => void handleUseExpInstantAll()}
-                    disabled={usingExpInstant}
-                  >
-                    {usingExpInstant
-                      ? 'Usando...'
-                      : `Utilizar Todos (+${expInstantCount * EXP_INSTANT_XP} XP)`}
-                  </GameButton>
-                </div>
-              </motion.div>
-            )}
+                {totalItems < 1 && !loading && (
+                  <p className="game-inventory-empty">Nenhum item consumível no inventário.</p>
+                )}
 
-            {selected === 'doria_bag' && doriaBagCount > 0 && (
-              <motion.div
-                className="game-inventory-detail"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-              >
-                <h3 className="game-inventory-detail__title">{DORIA_BAG_LABEL}</h3>
-                <p className="game-inventory-detail__desc">
-                  Cada bolsa concede entre {DORIA_BAG_MIN} e {DORIA_BAG_MAX} {CURRENCY_NAME}{' '}
-                  aleatórias. Você tem {doriaBagCount} em estoque.
-                  {doriaBagCount > 1 && (
-                    <>
-                      {' '}
-                      Abrir todas pode render de {doriaBagCount * DORIA_BAG_MIN} a{' '}
-                      {doriaBagCount * DORIA_BAG_MAX} {CURRENCY_NAME}.
-                    </>
+                <AnimatePresence>
+                  {selected === 'frozen_streak' && frozenStreakCount > 0 && (
+                    <motion.div
+                      className="game-inventory-detail"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                    >
+                      <h3 className="game-inventory-detail__title">{FROZEN_STREAK_LABEL}</h3>
+                      <p className="game-inventory-detail__desc">
+                        {formatFrozenStreakDescription()}
+                      </p>
+                      <p className="game-inventory-detail__desc game-inventory-detail__desc--muted">
+                        {frozenAutoUse
+                          ? 'Consumido automaticamente se você perder um dia de treino.'
+                          : 'Uso automático desativado — o streak vai quebrar normalmente se você perder um dia.'}{' '}
+                        Você tem {frozenStreakCount} em estoque (máx. {stackCap}).
+                      </p>
+                      <div className="game-inventory-detail__toggle-row">
+                        <span className="game-inventory-detail__toggle-label">Uso automático</span>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={frozenAutoUse}
+                          aria-label={
+                            frozenAutoUse ? 'Desativar uso automático' : 'Ativar uso automático'
+                          }
+                          disabled={togglingAutoUse}
+                          className={`library-equipment__switch${frozenAutoUse ? ' library-equipment__switch--on' : ''}`}
+                          onClick={() => void handleToggleFrozenAutoUse()}
+                        >
+                          <span className="library-equipment__switch-thumb" aria-hidden />
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
-                </p>
-                <div className="game-inventory-detail__actions">
-                  <GameButton
-                    onClick={() => void handleUseDoriaBag(doriaBagCount, true)}
-                    disabled={usingDoriaBag}
-                  >
-                    {usingDoriaBag
-                      ? 'Abrindo...'
-                      : doriaBagCount > 1
-                        ? `Utilizar todas (${doriaBagCount})`
-                        : 'Usar bolsa'}
-                  </GameButton>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+                  {selected === 'route_drink' && routeCount > 0 && (
+                    <motion.div
+                      className="game-inventory-detail"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                    >
+                      <h3 className="game-inventory-detail__title">{ROUTE_DRINK_LABEL}</h3>
+                      <p className="game-inventory-detail__desc">
+                        Aplica na hora o loot de {ROUTE_DRINK_HOURS}h de Exploração por unidade —
+                        usar todos rende {routeCount * ROUTE_DRINK_HOURS}h. Você tem {routeCount} em
+                        estoque (máx. {stackCap}).
+                      </p>
+                      <div className="game-inventory-detail__actions">
+                        <GameButton
+                          onClick={() => setRouteDrinkConfirmOpen(true)}
+                          disabled={usingRouteDrink}
+                        >
+                          {usingRouteDrink ? 'Usando...' : 'Usar Todos'}
+                        </GameButton>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {selected === 'exp_instant' && expInstantCount > 0 && (
+                    <motion.div
+                      className="game-inventory-detail"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                    >
+                      <h3 className="game-inventory-detail__title">{EXP_INSTANT_LABEL}</h3>
+                      <p className="game-inventory-detail__desc">
+                        Concede +{EXP_INSTANT_XP} XP imediatamente por unidade. Você tem{' '}
+                        {expInstantCount} em estoque (máx. {stackCap}).
+                      </p>
+                      <div className="game-inventory-detail__actions">
+                        <GameButton
+                          onClick={() => void handleUseExpInstantAll()}
+                          disabled={usingExpInstant}
+                        >
+                          {usingExpInstant
+                            ? 'Usando...'
+                            : `Utilizar Todos (+${expInstantCount * EXP_INSTANT_XP} XP)`}
+                        </GameButton>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {selected === 'doria_bag' && doriaBagCount > 0 && (
+                    <motion.div
+                      className="game-inventory-detail"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                    >
+                      <h3 className="game-inventory-detail__title">{DORIA_BAG_LABEL}</h3>
+                      <p className="game-inventory-detail__desc">
+                        Cada bolsa concede entre {DORIA_BAG_MIN} e {DORIA_BAG_MAX} {CURRENCY_NAME}{' '}
+                        aleatórias. Você tem {doriaBagCount} em estoque.
+                        {doriaBagCount > 1 && (
+                          <>
+                            {' '}
+                            Abrir todas pode render de {doriaBagCount * DORIA_BAG_MIN} a{' '}
+                            {doriaBagCount * DORIA_BAG_MAX} {CURRENCY_NAME}.
+                          </>
+                        )}
+                      </p>
+                      <div className="game-inventory-detail__actions">
+                        <GameButton
+                          onClick={() => void handleUseDoriaBag(doriaBagCount, true)}
+                          disabled={usingDoriaBag}
+                        >
+                          {usingDoriaBag
+                            ? 'Abrindo...'
+                            : doriaBagCount > 1
+                              ? `Utilizar todas (${doriaBagCount})`
+                              : 'Usar bolsa'}
+                        </GameButton>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </section>
+
+            <section className="game-inventory-pane game-inventory-pane--arsenal">
+              <header className="game-inventory-pane__head">
+                <span>
+                  <ShieldCheck size={17} /> Arsenal
+                </span>
+                <small>Armas conquistadas e equipamentos em uso</small>
+              </header>
+              <div className="game-inventory-equipment game-inventory-pane__scroll">
+                {equipment ? (
+                  (['arcos', 'espadas', 'magias'] as const).map((collection) => {
+                    const owned = equipment[collection].filter((item) => item.desbloqueada);
+                    if (owned.length === 0) return null;
+                    return (
+                      <section key={collection}>
+                        <h3>
+                          {collection === 'arcos'
+                            ? 'Arcos'
+                            : collection === 'espadas'
+                              ? 'Espadas'
+                              : 'Magias'}
+                        </h3>
+                        <div className="game-inventory-equipment__grid">
+                          {owned.map((item) => (
+                            <article
+                              key={item.id}
+                              className={`game-inventory-weapon game-inventory-weapon--${item.raridade}${item.equipada ? ' is-equipped' : ''}`}
+                            >
+                              <span className="game-inventory-weapon__icon">
+                                {item.kind === 'arco' ? (
+                                  <PatrolBowIcon variant={item.id} />
+                                ) : item.kind === 'espada' ? (
+                                  <PatrolSwordIcon variant={item.id} />
+                                ) : (
+                                  <WandSparkles size={38} />
+                                )}
+                              </span>
+                              <span className="game-inventory-weapon__copy">
+                                <strong>{item.nome}</strong>
+                                <small>
+                                  +{item.dano_total} dano · {item.chance_critico}% crítico
+                                </small>
+                              </span>
+                              <button
+                                type="button"
+                                disabled={item.equipada || equippingId === item.id}
+                                onClick={() => void handleEquipWeapon(item.kind, item.id)}
+                              >
+                                {item.equipada ? (
+                                  <>
+                                    <ShieldCheck size={13} /> Equipado
+                                  </>
+                                ) : equippingId === item.id ? (
+                                  'Equipando…'
+                                ) : (
+                                  <>
+                                    <Sparkles size={13} /> Equipar
+                                  </>
+                                )}
+                              </button>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })
+                ) : (
+                  <p className="game-loader">Carregando equipamentos…</p>
+                )}
+              </div>
+            </section>
+          </div>
         </motion.div>
       </div>
 

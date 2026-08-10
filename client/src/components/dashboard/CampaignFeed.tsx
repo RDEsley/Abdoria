@@ -1,6 +1,4 @@
-import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { GameButton } from '@/components/ui/GameButton';
 import { CAMPAIGN_EVENT_STYLE } from '@/components/campaign/campaign-style';
 import { useCampaignPosts } from '@/hooks/useCampaignPosts';
 import type { CampaignPost } from '@shared/campaign';
@@ -75,11 +73,12 @@ function PostCard({ post }: { post: CampaignPost }) {
 
 /**
  * Feed narrativo do Mapa da Campanha — 1 post por sessão de treino (a
- * "missão do dia"). Só o capítulo mais recente aparece aqui; os anteriores
- * ficam no livro de capítulos (`/campanha`).
+ * "missão do dia"). Exibe somente o capítulo atual e o imediatamente anterior.
+ *
+ * O arquivo completo de capítulos continua preservado no projeto, mas está
+ * temporariamente desativado e não possui acesso pelo front-end.
  */
 export function CampaignFeed() {
-  const navigate = useNavigate();
   const { posts, loading } = useCampaignPosts();
 
   if (loading) {
@@ -97,18 +96,15 @@ export function CampaignFeed() {
   return (
     <div className="mt-4 flex flex-col gap-2.5">
       <AnimatePresence initial={false}>
-        <PostCard key={posts[0].id} post={posts[0]} />
+        {posts.slice(0, 2).map((post, index) => (
+          <div key={post.id} className="flex flex-col gap-1">
+            <span className="px-1 text-[0.58rem] font-extrabold uppercase tracking-[0.12em] text-stone-400">
+              {index === 0 ? 'Capítulo atual' : 'Capítulo anterior'}
+            </span>
+            <PostCard post={post} />
+          </div>
+        ))}
       </AnimatePresence>
-      {posts.length > 1 && (
-        <GameButton
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate('/campanha')}
-          className="mt-1"
-        >
-          Ver capítulos anteriores
-        </GameButton>
-      )}
     </div>
   );
 }

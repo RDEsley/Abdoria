@@ -15,6 +15,7 @@ export type BestiaryPendingLike = {
   cosmetic_ids: string[];
   weapon_ids: string[];
   titulo_secreto: boolean;
+  material_items?: Record<string, number>;
 };
 
 export type BestiaryDropId =
@@ -32,7 +33,8 @@ export type BestiaryDropId =
   | 'weapon_legendary'
   | 'weapon_mythic'
   | 'weapon_secret'
-  | 'weapon_spell';
+  | 'weapon_spell'
+  | 'material_unique';
 
 export interface BestiaryDropDefinition {
   id: BestiaryDropId;
@@ -54,12 +56,13 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   frozen_streak: '30%',
   route_drink: '0,04%',
   cosmetic_legendary: '0,07%',
-  cosmetic_secret: '0,01%',
+  cosmetic_secret: '5%',
   titulo_secreto: '0,01%',
-  weapon_legendary: '0,05%',
-  weapon_mythic: '0,05%',
+  weapon_legendary: '5–11%',
+  weapon_mythic: '5–11%',
   weapon_secret: '0,003%',
-  weapon_spell: '100%',
+  weapon_spell: '25%',
+  material_unique: '5–20%',
 };
 
 // Loot por tier: comuns = recursos básicos; elites = sustain (frozen/route);
@@ -71,24 +74,30 @@ const BOSS_DROPS: BestiaryDropId[] = [
   'abdoria',
   'frozen_streak',
   'cosmetic_legendary',
-  'titulo_secreto',
   'weapon_mythic',
-  'weapon_secret',
 ];
 
-const GOLDEN_SLIME_DROPS: BestiaryDropId[] = ['abdoria_golden', 'cosmetic_secret', 'route_drink'];
+const GOLDEN_SLIME_DROPS: BestiaryDropId[] = ['abdoria_golden'];
 const MAGIC_RABBIT_DROPS: BestiaryDropId[] = ['weapon_spell'];
 /** "?" e Slime Binário: cosmético secreto na 1ª derrota; Coins + Bolsa nas seguintes. */
-const RARE_ENEMY_DROPS: BestiaryDropId[] = ['cosmetic_secret', 'abdoria', 'doria_bag'];
+const RARE_ENEMY_DROPS: BestiaryDropId[] = ['cosmetic_secret'];
 
 export function bestiaryDropsForEnemy(enemyId: AfkEnemyId): BestiaryDropId[] {
-  if (enemyId === 'golden_slime') return [...GOLDEN_SLIME_DROPS];
-  if (enemyId === 'magic_rabbit') return [...MAGIC_RABBIT_DROPS];
-  if (enemyId === 'slime_enigma' || enemyId === 'slime_binario') return [...RARE_ENEMY_DROPS];
+  if (enemyId === 'golden_slime') return [...GOLDEN_SLIME_DROPS, 'material_unique'];
+  if (enemyId === 'magic_rabbit') return [...MAGIC_RABBIT_DROPS, 'material_unique'];
+  if (enemyId === 'slime_enigma' || enemyId === 'slime_binario') {
+    return [...RARE_ENEMY_DROPS, 'material_unique'];
+  }
   const tier = AFK_ENEMIES[enemyId]?.tier ?? 'common';
-  if (tier === 'boss') return [...BOSS_DROPS];
-  if (tier === 'elite') return [...ELITE_DROPS];
-  return [...COMMON_DROPS];
+  if (tier === 'boss') {
+    const drops: BestiaryDropId[] =
+      enemyId === 'boss_procrastinador' || enemyId === 'boss_preguica'
+        ? [...BOSS_DROPS, 'titulo_secreto', 'weapon_secret']
+        : [...BOSS_DROPS];
+    return [...drops, 'material_unique'];
+  }
+  if (tier === 'elite') return [...ELITE_DROPS, 'material_unique'];
+  return [...COMMON_DROPS, 'material_unique'];
 }
 
 export function buildBestiaryDropCatalog(
@@ -110,10 +119,11 @@ export function buildBestiaryDropCatalog(
     cosmetic_legendary: def('cosmetic_legendary', 'Cosmético lendário'),
     cosmetic_secret: def('cosmetic_secret', 'Cosmético secreto'),
     titulo_secreto: def('titulo_secreto', 'Título secreto'),
-    weapon_legendary: def('weapon_legendary', 'Arma Mítica'),
-    weapon_mythic: def('weapon_mythic', 'Arma Mítica'),
+    weapon_legendary: def('weapon_legendary', 'Arma lendária do guardião'),
+    weapon_mythic: def('weapon_mythic', 'Arma lendária do guardião'),
     weapon_secret: def('weapon_secret', 'Arma Secret'),
     weapon_spell: def('weapon_spell', 'Magia'),
+    material_unique: def('material_unique', 'Material exclusivo'),
   };
 }
 
@@ -132,6 +142,7 @@ export type BestiaryPendingSnapshot = {
   cosmetic_ids: string[];
   weapon_ids: string[];
   titulo_secreto: boolean;
+  material_items: Record<string, number>;
 };
 
 export function snapshotBestiaryPending(pending: BestiaryPendingLike): BestiaryPendingSnapshot {
@@ -145,6 +156,7 @@ export function snapshotBestiaryPending(pending: BestiaryPendingLike): BestiaryP
     cosmetic_ids: [...pending.cosmetic_ids],
     weapon_ids: [...pending.weapon_ids],
     titulo_secreto: pending.titulo_secreto,
+    material_items: { ...(pending.material_items ?? {}) },
   };
 }
 
@@ -154,11 +166,15 @@ export function inferBestiaryDropsFromKill(
   after: BestiaryPendingSnapshot,
 ): BestiaryDropId[] {
   const found: BestiaryDropId[] = [];
+  const materialId = `slime_material_${enemyId}`;
+  const materialDropped =
+    (after.material_items[materialId] ?? 0) > (before.material_items[materialId] ?? 0);
 
   if (enemyId === 'golden_slime') {
     if (after.abdoria > before.abdoria) found.push('abdoria_golden');
     if (after.cosmetic_ids.length > before.cosmetic_ids.length) found.push('cosmetic_secret');
     if (after.route_drinks > before.route_drinks) found.push('route_drink');
+    if (materialDropped) found.push('material_unique');
     return found;
   }
 
@@ -167,6 +183,7 @@ export function inferBestiaryDropsFromKill(
     if (newWeaponIds.some((id) => (PATROL_SPELL_IDS as readonly string[]).includes(id))) {
       found.push('weapon_spell');
     }
+    if (materialDropped) found.push('material_unique');
     return found;
   }
 
@@ -174,6 +191,7 @@ export function inferBestiaryDropsFromKill(
     if (after.cosmetic_ids.length > before.cosmetic_ids.length) found.push('cosmetic_secret');
     if (after.abdoria > before.abdoria) found.push('abdoria');
     if (after.doria_bags > before.doria_bags) found.push('doria_bag');
+    if (materialDropped) found.push('material_unique');
     return found;
   }
 
@@ -193,6 +211,7 @@ export function inferBestiaryDropsFromKill(
   if (newWeaponIds.some((id) => (PATROL_MYTHIC_WEAPON_IDS as readonly string[]).includes(id))) {
     found.push('weapon_mythic');
   }
+  if (materialDropped) found.push('material_unique');
 
   return found;
 }

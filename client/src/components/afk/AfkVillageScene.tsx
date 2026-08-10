@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { areVillageImagesLoaded, preloadVillageImages } from '@/lib/afk-image-preload';
 
 interface Props {
   bestiaryUnlocked: number;
@@ -7,39 +8,22 @@ interface Props {
   onOpenShop: () => void;
   onOpenBestiary: () => void;
   onContinue: () => void;
+  onOpenSkillTree: () => void;
+  adventureStarted?: boolean;
+  busy?: boolean;
 }
-
-const VILLAGE_IMAGES = [
-  '/assets/background-afk-banner.png',
-  '/assets/loja-da-vila.png',
-  '/assets/museu-da-vila-bestiario.png',
-];
-
-/** Módulo: uma vez carregadas nesta sessão, as próximas visitas à vila não
-    esperam de novo (evita até o flash do loading num cache já quente). */
-let villageImagesLoaded = false;
 
 /** Pré-carrega fundo/loja/museu antes de revelar a vila — faltava o fundo
     nessa lista (só loja+museu eram esperados), então ele "pipocava" depois
     dos outros dois já prontos, mesmo com o loading em tela. */
 function useVillageImagesReady(): boolean {
-  const [ready, setReady] = useState(villageImagesLoaded);
+  const [ready, setReady] = useState(areVillageImagesLoaded);
 
   useEffect(() => {
-    if (villageImagesLoaded) return undefined;
+    if (areVillageImagesLoaded()) return undefined;
     let cancelled = false;
-    let remaining = VILLAGE_IMAGES.length;
-    const onSettle = () => {
-      remaining -= 1;
-      if (remaining > 0 || cancelled) return;
-      villageImagesLoaded = true;
-      setReady(true);
-    };
-    VILLAGE_IMAGES.forEach((src) => {
-      const img = new Image();
-      img.onload = onSettle;
-      img.onerror = onSettle;
-      img.src = src;
+    void preloadVillageImages().then(() => {
+      if (!cancelled) setReady(true);
     });
     return () => {
       cancelled = true;
@@ -62,6 +46,9 @@ export function AfkVillageScene({
   onOpenShop,
   onOpenBestiary,
   onContinue,
+  onOpenSkillTree,
+  adventureStarted = false,
+  busy = false,
 }: Props) {
   const imagesReady = useVillageImagesReady();
 
@@ -93,6 +80,23 @@ export function AfkVillageScene({
 
         <button
           type="button"
+          className="game-afk-village__skill-tree"
+          onClick={onOpenSkillTree}
+          aria-label="Abrir árvore de habilidades"
+          title="Árvore de habilidades"
+        >
+          <img
+            className="game-afk-village__skill-tree-image"
+            src="/assets/skill-tree-ancient.png"
+            alt=""
+            draggable={false}
+          />
+          <span className="game-afk-village__skill-tree-glow" aria-hidden />
+          <strong>Árvore de habilidades</strong>
+        </button>
+
+        <button
+          type="button"
           className="game-afk-village__building game-afk-village__building--museu"
           onClick={onOpenBestiary}
           aria-label="Abrir Bestiário"
@@ -105,12 +109,21 @@ export function AfkVillageScene({
             {bestiaryUnlocked}/{bestiaryTotal}
           </span>
         </button>
-      </div>
 
-      <button type="button" className="game-afk-village__continue" onClick={onContinue}>
-        Explorar Floresta
-        <ArrowRight size={16} aria-hidden />
-      </button>
+        <button
+          type="button"
+          className="game-afk-village__continue"
+          onClick={onContinue}
+          disabled={busy}
+        >
+          {busy
+            ? 'Preparando jornada…'
+            : adventureStarted
+              ? 'Continuar jornada'
+              : 'Começar a aventura'}
+          <ArrowRight size={16} aria-hidden />
+        </button>
+      </div>
     </div>
   );
 }

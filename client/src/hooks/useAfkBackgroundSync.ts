@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { pingAfk, type AfkPingResponse } from '@/lib/api';
+import { pingAfk, setAfkAway, type AfkPingResponse } from '@/lib/api';
 
 const AFK_PING_INTERVAL_MS = 60_000;
 
@@ -19,19 +19,27 @@ export function useAfkBackgroundSync(enabled: boolean) {
     }
   }, []);
 
+  const activateAwayMode = useCallback(async () => {
+    try {
+      const res = await setAfkAway();
+      dispatchAfkSync(res);
+    } catch {
+      // A requisição keepalive é melhor esforço; o próximo sync reconcilia.
+    }
+  }, []);
+
   useEffect(() => {
     if (!enabled) return undefined;
 
     void sync();
 
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void sync();
-      }
+      if (document.visibilityState === 'visible') void sync();
+      else void activateAwayMode();
     };
 
     const onPageHide = () => {
-      void sync();
+      void activateAwayMode();
     };
 
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -48,5 +56,5 @@ export function useAfkBackgroundSync(enabled: boolean) {
       window.removeEventListener('pagehide', onPageHide);
       window.clearInterval(timer);
     };
-  }, [enabled, sync]);
+  }, [activateAwayMode, enabled, sync]);
 }

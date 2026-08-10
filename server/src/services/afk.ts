@@ -19,7 +19,7 @@ import { normalizePending, EMPTY_AFK_PENDING } from '../repositories/user-reposi
 import {
   combatSnapshot,
   ensureCombat,
-  simulateOfflineKills,
+  simulateOfflineCombat,
   defeatCurrentEnemy,
 } from './afk-combat.js';
 import { ensureBestiario } from './bestiario.js';
@@ -100,6 +100,10 @@ function applyAfkRewardBundle(
   }
   if (claimed.doria_bags > 0) {
     const result = addInventoryItem(user, DORIA_BAG_ITEM_ID, claimed.doria_bags);
+    overflow_to_dorias += result.overflow_to_dorias;
+  }
+  for (const [itemId, amount] of Object.entries(claimed.material_items)) {
+    const result = addInventoryItem(user, itemId, amount);
     overflow_to_dorias += result.overflow_to_dorias;
   }
   for (const cosmeticId of claimed.cosmetic_ids) {
@@ -241,6 +245,18 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
     return collectNewBestiaryUnlocks(before, user);
   }
 
+  // Relógio próprio do combate: preserva HP do inimigo, procura, ataques dos
+  // slimes e tempo derrotado mesmo quando ainda não fechou um minuto de baú.
+  const combat = ensureCombat(user);
+  // Saves anteriores ao relógio de combate usam o cursor AFK já persistido;
+  // começar em `now` descartaria toda a primeira janela offline após a atualização.
+  const combatLastAt = combat.combat_last_at
+    ? new Date(combat.combat_last_at)
+    : new Date(afk.last_seen_at!);
+  const combatElapsedMs = Math.max(0, now.getTime() - combatLastAt.getTime());
+  if (combatElapsedMs > 0) simulateOfflineCombat(user, combatElapsedMs);
+  combat.combat_last_at = now.toISOString();
+
   const lastSeen = new Date(afk.last_seen_at!);
   const already = afk.minutos_acumulados ?? 0;
 
@@ -261,8 +277,6 @@ export function syncAfkRewards(user: UserRecord, now = new Date()): AfkEnemyId[]
   newMinutes = Math.min(newMinutes, room);
 
   const totalMinutes = already + newMinutes;
-
-  simulateOfflineKills(user, newMinutes);
 
   afk.minutos_acumulados = totalMinutes;
   // Avança last_seen_at exatamente pelos minutos consumidos — preserva segundos fracionários.
@@ -293,9 +307,14 @@ export function pauseAfk(user: UserRecord, now = new Date()): void {
  */
 export function resumeAfk(user: UserRecord, now = new Date()): void {
   const afk = ensureAfk(user);
-  if (!afk.paused_at) return;
+  const combat = ensureCombat(user);
+  if (!afk.paused_at) {
+    combat.combat_last_at ??= now.toISOString();
+    return;
+  }
   afk.paused_at = null;
   afk.last_seen_at = now.toISOString();
+  combat.combat_last_at = now.toISOString();
 }
 
 function collectNewBestiaryUnlocks(before: Set<AfkEnemyId>, user: UserRecord): AfkEnemyId[] {
@@ -313,6 +332,7 @@ export function hasAfkRewardsToClaim(
     p.route_drinks > 0 ||
     p.exp_instant > 0 ||
     p.doria_bags > 0 ||
+    Object.values(p.material_items).some((amount) => (amount ?? 0) > 0) ||
     p.cosmetic_ids.length > 0 ||
     p.weapon_ids.length > 0 ||
     p.titulo_secreto

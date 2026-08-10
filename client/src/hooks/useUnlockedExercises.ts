@@ -1,8 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useApp } from '@/hooks/useApp';
+import { ALWAYS_AVAILABLE_PUSH_UP_SLUGS } from '@/types';
 
 export function useUnlockedExercises() {
   const { unlockedExercises, unlockExercise, unlockExercises: unlockManySlugs } = useApp();
+  const unlocked = useMemo(
+    () => new Set([...unlockedExercises, ...ALWAYS_AVAILABLE_PUSH_UP_SLUGS]),
+    [unlockedExercises],
+  );
 
   const unlock = useCallback(
     (slug: string) => {
@@ -19,16 +24,13 @@ export function useUnlockedExercises() {
     [unlockManySlugs],
   );
 
-  const isUnlocked = useCallback(
-    (slug: string) => unlockedExercises.has(slug),
-    [unlockedExercises],
-  );
+  const isUnlocked = useCallback((slug: string) => unlocked.has(slug), [unlocked]);
 
   return {
-    unlocked: unlockedExercises,
+    unlocked,
     unlock,
     unlockAll,
     isUnlocked,
-    unlockedCount: unlockedExercises.size,
+    unlockedCount: unlocked.size,
   };
 }

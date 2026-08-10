@@ -5,6 +5,7 @@
 
 import type { AfkCombatState, AfkEnemyId } from '../afk/combat.js';
 import { DEFAULT_AFK_COMBAT } from '../afk/combat.js';
+import { SLIME_MATERIALS, type SlimeMaterialItemId } from '../afk/slime-materials.js';
 import type { EquipmentId } from '../equipment/index.js';
 
 export type NivelUsuario = 'iniciante' | 'intermediario' | 'avancado';
@@ -142,13 +143,7 @@ export function isBanimentoAtivo(banimento?: Banimento | null, now = new Date())
 }
 
 export type ReportMotivo =
-  | 'nome_ofensivo'
-  | 'foto_inadequada'
-  | 'trapaca'
-  | 'assedio'
-  | 'spam'
-  | 'personificacao'
-  | 'outro';
+  'nome_ofensivo' | 'foto_inadequada' | 'trapaca' | 'assedio' | 'spam' | 'personificacao' | 'outro';
 
 export const REPORT_MOTIVOS: ReportMotivo[] = [
   'nome_ofensivo',
@@ -379,7 +374,12 @@ export interface PlanoDia {
 }
 
 export type InventoryItemId =
-  'frozen_streak' | 'route_drink' | 'bau_patrulha' | 'exp_instant' | 'doria_bag';
+  | 'frozen_streak'
+  | 'route_drink'
+  | 'bau_patrulha'
+  | 'exp_instant'
+  | 'doria_bag'
+  | SlimeMaterialItemId;
 
 export interface InventoryEntry {
   item_id: InventoryItemId;
@@ -402,6 +402,8 @@ export interface AfkPendingReward {
   exp_instant: number;
   /** Bolsas de Dorias acumuladas no baú AFK. */
   doria_bags: number;
+  /** Materiais exclusivos rolados de forma independente por espécie. */
+  material_items: Partial<Record<SlimeMaterialItemId, number>>;
   titulo_secreto: boolean;
   /** Quantidade de vezes que um inimigo dropou loot na exploração. */
   drop_count: number;
@@ -420,7 +422,15 @@ export interface AfkState {
   paused_at?: string | null;
 }
 
-export type { AfkCombatState, AfkCombatSnapshot, AfkEnemyId, AfkEnemyTier } from '../afk/combat.js';
+export type {
+  AfkCombatState,
+  AfkCombatSnapshot,
+  AfkEnemyId,
+  AfkEnemyTier,
+  AfkRegionCombatProgress,
+  PatrolWeaponDamageKind,
+} from '../afk/combat.js';
+export type { AfkRegionDefinition, AfkRegionId, AfkRegionProgress } from '../afk/regions.js';
 
 export type {
   SlimeEyeStyle,
@@ -469,6 +479,9 @@ export {
   formatPatrolCritChancePercent,
   AFK_GOLDEN_SLIME_MOEDA_BONUS,
   AFK_GOLDEN_SLIME_CHANCE,
+  AFK_MAGIC_RABBIT_CHANCE,
+  AFK_ENIGMA_CHANCE,
+  AFK_BINARIO_CHANCE,
   AFK_HERO_DAMAGE_ARCO,
   AFK_HERO_DAMAGE_ESPADA,
   AFK_KILLS_PER_MINUTE,
@@ -486,7 +499,32 @@ export {
   shouldSpawnBoss,
   shouldSpawnElite,
   shouldSpawnGoldenSlime,
+  getEnemyAttackDamage,
+  getEnemyAttackIntervalSeconds,
+  AFK_HERO_BASE_HP,
+  AFK_HERO_DEFEAT_SECONDS,
+  AFK_COMMON_ATTACK_SECONDS,
+  AFK_ELITE_ATTACK_SECONDS,
+  AFK_BOSS_ATTACK_SECONDS,
+  AFK_GOLDEN_SLIME_COIN_DROP,
 } from '../afk/combat.js';
+export {
+  AFK_REGIONS,
+  AFK_REGION_CYCLE_KILLS,
+  getAfkRegionById,
+  getNextAfkRegion,
+  getAfkRegionProgress,
+} from '../afk/regions.js';
+export {
+  AFK_SKILL_NODES,
+  getAfkSkillNode,
+  getAfkSkillTotal,
+  canUnlockAfkSkill,
+  afkHeroMaxHp,
+  afkDefeatDurationMs,
+  afkSearchReductionMs,
+} from '../afk/skill-tree.js';
+export type { AfkSkillBranch, AfkSkillEffect, AfkSkillNodeDefinition } from '../afk/skill-tree.js';
 
 export {
   resolvePortraitAppearance,
@@ -776,6 +814,7 @@ export interface PatrolShopResponse {
   arcos: PatrolShopCatalogItem[];
   espadas: PatrolShopCatalogItem[];
   magias: PatrolShopCatalogItem[];
+  materials: import('../afk/slime-materials.js').SlimeMaterialStockItem[];
 }
 
 export interface UpdateUserDadosResponse {
@@ -1004,6 +1043,7 @@ export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [
   FROZEN_STREAK_ITEM_ID,
   ROUTE_DRINK_ITEM_ID,
   EXP_INSTANT_ITEM_ID,
+  ...SLIME_MATERIALS.map((material) => material.id),
 ];
 export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
 /** Horas de Exploração AFK concedidas ao usar o baú. */
@@ -1013,8 +1053,8 @@ export const PATROL_CACHE_LABEL = 'Baú da Exploração';
 /** @deprecated Loot não é mais por intervalo de tempo — use AFK_KILL_DROP_CHANCE_COMMON. */
 export const AFK_REWARD_INTERVAL_MINUTES = 15;
 export const AFK_KILL_DROP_CHANCE_COMMON = 4;
-export const AFK_KILL_DROP_CHANCE_ELITE = 6;
-export const AFK_KILL_DROP_CHANCE_BOSS = 10;
+export const AFK_KILL_DROP_CHANCE_ELITE = 7;
+export const AFK_KILL_DROP_CHANCE_BOSS = 35;
 /** @deprecated use tier-specific constants */
 export const AFK_KILL_DROP_CHANCE = AFK_KILL_DROP_CHANCE_COMMON;
 export const AFK_MAX_MINUTES = 24 * 60;
@@ -1046,6 +1086,7 @@ export const DEFAULT_AFK_STATE: AfkState = {
     weapon_ids: [],
     exp_instant: 0,
     doria_bags: 0,
+    material_items: {},
     titulo_secreto: false,
     drop_count: 0,
   },
@@ -1385,21 +1426,6 @@ export interface PersonalRecordNotice {
   valor_anterior: number;
   valor_novo: number;
   unidade: 'reps' | 'segundos';
-}
-
-export interface WorkoutHistoryFeedCursor {
-  concluido_em: string;
-  id: string;
-}
-
-export interface WorkoutHistoryFeedPage {
-  items: IWorkoutHistoryDocument[];
-  next_cursor: WorkoutHistoryFeedCursor | null;
-}
-
-export interface WorkoutHistorySessionDetail {
-  session: IWorkoutHistoryDocument;
-  personal_records_hit: PersonalRecordNotice[];
 }
 
 export interface CompleteWorkoutResponse {
@@ -2087,8 +2113,23 @@ export function getExerciseParamsForNivel(
 }
 
 export { EXERCISE_NOME_PT, formatExerciseName, resolveExerciseNomePt } from './exercise-display.js';
+export {
+  SLIME_MATERIALS,
+  SLIME_MATERIAL_BY_ID,
+  SLIME_MATERIAL_BY_ENEMY_ID,
+  SLIME_MATERIAL_DROP_CHANCE_PCT,
+  SLIME_MATERIAL_SELL_PRICE,
+  getSlimeMaterialForEnemy,
+  isSlimeMaterialItemId,
+} from '../afk/slime-materials.js';
+export type {
+  SlimeMaterialDefinition,
+  SlimeMaterialItemId,
+  SlimeMaterialStockItem,
+} from '../afk/slime-materials.js';
 export type { EquipmentId } from '../equipment/index.js';
 export {
+  ALWAYS_AVAILABLE_PUSH_UP_SLUGS,
   EQUIPMENT_CATALOG,
   EQUIPMENT_IDS,
   getAllEquipmentExerciseSlugs,
