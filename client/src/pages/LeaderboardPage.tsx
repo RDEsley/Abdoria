@@ -317,7 +317,12 @@ export function LeaderboardPage() {
       ) : (
         <div ref={listWrapRef} className="flex flex-col gap-5">
           <div id="rank-podium">
-            <LeaderboardPodium top3={top3} metric={metric} onOpen={openProfile} />
+            <LeaderboardPodium
+              top3={top3}
+              metric={metric}
+              period={period}
+              onOpen={openProfile}
+            />
           </div>
 
           {rest.length > 0 && (

@@ -6,6 +6,7 @@ import {
   weeklyLeaderboardReward,
   type LeaderboardEntry,
   type LeaderboardMetric,
+  type LeaderboardPeriod,
 } from '@/types';
 
 const PODIUM_SLOTS = [
@@ -16,7 +17,7 @@ const PODIUM_SLOTS = [
 
 /** Valor de destaque do pódio — o número que decide a posição no ranking. */
 function podiumMetricValue(entry: LeaderboardEntry, metric: LeaderboardMetric): string {
-  if (metric === 'streak') return `${entry.streak_atual}`;
+  if (metric === 'streak') return `${entry.week_value ?? entry.streak_atual}`;
   if (metric === 'moedas') return `${entry.week_value ?? entry.moedas}`;
   return `${entry.week_value ?? entry.nivel_xp}`;
 }
@@ -36,10 +37,12 @@ function PodiumMetricIcon({ metric }: { metric: LeaderboardMetric }) {
 export function LeaderboardPodium({
   top3,
   metric,
+  period,
   onOpen,
 }: {
   top3: LeaderboardEntry[];
   metric: LeaderboardMetric;
+  period: LeaderboardPeriod;
   /** Abre o perfil público do jogador ao tocar no slot. */
   onOpen?: (entry: LeaderboardEntry) => void;
 }) {
@@ -94,11 +97,13 @@ export function LeaderboardPodium({
               }
             >
               <span className="game-podium__rank">#{entry.rank}</span>
-              {metric !== 'streak' && weeklyLeaderboardReward(entry.rank) && (
-                <span className="game-podium__reward">
-                  <Coins size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
-                </span>
-              )}
+              {period === 'semanal' &&
+                metric !== 'streak' &&
+                weeklyLeaderboardReward(entry.rank) && (
+                  <span className="game-podium__reward">
+                    <Coins size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
+                  </span>
+                )}
             </div>
           </motion.div>
         );
