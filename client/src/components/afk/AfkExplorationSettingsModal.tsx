@@ -1,16 +1,27 @@
-import { Compass, FastForward, X } from 'lucide-react';
+import { Compass, FastForward, UserRound, X } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { updateMe } from '@/lib/api';
+import { updatePreferences } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
+import type { PersonagemGenero } from '@/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-type ExplorationSetting = 'exploracao_auto_abrir' | 'baus_abertura_rapida';
+type ExplorationToggle = 'exploracao_auto_abrir' | 'baus_abertura_rapida';
+type ExplorationSetting = ExplorationToggle | 'personagem_genero';
+
+const CHARACTER_OPTIONS: readonly {
+  id: PersonagemGenero;
+  label: string;
+  image: string;
+}[] = [
+  { id: 'masculino', label: 'Herói', image: '/assets/patrol-mascot-village.png' },
+  { id: 'feminino', label: 'Heroína', image: '/assets/patrol-mascot-female-village.png' },
+];
 
 export function AfkExplorationSettingsModal({ open, onClose }: Props) {
   const { user, applyUser } = useAuth();
@@ -24,7 +35,7 @@ export function AfkExplorationSettingsModal({ open, onClose }: Props) {
 
   if (!open || !user) return null;
 
-  const toggle = async (setting: ExplorationSetting) => {
+  const toggle = async (setting: ExplorationToggle) => {
     if (saving) return;
     const previousUser = user;
     const nextValue = !(user.preferencias?.[setting] ?? false);
@@ -35,7 +46,7 @@ export function AfkExplorationSettingsModal({ open, onClose }: Props) {
     setSaving(setting);
     applyUser(optimisticUser);
     try {
-      applyUser(await updateMe({ preferencias: optimisticUser.preferencias }));
+      applyUser(await updatePreferences({ [setting]: nextValue }));
     } catch (error) {
       applyUser(previousUser);
       showGameToast(getErrorMessage(error, 'Não foi possível salvar esta configuração.'), {
@@ -46,8 +57,33 @@ export function AfkExplorationSettingsModal({ open, onClose }: Props) {
     }
   };
 
+  const changeCharacterGender = async (gender: PersonagemGenero) => {
+    if (saving || user.preferencias?.personagem_genero === gender) return;
+    const previousUser = user;
+    const optimisticUser = {
+      ...user,
+      preferencias: { ...user.preferencias, personagem_genero: gender },
+    };
+    setSaving('personagem_genero');
+    applyUser(optimisticUser);
+    try {
+      applyUser(await updatePreferences({ personagem_genero: gender }));
+      showGameToast(`Personagem alterado para ${gender === 'feminino' ? 'Heroína' : 'Herói'}.`, {
+        variant: 'success',
+      });
+    } catch (error) {
+      applyUser(previousUser);
+      showGameToast(getErrorMessage(error, 'Não foi possível trocar o personagem.'), {
+        variant: 'error',
+      });
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const autoOpen = user.preferencias?.exploracao_auto_abrir ?? false;
   const quickChest = user.preferencias?.baus_abertura_rapida ?? false;
+  const characterGender = user.preferencias?.personagem_genero ?? 'masculino';
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
@@ -98,6 +134,39 @@ export function AfkExplorationSettingsModal({ open, onClose }: Props) {
             <X size={19} aria-hidden />
           </button>
         </header>
+
+        <section className="game-afk-settings__character" aria-labelledby="afk-character-title">
+          <div className="game-afk-settings__character-heading">
+            <UserRound size={19} aria-hidden />
+            <span>
+              <strong id="afk-character-title">Personagem da jornada</strong>
+              <small>A mudança aparece imediatamente na vila e nas batalhas.</small>
+            </span>
+          </div>
+          <div
+            className="game-afk-settings__character-options"
+            role="radiogroup"
+            aria-label="Gênero do personagem"
+          >
+            {CHARACTER_OPTIONS.map((option) => {
+              const selected = characterGender === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  className={selected ? 'is-selected' : ''}
+                  disabled={saving !== null}
+                  onClick={() => void changeCharacterGender(option.id)}
+                >
+                  <img src={option.image} alt="" draggable={false} />
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <button
           type="button"

@@ -180,6 +180,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         : (patrolArmas.magia_equipada ?? patrolArmas.arco_equipado);
   const userId = String(user?.id ?? 'guest');
   const genero: PersonagemGenero = user?.preferencias?.personagem_genero ?? 'masculino';
+  const needsCharacterSetup = !user?.preferencias?.personagem_genero;
 
   useEffect(() => {
     combatOrbsRef.current = meta?.combat.orbs ?? 0;
@@ -444,6 +445,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     if (
       !open ||
       loading ||
+      needsCharacterSetup ||
       showTutorial ||
       dialogue ||
       sceneMode !== 'village' ||
@@ -479,11 +481,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         );
       },
     });
-  }, [dialogue, loading, meta?.combat, open, sceneMode, showTutorial]);
+  }, [dialogue, loading, meta?.combat, needsCharacterSetup, open, sceneMode, showTutorial]);
 
   useEffect(() => {
     if (
       !pendingDialogue ||
+      needsCharacterSetup ||
       dialogue ||
       !regionReady ||
       sceneTransition ||
@@ -492,11 +495,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       return;
     setDialogue(pendingDialogue);
     setPendingDialogue(null);
-  }, [dialogue, pendingDialogue, regionReady, sceneMode, sceneTransition]);
+  }, [dialogue, needsCharacterSetup, pendingDialogue, regionReady, sceneMode, sceneTransition]);
 
   useEffect(() => {
     if (
       !bossActive ||
+      needsCharacterSetup ||
       dialogue ||
       !meta?.combat ||
       sceneMode !== 'exploring' ||
@@ -565,6 +569,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     sceneMode,
     sceneTransition,
     mapOpen,
+    needsCharacterSetup,
   ]);
 
   useEffect(() => {
@@ -665,7 +670,6 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     }
   };
 
-  const needsCharacterSetup = !user?.preferencias?.personagem_genero;
   const capped = meta?.capped ?? false;
   const displayedRegion = activeRegion ?? getAfkRegionById(meta?.combat?.region_id);
   const displayedProgress = meta?.combat?.region_progress?.[displayedRegion.id];
@@ -1009,7 +1013,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                 </div>
                 <span className="game-afk-modal__topbar-spacer" aria-hidden />
               </div>
-              <ExplorationIntroFlow onDone={() => void load()} />
+              <ExplorationIntroFlow />
             </>
           ) : (
             <>
@@ -1236,7 +1240,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       ) : null}
 
       <AfkDialogueModal
-        open={Boolean(dialogue)}
+        open={Boolean(dialogue) && !needsCharacterSetup}
         title={dialogue?.title ?? ''}
         lines={dialogue?.lines ?? []}
         onComplete={() => {

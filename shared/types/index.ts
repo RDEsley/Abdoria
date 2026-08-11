@@ -208,6 +208,8 @@ export interface UserPreferencias {
   esquema_recomendado?: boolean;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
+  /** O usuário já abriu o RPG pelo botão flutuante ao menos uma vez. */
+  rpg_fab_descoberto?: boolean;
   /** Visual do personagem na Exploração — escolhido na 1ª entrada, antes da arma. */
   personagem_genero?: PersonagemGenero | null;
   /** Estilo de combate na Exploração AFK. */
@@ -1884,6 +1886,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   reps_repeticoes_padrao: 12,
   preset_favorito_id: null,
   tutorial_visto: false,
+  rpg_fab_descoberto: false,
   personagem_genero: null,
   arma_preferida: null,
   ocultar_aviso_xp_diario: false,
