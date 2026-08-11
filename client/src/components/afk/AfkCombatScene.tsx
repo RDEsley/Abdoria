@@ -50,6 +50,12 @@ interface Props {
   onOpenMap?: () => void;
   onEnemyDefeated?: (expectedKillsTotal: number, wasBoss: boolean) => void;
   onEnemyDamaged?: (expectedKillsTotal: number, enemyId: AfkEnemyId, enemyHp: number) => void;
+  onHeroStateChanged?: (
+    expectedKillsTotal: number,
+    enemyId: AfkEnemyId,
+    heroHp: number,
+    defeatedRemainingMs: number,
+  ) => void;
   onBackToVillage?: () => void;
   paused?: boolean;
 }
@@ -93,6 +99,7 @@ export function AfkCombatScene({
   onOpenMap,
   onEnemyDefeated,
   onEnemyDamaged,
+  onHeroStateChanged,
   onBackToVillage,
   paused = false,
 }: Props) {
@@ -144,7 +151,7 @@ export function AfkCombatScene({
   const [heroHp, setHeroHp] = useState(combat?.hero_hp ?? combat?.hero_max_hp ?? 250);
   const heroHpRef = useRef(combat?.hero_hp ?? combat?.hero_max_hp ?? 250);
   const [heroDefeated, setHeroDefeated] = useState(false);
-  const [reviveSeconds, setReviveSeconds] = useState(0);
+  const [reviveRemainingMs, setReviveRemainingMs] = useState(0);
   const [heroHit, setHeroHit] = useState(false);
   const [enemyAttacking, setEnemyAttacking] = useState(false);
   const [heroAttackProgress, setHeroAttackProgress] = useState(0);
@@ -233,26 +240,28 @@ export function AfkCombatScene({
     heroDefeatedRef.current = defeated;
     const until = defeated ? new Date(combat?.hero_defeated_until ?? 0).getTime() : 0;
     heroDefeatedUntilRef.current = until;
-    setReviveSeconds(defeated ? Math.max(1, Math.ceil((until - Date.now()) / 1000)) : 0);
+    setReviveRemainingMs(defeated ? Math.max(1, until - Date.now()) : 0);
   }, [combat?.hero_defeated_until, combatHeroHp]);
 
   useEffect(() => {
     if (!heroDefeated) return undefined;
     const tick = () => {
-      const remaining = Math.max(0, Math.ceil((heroDefeatedUntilRef.current - Date.now()) / 1000));
-      setReviveSeconds(remaining);
+      if (!heroDefeatedRef.current) return;
+      const remaining = Math.max(0, heroDefeatedUntilRef.current - Date.now());
+      setReviveRemainingMs(remaining);
       if (remaining === 0) {
         heroDefeatedRef.current = false;
         heroDefeatedUntilRef.current = 0;
         setHeroDefeated(false);
         heroHpRef.current = heroMaxHp;
         setHeroHp(heroMaxHp);
+        onHeroStateChanged?.(killsTotalRef.current, localEnemyIdRef.current, heroMaxHp, 0);
       }
     };
     tick();
-    const timer = window.setInterval(tick, 200);
+    const timer = window.setInterval(tick, 33);
     return () => window.clearInterval(timer);
-  }, [heroDefeated, heroMaxHp]);
+  }, [heroDefeated, heroMaxHp, onHeroStateChanged]);
 
   useEffect(() => {
     const update = () => {
@@ -305,7 +314,17 @@ export function AfkCombatScene({
         setEnemyAttacking(false);
         setHeroHit(true);
         later(() => setHeroHit(false), 360);
-        const damage = getEnemyAttackDamage(localEnemyIdRef.current, region.chapter, heroMaxHp);
+        const currentTier = localIsBossRef.current
+          ? 'boss'
+          : localIsEliteRef.current
+            ? 'elite'
+            : 'common';
+        const damage = getEnemyAttackDamage(
+          localEnemyIdRef.current,
+          region.chapter,
+          heroMaxHp,
+          currentTier,
+        );
         const currentHp = heroHpRef.current;
         const next = Number.isFinite(damage) ? Math.max(0, currentHp - damage) : 0;
         const receivedDamage = Math.max(1, Math.ceil(currentHp - next));
@@ -318,7 +337,10 @@ export function AfkCombatScene({
           const duration = afkDefeatDurationMs(skillNodes);
           const defeatedUntil = Date.now() + duration;
           heroDefeatedUntilRef.current = defeatedUntil;
-          setReviveSeconds(Math.ceil(duration / 1000));
+          setReviveRemainingMs(duration);
+          onHeroStateChanged?.(killsTotalRef.current, localEnemyIdRef.current, 0, duration);
+        } else {
+          onHeroStateChanged?.(killsTotalRef.current, localEnemyIdRef.current, next, 0);
         }
       }, 260);
     };
@@ -327,7 +349,16 @@ export function AfkCombatScene({
       window.clearInterval(timer);
       pendingTimers.forEach((id) => window.clearTimeout(id));
     };
-  }, [heroMaxHp, localIsBoss, localIsElite, paused, pushDamage, region.chapter, skillNodes]);
+  }, [
+    heroMaxHp,
+    localIsBoss,
+    localIsElite,
+    onHeroStateChanged,
+    paused,
+    pushDamage,
+    region.chapter,
+    skillNodes,
+  ]);
 
   useEffect(() => {
     localIsBossRef.current = localIsBoss;
@@ -769,7 +800,7 @@ export function AfkCombatScene({
               Nocauteado!
             </div>
             <div className="game-afk-hero-defeated" role="status">
-              Levanta em <strong>{reviveSeconds}s</strong>
+              Levanta em <strong>{(reviveRemainingMs / 1000).toFixed(3)}s</strong>
             </div>
           </>
         ) : null}

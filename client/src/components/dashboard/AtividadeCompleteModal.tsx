@@ -41,7 +41,6 @@ export function AtividadeCompleteModal({
   busy,
   passo,
   totalPassos,
-  diaDeTreino,
   progressoHoje,
   metaHoje,
   cancelLabel = 'Agora não',
@@ -53,9 +52,6 @@ export function AtividadeCompleteModal({
   /** Posição na fila (1-based) — omitido fora do fluxo sequencial. */
   passo?: number;
   totalPassos?: number;
-  /** true = hoje é dia de treino agendado — só muda a mensagem sobre
-      sequência (streak); XP vale em qualquer dia, até o teto diário. */
-  diaDeTreino: boolean;
   /** Quantas atividades já concluídas hoje — junto de `metaHoje`, mostra o
       progresso rumo ao teto diário de XP por atividades. */
   progressoHoje?: number;
@@ -93,14 +89,9 @@ export function AtividadeCompleteModal({
   const temDados = Object.values(valores).some((v) => v.trim()) || obs.trim().length > 0;
 
   const ganhaXp = metaHoje == null || progressoHoje == null || progressoHoje < metaHoje;
-  const ganhaStreak = !diaDeTreino;
   const hint = ganhaXp
-    ? ganhaStreak
-      ? 'Marque como concluída só depois de fazer de verdade — vale XP e ajuda a manter sua sequência.'
-      : 'Hoje é dia de treino: a sequência vem só do treino, mas esta atividade ainda te dá XP.'
-    : ganhaStreak
-      ? `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins e ainda ajuda sua sequência.`
-      : `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins (hoje é dia de treino, não mexe na sequência).`;
+    ? 'Marque como concluída só depois de fazer de verdade — vale XP e ajuda a manter sua sequência.'
+    : `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins e ainda ajuda sua sequência.`;
 
   return (
     <Modal

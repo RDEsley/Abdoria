@@ -70,7 +70,7 @@ export function AfkVillageScene({
           type="button"
           className="game-afk-village__building game-afk-village__building--shop"
           onClick={onOpenShop}
-          aria-label="Abrir loja da Exploração"
+          aria-label="Abrir Loja da Vila"
           title="Loja"
         >
           <span className="game-afk-village__building-label">Loja</span>

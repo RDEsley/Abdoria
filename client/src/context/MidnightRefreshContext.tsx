@@ -1,9 +1,9 @@
+/* eslint-disable react-refresh/only-export-components -- provider e hooks compartilham contextos privados */
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -12,12 +12,10 @@ import { getTodaySaoPaulo, secondsUntilSaoPauloMidnight } from '@/lib/timezone';
 
 type MidnightListener = () => void;
 
-type MidnightRefreshContextValue = {
-  secondsLeft: number;
-  registerMidnightListener: (listener: MidnightListener) => () => void;
-};
+type RegisterMidnightListener = (listener: MidnightListener) => () => void;
 
-const MidnightRefreshContext = createContext<MidnightRefreshContextValue | null>(null);
+const MidnightSecondsContext = createContext<number | null>(null);
+const MidnightListenerContext = createContext<RegisterMidnightListener | null>(null);
 
 export function MidnightRefreshProvider({ children }: { children: ReactNode }) {
   const [secondsLeft, setSecondsLeft] = useState(() => secondsUntilSaoPauloMidnight());
@@ -32,57 +30,81 @@ export function MidnightRefreshProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const tick = () => {
+    let lastResumeNotificationAt = 0;
+
+    const notifyListeners = () => {
+      for (const listener of [...listeners.current]) {
+        listener();
+      }
+    };
+
+    const tick = (notifyAfterResume = false) => {
       const now = new Date();
       const today = getTodaySaoPaulo(now);
       setSecondsLeft(secondsUntilSaoPauloMidnight(now));
 
       if (today !== lastResetDay.current) {
         lastResetDay.current = today;
-        for (const listener of listeners.current) {
-          listener();
-        }
+        notifyListeners();
+      } else if (notifyAfterResume) {
+        notifyListeners();
       }
+    };
+
+    const refreshAfterBackground = () => {
+      if (document.visibilityState === 'hidden') return;
+
+      // `visibilitychange` e `pageshow` podem ocorrer juntos ao restaurar uma
+      // aba/PWA. Um pequeno guard evita duas sincronizações idênticas.
+      const now = Date.now();
+      const shouldNotify = now - lastResumeNotificationAt > 1_000;
+      if (shouldNotify) lastResumeNotificationAt = now;
+      tick(shouldNotify);
     };
 
     tick();
     const timer = window.setInterval(tick, 1000);
-    return () => window.clearInterval(timer);
+    document.addEventListener('visibilitychange', refreshAfterBackground);
+    window.addEventListener('pageshow', refreshAfterBackground);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshAfterBackground);
+      window.removeEventListener('pageshow', refreshAfterBackground);
+    };
   }, []);
 
-  const value = useMemo(
-    () => ({ secondsLeft, registerMidnightListener }),
-    [secondsLeft, registerMidnightListener],
-  );
-
   return (
-    <MidnightRefreshContext.Provider value={value}>{children}</MidnightRefreshContext.Provider>
+    <MidnightListenerContext.Provider value={registerMidnightListener}>
+      <MidnightSecondsContext.Provider value={secondsLeft}>
+        {children}
+      </MidnightSecondsContext.Provider>
+    </MidnightListenerContext.Provider>
   );
 }
 
 export function useMidnightSecondsLeft(): number {
-  const ctx = useContext(MidnightRefreshContext);
-  if (!ctx) {
+  const secondsLeft = useContext(MidnightSecondsContext);
+  if (secondsLeft === null) {
     throw new Error('useMidnightSecondsLeft must be used within MidnightRefreshProvider');
   }
-  return ctx.secondsLeft;
+  return secondsLeft;
 }
 
 /** Registra callback de meia-noite (SP) sem criar timer extra. */
 export function useMidnightRefresh(onReset?: () => void) {
-  const ctx = useContext(MidnightRefreshContext);
+  const registerMidnightListener = useContext(MidnightListenerContext);
   const onResetRef = useRef(onReset);
+  const enabled = typeof onReset === 'function';
 
   useEffect(() => {
     onResetRef.current = onReset;
   }, [onReset]);
 
   useEffect(() => {
-    if (!ctx || !onReset) return;
-    return ctx.registerMidnightListener(() => {
+    if (!registerMidnightListener || !enabled) return;
+    return registerMidnightListener(() => {
       onResetRef.current?.();
     });
-  }, [ctx, onReset]);
-
-  return ctx?.secondsLeft ?? secondsUntilSaoPauloMidnight();
+  }, [enabled, registerMidnightListener]);
 }

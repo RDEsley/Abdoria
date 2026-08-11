@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
 import { completeAtividade, updateMe } from '@/lib/api';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -38,8 +37,7 @@ export interface AtividadesFluxoResumo {
  * celebração final ficam a critério de quem chama).
  */
 export function useAtividadesFlow() {
-  const { user, history, refresh, ensureHistory } = useApp();
-  const { applyUser } = useAuth();
+  const { user, history, refresh, ensureHistory, markStreakSecuredToday } = useApp();
 
   const [busy, setBusy] = useState(false);
   const [passoFila, setPassoFila] = useState<number | null>(null);
@@ -107,7 +105,7 @@ export function useAtividadesFlow() {
     setBusy(true);
     try {
       const res = await completeAtividade(atividade.id, dados);
-      applyUser(res.user);
+      markStreakSecuredToday(res.user);
 
       // A partir daqui a conclusão JÁ VALEU no servidor (XP/streak salvos) e
       // a resposta trouxe o usuário atualizado. Marca localmente e libera a
@@ -123,22 +121,31 @@ export function useAtividadesFlow() {
         void updateMe({
           preferencias: { ...user.preferencias, atividades_fila: { data: hoje, ids: semAtual } },
         })
-          .then(() => refresh())
           .catch(() => {
             // Só a limpeza da fila falhou — a conclusão em si está salva, não
             // vale travar o fluxo nem alarmar o usuário por isso.
+          })
+          .finally(() => {
+            // Confirma também a fila depois que a tentativa de persistência
+            // terminar; o refresh imediato abaixo cuida do aviso de streak.
+            void refresh();
           });
-      } else {
-        void refresh();
       }
+      // A sincronização não depende da limpeza da fila: a conclusão já
+      // valeu mesmo se a atualização das preferências falhar.
+      void refresh();
       void ensureHistory({ force: true });
 
       acumulado.current.xp += res.xp_ganho;
       acumulado.current.moedas += res.abdoria_ganha;
       acumulado.current.total += 1;
       emitXpEarned(res.xp_ganho);
-      acumulado.current.feitas.push({ nome: atividade.nome, detalhe: formatMetricas(dados.metricas) });
-      if (res.streak_celebration) acumulado.current.streakCelebration = res.streak_celebration.streak_atual;
+      acumulado.current.feitas.push({
+        nome: atividade.nome,
+        detalhe: formatMetricas(dados.metricas),
+      });
+      if (res.streak_celebration)
+        acumulado.current.streakCelebration = res.streak_celebration.streak_atual;
       if (res.level_up) {
         acumulado.current.levelUp = res.level_up;
         // Mesmo evento global do treino — mesma celebração cinemática pros dois fluxos.

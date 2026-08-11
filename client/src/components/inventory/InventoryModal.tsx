@@ -22,7 +22,6 @@ import {
   partitionRewardPresentation,
 } from '@/lib/reward-presentation';
 import { showGameToast } from '@/components/ui/GameToast';
-import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { useRewardPresentation } from '@/context/RewardPresentationContext';
 import { emitXpEarned } from '@/lib/xp-orbs';
@@ -57,9 +56,17 @@ interface Props {
 
 type SelectedItem = 'frozen_streak' | 'route_drink' | 'exp_instant' | 'doria_bag' | null;
 
+const CONSUMABLE_SLOT_CAPACITY = 12;
+const EMPTY_CONSUMABLE_SLOTS = Array.from(
+  { length: CONSUMABLE_SLOT_CAPACITY - 4 },
+  (_, index) => `empty-${index + 1}`,
+);
+const EQUIPMENT_COLLECTIONS = ['arcos', 'espadas', 'magias'] as const;
+const INVENTORY_FOCUSABLE_SELECTOR =
+  'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
 export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
-  const { user, applyUser } = useAuth();
-  const { refresh: refreshApp, stats } = useApp();
+  const { user, applyUser, refresh: refreshApp, stats } = useApp();
   const { presentRewards } = useRewardPresentation();
   const [frozenStreakCount, setFrozenStreakCount] = useState(0);
   const [routeCount, setRouteCount] = useState(0);
@@ -80,6 +87,8 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const [equipment, setEquipment] = useState<PatrolShopResponse | null>(null);
   const [equippingId, setEquippingId] = useState<string | null>(null);
   const expInstantSlotRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   const applyCounts = useCallback(
     (data: {
@@ -137,15 +146,43 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
 
   useEffect(() => {
     if (!open) return undefined;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      previouslyFocused?.focus();
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         if (selected) setSelected(null);
         else onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || routeDrinkConfirmOpen || celebrationClaimed) return;
+      const modal = modalRef.current;
+      if (!modal) return;
+      const focusableElements = Array.from(
+        modal.querySelectorAll<HTMLElement>(INVENTORY_FOCUSABLE_SELECTOR),
+      );
+      if (focusableElements.length === 0) return;
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose, selected]);
+  }, [celebrationClaimed, open, onClose, routeDrinkConfirmOpen, selected]);
 
   const handleUseExpInstantAll = async () => {
     if (expInstantCount < 1) return;
@@ -262,6 +299,20 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
   const materialCount = materials.reduce((total, material) => total + material.quantity, 0);
   const totalItems =
     frozenStreakCount + routeCount + expInstantCount + doriaBagCount + materialCount;
+  const occupiedConsumableSlots = [
+    frozenStreakCount,
+    routeCount,
+    expInstantCount,
+    doriaBagCount,
+  ].filter((count) => count > 0).length;
+  const ownedEquipmentCount = equipment
+    ? EQUIPMENT_COLLECTIONS.reduce(
+        (total, collection) =>
+          total + equipment[collection].filter((item) => item.desbloqueada).length,
+        0,
+      )
+    : 0;
+  const occupiedSlots = occupiedConsumableSlots + materials.length + ownedEquipmentCount;
 
   const handleEquipWeapon = async (kind: PatrolWeaponKind, id: string) => {
     setEquippingId(id);
@@ -288,15 +339,18 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="inventory-title"
+        aria-describedby="inventory-description"
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
           className="game-inventory-modal game-modal"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
+            ref={closeButtonRef}
             type="button"
             className="game-modal__close-btn"
             onClick={onClose}
@@ -306,39 +360,58 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
           </button>
 
           <header className="game-inventory-header">
+            <span className="game-inventory-header__handle" aria-hidden />
             <span className="game-inventory-header__crest" aria-hidden>
               <Backpack size={26} />
             </span>
-            <div>
-              <span className="game-inventory-header__eyebrow">Mochila do aventureiro</span>
+            <div className="game-inventory-header__copy">
+              <span className="game-inventory-header__eyebrow">Equipamento de viagem</span>
               <h2 id="inventory-title" className="game-modal__title">
-                Inventário
+                Mochila do Aventureiro
               </h2>
-              <p className="game-modal__text">
-                Gerencie suprimentos e equipe seu arsenal sem sair da jornada.
+              <p id="inventory-description" className="game-modal__text">
+                Organize seus achados, escolha um item e prepare o equipamento da jornada.
               </p>
             </div>
+            <span
+              className="game-inventory-header__counter"
+              role="status"
+              aria-label={`${occupiedSlots} espaços ocupados`}
+            >
+              <Backpack size={14} aria-hidden />
+              <strong className="tabular-nums">{occupiedSlots}</strong>
+              <small>slots</small>
+            </span>
           </header>
 
           <div className="game-inventory-layout">
-            <section className="game-inventory-pane game-inventory-pane--supplies">
+            <section
+              className="game-inventory-pane game-inventory-pane--supplies"
+              aria-labelledby="inventory-consumables-title"
+              aria-busy={loading}
+            >
               <header className="game-inventory-pane__head">
-                <span>
-                  <Backpack size={17} /> Suprimentos
+                <span id="inventory-consumables-title">
+                  <Backpack size={17} /> Bolsa principal
                 </span>
-                <small>Pilhas até {stackCap} · excedentes são descartados</small>
+                <small>
+                  {occupiedConsumableSlots}/{CONSUMABLE_SLOT_CAPACITY} slots · pilhas até {stackCap}
+                  , excedentes descartados
+                </small>
               </header>
 
               <div className="game-inventory-pane__scroll">
-                <div className="game-inventory-grid">
+                <div className="game-inventory-grid" role="group" aria-label="Grade de consumíveis">
                   <button
                     type="button"
                     className={`game-inventory-slot${frozenStreakCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'frozen_streak' ? ' game-inventory-slot--active' : ''}`}
-                    disabled={loading}
+                    disabled={loading || frozenStreakCount < 1}
                     onClick={() =>
                       setSelected((prev) => (prev === 'frozen_streak' ? null : 'frozen_streak'))
                     }
                     aria-label={`${FROZEN_STREAK_LABEL}, ${frozenStreakCount} em estoque`}
+                    aria-pressed={selected === 'frozen_streak'}
+                    title={FROZEN_STREAK_LABEL}
                   >
                     <span className="game-inventory-slot__icon">
                       <FrozenStreakIcon size={36} />
@@ -353,11 +426,13 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                   <button
                     type="button"
                     className={`game-inventory-slot${routeCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'route_drink' ? ' game-inventory-slot--active' : ''}`}
-                    disabled={loading}
+                    disabled={loading || routeCount < 1}
                     onClick={() =>
                       setSelected((prev) => (prev === 'route_drink' ? null : 'route_drink'))
                     }
                     aria-label={`${ROUTE_DRINK_LABEL}, ${routeCount} em estoque`}
+                    aria-pressed={selected === 'route_drink'}
+                    title={ROUTE_DRINK_LABEL}
                   >
                     <span className="game-inventory-slot__icon">
                       <RouteDrinkIcon size={36} />
@@ -371,11 +446,13 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                     ref={expInstantSlotRef}
                     type="button"
                     className={`game-inventory-slot${expInstantCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'exp_instant' ? ' game-inventory-slot--active' : ''}`}
-                    disabled={loading}
+                    disabled={loading || expInstantCount < 1}
                     onClick={() =>
                       setSelected((prev) => (prev === 'exp_instant' ? null : 'exp_instant'))
                     }
                     aria-label={`${EXP_INSTANT_LABEL}, ${expInstantCount} em estoque`}
+                    aria-pressed={selected === 'exp_instant'}
+                    title={EXP_INSTANT_LABEL}
                   >
                     <span className="game-inventory-slot__icon">
                       <ExpInstantIcon size={36} />
@@ -390,11 +467,13 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                   <button
                     type="button"
                     className={`game-inventory-slot${doriaBagCount < 1 ? ' game-inventory-slot--empty' : ''}${selected === 'doria_bag' ? ' game-inventory-slot--active' : ''}${bagShake ? ' reward-doria-bag-shake' : ''}`}
-                    disabled={loading}
+                    disabled={loading || doriaBagCount < 1}
                     onClick={() =>
                       setSelected((prev) => (prev === 'doria_bag' ? null : 'doria_bag'))
                     }
                     aria-label={`${DORIA_BAG_LABEL}, ${doriaBagCount} em estoque`}
+                    aria-pressed={selected === 'doria_bag'}
+                    title={DORIA_BAG_LABEL}
                   >
                     <span className="game-inventory-slot__icon relative">
                       <DoriaBagIcon size={36} />
@@ -412,6 +491,15 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                       <span className="game-inventory-slot__qty tabular-nums">{doriaBagCount}</span>
                     )}
                   </button>
+
+                  {!selected &&
+                    EMPTY_CONSUMABLE_SLOTS.map((slotId) => (
+                      <span
+                        key={slotId}
+                        className="game-inventory-slot game-inventory-slot--vacant"
+                        aria-hidden="true"
+                      />
+                    ))}
                 </div>
 
                 {materials.length > 0 ? (
@@ -571,16 +659,20 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
               </div>
             </section>
 
-            <section className="game-inventory-pane game-inventory-pane--arsenal">
+            <section
+              className="game-inventory-pane game-inventory-pane--arsenal"
+              aria-labelledby="inventory-equipment-title"
+              aria-busy={loading}
+            >
               <header className="game-inventory-pane__head">
-                <span>
-                  <ShieldCheck size={17} /> Arsenal
+                <span id="inventory-equipment-title">
+                  <ShieldCheck size={17} /> Equipamentos
                 </span>
-                <small>Armas conquistadas e equipamentos em uso</small>
+                <small>{ownedEquipmentCount} itens conquistados · escolha seu arsenal</small>
               </header>
               <div className="game-inventory-equipment game-inventory-pane__scroll">
-                {equipment ? (
-                  (['arcos', 'espadas', 'magias'] as const).map((collection) => {
+                {equipment && ownedEquipmentCount > 0 ? (
+                  EQUIPMENT_COLLECTIONS.map((collection) => {
                     const owned = equipment[collection].filter((item) => item.desbloqueada);
                     if (owned.length === 0) return null;
                     return (
@@ -609,6 +701,9 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                               </span>
                               <span className="game-inventory-weapon__copy">
                                 <strong>{item.nome}</strong>
+                                <span className="game-inventory-weapon__rarity">
+                                  {item.raridade}
+                                </span>
                                 <small>
                                   +{item.dano_total} dano · {item.chance_critico}% crítico
                                 </small>
@@ -617,6 +712,9 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                                 type="button"
                                 disabled={item.equipada || equippingId === item.id}
                                 onClick={() => void handleEquipWeapon(item.kind, item.id)}
+                                aria-label={
+                                  item.equipada ? `${item.nome} equipado` : `Equipar ${item.nome}`
+                                }
                               >
                                 {item.equipada ? (
                                   <>
@@ -636,6 +734,12 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                       </section>
                     );
                   })
+                ) : equipment ? (
+                  <div className="game-inventory-empty game-inventory-empty--equipment">
+                    <ShieldCheck size={28} aria-hidden />
+                    <strong>Seu suporte de equipamentos está vazio</strong>
+                    <span>Armas conquistadas em chefes e na Loja da Vila aparecerão aqui.</span>
+                  </div>
                 ) : (
                   <p className="game-loader">Carregando equipamentos…</p>
                 )}

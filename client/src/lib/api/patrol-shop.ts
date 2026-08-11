@@ -33,3 +33,15 @@ export function sellPatrolMaterial(
     body: JSON.stringify({ id, quantity }),
   });
 }
+
+export function sellPatrolMaterialsBulk(tier: 'all' | 'common' | 'elite' | 'boss'): Promise<{
+  user: IUserDocument;
+  quantity_sold: number;
+  coins_gained: number;
+  shop: PatrolShopResponse;
+}> {
+  return fetchJson('/patrol-shop/materials/sell-bulk', {
+    method: 'POST',
+    body: JSON.stringify({ tier }),
+  });
+}

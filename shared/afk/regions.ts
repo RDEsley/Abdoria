@@ -131,6 +131,22 @@ export function getNextAfkRegion(regionId: AfkRegionId): AfkRegionDefinition | n
   return index >= 0 ? (AFK_REGIONS[index + 1] ?? null) : null;
 }
 
+/**
+ * Próximo capítulo que ainda aguarda a ação explícita do jogador.
+ * Derrotar o chefe apenas libera o botão "Seguir história"; a região só entra
+ * em `unlockedRegions` depois dessa ação. Ao revisitar um capítulo antigo cujo
+ * sucessor já foi aberto, não existe avanço pendente.
+ */
+export function getPendingAfkStoryRegion(
+  regionId: AfkRegionId,
+  bossDefeated: boolean,
+  unlockedRegions: readonly AfkRegionId[],
+): AfkRegionDefinition | null {
+  if (!bossDefeated) return null;
+  const next = getNextAfkRegion(regionId);
+  return next && !unlockedRegions.includes(next.id) ? next : null;
+}
+
 export interface AfkRegionProgress {
   region: AfkRegionDefinition;
   regionIndex: number;

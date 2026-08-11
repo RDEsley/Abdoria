@@ -46,7 +46,7 @@ export const PATROL_SECRET_WEAPON_IDS = ['arco_10', 'espada_10'] as const;
 /** Trio Flamejante — possuir os 3 desbloqueia a moldura Fogo do Editar Perfil. */
 export const CONJUNTO_FLAMEJANTE_IDS = ['magia_fogo', 'arco_06', 'espada_09'] as const;
 
-/** Magias dropáveis do Slime Mágico (também compráveis na loja de exploração). */
+/** Magias dropáveis do Slime Mágico (também compráveis na Loja da Vila). */
 export const PATROL_SPELL_IDS = [
   'magia_agua',
   'magia_terra',

@@ -212,7 +212,7 @@ export interface UserPreferencias {
   personagem_genero?: PersonagemGenero | null;
   /** Estilo de combate na Exploração AFK. */
   arma_preferida?: ArmaPreferida | null;
-  /** Arcos e espadas desbloqueados na loja da exploração. */
+  /** Arcos e espadas desbloqueados na Loja da Vila. */
   patrol_armas?: import('../patrol/shop.js').PatrolArmasState;
   /** Não exibir aviso de máx. diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
@@ -398,7 +398,7 @@ export interface AfkPendingReward {
   frozen_streaks: number;
   route_drinks: number;
   cosmetic_ids: string[];
-  /** Armas da loja da exploração desbloqueadas via drop de boss. */
+  /** Armas da Loja da Vila desbloqueadas via drop de boss. */
   weapon_ids: string[];
   /** EXP Instantâneo acumulado no baú AFK. */
   exp_instant: number;
@@ -514,6 +514,7 @@ export {
   AFK_REGIONS,
   AFK_REGION_CYCLE_KILLS,
   getAfkRegionById,
+  getPendingAfkStoryRegion,
   getNextAfkRegion,
   getAfkRegionProgress,
 } from '../afk/regions.js';

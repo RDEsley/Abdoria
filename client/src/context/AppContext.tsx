@@ -36,14 +36,6 @@ import { resolveUserDadosSalvos } from '@/types';
 
 const PERSIST_DEBOUNCE_MS = 450;
 
-/** Toast único de Frozen Streak — a notificação persistida (sino) é o registro durável. */
-function notifyIfStreakFrozen(stats: DashboardStats): void {
-  if (!stats.streak_frozen_notice) return;
-  showGameToast('Você não treinou ontem, mas um Frozen Streak salvou sua ofensiva!', {
-    variant: 'info',
-  });
-}
-
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IUserDocument | null>(null);
   const [exercises, setExercises] = useState<IExerciseDocument[]>([]);
@@ -63,6 +55,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const pendingPersist = useRef<Partial<UserDadosSalvos> | null>(null);
   const userDadosRef = useRef(userDados);
   const recommendationsLoaded = useRef(false);
+  const statsRequestVersion = useRef(0);
+  const frozenNoticeShown = useRef(false);
 
   useEffect(() => {
     userDadosRef.current = userDados;
@@ -89,6 +83,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new CustomEvent('abdoria:user-updated', { detail: next }));
   }, []);
 
+  /** Ignora respostas de /stats ultrapassadas e evita repetir o mesmo aviso. */
+  const commitStats = useCallback((next: DashboardStats, requestVersion: number) => {
+    if (requestVersion !== statsRequestVersion.current) return false;
+
+    setStats(next);
+    if (next.streak_frozen_notice) {
+      if (!frozenNoticeShown.current) {
+        showGameToast('Um Frozen Streak protegeu um dia anterior da sua sequência.', {
+          variant: 'info',
+        });
+      }
+      frozenNoticeShown.current = true;
+    } else {
+      frozenNoticeShown.current = false;
+    }
+    return true;
+  }, []);
+
+  const markStreakSecuredToday = useCallback(
+    (nextUser: IUserDocument) => {
+      applyUser(nextUser);
+
+      // Invalida qualquer leitura iniciada antes da conclusão. O refresh logo
+      // depois recebe uma nova versão e confirma o estado salvo no servidor.
+      statsRequestVersion.current += 1;
+      frozenNoticeShown.current = false;
+      setStats((previous) =>
+        previous
+          ? {
+              ...previous,
+              sequencia_garantida_hoje: true,
+              streak_atual: nextUser.gamificacao.streak_atual,
+              streak_maior: nextUser.gamificacao.streak_maior,
+              streak_frozen_notice: false,
+            }
+          : previous,
+      );
+    },
+    [applyUser],
+  );
+
   const flushPersist = useCallback(async () => {
     const snapshot = pendingPersist.current;
     if (!snapshot) return;
@@ -100,15 +135,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       applyUserDados(hydrateUserDadosFromAccount(result.user), result.user);
       if (result.xp_ganho_habilidades > 0) {
+        const requestVersion = ++statsRequestVersion.current;
         const statsRes = await getDashboardStats();
-        setStats(statsRes);
-        notifyIfStreakFrozen(statsRes);
-        recommendationsLoaded.current = false;
+        if (commitStats(statsRes, requestVersion)) {
+          recommendationsLoaded.current = false;
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar dados da conta');
     }
-  }, [applyUserDados]);
+  }, [applyUserDados, commitStats]);
 
   const schedulePersist = useCallback(
     (patch: Partial<UserDadosSalvos>, immediate = false) => {
@@ -187,6 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const errors: string[] = [];
     recommendationsLoaded.current = false;
+    const statsVersion = ++statsRequestVersion.current;
 
     const [userRes, statsRes] = await Promise.allSettled([getMe(), getDashboardStats()]);
 
@@ -202,8 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     if (statsRes.status === 'fulfilled') {
-      setStats(statsRes.value);
-      notifyIfStreakFrozen(statsRes.value);
+      commitStats(statsRes.value, statsVersion);
     } else
       errors.push(
         statsRes.reason instanceof Error
@@ -213,7 +249,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setError(errors.length > 0 ? errors.join(' · ') : null);
     setLoading(false);
-  }, [applyUserDados, hydrateAccountData]);
+  }, [applyUserDados, commitStats, hydrateAccountData]);
 
   const ensureExercises = useCallback(async (options?: { force?: boolean }) => {
     if (exercisesLoaded.current && !options?.force) return;
@@ -467,6 +503,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      const statsVersion = ++statsRequestVersion.current;
       const [statsRes, recRes, historyRes] = await Promise.allSettled([
         getDashboardStats(),
         getDashboardRecommendations(),
@@ -475,7 +512,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (statsRes.status === 'fulfilled') {
         const rec = recRes.status === 'fulfilled' ? recRes.value : null;
-        setStats({
+        const nextStats: DashboardStats = {
           ...statsRes.value,
           ...(rec
             ? {
@@ -484,9 +521,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 proximo_treino: rec.proximo_treino,
               }
             : {}),
-        });
-        notifyIfStreakFrozen(statsRes.value);
-        recommendationsLoaded.current = !!rec;
+        };
+        if (commitStats(nextStats, statsVersion)) {
+          recommendationsLoaded.current = !!rec;
+        }
       }
       if (historyRes.status === 'fulfilled') {
         setHistory(historyRes.value);
@@ -502,7 +540,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rodada_completa: result.rodada_completa ?? false,
       };
     },
-    [hydrateAccountData],
+    [commitStats, hydrateAccountData],
   );
 
   const value = useMemo(
@@ -524,6 +562,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       muscleFilter,
       setMuscleFilter,
       applyUser,
+      markStreakSecuredToday,
       refresh,
       loadRecommendations,
       ensureExercises,
@@ -554,6 +593,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       error,
       muscleFilter,
       applyUser,
+      markStreakSecuredToday,
       refresh,
       loadRecommendations,
       ensureExercises,

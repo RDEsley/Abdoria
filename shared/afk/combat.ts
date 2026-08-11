@@ -312,8 +312,12 @@ export function getEnemyAttackDamage(
   enemyId: AfkEnemyId,
   _chapter = 1,
   heroMaxHp = AFK_HERO_BASE_HP,
+  tierOverride?: AfkEnemyTier,
 ): number {
-  const tier = AFK_ENEMIES[enemyId]?.tier ?? 'common';
+  // O encontro é a autoridade para o tier. Saves antigos podiam conter o ID
+  // de um chefe junto de `is_boss: false`; usar apenas o catálogo transformava
+  // esse encontro comum em hitkill.
+  const tier = tierOverride ?? AFK_ENEMIES[enemyId]?.tier ?? 'common';
   if (tier === 'boss') return Number.POSITIVE_INFINITY;
   // O dano acompanha a vida máxima do herói: melhorias de vitalidade não
   // quebram o balanceamento de 10 golpes comuns / 8 golpes de elite.

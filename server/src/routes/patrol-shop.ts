@@ -8,6 +8,7 @@ import {
   loadUserForPatrolShop,
   purchasePatrolWeapon,
   sellPatrolMaterial,
+  sellPatrolMaterialsByTier,
 } from '../services/patrol-shop.js';
 import type { PatrolWeaponKind } from '../types/index.js';
 
@@ -25,7 +26,7 @@ patrolShopRouter.get('/', async (req: AuthRequest, res) => {
     res.json(buildPatrolShopResponse(user));
   } catch (error) {
     console.error('GET /api/patrol-shop error:', error);
-    res.status(500).json({ error: 'Erro ao carregar loja da exploração.' });
+    res.status(500).json({ error: 'Erro ao carregar a Loja da Vila.' });
   }
 });
 
@@ -100,5 +101,32 @@ patrolShopRouter.post('/materials/sell', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/patrol-shop/materials/sell error:', error);
     res.status(500).json({ error: 'Erro ao vender material.' });
+  }
+});
+
+patrolShopRouter.post('/materials/sell-bulk', async (req: AuthRequest, res) => {
+  try {
+    const requestedTier = String(req.body?.tier ?? 'all');
+    if (!['all', 'common', 'elite', 'boss'].includes(requestedTier)) {
+      res.status(400).json({ error: 'Selecione uma raridade válida.' });
+      return;
+    }
+    const result = await sellPatrolMaterialsByTier(
+      req.userId!,
+      requestedTier as 'all' | 'common' | 'elite' | 'boss',
+    );
+    if ('error' in result) {
+      res.status(result.status ?? 400).json({ error: result.error });
+      return;
+    }
+    res.json({
+      user: sanitizeUser(result.user),
+      quantity_sold: result.quantity_sold,
+      coins_gained: result.coins_gained,
+      shop: result.shop,
+    });
+  } catch (error) {
+    console.error('POST /api/patrol-shop/materials/sell-bulk error:', error);
+    res.status(500).json({ error: 'Erro ao vender materiais em lote.' });
   }
 });

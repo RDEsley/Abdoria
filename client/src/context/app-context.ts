@@ -36,6 +36,7 @@ export interface AppContextValue {
   setMuscleFilter: (m: MusculoPrincipal | null) => void;
   /** Atualiza o usuário do contexto sem refetch (otimista ou resposta de API). */
   applyUser: (user: IUserDocument) => void;
+  markStreakSecuredToday: (user: IUserDocument) => void;
   refresh: () => Promise<void>;
   loadRecommendations: (options?: { force?: boolean }) => Promise<void>;
   ensureExercises: (options?: { force?: boolean }) => Promise<void>;

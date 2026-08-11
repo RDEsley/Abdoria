@@ -48,6 +48,9 @@ export function AfkRegionMapModal({
               ? Boolean(combat.region_progress[previousRegion.id]?.boss_defeated)
               : true;
             const isUnlocked = unlocked.has(region.id) && previousBossDefeated;
+            const lockedHint = previousBossDefeated
+              ? 'Use “Seguir história” no capítulo anterior'
+              : 'Derrote o guardião anterior';
             const isCurrent = combat.region_id === region.id;
             const progress = combat.region_progress[region.id];
             const bossDefeated = Boolean(progress?.boss_defeated);
@@ -90,7 +93,7 @@ export function AfkRegionMapModal({
                     {isTraveling
                       ? 'Carregando cenário e encontro…'
                       : !isUnlocked
-                        ? 'Derrote o guardião anterior'
+                        ? lockedHint
                         : bossDefeated
                           ? `${progress?.boss_kills ?? 0} chefe(s) derrotado(s)`
                           : `${progress?.kills_until_boss ?? 0}/${region.killsToBoss} até o chefe`}

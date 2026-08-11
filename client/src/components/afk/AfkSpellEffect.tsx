@@ -1,4 +1,4 @@
-/** Efeitos visuais de cada magia da Loja da Exploração durante o ataque. */
+/** Efeitos visuais de cada magia da Loja da Vila durante o ataque. */
 export function AfkSpellEffect({ spellId }: { spellId: string }) {
   switch (spellId) {
     case 'magia_raio_laser':
@@ -15,9 +15,13 @@ export function AfkSpellEffect({ spellId }: { spellId: string }) {
     case 'magia_explosao':
       return (
         <span className="game-afk-spell-explosion" aria-hidden>
+          <i className="game-afk-spell-explosion__sigil" />
+          <i className="game-afk-spell-explosion__pillar" />
           <i className="game-afk-spell-explosion__flash" />
           <i className="game-afk-spell-explosion__core" />
           <i className="game-afk-spell-explosion__ring" />
+          <i className="game-afk-spell-explosion__ring game-afk-spell-explosion__ring--outer" />
+          <i className="game-afk-spell-explosion__embers" />
         </span>
       );
 

@@ -32,9 +32,21 @@ function buildNavItems(copy: ReturnType<typeof useCopy>) {
 
 const VIEWPORT_NOTICE_KEY = 'abdoria_viewport_notice_dismissed';
 
+function MidnightRefreshListener() {
+  const { refreshUser } = useAuth();
+  const { refresh: refreshApp } = useApp();
+
+  const handleRefresh = useCallback(() => {
+    void refreshApp();
+    void refreshUser();
+  }, [refreshApp, refreshUser]);
+
+  useMidnightRefresh(handleRefresh);
+  return null;
+}
+
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
-  const { refresh: refreshApp } = useApp();
   const copy = useCopy();
   const navItems = buildNavItems(copy);
   const location = useLocation();
@@ -48,13 +60,6 @@ export function AppLayout() {
   const [tutorialSpotlight, setTutorialSpotlight] = useState<TutorialSlide['spotlight'] | null>(
     null,
   );
-
-  const handleMidnightRefresh = useCallback(() => {
-    void refreshApp();
-    void refreshUser();
-  }, [refreshApp, refreshUser]);
-
-  useMidnightRefresh(handleMidnightRefresh);
 
   useAfkBackgroundSync(Boolean(user));
 
@@ -87,6 +92,7 @@ export function AppLayout() {
 
   return (
     <MidnightRefreshProvider>
+      <MidnightRefreshListener />
       <div className="game-app relative flex min-h-screen flex-col md:flex-row text-stone-800">
         <AnimatedBackground variant="app" />
 

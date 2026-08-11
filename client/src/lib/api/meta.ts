@@ -122,10 +122,31 @@ export function selectAfkRegion(regionId: AfkRegionId): Promise<AfkPingResponse>
   });
 }
 
-export function advanceAfkChapter(): Promise<
-  AfkPingResponse & { story: { title: string; body: string }; region_id: AfkRegionId }
-> {
-  return fetchJson('/meta/afk/chapter/advance', { method: 'POST' });
+export function advanceAfkChapter(
+  regionId: AfkRegionId,
+): Promise<AfkPingResponse & { story: { title: string; body: string }; region_id: AfkRegionId }> {
+  return fetchJson('/meta/afk/chapter/advance', {
+    method: 'POST',
+    body: JSON.stringify({ region_id: regionId }),
+  });
+}
+
+export function recordAfkHeroState(
+  expectedKillsTotal: number,
+  enemyId: AfkEnemyId,
+  heroHp: number,
+  defeatedRemainingMs = 0,
+): Promise<{ ok: true; saved: boolean }> {
+  return fetchJson('/meta/afk/combat/hero-state', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      expected_kills_total: expectedKillsTotal,
+      enemy_id: enemyId,
+      hero_hp: heroHp,
+      defeated_remaining_ms: defeatedRemainingMs,
+    }),
+    keepalive: true,
+  });
 }
 
 export function unlockAfkSkill(nodeId: string): Promise<AfkPingResponse> {

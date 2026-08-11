@@ -15,7 +15,13 @@ export function mergeAfkCombatSnapshot(
     region_id: server.region_id,
     region_progress: server.region_progress,
     unlocked_regions: server.unlocked_regions,
+    // HP e nocaute são persistidos a cada golpe inimigo. Sempre aceitar a
+    // versão autoritativa impede o estado impossível `0 HP` sem contador de
+    // recuperação depois de uma vitória ou de um modal aberto/fechado.
+    hero_hp: server.hero_hp,
     hero_max_hp: server.hero_max_hp,
+    hero_defeated_until: server.hero_defeated_until,
+    defeated_remaining_ms: server.defeated_remaining_ms,
     orbs: server.orbs,
     skill_nodes: server.skill_nodes,
     skill_tree_free_reset_used: server.skill_tree_free_reset_used,

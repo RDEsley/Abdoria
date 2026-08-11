@@ -208,6 +208,7 @@ export {
   AFK_GOLDEN_SLIME_COIN_DROP,
   AFK_REGIONS,
   getAfkRegionById,
+  getPendingAfkStoryRegion,
   getAfkRegionProgress,
   getNextAfkRegion,
   getEnemyAttackDamage,

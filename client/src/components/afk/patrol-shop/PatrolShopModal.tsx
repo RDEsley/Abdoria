@@ -16,7 +16,10 @@ import {
 import { GameButton } from '@/components/ui/GameButton';
 import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRow';
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
-import { PatrolMaterialMarket } from '@/components/afk/patrol-shop/PatrolMaterialMarket';
+import {
+  PatrolMaterialMarket,
+  type MaterialTierFilter,
+} from '@/components/afk/patrol-shop/PatrolMaterialMarket';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import {
@@ -24,6 +27,7 @@ import {
   getPatrolShop,
   purchasePatrolWeapon,
   sellPatrolMaterial,
+  sellPatrolMaterialsBulk,
 } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -45,6 +49,13 @@ interface Props {
 }
 
 type TabId = PatrolWeaponKind | 'materials';
+
+const MATERIAL_FILTER_LABEL: Record<MaterialTierFilter, string> = {
+  all: 'todas as raridades',
+  common: 'comum',
+  elite: 'elite',
+  boss: 'chefe',
+};
 
 const TABS: {
   id: TabId;
@@ -75,6 +86,10 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     quantity: number | 'all';
     details: PurchaseConfirmDetails;
   } | null>(null);
+  const [bulkSaleConfirm, setBulkSaleConfirm] = useState<{
+    tier: MaterialTierFilter;
+    details: PurchaseConfirmDetails;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,7 +97,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
       const data = await getPatrolShop();
       setCatalog(data);
     } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível abrir a loja da exploração.'), {
+      showGameToast(getErrorMessage(err, 'Não foi possível abrir a Loja da Vila.'), {
         variant: 'error',
       });
     } finally {
@@ -94,6 +109,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     if (!open) {
       setPurchaseConfirm(null);
       setMaterialSaleConfirm(null);
+      setBulkSaleConfirm(null);
       setBusyId(null);
       setCelebrating(false);
       return;
@@ -219,6 +235,51 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     });
   };
 
+  const requestBulkSale = (tier: MaterialTierFilter) => {
+    const selected = (catalog?.materials ?? []).filter(
+      (material) => material.quantity > 0 && (tier === 'all' || material.tier === tier),
+    );
+    const quantity = selected.reduce((total, material) => total + material.quantity, 0);
+    const coins = selected.reduce(
+      (total, material) => total + material.quantity * material.sellPrice,
+      0,
+    );
+    if (quantity < 1) return;
+    setBulkSaleConfirm({
+      tier,
+      details: {
+        itemName: `${quantity} materiais selecionados`,
+        itemDescription:
+          'Os materiais da raridade escolhida serão removidos da mochila e não poderão ser recuperados.',
+        priceLabel: `Receber ${coins} Coins`,
+        balanceHint: `Filtro: ${MATERIAL_FILTER_LABEL[tier]}`,
+      },
+    });
+  };
+
+  const handleBulkSale = async () => {
+    if (!bulkSaleConfirm) return;
+    setBusyId('bulk');
+    try {
+      const response = await sellPatrolMaterialsBulk(bulkSaleConfirm.tier);
+      applyUser(response.user);
+      setCatalog(response.shop);
+      playPurchase();
+      showGameToast(
+        `${response.quantity_sold} materiais vendidos por ${response.coins_gained} Coins.`,
+        { variant: 'success' },
+      );
+      setBulkSaleConfirm(null);
+      void refreshApp();
+    } catch (error) {
+      showGameToast(getErrorMessage(error, 'Não foi possível vender os materiais.'), {
+        variant: 'error',
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (!open) return null;
 
   const weaponItems =
@@ -247,7 +308,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
           <header className="game-patrol-shop-header">
             <div>
               <h2 id="patrol-shop-title" className="game-patrol-shop-header__title">
-                <Store size={18} aria-hidden /> Loja da Exploração
+                <Store size={18} aria-hidden /> Loja da Vila
               </h2>
               <p className="game-patrol-shop-header__subtitle">
                 Armas e comércio de materiais da sua jornada
@@ -267,10 +328,12 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
                 type="button"
                 className={`game-patrol-shop-nav__btn game-patrol-shop-nav__btn--${kind}${activeTab === id ? ' game-patrol-shop-nav__btn--active' : ''}`}
                 aria-pressed={activeTab === id}
+                aria-label={label}
+                title={label}
                 onClick={() => setActiveTab(id)}
               >
                 <Icon size={15} aria-hidden />
-                {label}
+                <span>{label}</span>
               </button>
             ))}
           </nav>
@@ -283,6 +346,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
                 materials={catalog?.materials ?? []}
                 busyId={busyId}
                 onSell={requestMaterialSale}
+                onSellBulk={requestBulkSale}
               />
             ) : weaponItems.length === 0 ? (
               <p className="game-patrol-shop-empty">Nenhum item nesta categoria ainda.</p>
@@ -335,6 +399,18 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
         }
         onCancel={() => {
           if (!busyId) setMaterialSaleConfirm(null);
+        }}
+      />
+      <PurchaseConfirmDialog
+        open={!!bulkSaleConfirm}
+        details={bulkSaleConfirm?.details ?? null}
+        busy={busyId === 'bulk'}
+        title="Confirmar venda em lote"
+        confirmLabel="Vender selecionados"
+        busyLabel="Vendendo…"
+        onConfirm={() => void handleBulkSale()}
+        onCancel={() => {
+          if (!busyId) setBulkSaleConfirm(null);
         }}
       />
     </div>,

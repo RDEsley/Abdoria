@@ -88,7 +88,8 @@ export const WorkoutHistory = {
     if (options?.limit) query = query.limit(options.limit);
 
     const { data, error } = await query;
-    if (error || !data) return [];
+    if (error) throw error;
+    if (!data) return [];
     return (data as Record<string, unknown>[]).map(rowToHistory);
   },
 
@@ -102,7 +103,8 @@ export const WorkoutHistory = {
       query = query.order('concluido_em', { ascending: false });
     }
     const { data, error } = await query.limit(1).maybeSingle();
-    if (error || !data) return null;
+    if (error) throw error;
+    if (!data) return null;
     return rowToHistory(data as Record<string, unknown>);
   },
 
@@ -160,14 +162,17 @@ export const WorkoutHistory = {
       query = query.is('atividade', null);
     }
     const { count, error } = await query;
-    if (error && filter.somenteTreino) {
-      // Coluna `atividade` ainda não migrada nesse ambiente — cai pro
-      // comportamento antigo (conta qualquer linha) em vez de nunca
-      // detectar treino nenhum.
-      return WorkoutHistory.exists({
-        usuario_id: filter.usuario_id,
-        concluido_em: filter.concluido_em,
-      });
+    if (error) {
+      if (filter.somenteTreino && isMissingAtividadeColumn(error)) {
+        // Coluna `atividade` ainda não migrada nesse ambiente — cai pro
+        // comportamento antigo (conta qualquer linha) em vez de nunca
+        // detectar treino nenhum.
+        return WorkoutHistory.exists({
+          usuario_id: filter.usuario_id,
+          concluido_em: filter.concluido_em,
+        });
+      }
+      throw error;
     }
     return (count ?? 0) > 0;
   },
@@ -183,10 +188,11 @@ export const WorkoutHistory = {
         (s) => (s as { $group?: { _id?: string } }).$group?._id === '$musculos_estimulados',
       )
     ) {
-      const { data } = await sb
+      const { data, error } = await sb
         .from('workout_history')
         .select('musculos_estimulados')
         .eq('usuario_id', userId);
+      if (error) throw error;
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
         for (const m of (row.musculos_estimulados as string[]) ?? []) {
@@ -200,7 +206,8 @@ export const WorkoutHistory = {
       const groupStage = pipeline.find((s) => (s as { $group?: unknown }).$group) as {
         $group: { total?: { $sum?: unknown } };
       };
-      const { data } = await sb.from('workout_history').select('*').eq('usuario_id', userId);
+      const { data, error } = await sb.from('workout_history').select('*').eq('usuario_id', userId);
+      if (error) throw error;
 
       if (groupStage?.$group?.total?.$sum === '$duracao_total_segundos') {
         const total = (data ?? []).reduce((s, r) => s + Number(r.duracao_total_segundos ?? 0), 0);
@@ -236,7 +243,8 @@ export const WorkoutHistory = {
             : String(concluidoFilter.$gte);
         query = query.gte('concluido_em', since);
       }
-      const { data } = await query;
+      const { data, error } = await query;
+      if (error) throw error;
       const byMonth: Record<string, number> = {};
       for (const row of data ?? []) {
         const d = new Date(row.concluido_em as string);

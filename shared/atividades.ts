@@ -62,8 +62,8 @@ export const ATIVIDADE_DESCRICAO_MAX = 100;
 export const ATIVIDADE_OBS_MAX = 400;
 /** Teto de atividades cadastradas (padrão + criadas pelo usuário). */
 export const ATIVIDADES_MAX = 30;
-/** Mínimo de atividades concluídas pra manter a streak num dia de descanso;
-    também é o teto diário de atividades que pagam XP (ver abaixo). */
+/** Quantidade máxima de atividades que pagam XP por dia. O nome é mantido por
+    compatibilidade; a streak exige apenas uma atividade, em qualquer dia. */
 export const ATIVIDADES_MIN_DESCANSO = 3;
 /** XP fixo por atividade concluída, dentro do teto diário. */
 export const ATIVIDADE_XP_POR_UNIDADE = 15;
@@ -142,7 +142,12 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
       unidade: 'páginas',
       placeholder: '10',
     },
-    { id: 'obra', label: 'Qual livro/material?', formato: 'texto', placeholder: 'Ex.: Hábitos Atômicos' },
+    {
+      id: 'obra',
+      label: 'Qual livro/material?',
+      formato: 'texto',
+      placeholder: 'Ex.: Hábitos Atômicos',
+    },
     CAMPO_TEMPO,
   ],
   corrida: [
@@ -207,11 +212,21 @@ export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
     CAMPO_TEMPO,
   ],
   escrita: [
-    { id: 'tema', label: 'Sobre o que você escreveu?', formato: 'texto', placeholder: 'Ex.: Diário pessoal' },
+    {
+      id: 'tema',
+      label: 'Sobre o que você escreveu?',
+      formato: 'texto',
+      placeholder: 'Ex.: Diário pessoal',
+    },
     CAMPO_TEMPO,
   ],
   organizacao: [
-    { id: 'local', label: 'O que você organizou?', formato: 'texto', placeholder: 'Ex.: Guarda-roupa' },
+    {
+      id: 'local',
+      label: 'O que você organizou?',
+      formato: 'texto',
+      placeholder: 'Ex.: Guarda-roupa',
+    },
     CAMPO_TEMPO,
   ],
   generico: [CAMPO_TEMPO],
@@ -426,7 +441,12 @@ function sanitizeAtividade(entry: unknown): AtividadeExtra | null {
     meta_tipo: metaTipo,
     meta_valor: metaValor,
     ...(metaTipo === 'numero'
-      ? { meta_unidade: String(item.meta_unidade ?? 'vezes').trim().slice(0, 20) || 'vezes' }
+      ? {
+          meta_unidade:
+            String(item.meta_unidade ?? 'vezes')
+              .trim()
+              .slice(0, 20) || 'vezes',
+        }
       : {}),
     ...(item.builtin ? { builtin: true } : {}),
   };
@@ -543,9 +563,9 @@ export function isAtividadeHistory(treinoNome?: string | null): boolean {
 }
 
 /**
- * Dia de treino = o perfil tem dias fixos e este weekday é um deles.
- * Sem dias fixos configurados, todo dia é tratado como flexível (descanso),
- * então as atividades podem sustentar a streak.
+ * Dia de treino = o perfil tem dias fixos e este weekday é um deles. Essa
+ * classificação organiza a agenda e as mensagens; atividades sustentam a
+ * streak tanto em dias de treino quanto em dias de descanso.
  */
 export function isDiaDeTreino(diasSemana: number[] | null | undefined, weekday: number): boolean {
   return Array.isArray(diasSemana) && diasSemana.length > 0 && diasSemana.includes(weekday);

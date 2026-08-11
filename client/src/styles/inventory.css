@@ -323,6 +323,47 @@
   color: #1c1917;
 }
 
+/* O detalhe do item vem logo abaixo da grade, como um balão contextual. O
+   `order` corrige a posição visual sem duplicar os controles no DOM. */
+.game-inventory-pane--supplies .game-inventory-pane__scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-inventory-pane--supplies .game-inventory-pane__scroll > .game-inventory-grid {
+  order: 1;
+}
+
+.game-inventory-pane--supplies .game-inventory-detail {
+  position: relative;
+  order: 2;
+  margin: 0.72rem 0 0;
+  border-color: #9c6b38;
+  background: linear-gradient(155deg, #fff7df, #ead6ac);
+  box-shadow: 0 0.5rem 1rem rgba(45, 24, 10, 0.24);
+}
+
+.game-inventory-pane--supplies .game-inventory-detail::before {
+  content: '';
+  position: absolute;
+  top: -0.48rem;
+  left: 1.35rem;
+  width: 0.82rem;
+  height: 0.82rem;
+  border-top: 2px solid #9c6b38;
+  border-left: 2px solid #9c6b38;
+  background: #fff7df;
+  transform: rotate(45deg);
+}
+
+.game-inventory-pane--supplies .game-inventory-materials {
+  order: 3;
+}
+
+.game-inventory-pane--supplies .game-inventory-empty {
+  order: 4;
+}
+
 .game-profile-hero .game-nav-item,
 header .game-nav-item {
   position: relative;
@@ -594,11 +635,13 @@ header .game-nav-item {
   }
 }
 
-/* Inventário de campanha: usa o espaço como uma mochila de RPG, sem abas. */
+/* Mochila de campanha: grade tátil inspirada em inventários clássicos de RPG. */
 .game-inventory-overlay {
   padding: clamp(0.45rem, 2vw, 1.4rem);
-  background: rgba(2, 8, 14, 0.82);
-  backdrop-filter: blur(9px);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(139, 92, 43, 0.15), transparent 38%),
+    rgba(7, 4, 3, 0.86);
+  backdrop-filter: blur(10px) saturate(0.8);
 }
 
 .game-inventory-overlay .game-inventory-modal {
@@ -610,32 +653,90 @@ header .game-nav-item {
   max-height: 93dvh;
   overflow: hidden;
   padding: clamp(0.85rem, 1.8vw, 1.35rem);
-  border: 1px solid rgba(222, 184, 99, 0.52);
+  isolation: isolate;
+  border: 2px solid #bd8950;
   border-radius: 1.25rem;
   background:
-    radial-gradient(circle at 15% 0%, rgba(44, 139, 94, 0.2), transparent 33%),
-    linear-gradient(150deg, #13231f 0%, #0a1319 58%, #101018 100%);
+    radial-gradient(circle at 17% 0%, rgba(255, 218, 151, 0.12), transparent 34%),
+    repeating-linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0.015) 0,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 7px
+    ),
+    linear-gradient(145deg, #694027 0%, #432618 48%, #2b1711 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 28px 80px rgba(0, 0, 0, 0.62);
-  color: #f6f0df;
+    inset 0 0 0 3px #28140e,
+    inset 0 1px 0 4px rgba(255, 230, 178, 0.16),
+    0 30px 90px rgba(0, 0, 0, 0.68);
+  color: #fff2d0;
+}
+
+.game-inventory-overlay .game-inventory-modal::before {
+  position: absolute;
+  inset: 0.55rem;
+  z-index: -1;
+  border: 1px dashed rgba(242, 199, 126, 0.38);
+  border-radius: 0.82rem;
+  content: '';
+  pointer-events: none;
 }
 
 .game-inventory-overlay .game-modal__close-btn {
   z-index: 5;
-  border-color: rgba(246, 211, 135, 0.42);
-  background: #1b211e;
-  color: #f8e6ba;
+  width: 2.35rem;
+  height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  border-color: #d7aa69;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #54311f, #27140e);
+  color: #ffe9b5;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.12),
+    0 3px 0 #1a0c08;
+}
+
+.game-inventory-overlay .game-modal__close-btn:hover {
+  background: linear-gradient(145deg, #77452a, #382016);
+  color: #fff8df;
+}
+
+.game-inventory-overlay .game-modal__close-btn:focus-visible,
+.game-inventory-slot:focus-visible,
+.game-inventory-weapon > button:focus-visible {
+  outline: 3px solid #f9d477;
+  outline-offset: 2px;
 }
 
 .game-inventory-header {
+  position: relative;
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   gap: 0.8rem;
   min-height: 4.25rem;
   padding: 0 3rem 0.85rem 0;
-  border-bottom: 1px solid rgba(222, 184, 99, 0.22);
+  border-bottom: 1px solid rgba(247, 204, 126, 0.34);
+}
+
+.game-inventory-header__handle {
+  position: absolute;
+  top: -1.55rem;
+  left: 50%;
+  width: 5.4rem;
+  height: 1.35rem;
+  border: 3px solid #2b160f;
+  border-bottom: 0;
+  border-radius: 1.2rem 1.2rem 0 0;
+  background: linear-gradient(90deg, #56311f, #855232 50%, #56311f);
+  box-shadow: inset 0 2px rgba(255, 230, 184, 0.14);
+  transform: translateX(-50%);
+}
+
+.game-inventory-header__copy {
+  min-width: 0;
 }
 
 .game-inventory-header__crest {
@@ -644,15 +745,17 @@ header .game-nav-item {
   width: 3.15rem;
   height: 3.15rem;
   place-items: center;
-  border: 1px solid rgba(246, 211, 135, 0.5);
-  border-radius: 0.85rem;
-  background: linear-gradient(145deg, #3e6d4b, #16271f);
-  color: #fff0b7;
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.15);
+  border: 2px solid #e0b46e;
+  border-radius: 0.72rem;
+  background: linear-gradient(145deg, #80502f, #402317);
+  color: #ffe4a3;
+  box-shadow:
+    inset 0 0 0 3px rgba(40, 20, 13, 0.46),
+    0 3px 0 #27130d;
 }
 
 .game-inventory-header__eyebrow {
-  color: #7ee2aa;
+  color: #f2c97f;
   font-size: 0.6rem;
   font-weight: 900;
   letter-spacing: 0.13em;
@@ -661,23 +764,55 @@ header .game-nav-item {
 
 .game-inventory-header .game-modal__title {
   margin: 0.12rem 0 0;
-  color: #fff3cf;
+  color: #fff0c7;
   font-family: Georgia, serif;
   font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+  line-height: 1.08;
+  text-shadow: 0 2px 0 #24110b;
 }
 
 .game-inventory-header .game-modal__text {
   margin-top: 0.15rem;
-  color: #aebdb4;
+  margin-bottom: 0;
+  color: #d6c2a5;
+}
+
+.game-inventory-header__counter {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid #be8c51;
+  border-radius: 0.65rem;
+  background: rgba(42, 20, 13, 0.62);
+  color: #f6ce83;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.game-inventory-header__counter strong {
+  font-size: 0.85rem;
+}
+
+.game-inventory-header__counter small {
+  grid-column: 1 / -1;
+  color: #cbb391;
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .game-inventory-layout {
   display: grid;
   flex: 1 1 auto;
-  grid-template-columns: minmax(17rem, 0.76fr) minmax(28rem, 1.42fr);
-  gap: 0.85rem;
+  grid-template-columns: minmax(18rem, 0.82fr) minmax(28rem, 1.35fr);
+  gap: 0.95rem;
   min-height: 0;
-  padding-top: 0.85rem;
+  padding-top: 0.95rem;
 }
 
 .game-inventory-pane {
@@ -686,10 +821,14 @@ header .game-nav-item {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(174, 212, 187, 0.18);
-  border-radius: 1rem;
-  background: rgba(4, 12, 15, 0.56);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.045);
+  border: 2px solid #28150e;
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(240, 185, 105, 0.08), transparent 36%),
+    linear-gradient(145deg, #4c2d1d, #2d1a12);
+  box-shadow:
+    inset 0 0 0 1px rgba(218, 166, 94, 0.36),
+    0 6px 0 rgba(27, 12, 7, 0.72);
 }
 
 .game-inventory-pane__head {
@@ -699,15 +838,16 @@ header .game-nav-item {
   justify-content: space-between;
   gap: 0.65rem;
   padding: 0.72rem 0.85rem;
-  border-bottom: 1px solid rgba(174, 212, 187, 0.14);
-  background: rgba(20, 44, 36, 0.62);
+  border-bottom: 2px solid #25120d;
+  background: linear-gradient(rgba(255, 255, 255, 0.035), transparent), #3d2116;
+  box-shadow: inset 0 -1px rgba(230, 177, 103, 0.24);
 }
 
 .game-inventory-pane__head > span {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: #eaffef;
+  color: #ffedc4;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -715,7 +855,7 @@ header .game-nav-item {
 }
 
 .game-inventory-pane__head small {
-  color: #90a99b;
+  color: #c7aa83;
   font-size: 0.56rem;
   text-align: right;
 }
@@ -724,50 +864,164 @@ header .game-nav-item {
   min-height: 0;
   overflow: auto;
   padding: 0.8rem;
-  scrollbar-color: #4d7b61 #101a17;
+  scrollbar-color: #9a653b #28160f;
   scrollbar-width: thin;
 }
 
 .game-inventory-grid {
-  grid-template-columns: repeat(4, minmax(3.4rem, 1fr));
-  gap: 0.62rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.48rem;
+  margin-top: 0;
+  padding: 0.55rem;
+  border: 2px solid #1c0e09;
+  border-radius: 0.72rem;
+  background: linear-gradient(rgba(255, 255, 255, 0.025), transparent), #25150f;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.42),
+    0 1px rgba(229, 175, 101, 0.25);
 }
 
 .game-inventory-slot {
   aspect-ratio: 1;
-  min-height: 4.25rem;
-  border-color: rgba(226, 192, 119, 0.34);
-  background: linear-gradient(145deg, rgba(42, 54, 48, 0.96), rgba(15, 25, 24, 0.98));
+  min-height: 3.85rem;
+  overflow: visible;
+  border-color: #9b6b41 #301a10 #2a160e #a97948;
+  border-radius: 0.38rem;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(230, 187, 119, 0.12), transparent 48%),
+    linear-gradient(145deg, #60422c, #352318);
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.08),
-    0 6px 13px rgba(0, 0, 0, 0.25);
+    inset 2px 2px rgba(255, 223, 169, 0.1),
+    inset -2px -2px rgba(15, 7, 4, 0.48),
+    0 2px 0 rgba(20, 9, 5, 0.75);
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    filter 120ms ease;
 }
 
 .game-inventory-slot:hover:not(:disabled),
 .game-inventory-slot--active {
-  border-color: #7ee2aa;
-  background: linear-gradient(145deg, #284b39, #13251d);
-  transform: translateY(-2px);
+  z-index: 1;
+  border-color: #ffe098 #8b5c2f #74451f #ffe098;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 221, 137, 0.24), transparent 50%),
+    linear-gradient(145deg, #755036, #412919);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.game-inventory-slot--active {
+  box-shadow:
+    inset 0 0 0 2px #f2bd58,
+    inset 2px 2px rgba(255, 244, 207, 0.16),
+    0 0 0 2px rgba(255, 210, 113, 0.2),
+    0 3px 0 #1b0c07;
+}
+
+.game-inventory-slot--empty:disabled {
+  cursor: default;
+  filter: grayscale(0.55) sepia(0.25);
+  opacity: 0.34;
+}
+
+.game-inventory-slot--vacant {
+  min-height: 3.85rem;
+  cursor: default;
+  opacity: 0.43;
+}
+
+.game-inventory-slot--vacant::after {
+  width: 42%;
+  height: 42%;
+  border: 1px dashed rgba(222, 179, 113, 0.18);
+  border-radius: 0.25rem;
+  content: '';
+}
+
+.game-inventory-slot__icon {
+  filter: drop-shadow(0 3px 1px rgba(18, 8, 4, 0.6));
+}
+
+.game-inventory-slot__qty {
+  right: 0.22rem;
+  bottom: 0.18rem;
+  min-width: 1.22rem;
+  padding: 0.07rem 0.26rem;
+  border: 1px solid #e0b36c;
+  background: #21110c;
+  color: #fff1c2;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
 }
 
 .game-inventory-detail {
   margin-top: 0.75rem;
-  border-color: rgba(126, 226, 170, 0.35);
-  background: linear-gradient(145deg, rgba(29, 55, 43, 0.96), rgba(13, 25, 23, 0.98));
+  border-color: #3a2115;
+  border-radius: 0.55rem;
+  background: linear-gradient(rgba(255, 255, 255, 0.1), transparent), #dfc18e;
+  box-shadow:
+    inset 0 0 0 2px rgba(101, 61, 33, 0.19),
+    0 3px 0 #1e0e09;
 }
 
 .game-inventory-detail__title {
-  color: #fff0bf;
+  color: #3c2115;
+  font-family: Georgia, serif;
 }
 
 .game-inventory-detail__desc,
 .game-inventory-detail__toggle-label {
-  color: #d3ded7;
+  color: #513723;
 }
 
-.game-inventory-detail__desc--muted,
+.game-inventory-detail__desc--muted {
+  color: #4c3020;
+}
+
 .game-inventory-empty {
-  color: #91a59a;
+  color: #d8bd94;
+}
+
+.game-inventory-detail__toggle-row {
+  border-top-color: rgba(71, 39, 22, 0.23);
+}
+
+.game-inventory-materials {
+  margin-top: 0.8rem;
+  padding-top: 0.75rem;
+  border-top-color: rgba(225, 177, 105, 0.28);
+}
+
+.game-inventory-materials__head strong {
+  color: #ffebbd;
+  font-family: Georgia, serif;
+  font-size: 0.74rem;
+}
+
+.game-inventory-materials__head small {
+  color: #c6a881;
+}
+
+.game-inventory-material-slot > small {
+  color: #f4dfb9;
+  text-shadow: 0 1px #160a06;
+}
+
+.game-inventory-material-slot--elite {
+  border-color: #83d8e8 #315260 #243e48 #9ce8f0;
+  box-shadow:
+    inset 0 0 0 1px rgba(83, 210, 232, 0.2),
+    0 2px 0 #160b07;
+}
+
+.game-inventory-material-slot--boss {
+  border-color: #e5adff #6f3f82 #4f2d60 #efc2ff;
+  background:
+    radial-gradient(circle, rgba(220, 154, 255, 0.19), transparent 56%),
+    linear-gradient(145deg, #62415d, #352139);
+  box-shadow:
+    inset 0 0 0 1px rgba(222, 171, 255, 0.24),
+    0 2px 0 #160b07;
 }
 
 .game-inventory-equipment {
@@ -775,73 +1029,181 @@ header .game-nav-item {
   padding: 0.8rem;
 }
 
+.game-inventory-equipment section + section {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(217, 166, 94, 0.2);
+}
+
 .game-inventory-equipment h3 {
-  color: #c9f8db;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #f6d28e;
+  font-family: Georgia, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+
+.game-inventory-equipment h3::after {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(236, 184, 102, 0.38), transparent);
+  content: '';
 }
 
 .game-inventory-equipment__grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.62rem;
+  gap: 0.55rem;
 }
 
 .game-inventory-weapon {
-  grid-template-columns: 48px minmax(0, 1fr) auto;
-  border-color: rgba(196, 178, 139, 0.32);
-  background: linear-gradient(145deg, rgba(35, 40, 43, 0.98), rgba(15, 21, 25, 0.98));
-  box-shadow: inset 3px 0 rgba(158, 176, 168, 0.26);
+  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 0.5rem 0.62rem;
+  min-width: 0;
+  border: 2px solid #2a1710;
+  border-color: #8c633f #2c180f #25130d #9c7148;
+  border-radius: 0.6rem;
+  background: linear-gradient(rgba(255, 255, 255, 0.025), transparent), #352118;
+  box-shadow:
+    inset 0 0 0 1px rgba(220, 173, 104, 0.1),
+    0 3px 0 #1b0c07;
 }
 
 .game-inventory-weapon.is-equipped {
-  border-color: #4bdb91;
-  background: linear-gradient(145deg, #173c2b, #101e1a);
+  border-color: #a7e59d #346d42 #285734 #c0efad;
+  background: radial-gradient(circle at 0 0, rgba(128, 218, 133, 0.18), transparent 48%), #29402a;
   box-shadow:
-    inset 3px 0 #4bdb91,
-    0 0 16px rgba(75, 219, 145, 0.13);
+    inset 0 0 0 2px rgba(124, 210, 130, 0.15),
+    0 0 14px rgba(97, 199, 109, 0.16),
+    0 3px 0 #14200f;
 }
 
 .game-inventory-weapon--raro {
-  border-color: rgba(56, 189, 248, 0.7);
-  box-shadow: inset 3px 0 #38bdf8;
+  border-color: #77d8ff #285d74 #224d60 #9ce4ff;
 }
 
 .game-inventory-weapon--epico {
-  border-color: rgba(192, 132, 252, 0.75);
-  box-shadow: inset 3px 0 #c084fc;
+  border-color: #d7a7ff #633b7d #4c2d61 #e8c7ff;
 }
 
 .game-inventory-weapon--lendario,
 .game-inventory-weapon--legendary {
-  border-color: rgba(251, 191, 36, 0.78);
-  background: linear-gradient(145deg, #382e17, #181810);
-  box-shadow: inset 3px 0 #fbbf24;
+  border-color: #ffe38b #8b611b #724d13 #fff0ae;
+  background: radial-gradient(circle at 0 0, rgba(255, 205, 74, 0.22), transparent 46%), #403019;
 }
 
 .game-inventory-weapon--mitico {
-  border-color: #d8b4fe;
-  background: linear-gradient(135deg, #2b1637, #172b32 52%, #332814);
+  border-color: #ffb4f4 #6d438c #3e527b #ffc8f5;
+  background: linear-gradient(135deg, rgba(232, 121, 249, 0.18), rgba(56, 189, 248, 0.12)), #302338;
   box-shadow:
-    inset 3px 0 #e879f9,
-    0 0 18px rgba(232, 121, 249, 0.17);
+    0 0 16px rgba(232, 121, 249, 0.14),
+    0 3px 0 #160b13;
 }
 
 .game-inventory-weapon--secreto,
 .game-inventory-weapon--secret {
-  border-color: #fb7185;
-  background: linear-gradient(145deg, #35121b, #16131f);
-  box-shadow: inset 3px 0 #fb7185;
+  border-color: #ff9cac #7a2838 #631f2c #ffc1ca;
+  background: radial-gradient(circle at 0 0, rgba(251, 113, 133, 0.22), transparent 48%), #3c2027;
+  box-shadow:
+    0 0 17px rgba(251, 113, 133, 0.14),
+    0 3px 0 #180a0e;
+}
+
+.game-inventory-weapon__icon {
+  grid-row: 1 / 3;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #b17b46;
+  border-radius: 0.42rem;
+  background: radial-gradient(circle, rgba(255, 226, 167, 0.1), transparent 58%), #1f130e;
+  color: #f0c477;
+  box-shadow:
+    inset 2px 2px rgba(255, 235, 191, 0.07),
+    inset -2px -2px rgba(0, 0, 0, 0.42);
 }
 
 .game-inventory-weapon__copy strong {
-  color: #fff5da;
+  overflow: hidden;
+  color: #fff0c8;
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-inventory-weapon__copy small {
-  color: #a9b7b0;
+  color: #cbb79a;
+  font-size: 0.58rem;
 }
 
-@media (max-width: 900px) {
+.game-inventory-weapon__rarity {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.22rem;
+  padding: 0.08rem 0.3rem;
+  border: 1px solid rgba(237, 201, 139, 0.26);
+  border-radius: 999px;
+  background: rgba(20, 10, 7, 0.52);
+  color: #ead0a4;
+  font-size: 0.45rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.game-inventory-weapon > button {
+  grid-column: 2;
+  justify-self: start;
+  min-height: 1.8rem;
+  border-color: #d3a75e;
+  background: linear-gradient(180deg, #3e8d57, #27633e);
+  color: #fff6d7;
+  box-shadow: 0 2px 0 #173722;
+  cursor: pointer;
+}
+
+.game-inventory-weapon > button:not(:disabled):hover {
+  background: linear-gradient(180deg, #50a768, #307549);
+}
+
+.game-inventory-weapon > button:disabled {
+  border-color: #709574;
+  background: #36513a;
+  color: #d7e9d8;
+  cursor: default;
+  opacity: 0.82;
+}
+
+.game-inventory-empty--equipment {
+  display: grid;
+  min-height: 13rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px dashed rgba(224, 177, 106, 0.38);
+  border-radius: 0.7rem;
+  color: #d8bd94;
+  text-align: center;
+}
+
+.game-inventory-empty--equipment strong {
+  color: #ffe7b4;
+  font-family: Georgia, serif;
+}
+
+.game-inventory-empty--equipment span {
+  max-width: 23rem;
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 980px) {
   .game-inventory-layout {
-    grid-template-columns: minmax(15rem, 0.8fr) minmax(22rem, 1.2fr);
+    grid-template-columns: minmax(15rem, 0.82fr) minmax(21rem, 1.18fr);
   }
 
   .game-inventory-equipment__grid {
@@ -849,17 +1211,22 @@ header .game-nav-item {
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 720px) {
+  .game-inventory-overlay {
+    padding: 0.25rem;
+  }
+
   .game-inventory-overlay .game-inventory-modal {
-    width: 98vw;
-    height: 96dvh;
-    max-height: 96dvh;
+    width: calc(100vw - 0.5rem);
+    height: calc(100dvh - 0.5rem);
+    max-height: calc(100dvh - 0.5rem);
     padding: 0.7rem;
-    border-radius: 1rem;
+    border-radius: 0.9rem;
   }
 
   .game-inventory-header {
-    min-height: 3.7rem;
+    min-height: 3.8rem;
+    padding-bottom: 0.7rem;
   }
 
   .game-inventory-header .game-modal__text,
@@ -868,31 +1235,124 @@ header .game-nav-item {
   }
 
   .game-inventory-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(11rem, 0.75fr) minmax(17rem, 1.3fr);
+    display: block;
+    overflow-y: auto;
+    padding: 0.75rem 0.12rem 0.35rem;
+    scrollbar-color: #9a653b #28160f;
+    scrollbar-width: thin;
+  }
+
+  .game-inventory-pane {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .game-inventory-pane--arsenal {
+    margin-top: 0.85rem;
+  }
+
+  .game-inventory-pane__scroll,
+  .game-inventory-equipment {
+    overflow: visible;
+  }
+
+  .game-inventory-weapon > button {
+    min-height: 2.75rem;
   }
 
   .game-inventory-grid {
-    grid-template-columns: repeat(4, minmax(3.25rem, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 430px) {
+  .game-inventory-overlay .game-inventory-modal {
+    padding: 0.58rem;
+  }
+
+  .game-inventory-overlay .game-modal__close-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .game-inventory-header {
+    gap: 0.52rem;
+    padding-right: 3.1rem;
+  }
+
+  .game-inventory-header__handle {
+    top: -0.45rem;
+    width: 4.4rem;
+    height: 1.1rem;
+  }
+
   .game-inventory-header__crest {
-    flex-basis: 2.7rem;
-    width: 2.7rem;
-    height: 2.7rem;
+    flex-basis: 2.45rem;
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
+  .game-inventory-header__crest svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .game-inventory-header__eyebrow {
+    display: none;
+  }
+
+  .game-inventory-header .game-modal__title {
+    font-size: 1.02rem;
+  }
+
+  .game-inventory-header__counter {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .game-inventory-header__counter small {
+    display: none;
+  }
+
+  .game-inventory-pane__head {
+    padding: 0.62rem 0.68rem;
   }
 
   .game-inventory-grid {
-    grid-template-columns: repeat(4, minmax(2.8rem, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.36rem;
+    padding: 0.42rem;
+  }
+
+  .game-inventory-slot,
+  .game-inventory-slot--vacant {
+    min-height: 3.2rem;
+  }
+
+  .game-inventory-material-slot .game-inventory-slot__icon {
+    font-size: 1.42rem;
+  }
+
+  .game-inventory-material-slot > small {
+    font-size: 0.42rem;
   }
 
   .game-inventory-weapon {
     grid-template-columns: 44px minmax(0, 1fr);
+    padding: 0.55rem;
   }
 
   .game-inventory-weapon > button {
     grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-inventory-slot,
+  .game-inventory-overlay .game-modal__close-btn {
+    transition: none;
   }
 }
