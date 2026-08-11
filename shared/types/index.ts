@@ -988,7 +988,7 @@ export const ROUTE_DRINK_HOURS = 1;
 export const ROUTE_DRINK_LABEL = 'Route Drink';
 export const ROUTE_DRINK_SHOP_PRICE = 40;
 /** @deprecated Use {@link AFK_ROUTE_DRINK_DROP_THRESHOLD} from shared/afk/exploration-drops.js */
-export const AFK_ROUTE_DRINK_DROP_CHANCE = 4;
+export const AFK_ROUTE_DRINK_DROP_CHANCE = 0.5;
 
 export const EXP_INSTANT_ITEM_ID: InventoryItemId = 'exp_instant';
 export const EXP_INSTANT_LABEL = 'EXP Instantâneo';
@@ -2123,12 +2123,15 @@ export {
   SLIME_MATERIAL_BY_ENEMY_ID,
   SLIME_MATERIAL_DROP_CHANCE_PCT,
   SLIME_MATERIAL_SELL_PRICE,
+  SPECIAL_SLIME_MATERIAL_DROP_CHANCE_PCT,
+  SPECIAL_SLIME_MATERIAL_SELL_PRICE,
   getSlimeMaterialForEnemy,
   isSlimeMaterialItemId,
 } from '../afk/slime-materials.js';
 export type {
   SlimeMaterialDefinition,
   SlimeMaterialItemId,
+  SlimeMaterialRarity,
   SlimeMaterialStockItem,
 } from '../afk/slime-materials.js';
 export type { EquipmentId } from '../equipment/index.js';

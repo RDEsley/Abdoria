@@ -1,4 +1,9 @@
-import type { IUserDocument, PatrolShopResponse, PatrolWeaponKind } from '@/types';
+import type {
+  IUserDocument,
+  PatrolShopResponse,
+  PatrolWeaponKind,
+  SlimeMaterialRarity,
+} from '@/types';
 import { fetchJson } from './client';
 
 export function getPatrolShop(): Promise<PatrolShopResponse> {
@@ -34,7 +39,7 @@ export function sellPatrolMaterial(
   });
 }
 
-export function sellPatrolMaterialsBulk(tier: 'all' | 'common' | 'elite' | 'boss'): Promise<{
+export function sellPatrolMaterialsBulk(rarity: SlimeMaterialRarity | 'all'): Promise<{
   user: IUserDocument;
   quantity_sold: number;
   coins_gained: number;
@@ -42,6 +47,6 @@ export function sellPatrolMaterialsBulk(tier: 'all' | 'common' | 'elite' | 'boss
 }> {
   return fetchJson('/patrol-shop/materials/sell-bulk', {
     method: 'POST',
-    body: JSON.stringify({ tier }),
+    body: JSON.stringify({ rarity }),
   });
 }

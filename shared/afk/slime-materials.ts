@@ -1,6 +1,7 @@
 import { AFK_ENEMIES, type AfkEnemyId, type AfkEnemyTier } from './combat.js';
 
 export type SlimeMaterialItemId = `slime_material_${AfkEnemyId}`;
+export type SlimeMaterialRarity = 'comum' | 'raro' | 'epico' | 'mitico';
 
 export interface SlimeMaterialDefinition {
   id: SlimeMaterialItemId;
@@ -9,6 +10,7 @@ export interface SlimeMaterialDefinition {
   description: string;
   icon: string;
   tier: AfkEnemyTier;
+  rarity: SlimeMaterialRarity;
   dropChancePct: number;
   sellPrice: number;
 }
@@ -18,15 +20,26 @@ export interface SlimeMaterialStockItem extends SlimeMaterialDefinition {
 }
 
 export const SLIME_MATERIAL_DROP_CHANCE_PCT: Record<AfkEnemyTier, number> = {
-  common: 10,
+  common: 4,
   elite: 5,
-  boss: 20,
+  boss: 15,
 };
+
+export const SPECIAL_SLIME_MATERIAL_DROP_CHANCE_PCT = 50;
+export const SPECIAL_SLIME_MATERIAL_SELL_PRICE = 500;
 
 export const SLIME_MATERIAL_SELL_PRICE: Record<AfkEnemyTier, number> = {
   common: 3,
   elite: 4,
   boss: 15,
+};
+
+const SPECIAL_SLIME_MATERIAL_ENEMY_IDS = new Set<AfkEnemyId>(['slime_enigma', 'slime_binario']);
+
+const SLIME_MATERIAL_RARITY_BY_TIER: Record<AfkEnemyTier, SlimeMaterialRarity> = {
+  common: 'comum',
+  elite: 'raro',
+  boss: 'epico',
 };
 
 const MATERIAL_SEEDS = {
@@ -71,6 +84,7 @@ export const SLIME_MATERIALS: readonly SlimeMaterialDefinition[] = (
 ).map((enemyId) => {
   const [name, description, icon] = MATERIAL_SEEDS[enemyId];
   const tier = AFK_ENEMIES[enemyId].tier;
+  const isSpecial = SPECIAL_SLIME_MATERIAL_ENEMY_IDS.has(enemyId);
   return {
     id: `slime_material_${enemyId}`,
     enemyId,
@@ -78,8 +92,11 @@ export const SLIME_MATERIALS: readonly SlimeMaterialDefinition[] = (
     description,
     icon,
     tier,
-    dropChancePct: SLIME_MATERIAL_DROP_CHANCE_PCT[tier],
-    sellPrice: SLIME_MATERIAL_SELL_PRICE[tier],
+    rarity: isSpecial ? 'mitico' : SLIME_MATERIAL_RARITY_BY_TIER[tier],
+    dropChancePct: isSpecial
+      ? SPECIAL_SLIME_MATERIAL_DROP_CHANCE_PCT
+      : SLIME_MATERIAL_DROP_CHANCE_PCT[tier],
+    sellPrice: isSpecial ? SPECIAL_SLIME_MATERIAL_SELL_PRICE : SLIME_MATERIAL_SELL_PRICE[tier],
   };
 });
 

@@ -4,7 +4,7 @@
   AFK_LEVEL10_BOW_CRIT_CHANCE,
   AFK_LEVEL10_SWORD_CRIT_CHANCE,
   CURRENCY_NAME,
-  type AfkEnemyTier,
+  type SlimeMaterialRarity,
   type PatrolArmasState,
   type PatrolShopCatalogItem,
   type PatrolShopResponse,
@@ -222,12 +222,15 @@ export async function sellPatrolMaterial(userId: string, itemId: string, quantit
   };
 }
 
-export async function sellPatrolMaterialsByTier(userId: string, tier: AfkEnemyTier | 'all') {
+export async function sellPatrolMaterialsByRarity(
+  userId: string,
+  rarity: SlimeMaterialRarity | 'all',
+) {
   const user = await User.findById(userId);
   if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
 
   const stocked = readSlimeMaterialStock(user).filter(
-    (material) => material.quantity > 0 && (tier === 'all' || material.tier === tier),
+    (material) => material.quantity > 0 && (rarity === 'all' || material.rarity === rarity),
   );
   if (stocked.length === 0) {
     return { error: 'Nenhum material desta raridade para vender.', status: 400 as const };

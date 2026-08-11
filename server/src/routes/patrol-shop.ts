@@ -8,9 +8,9 @@ import {
   loadUserForPatrolShop,
   purchasePatrolWeapon,
   sellPatrolMaterial,
-  sellPatrolMaterialsByTier,
+  sellPatrolMaterialsByRarity,
 } from '../services/patrol-shop.js';
-import type { PatrolWeaponKind } from '../types/index.js';
+import type { PatrolWeaponKind, SlimeMaterialRarity } from '../types/index.js';
 
 export const patrolShopRouter = Router();
 
@@ -110,14 +110,20 @@ patrolShopRouter.post('/materials/sell', async (req: AuthRequest, res) => {
 
 patrolShopRouter.post('/materials/sell-bulk', async (req: AuthRequest, res) => {
   try {
-    const requestedTier = String(req.body?.tier ?? 'all');
-    if (!['all', 'common', 'elite', 'boss'].includes(requestedTier)) {
+    const legacyRarity: Record<string, SlimeMaterialRarity> = {
+      common: 'comum',
+      elite: 'raro',
+      boss: 'epico',
+    };
+    const requested = String(req.body?.rarity ?? req.body?.tier ?? 'all');
+    const requestedRarity = legacyRarity[requested] ?? requested;
+    if (!['all', 'comum', 'raro', 'epico', 'mitico'].includes(requestedRarity)) {
       res.status(400).json({ error: 'Selecione uma raridade válida.' });
       return;
     }
-    const result = await sellPatrolMaterialsByTier(
+    const result = await sellPatrolMaterialsByRarity(
       req.userId!,
-      requestedTier as 'all' | 'common' | 'elite' | 'boss',
+      requestedRarity as SlimeMaterialRarity | 'all',
     );
     if ('error' in result) {
       res.status(result.status ?? 400).json({ error: result.error });

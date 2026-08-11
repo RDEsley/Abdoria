@@ -522,7 +522,7 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
                       {materials.map((material) => (
                         <div
                           key={material.id}
-                          className={`game-inventory-slot game-inventory-material-slot game-inventory-material-slot--${material.tier}`}
+                          className={`game-inventory-slot game-inventory-material-slot game-inventory-material-slot--${material.tier} game-inventory-material-slot--rarity-${material.rarity}`}
                           aria-label={`${material.name}, ${material.quantity} em estoque`}
                           title={`${material.name} · vale ${material.sellPrice} Coins`}
                         >

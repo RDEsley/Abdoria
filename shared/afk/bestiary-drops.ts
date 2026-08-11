@@ -54,7 +54,7 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   doria_bag: '2%',
   exp_instant: '5%',
   frozen_streak: '15% ao dia',
-  route_drink: '0,04%',
+  route_drink: '0,5%',
   cosmetic_legendary: '0,07%',
   cosmetic_secret: '5%',
   titulo_secreto: '0,01%',
@@ -62,7 +62,7 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
   weapon_mythic: '5–11%',
   weapon_secret: '0,003%',
   weapon_spell: '25%',
-  material_unique: '5–20%',
+  material_unique: '4–50%',
 };
 
 // Loot por tier: comuns = recursos básicos; elites = recursos + Route Drink;
@@ -70,12 +70,7 @@ const BESTIARY_DROP_CHANCE: Record<BestiaryDropId, string> = {
 // um bônus diário global da exploração, portanto não pertence a um inimigo.
 const COMMON_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'doria_bag', 'exp_instant'];
 const ELITE_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'route_drink'];
-const BOSS_DROPS: BestiaryDropId[] = [
-  'xp',
-  'abdoria',
-  'cosmetic_legendary',
-  'weapon_mythic',
-];
+const BOSS_DROPS: BestiaryDropId[] = ['xp', 'abdoria', 'cosmetic_legendary', 'weapon_mythic'];
 
 const GOLDEN_SLIME_DROPS: BestiaryDropId[] = ['abdoria_golden'];
 const MAGIC_RABBIT_DROPS: BestiaryDropId[] = ['weapon_spell'];

@@ -18,7 +18,7 @@ import { PatrolShopItemRow } from '@/components/afk/patrol-shop/PatrolShopItemRo
 import { PatrolShopVendor } from '@/components/afk/patrol-shop/PatrolShopVendor';
 import {
   PatrolMaterialMarket,
-  type MaterialTierFilter,
+  type MaterialRarityFilter,
 } from '@/components/afk/patrol-shop/PatrolMaterialMarket';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
@@ -50,11 +50,12 @@ interface Props {
 
 type TabId = PatrolWeaponKind | 'materials';
 
-const MATERIAL_FILTER_LABEL: Record<MaterialTierFilter, string> = {
+const MATERIAL_FILTER_LABEL: Record<MaterialRarityFilter, string> = {
   all: 'todas as raridades',
-  common: 'comum',
-  elite: 'elite',
-  boss: 'chefe',
+  comum: 'comum',
+  raro: 'raro',
+  epico: 'épico',
+  mitico: 'mítico',
 };
 
 const TABS: {
@@ -87,7 +88,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     details: PurchaseConfirmDetails;
   } | null>(null);
   const [bulkSaleConfirm, setBulkSaleConfirm] = useState<{
-    tier: MaterialTierFilter;
+    rarity: MaterialRarityFilter;
     details: PurchaseConfirmDetails;
   } | null>(null);
 
@@ -206,7 +207,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
 
   const requestMaterialSale = (item: SlimeMaterialStockItem, quantity: number | 'all') => {
     const quantityToSell = quantity === 'all' ? item.quantity : Math.min(item.quantity, quantity);
-    if (quantityToSell <= 1 && item.tier !== 'boss') {
+    if (quantityToSell <= 1 && item.rarity !== 'epico' && item.rarity !== 'mitico') {
       void handleSellMaterial(item, quantityToSell);
       return;
     }
@@ -223,9 +224,9 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     });
   };
 
-  const requestBulkSale = (tier: MaterialTierFilter) => {
+  const requestBulkSale = (rarity: MaterialRarityFilter) => {
     const selected = (catalog?.materials ?? []).filter(
-      (material) => material.quantity > 0 && (tier === 'all' || material.tier === tier),
+      (material) => material.quantity > 0 && (rarity === 'all' || material.rarity === rarity),
     );
     const quantity = selected.reduce((total, material) => total + material.quantity, 0);
     const coins = selected.reduce(
@@ -234,13 +235,13 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     );
     if (quantity < 1) return;
     setBulkSaleConfirm({
-      tier,
+      rarity,
       details: {
         itemName: `${quantity} materiais selecionados`,
         itemDescription:
           'Os materiais da raridade escolhida serão removidos da mochila e não poderão ser recuperados.',
         priceLabel: `Receber ${coins} Coins`,
-        balanceHint: `Filtro: ${MATERIAL_FILTER_LABEL[tier]}`,
+        balanceHint: `Filtro: ${MATERIAL_FILTER_LABEL[rarity]}`,
       },
     });
   };
@@ -249,7 +250,7 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     if (!bulkSaleConfirm) return;
     setBusyId('bulk');
     try {
-      const response = await sellPatrolMaterialsBulk(bulkSaleConfirm.tier);
+      const response = await sellPatrolMaterialsBulk(bulkSaleConfirm.rarity);
       applyUser(response.user);
       setCatalog(response.shop);
       playPurchase();

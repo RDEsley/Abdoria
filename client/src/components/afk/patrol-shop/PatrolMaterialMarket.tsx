@@ -1,36 +1,38 @@
 import { Coins, PackageOpen } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { SlimeMaterialStockItem } from '@/types';
+import type { SlimeMaterialRarity, SlimeMaterialStockItem } from '@/types';
 
-export type MaterialTierFilter = 'all' | 'common' | 'elite' | 'boss';
+export type MaterialRarityFilter = SlimeMaterialRarity | 'all';
 
 interface Props {
   materials: SlimeMaterialStockItem[];
   busyId: string | null;
   onSell: (item: SlimeMaterialStockItem, quantity: number | 'all') => void;
-  onSellBulk: (tier: MaterialTierFilter) => void;
+  onSellBulk: (rarity: MaterialRarityFilter) => void;
 }
 
-const TIER_LABEL = {
-  common: 'Comum',
-  elite: 'Elite',
-  boss: 'Chefe',
+const RARITY_LABEL: Record<SlimeMaterialRarity, string> = {
+  comum: 'Comum',
+  raro: 'Raro',
+  epico: 'Épico',
+  mitico: 'Mítico',
 } as const;
 
-const FILTERS: readonly { id: MaterialTierFilter; label: string }[] = [
+const FILTERS: readonly { id: MaterialRarityFilter; label: string }[] = [
   { id: 'all', label: 'Todas' },
-  { id: 'common', label: 'Comum' },
-  { id: 'elite', label: 'Elite' },
-  { id: 'boss', label: 'Chefe' },
+  { id: 'comum', label: 'Comum' },
+  { id: 'raro', label: 'Raro' },
+  { id: 'epico', label: 'Épico' },
+  { id: 'mitico', label: 'Mítico' },
 ];
 
 export function PatrolMaterialMarket({ materials, busyId, onSell, onSellBulk }: Props) {
-  const [tierFilter, setTierFilter] = useState<MaterialTierFilter>('all');
+  const [rarityFilter, setRarityFilter] = useState<MaterialRarityFilter>('all');
   const stocked = materials.filter((material) => material.quantity > 0);
   const bulkSummary = useMemo(
     () =>
       stocked
-        .filter((material) => tierFilter === 'all' || material.tier === tierFilter)
+        .filter((material) => rarityFilter === 'all' || material.rarity === rarityFilter)
         .reduce(
           (total, material) => ({
             items: total.items + material.quantity,
@@ -38,7 +40,7 @@ export function PatrolMaterialMarket({ materials, busyId, onSell, onSellBulk }: 
           }),
           { items: 0, coins: 0 },
         ),
-    [stocked, tierFilter],
+    [stocked, rarityFilter],
   );
 
   if (stocked.length === 0) {
@@ -67,9 +69,9 @@ export function PatrolMaterialMarket({ materials, busyId, onSell, onSellBulk }: 
             <button
               key={filter.id}
               type="button"
-              className={tierFilter === filter.id ? 'is-active' : ''}
-              aria-pressed={tierFilter === filter.id}
-              onClick={() => setTierFilter(filter.id)}
+              className={rarityFilter === filter.id ? 'is-active' : ''}
+              aria-pressed={rarityFilter === filter.id}
+              onClick={() => setRarityFilter(filter.id)}
             >
               {filter.label}
             </button>
@@ -79,7 +81,7 @@ export function PatrolMaterialMarket({ materials, busyId, onSell, onSellBulk }: 
           type="button"
           className="game-patrol-materials__bulk-action"
           disabled={busyId !== null || bulkSummary.items === 0}
-          onClick={() => onSellBulk(tierFilter)}
+          onClick={() => onSellBulk(rarityFilter)}
         >
           <Coins size={15} aria-hidden />
           {busyId === 'bulk'
@@ -94,14 +96,14 @@ export function PatrolMaterialMarket({ materials, busyId, onSell, onSellBulk }: 
           return (
             <article
               key={material.id}
-              className={`game-patrol-material game-patrol-material--${material.tier}`}
+              className={`game-patrol-material game-patrol-material--${material.tier} game-patrol-material--rarity-${material.rarity}`}
               role="listitem"
             >
               <span className="game-patrol-material__icon" aria-hidden>
                 {material.icon}
               </span>
               <div className="game-patrol-material__content">
-                <span className="game-patrol-material__tier">{TIER_LABEL[material.tier]}</span>
+                <span className="game-patrol-material__tier">{RARITY_LABEL[material.rarity]}</span>
                 <strong>{material.name}</strong>
                 <small>{material.description}</small>
                 <span className="game-patrol-material__price">
