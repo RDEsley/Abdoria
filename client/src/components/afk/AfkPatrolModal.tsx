@@ -113,6 +113,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const [explorationSettingsOpen, setExplorationSettingsOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [travelingRegionId, setTravelingRegionId] = useState<AfkRegionId | null>(null);
+  const [unlockedRegionId, setUnlockedRegionId] = useState<AfkRegionId | null>(null);
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   const [adventureBusy, setAdventureBusy] = useState(false);
   const adventureBusyRef = useRef(false);
@@ -136,6 +137,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   }, [sceneMode]);
   const [sceneTransition, setSceneTransition] = useState<string | null>(null);
   const sceneTransitionTimerRef = useRef<number | null>(null);
+  const chapterUnlockTimerRef = useRef<number | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
   /** XP/level-up ficam represados até o jogador fechar a celebração do baú —
@@ -162,8 +164,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     }
   }, []);
 
+  // A resposta de equipar atualiza o usuário imediatamente. Priorizá-la evita
+  // que um snapshot AFK antigo mantenha a arma anterior até o próximo poll.
   const preferredWeapon: ArmaPreferida =
-    meta?.arma_preferida ?? user?.preferencias?.arma_preferida ?? 'arco';
+    user?.preferencias?.arma_preferida ?? meta?.arma_preferida ?? 'arco';
   const patrolArmas = resolvePatrolArmas(user?.preferencias?.patrol_armas);
   // Sem magia equipada, o modo magia cai de volta pro arco.
   const weapon: ArmaPreferida =
@@ -187,7 +191,9 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         ...(prev ?? (data as AfkMetaResponse)),
         ...data,
         arma_preferida:
-          prev?.arma_preferida ?? ('arma_preferida' in data ? data.arma_preferida : 'arco'),
+          ('arma_preferida' in data ? data.arma_preferida : undefined) ??
+          prev?.arma_preferida ??
+          'arco',
         combat: replaceCombat ? data.combat : mergeAfkCombatSnapshot(prev?.combat, data.combat),
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
@@ -273,6 +279,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   useEffect(
     () => () => {
       if (sceneTransitionTimerRef.current) window.clearTimeout(sceneTransitionTimerRef.current);
+      if (chapterUnlockTimerRef.current) window.clearTimeout(chapterUnlockTimerRef.current);
     },
     [],
   );
@@ -290,6 +297,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       setInventoryOpen(false);
       setExplorationSettingsOpen(false);
       setMapOpen(false);
+      setUnlockedRegionId(null);
       setSkillTreeOpen(false);
       setDialogue(null);
       setPendingDialogue(null);
@@ -308,6 +316,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       if (sceneTransitionTimerRef.current) {
         window.clearTimeout(sceneTransitionTimerRef.current);
         sceneTransitionTimerRef.current = null;
+      }
+      if (chapterUnlockTimerRef.current) {
+        window.clearTimeout(chapterUnlockTimerRef.current);
+        chapterUnlockTimerRef.current = null;
       }
       setSceneTransition(null);
       return;
@@ -863,7 +875,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   };
 
   const handleAdvanceChapter = async () => {
-    if (!nextRegion) return;
+    if (!nextRegion || adventureBusyRef.current) return;
     setAdventureBusy(true);
     adventureBusyRef.current = true;
     regionChangeVersionRef.current += 1;
@@ -882,6 +894,16 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       applyAfkResponse(response);
       setActiveRegion(nextRegion);
       setRegionReady(true);
+      setTravelingRegionId(null);
+      setUnlockedRegionId(nextRegion.id);
+      if (chapterUnlockTimerRef.current) window.clearTimeout(chapterUnlockTimerRef.current);
+      chapterUnlockTimerRef.current = window.setTimeout(() => {
+        setUnlockedRegionId(null);
+        chapterUnlockTimerRef.current = null;
+      }, 2_000);
+      showGameToast(`Capítulo ${nextRegion.chapter} desbloqueado: ${nextRegion.name}!`, {
+        variant: 'success',
+      });
       setDialogue({
         title: response.story.title,
         lines: [
@@ -1149,6 +1171,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
 
       {travelingRegionId ? (
         <AfkRegionTravelOverlay region={getAfkRegionById(travelingRegionId)} />
+      ) : null}
+
+      {unlockedRegionId ? (
+        <AfkRegionTravelOverlay region={getAfkRegionById(unlockedRegionId)} mode="unlocked" />
       ) : null}
 
       {orbDropSeq > 0 ? (

@@ -31,5 +31,6 @@ export function mergeAfkCombatSnapshot(
     story_flags: server.story_flags,
     hero_damage_arco: server.hero_damage_arco,
     hero_damage_espada: server.hero_damage_espada,
+    hero_damage_magia: server.hero_damage_magia,
   };
 }

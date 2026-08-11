@@ -14391,6 +14391,47 @@ button.game-afk-reward-chip {
   letter-spacing: 0.04em;
 }
 
+.game-afk-region-travel--unlocked::after {
+  inset: -45vmax;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--travel-accent) 36%, transparent),
+      transparent 54%
+    ),
+    repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.055) 0 8deg, transparent 8deg 20deg);
+  animation: game-afk-unlock-rays 8s linear infinite;
+}
+
+.game-afk-region-travel--unlocked .game-afk-region-travel__card {
+  border-color: color-mix(in srgb, var(--travel-accent) 80%, white 20%);
+  box-shadow:
+    0 1.6rem 4rem rgba(0, 0, 0, 0.62),
+    inset 0 1px rgba(255, 255, 255, 0.2),
+    0 0 3.4rem color-mix(in srgb, var(--travel-accent) 38%, transparent);
+}
+
+.game-afk-region-travel__unlock-seal {
+  display: grid;
+  width: 4.25rem;
+  height: 4.25rem;
+  margin: 1.2rem auto 0.8rem;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--travel-accent) 74%, white 26%);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--travel-accent) 20%, #07131f);
+  color: #fff;
+  box-shadow:
+    0 0 0 0.45rem color-mix(in srgb, var(--travel-accent) 12%, transparent),
+    0 0 2rem color-mix(in srgb, var(--travel-accent) 58%, transparent);
+}
+
+@keyframes game-afk-unlock-rays {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 /* Personagens maiores e um pouco acima da linha do chão do cenário ampliado. */
 .game-afk-mascot {
   bottom: 24%;
@@ -14450,6 +14491,10 @@ button.game-afk-reward-chip {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .game-afk-region-travel--unlocked::after {
+    animation: none;
+  }
+
   .game-afk-region-travel__traveler {
     left: 50%;
     animation: none;
@@ -14744,6 +14789,20 @@ button.game-afk-reward-chip {
   }
 }
 
+@media (max-width: 430px) {
+  .game-afk-skills__orbs-hint {
+    position: fixed;
+    top: max(4.35rem, calc(env(safe-area-inset-top) + 4rem));
+    right: 0.65rem;
+    left: 0.65rem;
+    width: auto;
+  }
+
+  .game-afk-skills__orbs-hint::before {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .game-afk-skills__head .game-afk-skills__reset-trigger,
   .game-afk-skills__head .game-afk-skills__close {
@@ -14773,5 +14832,188 @@ button.game-afk-reward-chip {
   .game-afk-village__skill-tree:hover .game-afk-village__skill-tree-image,
   .game-afk-village__skill-tree:focus-visible .game-afk-village__skill-tree-image {
     transform: translateY(calc(-6.4% - 5px)) scale(0.9135);
+  }
+}
+
+/* HUD final da árvore: saldo de Orbes e zoom do mapa. */
+.game-afk-skills__orbs-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.game-afk-skills__head-actions .game-afk-skills__orbs-wrap .game-afk-skills__orbs {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 0.42rem;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 4.7rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.28rem 0.68rem 0.28rem 0.36rem;
+  overflow: hidden;
+  color: #eafff4;
+  border: 1px solid rgba(125, 246, 183, 0.58);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 22% 50%, rgba(91, 255, 177, 0.2), transparent 38%),
+    linear-gradient(150deg, #173f2e, #091f18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 5px 14px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(64, 229, 141, 0.12);
+  font: inherit;
+  cursor: pointer;
+}
+
+.game-afk-skills__head-actions .game-afk-skills__orbs::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.12), transparent 68%);
+  content: '';
+  pointer-events: none;
+  transform: translateX(-110%);
+  transition: transform 350ms ease;
+}
+
+.game-afk-skills__head-actions .game-afk-skills__orbs:hover::after,
+.game-afk-skills__head-actions .game-afk-skills__orbs[aria-expanded='true']::after {
+  transform: translateX(110%);
+}
+
+.game-afk-skills__orb-emblem {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  color: #caffdf;
+  border: 1px solid rgba(192, 255, 220, 0.55);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4aef9a, #127252 58%, #092d27);
+  box-shadow:
+    inset 0 0 0 0.18rem rgba(5, 35, 27, 0.55),
+    0 0 10px rgba(73, 241, 157, 0.48);
+}
+
+.game-afk-skills__orb-emblem svg {
+  filter: drop-shadow(0 0 3px rgba(224, 255, 238, 0.7));
+}
+
+.game-afk-skills__head-actions .game-afk-skills__orbs .game-afk-skills__orb-count {
+  position: relative;
+  z-index: 1;
+  min-width: 1.1rem;
+  margin: 0;
+  color: #f1fff6;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(139, 255, 188, 0.45);
+}
+
+.game-afk-skills__zoom {
+  position: absolute;
+  z-index: 16;
+  top: 0.7rem;
+  left: 0.7rem;
+  display: grid;
+  grid-template-columns: 2.75rem 3.25rem 2.75rem;
+  align-items: center;
+  padding: 0.2rem;
+  overflow: hidden;
+  color: #e8fff1;
+  border: 1px solid rgba(160, 222, 185, 0.3);
+  border-radius: 0.78rem;
+  background: rgba(6, 22, 17, 0.9);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(9px);
+}
+
+.game-afk-skills__zoom button {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: #b9f8d2;
+  border: 0;
+  border-radius: 0.58rem;
+  background: rgba(72, 197, 128, 0.12);
+  font:
+    800 1.3rem/1 system-ui,
+    sans-serif;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease;
+}
+
+.game-afk-skills__zoom button:hover:not(:disabled),
+.game-afk-skills__zoom button:focus-visible {
+  color: #f2fff7;
+  background: rgba(80, 226, 147, 0.28);
+}
+
+.game-afk-skills__zoom button:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.game-afk-skills__zoom button:disabled {
+  color: rgba(185, 248, 210, 0.28);
+  cursor: not-allowed;
+}
+
+.game-afk-skills__zoom output {
+  color: #d8f8e5;
+  font-size: 0.65rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.game-afk-skills__canvas-stage {
+  position: relative;
+  width: max-content;
+  height: max-content;
+}
+
+.game-afk-skills__canvas-stage > .game-afk-skills__canvas {
+  position: relative;
+  zoom: var(--skill-tree-zoom);
+}
+
+@media (max-width: 760px) {
+  .game-afk-skills__zoom {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .game-afk-skills__head-actions .game-afk-skills__orbs-wrap .game-afk-skills__orbs {
+    min-width: 4.15rem;
+    padding-right: 0.48rem;
+    padding-left: 0.28rem;
+  }
+
+  .game-afk-skills__orb-emblem {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-afk-skills__head-actions .game-afk-skills__orbs::after,
+  .game-afk-skills__zoom button {
+    transition: none;
   }
 }

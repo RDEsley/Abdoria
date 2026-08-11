@@ -319,8 +319,15 @@ export function InventoryModal({ open, onClose, layer = 'default' }: Props) {
     try {
       const response = await equipPatrolWeapon(kind, id);
       applyUser(response.user);
-      setEquipment(await getPatrolShop());
-      showGameToast('Equipamento atualizado.', { variant: 'success' });
+      setEquipment(response.shop);
+      const equippedItem = [
+        ...response.shop.arcos,
+        ...response.shop.espadas,
+        ...response.shop.magias,
+      ].find((item) => item.id === id);
+      showGameToast(`${equippedItem?.nome ?? 'Equipamento'} em uso no combate!`, {
+        variant: 'success',
+      });
     } catch (error) {
       showGameToast(getErrorMessage(error, 'Não foi possível equipar este item.'), {
         variant: 'error',

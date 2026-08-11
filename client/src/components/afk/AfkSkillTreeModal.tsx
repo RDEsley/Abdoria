@@ -2,6 +2,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type ComponentType,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent,
@@ -69,6 +70,9 @@ const EFFECT_ICONS: Record<AfkSkillEffect, ComponentType<{ size?: number }>> = {
 };
 
 const EMPTY_SKILL_ID_SET = new Set<string>();
+const MIN_SKILL_TREE_ZOOM = 0.5;
+const MAX_SKILL_TREE_ZOOM = 1.5;
+const SKILL_TREE_ZOOM_STEP = 0.1;
 const READY_SKILLS_STORAGE_PREFIX = 'abdoria_skill_tree_ready_seen_v1';
 const FOCUSABLE_SELECTOR =
   'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
@@ -128,6 +132,7 @@ export function AfkSkillTreeModal({
   const [resetOpen, setResetOpen] = useState(false);
   const [resetCurrency, setResetCurrency] = useState<'coins' | 'gems'>('coins');
   const [dragging, setDragging] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const [orbsHintOpen, setOrbsHintOpen] = useState(false);
   const [attentionNodeIds, setAttentionNodeIds] = useState<Set<string>>(EMPTY_SKILL_ID_SET);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -297,6 +302,31 @@ export function AfkSkillTreeModal({
     trapKeyboardFocus(event);
   };
 
+  const changeZoom = (direction: -1 | 1) => {
+    setZoom((currentZoom) => {
+      const nextZoom = Math.min(
+        MAX_SKILL_TREE_ZOOM,
+        Math.max(
+          MIN_SKILL_TREE_ZOOM,
+          Number((currentZoom + direction * SKILL_TREE_ZOOM_STEP).toFixed(1)),
+        ),
+      );
+      if (nextZoom === currentZoom) return currentZoom;
+
+      const viewport = viewportRef.current;
+      if (viewport) {
+        const centerX = viewport.scrollLeft + viewport.clientWidth / 2;
+        const centerY = viewport.scrollTop + viewport.clientHeight / 2;
+        const scaleChange = nextZoom / currentZoom;
+        window.requestAnimationFrame(() => {
+          viewport.scrollLeft = centerX * scaleChange - viewport.clientWidth / 2;
+          viewport.scrollTop = centerY * scaleChange - viewport.clientHeight / 2;
+        });
+      }
+      return nextZoom;
+    });
+  };
+
   return (
     <div
       className="game-afk-skills"
@@ -328,8 +358,10 @@ export function AfkSkillTreeModal({
                 aria-describedby={orbsHintOpen ? 'skill-orbs-hint' : undefined}
                 onClick={() => setOrbsHintOpen((current) => !current)}
               >
-                <CircleDotDashed size={20} aria-hidden />
-                <strong>{combat.orbs}</strong>
+                <span className="game-afk-skills__orb-emblem" aria-hidden>
+                  <CircleDotDashed size={18} />
+                </span>
+                <strong className="game-afk-skills__orb-count">{combat.orbs}</strong>
               </button>
               {orbsHintOpen ? (
                 <div id="skill-orbs-hint" className="game-afk-skills__orbs-hint" role="tooltip">
@@ -380,6 +412,29 @@ export function AfkSkillTreeModal({
         </header>
 
         <div className="game-afk-skills__body">
+          <div className="game-afk-skills__zoom" role="group" aria-label="Zoom da árvore">
+            <button
+              type="button"
+              disabled={zoom <= MIN_SKILL_TREE_ZOOM}
+              onClick={() => changeZoom(-1)}
+              aria-label="Diminuir zoom"
+              title="Diminuir zoom"
+            >
+              −
+            </button>
+            <output aria-live="polite" aria-label={`Zoom em ${Math.round(zoom * 100)} por cento`}>
+              {Math.round(zoom * 100)}%
+            </output>
+            <button
+              type="button"
+              disabled={zoom >= MAX_SKILL_TREE_ZOOM}
+              onClick={() => changeZoom(1)}
+              aria-label="Aumentar zoom"
+              title="Aumentar zoom"
+            >
+              +
+            </button>
+          </div>
           <div
             ref={viewportRef}
             className={`game-afk-skills__viewport${dragging ? ' game-afk-skills__viewport--dragging' : ''}`}
@@ -391,64 +446,69 @@ export function AfkSkillTreeModal({
             onPointerUp={stopDragging}
             onPointerCancel={stopDragging}
           >
-            <div className="game-afk-skills__canvas">
-              <div className="game-afk-skills__mist" aria-hidden />
-              <svg
-                className="game-afk-skills__connections"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                aria-hidden
-              >
-                {AFK_SKILL_NODES.flatMap((node) =>
-                  node.requires.map((requiredId) => {
-                    const parent = getAfkSkillNode(requiredId);
-                    if (!parent) return null;
-                    return (
-                      <line
-                        key={`${requiredId}-${node.id}`}
-                        x1={parent.x}
-                        y1={parent.y}
-                        x2={node.x}
-                        y2={node.y}
-                        className={
-                          unlocked.includes(requiredId) && unlocked.includes(node.id)
-                            ? 'game-afk-skills__line game-afk-skills__line--active'
-                            : unlocked.includes(requiredId)
-                              ? 'game-afk-skills__line game-afk-skills__line--ready'
-                              : 'game-afk-skills__line'
-                        }
-                      />
-                    );
-                  }),
-                )}
-              </svg>
+            <div
+              className="game-afk-skills__canvas-stage"
+              style={{ '--skill-tree-zoom': zoom } as CSSProperties}
+            >
+              <div className="game-afk-skills__canvas">
+                <div className="game-afk-skills__mist" aria-hidden />
+                <svg
+                  className="game-afk-skills__connections"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden
+                >
+                  {AFK_SKILL_NODES.flatMap((node) =>
+                    node.requires.map((requiredId) => {
+                      const parent = getAfkSkillNode(requiredId);
+                      if (!parent) return null;
+                      return (
+                        <line
+                          key={`${requiredId}-${node.id}`}
+                          x1={parent.x}
+                          y1={parent.y}
+                          x2={node.x}
+                          y2={node.y}
+                          className={
+                            unlocked.includes(requiredId) && unlocked.includes(node.id)
+                              ? 'game-afk-skills__line game-afk-skills__line--active'
+                              : unlocked.includes(requiredId)
+                                ? 'game-afk-skills__line game-afk-skills__line--ready'
+                                : 'game-afk-skills__line'
+                          }
+                        />
+                      );
+                    }),
+                  )}
+                </svg>
 
-              {AFK_SKILL_NODES.map((node) => {
-                const learned = unlocked.includes(node.id);
-                const available = canUnlockAfkSkill(unlocked, node.id);
-                const Icon = EFFECT_ICONS[node.effect];
-                return (
-                  <button
-                    key={node.id}
-                    type="button"
-                    className={`game-afk-skill-node game-afk-skill-node--${node.branch}${node.id === 'core_instinct' ? ' game-afk-skill-node--core' : ''}${learned ? ' game-afk-skill-node--learned' : ''}${available ? ' game-afk-skill-node--available' : ''}${attentionNodeIds.has(node.id) ? ' game-afk-skill-node--newly-available' : ''}${selected.id === node.id ? ' game-afk-skill-node--selected' : ''}`}
-                    style={{ left: `${node.x}%`, top: `${node.y}%` }}
-                    onClick={(event) => {
-                      if (suppressNodeClickRef.current) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        return;
-                      }
-                      setSelectedId(node.id);
-                    }}
-                    aria-label={`${node.name}. ${node.description}. Custo: ${node.cost} orbes.`}
-                    aria-pressed={selected.id === node.id}
-                    title={node.name}
-                  >
-                    <Icon aria-hidden />
-                  </button>
-                );
-              })}
+                {AFK_SKILL_NODES.map((node) => {
+                  const learned = unlocked.includes(node.id);
+                  const available = canUnlockAfkSkill(unlocked, node.id);
+                  const Icon = EFFECT_ICONS[node.effect];
+                  return (
+                    <button
+                      key={node.id}
+                      type="button"
+                      className={`game-afk-skill-node game-afk-skill-node--${node.branch}${node.id === 'core_instinct' ? ' game-afk-skill-node--core' : ''}${learned ? ' game-afk-skill-node--learned' : ''}${available ? ' game-afk-skill-node--available' : ''}${attentionNodeIds.has(node.id) ? ' game-afk-skill-node--newly-available' : ''}${selected.id === node.id ? ' game-afk-skill-node--selected' : ''}`}
+                      style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                      onClick={(event) => {
+                        if (suppressNodeClickRef.current) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          return;
+                        }
+                        setSelectedId(node.id);
+                      }}
+                      aria-label={`${node.name}. ${node.description}. Custo: ${node.cost} orbes.`}
+                      aria-pressed={selected.id === node.id}
+                      title={node.name}
+                    >
+                      <Icon aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

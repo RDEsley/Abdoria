@@ -164,7 +164,9 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   user.preferencias.patrol_armas = armas;
   user.preferencias.arma_preferida = def.kind;
 
-  await user.save();
+  // A compra não altera combate/AFK. Limitar as colunas evita que uma leitura
+  // antiga da loja sobrescreva HP ou progresso gravados durante a compra.
+  await user.save({ profileColumns: ['preferencias', 'cosmeticos'] });
 
   return {
     user,
@@ -197,7 +199,9 @@ export async function equipPatrolWeapon(userId: string, kind: PatrolWeaponKind, 
 
   user.preferencias.patrol_armas = armas;
   user.preferencias.arma_preferida = kind;
-  await user.save();
+  // Equipar no meio da luta não pode regravar o snapshot AFK lido no início
+  // desta requisição; só a preferência de equipamento pertence a este fluxo.
+  await user.save({ profileColumns: ['preferencias'] });
 
   return { user, item: def };
 }

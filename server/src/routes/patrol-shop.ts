@@ -70,7 +70,11 @@ patrolShopRouter.patch('/equip', async (req: AuthRequest, res) => {
       return;
     }
 
-    res.json({ user: sanitizeUser(result.user), item: result.item });
+    res.json({
+      user: sanitizeUser(result.user),
+      item: result.item,
+      shop: buildPatrolShopResponse(result.user),
+    });
   } catch (error) {
     console.error('PATCH /api/patrol-shop/equip error:', error);
     res.status(500).json({ error: 'Erro ao equipar item.' });

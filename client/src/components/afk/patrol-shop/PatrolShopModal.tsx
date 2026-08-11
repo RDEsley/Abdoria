@@ -166,24 +166,12 @@ export function PatrolShopModal({ open, onClose, onWeaponChange }: Props) {
     try {
       const res = await equipPatrolWeapon(item.kind, item.id);
       applyUser(res.user);
-      // Feedback imediato: marca o item como equipado no catálogo local na
-      // hora, sem esperar o refresh do app + reload do catálogo (2 idas a
-      // mais ao servidor) — "Equipar" só virava "Em uso" depois de tudo
-      // isso terminar, dando a sensação de loja travada/lenta.
-      setCatalog((prev) => {
-        if (!prev) return prev;
-        const key = item.kind === 'arco' ? 'arcos' : item.kind === 'espada' ? 'espadas' : 'magias';
-        return {
-          ...prev,
-          [key]: prev[key].map((entry) => ({ ...entry, equipada: entry.id === item.id })),
-        };
-      });
+      // A resposta já traz o catálogo autoritativo. Isso desmarca a categoria
+      // anterior ao trocar, além de marcar o item novo sem uma segunda busca.
+      setCatalog(res.shop);
       playEquip();
       onWeaponChange?.(item.kind);
       showGameToast(`${item.nome} equipado!`, { variant: 'success' });
-      // Nada além de "quem tá equipado" muda ao equipar — sem motivo pra
-      // recarregar o catálogo inteiro (e de novo pela API, com o loading
-      // piscando por cima da lista que acabou de aparecer certa).
       void refreshApp();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível equipar este item.'), {

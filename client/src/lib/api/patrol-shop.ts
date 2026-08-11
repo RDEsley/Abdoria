@@ -15,7 +15,7 @@ export function purchasePatrolWeapon(id: string): Promise<{
 export function equipPatrolWeapon(
   kind: PatrolWeaponKind,
   id: string,
-): Promise<{ user: IUserDocument }> {
+): Promise<{ user: IUserDocument; shop: PatrolShopResponse }> {
   return fetchJson('/patrol-shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });
 }
 
