@@ -67,4 +67,20 @@ describe('streak frozen-day protection', () => {
     expect(comFreeze.atual).toBe(2);
     expect(comFreeze.atual).toBeGreaterThan(semFreeze.atual);
   });
+
+  it('preserva a maior streak histórica através de vários dias congelados', () => {
+    const primeiro = addDaysSaoPaulo(today, -10);
+    const segundo = addDaysSaoPaulo(today, -9);
+    const congelado1 = addDaysSaoPaulo(today, -8);
+    const congelado2 = addDaysSaoPaulo(today, -7);
+    const terceiro = addDaysSaoPaulo(today, -6);
+    const quarto = addDaysSaoPaulo(today, -5);
+
+    const result = computeStreakWithFrozenDays(
+      [workout(primeiro), workout(segundo), workout(terceiro), workout(quarto)],
+      [congelado1, congelado2],
+    );
+
+    expect(result).toEqual({ atual: 0, maior: 4 });
+  });
 });

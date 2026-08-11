@@ -4,6 +4,7 @@
   AFK_LEVEL10_BOW_CRIT_CHANCE,
   AFK_LEVEL10_SWORD_CRIT_CHANCE,
   CURRENCY_NAME,
+  type AfkEnemyTier,
   type PatrolArmasState,
   type PatrolShopCatalogItem,
   type PatrolShopResponse,
@@ -163,7 +164,9 @@ export async function purchasePatrolWeapon(userId: string, itemId: string) {
   user.preferencias.patrol_armas = armas;
   user.preferencias.arma_preferida = def.kind;
 
-  await user.save();
+  // A compra não altera combate/AFK. Limitar as colunas evita que uma leitura
+  // antiga da loja sobrescreva HP ou progresso gravados durante a compra.
+  await user.save({ profileColumns: ['preferencias', 'cosmeticos'] });
 
   return {
     user,
@@ -196,7 +199,9 @@ export async function equipPatrolWeapon(userId: string, kind: PatrolWeaponKind, 
 
   user.preferencias.patrol_armas = armas;
   user.preferencias.arma_preferida = kind;
-  await user.save();
+  // Equipar no meio da luta não pode regravar o snapshot AFK lido no início
+  // desta requisição; só a preferência de equipamento pertence a este fluxo.
+  await user.save({ profileColumns: ['preferencias'] });
 
   return { user, item: def };
 }
@@ -213,6 +218,35 @@ export async function sellPatrolMaterial(userId: string, itemId: string, quantit
     user,
     quantity_sold: result.quantity_sold,
     coins_gained: result.coins_gained,
+    shop: buildPatrolShopResponse(user),
+  };
+}
+
+export async function sellPatrolMaterialsByTier(userId: string, tier: AfkEnemyTier | 'all') {
+  const user = await User.findById(userId);
+  if (!user) return { error: 'Usuário não encontrado.', status: 404 as const };
+
+  const stocked = readSlimeMaterialStock(user).filter(
+    (material) => material.quantity > 0 && (tier === 'all' || material.tier === tier),
+  );
+  if (stocked.length === 0) {
+    return { error: 'Nenhum material desta raridade para vender.', status: 400 as const };
+  }
+
+  let quantitySold = 0;
+  let coinsGained = 0;
+  for (const material of stocked) {
+    const result = sellSlimeMaterialFromInventory(user, material.id, 'all');
+    if (!result.ok) continue;
+    quantitySold += result.quantity_sold;
+    coinsGained += result.coins_gained;
+  }
+
+  await user.save({ profileColumns: ['inventario', 'cosmeticos'] });
+  return {
+    user,
+    quantity_sold: quantitySold,
+    coins_gained: coinsGained,
     shop: buildPatrolShopResponse(user),
   };
 }

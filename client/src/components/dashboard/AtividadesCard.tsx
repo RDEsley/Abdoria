@@ -205,9 +205,9 @@ function AtividadeItem({
  * própria (`/atividades-player`, mesma linguagem visual do Player) — este
  * card só monta a fila e navega pra lá.
  *
- * Regra: em dia de descanso as atividades dão XP e sustentam a streak a
- * partir de `ATIVIDADES_MIN_DESCANSO`; em dia de treino elas só ficam
- * registradas (quem paga o dia é o treino).
+ * Regra: uma única atividade sustenta a streak em qualquer dia. As primeiras
+ * atividades do dia pagam XP até o teto próprio; as seguintes pagam Coins.
+ * Concluir uma atividade não marca a Missão de treino como concluída.
  */
 export function AtividadesCard() {
   const { user, persist } = usePreferencesPersist();
@@ -343,7 +343,9 @@ export function AtividadesCard() {
     }
     persist(
       patch,
-      selecionados.size === 1 ? 'Atividade removida.' : `${selecionados.size} atividades removidas.`,
+      selecionados.size === 1
+        ? 'Atividade removida.'
+        : `${selecionados.size} atividades removidas.`,
     );
     setSelecionados(new Set());
   };
@@ -436,37 +438,37 @@ export function AtividadesCard() {
           {modo === 'notas' ? 'Lembretes' : 'Atividades'}
         </h3>
         {modo === 'atividades' && (
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            className={`atividade-action-btn${modoEdicao ? ' atividade-action-btn--active' : ' atividade-action-btn--editar'}`}
-            aria-label={modoEdicao ? 'Concluir edição da lista' : 'Editar lista de atividades'}
-            aria-pressed={modoEdicao}
-            title={modoEdicao ? 'Concluir edição' : 'Editar lista'}
-            onClick={() => {
-              playClick();
-              if (modoEdicao) sairDoModoEdicao();
-              else setModoEdicao(true);
-            }}
-          >
-            <span className="atividade-action-btn__icon" aria-hidden>
-              {modoEdicao ? <Check size={13} /> : <Pencil size={13} />}
-            </span>
-            {modoEdicao ? 'Concluir' : 'Editar'}
-          </button>
-          <button
-            type="button"
-            className="atividade-action-btn atividade-action-btn--agenda"
-            aria-label="Configurações de atividades"
-            title="Configurações de atividades"
-            onClick={() => setMostrarAgenda(true)}
-          >
-            <span className="atividade-action-btn__icon" aria-hidden>
-              <Settings size={13} />
-            </span>
-            Config
-          </button>
-        </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              className={`atividade-action-btn${modoEdicao ? ' atividade-action-btn--active' : ' atividade-action-btn--editar'}`}
+              aria-label={modoEdicao ? 'Concluir edição da lista' : 'Editar lista de atividades'}
+              aria-pressed={modoEdicao}
+              title={modoEdicao ? 'Concluir edição' : 'Editar lista'}
+              onClick={() => {
+                playClick();
+                if (modoEdicao) sairDoModoEdicao();
+                else setModoEdicao(true);
+              }}
+            >
+              <span className="atividade-action-btn__icon" aria-hidden>
+                {modoEdicao ? <Check size={13} /> : <Pencil size={13} />}
+              </span>
+              {modoEdicao ? 'Concluir' : 'Editar'}
+            </button>
+            <button
+              type="button"
+              className="atividade-action-btn atividade-action-btn--agenda"
+              aria-label="Configurações de atividades"
+              title="Configurações de atividades"
+              onClick={() => setMostrarAgenda(true)}
+            >
+              <span className="atividade-action-btn__icon" aria-hidden>
+                <Settings size={13} />
+              </span>
+              Config
+            </button>
+          </div>
         )}
       </div>
 
@@ -492,128 +494,129 @@ export function AtividadesCard() {
               exit={{ rotateY: 100, opacity: 0 }}
               transition={{ duration: 0.45, ease: [0.34, 1.15, 0.64, 1] }}
             >
-      {atividades.length > 0 && (
-        <p className="atividades-resumo">
-          <strong>{feitasHoje}</strong>/{atividades.length} concluídas hoje
-        </p>
-      )}
+              {atividades.length > 0 && (
+                <p className="atividades-resumo">
+                  <strong>{feitasHoje}</strong>/{atividades.length} concluídas hoje
+                </p>
+              )}
 
-      <p className="flex items-center gap-1.5 text-xs font-semibold text-stone-500">
-        {diaDeTreino ? (
-          <>
-            <Dumbbell size={12} aria-hidden /> Dia de treino — o treino ou qualquer Atividade
-            concluída mantêm sua sequência
-          </>
-        ) : hojeNaAgenda ? (
-          <>
-            <Sparkles size={12} aria-hidden /> Escolha, crie ou edite Atividades
-          </>
-        ) : (
-          <>
-            <CalendarClock size={12} aria-hidden /> Não agendadas hoje — ajuste no calendário acima
-          </>
-        )}
-      </p>
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-stone-500">
+                {diaDeTreino ? (
+                  <>
+                    <Dumbbell size={12} aria-hidden /> Dia de treino — o treino ou qualquer
+                    Atividade concluída mantêm sua sequência
+                  </>
+                ) : hojeNaAgenda ? (
+                  <>
+                    <Sparkles size={12} aria-hidden /> Escolha, crie ou edite Atividades
+                  </>
+                ) : (
+                  <>
+                    <CalendarClock size={12} aria-hidden /> Não agendadas hoje — ajuste no
+                    calendário acima
+                  </>
+                )}
+              </p>
 
-      {filaPendente.length > 0 && !modoEdicao && hojeNaAgenda && (
-        <div className="atividades-fila-cta mt-3">
-          <motion.div
-            className={`atividades-fila-medidor atividades-fila-medidor--tier-${Math.min(filaPendente.length, FILA_MEDIDOR_MAX)}`}
-            animate={medidorControls}
-          >
-            {Array.from({ length: FILA_MEDIDOR_MAX }).map((_, i) => (
-              <span
-                key={i}
-                className={`atividades-fila-medidor__pip${i < filaPendente.length ? ' is-filled' : ''}`}
-              />
-            ))}
-          </motion.div>
+              {filaPendente.length > 0 && !modoEdicao && hojeNaAgenda && (
+                <div className="atividades-fila-cta mt-3">
+                  <motion.div
+                    className={`atividades-fila-medidor atividades-fila-medidor--tier-${Math.min(filaPendente.length, FILA_MEDIDOR_MAX)}`}
+                    animate={medidorControls}
+                  >
+                    {Array.from({ length: FILA_MEDIDOR_MAX }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`atividades-fila-medidor__pip${i < filaPendente.length ? ' is-filled' : ''}`}
+                      />
+                    ))}
+                  </motion.div>
 
-          {mensagemFila(filaPendente.length) && (
-            <p className="atividades-fila-mensagem">
-              <Sparkles size={12} aria-hidden /> {mensagemFila(filaPendente.length)}
-            </p>
-          )}
+                  {mensagemFila(filaPendente.length) && (
+                    <p className="atividades-fila-mensagem">
+                      <Sparkles size={12} aria-hidden /> {mensagemFila(filaPendente.length)}
+                    </p>
+                  )}
 
-          <GameButton
-            className="mt-2 flex w-full items-center justify-center gap-2"
-            onClick={() => {
-              playClick();
-              navigate('/atividades-player');
-            }}
-          >
-            Iniciar {filaPendente.length} atividade{filaPendente.length === 1 ? '' : 's'}
-          </GameButton>
-        </div>
-      )}
+                  <GameButton
+                    className="mt-2 flex w-full items-center justify-center gap-2"
+                    onClick={() => {
+                      playClick();
+                      navigate('/atividades-player');
+                    }}
+                  >
+                    Iniciar {filaPendente.length} atividade{filaPendente.length === 1 ? '' : 's'}
+                  </GameButton>
+                </div>
+              )}
 
-      <ul className="atividades-lista">
-        {atividadesOrdenadas.map((atividade, index) => {
-          const feita = concluidasHoje.has(atividade.nome);
-          const anterior = atividadesOrdenadas[index - 1];
-          const proxima = atividadesOrdenadas[index + 1];
-          return (
-            <AtividadeItem
-              key={atividade.id}
-              atividade={atividade}
-              feita={feita}
-              naFila={fila.includes(atividade.id)}
-              modoEdicao={modoEdicao}
-              bloqueada={!hojeNaAgenda}
-              busy={false}
-              selecionado={selecionados.has(atividade.id)}
-              podeSubir={Boolean(anterior) && concluidasHoje.has(anterior.nome) === feita}
-              podeDescer={Boolean(proxima) && concluidasHoje.has(proxima.nome) === feita}
-              onToggleFila={() => alternarFila(atividade)}
-              onEdit={() => setEditando(atividade)}
-              onDelete={() => excluir(atividade.id)}
-              onToggleSelecionado={() => toggleSelecionado(atividade.id)}
-              onMoveUp={() => moverAtividade(atividade.id, 'cima')}
-              onMoveDown={() => moverAtividade(atividade.id, 'baixo')}
-            />
-          );
-        })}
-      </ul>
+              <ul className="atividades-lista">
+                {atividadesOrdenadas.map((atividade, index) => {
+                  const feita = concluidasHoje.has(atividade.nome);
+                  const anterior = atividadesOrdenadas[index - 1];
+                  const proxima = atividadesOrdenadas[index + 1];
+                  return (
+                    <AtividadeItem
+                      key={atividade.id}
+                      atividade={atividade}
+                      feita={feita}
+                      naFila={fila.includes(atividade.id)}
+                      modoEdicao={modoEdicao}
+                      bloqueada={!hojeNaAgenda}
+                      busy={false}
+                      selecionado={selecionados.has(atividade.id)}
+                      podeSubir={Boolean(anterior) && concluidasHoje.has(anterior.nome) === feita}
+                      podeDescer={Boolean(proxima) && concluidasHoje.has(proxima.nome) === feita}
+                      onToggleFila={() => alternarFila(atividade)}
+                      onEdit={() => setEditando(atividade)}
+                      onDelete={() => excluir(atividade.id)}
+                      onToggleSelecionado={() => toggleSelecionado(atividade.id)}
+                      onMoveUp={() => moverAtividade(atividade.id, 'cima')}
+                      onMoveDown={() => moverAtividade(atividade.id, 'baixo')}
+                    />
+                  );
+                })}
+              </ul>
 
-      {modoEdicao && selecionados.size > 0 && (
-        <GameButton
-          variant="danger"
-          className="mt-2 flex w-full items-center justify-center gap-2"
-          onClick={excluirSelecionados}
-        >
-          <Trash2 size={15} aria-hidden /> Excluir {selecionados.size} selecionada
-          {selecionados.size === 1 ? '' : 's'}
-        </GameButton>
-      )}
-      {modoEdicao && selecionados.size === 0 && (
-        <p className="mt-2 text-[0.65rem] font-semibold text-stone-400">
-          Toque nos quadrados para selecionar e excluir em lote.
-        </p>
-      )}
+              {modoEdicao && selecionados.size > 0 && (
+                <GameButton
+                  variant="danger"
+                  className="mt-2 flex w-full items-center justify-center gap-2"
+                  onClick={excluirSelecionados}
+                >
+                  <Trash2 size={15} aria-hidden /> Excluir {selecionados.size} selecionada
+                  {selecionados.size === 1 ? '' : 's'}
+                </GameButton>
+              )}
+              {modoEdicao && selecionados.size === 0 && (
+                <p className="mt-2 text-[0.65rem] font-semibold text-stone-400">
+                  Toque nos quadrados para selecionar e excluir em lote.
+                </p>
+              )}
 
-      {noLimite ? (
-        <p className="mt-3 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-2.5 text-center text-[0.68rem] font-bold text-amber-800">
-          {ATIVIDADES_LIMITE_MSG}
-        </p>
-      ) : (
-        <GameButton
-          variant="secondary"
-          className="mt-3 flex w-full items-center justify-center gap-2"
-          onClick={() => setEditando('nova')}
-        >
-          <Plus size={16} aria-hidden /> Criar atividade
-        </GameButton>
-      )}
+              {noLimite ? (
+                <p className="mt-3 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-2.5 text-center text-[0.68rem] font-bold text-amber-800">
+                  {ATIVIDADES_LIMITE_MSG}
+                </p>
+              ) : (
+                <GameButton
+                  variant="secondary"
+                  className="mt-3 flex w-full items-center justify-center gap-2"
+                  onClick={() => setEditando('nova')}
+                >
+                  <Plus size={16} aria-hidden /> Criar atividade
+                </GameButton>
+              )}
 
-      {modoEdicao && (
-        <GameButton
-          variant="ghost"
-          className="mt-2 flex w-full items-center justify-center gap-2"
-          onClick={resetar}
-        >
-          <RotateCcw size={15} aria-hidden /> Restaurar atividades padrão
-        </GameButton>
-      )}
+              {modoEdicao && (
+                <GameButton
+                  variant="ghost"
+                  className="mt-2 flex w-full items-center justify-center gap-2"
+                  onClick={resetar}
+                >
+                  <RotateCcw size={15} aria-hidden /> Restaurar atividades padrão
+                </GameButton>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

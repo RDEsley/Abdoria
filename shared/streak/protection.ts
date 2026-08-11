@@ -46,7 +46,7 @@ export function computeStreakWithFrozenDays(
 
   const mostRecent = allActiveKeys[0];
   if (mostRecent !== today && mostRecent !== yesterday) {
-    return { atual: 0, maior: computeLongestStreakFromWorkouts([...workoutKeys]) };
+    return { atual: 0, maior: computeLongestStreakFromWorkouts([...workoutKeys], frozenSet) };
   }
 
   let cursorKey = mostRecent === today ? today : yesterday;
@@ -85,7 +85,17 @@ function computeLongestStreakFromWorkouts(
       current = 1;
     } else {
       const gap = dayDiff(prevKey, key);
-      if (gap === 1 || (gap === 2 && frozenSet.has(addDaysSaoPaulo(prevKey, 1)))) {
+      let connectedByFrozenDays = gap > 1;
+      let cursor = addDaysSaoPaulo(prevKey, 1);
+      while (connectedByFrozenDays && cursor !== key) {
+        if (!frozenSet.has(cursor)) {
+          connectedByFrozenDays = false;
+          break;
+        }
+        cursor = addDaysSaoPaulo(cursor, 1);
+      }
+
+      if (gap === 1 || connectedByFrozenDays) {
         current += 1;
       } else {
         current = 1;

@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarCheck, ChevronRight, X } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
-import { AtividadeCompleteModal, type AtividadeConclusao } from '@/components/dashboard/AtividadeCompleteModal';
+import {
+  AtividadeCompleteModal,
+  type AtividadeConclusao,
+} from '@/components/dashboard/AtividadeCompleteModal';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
@@ -197,8 +200,8 @@ export function AtividadesPlayerPage() {
         <div className="text-center">
           <p className="game-page-header__eyebrow !mb-0">Atividades</p>
           <p className="text-xs font-extrabold text-stone-800">
-            {flow.filaPendente.length} atividade{flow.filaPendente.length === 1 ? '' : 's'}{' '}
-            pendente{flow.filaPendente.length === 1 ? '' : 's'}
+            {flow.filaPendente.length} atividade{flow.filaPendente.length === 1 ? '' : 's'} pendente
+            {flow.filaPendente.length === 1 ? '' : 's'}
           </p>
         </div>
         <span className="w-6" aria-hidden />
@@ -248,7 +251,6 @@ export function AtividadesPlayerPage() {
         <AtividadeCompleteModal
           atividade={selecionada}
           busy={flow.busy}
-          diaDeTreino={flow.diaDeTreino}
           progressoHoje={progressoHoje}
           metaHoje={ATIVIDADES_MIN_DESCANSO}
           onCancel={() => setSelecionada(null)}

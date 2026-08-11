@@ -118,6 +118,7 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
               sequenciaGarantida={stats.sequencia_garantida_hoje ?? stats.treino_hoje}
               streak={stats.streak_atual}
               frozenCount={stats.frozen_streak_count}
+              frozenAutoUse={user?.preferencias?.frozen_streak_auto_usar ?? true}
             />
           </div>
         </div>

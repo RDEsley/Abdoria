@@ -39,7 +39,7 @@ export interface CompleteAtividadeResponse {
   atividade: import('@shared/atividades').AtividadeExtra;
   xp_ganho: number;
   abdoria_ganha: number;
-  /** true = hoje é dia de treino agendado — atividade ainda paga XP (até o teto diário), mas não mexe na streak. */
+  /** true = hoje é dia de treino agendado; usado apenas para contexto visual. */
   dia_de_treino: boolean;
   atividades_hoje: number;
   /** Teto de atividades que ainda pagam XP no dia (não é mínimo pra streak). */
@@ -51,8 +51,8 @@ export interface CompleteAtividadeResponse {
 
 /**
  * Conclui uma Atividade da fila do dia com as métricas do form contextual.
- * Dia de descanso paga XP e sustenta a streak (a partir do mínimo do dia);
- * dia de treino registra só pro calendário/conquistas.
+ * Em qualquer dia, uma conclusão sustenta a streak. As primeiras atividades
+ * do dia pagam XP; depois do teto diário, passam a pagar Coins.
  */
 export function completeAtividade(
   atividadeId: string,

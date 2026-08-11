@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type ComponentType, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ComponentType,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import { motion } from 'framer-motion';
 import {
   BowArrow,
@@ -32,6 +40,7 @@ import {
 interface Props {
   open: boolean;
   combat: AfkCombatSnapshot | null;
+  userId?: string;
   busy?: boolean;
   onUnlock: (nodeId: string) => void;
   onReset: (currency: 'coins' | 'gems') => void;
@@ -60,18 +69,86 @@ const EFFECT_ICONS: Record<AfkSkillEffect, ComponentType<{ size?: number }>> = {
   drop_chance_pct: Clover,
 };
 
-export function AfkSkillTreeModal({ open, combat, busy, onUnlock, onReset, onClose }: Props) {
+const EMPTY_SKILL_ID_SET = new Set<string>();
+const MIN_SKILL_TREE_ZOOM = 0.5;
+const MAX_SKILL_TREE_ZOOM = 1.5;
+const SKILL_TREE_ZOOM_STEP = 0.1;
+const READY_SKILLS_STORAGE_PREFIX = 'abdoria_skill_tree_ready_seen_v1';
+const FOCUSABLE_SELECTOR =
+  'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
+function trapKeyboardFocus(event: ReactKeyboardEvent<HTMLElement>): void {
+  if (event.key !== 'Tab' || event.defaultPrevented) return;
+  const focusableElements = Array.from(
+    event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+  );
+  if (focusableElements.length === 0) return;
+  const first = focusableElements[0];
+  const last = focusableElements[focusableElements.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function readSeenReadySkills(userId: string): Set<string> {
+  try {
+    const stored = window.localStorage.getItem(`${READY_SKILLS_STORAGE_PREFIX}_${userId}`);
+    const parsed: unknown = stored ? JSON.parse(stored) : [];
+    return new Set(
+      Array.isArray(parsed)
+        ? parsed.filter((value): value is string => typeof value === 'string')
+        : [],
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function rememberReadySkills(userId: string, skillIds: Set<string>): void {
+  try {
+    window.localStorage.setItem(
+      `${READY_SKILLS_STORAGE_PREFIX}_${userId}`,
+      JSON.stringify([...skillIds]),
+    );
+  } catch {
+    // A animação continua funcional na sessão mesmo sem armazenamento local.
+  }
+}
+
+export function AfkSkillTreeModal({
+  open,
+  combat,
+  userId = 'guest',
+  busy,
+  onUnlock,
+  onReset,
+  onClose,
+}: Props) {
   const [selectedId, setSelectedId] = useState('core_instinct');
   const [resetOpen, setResetOpen] = useState(false);
   const [resetCurrency, setResetCurrency] = useState<'coins' | 'gems'>('coins');
   const [dragging, setDragging] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [orbsHintOpen, setOrbsHintOpen] = useState(false);
+  const [attentionNodeIds, setAttentionNodeIds] = useState<Set<string>>(EMPTY_SKILL_ID_SET);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const orbsHintRef = useRef<HTMLDivElement>(null);
+  const resetTriggerRef = useRef<HTMLButtonElement>(null);
+  const resetCancelRef = useRef<HTMLButtonElement>(null);
+  const resetWasOpenRef = useRef(false);
+  const readyThisMountRef = useRef(new Set<string>());
+  const suppressNodeClickRef = useRef(false);
   const dragRef = useRef<{
     pointerId: number;
     x: number;
     y: number;
     scrollLeft: number;
     scrollTop: number;
+    moved: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -81,9 +158,85 @@ export function AfkSkillTreeModal({ open, combat, busy, onUnlock, onReset, onClo
       if (!viewport) return;
       viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
       viewport.scrollTop = Math.max(0, (viewport.scrollHeight - viewport.clientHeight) / 2);
+      viewport.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [open]);
+
+  const availableNodeIdsKey = combat
+    ? AFK_SKILL_NODES.filter((node) => canUnlockAfkSkill(combat.skill_nodes, node.id))
+        .map((node) => node.id)
+        .join('|')
+    : '';
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const availableNodeIds = availableNodeIdsKey ? availableNodeIdsKey.split('|') : [];
+    const seenNodeIds = readSeenReadySkills(userId);
+    const unseenNodeIds = availableNodeIds.filter((nodeId) => !seenNodeIds.has(nodeId));
+    unseenNodeIds.forEach((nodeId) => readyThisMountRef.current.add(nodeId));
+    const firstSeenThisMount = availableNodeIds.filter((nodeId) =>
+      readyThisMountRef.current.has(nodeId),
+    );
+    setAttentionNodeIds(
+      firstSeenThisMount.length > 0 ? new Set(firstSeenThisMount) : EMPTY_SKILL_ID_SET,
+    );
+
+    if (unseenNodeIds.length > 0) {
+      unseenNodeIds.forEach((nodeId) => seenNodeIds.add(nodeId));
+      rememberReadySkills(userId, seenNodeIds);
+    }
+
+    const timer = window.setTimeout(() => setAttentionNodeIds(EMPTY_SKILL_ID_SET), 1_900);
+    return () => window.clearTimeout(timer);
+  }, [availableNodeIdsKey, open, userId]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (orbsHintOpen) {
+        setOrbsHintOpen(false);
+        return;
+      }
+      if (resetOpen) {
+        setResetOpen(false);
+        return;
+      }
+      onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, open, orbsHintOpen, resetOpen]);
+
+  useEffect(() => {
+    if (!open || !orbsHintOpen) return undefined;
+    const closeOnOutsidePointer = (event: globalThis.PointerEvent) => {
+      if (!orbsHintRef.current?.contains(event.target as Node)) setOrbsHintOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    return () => document.removeEventListener('pointerdown', closeOnOutsidePointer);
+  }, [open, orbsHintOpen]);
+
+  useEffect(() => {
+    if (!open) {
+      resetWasOpenRef.current = false;
+      return undefined;
+    }
+    if (resetOpen) {
+      resetWasOpenRef.current = true;
+      const frame = window.requestAnimationFrame(() => resetCancelRef.current?.focus());
+      return () => window.cancelAnimationFrame(frame);
+    }
+    if (!resetWasOpenRef.current) return undefined;
+    resetWasOpenRef.current = false;
+    const frame = window.requestAnimationFrame(() => {
+      const resetTrigger = resetTriggerRef.current;
+      if (resetTrigger && !resetTrigger.disabled) resetTrigger.focus();
+      else viewportRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, resetOpen]);
 
   if (!open || !combat) return null;
 
@@ -96,33 +249,82 @@ export function AfkSkillTreeModal({ open, combat, busy, onUnlock, onReset, onClo
   const SelectedIcon = EFFECT_ICONS[selected.effect];
 
   const stopDragging = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragRef.current?.pointerId !== event.pointerId) return;
+    const drag = dragRef.current;
+    if (drag?.pointerId !== event.pointerId) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     dragRef.current = null;
     setDragging(false);
+    if (drag.moved) {
+      window.setTimeout(() => {
+        suppressNodeClickRef.current = false;
+      }, 0);
+    }
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || (event.target as HTMLElement).closest('button')) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (event.button !== 0) return;
     dragRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
       scrollLeft: event.currentTarget.scrollLeft,
       scrollTop: event.currentTarget.scrollTop,
+      moved: false,
     };
-    setDragging(true);
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
+    if ((event.buttons & 1) === 0) {
+      dragRef.current = null;
+      suppressNodeClickRef.current = false;
+      setDragging(false);
+      return;
+    }
+    const deltaX = event.clientX - drag.x;
+    const deltaY = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      suppressNodeClickRef.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+    }
     event.preventDefault();
-    event.currentTarget.scrollLeft = drag.scrollLeft - (event.clientX - drag.x);
-    event.currentTarget.scrollTop = drag.scrollTop - (event.clientY - drag.y);
+    event.currentTarget.scrollLeft = drag.scrollLeft - deltaX;
+    event.currentTarget.scrollTop = drag.scrollTop - deltaY;
+  };
+
+  const handleResetDialogKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    trapKeyboardFocus(event);
+  };
+
+  const changeZoom = (direction: -1 | 1) => {
+    setZoom((currentZoom) => {
+      const nextZoom = Math.min(
+        MAX_SKILL_TREE_ZOOM,
+        Math.max(
+          MIN_SKILL_TREE_ZOOM,
+          Number((currentZoom + direction * SKILL_TREE_ZOOM_STEP).toFixed(1)),
+        ),
+      );
+      if (nextZoom === currentZoom) return currentZoom;
+
+      const viewport = viewportRef.current;
+      if (viewport) {
+        const centerX = viewport.scrollLeft + viewport.clientWidth / 2;
+        const centerY = viewport.scrollTop + viewport.clientHeight / 2;
+        const scaleChange = nextZoom / currentZoom;
+        window.requestAnimationFrame(() => {
+          viewport.scrollLeft = centerX * scaleChange - viewport.clientWidth / 2;
+          viewport.scrollTop = centerY * scaleChange - viewport.clientHeight / 2;
+        });
+      }
+      return nextZoom;
+    });
   };
 
   return (
@@ -136,96 +338,177 @@ export function AfkSkillTreeModal({ open, combat, busy, onUnlock, onReset, onClo
         className="game-afk-skills__panel"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
+        onKeyDown={(event) => {
+          if (!resetOpen) trapKeyboardFocus(event);
+        }}
       >
         <header className="game-afk-skills__head">
-          <div>
+          <div className="game-afk-skills__title">
             <span>Árvore ancestral</span>
             <h2 id="skill-tree-title">Caminhos do herói</h2>
           </div>
           <div className="game-afk-skills__head-actions">
-            <div className="game-afk-skills__orbs" aria-label={`${combat.orbs} orbes disponíveis`}>
-              <CircleDotDashed size={20} aria-hidden />
-              <span>
-                <small>Orbes</small>
-                <strong>{combat.orbs}</strong>
-              </span>
+            <div ref={orbsHintRef} className="game-afk-skills__orbs-wrap">
+              <button
+                type="button"
+                className="game-afk-skills__orbs"
+                aria-label={`${combat.orbs} orbes disponíveis. Saiba como conseguir.`}
+                aria-expanded={orbsHintOpen}
+                aria-controls="skill-orbs-hint"
+                aria-describedby={orbsHintOpen ? 'skill-orbs-hint' : undefined}
+                onClick={() => setOrbsHintOpen((current) => !current)}
+              >
+                <span className="game-afk-skills__orb-emblem" aria-hidden>
+                  <CircleDotDashed size={18} />
+                </span>
+                <strong className="game-afk-skills__orb-count">{combat.orbs}</strong>
+              </button>
+              {orbsHintOpen ? (
+                <div id="skill-orbs-hint" className="game-afk-skills__orbs-hint" role="tooltip">
+                  <strong>Como conseguir Orbes?</strong>
+                  <span>
+                    Derrote o chefe de uma região: cada vitória concede 1 Orbe. Nos capítulos 1 a 5,
+                    cada chefe concede até 10; no capítulo final, não há limite.
+                  </span>
+                </div>
+              ) : null}
             </div>
             <button
+              ref={resetTriggerRef}
               type="button"
               className="game-afk-skills__reset-trigger"
               disabled={busy || unlocked.length === 0}
               onClick={() => setResetOpen(true)}
+              aria-label={
+                unlocked.length === 0
+                  ? 'Reset indisponível: nenhuma habilidade aprendida'
+                  : hasFreeReset
+                    ? 'Resetar habilidades: primeiro reset grátis'
+                    : 'Resetar habilidades'
+              }
+              title={
+                unlocked.length === 0
+                  ? 'Aprenda uma habilidade para liberar o reset'
+                  : hasFreeReset
+                    ? 'Primeiro reset grátis'
+                    : 'Resetar habilidades'
+              }
             >
-              <RotateCcw size={15} />
-              <span>{hasFreeReset ? 'Reset grátis' : 'Resetar'}</span>
+              <RotateCcw size={18} strokeWidth={2.5} aria-hidden />
+              <span className="game-afk-skills__reset-label">
+                {hasFreeReset ? 'Reset grátis' : 'Resetar'}
+              </span>
             </button>
-            <button type="button" onClick={onClose} aria-label="Fechar árvore">
-              <X size={20} />
+            <button
+              type="button"
+              className="game-afk-skills__close"
+              onClick={onClose}
+              aria-label="Fechar árvore"
+              title="Fechar"
+            >
+              <X size={20} strokeWidth={2.2} aria-hidden />
             </button>
           </div>
         </header>
 
         <div className="game-afk-skills__body">
+          <div className="game-afk-skills__zoom" role="group" aria-label="Zoom da árvore">
+            <button
+              type="button"
+              disabled={zoom <= MIN_SKILL_TREE_ZOOM}
+              onClick={() => changeZoom(-1)}
+              aria-label="Diminuir zoom"
+              title="Diminuir zoom"
+            >
+              −
+            </button>
+            <output aria-live="polite" aria-label={`Zoom em ${Math.round(zoom * 100)} por cento`}>
+              {Math.round(zoom * 100)}%
+            </output>
+            <button
+              type="button"
+              disabled={zoom >= MAX_SKILL_TREE_ZOOM}
+              onClick={() => changeZoom(1)}
+              aria-label="Aumentar zoom"
+              title="Aumentar zoom"
+            >
+              +
+            </button>
+          </div>
           <div
             ref={viewportRef}
             className={`game-afk-skills__viewport${dragging ? ' game-afk-skills__viewport--dragging' : ''}`}
-            aria-label="Mapa de habilidades. Arraste para navegar."
+            role="region"
+            tabIndex={0}
+            aria-label="Mapa de habilidades. Arraste ou use as setas para navegar."
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={stopDragging}
             onPointerCancel={stopDragging}
           >
-            <div className="game-afk-skills__canvas">
-              <div className="game-afk-skills__mist" aria-hidden />
-              <svg
-                className="game-afk-skills__connections"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                aria-hidden
-              >
-                {AFK_SKILL_NODES.flatMap((node) =>
-                  node.requires.map((requiredId) => {
-                    const parent = getAfkSkillNode(requiredId);
-                    if (!parent) return null;
-                    return (
-                      <line
-                        key={`${requiredId}-${node.id}`}
-                        x1={parent.x}
-                        y1={parent.y}
-                        x2={node.x}
-                        y2={node.y}
-                        className={
-                          unlocked.includes(requiredId) && unlocked.includes(node.id)
-                            ? 'game-afk-skills__line game-afk-skills__line--active'
-                            : unlocked.includes(requiredId)
-                              ? 'game-afk-skills__line game-afk-skills__line--ready'
-                              : 'game-afk-skills__line'
-                        }
-                      />
-                    );
-                  }),
-                )}
-              </svg>
+            <div
+              className="game-afk-skills__canvas-stage"
+              style={{ '--skill-tree-zoom': zoom } as CSSProperties}
+            >
+              <div className="game-afk-skills__canvas">
+                <div className="game-afk-skills__mist" aria-hidden />
+                <svg
+                  className="game-afk-skills__connections"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden
+                >
+                  {AFK_SKILL_NODES.flatMap((node) =>
+                    node.requires.map((requiredId) => {
+                      const parent = getAfkSkillNode(requiredId);
+                      if (!parent) return null;
+                      return (
+                        <line
+                          key={`${requiredId}-${node.id}`}
+                          x1={parent.x}
+                          y1={parent.y}
+                          x2={node.x}
+                          y2={node.y}
+                          className={
+                            unlocked.includes(requiredId) && unlocked.includes(node.id)
+                              ? 'game-afk-skills__line game-afk-skills__line--active'
+                              : unlocked.includes(requiredId)
+                                ? 'game-afk-skills__line game-afk-skills__line--ready'
+                                : 'game-afk-skills__line'
+                          }
+                        />
+                      );
+                    }),
+                  )}
+                </svg>
 
-              {AFK_SKILL_NODES.map((node) => {
-                const learned = unlocked.includes(node.id);
-                const available = canUnlockAfkSkill(unlocked, node.id);
-                const Icon = EFFECT_ICONS[node.effect];
-                return (
-                  <button
-                    key={node.id}
-                    type="button"
-                    className={`game-afk-skill-node game-afk-skill-node--${node.branch}${node.id === 'core_instinct' ? ' game-afk-skill-node--core' : ''}${learned ? ' game-afk-skill-node--learned' : ''}${available ? ' game-afk-skill-node--available' : ''}${selected.id === node.id ? ' game-afk-skill-node--selected' : ''}`}
-                    style={{ left: `${node.x}%`, top: `${node.y}%` }}
-                    onClick={() => setSelectedId(node.id)}
-                    aria-label={`${node.name}. ${node.description}. Custo: ${node.cost} orbes.`}
-                    aria-pressed={selected.id === node.id}
-                    title={node.name}
-                  >
-                    <Icon aria-hidden />
-                  </button>
-                );
-              })}
+                {AFK_SKILL_NODES.map((node) => {
+                  const learned = unlocked.includes(node.id);
+                  const available = canUnlockAfkSkill(unlocked, node.id);
+                  const Icon = EFFECT_ICONS[node.effect];
+                  return (
+                    <button
+                      key={node.id}
+                      type="button"
+                      className={`game-afk-skill-node game-afk-skill-node--${node.branch}${node.id === 'core_instinct' ? ' game-afk-skill-node--core' : ''}${learned ? ' game-afk-skill-node--learned' : ''}${available ? ' game-afk-skill-node--available' : ''}${attentionNodeIds.has(node.id) ? ' game-afk-skill-node--newly-available' : ''}${selected.id === node.id ? ' game-afk-skill-node--selected' : ''}`}
+                      style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                      onClick={(event) => {
+                        if (suppressNodeClickRef.current) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          return;
+                        }
+                        setSelectedId(node.id);
+                      }}
+                      aria-label={`${node.name}. ${node.description}. Custo: ${node.cost} orbes.`}
+                      aria-pressed={selected.id === node.id}
+                      title={node.name}
+                    >
+                      <Icon aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -277,6 +560,7 @@ export function AfkSkillTreeModal({ open, combat, busy, onUnlock, onReset, onClo
               aria-describedby="skill-reset-description"
               initial={{ opacity: 0, y: 12, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
+              onKeyDown={handleResetDialogKeyDown}
               onClick={(event) => event.stopPropagation()}
             >
               <div className="game-afk-skills__reset-icon">
@@ -337,7 +621,7 @@ export function AfkSkillTreeModal({ open, combat, busy, onUnlock, onReset, onClo
               )}
 
               <div className="game-afk-skills__reset-actions">
-                <button type="button" onClick={() => setResetOpen(false)}>
+                <button ref={resetCancelRef} type="button" onClick={() => setResetOpen(false)}>
                   Cancelar
                 </button>
                 <button

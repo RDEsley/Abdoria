@@ -4,11 +4,16 @@ import {
   AFK_SKILL_NODES,
   getAfkRegionProgress,
   getEnemyAttackDamage,
+  getPendingAfkStoryRegion,
   getNextAfkRegion,
 } from '../../shared/types/index.js';
 import { EMPTY_AFK_PENDING, normalizeCombat } from '../src/repositories/user-repository.js';
-import { selectAfkRegion } from '../src/services/afk-adventure.js';
-import { persistCurrentEnemyHp } from '../src/services/afk-combat.js';
+import { advanceAfkChapter, selectAfkRegion } from '../src/services/afk-adventure.js';
+import {
+  applyKill,
+  persistCurrentEnemyHp,
+  persistVisibleHeroState,
+} from '../src/services/afk-combat.js';
 import type { UserRecord } from '../src/types/user-record.js';
 
 function createTravelUser(): UserRecord {
@@ -106,6 +111,46 @@ describe('Exploração AFK — campanha por regiões', () => {
     expect(getNextAfkRegion('pillowwood')).toBeNull();
   });
 
+  it('só desbloqueia o próximo capítulo depois de clicar em Seguir história', () => {
+    const user = createTravelUser();
+    const combat = user.afk.combat!;
+    combat.unlocked_regions = ['verdant-trail'];
+    combat.region_id = 'verdant-trail';
+    combat.enemy_id = 'boss_colossus';
+    combat.enemy_hp = 1;
+    combat.is_boss = true;
+    combat.elite = false;
+    combat.kills_until_boss = 100;
+    combat.region_progress!['verdant-trail'] = {
+      kills_until_boss: 100,
+      boss_defeated: false,
+      boss_kills: 0,
+      orbs_earned: 0,
+    };
+
+    applyKill(user);
+    const defeatedCombat = user.afk.combat!;
+
+    expect(defeatedCombat.region_progress?.['verdant-trail']?.boss_defeated).toBe(true);
+    expect(defeatedCombat.unlocked_regions).toEqual(['verdant-trail']);
+    expect(defeatedCombat.region_id).toBe('verdant-trail');
+    expect(defeatedCombat.search_remaining_ms).toBeGreaterThan(0);
+    expect(
+      getPendingAfkStoryRegion(defeatedCombat.region_id, true, defeatedCombat.unlocked_regions)?.id,
+    ).toBe('sunspire-ruins');
+
+    const result = advanceAfkChapter(user, 'verdant-trail');
+    expect(result).toMatchObject({ ok: true, region_id: 'sunspire-ruins' });
+    expect(user.afk.combat?.unlocked_regions).toEqual(['verdant-trail', 'sunspire-ruins']);
+    expect(user.afk.combat?.region_id).toBe('sunspire-ruins');
+  });
+
+  it('não encadeia dois desbloqueios com uma confirmação antiga', () => {
+    const user = createTravelUser();
+    expect(advanceAfkChapter(user, 'verdant-trail')).toMatchObject({ ok: false });
+    expect(user.afk.combat?.unlocked_regions).not.toContain('mooncrystal-marsh');
+  });
+
   it('preserva o contador individual de cada região depois de serializar e recarregar', () => {
     const combat = normalizeCombat({
       region_id: 'mooncrystal-marsh',
@@ -151,6 +196,20 @@ describe('Exploração AFK — campanha por regiões', () => {
     expect(persistCurrentEnemyHp(user, combat.kills_total + 1, combat.enemy_id, 1)).toBe(false);
   });
 
+  it('persiste vida e nocaute do combate visível com o tempo completo da árvore', () => {
+    const user = createTravelUser();
+    const combat = user.afk.combat!;
+    const saved = persistVisibleHeroState(user, combat.kills_total, combat.enemy_id, 0, 10_000);
+    const savedCombat = user.afk.combat!;
+
+    expect(saved).toBe(true);
+    expect(savedCombat.hero_hp).toBe(0);
+    expect(savedCombat.defeated_remaining_ms).toBe(10_000);
+    expect(new Date(savedCombat.hero_defeated_until!).getTime()).toBeGreaterThan(
+      Date.now() + 9_000,
+    );
+  });
+
   it('derruba o herói em 10 ataques comuns, 8 de elite e 1 de chefe', () => {
     const heroMaxHp = 283;
     const common = getEnemyAttackDamage('bat', 6, heroMaxHp);
@@ -161,6 +220,7 @@ describe('Exploração AFK — campanha por regiões', () => {
     expect(elite * 7).toBeLessThan(heroMaxHp);
     expect(elite * 8).toBeGreaterThanOrEqual(heroMaxHp);
     expect(getEnemyAttackDamage('boss_preguica', 6, heroMaxHp)).toBe(Number.POSITIVE_INFINITY);
+    expect(getEnemyAttackDamage('boss_preguica', 6, heroMaxHp, 'common')).toBe(common);
   });
 
   it('mantém os quatro caminhos da árvore separados a partir do núcleo central', () => {

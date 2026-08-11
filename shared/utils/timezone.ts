@@ -68,39 +68,49 @@ export function getWeekStartSaoPaulo(date = new Date()): string {
 }
 
 /** Instante UTC do início do dia civil em SP (para queries Postgres). */
+function saoPauloOffsetMs(instant: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(instant);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 0);
+  const representedAsUtc = Date.UTC(
+    value('year'),
+    value('month') - 1,
+    value('day'),
+    value('hour'),
+    value('minute'),
+    value('second'),
+  );
+  const instantWithoutMs = Math.floor(instant.getTime() / 1000) * 1000;
+  return representedAsUtc - instantWithoutMs;
+}
+
+function startOfSaoPauloDayKey(dayKey: string): Date {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  const utcMidnight = Date.UTC(year, month - 1, day);
+
+  // Duas passagens cobrem mudanças históricas de offset sem depender do fuso
+  // do processo. A busca antiga preservava minutos/segundos, quase nunca
+  // encontrava 00:00:00 e caía num fallback UTC incorreto após 21h em SP.
+  let result = utcMidnight - saoPauloOffsetMs(new Date(utcMidnight));
+  result = utcMidnight - saoPauloOffsetMs(new Date(result));
+  return new Date(result);
+}
+
 export function startOfDaySaoPaulo(date = new Date()): Date {
-  const target = getTodaySaoPaulo(date);
-  let probe = date.getTime() - 36 * 3_600_000;
-  for (let i = 0; i < 72; i += 1) {
-    const candidate = new Date(probe);
-    if (getTodaySaoPaulo(candidate) === target) {
-      const hour = getHourSaoPaulo(candidate);
-      const minute = Number(
-        new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/Sao_Paulo',
-          minute: 'numeric',
-        })
-          .formatToParts(candidate)
-          .find((p) => p.type === 'minute')?.value ?? 0,
-      );
-      const second = Number(
-        new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/Sao_Paulo',
-          second: 'numeric',
-        })
-          .formatToParts(candidate)
-          .find((p) => p.type === 'second')?.value ?? 0,
-      );
-      if (hour === 0 && minute === 0 && second === 0) return candidate;
-    }
-    probe += 3_600_000;
-  }
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return startOfSaoPauloDayKey(getTodaySaoPaulo(date));
 }
 
 export function endOfDaySaoPaulo(date = new Date()): Date {
-  const start = startOfDaySaoPaulo(date);
-  return new Date(start.getTime() + 86_400_000);
+  return startOfSaoPauloDayKey(addDaysSaoPaulo(getTodaySaoPaulo(date), 1));
 }
 
 /** Segundos até a próxima meia-noite em America/Sao_Paulo. */

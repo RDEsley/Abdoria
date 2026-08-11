@@ -210,12 +210,43 @@ export function persistCurrentEnemyHp(
   requestedHp: number,
 ): boolean {
   const combat = ensureCombat(user);
-  if (combat.kills_total !== expectedKillsTotal || combat.enemy_id !== expectedEnemyId) return false;
+  if (combat.kills_total !== expectedKillsTotal || combat.enemy_id !== expectedEnemyId)
+    return false;
   if (!Number.isFinite(requestedHp) || requestedHp <= 0) return false;
 
   const maxHp = getEnemyMaxHp(combat.enemy_id, getAfkRegionById(combat.region_id).chapter);
   combat.enemy_hp = Math.max(1, Math.min(combat.enemy_hp, maxHp, Math.floor(requestedHp)));
+  combat.combat_last_at = new Date().toISOString();
   return true;
+}
+
+/** Persiste o combate visível sem deixar o próximo sync repetir esse tempo em AFK. */
+export function persistVisibleHeroState(
+  user: UserRecord,
+  expectedKillsTotal: number,
+  expectedEnemyId: string,
+  requestedHp: number,
+  defeatedRemainingMs: number,
+): boolean {
+  const combat = ensureCombat(user);
+  if (combat.kills_total !== expectedKillsTotal || combat.enemy_id !== expectedEnemyId)
+    return false;
+  if (!Number.isFinite(requestedHp) || !Number.isFinite(defeatedRemainingMs)) return false;
+
+  const heroMaxHp = afkHeroMaxHp(combat.skill_nodes);
+  const hp = Math.max(0, Math.min(heroMaxHp, Math.floor(requestedHp)));
+  const maximumDefeatMs = afkDefeatDurationMs(combat.skill_nodes);
+  const remainingMs = hp <= 0 ? Math.max(1, Math.min(maximumDefeatMs, defeatedRemainingMs)) : 0;
+  combat.hero_hp = hp;
+  combat.defeated_remaining_ms = remainingMs;
+  combat.hero_defeated_until =
+    remainingMs > 0 ? new Date(Date.now() + remainingMs).toISOString() : null;
+  combat.combat_last_at = new Date().toISOString();
+  return true;
+}
+
+export function touchVisibleCombatClock(user: UserRecord): void {
+  ensureCombat(user).combat_last_at = new Date().toISOString();
 }
 
 export function applyKill(user: UserRecord): void {
@@ -363,7 +394,12 @@ export function simulateOfflineCombat(user: UserRecord, elapsedMs: number): numb
     }
 
     if (combat.enemy_attack_remaining_ms <= 0) {
-      const damage = getEnemyAttackDamage(combat.enemy_id, region.chapter, heroMaxHp);
+      const damage = getEnemyAttackDamage(
+        combat.enemy_id,
+        region.chapter,
+        heroMaxHp,
+        enemyTier(combat),
+      );
       combat.enemy_attack_remaining_ms = getEnemyAttackIntervalSeconds(enemyTier(combat)) * 1000;
       if (!Number.isFinite(damage)) {
         defeatHero(combat);

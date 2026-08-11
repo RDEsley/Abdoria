@@ -14,13 +14,10 @@ import {
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { showGameToast } from '@/components/ui/GameToast';
+import { useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useApp } from '@/hooks/useApp';
-import {
-  buildLocalNotices,
-  dismissLocalNotice,
-  isLocalNotice,
-} from '@/lib/local-notifications';
+import { buildLocalNotices, dismissLocalNotice, isLocalNotice } from '@/lib/local-notifications';
 import {
   clearAllNotifications,
   dismissNotification,
@@ -32,7 +29,8 @@ import {
 function iconForTipo(tipo: string) {
   if (tipo === 'ranking_podio') return <Medal size={16} aria-hidden />;
   if (tipo === 'ranking_premio') return <Coins size={16} aria-hidden />;
-  if (tipo === 'streak_frozen' || tipo === 'frozen_baixo') return <Snowflake size={16} aria-hidden />;
+  if (tipo === 'streak_frozen' || tipo === 'frozen_baixo')
+    return <Snowflake size={16} aria-hidden />;
   if (tipo === 'streak_reset') return <TimerReset size={16} aria-hidden />;
   if (tipo === 'streak_recovery_available') return <Flame size={16} aria-hidden />;
   if (tipo === 'lembrete_treino') return <Dumbbell size={16} aria-hidden />;
@@ -53,7 +51,8 @@ function formatWhen(iso: string): string {
 
 /** Sino da navbar: badge de não lidas + painel com as notificações persistentes. */
 export function NotificationsBell() {
-  const { stats } = useApp();
+  const { stats, user } = useApp();
+  const secondsLeft = useMidnightSecondsLeft();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<AppNotification[]>([]);
   const [unread, setUnread] = useState(0);
@@ -61,10 +60,12 @@ export function NotificationsBell() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [localDismissTick, setLocalDismissTick] = useState(0);
 
+  const frozenAutoUse = user?.preferencias?.frozen_streak_auto_usar ?? true;
   const localNotices = useMemo(
-    () => buildLocalNotices(stats),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- tick invalida após dispensar
-    [stats, localDismissTick],
+    () => buildLocalNotices(stats, { frozenAutoUse, secondsLeft }),
+    // O contador invalida o texto; a revisão invalida dispensas salvas no localStorage.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [frozenAutoUse, localDismissTick, secondsLeft, stats],
   );
   const allItems = useMemo(() => [...localNotices, ...items], [localNotices, items]);
   const urgentLocalCount = localNotices.filter((notice) => notice.lida_em === null).length;
@@ -124,6 +125,10 @@ export function NotificationsBell() {
       setUnread(data.unread_count);
       if (data.unread_count > 0) {
         await markAllNotificationsRead();
+        const readAt = new Date().toISOString();
+        setItems((previous) =>
+          previous.map((item) => (item.lida_em ? item : { ...item, lida_em: readAt })),
+        );
         setUnread(0);
       }
     } catch (err) {

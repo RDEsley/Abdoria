@@ -30,6 +30,8 @@ import {
   defeatCurrentEnemy,
   ensureCombat,
   persistCurrentEnemyHp,
+  persistVisibleHeroState,
+  touchVisibleCombatClock,
 } from '../services/afk-combat.js';
 import {
   advanceAfkChapter,
@@ -166,12 +168,35 @@ metaRouter.post('/afk/combat/defeat', async (req: AuthRequest, res) => {
     const expected = Math.max(0, Number(req.body?.expected_kills_total ?? -1));
     if (expected === combat.kills_total) {
       defeatCurrentEnemy(user, user.afk.pending);
+      touchVisibleCombatClock(user);
       await user.save({ profileColumns: afkProfileColumns(user) });
     }
     res.json({ ok: true, ...afkResponsePayload(user) });
   } catch (error) {
     console.error('POST /api/meta/afk/combat/defeat error:', error);
     res.status(500).json({ error: 'Erro ao registrar a vitória.' });
+  }
+});
+
+metaRouter.patch('/afk/combat/hero-state', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const saved = persistVisibleHeroState(
+      user,
+      Math.max(0, Number(req.body?.expected_kills_total ?? -1)),
+      String(req.body?.enemy_id ?? ''),
+      Number(req.body?.hero_hp),
+      Math.max(0, Number(req.body?.defeated_remaining_ms ?? 0)),
+    );
+    if (saved) await user.save({ profileColumns: [] });
+    res.json({ ok: true, saved });
+  } catch (error) {
+    console.error('PATCH /api/meta/afk/combat/hero-state error:', error);
+    res.status(500).json({ error: 'Erro ao salvar a vida do herói.' });
   }
 });
 
@@ -246,7 +271,7 @@ metaRouter.post('/afk/chapter/advance', async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
-    const result = advanceAfkChapter(user);
+    const result = advanceAfkChapter(user, String(req.body?.region_id ?? ''));
     if (!result.ok) {
       res.status(400).json({ error: result.error });
       return;

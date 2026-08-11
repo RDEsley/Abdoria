@@ -15,7 +15,7 @@ export function purchasePatrolWeapon(id: string): Promise<{
 export function equipPatrolWeapon(
   kind: PatrolWeaponKind,
   id: string,
-): Promise<{ user: IUserDocument }> {
+): Promise<{ user: IUserDocument; shop: PatrolShopResponse }> {
   return fetchJson('/patrol-shop/equip', { method: 'PATCH', body: JSON.stringify({ kind, id }) });
 }
 
@@ -31,5 +31,17 @@ export function sellPatrolMaterial(
   return fetchJson('/patrol-shop/materials/sell', {
     method: 'POST',
     body: JSON.stringify({ id, quantity }),
+  });
+}
+
+export function sellPatrolMaterialsBulk(tier: 'all' | 'common' | 'elite' | 'boss'): Promise<{
+  user: IUserDocument;
+  quantity_sold: number;
+  coins_gained: number;
+  shop: PatrolShopResponse;
+}> {
+  return fetchJson('/patrol-shop/materials/sell-bulk', {
+    method: 'POST',
+    body: JSON.stringify({ tier }),
   });
 }

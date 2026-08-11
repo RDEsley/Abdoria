@@ -3,6 +3,7 @@ import {
   AFK_REGIONS,
   canUnlockAfkSkill,
   getAfkRegionById,
+  getPendingAfkStoryRegion,
   getAfkSkillNode,
   getEnemyMaxHp,
   getNextAfkRegion,
@@ -40,6 +41,15 @@ export function selectAfkRegion(
   if (previous && !combat.region_progress?.[previous.id]?.boss_defeated) {
     return { ok: false, error: 'Derrote o guardião anterior para liberar esta região.' };
   }
+  applyRegionSelection(user, combat, region);
+  return { ok: true };
+}
+
+function applyRegionSelection(
+  user: UserRecord,
+  combat: ReturnType<typeof ensureCombat>,
+  region: (typeof AFK_REGIONS)[number],
+): void {
   combat.region_id = region.id;
   const progress = combat.region_progress?.[region.id];
   combat.kills_until_boss = progress?.kills_until_boss ?? 0;
@@ -51,26 +61,36 @@ export function selectAfkRegion(
   combat.hero_attack_remaining_ms = 350;
   combat.enemy_attack_remaining_ms = 10_000;
   resumeAfk(user);
-  return { ok: true };
 }
 
 export function advanceAfkChapter(
   user: UserRecord,
+  expectedRegionId?: string,
 ):
   | { ok: true; story: { title: string; body: string }; region_id: AfkRegionId }
   | { ok: false; error: string } {
   syncAfkRewards(user);
   const combat = ensureCombat(user);
   const current = getAfkRegionById(combat.region_id);
+  if (expectedRegionId && current.id !== expectedRegionId) {
+    return {
+      ok: false,
+      error: 'A região mudou antes da confirmação. Abra o mapa e tente novamente.',
+    };
+  }
   const progress = combat.region_progress?.[current.id];
   if (!progress?.boss_defeated) {
     return { ok: false, error: 'Derrote o guardião desta região antes de avançar.' };
   }
-  const next = getNextAfkRegion(current.id);
-  if (!next) return { ok: false, error: 'Você já alcançou o último capítulo.' };
-  if ((combat.unlocked_regions ?? []).includes(next.id)) {
+  const nextRegion = getNextAfkRegion(current.id);
+  if (!nextRegion) return { ok: false, error: 'Você já alcançou o último capítulo.' };
+  const next = getPendingAfkStoryRegion(
+    current.id,
+    progress.boss_defeated,
+    combat.unlocked_regions ?? [],
+  );
+  if (!next)
     return { ok: false, error: 'Este caminho já foi liberado. Escolha a região pelo mapa.' };
-  }
 
   const unlocked = new Set(combat.unlocked_regions ?? ['verdant-trail']);
   unlocked.add(next.id);
@@ -80,7 +100,10 @@ export function advanceAfkChapter(
   combat.story_flags = [
     ...new Set([...(combat.story_flags ?? []), `chapter_${current.chapter}_clear`]),
   ];
-  selectAfkRegion(user, next.id);
+  // Não chama `selectAfkRegion`: ela sincronizaria e substituiria a referência
+  // de `combat` no meio da mutação. O desbloqueio, a história e a viagem são
+  // persistidos como uma única transição coerente.
+  applyRegionSelection(user, combat, next);
   return {
     ok: true,
     story: { title: current.storyTitle, body: current.story },

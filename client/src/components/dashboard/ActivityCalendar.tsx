@@ -6,7 +6,6 @@ import { formatTrainingDuration } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 import { formatMetricas } from '@/lib/atividade-format';
 import { getTodaySaoPaulo, addDaysSaoPaulo } from '@shared/utils/timezone';
-import { ATIVIDADES_MIN_DESCANSO } from '@shared/atividades';
 import { resolveBlocoNotasHistorico } from '@shared/bloco-notas';
 
 const MONTH_NAMES = [
@@ -39,7 +38,7 @@ export function ActivityCalendar() {
   );
 
   /** Sequência do streak NO DIA (não é o streak_atual de hoje) — anda por
-      todo o histórico em ordem cronológica: treino ou 3+ atividades no dia
+      todo o histórico em ordem cronológica: treino ou uma atividade no dia
       incrementa; dia congelado sustenta sem incrementar; qualquer outro dia
       zera. Aproximação client-side da regra real (ver shared/atividades.ts),
       boa o bastante pra exibição do calendário. */
@@ -55,7 +54,7 @@ export function ActivityCalendar() {
 
     const status = new Map<string, 'active' | 'frozen'>();
     for (const [key, v] of perDay) {
-      if (v.treinos > 0 || v.atividades >= ATIVIDADES_MIN_DESCANSO) status.set(key, 'active');
+      if (v.treinos > 0 || v.atividades > 0) status.set(key, 'active');
     }
     for (const key of frozenSet) {
       if (!status.has(key)) status.set(key, 'frozen');

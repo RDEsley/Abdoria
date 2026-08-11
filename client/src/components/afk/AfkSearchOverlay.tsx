@@ -10,12 +10,12 @@ interface Props {
   durationMs: number;
 }
 
-/** Contador regressivo em segundos — dá ao jogador uma noção real de quanto
+/** Contador regressivo em milissegundos — dá ao jogador uma noção real de quanto
     falta, em vez de só uma animação sem fim visível. Conta a partir do
     relógio de verdade (não dos timers do pai), então não desalinha mesmo
     que o componente monte um instante depois do início da busca. */
-function useCountdownSeconds(durationMs: number): number {
-  const [remaining, setRemaining] = useState(() => Math.ceil(durationMs / 1000));
+function useCountdownMs(durationMs: number): number {
+  const [remaining, setRemaining] = useState(() => Math.max(0, durationMs));
 
   useEffect(() => {
     if (durationMs <= 0) {
@@ -23,11 +23,11 @@ function useCountdownSeconds(durationMs: number): number {
       return undefined;
     }
     const startedAt = Date.now();
-    setRemaining(Math.ceil(durationMs / 1000));
+    setRemaining(durationMs);
     const id = window.setInterval(() => {
       const elapsed = Date.now() - startedAt;
-      setRemaining(Math.max(0, Math.ceil((durationMs - elapsed) / 1000)));
-    }, 250);
+      setRemaining(Math.max(0, durationMs - elapsed));
+    }, 33);
     return () => window.clearInterval(id);
   }, [durationMs]);
 
@@ -42,7 +42,7 @@ function useCountdownSeconds(durationMs: number): number {
  */
 export function AfkSearchOverlay({ durationMs }: Props) {
   const lupaData = useLottieAsset(LUPA_LOTTIE_URL);
-  const remainingSec = useCountdownSeconds(durationMs);
+  const remainingMs = useCountdownMs(durationMs);
 
   return (
     <div className="game-afk-search" role="status" aria-live="polite">
@@ -50,7 +50,7 @@ export function AfkSearchOverlay({ durationMs }: Props) {
         <span className="game-afk-search__lupa-glow" aria-hidden />
         {lupaData ? <LottieView data={lupaData} loop /> : null}
         <span className="game-afk-search__countdown tabular-nums" aria-hidden>
-          {remainingSec}s
+          {(remainingMs / 1000).toFixed(3)}s
         </span>
       </div>
       <p className="game-afk-search__text">

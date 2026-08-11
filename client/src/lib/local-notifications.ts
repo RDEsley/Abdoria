@@ -14,6 +14,12 @@ import {
 const DISMISS_KEY = 'abdoria_local_notices_dismissed';
 const RESET_WINDOW_SECONDS = 5 * 3600;
 
+interface LocalNoticeOptions {
+  frozenAutoUse?: boolean;
+  now?: Date;
+  secondsLeft?: number;
+}
+
 function dismissedSet(): Set<string> {
   try {
     return new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) ?? '[]') as string[]);
@@ -37,12 +43,17 @@ export function dismissLocalNotice(id: string): void {
   );
 }
 
-export function buildLocalNotices(stats: DashboardStats | null): AppNotification[] {
+export function buildLocalNotices(
+  stats: DashboardStats | null,
+  options: LocalNoticeOptions = {},
+): AppNotification[] {
   if (!stats) return [];
 
-  const today = getTodaySaoPaulo();
-  const now = new Date().toISOString();
-  const seconds = secondsUntilSaoPauloMidnight();
+  const nowDate = options.now ?? new Date();
+  const today = getTodaySaoPaulo(nowDate);
+  const now = nowDate.toISOString();
+  const seconds = options.secondsLeft ?? secondsUntilSaoPauloMidnight(nowDate);
+  const frozenAutoUse = options.frozenAutoUse ?? true;
   const notices: AppNotification[] = [];
 
   // Aviso de expiração olha `sequencia_garantida_hoje` (treino OU Atividade),
@@ -51,7 +62,7 @@ export function buildLocalNotices(stats: DashboardStats | null): AppNotification
   const sequenciaGarantida = stats.sequencia_garantida_hoje ?? stats.treino_hoje;
 
   if (!sequenciaGarantida && stats.streak_atual > 0 && seconds <= RESET_WINDOW_SECONDS) {
-    if (stats.frozen_streak_count > 0) {
+    if (stats.frozen_streak_count > 0 && frozenAutoUse) {
       notices.push({
         id: `local-frozen-uso-${today}`,
         tipo: 'streak_frozen',
@@ -61,12 +72,22 @@ export function buildLocalNotices(stats: DashboardStats | null): AppNotification
         lida_em: null,
         criada_em: now,
       });
+    } else if (stats.frozen_streak_count > 0) {
+      notices.push({
+        id: `local-frozen-auto-off-${today}`,
+        tipo: 'streak_reset',
+        titulo: 'Uso automático do Frozen Streak está desligado',
+        corpo: `Faltam ${formatCountdown(seconds)} pro dia virar. Ative o uso automático no Inventário ou treine para manter sua sequência de ${stats.streak_atual} dia(s).`,
+        payload: {},
+        lida_em: null,
+        criada_em: now,
+      });
     } else {
       notices.push({
         id: `local-reset-${today}`,
         tipo: 'streak_reset',
         titulo: `Sua sequência expira em ${formatCountdown(seconds)}!`,
-        corpo: `Sem Frozen Streak no inventário: treine (ou complete Atividades no dia de descanso) pra não perder ${stats.streak_atual} dia(s) de sequência.`,
+        corpo: `Sem Frozen Streak no inventário: treine ou complete uma Atividade pra não perder ${stats.streak_atual} dia(s) de sequência.`,
         payload: {},
         lida_em: null,
         criada_em: now,

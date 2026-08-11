@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FastForward, PackageOpen } from 'lucide-react';
 import { AfkRewardGrid } from '@/components/afk/AfkRewardGrid';
 import { CosmeticEffectLayer } from '@/components/shop/CosmeticEffectLayer';
-import { showGameToast } from '@/components/ui/GameToast';
 import { buildAfkRewardItems } from '@/lib/afk-rewards';
 import { playChestOpening, playChestRarity, type ChestRewardRarity } from '@/lib/sounds';
-import { updateMe } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { resolveCosmeticos, type AfkPendingReward } from '@/types';
 
@@ -26,15 +23,12 @@ function vibrate(pattern: number | number[]) {
 }
 
 export function AfkRewardCelebration({ claimed, onClose }: Props) {
-  const { user, applyUser } = useAuth();
+  const { user } = useAuth();
   const effectId = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp).efeito_equipado;
   const [phase, setPhase] = useState<ChestPhase>('closed');
   const items = useMemo(() => buildAfkRewardItems(claimed), [claimed]);
   const [revealIndex, setRevealIndex] = useState(0);
-  const [quickReveal, setQuickReveal] = useState(
-    user?.preferencias?.baus_abertura_rapida ?? false,
-  );
-  const [savingQuickReveal, setSavingQuickReveal] = useState(false);
+  const quickReveal = user?.preferencias?.baus_abertura_rapida ?? false;
   const playedRarityRef = useRef(new Set<string>());
 
   // O tier mais alto governa a apresentação visual e sonora da abertura.
@@ -96,27 +90,6 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
     playChestRarity(rarity);
   }, [items, phase, quickReveal, revealIndex]);
 
-  const toggleQuickReveal = () => {
-    if (savingQuickReveal) return;
-    const next = !quickReveal;
-    setQuickReveal(next);
-    if (!user) return;
-    setSavingQuickReveal(true);
-    const optimisticUser = {
-      ...user,
-      preferencias: { ...user.preferencias, baus_abertura_rapida: next },
-    };
-    applyUser(optimisticUser);
-    void updateMe({ preferencias: optimisticUser.preferencias })
-      .then(applyUser)
-      .catch(() => {
-        setQuickReveal(!next);
-        applyUser(user);
-        showGameToast('Não foi possível salvar a abertura rápida.', { variant: 'error' });
-      })
-      .finally(() => setSavingQuickReveal(false));
-  };
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -159,29 +132,6 @@ export function AfkRewardCelebration({ claimed, onClose }: Props) {
         <h2 id="afk-reward-title" className="sr-only">
           Recompensas da exploração coletadas
         </h2>
-
-        <div className="game-afk-celebration-head">
-          <span>
-            <PackageOpen size={17} aria-hidden />
-            Baú da exploração
-          </span>
-          <button
-            type="button"
-            className={`game-afk-quick-reveal${quickReveal ? ' game-afk-quick-reveal--active' : ''}`}
-            aria-pressed={quickReveal}
-            aria-label={`Abertura rápida dos baús: ${quickReveal ? 'ligada' : 'desligada'}`}
-            disabled={phase === 'open' || savingQuickReveal}
-            aria-busy={savingQuickReveal}
-            onClick={(event) => {
-              event.stopPropagation();
-              toggleQuickReveal();
-            }}
-          >
-            <FastForward size={14} aria-hidden />
-            Abertura rápida
-            <strong>{quickReveal ? 'Ligada' : 'Desligada'}</strong>
-          </button>
-        </div>
 
         <AnimatePresence>
           {tier && phase === 'open' && (

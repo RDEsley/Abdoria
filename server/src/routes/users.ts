@@ -87,10 +87,9 @@ function adminUnlockNeedsSync(user: {
     (user.gamificacao?.bestiario_desbloqueados?.length ?? 0) >= ALL_BESTIARY_ENEMY_IDS.length;
   const achievementsOk = (user.gamificacao?.conquistas?.length ?? 0) >= ACHIEVEMENTS.length;
   // Armas/magias da Exploração são um catálogo à parte — sem checar aqui, um
-  // ADM com os cosméticos completos nunca reconciliava a loja da Exploração.
+  // ADM com os cosméticos completos nunca reconciliava a Loja da Vila.
   const buyableWeapons = PATROL_WEAPONS.filter((w) => w.unlock.tipo !== 'futuro').length;
-  const weaponsOk =
-    (user.preferencias?.patrol_armas?.desbloqueados?.length ?? 0) >= buyableWeapons;
+  const weaponsOk = (user.preferencias?.patrol_armas?.desbloqueados?.length ?? 0) >= buyableWeapons;
 
   return !cosmeticsOk || !bestiaryOk || !weaponsOk || !achievementsOk;
 }

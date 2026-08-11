@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Snowflake, TimerReset } from 'lucide-react';
-import { formatCountdown, secondsUntilSaoPauloMidnight } from '@shared/utils/timezone';
+import { useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
+import { formatCountdown } from '@shared/utils/timezone';
 
 /** Só nas últimas 5h do dia (horário de SP) o contador aparece. */
 const WINDOW_SECONDS = 5 * 3600;
@@ -15,6 +15,7 @@ interface Props {
   sequenciaGarantida: boolean;
   streak: number;
   frozenCount: number;
+  frozenAutoUse: boolean;
 }
 
 /**
@@ -24,24 +25,28 @@ interface Props {
  * Nos últimos 59min, o número fica vermelho independente do estado (urgência
  * visual crescente conforme o prazo aperta).
  */
-export function StreakCountdown({ sequenciaGarantida, streak, frozenCount }: Props) {
-  const [seconds, setSeconds] = useState(() => secondsUntilSaoPauloMidnight());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setSeconds(secondsUntilSaoPauloMidnight()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
+export function StreakCountdown({ sequenciaGarantida, streak, frozenCount, frozenAutoUse }: Props) {
+  const seconds = useMidnightSecondsLeft();
 
   if (sequenciaGarantida || streak <= 0 || seconds > WINDOW_SECONDS) return null;
 
-  const danger = frozenCount <= 0;
+  const frozenWillProtect = frozenCount > 0 && frozenAutoUse;
+  const autoUseDisabled = frozenCount > 0 && !frozenAutoUse;
+  const danger = !frozenWillProtect;
   const urgente = seconds < URGENT_SECONDS;
+  const countdown = formatCountdown(seconds);
+  const accessibleLabel = frozenWillProtect
+    ? `Frozen Streak será ativado em ${countdown}`
+    : autoUseDisabled
+      ? `Uso automático do Frozen Streak desativado. Treine em até ${countdown} para manter a sequência.`
+      : `${countdown} para manter a sequência`;
 
   return (
     <span
       className={`streak-countdown ${danger ? 'streak-countdown--danger' : 'streak-countdown--frozen'}`}
-      role="status"
-      aria-live="polite"
+      role="timer"
+      aria-live="off"
+      aria-label={accessibleLabel}
     >
       {danger ? <TimerReset size={13} aria-hidden /> : <Snowflake size={13} aria-hidden />}
       {danger ? (
@@ -49,9 +54,11 @@ export function StreakCountdown({ sequenciaGarantida, streak, frozenCount }: Pro
           <strong
             className={`streak-countdown__time tabular-nums${urgente ? ' streak-countdown__time--urgent' : ''}`}
           >
-            {formatCountdown(seconds)}
+            {countdown}
           </strong>
-          <span className="streak-countdown__hint">pra manter a sequência</span>
+          <span className="streak-countdown__hint">
+            {autoUseDisabled ? 'pra treinar · automático desligado' : 'pra manter a sequência'}
+          </span>
         </>
       ) : (
         <span className="streak-countdown__hint">
@@ -59,7 +66,7 @@ export function StreakCountdown({ sequenciaGarantida, streak, frozenCount }: Pro
           <strong
             className={`streak-countdown__time tabular-nums${urgente ? ' streak-countdown__time--urgent' : ''}`}
           >
-            {formatCountdown(seconds)}
+            {countdown}
           </strong>
         </span>
       )}

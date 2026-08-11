@@ -112,8 +112,8 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
                 <strong className="atividade-info-card__pill atividade-info-card__pill--coins">
                   +{ATIVIDADE_COINS_EXTRA} Coins
                 </strong>
-                . Em dia de treino, a sequência (streak) continua vindo só do treino; nos outros
-                dias, as atividades também mantêm a sequência.
+                . Uma única atividade mantém sua sequência em qualquer dia, inclusive nos dias de
+                treino, sem marcar a Missão de treino como concluída.
               </p>
             </motion.div>
           )}
@@ -203,7 +203,8 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
         <span>
           <strong>Fazer junto com o treino</strong>
           <small>
-            Ligado, as atividades entram na mesma sequência da Missão Diária, logo depois do treino.
+            Ligado, as atividades aparecem logo depois da Missão Diária; desligado, ficam separadas
+            no Início.
           </small>
         </span>
       </label>

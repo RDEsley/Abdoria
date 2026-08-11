@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Backpack, ChevronLeft, Sparkles } from 'lucide-react';
+import { Backpack, ChevronLeft, Settings, Sparkles } from 'lucide-react';
 import { BestiaryModal } from '@/components/bestiary/BestiaryModal';
 import { AfkCombatScene } from '@/components/afk/AfkCombatScene';
 import { AfkGameLoading } from '@/components/afk/AfkGameLoading';
@@ -10,6 +10,7 @@ import { AfkDialogueModal, type AfkDialogueLine } from '@/components/afk/AfkDial
 import { AfkRegionMapModal } from '@/components/afk/AfkRegionMapModal';
 import { AfkRegionTravelOverlay } from '@/components/afk/AfkRegionTravelOverlay';
 import { AfkSkillTreeModal } from '@/components/afk/AfkSkillTreeModal';
+import { AfkExplorationSettingsModal } from '@/components/afk/AfkExplorationSettingsModal';
 import { ExplorationIntroFlow } from '@/components/afk/ExplorationIntroFlow';
 import { SceneTransitionOverlay } from '@/components/afk/SceneTransitionOverlay';
 import {
@@ -35,6 +36,7 @@ import {
   markAfkStory,
   recordAfkEnemyDefeat,
   recordAfkEnemyHp,
+  recordAfkHeroState,
   resetAfkSkillTree,
   selectAfkRegion,
   setAfkAway,
@@ -65,7 +67,7 @@ import {
   ALL_BESTIARY_ENEMY_IDS,
   AFK_ENEMIES,
   getAfkRegionById,
-  getNextAfkRegion,
+  getPendingAfkStoryRegion,
   resolvePatrolArmas,
 } from '@/types';
 
@@ -108,8 +110,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const [shopOpen, setShopOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [explorationSettingsOpen, setExplorationSettingsOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [travelingRegionId, setTravelingRegionId] = useState<AfkRegionId | null>(null);
+  const [unlockedRegionId, setUnlockedRegionId] = useState<AfkRegionId | null>(null);
   const [skillTreeOpen, setSkillTreeOpen] = useState(false);
   const [adventureBusy, setAdventureBusy] = useState(false);
   const adventureBusyRef = useRef(false);
@@ -133,6 +137,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   }, [sceneMode]);
   const [sceneTransition, setSceneTransition] = useState<string | null>(null);
   const sceneTransitionTimerRef = useRef<number | null>(null);
+  const chapterUnlockTimerRef = useRef<number | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [celebrationClaimed, setCelebrationClaimed] = useState<AfkPendingReward | null>(null);
   /** XP/level-up ficam represados até o jogador fechar a celebração do baú —
@@ -159,8 +164,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     }
   }, []);
 
+  // A resposta de equipar atualiza o usuário imediatamente. Priorizá-la evita
+  // que um snapshot AFK antigo mantenha a arma anterior até o próximo poll.
   const preferredWeapon: ArmaPreferida =
-    meta?.arma_preferida ?? user?.preferencias?.arma_preferida ?? 'arco';
+    user?.preferencias?.arma_preferida ?? meta?.arma_preferida ?? 'arco';
   const patrolArmas = resolvePatrolArmas(user?.preferencias?.patrol_armas);
   // Sem magia equipada, o modo magia cai de volta pro arco.
   const weapon: ArmaPreferida =
@@ -184,7 +191,9 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         ...(prev ?? (data as AfkMetaResponse)),
         ...data,
         arma_preferida:
-          prev?.arma_preferida ?? ('arma_preferida' in data ? data.arma_preferida : 'arco'),
+          ('arma_preferida' in data ? data.arma_preferida : undefined) ??
+          prev?.arma_preferida ??
+          'arco',
         combat: replaceCombat ? data.combat : mergeAfkCombatSnapshot(prev?.combat, data.combat),
       }));
       reconcileTimerFromServer(data.minutos_acumulados);
@@ -270,6 +279,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   useEffect(
     () => () => {
       if (sceneTransitionTimerRef.current) window.clearTimeout(sceneTransitionTimerRef.current);
+      if (chapterUnlockTimerRef.current) window.clearTimeout(chapterUnlockTimerRef.current);
     },
     [],
   );
@@ -285,7 +295,9 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       setShopOpen(false);
       setBestiaryOpen(false);
       setInventoryOpen(false);
+      setExplorationSettingsOpen(false);
       setMapOpen(false);
+      setUnlockedRegionId(null);
       setSkillTreeOpen(false);
       setDialogue(null);
       setPendingDialogue(null);
@@ -304,6 +316,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       if (sceneTransitionTimerRef.current) {
         window.clearTimeout(sceneTransitionTimerRef.current);
         sceneTransitionTimerRef.current = null;
+      }
+      if (chapterUnlockTimerRef.current) {
+        window.clearTimeout(chapterUnlockTimerRef.current);
+        chapterUnlockTimerRef.current = null;
       }
       setSceneTransition(null);
       return;
@@ -532,7 +548,16 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         );
       },
     });
-  }, [bossActive, dialogue, genero, meta?.combat, regionReady, sceneMode, sceneTransition, mapOpen]);
+  }, [
+    bossActive,
+    dialogue,
+    genero,
+    meta?.combat,
+    regionReady,
+    sceneMode,
+    sceneTransition,
+    mapOpen,
+  ]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -556,6 +581,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         setInventoryOpen(false);
         return;
       }
+      if (explorationSettingsOpen) {
+        setExplorationSettingsOpen(false);
+        return;
+      }
       if (mapOpen) {
         setMapOpen(false);
         return;
@@ -577,6 +606,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     handleExit,
     shopOpen,
     inventoryOpen,
+    explorationSettingsOpen,
     mapOpen,
     skillTreeOpen,
     dialogue,
@@ -631,12 +661,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const capped = meta?.capped ?? false;
   const displayedRegion = activeRegion ?? getAfkRegionById(meta?.combat?.region_id);
   const displayedProgress = meta?.combat?.region_progress?.[displayedRegion.id];
-  const nextRegion = getNextAfkRegion(displayedRegion.id);
-  const canAdvanceChapter = Boolean(
-    displayedProgress?.boss_defeated &&
-    nextRegion &&
-    !meta?.combat?.unlocked_regions.includes(nextRegion.id),
+  const nextRegion = getPendingAfkStoryRegion(
+    displayedRegion.id,
+    Boolean(displayedProgress?.boss_defeated),
+    meta?.combat?.unlocked_regions ?? [],
   );
+  const canAdvanceChapter = Boolean(nextRegion);
   const inventoryItemCount =
     (stats?.frozen_streak_count ?? 0) +
     (stats?.route_drink_count ?? meta?.route_drink_count ?? 0) +
@@ -652,7 +682,6 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
 
   const handleInventoryClose = () => {
     setInventoryOpen(false);
-    void load();
   };
 
   const handleStartAdventure = async () => {
@@ -775,9 +804,28 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   );
 
   const handleEnemyDamaged = useCallback(
-    (expectedKillsTotal: number, enemyId: Parameters<typeof recordAfkEnemyHp>[1], enemyHp: number) => {
+    (
+      expectedKillsTotal: number,
+      enemyId: Parameters<typeof recordAfkEnemyHp>[1],
+      enemyHp: number,
+    ) => {
       const request = combatWriteQueueRef.current.then(() =>
         recordAfkEnemyHp(expectedKillsTotal, enemyId, enemyHp),
+      );
+      combatWriteQueueRef.current = request.catch(() => undefined);
+    },
+    [],
+  );
+
+  const handleHeroStateChanged = useCallback(
+    (
+      expectedKillsTotal: number,
+      enemyId: Parameters<typeof recordAfkHeroState>[1],
+      heroHp: number,
+      defeatedRemainingMs: number,
+    ) => {
+      const request = combatWriteQueueRef.current.then(() =>
+        recordAfkHeroState(expectedKillsTotal, enemyId, heroHp, defeatedRemainingMs),
       );
       combatWriteQueueRef.current = request.catch(() => undefined);
     },
@@ -827,7 +875,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   };
 
   const handleAdvanceChapter = async () => {
-    if (!nextRegion) return;
+    if (!nextRegion || adventureBusyRef.current) return;
     setAdventureBusy(true);
     adventureBusyRef.current = true;
     regionChangeVersionRef.current += 1;
@@ -835,13 +883,27 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     setTravelingRegionId(nextRegion.id);
     try {
       await combatWriteQueueRef.current.catch(() => undefined);
-      const [response] = await Promise.all([advanceAfkChapter(), prepareRegionTravel(nextRegion)]);
+      const currentRegionId = displayedRegion.id;
+      const [response] = await Promise.all([
+        advanceAfkChapter(currentRegionId),
+        prepareRegionTravel(nextRegion),
+      ]);
       if (response.region_id !== nextRegion.id || response.combat.region_id !== nextRegion.id) {
         throw new Error('O servidor não confirmou o avanço de capítulo. Tente novamente.');
       }
       applyAfkResponse(response);
       setActiveRegion(nextRegion);
       setRegionReady(true);
+      setTravelingRegionId(null);
+      setUnlockedRegionId(nextRegion.id);
+      if (chapterUnlockTimerRef.current) window.clearTimeout(chapterUnlockTimerRef.current);
+      chapterUnlockTimerRef.current = window.setTimeout(() => {
+        setUnlockedRegionId(null);
+        chapterUnlockTimerRef.current = null;
+      }, 2_000);
+      showGameToast(`Capítulo ${nextRegion.chapter} desbloqueado: ${nextRegion.name}!`, {
+        variant: 'success',
+      });
       setDialogue({
         title: response.story.title,
         lines: [
@@ -965,30 +1027,44 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                 </div>
                 <div className="game-afk-modal__toolbar">
                   {!loading && (
-                    <button
-                      type="button"
-                      className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleInventoryOpen();
-                      }}
-                      title="Inventário"
-                      aria-label={
-                        newInventoryItemCount > 0
-                          ? `Abrir inventário, ${newInventoryItemCount} itens novos`
-                          : 'Abrir inventário'
-                      }
-                    >
-                      <Backpack size={26} aria-hidden />
-                      <span className="game-afk-modal__shop-btn-hint" aria-hidden>
-                        Mochila
-                      </span>
-                      {newInventoryItemCount > 0 && (
-                        <span className="game-afk-modal__inventory-badge tabular-nums">
-                          {newInventoryItemCount}
+                    <>
+                      <button
+                        type="button"
+                        className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon game-afk-modal__shop-btn--inventory"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInventoryOpen();
+                        }}
+                        title="Mochila"
+                        aria-label={
+                          newInventoryItemCount > 0
+                            ? `Abrir mochila, ${newInventoryItemCount} itens novos`
+                            : 'Abrir mochila'
+                        }
+                      >
+                        <Backpack size={26} aria-hidden />
+                        <span className="game-afk-modal__shop-btn-hint" aria-hidden>
+                          Mochila
                         </span>
-                      )}
-                    </button>
+                        {newInventoryItemCount > 0 && (
+                          <span className="game-afk-modal__inventory-badge tabular-nums">
+                            {newInventoryItemCount}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="game-afk-modal__shop-btn game-afk-modal__shop-btn--icon"
+                        onClick={() => setExplorationSettingsOpen(true)}
+                        title="Configurações da Exploração"
+                        aria-label="Abrir configurações da Exploração"
+                      >
+                        <Settings size={23} aria-hidden />
+                        <span className="game-afk-modal__shop-btn-hint" aria-hidden>
+                          Configurações
+                        </span>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -1024,6 +1100,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                         onOpenMap={() => setMapOpen(true)}
                         onEnemyDefeated={handleEnemyDefeated}
                         onEnemyDamaged={handleEnemyDamaged}
+                        onHeroStateChanged={handleHeroStateChanged}
                         onBackToVillage={() => goToScene('village')}
                         paused={Boolean(
                           dialogue ||
@@ -1063,7 +1140,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                           disabled={adventureBusy}
                           onClick={() => void handleAdvanceChapter()}
                         >
-                          Seguir para o próximo capítulo
+                          Seguir história
                         </GameButton>
                       ) : null}
                       <GameButton
@@ -1096,6 +1173,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         <AfkRegionTravelOverlay region={getAfkRegionById(travelingRegionId)} />
       ) : null}
 
+      {unlockedRegionId ? (
+        <AfkRegionTravelOverlay region={getAfkRegionById(unlockedRegionId)} mode="unlocked" />
+      ) : null}
+
       {orbDropSeq > 0 ? (
         <motion.div key={orbDropSeq} className="game-afk-orb-drop" aria-live="polite">
           <span>
@@ -1119,6 +1200,10 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       )}
 
       <InventoryModal open={inventoryOpen} onClose={handleInventoryClose} layer="modal" />
+      <AfkExplorationSettingsModal
+        open={explorationSettingsOpen}
+        onClose={() => setExplorationSettingsOpen(false)}
+      />
       <BestiaryModal open={bestiaryOpen} onClose={() => setBestiaryOpen(false)} layer="modal" />
 
       <AfkRegionMapModal
@@ -1134,6 +1219,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         <AfkSkillTreeModal
           open
           combat={meta?.combat ?? null}
+          userId={userId}
           busy={adventureBusy}
           onUnlock={(nodeId) => void handleUnlockSkill(nodeId)}
           onReset={(currency) => void handleResetSkills(currency)}
