@@ -13,6 +13,7 @@ import {
   applyKill,
   persistCurrentEnemyHp,
   persistVisibleHeroState,
+  simulateOfflineCombat,
 } from '../src/services/afk-combat.js';
 import type { UserRecord } from '../src/types/user-record.js';
 
@@ -208,6 +209,22 @@ describe('Exploração AFK — campanha por regiões', () => {
     expect(new Date(savedCombat.hero_defeated_until!).getTime()).toBeGreaterThan(
       Date.now() + 9_000,
     );
+  });
+
+  it('pausa o cooldown inimigo durante o nocaute e reinicia após levantar', () => {
+    const user = createTravelUser();
+    const combat = user.afk.combat!;
+    combat.hero_hp = 0;
+    combat.defeated_remaining_ms = 8_000;
+    combat.enemy_attack_remaining_ms = 1_500;
+
+    simulateOfflineCombat(user, 3_000);
+    expect(user.afk.combat?.defeated_remaining_ms).toBe(5_000);
+    expect(user.afk.combat?.enemy_attack_remaining_ms).toBe(1_500);
+
+    simulateOfflineCombat(user, 5_000);
+    expect(user.afk.combat?.defeated_remaining_ms).toBe(0);
+    expect(user.afk.combat?.enemy_attack_remaining_ms).toBe(10_000);
   });
 
   it('derruba o herói em 10 ataques comuns, 8 de elite e 1 de chefe', () => {

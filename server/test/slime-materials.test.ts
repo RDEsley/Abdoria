@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   AFK_ENEMIES,
+  AFK_ROUTE_DRINK_DROP_THRESHOLD,
   SLIME_MATERIALS,
   SLIME_MATERIAL_BY_ENEMY_ID,
   type AfkPendingReward,
 } from '../../shared/types/index.js';
-import { rollLootTable, rollSlimeMaterialDrop } from '../src/services/afk-rolls.js';
+import {
+  rollLootTable,
+  rollRouteDrinkDrop,
+  rollSlimeMaterialDrop,
+} from '../src/services/afk-rolls.js';
 import { addInventoryItem, getItemCount, sellSlimeMaterial } from '../src/services/inventory.js';
 import type { UserRecord } from '../src/types/user-record.js';
 
@@ -65,18 +70,32 @@ describe('materiais exclusivos dos slimes', () => {
   it('aplica chances e preços definidos por raridade', () => {
     expect(SLIME_MATERIAL_BY_ENEMY_ID.slime_doce).toMatchObject({
       tier: 'common',
-      dropChancePct: 10,
+      rarity: 'comum',
+      dropChancePct: 4,
       sellPrice: 3,
     });
     expect(SLIME_MATERIAL_BY_ENEMY_ID.crystal_slime).toMatchObject({
       tier: 'elite',
+      rarity: 'raro',
       dropChancePct: 5,
       sellPrice: 4,
     });
     expect(SLIME_MATERIAL_BY_ENEMY_ID.boss_colossus).toMatchObject({
       tier: 'boss',
-      dropChancePct: 20,
+      rarity: 'epico',
+      dropChancePct: 15,
       sellPrice: 15,
+    });
+    expect(SLIME_MATERIAL_BY_ENEMY_ID.slime_enigma).toMatchObject({
+      tier: 'common',
+      rarity: 'mitico',
+      dropChancePct: 50,
+      sellPrice: 500,
+    });
+    expect(SLIME_MATERIAL_BY_ENEMY_ID.slime_binario).toMatchObject({
+      rarity: 'mitico',
+      dropChancePct: 50,
+      sellPrice: 500,
     });
   });
 
@@ -104,15 +123,25 @@ describe('materiais exclusivos dos slimes', () => {
     });
     expect(getItemCount(owner, boss.id)).toBe(0);
     expect(owner.cosmeticos.moedas).toBe(42);
+
+    const mythical = SLIME_MATERIAL_BY_ENEMY_ID.slime_enigma;
+    addInventoryItem(owner, mythical.id, 1);
+    expect(sellSlimeMaterial(owner, mythical.id, 1)).toMatchObject({
+      ok: true,
+      quantity_sold: 1,
+      coins_gained: 500,
+    });
+    expect(owner.cosmeticos.moedas).toBe(542);
   });
 
   it('mantém a rolagem de material independente e próxima das chances configuradas', () => {
     const owner = user();
     const samples = 20_000;
     const cases = [
-      ['slime_doce', 10],
+      ['slime_doce', 4],
       ['crystal_slime', 5],
-      ['boss_colossus', 20],
+      ['boss_colossus', 15],
+      ['slime_enigma', 50],
     ] as const;
 
     for (const [enemyId, expectedPct] of cases) {
@@ -125,6 +154,21 @@ describe('materiais exclusivos dos slimes', () => {
       expect(actualPct).toBeGreaterThan(expectedPct - 1.2);
       expect(actualPct).toBeLessThan(expectedPct + 1.2);
     }
+  });
+
+  it('usa 0,5% como chance de Route Drink em cada inimigo elegível', () => {
+    expect(AFK_ROUTE_DRINK_DROP_THRESHOLD).toBe(50);
+    const owner = user();
+    const rewards = pending();
+    const samples = 100_000;
+
+    for (let index = 1; index <= samples; index += 1) {
+      rollRouteDrinkDrop(owner, index, rewards);
+    }
+
+    const actualPct = (rewards.route_drinks / samples) * 100;
+    expect(actualPct).toBeGreaterThan(0.4);
+    expect(actualPct).toBeLessThan(0.6);
   });
 
   it('permite que vários drops da tabela principal saiam na mesma vitória', () => {

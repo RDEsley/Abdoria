@@ -208,6 +208,8 @@ export interface UserPreferencias {
   esquema_recomendado?: boolean;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
+  /** O usuário já abriu o RPG pelo botão flutuante ao menos uma vez. */
+  rpg_fab_descoberto?: boolean;
   /** Visual do personagem na Exploração — escolhido na 1ª entrada, antes da arma. */
   personagem_genero?: PersonagemGenero | null;
   /** Estilo de combate na Exploração AFK. */
@@ -988,7 +990,7 @@ export const ROUTE_DRINK_HOURS = 1;
 export const ROUTE_DRINK_LABEL = 'Route Drink';
 export const ROUTE_DRINK_SHOP_PRICE = 40;
 /** @deprecated Use {@link AFK_ROUTE_DRINK_DROP_THRESHOLD} from shared/afk/exploration-drops.js */
-export const AFK_ROUTE_DRINK_DROP_CHANCE = 4;
+export const AFK_ROUTE_DRINK_DROP_CHANCE = 0.5;
 
 export const EXP_INSTANT_ITEM_ID: InventoryItemId = 'exp_instant';
 export const EXP_INSTANT_LABEL = 'EXP Instantâneo';
@@ -1884,6 +1886,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   reps_repeticoes_padrao: 12,
   preset_favorito_id: null,
   tutorial_visto: false,
+  rpg_fab_descoberto: false,
   personagem_genero: null,
   arma_preferida: null,
   ocultar_aviso_xp_diario: false,
@@ -2123,12 +2126,15 @@ export {
   SLIME_MATERIAL_BY_ENEMY_ID,
   SLIME_MATERIAL_DROP_CHANCE_PCT,
   SLIME_MATERIAL_SELL_PRICE,
+  SPECIAL_SLIME_MATERIAL_DROP_CHANCE_PCT,
+  SPECIAL_SLIME_MATERIAL_SELL_PRICE,
   getSlimeMaterialForEnemy,
   isSlimeMaterialItemId,
 } from '../afk/slime-materials.js';
 export type {
   SlimeMaterialDefinition,
   SlimeMaterialItemId,
+  SlimeMaterialRarity,
   SlimeMaterialStockItem,
 } from '../afk/slime-materials.js';
 export type { EquipmentId } from '../equipment/index.js';

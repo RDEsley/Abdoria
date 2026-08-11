@@ -13,8 +13,8 @@ export const AFK_SECRET_WEAPON_ROLL_EXACT = 9998;
 /** Portão secundário: roll 9998 + hash % N === 0 → ~0,0033% vs 0,01% do título. */
 export const AFK_SECRET_WEAPON_GATE_MOD = 3;
 
-/** ~5 Route Drinks em 24h (11.520 kills): roll % 10.000 < 4 ≈ 4,6 un. */
-export const AFK_ROUTE_DRINK_DROP_THRESHOLD = 4;
+/** 0,5% por inimigo elegível: roll % 10.000 < 50. */
+export const AFK_ROUTE_DRINK_DROP_THRESHOLD = 50;
 
 export function isExplorationLegendaryCosmeticDrop(
   item: Pick<CosmeticDefinition, 'id' | 'kind' | 'raridade' | 'unlock'>,

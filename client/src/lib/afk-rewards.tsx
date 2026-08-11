@@ -84,8 +84,7 @@ function rarityForItem(item: AfkRewardItem): AfkRewardRarity {
   }
   if (item.secret || item.kind === 'secret') return 'secret';
   if (item.kind === 'material' && item.materialId && isSlimeMaterialItemId(item.materialId)) {
-    const tier = SLIME_MATERIAL_BY_ID[item.materialId].tier;
-    return tier === 'boss' ? 'epico' : tier === 'elite' ? 'raro' : 'comum';
+    return SLIME_MATERIAL_BY_ID[item.materialId].rarity;
   }
   if (item.kind === 'weapon' && item.cosmeticId) {
     const r = PATROL_WEAPON_BY_ID[item.cosmeticId]?.raridade;

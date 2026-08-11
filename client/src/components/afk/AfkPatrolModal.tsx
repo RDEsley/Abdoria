@@ -180,6 +180,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         : (patrolArmas.magia_equipada ?? patrolArmas.arco_equipado);
   const userId = String(user?.id ?? 'guest');
   const genero: PersonagemGenero = user?.preferencias?.personagem_genero ?? 'masculino';
+  const needsCharacterSetup = !user?.preferencias?.personagem_genero;
 
   useEffect(() => {
     combatOrbsRef.current = meta?.combat.orbs ?? 0;
@@ -200,6 +201,17 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     },
     [reconcileTimerFromServer],
   );
+
+  const syncSceneWithServer = useCallback((mode: 'village' | 'exploring') => {
+    // O snapshot do combate e a cena vivem no mesmo estado AFK. Aguardar a
+    // fila impede uma troca de cena de salvar por cima do HP mais recente;
+    // incluir a própria troca na fila também segura novos golpes até ela acabar.
+    const request = combatWriteQueueRef.current
+      .catch(() => undefined)
+      .then(() => setAfkScene(mode));
+    combatWriteQueueRef.current = request.catch(() => undefined);
+    return request;
+  }, []);
 
   const handleExit = useCallback(() => {
     void combatWriteQueueRef.current.finally(() => setAfkAway());
@@ -309,7 +321,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       // abertura decide a cena a partir do que o servidor diz (load()/
       // data.paused), então isso também corrige o reabrir sempre na vila.
       if (sceneModeRef.current === 'village') {
-        void setAfkScene('exploring').catch(() => {
+        void syncSceneWithServer('exploring').catch(() => {
           /* melhor esforço — o próximo open recarrega e corrige */
         });
       }
@@ -331,7 +343,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       setShowTutorial(true);
     }
     void load();
-  }, [open, load, user?.preferencias?.personagem_genero]);
+  }, [open, load, syncSceneWithServer, user?.preferencias?.personagem_genero]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -343,40 +355,37 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     return () => window.clearInterval(combatPoll);
   }, [open, load]);
 
-  // Vila pausa o tempo acumulado da Exploração no servidor; floresta
-  // retoma — dispara em toda troca de cena, inclusive a inicial (a página
-  // abre na vila por padrão, então o timer já nasce pausado).
+  // Vila pausa o tempo acumulado da Exploração no servidor; floresta retoma.
+  // A primeira carga respeita a cena autoritativa recebida antes de sincronizar.
   useEffect(() => {
-    if (!open) return;
-    setAfkScene(sceneMode)
+    if (!open || !hasLoadedRef.current) return undefined;
+    let cancelled = false;
+    void syncSceneWithServer(sceneMode)
       .then((res) => {
-        setMeta((prev) => ({
-          ...(prev ?? ({} as AfkMetaResponse)),
-          minutos_acumulados: res.minutos_acumulados,
-          pending: res.pending,
-          has_rewards: res.has_rewards,
-          kill_drop_chance: res.kill_drop_chance ?? prev?.kill_drop_chance ?? 4,
-          kill_drop_chances: res.kill_drop_chances ?? prev?.kill_drop_chances,
-          max_minutes: res.max_minutes ?? prev?.max_minutes ?? 1440,
-          capped: res.capped ?? prev?.capped ?? false,
-          combat: mergeAfkCombatSnapshot(prev?.combat, res.combat),
-        }));
-        reconcileTimerFromServer(res.minutos_acumulados);
+        if (!cancelled) applyAfkResponse(res);
       })
       .catch(() => {
         /* melhor esforço — o próximo poll de 15s corrige o estado */
       });
-  }, [open, sceneMode, reconcileTimerFromServer]);
+    return () => {
+      cancelled = true;
+    };
+  }, [applyAfkResponse, open, sceneMode, syncSceneWithServer]);
 
   useEffect(() => {
     if (!open) return undefined;
+    let restoreTimer: number | null = null;
     const restoreVisibleScene = () => {
       if (document.visibilityState !== 'visible') return;
-      window.setTimeout(() => void setAfkScene(sceneModeRef.current), 60);
+      if (restoreTimer !== null) window.clearTimeout(restoreTimer);
+      restoreTimer = window.setTimeout(() => void syncSceneWithServer(sceneModeRef.current), 60);
     };
     document.addEventListener('visibilitychange', restoreVisibleScene);
-    return () => document.removeEventListener('visibilitychange', restoreVisibleScene);
-  }, [open]);
+    return () => {
+      document.removeEventListener('visibilitychange', restoreVisibleScene);
+      if (restoreTimer !== null) window.clearTimeout(restoreTimer);
+    };
+  }, [open, syncSceneWithServer]);
 
   useEffect(() => {
     const onAfkSync = (event: Event) => {
@@ -436,6 +445,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     if (
       !open ||
       loading ||
+      needsCharacterSetup ||
       showTutorial ||
       dialogue ||
       sceneMode !== 'village' ||
@@ -471,11 +481,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
         );
       },
     });
-  }, [dialogue, loading, meta?.combat, open, sceneMode, showTutorial]);
+  }, [dialogue, loading, meta?.combat, needsCharacterSetup, open, sceneMode, showTutorial]);
 
   useEffect(() => {
     if (
       !pendingDialogue ||
+      needsCharacterSetup ||
       dialogue ||
       !regionReady ||
       sceneTransition ||
@@ -484,11 +495,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       return;
     setDialogue(pendingDialogue);
     setPendingDialogue(null);
-  }, [dialogue, pendingDialogue, regionReady, sceneMode, sceneTransition]);
+  }, [dialogue, needsCharacterSetup, pendingDialogue, regionReady, sceneMode, sceneTransition]);
 
   useEffect(() => {
     if (
       !bossActive ||
+      needsCharacterSetup ||
       dialogue ||
       !meta?.combat ||
       sceneMode !== 'exploring' ||
@@ -557,6 +569,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     sceneMode,
     sceneTransition,
     mapOpen,
+    needsCharacterSetup,
   ]);
 
   useEffect(() => {
@@ -657,7 +670,6 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
     }
   };
 
-  const needsCharacterSetup = !user?.preferencias?.personagem_genero;
   const capped = meta?.capped ?? false;
   const displayedRegion = activeRegion ?? getAfkRegionById(meta?.combat?.region_id);
   const displayedProgress = meta?.combat?.region_progress?.[displayedRegion.id];
@@ -1001,7 +1013,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                 </div>
                 <span className="game-afk-modal__topbar-spacer" aria-hidden />
               </div>
-              <ExplorationIntroFlow onDone={() => void load()} />
+              <ExplorationIntroFlow />
             </>
           ) : (
             <>
@@ -1228,7 +1240,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       ) : null}
 
       <AfkDialogueModal
-        open={Boolean(dialogue)}
+        open={Boolean(dialogue) && !needsCharacterSetup}
         title={dialogue?.title ?? ''}
         lines={dialogue?.lines ?? []}
         onComplete={() => {

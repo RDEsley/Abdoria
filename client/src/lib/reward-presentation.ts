@@ -81,7 +81,7 @@ export function buildRewardPresentationFromAfk(
     items.push({
       id: materialId,
       kind: 'material',
-      rarity: material.tier === 'boss' ? 'epico' : material.tier === 'elite' ? 'raro' : 'comum',
+      rarity: material.rarity,
       name: material.name,
       description: material.description,
       amount,

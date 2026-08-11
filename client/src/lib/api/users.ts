@@ -5,6 +5,7 @@ import type {
   PerfilTreino,
   PublicProfile,
   UpdateUserDadosResponse,
+  UserPreferencias,
   UserDadosSalvos,
 } from '@/types';
 import { fetchJson } from './client';
@@ -28,6 +29,14 @@ export function getPublicProfile(userId: string): Promise<PublicProfile> {
 
 export function updateMe(data: Partial<IUserDocument>): Promise<IUserDocument> {
   return fetchJson('/users/me', { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+/** Atualiza somente as preferências informadas; o servidor faz o merge com o perfil atual. */
+export function updatePreferences(preferencias: Partial<UserPreferencias>): Promise<IUserDocument> {
+  return fetchJson('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify({ preferencias }),
+  });
 }
 
 export function updateUserDados(data: Partial<UserDadosSalvos>): Promise<UpdateUserDadosResponse> {

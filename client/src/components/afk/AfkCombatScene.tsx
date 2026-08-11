@@ -287,6 +287,10 @@ export function AfkCombatScene({
     const tier = localIsBoss ? 'boss' : localIsElite ? 'elite' : 'common';
     const intervalMs = getEnemyAttackIntervalSeconds(tier) * 1000;
     enemyNextAttackAtRef.current = performance.now() + intervalMs;
+    if (heroDefeated) {
+      setEnemyAttacking(false);
+      return undefined;
+    }
     const pendingTimers: number[] = [];
     const later = (callback: () => void, delay: number) => {
       pendingTimers.push(window.setTimeout(callback, delay));
@@ -350,6 +354,7 @@ export function AfkCombatScene({
       pendingTimers.forEach((id) => window.clearTimeout(id));
     };
   }, [
+    heroDefeated,
     heroMaxHp,
     localIsBoss,
     localIsElite,

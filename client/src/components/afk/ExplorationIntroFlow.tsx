@@ -3,14 +3,10 @@ import { Check, Swords } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
-import { updateMe } from '@/lib/api';
+import { updatePreferences } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { playClick } from '@/lib/sounds';
 import type { ArmaPreferida, PersonagemGenero } from '@/types';
-
-interface Props {
-  onDone: () => void;
-}
 
 const GENEROS: { id: PersonagemGenero; label: string; img: string }[] = [
   { id: 'masculino', label: 'Herói', img: '/assets/patrol-mascot-village.png' },
@@ -52,7 +48,7 @@ const TODAS_AS_IMAGENS = [
  * só faz sentido pra quem realmente for explorar. Sequência fixa: gênero
  * sempre antes da arma.
  */
-export function ExplorationIntroFlow({ onDone }: Props) {
+export function ExplorationIntroFlow() {
   const { user, applyUser } = useAuth();
   const [genero, setGenero] = useState<PersonagemGenero | null>(null);
   const [arma, setArma] = useState<ArmaPreferida | null>(null);
@@ -72,15 +68,11 @@ export function ExplorationIntroFlow({ onDone }: Props) {
     setArma(armaEscolhida);
     setSaving(true);
     try {
-      const updated = await updateMe({
-        preferencias: {
-          ...user.preferencias,
-          personagem_genero: genero,
-          arma_preferida: armaEscolhida,
-        },
+      const updated = await updatePreferences({
+        personagem_genero: genero,
+        arma_preferida: armaEscolhida,
       });
       applyUser(updated);
-      onDone();
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível salvar seu personagem.'), {
         variant: 'error',
@@ -110,12 +102,7 @@ export function ExplorationIntroFlow({ onDone }: Props) {
                     setGenero(option.id);
                   }}
                 >
-                  <img
-                    src={option.img}
-                    alt=""
-                    className="onb-weapon-card__img"
-                    draggable={false}
-                  />
+                  <img src={option.img} alt="" className="onb-weapon-card__img" draggable={false} />
                   <span className="onb-weapon-card__label">{option.label}</span>
                 </button>
               ))}
@@ -137,12 +124,7 @@ export function ExplorationIntroFlow({ onDone }: Props) {
                   className={`onb-weapon-card${arma === weapon.id ? ' onb-weapon-card--selected' : ''}`}
                   onClick={() => void confirmArma(weapon.id)}
                 >
-                  <img
-                    src={weapon.img}
-                    alt=""
-                    className="onb-weapon-card__img"
-                    draggable={false}
-                  />
+                  <img src={weapon.img} alt="" className="onb-weapon-card__img" draggable={false} />
                   <span className="onb-weapon-card__label">{weapon.label}</span>
                   <span className="onb-weapon-card__hint">{weapon.hint}</span>
                   {arma === weapon.id && (
