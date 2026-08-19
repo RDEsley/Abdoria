@@ -129,7 +129,7 @@ export function BuilderPage() {
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
   const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
-  const [dismissedCardKeys, setDismissedCardKeys] = useState<Set<string>>(new Set());
+  const [dismissedCardKey, setDismissedCardKey] = useState<string | null>(null);
   const lastAppliedQueueKeyRef = useRef('');
   const lastSyncedSuggestedRef = useRef<string | null>(null);
   const lastRestPreferenceRef = useRef(authUser?.preferencias?.descanso_padrao_seg ?? 30);
@@ -447,6 +447,7 @@ export function BuilderPage() {
 
   const selectPreset = useCallback(
     (id: string | 'custom') => {
+      setDismissedCardKey(null);
       if (id === 'custom') {
         setActiveTab('customize');
         setSelectedPresetId('custom');
@@ -484,6 +485,7 @@ export function BuilderPage() {
     async (indice: number) => {
       try {
         const treino = await getRecommendWorkout({ dia: indice, shuffle: false });
+        setDismissedCardKey(null);
         setPlanOverride(treino);
         lastSyncedSuggestedRef.current = treino.preset_id;
         setSelectedPresetId(treino.preset_id);
@@ -872,11 +874,11 @@ export function BuilderPage() {
                 : null
             }
             exerciseMap={exerciseMap}
-            dismissedCardKeys={dismissedCardKeys}
+            dismissedCardKey={dismissedCardKey}
             onSelectCiclo={handleSelectCiclo}
             onSelectPreset={selectPreset}
             onSwapWorkout={() => void handleSwapWorkout()}
-            onDismissCard={(key) => setDismissedCardKeys((current) => new Set(current).add(key))}
+            onDismissCard={setDismissedCardKey}
           />
 
           <section>

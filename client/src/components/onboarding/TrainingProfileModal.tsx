@@ -20,7 +20,8 @@ import {
   type TrainingProfileDraft,
 } from '@/components/onboarding/training-profile-draft';
 import { useAuth } from '@/context/AuthContext';
-import { updateMe, updateTrainingProfile } from '@/lib/api';
+import { useApp } from '@/hooks/useApp';
+import { updateTrainingProfile } from '@/lib/api';
 
 type StepId = 'scope' | 'foco' | 'partes' | 'frequencia' | 'equipamento' | 'restricoes' | 'plano';
 
@@ -32,6 +33,7 @@ interface Props {
 /** Mini-wizard de re-onboarding: só os steps do perfil de treino. */
 export function TrainingProfileModal({ open, onClose }: Props) {
   const { user, refreshUser, applyUser } = useAuth();
+  const { refresh: refreshApp } = useApp();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [invalid, setInvalid] = useState(false);
@@ -102,14 +104,12 @@ export function TrainingProfileModal({ open, onClose }: Props) {
   const save = async () => {
     setSaving(true);
     try {
-      if (user) {
-        await updateMe({
-          preferencias: { ...user.preferencias, equipamentos: draft.equipamentos },
-        });
-      }
-      const updated = await updateTrainingProfile(draftToPerfilTreino(draft, 'reonboarding'));
+      const updated = await updateTrainingProfile(
+        draftToPerfilTreino(draft, 'reonboarding'),
+        draft.equipamentos,
+      );
       applyUser(updated);
-      await refreshUser();
+      await Promise.all([refreshUser(), refreshApp()]);
       showGameToast(corpoTodo ? 'Nova campanha ativada!' : 'Plano de treino atualizado.', {
         variant: 'success',
       });
@@ -209,7 +209,7 @@ export function TrainingProfileModal({ open, onClose }: Props) {
             disabled={saving}
             className="flex w-full items-center justify-center gap-2"
           >
-            {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Ativar plano') : 'Continuar'}
+            {step === steps.length - 1 ? (saving ? 'Salvando...' : 'Salvar plano') : 'Continuar'}
             <ChevronRight size={18} />
           </GameButton>
         </motion.div>

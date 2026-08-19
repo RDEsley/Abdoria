@@ -16,6 +16,7 @@ import {
 } from '../types/index.js';
 import { COSMETICS } from '../data/cosmetics.js';
 import { PATROL_WEAPONS } from '../../../shared/patrol/shop.js';
+import { EQUIPMENT_IDS } from '../../../shared/equipment/index.js';
 import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
@@ -662,11 +663,47 @@ usersRouter.put('/me/training-profile', async (req: AuthRequest, res) => {
       return;
     }
 
+    const current = await loadCurrentUser(req.userId!);
+    if (!current) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+
     const update: Record<string, unknown> = {
       perfil_treino: perfilTreino,
       plano_treino: buildPlanoTreino(perfilTreino, new Date().toISOString()),
       objetivo: focoToObjetivo(perfilTreino.foco),
     };
+
+    // Perfil e equipamento formam uma única configuração de recomendação.
+    // Persistir os dois na mesma requisição evita um plano novo usando o
+    // equipamento antigo quando uma das duas gravações falha no meio do fluxo.
+    if (
+      req.body?.equipamentos !== undefined &&
+      (!req.body.equipamentos ||
+        typeof req.body.equipamentos !== 'object' ||
+        Array.isArray(req.body.equipamentos))
+    ) {
+      res.status(400).json({ error: 'Configuração de equipamentos inválida.' });
+      return;
+    }
+
+    if (req.body?.equipamentos) {
+      const rawEquipamentos = req.body.equipamentos as Record<string, unknown>;
+      const equipamentos = Object.fromEntries(
+        EQUIPMENT_IDS.map((id) => [id, rawEquipamentos[id] === true]),
+      );
+      const preferencias = mergePreferencias(current.preferencias, {
+        equipamentos,
+      });
+      update.preferencias = preferencias;
+
+      const mutable = await User.findById(req.userId!);
+      if (mutable) {
+        syncEquipmentExerciseUnlocks(mutable, preferencias);
+        update.dados_salvos = mutable.dados_salvos;
+      }
+    }
 
     const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
     if (!user) {

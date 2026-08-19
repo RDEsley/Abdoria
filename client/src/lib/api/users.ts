@@ -49,10 +49,11 @@ export function completeOnboarding(data: OnboardingPayload): Promise<IUserDocume
 
 export function updateTrainingProfile(
   perfil: Omit<PerfilTreino, 'atualizado_em'>,
+  equipamentos?: UserPreferencias['equipamentos'],
 ): Promise<IUserDocument> {
   return fetchJson('/users/me/training-profile', {
     method: 'PUT',
-    body: JSON.stringify({ perfil_treino: perfil }),
+    body: JSON.stringify({ perfil_treino: perfil, equipamentos }),
   });
 }
 
