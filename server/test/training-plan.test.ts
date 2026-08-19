@@ -13,7 +13,11 @@ import {
   weeklyMultiplier,
 } from '../../shared/training-plan.js';
 import type { PerfilTreino } from '../../shared/types/index.js';
-import { isPlanoUser, markPlanoDayCompleted } from '../src/services/plan-generator.js';
+import {
+  addPinnedExercises,
+  isPlanoUser,
+  markPlanoDayCompleted,
+} from '../src/services/plan-generator.js';
 import type { UserRecord } from '../src/domain/User.js';
 import type { UserMutable } from '../src/repositories/user-repository.js';
 
@@ -103,7 +107,7 @@ describe('dosagem por foco e progressão', () => {
     expect(doseReps(1, 'forca', 1)).toBeGreaterThanOrEqual(4);
     expect(doseReps(100, 'resistencia', 4)).toBeLessThanOrEqual(30);
     expect(doseTempoSeg(5, 'forca', 1)).toBeGreaterThanOrEqual(10);
-    expect(doseTempoSeg(500, 'resistencia', 4)).toBeLessThanOrEqual(120);
+    expect(doseTempoSeg(1_000, 'resistencia', 4)).toBeLessThanOrEqual(600);
     expect(doseTempoSeg(33, 'definicao', 1) % 5).toBe(0);
   });
 
@@ -125,6 +129,20 @@ describe('isPlanoUser', () => {
       } as unknown as UserRecord),
     ).toBe(false);
     expect(isPlanoUser({} as unknown as UserRecord)).toBe(false);
+  });
+});
+
+describe('exercícios fixados', () => {
+  it('soma os fixados à seleção normal sem substituir vagas nem duplicar', () => {
+    const selected = [{ slug: 'crunch' }, { slug: 'plank' }, { slug: 'sit-up' }];
+    const pinned = [{ slug: 'push-up' }, { slug: 'plank' }];
+
+    expect(addPinnedExercises(selected, pinned).map((exercise) => exercise.slug)).toEqual([
+      'push-up',
+      'plank',
+      'crunch',
+      'sit-up',
+    ]);
   });
 });
 

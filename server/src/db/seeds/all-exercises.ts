@@ -4,6 +4,7 @@ import { prioritySExercises } from './priority-s-exercises.js';
 import { equipmentExercises } from './equipment-exercises.js';
 import { bodyweightExercises } from './bodyweight-exercises.js';
 import { EXERCISE_CONTRAINDICACOES, EXERCISE_GRUPOS } from './exercise-groups.js';
+import { filterRetiredExercises } from '../../../../shared/exercises.js';
 
 const priorityBase = prioritySExercises.map((e) =>
   withLevelParams({
@@ -485,9 +486,8 @@ function withGroupTags<
   };
 }
 
-export const allExercises = [
-  ...priorityBase,
-  ...additionalExercises,
-  ...bodyweightExercises,
-  ...equipmentExercises,
-].map(withGroupTags);
+export const allExercises = filterRetiredExercises(
+  [...priorityBase, ...additionalExercises, ...bodyweightExercises, ...equipmentExercises].map(
+    withGroupTags,
+  ),
+);

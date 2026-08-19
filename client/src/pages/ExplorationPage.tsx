@@ -18,7 +18,7 @@ function ExplorationFallback({ onBack }: { onBack: () => void }) {
 
 export function ExplorationPage() {
   const navigate = useNavigate();
-  const goHome = () => navigate('/');
+  const goHome = () => navigate('/exploracao');
 
   return (
     <MiniErrorBoundary fallback={<ExplorationFallback onBack={goHome} />}>

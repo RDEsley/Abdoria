@@ -185,7 +185,7 @@ export function AtividadesPlayerPage() {
   const progressoHoje = flow.concluidasHoje.size;
 
   return (
-    <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
+    <div className="game-player game-app fixed inset-x-0 top-[var(--top-navbar-height)] bottom-[calc(4.85rem+env(safe-area-inset-bottom,0px))] z-40 flex flex-col overflow-hidden md:right-0 md:bottom-0 md:left-64">
       <AnimatedBackground variant="player" />
       <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
         <button

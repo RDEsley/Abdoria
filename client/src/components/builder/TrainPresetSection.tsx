@@ -4,9 +4,7 @@ import { Check, Play, Swords, X } from 'lucide-react';
 import { MuscleTagGroup } from '@/components/builder/MuscleTag';
 import { getPresetPrimaryMuscles } from '@/components/builder/builder-muscles';
 import { presetSummary } from '@/components/builder/queue-utils';
-import { PreferenceToggleButtons } from '@/components/library/PreferenceToggleButtons';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast, WORKOUT_BLOCK_OFF, WORKOUT_BLOCK_ON } from '@/components/ui/GameToast';
 import type {
   IExerciseDocument,
   IWorkoutPresetDocument,
@@ -37,13 +35,11 @@ interface Props {
   selectedPlanWorkout?: TreinoSugerido | null;
   plan?: PlanSectionData | null;
   exerciseMap: Map<string, IExerciseDocument>;
-  fixedWorkoutIds: string[];
-  blockedWorkoutIds: string[];
+  dismissedCardKeys: Set<string>;
   onSelectCiclo: (ciclo: TreinoBase) => void;
   onSelectPreset: (id: string) => void;
   onSwapWorkout: () => void;
-  onToggleWorkoutPin: (presetId: string) => void;
-  onToggleWorkoutBlock: (presetId: string) => void;
+  onDismissCard: (key: string) => void;
 }
 
 /** Aba Treinar: progresso dos ciclos/missões, banner do recomendado e card do selecionado. */
@@ -58,14 +54,21 @@ export function TrainPresetSection({
   selectedPlanWorkout,
   plan,
   exerciseMap,
-  fixedWorkoutIds,
-  blockedWorkoutIds,
+  dismissedCardKeys,
   onSelectCiclo,
   onSelectPreset,
   onSwapWorkout,
-  onToggleWorkoutPin,
-  onToggleWorkoutBlock,
+  onDismissCard,
 }: Props) {
+  const selectedCardKey = selectedPreset
+    ? `ciclo-${selectedPreset.ciclo_id}`
+    : selectedPlanWorkout?.plano_dia_indice != null
+      ? `dia-${selectedPlanWorkout.plano_dia_indice}`
+      : selectedSavedWorkout
+        ? `salvo-${selectedSavedWorkout.id}`
+        : null;
+  const showSelectedCard = selectedCardKey ? !dismissedCardKeys.has(selectedCardKey) : false;
+
   return (
     <section id="builder-presets">
       <div className="game-train-head mb-3">
@@ -176,7 +179,7 @@ export function TrainPresetSection({
         </motion.div>
       )}
 
-      {(selectedPreset || selectedSavedWorkout || selectedPlanWorkout) && (
+      {(selectedPreset || selectedSavedWorkout || selectedPlanWorkout) && showSelectedCard && (
         <div className="glass-card game-cycle-card p-4">
           {selectedPreset && (
             <>
@@ -187,15 +190,9 @@ export function TrainPresetSection({
                 <button
                   type="button"
                   className="game-cycle-card__remove"
-                  aria-label="Remover este treino das recomendações"
-                  title="Remover das recomendações"
-                  onClick={() => {
-                    const next = !blockedWorkoutIds.includes(selectedPreset.id);
-                    showGameToast(next ? WORKOUT_BLOCK_ON : WORKOUT_BLOCK_OFF, {
-                      variant: 'info',
-                    });
-                    onToggleWorkoutBlock(selectedPreset.id);
-                  }}
+                  aria-label="Fechar sugestão deste ciclo"
+                  title="Fechar sugestão"
+                  onClick={() => selectedCardKey && onDismissCard(selectedCardKey)}
                 >
                   <X size={14} aria-hidden />
                 </button>
@@ -211,25 +208,22 @@ export function TrainPresetSection({
               <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
                 {presetSummary(selectedPreset)}
               </p>
-              <PreferenceToggleButtons
-                className="mt-3"
-                onSwapWorkout={onSwapWorkout}
-                swapAriaLabel="Trocar treino similar"
-                isPinned={fixedWorkoutIds.includes(selectedPreset.id)}
-                isBlocked={blockedWorkoutIds.includes(selectedPreset.id)}
-                onTogglePin={() => onToggleWorkoutPin(selectedPreset.id)}
-                onToggleBlock={() => onToggleWorkoutBlock(selectedPreset.id)}
-                pinAriaLabel="Sempre recomendar este treino"
-                blockAriaLabel="Não recomendar este treino"
-                feedbackKind="workout"
-              />
+              <GameButton
+                variant="secondary"
+                size="sm"
+                className="mt-3 w-full"
+                onClick={onSwapWorkout}
+              >
+                Trocar por treino similar
+              </GameButton>
             </>
           )}
           {!selectedPreset && selectedPlanWorkout && (
             <>
               <div className="game-cycle-card__header">
                 <span className="game-cycle-card__badge">
-                  <Swords size={11} aria-hidden /> {selectedPlanWorkout.plano_titulo ?? 'Plano de treino'}
+                  <Swords size={11} aria-hidden />{' '}
+                  {selectedPlanWorkout.plano_titulo ?? 'Plano de treino'}
                 </span>
               </div>
               <p className="game-cycle-card__title">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Bookmark, GraduationCap } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { BookOpen, Bookmark, GraduationCap, Trophy } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { resolveFila } from '@shared/atividades';
@@ -14,8 +14,8 @@ import { ExercisePicker } from '@/components/builder/ExercisePicker';
 import { BuilderTabs, type BuilderTab } from '@/components/builder/BuilderTabs';
 import { BuilderStickyBar } from '@/components/builder/BuilderStickyBar';
 import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
+import { ExerciseConfigModal } from '@/components/builder/ExerciseConfigModal';
 import { TrainPresetSection } from '@/components/builder/TrainPresetSection';
-import { WorkoutConfigPanel } from '@/components/builder/WorkoutConfigPanel';
 import { WorkoutQueueList } from '@/components/builder/WorkoutQueueList';
 import { presetToQueue, sugeridoToQueue } from '@/components/builder/queue-utils';
 import {
@@ -88,6 +88,7 @@ export function BuilderPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const presetFromUrl = searchParams.get('preset');
+  const modeFromUrl = searchParams.get('modo');
 
   // Atividades enfileiradas no Início entram na sequência depois do treino.
   const atividadesNaFila = resolveFila(authUser?.preferencias, getTodaySaoPaulo()).length;
@@ -112,11 +113,13 @@ export function BuilderPage() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<BuilderTab>('train');
+  const [activeTab, setActiveTab] = useState<BuilderTab>(
+    modeFromUrl === 'personalizar' ? 'customize' : 'train',
+  );
   const [allPresets, setAllPresets] = useState<IWorkoutPresetDocument[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string | 'custom'>('custom');
   const [draftQueue, setDraftQueue] = useState<WorkoutQueueItem[] | null>(null);
-  const [showConfig, setShowConfig] = useState(false);
+  const [configExerciseIndex, setConfigExerciseIndex] = useState<number | null>(null);
   const [showSimilarWorkout, setShowSimilarWorkout] = useState(false);
   const [swapExerciseIndex, setSwapExerciseIndex] = useState<number | null>(null);
   const [globalDescanso, setGlobalDescanso] = useState<number>(
@@ -126,6 +129,7 @@ export function BuilderPage() {
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
   const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
+  const [dismissedCardKeys, setDismissedCardKeys] = useState<Set<string>>(new Set());
   const lastAppliedQueueKeyRef = useRef('');
   const lastSyncedSuggestedRef = useRef<string | null>(null);
   const lastRestPreferenceRef = useRef(authUser?.preferencias?.descanso_padrao_seg ?? 30);
@@ -184,6 +188,11 @@ export function BuilderPage() {
   useEffect(() => {
     void ensureExercises();
   }, [ensureExercises]);
+
+  useEffect(() => {
+    if (modeFromUrl === 'personalizar') handleTabChange('customize');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deep link aplicado somente quando o parâmetro muda
+  }, [modeFromUrl]);
 
   useEffect(() => {
     void loadRecommendations({ force: true });
@@ -268,10 +277,11 @@ export function BuilderPage() {
       if (!selectedPreset) return [];
       return presetToQueue(selectedPreset, exerciseMap, nivel);
     })();
-    // O descanso padrão do usuário prevalece sobre o descanso gravado no preset.
-    return raw.map((item) =>
-      item.descanso_seg === globalDescanso ? item : { ...item, descanso_seg: globalDescanso },
-    );
+    // O valor global é apenas fallback. Ajustes feitos em cada exercício são preservados.
+    return raw.map((item) => ({
+      ...item,
+      descanso_seg: item.descanso_seg ?? globalDescanso,
+    }));
   }, [
     selectedPresetId,
     selectedSavedWorkout,
@@ -358,16 +368,6 @@ export function BuilderPage() {
     applyRepScheme(scheme, 'all', { force: true });
   };
 
-  // Descanso padrão manda: sobrescreve o descanso de TODOS os exercícios da fila.
-  const handleChangeGlobalDescanso = (value: number) => {
-    setGlobalDescanso(value);
-    const base = draftQueue ?? baseQueue;
-    if (base.length === 0) return;
-    const next = base.map((item) => ({ ...item, descanso_seg: value }));
-    setDraftQueue(next);
-    persistDraftIfCustom(next);
-  };
-
   const handleDeleteScheme = (schemeId: string) => {
     const next = removeRepScheme(nivel, schemeId);
     if (selectedSchemeId === schemeId) {
@@ -445,24 +445,27 @@ export function BuilderPage() {
     }
   };
 
-  const selectPreset = useCallback((id: string | 'custom') => {
-    if (id === 'custom') {
-      setActiveTab('customize');
-      setSelectedPresetId('custom');
+  const selectPreset = useCallback(
+    (id: string | 'custom') => {
+      if (id === 'custom') {
+        setActiveTab('customize');
+        setSelectedPresetId('custom');
+        setDraftQueue(null);
+        setCustomizedIndices(new Set());
+        lastAppliedQueueKeyRef.current = '';
+        scrollToSection(customWorkout.length > 0 ? 'builder-queue' : 'builder-add-exercise');
+        return;
+      }
+
+      setActiveTab('train');
+      setSelectedPresetId(id);
       setDraftQueue(null);
       setCustomizedIndices(new Set());
       lastAppliedQueueKeyRef.current = '';
-      scrollToSection(customWorkout.length > 0 ? 'builder-queue' : 'builder-add-exercise');
-      return;
-    }
-
-    setActiveTab('train');
-    setSelectedPresetId(id);
-    setDraftQueue(null);
-    setCustomizedIndices(new Set());
-    lastAppliedQueueKeyRef.current = '';
-    scrollToSection('builder-queue-preview');
-  }, [customWorkout.length, scrollToSection]);
+      scrollToSection('builder-queue-preview');
+    },
+    [customWorkout.length, scrollToSection],
+  );
 
   const handleSelectCiclo = useCallback(
     (ciclo: TreinoBase) => {
@@ -552,7 +555,9 @@ export function BuilderPage() {
         repeticoes: useReps
           ? (scheme?.repeticoes ?? current.repeticoes ?? params.repeticoes)
           : params.repeticoes,
-        tempo_seg: useReps ? undefined : (scheme?.tempo_seg ?? current.tempo_seg ?? params.tempo_seg),
+        tempo_seg: useReps
+          ? undefined
+          : (scheme?.tempo_seg ?? current.tempo_seg ?? params.tempo_seg),
         descanso_seg: current.descanso_seg ?? globalDescanso,
       };
 
@@ -818,25 +823,22 @@ export function BuilderPage() {
     return Math.max(1, Math.round(estimateWorkoutDurationSeconds(payload) / 60));
   }, [activeQueue, globalDescanso]);
 
-  const configSection = (
-    <WorkoutConfigPanel
-      open={showConfig}
-      onToggle={() => setShowConfig((s) => !s)}
-      queue={activeQueue}
-      sortableIds={sortableIds}
-      globalDescanso={globalDescanso}
-      onChangeGlobalDescanso={handleChangeGlobalDescanso}
-      schemes={schemes}
-      selectedSchemeId={selectedSchemeId}
-      customizedIndices={customizedIndices}
-      onApplySchemeToItem={(scheme, idx) => applyRepScheme(scheme, idx)}
-      onUpdateItem={updateQueueItem}
-    />
-  );
-
   return (
     <div className="flex flex-col gap-5 pb-24 md:pb-28">
       <GamePageHeader eyebrow="Escolha ou monte" title="Montar treino" />
+
+      <div className="grid grid-cols-2 gap-2" aria-label="Atalhos da missão">
+        <Link to="/biblioteca">
+          <GameButton variant="secondary" className="flex w-full items-center justify-center gap-2">
+            <BookOpen size={16} aria-hidden /> Biblioteca
+          </GameButton>
+        </Link>
+        <Link to="/ranking">
+          <GameButton variant="secondary" className="flex w-full items-center justify-center gap-2">
+            <Trophy size={16} aria-hidden /> Ranking
+          </GameButton>
+        </Link>
+      </div>
 
       {xpCapReached && <DailyXpCapBanner />}
 
@@ -870,13 +872,11 @@ export function BuilderPage() {
                 : null
             }
             exerciseMap={exerciseMap}
-            fixedWorkoutIds={fixedWorkoutIds}
-            blockedWorkoutIds={blockedWorkoutIds}
+            dismissedCardKeys={dismissedCardKeys}
             onSelectCiclo={handleSelectCiclo}
             onSelectPreset={selectPreset}
             onSwapWorkout={() => void handleSwapWorkout()}
-            onToggleWorkoutPin={toggleWorkoutPin}
-            onToggleWorkoutBlock={toggleWorkoutBlock}
+            onDismissCard={(key) => setDismissedCardKeys((current) => new Set(current).add(key))}
           />
 
           <section>
@@ -909,8 +909,6 @@ export function BuilderPage() {
             />
           </section>
 
-          {configSection}
-
           <section id="builder-queue-preview" className="glass-card p-4">
             <h3 className="game-section-title mb-3">Fila do treino</h3>
             <WorkoutQueueList
@@ -921,13 +919,7 @@ export function BuilderPage() {
                 exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'
               }
               onDragEnd={handleDragEnd}
-              onSwapExercise={setSwapExerciseIndex}
-              preferences={{
-                fixedExerciseSlugs,
-                blockedExerciseSlugs,
-                onTogglePin: toggleExercisePin,
-                onToggleBlock: toggleExerciseBlock,
-              }}
+              onConfigureExercise={setConfigExerciseIndex}
             />
           </section>
         </div>
@@ -964,8 +956,6 @@ export function BuilderPage() {
 
           <ExercisePicker exercises={exercises} loading={exercisesLoading} onAdd={addExercise} />
 
-          {configSection}
-
           <section id="builder-queue" className="glass-card p-4">
             <h3 className="game-section-title">Ordem dos exercícios</h3>
             <WorkoutQueueList
@@ -976,7 +966,7 @@ export function BuilderPage() {
                 exercisesLoading ? 'Carregando...' : 'Adicione exercícios da biblioteca acima.'
               }
               onDragEnd={handleDragEnd}
-              onSwapExercise={setSwapExerciseIndex}
+              onConfigureExercise={setConfigExerciseIndex}
               onRemove={removeExercise}
             />
           </section>
@@ -1030,6 +1020,41 @@ export function BuilderPage() {
         options={similarExerciseOptions}
         exerciseMap={exerciseMap}
         onSelect={confirmSwapExercise}
+      />
+
+      <ExerciseConfigModal
+        item={configExerciseIndex === null ? null : (activeQueue[configExerciseIndex] ?? null)}
+        index={configExerciseIndex}
+        defaultRestSeconds={globalDescanso}
+        schemes={schemes}
+        isPinned={
+          configExerciseIndex === null
+            ? false
+            : fixedExerciseSlugs.includes(activeQueue[configExerciseIndex]?.slug ?? '')
+        }
+        isBlocked={
+          configExerciseIndex === null
+            ? false
+            : blockedExerciseSlugs.includes(activeQueue[configExerciseIndex]?.slug ?? '')
+        }
+        onClose={() => setConfigExerciseIndex(null)}
+        onSwap={() => {
+          if (configExerciseIndex === null) return;
+          setSwapExerciseIndex(configExerciseIndex);
+          setConfigExerciseIndex(null);
+        }}
+        onTogglePin={() => {
+          if (configExerciseIndex === null) return;
+          const slug = activeQueue[configExerciseIndex]?.slug;
+          if (slug) toggleExercisePin(slug);
+        }}
+        onToggleBlock={() => {
+          if (configExerciseIndex === null) return;
+          const slug = activeQueue[configExerciseIndex]?.slug;
+          if (slug) toggleExerciseBlock(slug);
+        }}
+        onApplyScheme={(scheme, index) => applyRepScheme(scheme, index)}
+        onUpdate={updateQueueItem}
       />
 
       <BuilderStickyBar

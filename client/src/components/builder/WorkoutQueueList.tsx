@@ -15,23 +15,14 @@ import {
 import { SortableExerciseItem } from '@/components/builder/SortableExerciseItem';
 import type { IExerciseDocument, WorkoutQueueItem } from '@/types';
 
-interface ExercisePreferences {
-  fixedExerciseSlugs: string[];
-  blockedExerciseSlugs: string[];
-  onTogglePin: (slug: string) => void;
-  onToggleBlock: (slug: string) => void;
-}
-
 interface Props {
   queue: WorkoutQueueItem[];
   sortableIds: string[];
   exerciseMap: Map<string, IExerciseDocument>;
   emptyMessage: string;
   onDragEnd: (event: DragEndEvent) => void;
-  onSwapExercise: (index: number) => void;
+  onConfigureExercise: (index: number) => void;
   onRemove?: (index: number) => void;
-  /** Presente = mostra pin/block por exercício (aba Treinar). */
-  preferences?: ExercisePreferences;
 }
 
 /** Fila de exercícios reordenável — usada pelas abas Treinar e Personalizar do Builder. */
@@ -41,9 +32,8 @@ export function WorkoutQueueList({
   exerciseMap,
   emptyMessage,
   onDragEnd,
-  onSwapExercise,
+  onConfigureExercise,
   onRemove,
-  preferences,
 }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -65,14 +55,8 @@ export function WorkoutQueueList({
               item={item}
               index={index}
               exercise={exerciseMap.get(item.slug)}
-              showSwapExercise
-              onSwapExercise={() => onSwapExercise(index)}
+              onConfigure={() => onConfigureExercise(index)}
               onRemove={onRemove ? () => onRemove(index) : undefined}
-              showPreferences={Boolean(preferences)}
-              isPinned={preferences?.fixedExerciseSlugs.includes(item.slug)}
-              isBlocked={preferences?.blockedExerciseSlugs.includes(item.slug)}
-              onTogglePin={preferences ? () => preferences.onTogglePin(item.slug) : undefined}
-              onToggleBlock={preferences ? () => preferences.onToggleBlock(item.slug) : undefined}
             />
           ))}
         </ul>

@@ -51,7 +51,7 @@ export const FOCO_PARAMS: Record<Foco, FocoParams> = {
 export const REPS_MIN = 4;
 export const REPS_MAX = 30;
 export const TEMPO_SEG_MIN = 10;
-export const TEMPO_SEG_MAX = 120;
+export const TEMPO_SEG_MAX = 600;
 
 /** Aplica foco + progressão semanal sobre as repetições-base do exercício. */
 export function doseReps(baseReps: number, foco: Foco, semana: number): number {

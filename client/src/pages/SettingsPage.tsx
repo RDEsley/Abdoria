@@ -9,10 +9,8 @@ import {
   ClipboardList,
   Copy,
   Dumbbell,
-  Gamepad2,
   HelpCircle,
   LogOut,
-  MessageSquareText,
   PlayCircle,
   Sparkles,
   ScrollText,
@@ -37,7 +35,7 @@ import { deleteAccount, updateMe } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
-import type { TomTexto, TreinoBase } from '@/types';
+import type { TreinoBase } from '@/types';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_XP_POR_UNIDADE,
@@ -98,32 +96,42 @@ export function SettingsPage() {
   const [confetti, setConfetti] = useState(
     user?.preferencias?.confetti_animacoes_habilitadas ?? true,
   );
-  const [tomTexto, setTomTexto] = useState<TomTexto>(user?.preferencias?.tom_texto ?? 'jogo');
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
   const [ciclo, setCiclo] = useState<TreinoBase[]>(
     normalizeCicloTreinos(user?.preferencias?.ciclo_treinos),
   );
   const [saving, setSaving] = useState(false);
+  const [hydratedUserId, setHydratedUserId] = useState<string | null>(user?.id ?? null);
+
+  // O provider pode terminar de carregar depois do primeiro render. Hidratamos
+  // uma vez por conta antes de comparar o formulário, evitando um falso "alterado".
+  useEffect(() => {
+    if (!user || hydratedUserId === user.id) return;
+    setSom(user.preferencias?.som_habilitado ?? true);
+    setVolume(user.preferencias?.sfx_volume ?? 0.7);
+    setConfetti(user.preferencias?.confetti_animacoes_habilitadas ?? true);
+    setDescanso(user.preferencias?.descanso_padrao_seg ?? 30);
+    setCiclo(normalizeCicloTreinos(user.preferencias?.ciclo_treinos));
+    setHydratedUserId(user.id);
+  }, [hydratedUserId, user]);
 
   // Barra de salvar só aparece quando algo realmente mudou em relação ao salvo.
   const dirty = useMemo(() => {
-    if (!user) return false;
+    if (!user || hydratedUserId !== user.id) return false;
     const prefs = user.preferencias;
     return (
       som !== (prefs?.som_habilitado ?? true) ||
       volume !== (prefs?.sfx_volume ?? 0.7) ||
       confetti !== (prefs?.confetti_animacoes_habilitadas ?? true) ||
-      tomTexto !== (prefs?.tom_texto ?? 'jogo') ||
       descanso !== (prefs?.descanso_padrao_seg ?? 30) ||
       normalizeCicloTreinos(ciclo).join('') !== normalizeCicloTreinos(prefs?.ciclo_treinos).join('')
     );
-  }, [user, som, volume, confetti, tomTexto, descanso, ciclo]);
+  }, [user, hydratedUserId, som, volume, confetti, descanso, ciclo]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
     setConfetti(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
-    setTomTexto(user?.preferencias?.tom_texto ?? 'jogo');
     setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
     setCiclo(normalizeCicloTreinos(user?.preferencias?.ciclo_treinos));
   };
@@ -137,7 +145,7 @@ export function SettingsPage() {
           som_habilitado: som,
           sfx_volume: volume,
           confetti_animacoes_habilitadas: confetti,
-          tom_texto: tomTexto,
+          tom_texto: 'normal',
           descanso_padrao_seg: descanso,
           ciclo_treinos: normalizeCicloTreinos(ciclo),
         },
@@ -376,34 +384,6 @@ export function SettingsPage() {
             {confetti ? 'Ligadas' : 'Desligadas'}
           </span>
         </GameButton>
-      </section>
-
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <Gamepad2 size={14} /> Linguagem
-        </h3>
-        <div className="grid grid-cols-2 gap-2">
-          <GameButton
-            type="button"
-            variant={tomTexto === 'jogo' ? 'secondary' : 'ghost'}
-            className="flex-col !h-auto gap-1 py-3"
-            onClick={() => setTomTexto('jogo')}
-            aria-pressed={tomTexto === 'jogo'}
-          >
-            <Gamepad2 size={18} aria-hidden />
-            <span className="text-xs font-bold">Linguagem de Jogo</span>
-          </GameButton>
-          <GameButton
-            type="button"
-            variant={tomTexto === 'normal' ? 'secondary' : 'ghost'}
-            className="flex-col !h-auto gap-1 py-3"
-            onClick={() => setTomTexto('normal')}
-            aria-pressed={tomTexto === 'normal'}
-          >
-            <MessageSquareText size={18} aria-hidden />
-            <span className="text-xs font-bold">Linguagem normal</span>
-          </GameButton>
-        </div>
       </section>
 
       <section className="glass-card p-4">

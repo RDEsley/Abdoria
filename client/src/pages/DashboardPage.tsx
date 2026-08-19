@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Flame, ListChecks, Play, Timer } from 'lucide-react';
@@ -12,7 +12,6 @@ import { RatingPrompt } from '@/components/dashboard/RatingPrompt';
 import { SuggestionPrompt } from '@/components/dashboard/SuggestionPrompt';
 import { NotificationOptInPrompt } from '@/components/dashboard/NotificationOptInPrompt';
 import { StreakRecoveryPrompt } from '@/components/dashboard/StreakRecoveryPrompt';
-import { AtividadesCard } from '@/components/dashboard/AtividadesCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
@@ -30,13 +29,6 @@ import {
   xpProgressFromTotal,
 } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
-
-const ActivityCalendar = lazy(() =>
-  import('@/components/dashboard/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })),
-);
-const CampaignFeed = lazy(() =>
-  import('@/components/dashboard/CampaignFeed').then((m) => ({ default: m.CampaignFeed })),
-);
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -186,10 +178,6 @@ export function DashboardPage() {
       </motion.div>
 
       <motion.div variants={item}>
-        <AtividadesCard />
-      </motion.div>
-
-      <motion.div variants={item}>
         <WeekSummary />
       </motion.div>
 
@@ -232,20 +220,6 @@ export function DashboardPage() {
           total={stats.conquistas.length}
         />
       </motion.div>
-
-      <motion.section variants={item} className="glass-card p-4">
-        <h3 className="game-section-title">Mapa de campanha</h3>
-        <Suspense fallback={null}>
-          <CampaignFeed />
-        </Suspense>
-      </motion.section>
-
-      <motion.section variants={item} className="glass-card p-4">
-        <h3 className="game-section-title">Mapa de treinos</h3>
-        <Suspense fallback={<PageLoader />}>
-          <ActivityCalendar />
-        </Suspense>
-      </motion.section>
 
       <motion.section variants={item} className="glass-card p-4">
         <h3 className="game-section-title mb-3">Zonas da semana</h3>

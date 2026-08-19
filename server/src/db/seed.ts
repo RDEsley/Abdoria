@@ -11,8 +11,16 @@ import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS } from '../../../shared/equipment/index.js';
+import {
+  RETIRED_EXERCISE_SLUGS as PRODUCT_RETIRED_EXERCISE_SLUGS,
+  filterRetiredExercises,
+} from '../../../shared/exercises.js';
 
-const RETIRED_EXERCISE_SLUGS = ['pallof-press', ...LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS];
+const RETIRED_EXERCISE_SLUGS = [
+  'pallof-press',
+  ...LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS,
+  ...PRODUCT_RETIRED_EXERCISE_SLUGS,
+];
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em server/.env');
@@ -44,9 +52,13 @@ async function seed() {
   }
 
   for (const preset of workoutPresets) {
+    const sanitizedPreset = {
+      ...preset,
+      exercicios: filterRetiredExercises(preset.exercicios),
+    };
     const result = await WorkoutPreset.findOneAndUpdate(
       { nome: preset.nome },
-      { $set: preset },
+      { $set: sanitizedPreset },
       { upsert: true },
     );
     console.log(`Preset: ${result?.nome}`);
@@ -68,7 +80,7 @@ async function seed() {
     {
       $set: {
         passwordHash: adminHash,
-        nome: 'Admin Abdoria',
+        nome: 'Admin Evolyn',
         idade: 30,
         peso_kg: 75,
         altura_cm: 175,

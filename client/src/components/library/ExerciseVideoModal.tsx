@@ -6,6 +6,8 @@ import { exerciseMediaUrl } from '@/lib/media';
 import type { IExerciseDocument } from '@/types';
 import { PRIORIDADE_LABELS, formatExerciseName } from '@/types';
 import { MuscleZoneLabel } from '@/components/library/MuscleZoneLabel';
+import { useAuth } from '@/context/AuthContext';
+import { isPushUpExerciseSlug } from '@shared/exercises';
 
 interface Props {
   exercise: IExerciseDocument;
@@ -13,6 +15,7 @@ interface Props {
 }
 
 export function ExerciseVideoModal({ exercise, onClose }: Props) {
+  const { user } = useAuth();
   const [mediaError, setMediaError] = useState(false);
   const displayName = formatExerciseName(exercise);
   const gifUrl = exerciseMediaUrl(exercise.slug, 'gif');
@@ -35,6 +38,12 @@ export function ExerciseVideoModal({ exercise, onClose }: Props) {
       </p>
 
       {exercise.descricao && <p className="game-modal__desc">{exercise.descricao}</p>}
+      {user?.nivel === 'iniciante' && isPushUpExerciseSlug(exercise.slug) && (
+        <p className="game-modal__desc rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+          Se a flexão completa ainda estiver difícil, apoie os joelhos no chão e mantenha o tronco
+          alinhado. Volte à versão completa quando ganhar força.
+        </p>
+      )}
 
       <div className="game-video-frame">
         {mediaError ? (
