@@ -9,9 +9,9 @@
 O **Evolyn** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução de personagem, recompensas, exploração e desafios para tornar a constância muito mais divertida.
 
 [![Acessar o app](https://img.shields.io/badge/ACESSAR_O_APP-000000?style=for-the-badge\&logo=vercel\&logoColor=white)](https://abdoria-project.vercel.app)
-[![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Evolyn/releases)
+[![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Evolyn-Core-Quest/releases)
 [![Licença](https://img.shields.io/badge/LICENÇA-MIT-blue?style=for-the-badge)](./LICENSE)
-[![CI](https://github.com/RDEsley/Evolyn/actions/workflows/ci.yml/badge.svg)](https://github.com/RDEsley/Evolyn/actions/workflows/ci.yml)
+[![CI](https://github.com/RDEsley/Evolyn-Core-Quest/actions/workflows/ci.yml/badge.svg)](https://github.com/RDEsley/Evolyn-Core-Quest/actions/workflows/ci.yml)
 
 <br>
 
@@ -273,7 +273,7 @@ Antes de começar, tenha instalado:
 ### Clone o repositório
 
 ```bash
-git clone https://github.com/RDEsley/Evolyn.git
+git clone https://github.com/RDEsley/Evolyn-Core-Quest.git
 cd Evolyn
 ```
 
@@ -458,7 +458,7 @@ Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
 <br>
 
 [🌐 Abrir o aplicativo](https://abdoria-project.vercel.app) •
-[🐛 Reportar um problema](https://github.com/RDEsley/Evolyn/issues) •
+[🐛 Reportar um problema](https://github.com/RDEsley/Evolyn-Core-Quest/issues) •
 [📖 Guia do usuário](./docs/GUIA-DO-USUARIO.md)
 
 <br><br>
