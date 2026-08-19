@@ -61,18 +61,20 @@ export function SwapExerciseButton({ onClick, disabled = false, className = '' }
   );
 }
 
-/** Botão de ver demonstração — design original pixel verde. */
+/** Botão de demonstração com o mesmo padrão visual das demais ações da fila. */
 export function ExercisePlayButton({ onClick, className = '' }: PlayProps) {
   return (
-    <button
+    <GameButton
       type="button"
-      className={`game-item-card__play ${className}`.trim()}
+      variant="secondary"
+      size="sm"
+      className={`flex items-center gap-1.5 ${className}`.trim()}
       onClick={onClick}
       aria-label="Ver treino"
     >
-      <Play size={14} fill="currentColor" aria-hidden />
+      <Play size={14} aria-hidden />
       Ver treino
-    </button>
+    </GameButton>
   );
 }
 

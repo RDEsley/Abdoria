@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, ListChecks, Play, Timer } from 'lucide-react';
+import { Flame, Play, Timer } from 'lucide-react';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -17,8 +17,7 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatTrainingDuration } from '@/lib/utils';
 import { isRestDay } from '@shared/training-plan';
-import { resolveFila } from '@shared/atividades';
-import { getTodaySaoPaulo } from '@shared/utils/timezone';
+import { getSaoPauloWeekday } from '@shared/utils/timezone';
 import { useApp } from '@/hooks/useApp';
 import { useCopy } from '@/hooks/useCopy';
 import {
@@ -35,7 +34,6 @@ const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
 export function DashboardPage() {
   const { stats, loading, refresh, loadRecommendations, user } = useApp();
-  const navigate = useNavigate();
   const copy = useCopy();
 
   useEffect(() => {
@@ -67,14 +65,9 @@ export function DashboardPage() {
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
   const perfilTreino = user?.perfil_treino ?? null;
-  const hoje = new Date().getDay();
+  const hoje = getSaoPauloWeekday();
   // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
   const diaDescanso = !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
-  // Uma única Atividade (alongamento e afins) já sustenta a streak, em
-  // qualquer dia — não existe mais um "aquecimento" próprio.
-  const filaHojeCount = diaDescanso
-    ? resolveFila(user?.preferencias, getTodaySaoPaulo()).length
-    : 0;
 
   return (
     <motion.div
@@ -110,20 +103,9 @@ export function DashboardPage() {
               : copy('dashboard_quest_badge')}
         </span>
         <p className="game-quest-card__status">
-          {stats.treino_hoje
-            ? 'Treino de hoje concluído.'
-            : diaDescanso
-              ? 'Uma Atividade leve — um alongamento, por exemplo — já mantém sua sequência hoje.'
-              : stats.proximo_treino}
+          {stats.treino_hoje ? 'Treino de hoje concluído.' : stats.proximo_treino}
         </p>
-        {diaDescanso && (
-          <p className="mt-2 text-[0.68rem] font-semibold text-stone-500">
-            {filaHojeCount > 0
-              ? `Você já tem ${filaHojeCount} atividade${filaHojeCount === 1 ? '' : 's'} na fila de hoje.`
-              : 'Escolha uma Atividade abaixo pra manter sua sequência sem abrir mão do descanso — alongamento é uma ótima pedida.'}
-          </p>
-        )}
-        {!stats.treino_hoje && !diaDescanso && sugerido && (
+        {!stats.treino_hoje && sugerido && (
           <div className="mt-2 space-y-1">
             <p className="text-xs font-bold text-stone-600">
               {sugerido.ciclo_id
@@ -154,26 +136,26 @@ export function DashboardPage() {
             <strong>{alerta.titulo}:</strong> {alerta.mensagem}
           </p>
         ))}
-        {!stats.treino_hoje && !diaDescanso && !sugerido && (
+        {!stats.treino_hoje && !sugerido && (
           <p className="mt-2 text-xs font-bold text-stone-500">
             Escolha ou monte um treino na aba <strong>Missão</strong>.
           </p>
         )}
-        {!stats.treino_hoje && diaDescanso && filaHojeCount > 0 && (
-          <GameButton
-            className="mt-3 flex w-full items-center justify-center gap-2"
-            onClick={() => navigate('/atividades-player')}
-          >
-            <ListChecks size={14} /> Iniciar {filaHojeCount} atividade
-            {filaHojeCount === 1 ? '' : 's'}
-          </GameButton>
-        )}
-        {!stats.treino_hoje && !diaDescanso && (
+        {!stats.treino_hoje && (
           <Link to={playLink} className="mt-3 block">
             <GameButton className="flex w-full items-center justify-center gap-2">
-              <Play size={14} /> Jogar
+              <Play size={14} /> Iniciar treino
             </GameButton>
           </Link>
+        )}
+        {!stats.treino_hoje && diaDescanso && (
+          <p className="mt-2 text-[0.68rem] font-semibold leading-relaxed text-stone-500">
+            Hoje é dia de descanso, mas você pode realizar uma{' '}
+            <Link to="/atividades" className="font-extrabold text-emerald-700 underline">
+              Atividade
+            </Link>{' '}
+            para manter seu Streak.
+          </p>
         )}
       </motion.div>
 

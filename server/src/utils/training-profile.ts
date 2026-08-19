@@ -52,15 +52,16 @@ export function sanitizePerfilTreino(raw: unknown): PerfilTreino | null {
         (a, b) => a - b,
       )
     : null;
+  const diasSemanaValidos = diasSemana && diasSemana.length >= 2 ? diasSemana : null;
 
   return {
     escopo,
     foco,
     partes: partes && partes.length > 0 ? partes : null,
     frequencia_semanal: clampFrequencia(
-      diasSemana && diasSemana.length > 0 ? diasSemana.length : Number(p.frequencia_semanal),
+      diasSemanaValidos ? diasSemanaValidos.length : Number(p.frequencia_semanal),
     ),
-    dias_semana: diasSemana && diasSemana.length > 0 ? diasSemana : null,
+    dias_semana: diasSemanaValidos,
     tempo_por_sessao_min: tempo,
     restricoes,
     origem,

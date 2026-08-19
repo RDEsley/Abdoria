@@ -105,8 +105,9 @@ Além dos treinos, o Evolyn oferece ferramentas para ajudar na rotina:
 * Recompensas por manter hábitos saudáveis
 * Suporte para dias de descanso
 
-Atividades, mapa de campanha e histórico visual ficam reunidos no hub **Exploração**. A navegação
-principal (**Início, Exploração, Missão e Perfil**) permanece fixa em todo o aplicativo, exceto
+Atividades, mapa de campanha e histórico visual ficam reunidos na página **Atividades**. A
+**Exploração** possui uma página própria para a jornada automática. A navegação principal
+(**Início, Atividades, Missão, Exploração e Perfil**) permanece fixa em todo o aplicativo, exceto
 durante o player de treino. Biblioteca e Ranking são atalhos da página **Missão**.
 
 ### 🎨 Personalização

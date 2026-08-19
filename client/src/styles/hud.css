@@ -137,8 +137,8 @@
 }
 
 .game-bottom-nav__inner {
-  display: flex;
-  justify-content: space-around;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.15rem;
   max-width: 32rem;
   margin-inline: auto;
@@ -151,8 +151,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  min-width: 3.1rem;
-  padding: 0.35rem 0.4rem;
+  min-width: 0;
+  padding: 0.35rem 0.15rem;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.34rem;
   line-height: 1.3;

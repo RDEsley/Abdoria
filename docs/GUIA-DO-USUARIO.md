@@ -9,7 +9,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 1. **Crie sua conta** ou entre como visitante (funcionalidades limitadas).
 2. Complete o **cadastro inicial**: idade, objetivo, nível e preferências de treino.
 3. Aceite os **termos de uso**.
-4. No **painel**, toque em **JOGAR** para começar um treino sugerido ou vá em **Montar treino** para criar o seu.
+4. No **painel**, toque em **Iniciar treino** para abrir a Missão sugerida.
 
 ---
 
@@ -18,8 +18,9 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 | Tela | Para que serve |
 |------|----------------|
 | **Início** | Resumo do dia, XP, streak e missão sugerida |
-| **Exploração** | Atividades, mapas de campanha e atividades e jornada automática |
+| **Atividades** | Organizar atividades e lembretes, acompanhar a campanha e consultar o calendário |
 | **Missão** | Escolher exercícios, configurar a fila, salvar treinos e usar presets |
+| **Exploração** | Abrir diretamente a jornada automática, a vila, o inventário e as batalhas |
 | **Biblioteca** | Abre pelo botão na Missão; reúne os exercícios e desbloqueios |
 | **Player** | Executar o treino com timer e descanso; é a única tela sem a navegação inferior |
 | **Conquistas** | Ver metas e o que já desbloqueou |
@@ -27,14 +28,16 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 | **Perfil** | Seus dados, estatísticas e simulador |
 | **Opções** | Som, descanso padrão, ciclo de treinos, **código presente** e sair |
 
-A barra principal com **Início, Exploração, Missão e Perfil** permanece fixa nas telas do app.
+A barra principal com **Início, Atividades, Missão, Exploração e Perfil** permanece fixa nas telas
+do app. O player de treino é a única exceção.
 
 ---
 
 ## Treino
 
 ### Treino sugerido
-O app monta sugestões com base no seu **ciclo** (A, B, C…) e no histórico. Basta tocar em **JOGAR** no painel.
+O app monta sugestões com base no seu perfil, ciclo ou plano, equipamento, restrições e histórico.
+Basta tocar em **Iniciar treino** no painel.
 
 ### Montar o seu
 - Abra a **Biblioteca** pelo atalho no topo da Missão e escolha os exercícios.
@@ -118,7 +121,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 ## Dicas para manter constância
 
 - Configure o **ciclo de treinos** nas Opções (A, B, C…).
-- Olhe o **Mapa de atividades** em Exploração — dias treinados ficam marcados.
+- Olhe o **Mapa de atividades** em Atividades — dias treinados ficam marcados.
 - Busque **conquistas** fáceis primeiro (primeiro treino, 2 dias seguidos…).
 - Quando o XP diário encher (100/100), a barra “comemora” — meta do dia cumprida!
 
@@ -130,7 +133,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 |----------|-------------|
 | Não ganhei XP diário | Treino tinha menos de 3 exercícios? |
 | XP parou em 100 | Limite diário de exercícios — o resto vai para XP extra se for bônus |
-| Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta. Em dia de descanso, concluir uma Atividade (Exploração → Atividades) também mantém a sequência |
+| Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta. Em dia de descanso, concluir uma Atividade na página **Atividades** também mantém a sequência |
 | Item da loja bloqueado | Veja o requisito (nível, conquista ou Coins) |
 | Dados não salvaram | Confira conexão; treinos e progresso ficam na **conta logada** |
 

@@ -10,8 +10,10 @@ import {
   derivePartesFromFoco,
   doseReps,
   doseTempoSeg,
+  isRestDay,
   weeklyMultiplier,
 } from '../../shared/training-plan.js';
+import { sanitizePerfilTreino } from '../src/utils/training-profile.js';
 import type { PerfilTreino } from '../../shared/types/index.js';
 import {
   addPinnedExercises,
@@ -86,6 +88,32 @@ describe('buildPlanoTreino', () => {
     expect(clampFrequencia(NaN)).toBe(3);
     expect(clampFrequencia(12)).toBe(7);
     expect(SPLIT_TEMPLATES[clampFrequencia(5)]).toHaveLength(5);
+  });
+});
+
+describe('sincronização da rotina semanal', () => {
+  it('usa os dias escolhidos como fonte da frequência e identifica descanso', () => {
+    const sanitized = sanitizePerfilTreino({
+      ...perfil(),
+      frequencia_semanal: 7,
+      dias_semana: [5, 1, 3, 3],
+    });
+
+    expect(sanitized?.dias_semana).toEqual([1, 3, 5]);
+    expect(sanitized?.frequencia_semanal).toBe(3);
+    expect(isRestDay(sanitized, 2)).toBe(true);
+    expect(isRestDay(sanitized, 3)).toBe(false);
+  });
+
+  it('descarta uma agenda incompleta em vez de salvar frequência divergente', () => {
+    const sanitized = sanitizePerfilTreino({
+      ...perfil(),
+      frequencia_semanal: 4,
+      dias_semana: [1],
+    });
+
+    expect(sanitized?.dias_semana).toBeNull();
+    expect(sanitized?.frequencia_semanal).toBe(4);
   });
 });
 

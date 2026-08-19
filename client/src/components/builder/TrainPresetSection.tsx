@@ -35,7 +35,7 @@ interface Props {
   selectedPlanWorkout?: TreinoSugerido | null;
   plan?: PlanSectionData | null;
   exerciseMap: Map<string, IExerciseDocument>;
-  dismissedCardKeys: Set<string>;
+  dismissedCardKey: string | null;
   onSelectCiclo: (ciclo: TreinoBase) => void;
   onSelectPreset: (id: string) => void;
   onSwapWorkout: () => void;
@@ -54,7 +54,7 @@ export function TrainPresetSection({
   selectedPlanWorkout,
   plan,
   exerciseMap,
-  dismissedCardKeys,
+  dismissedCardKey,
   onSelectCiclo,
   onSelectPreset,
   onSwapWorkout,
@@ -67,7 +67,7 @@ export function TrainPresetSection({
       : selectedSavedWorkout
         ? `salvo-${selectedSavedWorkout.id}`
         : null;
-  const showSelectedCard = selectedCardKey ? !dismissedCardKeys.has(selectedCardKey) : false;
+  const showSelectedCard = selectedCardKey ? dismissedCardKey !== selectedCardKey : false;
 
   return (
     <section id="builder-presets">
@@ -206,7 +206,7 @@ export function TrainPresetSection({
               />
               <p className="mt-2 text-xs font-bold text-stone-600">{selectedPreset.descricao}</p>
               <p className="mt-1 text-[0.65rem] font-bold text-stone-500">
-                {presetSummary(selectedPreset)}
+                {presetSummary(selectedPreset, exerciseMap)}
               </p>
               <GameButton
                 variant="secondary"

@@ -200,7 +200,7 @@ function AtividadeItem({
 }
 
 /**
- * Seção de Atividades do Início: a lista do usuário (criar/editar/excluir/
+ * Seção da página Atividades: a lista do usuário (criar/editar/excluir/
  * reordenar) e a fila do dia. A conclusão em si acontece numa tela cheia
  * própria (`/atividades-player`, mesma linguagem visual do Player) — este
  * card só monta a fila e navega pra lá.

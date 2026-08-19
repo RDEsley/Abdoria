@@ -177,7 +177,7 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
             type="button"
             aria-pressed={draft.diasSemana.includes(dia)}
             onClick={() => toggleDia(dia)}
-            className={`h-12 rounded-xl border-2 text-xs font-bold ${
+            className={`h-12 rounded-xl border-2 text-xs font-bold transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
               draft.diasSemana.includes(dia)
                 ? 'cursor-pointer border-emerald-500 bg-emerald-50 text-emerald-800'
                 : 'cursor-pointer border-stone-200 text-stone-600'
@@ -213,7 +213,7 @@ export function FrequenciaStep({ draft, onChange }: StepProps) {
             key={tempo}
             type="button"
             onClick={() => onChange({ tempoSessao: tempo })}
-            className={`rounded-xl border-2 px-2 py-3 text-sm font-bold ${
+            className={`rounded-xl border-2 px-2 py-3 text-sm font-bold transition focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
               draft.tempoSessao === tempo
                 ? 'cursor-pointer border-emerald-500 bg-emerald-50'
                 : 'cursor-pointer border-stone-200'

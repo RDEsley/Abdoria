@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, Dumbbell, Home, Settings, User, X } from 'lucide-react';
+import { CalendarCheck2, Compass, Dumbbell, Home, Settings, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameAlertBanner } from '@/components/ui/GameToast';
@@ -18,8 +18,9 @@ import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 function buildNavItems() {
   return [
     { to: '/', icon: Home, label: 'Início' },
-    { to: '/exploracao', icon: Compass, label: 'Exploração' },
+    { to: '/atividades', icon: CalendarCheck2, label: 'Atividades' },
     { to: '/construtor', icon: Dumbbell, label: 'Missão' },
+    { to: '/exploracao', icon: Compass, label: 'Exploração' },
     { to: '/perfil', icon: User, label: 'Perfil' },
   ] as const;
 }

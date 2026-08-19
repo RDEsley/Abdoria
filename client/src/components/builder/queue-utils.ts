@@ -60,8 +60,14 @@ export function sugeridoToQueue(
     .filter(Boolean) as WorkoutQueueItem[];
 }
 
-export function presetSummary(preset: IWorkoutPresetDocument): string {
-  const count = preset.exercicios.length;
-  const reps = preset.exercicios.filter((e) => e.modo === 'reps' || !e.modo).length;
+export function presetSummary(
+  preset: IWorkoutPresetDocument,
+  exerciseMap?: Map<string, IExerciseDocument>,
+): string {
+  const available = exerciseMap
+    ? preset.exercicios.filter((exercise) => exerciseMap.has(exercise.slug))
+    : preset.exercicios;
+  const count = available.length;
+  const reps = available.filter((e) => e.modo === 'reps' || !e.modo).length;
   return `${count} exercícios${reps > 0 ? ` · ${reps} com repetições` : ''}`;
 }

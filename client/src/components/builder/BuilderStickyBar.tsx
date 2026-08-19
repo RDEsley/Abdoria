@@ -23,10 +23,10 @@ export function BuilderStickyBar({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 md:bottom-0"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 md:bottom-0 md:left-64"
       aria-hidden={false}
     >
-      <div className="pointer-events-auto mx-auto max-w-lg bg-white/95 px-4 py-3 shadow-[0_-6px_24px_rgba(28,25,23,0.1)] backdrop-blur-md [border-top:3px_solid_var(--game-ink)] md:max-w-3xl">
+      <div className="pointer-events-auto w-full bg-white/95 px-4 py-3 shadow-[0_-6px_24px_rgba(28,25,23,0.1)] backdrop-blur-md [border-top:3px_solid_var(--game-ink)] md:px-6">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="builder-start-pills flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
             <span className="builder-start-pill builder-start-pill--time">
@@ -61,12 +61,7 @@ export function BuilderStickyBar({
               </span>
             )}
           </div>
-          <button
-            type="button"
-            className="builder-start-btn"
-            onClick={onStart}
-            disabled={disabled}
-          >
+          <button type="button" className="builder-start-btn" onClick={onStart} disabled={disabled}>
             <span className="builder-start-btn__icon" aria-hidden>
               <Play size={18} fill="currentColor" />
             </span>

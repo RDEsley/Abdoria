@@ -139,7 +139,7 @@ export function SettingsPage() {
   const save = async () => {
     setSaving(true);
     try {
-      await updateMe({
+      const updated = await updateMe({
         preferencias: {
           ...user!.preferencias,
           som_habilitado: som,
@@ -150,8 +150,14 @@ export function SettingsPage() {
           ciclo_treinos: normalizeCicloTreinos(ciclo),
         },
       });
+      applyUser(updated);
       setSoundSettings(som, volume);
       await refreshUser();
+      showGameToast('Configurações salvas.', { variant: 'success' });
+    } catch (error) {
+      showGameToast(getErrorMessage(error, 'Não foi possível salvar as configurações.'), {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
