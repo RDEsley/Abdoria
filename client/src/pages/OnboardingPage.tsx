@@ -12,7 +12,6 @@ import {
   Coins,
   Compass,
   Flame,
-  Gauge,
   ListChecks,
   PartyPopper,
   Rocket,
@@ -21,9 +20,7 @@ import {
   SignalLow,
   SignalMedium,
   SkipForward,
-  SlidersHorizontal,
   Swords,
-  UserCog,
   Weight,
 } from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
@@ -32,7 +29,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
 import { MiniErrorBoundary } from '@/components/ui/MiniErrorBoundary';
 import { TermsModal } from '@/components/legal/TermsModal';
-import { Chip, OptionCard, StepHeader } from '@/components/onboarding/OnboardingUI';
+import { OptionCard, StepHeader } from '@/components/onboarding/OnboardingUI';
 import {
   CicloOptionCard,
   EquipamentoStep,
@@ -65,6 +62,7 @@ import {
   type NivelUsuario,
   type TreinoBase,
 } from '@/types';
+import { FOCO_PARAMS } from '@shared/training-plan';
 
 type StepId =
   | 'terms'
@@ -77,23 +75,15 @@ type StepId =
   | 'equipamento'
   | 'restricoes'
   | 'plano'
-  | 'prefs'
   | 'tutorial';
 
 const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
-const REP_SCHEMES = [
-  { id: '12x3', series: 3, repeticoes: 12, label: '12 × 3' },
-  { id: '14x3', series: 3, repeticoes: 14, label: '14 × 3' },
-  { id: '15x3', series: 3, repeticoes: 15, label: '15 × 3' },
-  { id: '15x5', series: 5, repeticoes: 15, label: '15 × 5' },
-] as const;
-
 /** Esquema derivado do nível — mesmo critério das recomendações da Missão. */
-const SCHEME_BY_NIVEL: Record<NivelUsuario, (typeof REP_SCHEMES)[number]['id']> = {
-  iniciante: '12x3',
-  intermediario: '14x3',
-  avancado: '15x3',
+const SCHEME_BY_NIVEL: Record<NivelUsuario, { series: number; repeticoes: number }> = {
+  iniciante: { series: 3, repeticoes: 12 },
+  intermediario: { series: 3, repeticoes: 14 },
+  avancado: { series: 3, repeticoes: 15 },
 };
 
 /** Ciclos sugeridos por foco — a rotação genérica que o sistema monta sozinho. */
@@ -114,14 +104,6 @@ function LottieView({ data, loop }: { data: unknown | null; loop: boolean }) {
     { width: '100%', height: '100%' },
   );
   return View;
-}
-
-/** Formato intuitivo: segundos abaixo de 1min, min+seg a partir daí (ex.: "1min 30s", "5min"). */
-function formatHoldDuration(totalSeconds: number): string {
-  if (totalSeconds < 60) return `${totalSeconds}s`;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return seconds === 0 ? `${minutes}min` : `${minutes}min ${seconds}s`;
 }
 
 /**
@@ -186,15 +168,9 @@ export function OnboardingPage() {
   const [draft, setDraft] = useState<TrainingProfileDraft>(DEFAULT_TRAINING_DRAFT);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [cicloRecomendado, setCicloRecomendado] = useState(false);
-  const [descanso, setDescanso] = useState(30);
-  const [modo, setModo] = useState<'tempo' | 'reps'>('tempo');
-  const [repSchemeId, setRepSchemeId] = useState<string>('12x3');
-  const [esquemaEscolha, setEsquemaEscolha] = useState<'recomendado' | 'personalizar' | null>(null);
-  const [tempoHold, setTempoHold] = useState(30);
   const [invalid, setInvalid] = useState(false);
   const [shakeNonce, setShakeNonce] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [skipped, setSkipped] = useState(false);
   // Controles imperativos (não a prop `animate` declarativa): o botão Continuar
   // é remontado a cada troca de etapa (fica dentro do motion.div key={stepId}),
   // e um `animate` declarativo replaya o shake nesse remount mesmo sem nova
@@ -233,7 +209,6 @@ export function OnboardingPage() {
       'frequencia',
       'restricoes',
       'plano',
-      'prefs',
       'tutorial',
     ],
     [corpoTodo],
@@ -263,27 +238,22 @@ export function OnboardingPage() {
             : 'Obesidade';
 
   const nivelSugerido = bodyMetrics.idade && imc ? suggestNivel(bodyMetrics.idade, imc) : null;
-  // Só "personalizar" explícito muda o comportamento; "Pular" sem escolher
-  // (esquemaEscolha null) cai no automático, igual ao restante do fluxo skip.
-  const esquemaRecomendado = esquemaEscolha !== 'personalizar';
-
-  const saveAndFinish = async (skip = false) => {
+  const saveAndFinish = async () => {
     setSaving(true);
     try {
-      const schemeId = esquemaRecomendado ? SCHEME_BY_NIVEL[nivel ?? 'iniciante'] : repSchemeId;
-      const scheme = REP_SCHEMES.find((s) => s.id === schemeId) ?? REP_SCHEMES[0];
+      const scheme = SCHEME_BY_NIVEL[nivel ?? 'iniciante'];
+      const descanso = FOCO_PARAMS[draft.foco ?? 'definicao'].descanso_seg;
       const payload: Parameters<typeof completeOnboarding>[0] = {
         terms_accepted: termsAccepted,
         onboarding_completed: true,
-        skip,
-        perfil_treino: draftToPerfilTreino(draft, skip || skipped ? 'skip' : 'onboarding'),
+        skip: false,
+        perfil_treino: draftToPerfilTreino(draft, 'onboarding'),
         preferencias: {
           descanso_padrao_seg: descanso,
-          modo_padrao: modo,
+          modo_padrao: 'reps',
           reps_series_padrao: scheme.series,
           reps_repeticoes_padrao: scheme.repeticoes,
-          esquema_recomendado: esquemaRecomendado,
-          ...(esquemaRecomendado ? {} : { tempo_exercicio_padrao_seg: tempoHold }),
+          esquema_recomendado: true,
           ciclo_treinos: normalizeCicloTreinos(ciclo),
           som_habilitado: true,
           sfx_volume: 0.7,
@@ -302,6 +272,8 @@ export function OnboardingPage() {
       applyUser(updatedUser);
       await refreshUser();
       navigate('/', { replace: true, state: { showTutorial: true } });
+    } catch {
+      showGameToast('Não foi possível concluir seu perfil. Tente novamente.', { variant: 'warn' });
     } finally {
       setSaving(false);
     }
@@ -322,9 +294,6 @@ export function OnboardingPage() {
     if (stepId === 'plano' && !corpoTodo && ciclo.length < 2) {
       return 'Escolha pelo menos 2 ciclos de treino, ou use a rotação recomendada.';
     }
-    if (stepId === 'prefs' && esquemaEscolha === null) {
-      return 'Escolha uma opção pra continuar.';
-    }
     return null;
   };
 
@@ -342,16 +311,16 @@ export function OnboardingPage() {
       setStep((s) => s + 1);
     } else {
       playSuccess();
-      void saveAndFinish(false);
+      void saveAndFinish();
     }
   };
 
   const skipStep = () => {
     setInvalid(false);
-    if (stepId !== 'terms' && stepId !== 'tutorial') setSkipped(true);
     if (step < steps.length - 1) setStep((s) => s + 1);
-    else void saveAndFinish(true);
   };
+
+  const canSkip = stepId === 'body' || stepId === 'equipamento' || stepId === 'restricoes';
 
   const prev = () => {
     setInvalid(false);
@@ -371,7 +340,7 @@ export function OnboardingPage() {
   const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
 
   return (
-    <div className="min-h-screen bg-stone-50 px-4 py-8">
+    <div className="onb-page min-h-screen px-4 py-6 sm:py-10">
       <TermsModal
         open={showTerms}
         requireAccept
@@ -381,25 +350,40 @@ export function OnboardingPage() {
         }}
       />
 
-      <div className="mx-auto max-w-lg">
-        <AuthLogo size="xl" showLabel={false} className="mb-6" />
+      <div className="relative z-10 mx-auto max-w-xl">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <AuthLogo size="xl" showLabel={false} />
+          <p className="mt-3 text-[0.65rem] font-black uppercase tracking-[0.2em] text-emerald-700">
+            Configuração inicial
+          </p>
+          <p className="mt-1 text-xs font-semibold text-stone-500">
+            Respostas rápidas para um plano realmente seu
+          </p>
+        </div>
 
         <div className="mb-6 flex items-center justify-between">
           <p className="text-sm font-bold text-teal-700">
             Passo {step + 1} / {steps.length}
           </p>
-          <button
-            type="button"
-            onClick={skipStep}
-            className="flex cursor-pointer items-center gap-1 text-sm font-semibold text-stone-500 hover:text-stone-700"
-          >
-            <SkipForward size={16} /> Pular
-          </button>
+          {canSkip && (
+            <button
+              type="button"
+              onClick={skipStep}
+              className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            >
+              <SkipForward size={16} /> Pular por agora
+            </button>
+          )}
         </div>
 
         <motion.div
           className="mb-4 h-1.5 overflow-hidden rounded-full bg-stone-200"
           animate={progressPulseControls}
+          role="progressbar"
+          aria-label="Progresso da configuração inicial"
+          aria-valuemin={1}
+          aria-valuemax={steps.length}
+          aria-valuenow={step + 1}
         >
           <motion.div
             className="h-full bg-teal-600"
@@ -413,7 +397,7 @@ export function OnboardingPage() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -30 }}
-            className={`onb-step-card relative rounded-2xl border border-stone-200 bg-white p-6 shadow-md${invalid ? ' onb-invalid' : ''}`}
+            className={`onb-step-card relative rounded-3xl border border-stone-200 bg-white p-5 shadow-xl shadow-stone-900/5 sm:p-7${invalid ? ' onb-invalid' : ''}`}
           >
             {stepId === 'terms' && (
               <>
@@ -585,83 +569,6 @@ export function OnboardingPage() {
               </>
             )}
 
-            {stepId === 'prefs' && (
-              <>
-                <StepHeader
-                  icon={<SlidersHorizontal size={22} />}
-                  title="Como você quer treinar?"
-                  subtitle="Define quantas repetições ou segundos cada exercício pede. Exercícios de segurar (prancha, barra fixa) sempre usam tempo; os demais usam repetições."
-                />
-                <div className="mt-4 flex flex-col gap-2">
-                  <OptionCard
-                    selected={esquemaEscolha === 'recomendado'}
-                    onClick={() => setEsquemaEscolha('recomendado')}
-                    icon={<Gauge size={18} />}
-                    title="Deixar no automático"
-                    subtitle={`Repetições e tempos ajustados pro nível ${nivel ? NIVEL_LABELS[nivel].toLowerCase() : 'iniciante'}. Dá pra mudar quando quiser.`}
-                    recommended
-                  />
-                  <OptionCard
-                    selected={esquemaEscolha === 'personalizar'}
-                    onClick={() => setEsquemaEscolha('personalizar')}
-                    icon={<UserCog size={18} />}
-                    title="Personalizar agora"
-                    subtitle="Escolha você mesmo o tempo de prancha, as repetições por série e o descanso."
-                  />
-                </div>
-                {esquemaEscolha === 'personalizar' && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-semibold">
-                      Tempo nos exercícios de segurar: {formatHoldDuration(tempoHold)}
-                      <input
-                        type="range"
-                        min={10}
-                        max={600}
-                        step={5}
-                        value={tempoHold}
-                        onChange={(e) => setTempoHold(Number(e.target.value))}
-                        className="mt-2 w-full cursor-pointer"
-                      />
-                    </label>
-                    <p className="mt-4 mb-2 text-sm font-bold text-stone-700">
-                      Repetições por série
-                    </p>
-                    <div className="onb-grid-2">
-                      {REP_SCHEMES.map((scheme) => (
-                        <Chip
-                          key={scheme.id}
-                          selected={repSchemeId === scheme.id}
-                          onClick={() => setRepSchemeId(scheme.id)}
-                          label={scheme.label}
-                        />
-                      ))}
-                    </div>
-                    <label className="mt-4 block text-sm font-semibold">
-                      Descanso entre séries: {descanso}s
-                      <input
-                        type="range"
-                        min={10}
-                        max={90}
-                        value={descanso}
-                        onChange={(e) => setDescanso(Number(e.target.value))}
-                        className="mt-2 w-full cursor-pointer"
-                      />
-                    </label>
-                    <div className="mt-4 onb-grid-2">
-                      {(['tempo', 'reps'] as const).map((m) => (
-                        <Chip
-                          key={m}
-                          selected={modo === m}
-                          onClick={() => setModo(m)}
-                          label={m === 'tempo' ? 'Prefiro tempo' : 'Prefiro repetições'}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
             {stepId === 'tutorial' && (
               <div className="relative text-center">
                 <MiniErrorBoundary>
@@ -736,13 +643,14 @@ export function OnboardingPage() {
                     >
                       <Swords size={15} />
                     </span>
-                    Na Home, abra o RPG pelo botão de espadas no canto inferior direito.
+                    Abra Exploração pela barra principal para patrulhar, lutar e coletar
+                    recompensas.
                   </li>
                 </motion.ul>
               </div>
             )}
 
-            <div className="mt-6 flex gap-3">
+            <div className="onb-actions mt-6 flex gap-3">
               {step > 0 && (
                 <GameButton
                   type="button"

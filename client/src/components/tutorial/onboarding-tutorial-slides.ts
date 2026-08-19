@@ -22,17 +22,17 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: Target,
     title: 'Sua missão diária',
-    body: 'A Home sempre sugere o treino do dia. Toque em Jogar e siga no seu ritmo — por repetições ou por tempo, você escolhe.',
+    body: 'A Home sugere o treino do dia. Toque em Iniciar treino; cada exercício pode ser configurado diretamente na fila da Missão.',
   },
   {
     icon: ListChecks,
-    title: 'Dia de descanso tem Atividade',
-    body: 'Sem treino hoje? Uma Atividade só, como leitura ou meditação, já mantém sua sequência — escolha na Home.',
+    title: 'Atividades em um só lugar',
+    body: 'No item Atividades da barra principal você organiza sua rotina, acompanha a campanha e mantém a sequência até nos dias de descanso.',
   },
   {
     icon: CalendarDays,
     title: 'Tudo fica no calendário',
-    body: 'Treinos, atividades e observações do dia ficam salvos — dá pra olhar pra trás e ver sua evolução a qualquer momento.',
+    body: 'Treinos, atividades e observações ficam salvos no Mapa de atividades para você acompanhar sua evolução.',
   },
   {
     icon: Flame,
@@ -46,9 +46,8 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   },
   {
     icon: Swords,
-    title: 'Seu RPG fica aqui',
-    body: 'Na Home, toque no botão de espadas no canto inferior direito para entrar na Exploração. Sua patrulha luta em segundo plano, evolui e traz recompensas mesmo quando você sai do app.',
-    spotlight: 'rpg-fab',
+    title: 'Exploração sempre à mão',
+    body: 'Abra Exploração pela barra principal. Sua patrulha luta em segundo plano, evolui e traz recompensas mesmo quando você sai do app.',
   },
   {
     icon: Trophy,

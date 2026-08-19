@@ -1,3 +1,33 @@
+.onb-page {
+  position: relative;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(16, 185, 129, 0.13), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgba(14, 165, 233, 0.09), transparent 24rem), #fafaf9;
+}
+
+.onb-page::before,
+.onb-page::after {
+  position: fixed;
+  z-index: 0;
+  width: 14rem;
+  height: 14rem;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 999px;
+}
+
+.onb-page::before {
+  top: -7rem;
+  right: -5rem;
+}
+
+.onb-page::after {
+  bottom: -8rem;
+  left: -6rem;
+}
+
 /* O onboarding usa uma única rolagem: a página. Um scroll interno aqui
    disputava o gesto vertical com o documento, sobretudo no passo da rotina. */
 .onb-step-card {
@@ -69,6 +99,12 @@
 
 .onb-option:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.onb-option:focus-visible,
+.onb-chip:focus-visible {
+  outline: 3px solid rgba(5, 150, 105, 0.35);
+  outline-offset: 2px;
 }
 
 .onb-option:disabled {
@@ -538,4 +574,20 @@
   flex-shrink: 0;
   gap: 0.75rem;
   padding-top: 1rem;
+}
+
+@media (max-width: 480px) {
+  .onb-actions {
+    position: sticky;
+    bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    z-index: 5;
+    padding: 0.65rem;
+    margin-inline: -0.65rem;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(231, 229, 228, 0.9);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(28, 25, 23, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
 }
