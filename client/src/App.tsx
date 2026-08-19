@@ -55,8 +55,8 @@ const CampaignBookPage = lazy(() =>
 const ExplorationPage = lazy(() =>
   import('@/pages/ExplorationPage').then((m) => ({ default: m.ExplorationPage })),
 );
-const ExplorationHubPage = lazy(() =>
-  import('@/pages/ExplorationHubPage').then((m) => ({ default: m.ExplorationHubPage })),
+const ActivitiesPage = lazy(() =>
+  import('@/pages/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage })),
 );
 
 /**
@@ -137,20 +137,24 @@ export default function App() {
                       }
                     />
                     <Route
-                      path="exploracao"
+                      path="atividades"
                       element={
                         <LazyPage>
-                          <ExplorationHubPage />
+                          <ActivitiesPage />
                         </LazyPage>
                       }
                     />
                     <Route
-                      path="exploracao/jornada"
+                      path="exploracao"
                       element={
                         <LazyPage>
                           <ExplorationPage />
                         </LazyPage>
                       }
+                    />
+                    <Route
+                      path="exploracao/jornada"
+                      element={<Navigate to="/exploracao" replace />}
                     />
                     <Route
                       path="construtor"
