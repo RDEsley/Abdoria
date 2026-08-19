@@ -1,21 +1,23 @@
 <div align="center">
 
-<img src="./docs/assets/abdoria-logo.png" width="220" alt="Logo do Abdoria Core Quest" />
+<img src="./docs/assets/evolyn-logo.png" width="220" alt="Logo do Evolyn Core Quest" />
 
-# ⚔️ Abdoria · Core Quest
+# ⚔️ Evolyn · Core Quest
 
 ### Transforme seus treinos de abdômen em uma aventura.
 
-O **Abdoria** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução de personagem, recompensas, exploração e desafios para tornar a constância muito mais divertida.
+O **Evolyn** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução de personagem, recompensas, exploração e desafios para tornar a constância muito mais divertida.
 
 [![Acessar o app](https://img.shields.io/badge/ACESSAR_O_APP-000000?style=for-the-badge\&logo=vercel\&logoColor=white)](https://abdoria-project.vercel.app)
-[![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Abdoria/releases)
+[![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Evolyn/releases)
 [![Licença](https://img.shields.io/badge/LICENÇA-MIT-blue?style=for-the-badge)](./LICENSE)
+[![CI](https://github.com/RDEsley/Evolyn/actions/workflows/ci.yml/badge.svg)](https://github.com/RDEsley/Evolyn/actions/workflows/ci.yml)
 
 <br>
 
 [🌐 Demonstração](https://abdoria-project.vercel.app) •
 [📖 Guia do usuário](./docs/GUIA-DO-USUARIO.md) •
+[🚀 CI/CD](./docs/DEPLOYMENT.md) •
 [⚙️ Instalação](#️-instalação) •
 [👨‍💻 Desenvolvedor](#-desenvolvedor)
 
@@ -25,13 +27,13 @@ O **Abdoria** é um aplicativo gamificado de treinos em casa que combina exercí
 
 ## 🎯 Sobre o projeto
 
-O **Abdoria · Core Quest** foi criado para ajudar pessoas a manterem uma rotina de exercícios por meio de uma experiência inspirada em jogos.
+O **Evolyn · Core Quest** foi criado para ajudar pessoas a manterem uma rotina de exercícios por meio de uma experiência inspirada em jogos.
 
 No aplicativo, o usuário pode montar treinos, seguir sessões guiadas, acumular experiência, desbloquear conquistas, disputar posições no ranking e evoluir um herói durante sua jornada.
 
-Mais do que registrar exercícios, o Abdoria transforma cada treino em progresso dentro de uma aventura.
+Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso dentro de uma aventura.
 
-> 🩺 O Abdoria possui finalidade educacional e de entretenimento. Ele não substitui o acompanhamento de profissionais de saúde ou educação física.
+> 🩺 O Evolyn possui finalidade educacional e de entretenimento. Ele não substitui o acompanhamento de profissionais de saúde ou educação física.
 
 ---
 
@@ -43,10 +45,12 @@ Mais do que registrar exercícios, o Abdoria transforma cada treino em progresso
 * Treinos prontos para diferentes objetivos
 * Criação de rotinas personalizadas
 * Organização dos exercícios por arrastar e soltar
+* Configuração individual de séries, repetições, duração e descanso direto na fila
 * Exercícios realizados por tempo ou repetições
 * Timer de descanso e execução guiada
 * Equipamentos opcionais, como barra fixa, roda abdominal e prancha de flexão
 * Sistema de favoritos, preferências e bloqueios de recomendação
+* Exercícios fixados somados a todas as recomendações, sem substituir a fila-base
 
 ### 🎮 Progressão gamificada
 
@@ -92,7 +96,7 @@ Os jogadores também podem acessar perfis públicos, acompanhar conquistas e int
 
 ### 📝 Atividades e organização pessoal
 
-Além dos treinos, o Abdoria oferece ferramentas para ajudar na rotina:
+Além dos treinos, o Evolyn oferece ferramentas para ajudar na rotina:
 
 * Atividades de leitura, estudo, corrida, meditação e alongamento
 * Agenda configurável por dia da semana
@@ -100,6 +104,10 @@ Além dos treinos, o Abdoria oferece ferramentas para ajudar na rotina:
 * Histórico das atividades concluídas
 * Recompensas por manter hábitos saudáveis
 * Suporte para dias de descanso
+
+Atividades, mapa de campanha e histórico visual ficam reunidos no hub **Exploração**. A navegação
+principal (**Início, Exploração, Missão e Perfil**) permanece fixa em todo o aplicativo, exceto
+durante o player de treino. Biblioteca e Ranking são atalhos da página **Missão**.
 
 ### 🎨 Personalização
 
@@ -119,7 +127,7 @@ Grande parte das personalizações é desbloqueada por conquistas, eventos e có
 
 ---
 
-## 🚀 Por que usar o Abdoria?
+## 🚀 Por que usar o Evolyn?
 
 <table>
 <tr>
@@ -161,7 +169,7 @@ Visualize estatísticas, calendário, zonas musculares trabalhadas e histórico 
 
 ## 🕹️ Como funciona?
 
-O ciclo principal do Abdoria é simples:
+O ciclo principal do Evolyn é simples:
 
 ```text
 Escolha ou monte um treino
@@ -185,13 +193,13 @@ O usuário também pode enviar seu herói para exploração, concluir atividades
 
 <div align="center">
 
-<img src="./docs/assets/preview-home.png" width="48%" alt="Tela inicial do Abdoria" />
-<img src="./docs/assets/preview-training.png" width="48%" alt="Tela de treino do Abdoria" />
+<img src="./docs/assets/preview-home.png" width="48%" alt="Tela inicial do Evolyn" />
+<img src="./docs/assets/preview-training.png" width="48%" alt="Tela de treino do Evolyn" />
 
 <br>
 
-<img src="./docs/assets/preview-exploration.png" width="48%" alt="Exploração do Abdoria" />
-<img src="./docs/assets/preview-profile.png" width="48%" alt="Perfil do jogador no Abdoria" />
+<img src="./docs/assets/preview-exploration.png" width="48%" alt="Exploração do Evolyn" />
+<img src="./docs/assets/preview-profile.png" width="48%" alt="Perfil do jogador no Evolyn" />
 
 </div>
 
@@ -206,7 +214,7 @@ O usuário também pode enviar seu herói para exploração, concluir atividades
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge\&logo=vite\&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge\&logo=tailwindcss\&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge\&logo=framer\&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js_20-339933?style=for-the-badge\&logo=node.js\&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js_22-339933?style=for-the-badge\&logo=node.js\&logoColor=white)
 ![Express](https://img.shields.io/badge/Express_5-000000?style=for-the-badge\&logo=express\&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase_Postgres-3FCF8E?style=for-the-badge\&logo=supabase\&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel_Serverless-000000?style=for-the-badge\&logo=vercel\&logoColor=white)
@@ -230,7 +238,7 @@ O usuário também pode enviar seu herói para exploração, concluir atividades
 ## 🗂️ Estrutura do projeto
 
 ```text
-Abdoria/
+Evolyn/
 ├── client/                 # Interface React
 ├── server/src/
 │   ├── domain/             # Regras e entidades de domínio
@@ -265,8 +273,8 @@ Antes de começar, tenha instalado:
 ### Clone o repositório
 
 ```bash
-git clone https://github.com/RDEsley/Abdoria.git
-cd Abdoria
+git clone https://github.com/RDEsley/Evolyn.git
+cd Evolyn
 ```
 
 ### Instale as dependências
@@ -450,7 +458,7 @@ Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
 <br>
 
 [🌐 Abrir o aplicativo](https://abdoria-project.vercel.app) •
-[🐛 Reportar um problema](https://github.com/RDEsley/Abdoria/issues) •
+[🐛 Reportar um problema](https://github.com/RDEsley/Evolyn/issues) •
 [📖 Guia do usuário](./docs/GUIA-DO-USUARIO.md)
 
 <br><br>

@@ -1,4 +1,4 @@
-﻿/* Cosmetics — mesmo visual do .user-avatar da top-navbar (verde + inicial Jakarta) */
+/* Cosmetics — mesmo visual do .user-avatar da top-navbar (verde + inicial Jakarta) */
 .game-cosmetic-avatar {
   position: relative;
   display: flex;
@@ -967,7 +967,7 @@
   margin: 0.85rem auto 0;
 }
 
-/* ── Loja Abdoria (redesign) ── */
+/* ── Loja Evolyn (redesign) ── */
 .game-shop-overlay {
   align-items: center;
   justify-content: center;

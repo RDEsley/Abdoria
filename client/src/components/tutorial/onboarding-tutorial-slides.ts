@@ -16,7 +16,7 @@ import type { TutorialSlide } from '@/components/tutorial/TutorialOverlay';
 export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: Dumbbell,
-    title: 'Bem-vindo ao Abdoria',
+    title: 'Bem-vindo ao Evolyn',
     body: 'Um app de treino de abdômen de verdade — com evolução real e um pouco de RPG pra deixar o hábito mais gostoso de manter.',
   },
   {

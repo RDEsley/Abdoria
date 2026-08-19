@@ -1,11 +1,16 @@
-﻿import { ACHIEVEMENT_BY_ID, ACHIEVEMENTS } from '../data/achievements.js';
+import { ACHIEVEMENT_BY_ID, ACHIEVEMENTS } from '../data/achievements.js';
 import {
   GIFT_CODE_BY_KEY,
   hasGiftCodeRewards,
   isGiftCodeExpired,
   type GiftCodeDefinition,
 } from '../data/gift-codes.js';
-import { COSMETIC_BY_ID, COSMETICS, DEFAULT_BORDA_ID, REMOVED_COSMETIC_IDS } from '../data/cosmetics.js';
+import {
+  COSMETIC_BY_ID,
+  COSMETICS,
+  DEFAULT_BORDA_ID,
+  REMOVED_COSMETIC_IDS,
+} from '../data/cosmetics.js';
 import {
   CONJUNTO_FLAMEJANTE_IDS,
   PATROL_WEAPON_BY_ID,
@@ -16,7 +21,12 @@ import { allExercises } from '../db/seeds/all-exercises.js';
 import { User } from '../domain/User.js';
 import { unlockBestiaryEnemy } from './bestiario.js';
 import type { UserMutable } from '../repositories/user-repository.js';
-import type { CosmeticDefinition, CosmeticKind, ShopCatalogItem, ShopResponse } from '../types/index.js';
+import type {
+  CosmeticDefinition,
+  CosmeticKind,
+  ShopCatalogItem,
+  ShopResponse,
+} from '../types/index.js';
 import {
   ALL_BESTIARY_ENEMY_IDS,
   MOEDA_XP_STEP,
@@ -191,10 +201,7 @@ export function syncShopUnlocks(user: UserDoc): void {
   const ctx: UnlockContext = {
     level: xpLevelFromTotal(user.gamificacao.nivel_xp),
     conquistas: new Set(user.gamificacao.conquistas),
-    streakMaior: Math.max(
-      user.gamificacao.streak_maior ?? 0,
-      user.gamificacao.streak_atual ?? 0,
-    ),
+    streakMaior: Math.max(user.gamificacao.streak_maior ?? 0, user.gamificacao.streak_atual ?? 0),
     armas: new Set(armas.desbloqueados),
     unlockedCosmetics: unlocked,
   };
@@ -400,7 +407,7 @@ export function unlockEverythingForUser(user: UserMutable): {
 } {
   const todosCosmeticos = COSMETICS.map((item) => item.id);
   user.cosmeticos.desbloqueados = todosCosmeticos;
-  syncGiftCodeAbdoriaBlocks(user);
+  syncGiftCodeCurrencyBlocks(user);
 
   const todosExercicios = allExercises.map((ex) => ex.slug);
   user.dados_salvos = mergeUserDadosSalvos(resolveUserDadosSalvos(user.dados_salvos), {
@@ -446,7 +453,7 @@ async function redeemLevelUpCode(user: UserDoc) {
   const faltando = Math.max(1, antes.xpToNext - antes.xpInLevel);
 
   user.gamificacao.nivel_xp += faltando;
-  syncGiftCodeAbdoriaBlocks(user);
+  syncGiftCodeCurrencyBlocks(user);
   await user.save();
 
   const nivelNovo = xpLevelFromTotal(user.gamificacao.nivel_xp);
@@ -549,7 +556,7 @@ async function redeemGiftCodeForUser(user: UserDoc, code: string) {
 
   const xp_ganho = awardDailyXp(user, definition.xp);
   grantMoeda(user, definition.abdoria);
-  syncGiftCodeAbdoriaBlocks(user);
+  syncGiftCodeCurrencyBlocks(user);
 
   if (definition.frozen_streaks && definition.frozen_streaks > 0) {
     addInventoryItem(user, FROZEN_STREAK_ITEM_ID, definition.frozen_streaks);
@@ -595,7 +602,7 @@ async function redeemGiftCodeForUser(user: UserDoc, code: string) {
   };
 }
 
-function syncGiftCodeAbdoriaBlocks(user: UserDoc): void {
+function syncGiftCodeCurrencyBlocks(user: UserDoc): void {
   user.cosmeticos.moedas_xp_blocos = Math.floor(user.gamificacao.nivel_xp / MOEDA_XP_STEP);
 }
 

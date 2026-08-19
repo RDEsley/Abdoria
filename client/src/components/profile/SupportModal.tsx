@@ -40,7 +40,7 @@ export function SupportModal({ open, onClose }: { open: boolean; onClose: () => 
       const res = await submitAppSuggestion(texto.trim());
       applyUser(res.user);
       setTexto('');
-      showGameToast('Enviado! Obrigado por ajudar a melhorar o Abdoria. 💚', {
+      showGameToast('Enviado! Obrigado por ajudar a melhorar o Evolyn. 💚', {
         variant: 'success',
       });
       onClose();
@@ -53,12 +53,7 @@ export function SupportModal({ open, onClose }: { open: boolean; onClose: () => 
 
   return (
     <Modal open={open} onClose={onClose} labelledBy="support-modal-title">
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Fechar"
-        className="support-modal__close"
-      >
+      <button type="button" onClick={onClose} aria-label="Fechar" className="support-modal__close">
         <X size={18} aria-hidden />
       </button>
 

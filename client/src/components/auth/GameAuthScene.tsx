@@ -88,7 +88,7 @@ export function GameAuthPanel({
       {showLogo && (
         <BrandMark
           size={logoSize === 'lg' ? 176 : 112}
-          alt="Abdoria"
+          alt="Evolyn"
           className={`game-login__logo${logoSize === 'lg' ? ' game-login__logo--lg' : ''}`}
         />
       )}

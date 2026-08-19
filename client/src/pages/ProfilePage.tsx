@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -133,10 +133,10 @@ export function ProfilePage() {
 
   const shareProfile = async () => {
     const url = `${window.location.origin}/perfil/${profile.id}`;
-    const text = `Vem ver meu perfil no Abdoria — nível ${xpProgressFromTotal(profile.gamificacao.nivel_xp).level}, bora treinar junto!`;
+    const text = `Vem ver meu perfil no Evolyn — nível ${xpProgressFromTotal(profile.gamificacao.nivel_xp).level}, bora treinar junto!`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Abdoria · Core Quest', text, url });
+        await navigator.share({ title: 'Evolyn · Core Quest', text, url });
         return;
       }
     } catch {
@@ -189,10 +189,9 @@ export function ProfilePage() {
       await refresh();
       showGameToast('Dados atualizados!', { variant: 'success' });
     } catch (err) {
-      showGameToast(
-        err instanceof Error ? err.message : 'Não foi possível salvar seus dados.',
-        { variant: 'error' },
-      );
+      showGameToast(err instanceof Error ? err.message : 'Não foi possível salvar seus dados.', {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }

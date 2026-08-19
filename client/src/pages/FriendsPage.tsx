@@ -29,11 +29,11 @@ const TABS: { id: Tab; label: string }[] = [
 
 /** Convite via Web Share (fallback: copia o link). */
 async function shareInvite() {
-  const text = 'Bora treinar comigo no Abdoria — treino de abdômen com XP, streak e ranking!';
+  const text = 'Bora treinar comigo no Evolyn — treino de abdômen com XP, streak e ranking!';
   const url = window.location.origin;
   try {
     if (navigator.share) {
-      await navigator.share({ title: 'Abdoria · Core Quest', text, url });
+      await navigator.share({ title: 'Evolyn · Core Quest', text, url });
       return;
     }
   } catch {
@@ -125,10 +125,7 @@ export function FriendsPage() {
     }
   };
 
-  const friendsRanking = useMemo(
-    () => (tab === 'amigos' ? items : null),
-    [tab, items],
-  );
+  const friendsRanking = useMemo(() => (tab === 'amigos' ? items : null), [tab, items]);
 
   const renderActions = (entry: SocialUserEntry) => {
     if (entry.is_me) return null;
@@ -182,55 +179,55 @@ export function FriendsPage() {
       moldura_loja_equipada: entry.moldura_loja_equipada,
     });
     return (
-    <li key={entry.user_id}>
-      <div
-        role="button"
-        tabIndex={0}
-        className={`game-rank-row friends-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}
-        onClick={() => openProfile(entry)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') openProfile(entry);
-        }}
-      >
-        {friendsRanking && <span className="game-rank-row__rank">#{index + 1}</span>}
-        <UserAvatar
-          nome={entry.nome}
-          avatarUrl={entry.avatar_url}
-          moldura={identityBorder.moldura}
-          borderLoja={identityBorder.borderLoja}
-          molduraCount={entry.moldura_count}
-          size="sm"
-        />
-        <div className="game-rank-row__main">
-          <span className="game-rank-row__name">{entry.is_me ? 'Você' : entry.nome}</span>
-          <span className="friends-rank-row__meta">
-            Nv. {entry.level}
-            {entry.streak_atual > 0 && (
-              <span className="friends-rank-row__streak" title="Dias seguidos">
-                <Flame size={11} aria-hidden />
-                {entry.streak_atual}d
-              </span>
-            )}
-          </span>
+      <li key={entry.user_id}>
+        <div
+          role="button"
+          tabIndex={0}
+          className={`game-rank-row friends-rank-row${entry.is_me ? ' game-rank-row--me' : ''}`}
+          onClick={() => openProfile(entry)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') openProfile(entry);
+          }}
+        >
+          {friendsRanking && <span className="game-rank-row__rank">#{index + 1}</span>}
+          <UserAvatar
+            nome={entry.nome}
+            avatarUrl={entry.avatar_url}
+            moldura={identityBorder.moldura}
+            borderLoja={identityBorder.borderLoja}
+            molduraCount={entry.moldura_count}
+            size="sm"
+          />
+          <div className="game-rank-row__main">
+            <span className="game-rank-row__name">{entry.is_me ? 'Você' : entry.nome}</span>
+            <span className="friends-rank-row__meta">
+              Nv. {entry.level}
+              {entry.streak_atual > 0 && (
+                <span className="friends-rank-row__streak" title="Dias seguidos">
+                  <Flame size={11} aria-hidden />
+                  {entry.streak_atual}d
+                </span>
+              )}
+            </span>
+          </div>
+          {renderActions(entry)}
+          {tab === 'seguidores' && !entry.is_me && (
+            <button
+              type="button"
+              className="friends-remove"
+              aria-label={`Remover ${entry.nome} dos seguidores`}
+              title="Remover seguidor"
+              disabled={busyId === entry.user_id}
+              onClick={(e) => {
+                e.stopPropagation();
+                void runAction(entry.user_id, () => removeFollower(entry.user_id));
+              }}
+            >
+              <X size={14} aria-hidden />
+            </button>
+          )}
         </div>
-        {renderActions(entry)}
-        {tab === 'seguidores' && !entry.is_me && (
-          <button
-            type="button"
-            className="friends-remove"
-            aria-label={`Remover ${entry.nome} dos seguidores`}
-            title="Remover seguidor"
-            disabled={busyId === entry.user_id}
-            onClick={(e) => {
-              e.stopPropagation();
-              void runAction(entry.user_id, () => removeFollower(entry.user_id));
-            }}
-          >
-            <X size={14} aria-hidden />
-          </button>
-        )}
-      </div>
-    </li>
+      </li>
     );
   };
 
@@ -243,7 +240,7 @@ export function FriendsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Comunidade Abdoria" title="Amigos" />
+      <GamePageHeader eyebrow="Comunidade Evolyn" title="Amigos" />
 
       <label className="library-search">
         <Search size={16} className="library-search__icon" aria-hidden />
@@ -273,9 +270,7 @@ export function FriendsPage() {
           {searching ? (
             <p className="text-sm font-bold text-stone-500">Buscando...</p>
           ) : results.length === 0 ? (
-            <p className="text-sm font-bold text-stone-500">
-              Ninguém encontrado com esse nome.
-            </p>
+            <p className="text-sm font-bold text-stone-500">Ninguém encontrado com esse nome.</p>
           ) : (
             <ul className="game-rank-list">{results.map((entry, i) => renderRow(entry, i))}</ul>
           )}

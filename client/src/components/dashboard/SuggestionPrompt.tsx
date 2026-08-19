@@ -75,7 +75,7 @@ export function SuggestionPrompt() {
       const res = await submitAppSuggestion(texto.trim());
       applyUser(res.user);
       closeForSession();
-      showGameToast('Sugestão enviada — obrigado por construir o Abdoria com a gente! 💚', {
+      showGameToast('Sugestão enviada — obrigado por construir o Evolyn com a gente! 💚', {
         variant: 'success',
       });
     } catch (err) {
@@ -98,8 +98,8 @@ export function SuggestionPrompt() {
           7 dias de sequência — você é veterano!
         </h2>
         <p className="mt-1 text-sm font-medium text-stone-500">
-          O que está achando do Abdoria? Tem alguma ideia ou sugestão? Sua opinião chega direto
-          pra quem desenvolve o app.
+          O que está achando do Evolyn? Tem alguma ideia ou sugestão? Sua opinião chega direto pra
+          quem desenvolve o app.
         </p>
 
         <textarea

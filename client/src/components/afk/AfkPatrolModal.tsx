@@ -274,8 +274,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
   const goToScene = useCallback(
     (mode: 'exploring' | 'village') => {
       if (mode === sceneMode) return;
-      const label =
-        mode === 'exploring' ? 'Retomando a jornada...' : 'Retornando à Vila Abdoria...';
+      const label = mode === 'exploring' ? 'Retomando a jornada...' : 'Retornando à Vila Evolyn...';
       setSceneTransition(label);
       if (sceneTransitionTimerRef.current) window.clearTimeout(sceneTransitionTimerRef.current);
       sceneTransitionTimerRef.current = window.setTimeout(() => {
@@ -456,12 +455,12 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       return;
     queuedStoryFlagsRef.current.add('village_intro');
     setDialogue({
-      title: 'O chamado de Abdoria',
+      title: 'O chamado de Evolyn',
       lines: [
         {
           speaker: 'Ancião Odrin',
           tone: 'elder',
-          text: 'As rotas de Abdoria despertaram. Algo inquieta os slimes além dos portões.',
+          text: 'As rotas de Evolyn despertaram. Algo inquieta os slimes além dos portões.',
         },
         {
           speaker: 'Herói',
@@ -726,7 +725,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
           {
             speaker: AFK_ENEMIES[region.bossId].label,
             tone: 'slime',
-            text: 'Glub blor… fraa Abdoria, mori glim!',
+            text: 'Glub blor… fraa Evolyn, mori glim!',
           },
           {
             speaker: 'Herói',
@@ -919,7 +918,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
       setDialogue({
         title: response.story.title,
         lines: [
-          { speaker: 'Crônica de Abdoria', tone: 'story', text: response.story.body },
+          { speaker: 'Crônica de Evolyn', tone: 'story', text: response.story.body },
           {
             speaker: 'Herói',
             tone: 'hero',
@@ -1034,7 +1033,7 @@ export function AfkPatrolModal({ open, onClose, variant = 'modal' }: Props) {
                       : `CAPÍTULO ${String(displayedRegion.chapter).padStart(2, '0')}`}
                   </span>
                   <h2 id="afk-patrol-title" className="game-afk-modal__title">
-                    {sceneMode === 'village' ? 'Vila Abdoria' : displayedRegion.name}
+                    {sceneMode === 'village' ? 'Vila Evolyn' : displayedRegion.name}
                   </h2>
                 </div>
                 <div className="game-afk-modal__toolbar">

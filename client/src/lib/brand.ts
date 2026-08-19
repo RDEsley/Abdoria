@@ -1,4 +1,4 @@
-/** Marca Abdoria — arte oficial em `client/public/brand/`. */
+/** Marca Evolyn — arte oficial em `client/public/brand/`. */
 export const BRAND_FAVICON = {
   16: '/brand/favicon-16.png',
   32: '/brand/favicon-32.png',

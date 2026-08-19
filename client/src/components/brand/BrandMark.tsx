@@ -6,7 +6,7 @@ interface BrandMarkProps {
   alt?: string;
 }
 
-export function BrandMark({ size = 48, className = '', alt = 'Abdoria' }: BrandMarkProps) {
+export function BrandMark({ size = 48, className = '', alt = 'Evolyn' }: BrandMarkProps) {
   return (
     <img
       src={brandMarkSrc(size)}

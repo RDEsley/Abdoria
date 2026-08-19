@@ -1,4 +1,4 @@
-# Contribuindo com o Abdoria
+# Contribuindo com o Evolyn
 
 Obrigado por considerar contribuir. Este projeto é mantido em português (Brasil).
 

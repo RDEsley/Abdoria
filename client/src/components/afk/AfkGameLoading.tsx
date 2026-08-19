@@ -12,7 +12,7 @@ export function AfkGameLoading({ label = 'Preparando sua jornada' }: Props) {
         <span className="game-afk-loading__crest-ring" />
         <AfkFabSwords />
       </div>
-      <p className="game-afk-loading__brand">ABDORIA</p>
+      <p className="game-afk-loading__brand">EVOLYN</p>
       <h2 className="game-afk-loading__title">Exploração</h2>
       <p className="game-afk-loading__label">{label}</p>
       <div className="game-afk-loading__bar" aria-hidden>
