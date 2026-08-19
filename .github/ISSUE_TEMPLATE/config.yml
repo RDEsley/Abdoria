@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Guia do usuário
-    url: https://github.com/RDEsley/Evolyn/blob/main/docs/GUIA-DO-USUARIO.md
+    url: https://github.com/RDEsley/Evolyn-Core-Quest/blob/main/docs/GUIA-DO-USUARIO.md
     about: Dúvidas sobre XP, loja, treinos e ranking
   - name: README
-    url: https://github.com/RDEsley/Evolyn#readme
+    url: https://github.com/RDEsley/Evolyn-Core-Quest#readme
     about: Visão geral do projeto

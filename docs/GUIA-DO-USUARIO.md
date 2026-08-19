@@ -1,6 +1,6 @@
 # Guia do usuário — Evolyn
 
-Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui não bater com a versão do app, avise pelo [GitHub Issues](https://github.com/RDEsley/Evolyn/issues).
+Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui não bater com a versão do app, avise pelo [GitHub Issues](https://github.com/RDEsley/Evolyn-Core-Quest/issues).
 
 ---
 
