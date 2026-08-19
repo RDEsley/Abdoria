@@ -1,13 +1,13 @@
-# Guia do usuário — Abdoria
+# Guia do usuário — Evolyn
 
-Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui não bater com a versão do app, avise pelo [GitHub Issues](https://github.com/RDEsley/Abdoria/issues).
+Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui não bater com a versão do app, avise pelo [GitHub Issues](https://github.com/RDEsley/Evolyn/issues).
 
 ---
 
 ## Primeiros passos
 
 1. **Crie sua conta** ou entre como visitante (funcionalidades limitadas).
-2. Complete o **cadastro inicial**: idade, objetivo, nível e preferências.
+2. Complete o **cadastro inicial**: idade, objetivo, nível e preferências de treino.
 3. Aceite os **termos de uso**.
 4. No **painel**, toque em **JOGAR** para começar um treino sugerido ou vá em **Montar treino** para criar o seu.
 
@@ -17,14 +17,17 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 
 | Tela | Para que serve |
 |------|----------------|
-| **Painel** | Resumo do dia, XP, streak e mapa de treinos |
-| **Montar treino** | Escolher exercícios, salvar treinos e usar presets |
-| **Biblioteca** | Ver todos os exercícios e desbloquear novos |
-| **Player** | Executar o treino com timer e descanso |
+| **Início** | Resumo do dia, XP, streak e missão sugerida |
+| **Exploração** | Atividades, mapas de campanha e atividades e jornada automática |
+| **Missão** | Escolher exercícios, configurar a fila, salvar treinos e usar presets |
+| **Biblioteca** | Abre pelo botão na Missão; reúne os exercícios e desbloqueios |
+| **Player** | Executar o treino com timer e descanso; é a única tela sem a navegação inferior |
 | **Conquistas** | Ver metas e o que já desbloqueou |
-| **Classificação** | Ranking por XP, dias seguidos ou Coins |
+| **Ranking** | Abre pelo botão na Missão; compara XP, dias seguidos ou Coins |
 | **Perfil** | Seus dados, estatísticas e simulador |
-| **Opções** | Som, descanso, ciclo de treinos, **código presente** e sair |
+| **Opções** | Som, descanso padrão, ciclo de treinos, **código presente** e sair |
+
+A barra principal com **Início, Exploração, Missão e Perfil** permanece fixa nas telas do app.
 
 ---
 
@@ -34,13 +37,22 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 O app monta sugestões com base no seu **ciclo** (A, B, C…) e no histórico. Basta tocar em **JOGAR** no painel.
 
 ### Montar o seu
-- Arraste exercícios da biblioteca.
-- Ajuste séries, tempo ou repetições.
+- Abra a **Biblioteca** pelo atalho no topo da Missão e escolha os exercícios.
+- Na fila, use **Ver treino** para assistir à demonstração ou **Configurar** para trocar,
+  fixar, bloquear e ajustar séries, repetições, duração e descanso daquele exercício.
+- Exercícios de segurar podem ser configurados entre 10 segundos e 10 minutos.
 - **Salve** para usar depois — fica na sua conta.
 
+Um exercício marcado como **Fixado (sempre incluir)** é somado a todas as recomendações e não
+substitui nenhum exercício da fila normal.
+
 ### Durante o treino
-- Siga as séries uma a uma.
-- O descanso entre exercícios pode ser ajustado nas **Opções**.
+- Siga as séries uma a uma. O botão de voltar retorna primeiro à série anterior e, depois, ao
+  exercício anterior.
+- Em exercícios de segurar posição, use **Próximo treino** para avançar manualmente quando quiser.
+- Exercícios de um lado por vez indicam o lado esquerdo/direito na tela e por voz quando o som está ativo.
+- O descanso de cada exercício é ajustado em **Missão → fila → Configurar**; as Opções definem
+  apenas o valor padrão para novos itens.
 - Ao terminar, você vê quanto **XP** ganhou e se subiu de nível.
 
 ---
@@ -89,7 +101,7 @@ Em **Opções → Código presente**, digite um código promocional (se tiver um
 
 ## Ranking
 
-Em **Classificação**, alterne entre:
+Na **Missão**, toque no botão **Ranking** e alterne entre:
 
 - **Pontos (XP)** — quem treinou mais no total
 - **Dias seguidos** — maior streak
@@ -106,7 +118,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 ## Dicas para manter constância
 
 - Configure o **ciclo de treinos** nas Opções (A, B, C…).
-- Olhe o **calendário** no painel — dias treinados ficam marcados.
+- Olhe o **Mapa de atividades** em Exploração — dias treinados ficam marcados.
 - Busque **conquistas** fáceis primeiro (primeiro treino, 2 dias seguidos…).
 - Quando o XP diário encher (100/100), a barra “comemora” — meta do dia cumprida!
 
@@ -118,7 +130,7 @@ Aparecem até **25** posições; se você estiver fora do top, sua linha aparece
 |----------|-------------|
 | Não ganhei XP diário | Treino tinha menos de 3 exercícios? |
 | XP parou em 100 | Limite diário de exercícios — o resto vai para XP extra se for bônus |
-| Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta. Em dia de descanso, concluir uma Atividade (Início → Atividades) também mantém a sequência |
+| Perdi streak | Treine pelo menos 1x por dia; ontem ou hoje conta. Em dia de descanso, concluir uma Atividade (Exploração → Atividades) também mantém a sequência |
 | Item da loja bloqueado | Veja o requisito (nível, conquista ou Coins) |
 | Dados não salvaram | Confira conexão; treinos e progresso ficam na **conta logada** |
 

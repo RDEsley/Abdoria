@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Grip, X } from 'lucide-react';
+import { Grip, Settings2, X } from 'lucide-react';
+import { GameButton } from '@/components/ui/GameButton';
 import { ExerciseVideoModal } from '@/components/library/ExerciseVideoModal';
 import { ExerciseQuickActions } from '@/components/library/PreferenceToggleButtons';
 import type { IExerciseDocument, WorkoutQueueItem } from '@/types';
@@ -14,37 +15,10 @@ interface Props {
   index: number;
   exercise?: IExerciseDocument;
   onRemove?: () => void;
-  isPinned?: boolean;
-  isBlocked?: boolean;
-  onTogglePin?: () => void;
-  onToggleBlock?: () => void;
-  showPreferences?: boolean;
-  showSwapWorkout?: boolean;
-  onSwapWorkout?: () => void;
-  swapWorkoutDisabled?: boolean;
-  showSwapExercise?: boolean;
-  onSwapExercise?: () => void;
-  swapExerciseDisabled?: boolean;
+  onConfigure?: () => void;
 }
 
-export function SortableExerciseItem({
-  id,
-  item,
-  index,
-  exercise,
-  onRemove,
-  isPinned = false,
-  isBlocked = false,
-  onTogglePin,
-  onToggleBlock,
-  showPreferences = false,
-  showSwapWorkout = false,
-  onSwapWorkout,
-  swapWorkoutDisabled = false,
-  showSwapExercise = false,
-  onSwapExercise,
-  swapExerciseDisabled = false,
-}: Props) {
+export function SortableExerciseItem({ id, item, index, exercise, onRemove, onConfigure }: Props) {
   const [showVideo, setShowVideo] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -102,18 +76,18 @@ export function SortableExerciseItem({
           <ExerciseQuickActions
             showPlay={Boolean(exercise)}
             onPlay={exercise ? () => setShowVideo(true) : undefined}
-            showSwapExercise={showSwapExercise}
-            onSwapExercise={onSwapExercise}
-            swapExerciseDisabled={swapExerciseDisabled}
-            showSwapWorkout={showSwapWorkout}
-            onSwapWorkout={onSwapWorkout}
-            swapWorkoutDisabled={swapWorkoutDisabled}
-            showPreferences={showPreferences}
-            isPinned={isPinned}
-            isBlocked={isBlocked}
-            onTogglePin={onTogglePin}
-            onToggleBlock={onToggleBlock}
           />
+          {onConfigure && (
+            <GameButton
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-1.5"
+              onClick={onConfigure}
+            >
+              <Settings2 size={14} aria-hidden /> Configurar
+            </GameButton>
+          )}
         </div>
       </li>
 

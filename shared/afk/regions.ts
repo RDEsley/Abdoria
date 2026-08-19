@@ -32,7 +32,7 @@ export const AFK_REGIONS: readonly AfkRegionDefinition[] = [
     id: 'verdant-trail',
     chapter: 1,
     name: 'Trilha Verdejante',
-    subtitle: 'Os caminhos além da Vila Abdoria',
+    subtitle: 'Os caminhos além da Vila Evolyn',
     backgroundUrl: '/assets/exploration/region-01-verdant-trail.png',
     accent: '#7ddf92',
     bossId: 'boss_colossus',
@@ -116,7 +116,7 @@ export const AFK_REGIONS: readonly AfkRegionDefinition[] = [
     eliteEnemies: ['nightmare_slime', 'crystal_slime'],
     storyTitle: 'A voz dos slimes',
     story:
-      'Ao despertar o Slime Preguiçoso, a última runa se completa. A fala incompreensível dos slimes ganha sentido: eles não queriam destruir Abdoria — tentavam testar alguém capaz de enfrentar o que ainda dorme além do bosque.',
+      'Ao despertar o Slime Preguiçoso, a última runa se completa. A fala incompreensível dos slimes ganha sentido: eles não queriam destruir Evolyn — tentavam testar alguém capaz de enfrentar o que ainda dorme além do bosque.',
   },
 ] as const;
 

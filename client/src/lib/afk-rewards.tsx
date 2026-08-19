@@ -116,7 +116,7 @@ function descriptionForItem(item: AfkRewardItem): string {
     case 'exp_instant':
       return 'Concede XP instantâneo ao ser utilizado.';
     case 'doria_bag':
-      return 'Saco com moedas extras de Abdoria.';
+      return 'Saco com moedas extras de Evolyn.';
     case 'material': {
       if (!item.materialId || !isSlimeMaterialItemId(item.materialId)) return 'Material de slime.';
       const material = SLIME_MATERIAL_BY_ID[item.materialId];

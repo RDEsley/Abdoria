@@ -147,10 +147,7 @@ export function LeaderboardPage() {
 
   useEffect(() => {
     setLoading(true);
-    void Promise.all([
-      getLeaderboard(metric, period),
-      getMyLeaderboardRank(metric, period),
-    ])
+    void Promise.all([getLeaderboard(metric, period), getMyLeaderboardRank(metric, period)])
       .then(([list, myRank]) => {
         setEntries(list);
         setMe(myRank);
@@ -186,9 +183,7 @@ export function LeaderboardPage() {
       applyUser(updated);
       setReloadTick((tick) => tick + 1);
       showGameToast(
-        !adminVisivel
-          ? 'Você agora aparece nos rankings.'
-          : 'Você está oculto dos rankings.',
+        !adminVisivel ? 'Você agora aparece nos rankings.' : 'Você está oculto dos rankings.',
         { variant: 'info' },
       );
     } catch (err) {
@@ -244,7 +239,7 @@ export function LeaderboardPage() {
     <div className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-3">
         <GamePageHeader
-          eyebrow="Comunidade Abdoria"
+          eyebrow="Comunidade Evolyn"
           title={period === 'global' ? 'Classificação Global' : 'Classificação Semanal'}
         />
         {isAdmin && (
@@ -317,12 +312,7 @@ export function LeaderboardPage() {
       ) : (
         <div ref={listWrapRef} className="flex flex-col gap-5">
           <div id="rank-podium">
-            <LeaderboardPodium
-              top3={top3}
-              metric={metric}
-              period={period}
-              onOpen={openProfile}
-            />
+            <LeaderboardPodium top3={top3} metric={metric} period={period} onOpen={openProfile} />
           </div>
 
           {rest.length > 0 && (

@@ -21,7 +21,7 @@ export type SfxPackDef = {
   equip: ToneStep[];
   timerDone: ToneStep[];
   restEnd: ToneStep[];
-  /** Demonstração curta na loja Abdoria — ritmo/melodia únicos por pack. */
+  /** Demonstração curta na loja Evolyn — ritmo/melodia únicos por pack. */
   shopPreview: ToneStep[];
 };
 

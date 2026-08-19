@@ -32,7 +32,7 @@ export function AfkRegionMapModal({
       >
         <header className="game-afk-map__head">
           <div>
-            <span>Atlas de Abdoria</span>
+            <span>Atlas de Evolyn</span>
             <h2 id="afk-map-title">
               <Map size={20} /> Mapa
             </h2>

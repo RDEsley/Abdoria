@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Dumbbell, Home, Layers, Settings, Trophy, User, X } from 'lucide-react';
+import { Compass, Dumbbell, Home, Settings, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AfkFab } from '@/components/afk/AfkFab';
 import { GameAlertBanner } from '@/components/ui/GameToast';
@@ -9,24 +9,18 @@ import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay, type TutorialSlide } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
-import { useCopy } from '@/hooks/useCopy';
 import { useAuth } from '@/context/AuthContext';
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 
-// Ícone da Home padronizado com os demais itens de navegação (linha simples,
-// mesmo peso visual — Castle destoava, era mais ilustrativo que os outros).
-// Rótulos variam por preferencias.tom_texto (Linguagem de Jogo x Normal) —
-// ver shared/copy.ts.
-function buildNavItems(copy: ReturnType<typeof useCopy>) {
+function buildNavItems() {
   return [
     { to: '/', icon: Home, label: 'Início' },
-    { to: '/biblioteca', icon: Layers, label: copy('nav_biblioteca') },
-    { to: '/construtor', icon: Dumbbell, label: copy('nav_construtor') },
-    { to: '/ranking', icon: Trophy, label: copy('nav_ranking') },
-    { to: '/perfil', icon: User, label: copy('nav_perfil') },
+    { to: '/exploracao', icon: Compass, label: 'Exploração' },
+    { to: '/construtor', icon: Dumbbell, label: 'Missão' },
+    { to: '/perfil', icon: User, label: 'Perfil' },
   ] as const;
 }
 
@@ -47,8 +41,7 @@ function MidnightRefreshListener() {
 
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
-  const copy = useCopy();
-  const navItems = buildNavItems(copy);
+  const navItems = buildNavItems();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMobileViewport();
@@ -100,7 +93,7 @@ export function AppLayout() {
           <div className="game-sidebar__brand">
             <BrandMark size={48} alt="" className="game-sidebar__logo" />
             <div>
-              <p className="game-sidebar__tag">Abdoria</p>
+              <p className="game-sidebar__tag">Evolyn</p>
               <h1 className="game-sidebar__title">Core Quest</h1>
             </div>
           </div>
@@ -141,7 +134,7 @@ export function AppLayout() {
                 <GameAlertBanner
                   variant="info"
                   title="Melhor experiência no celular"
-                  message="O Abdoria foi desenhado para telas de celular. Em computador ou tablet, alguns elementos podem não se encaixar perfeitamente."
+                  message="O Evolyn foi desenhado para telas de celular. Em computador ou tablet, alguns elementos podem não se encaixar perfeitamente."
                 />
                 <button
                   type="button"

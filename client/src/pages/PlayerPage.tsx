@@ -72,6 +72,14 @@ type Phase = 'ready' | 'working' | 'resting' | 'done' | 'atividades-prompt';
 
 const ACTIVE_WORKOUT_KEY = 'abdoria_active_workout';
 
+const ONE_SIDE_EXERCISES = new Set(['side-plank', 'copenhagen-plank', 'single-leg-glute-bridge']);
+
+function sideInstruction(item: WorkoutQueueItem | undefined, seriesIndex: number): string | null {
+  if (!item || !ONE_SIDE_EXERCISES.has(item.slug)) return null;
+  const side = seriesIndex % 2 === 0 ? 'lado esquerdo' : 'lado direito';
+  return seriesIndex === 0 ? `Comece pelo ${side}.` : `Agora, ${side}.`;
+}
+
 function readActiveWorkout(): ActiveWorkout | null {
   try {
     const raw = sessionStorage.getItem(ACTIVE_WORKOUT_KEY);
@@ -99,7 +107,7 @@ export function PlayerPage() {
   const [saving, setSaving] = useState(false);
   const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
-  const [abdoriaGained, setAbdoriaGained] = useState(0);
+  const [coinsGained, setCoinsGained] = useState(0);
   const [xpBreakdown, setXpBreakdown] = useState<XpBreakdown | null>(null);
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
@@ -131,6 +139,7 @@ export function PlayerPage() {
   const pauseStartedRef = useRef<number | null>(null);
   const sessionStartedRef = useRef(false);
   const tickHandledRef = useRef(false);
+  const spokenSideRef = useRef('');
 
   useEffect(() => {
     mutedRef.current = muted;
@@ -180,6 +189,18 @@ export function PlayerPage() {
 
   const current: WorkoutQueueItem | undefined = workout?.queue[exerciseIndex];
   const totalSeries = current?.series ?? 3;
+  const currentSideInstruction = sideInstruction(current, seriesIndex);
+
+  useEffect(() => {
+    if (!current || !currentSideInstruction || muted || phase !== 'ready') return;
+    const key = `${current.slug}:${seriesIndex}`;
+    if (spokenSideRef.current === key || !('speechSynthesis' in window)) return;
+    spokenSideRef.current = key;
+    const utterance = new SpeechSynthesisUtterance(currentSideInstruction);
+    utterance.lang = 'pt-BR';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }, [current, currentSideInstruction, muted, phase, seriesIndex]);
 
   const getTargetSeconds = useCallback(() => {
     if (!current) return 30;
@@ -317,9 +338,7 @@ export function PlayerPage() {
     advanceAfterSeries();
   };
 
-  const goToPreviousExercise = () => {
-    if (!workout || exerciseIndex === 0) return;
-
+  const resetForNavigation = () => {
     if (pauseStartedRef.current) {
       pausedMsRef.current += Date.now() - pauseStartedRef.current;
       pauseStartedRef.current = null;
@@ -327,14 +346,40 @@ export function PlayerPage() {
     }
 
     tickHandledRef.current = false;
-    setExerciseIndex((index) => Math.max(index - 1, 0));
-    setSeriesIndex(0);
     setPhase('ready');
     setSecondsLeft(0);
     setRestTotalSec(0);
     setPaused(false);
     setCountdownValue(null);
     setMediaError(false);
+  };
+
+  const goBackOneStep = () => {
+    if (!workout || (exerciseIndex === 0 && seriesIndex === 0)) return;
+    resetForNavigation();
+
+    if (seriesIndex > 0) {
+      setSeriesIndex((index) => Math.max(index - 1, 0));
+      return;
+    }
+
+    const previousIndex = Math.max(exerciseIndex - 1, 0);
+    const previousSeries = Math.max((workout.queue[previousIndex]?.series ?? 1) - 1, 0);
+    setExerciseIndex(previousIndex);
+    setSeriesIndex(previousSeries);
+  };
+
+  const goToNextExercise = () => {
+    if (!workout || !current) return;
+    resetForNavigation();
+    if (exerciseIndex + 1 < workout.queue.length) {
+      setExerciseIndex((index) => index + 1);
+      setSeriesIndex(0);
+      return;
+    }
+    endTimeRef.current = persistWorkoutEndedAt();
+    playWorkoutComplete();
+    setPhase('done');
   };
 
   const skipRest = () => {
@@ -495,7 +540,7 @@ export function PlayerPage() {
         duracao_total_segundos: Math.max(duration, 1),
       });
       setXpGained(result.xp_ganho ?? 0);
-      setAbdoriaGained(result.abdoria_ganha ?? 0);
+      setCoinsGained(result.abdoria_ganha ?? 0);
       setXpBreakdown(result.xp_breakdown ?? null);
       if (result.streak_celebration) {
         setStreakCelebration(result.streak_celebration.streak_atual);
@@ -595,7 +640,7 @@ export function PlayerPage() {
       <WorkoutVictoryScreen
         workoutName={workout.treino_nome}
         xpGained={xpGained}
-        abdoriaGained={abdoriaGained}
+        abdoriaGained={coinsGained}
         xpBreakdown={xpBreakdown}
         streakCelebration={streakCelebration}
         levelUpCelebration={levelUpCelebration}
@@ -637,11 +682,7 @@ export function PlayerPage() {
           >
             Sim, fazer agora <ChevronRight size={18} />
           </GameButton>
-          <button
-            type="button"
-            className="game-auth-guest-link"
-            onClick={() => navigate('/')}
-          >
+          <button type="button" className="game-auth-guest-link" onClick={() => navigate('/')}>
             Fazer mais tarde
           </button>
         </motion.div>
@@ -755,7 +796,9 @@ export function PlayerPage() {
                 : 'Ativar contagem regressiva antes dos exercícios'
             }
             aria-pressed={countdownEnabled}
-            title={countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'}
+            title={
+              countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'
+            }
           >
             <Hourglass size={18} />
           </button>
@@ -839,9 +882,19 @@ export function PlayerPage() {
               </div>
             ) : (
               statusText && (
-                <p className="mx-auto mt-1.5 max-w-xs text-center text-xs font-bold leading-relaxed text-stone-600">
-                  {statusText}
-                </p>
+                <>
+                  {currentSideInstruction && (
+                    <p
+                      className="mx-auto mt-1.5 max-w-xs text-center text-sm font-extrabold text-emerald-700"
+                      aria-live="polite"
+                    >
+                      {currentSideInstruction}
+                    </p>
+                  )}
+                  <p className="mx-auto mt-1.5 max-w-xs text-center text-xs font-bold leading-relaxed text-stone-600">
+                    {statusText}
+                  </p>
+                </>
               )
             )}
           </div>
@@ -886,15 +939,15 @@ export function PlayerPage() {
         </div>
 
         <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          {exerciseIndex > 0 && (
+          {(exerciseIndex > 0 || seriesIndex > 0) && (
             <GameButton
               size="lg"
               variant="ghost"
               className="w-full flex items-center justify-center gap-2"
-              onClick={goToPreviousExercise}
+              onClick={goBackOneStep}
             >
               <ChevronLeft size={18} />
-              Voltar para o treino anterior
+              {seriesIndex > 0 ? 'Voltar para a série anterior' : 'Voltar para o treino anterior'}
             </GameButton>
           )}
 
@@ -949,6 +1002,18 @@ export function PlayerPage() {
                 <RotateCcw size={18} />
               </GameButton>
             </div>
+          )}
+
+          {current.modo === 'tempo' && (
+            <GameButton
+              size="lg"
+              variant="secondary"
+              className="w-full flex items-center justify-center gap-2"
+              onClick={goToNextExercise}
+            >
+              {exerciseIndex + 1 < workout.queue.length ? 'Próximo treino' : 'Finalizar treino'}
+              <ChevronRight size={18} />
+            </GameButton>
           )}
 
           {phase === 'resting' && (

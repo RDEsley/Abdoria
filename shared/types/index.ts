@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tipos de domínio compartilhados entre client e server.
  * Mantém contratos de API, exercícios, usuário e gamificação alinhados.
  */
@@ -1017,7 +1017,7 @@ export const GOLDEN_SLIME_SECRET_COSMETIC_IDS = [
     (nem bloqueada); concedida/removida automaticamente conforme o papel. */
 export const ADMIN_MOLDURA_ID = 'borda_admin';
 
-/** Itens que nunca aparecem na Loja Abdoria nem no catálogo bloqueado. */
+/** Itens que nunca aparecem na Loja Evolyn nem no catálogo bloqueado. */
 /** Drops raríssimos dos inimigos especiais "?" e Slime Binário — mesmo tratamento
     do Golden Slime: escondidos do catálogo até serem conquistados, pra não
     entregar a surpresa. */
@@ -1879,7 +1879,7 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   frozen_streak_auto_usar: true,
   baus_abertura_rapida: false,
   idioma: 'pt',
-  tom_texto: 'jogo',
+  tom_texto: 'normal',
   ciclo_treinos: ['A', 'B', 'C'],
   modo_padrao: 'tempo',
   reps_series_padrao: 3,

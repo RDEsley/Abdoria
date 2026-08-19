@@ -25,7 +25,7 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     xp: 0,
     abdoria: 999,
     desbloqueia: [],
-    mensagem: `Código Abdoria resgatado! Você recebeu 999 ${CURRENCY_NAME}.`,
+    mensagem: `Código Evolyn resgatado! Você recebeu 999 ${CURRENCY_NAME}.`,
     active: true,
   },
   {
@@ -36,7 +36,7 @@ export const GIFT_CODES: GiftCodeDefinition[] = [
     gems: 1,
     desbloqueia: ['titulo_membro_familia'],
     titulo_equipar: 'titulo_membro_familia',
-    mensagem: 'Bem-vindo à família Abdoria! Recompensa exclusiva do Discord resgatada.',
+    mensagem: 'Bem-vindo à família Evolyn! Recompensa exclusiva do Discord resgatada.',
     active: true,
   },
   {

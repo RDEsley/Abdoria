@@ -18,9 +18,9 @@ export function AuthLogo({ size = 'md', showLabel = true, className = '' }: Prop
 
   return (
     <div className={`flex flex-col items-center text-center ${className}`}>
-      <BrandMark size={img} alt="Abdoria" className={`${dim} object-contain game-logo-pixel`} />
+      <BrandMark size={img} alt="Evolyn" className={`${dim} object-contain game-logo-pixel`} />
       {showLabel && (
-        <p className="mt-2 text-xs font-bold uppercase tracking-widest text-teal-700">Abdoria</p>
+        <p className="mt-2 text-xs font-bold uppercase tracking-widest text-teal-700">Evolyn</p>
       )}
     </div>
   );

@@ -21,9 +21,9 @@ const KIND_LABELS: Record<string, string> = {
 /** Mensagens especiais das molduras de streak longa — agradecimento na tela. */
 const SPECIAL_MESSAGES: Record<string, string> = {
   borda_lendario:
-    '360 dias de chama acesa. Um ano inteiro de dedicação — obrigado por fazer parte de Abdoria. Essa moldura é sua para sempre.',
+    '360 dias de chama acesa. Um ano inteiro de dedicação — obrigado por fazer parte de Evolyn. Essa moldura é sua para sempre.',
   borda_imparavel:
-    '160 dias sem apagar a chama. Pouquíssimos chegam até aqui — Abdoria agradece a sua constância.',
+    '160 dias sem apagar a chama. Pouquíssimos chegam até aqui — Evolyn agradece a sua constância.',
 };
 
 function findCatalogItem(catalog: ShopResponse, id: string): ShopCatalogItem | undefined {
@@ -116,7 +116,10 @@ export function CosmeticUnlockCelebration() {
       aria-modal="true"
       aria-labelledby="cosmetic-unlock-title"
     >
-      <CelebrationBurst effectId={user?.cosmeticos?.efeito_equipado ?? 'efeito_padrao'} fullscreen />
+      <CelebrationBurst
+        effectId={user?.cosmeticos?.efeito_equipado ?? 'efeito_padrao'}
+        fullscreen
+      />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -136,7 +139,9 @@ export function CosmeticUnlockCelebration() {
             {KIND_LABELS[item.kind] ?? 'Item'} · {COSMETIC_RARITY_LABELS[item.raridade]}
           </p>
 
-          <div className={`cosmetic-unlock-card__stage cosmetic-unlock-card__stage--${item.raridade}`}>
+          <div
+            className={`cosmetic-unlock-card__stage cosmetic-unlock-card__stage--${item.raridade}`}
+          >
             {item.kind === 'moldura_loja' ? (
               <span
                 className={`cosmetic-unlock-card__ring game-cosmetic-avatar--border-${item.id.replace('borda_', '')}`}
@@ -157,9 +162,7 @@ export function CosmeticUnlockCelebration() {
             disabled={closing}
             onClick={() => void handleAdvance()}
           >
-            {isLast
-              ? 'Incrível!'
-              : `Próximo (${index + 1}/${items.length})`}
+            {isLast ? 'Incrível!' : `Próximo (${index + 1}/${items.length})`}
           </GameButton>
         </motion.div>
       </AnimatePresence>

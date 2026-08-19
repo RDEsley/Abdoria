@@ -1,4 +1,4 @@
-# Mantém o projeto Abdoria no Supabase ativo (free tier pausa após ~7 dias sem uso).
+# Mantém o projeto Evolyn no Supabase ativo (free tier pausa após ~7 dias sem uso).
 # Configure em GitHub → Settings → Secrets and variables → Actions:
 #   SUPABASE_URL                  → https://<ref>.supabase.co
 #   SUPABASE_ANON_KEY             → chave anon (Settings → API no Supabase)
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   ping:
-    name: Ping Abdoria (Supabase)
+    name: Ping Evolyn (Supabase)
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -74,4 +74,4 @@ jobs:
             exit 1
           fi
 
-          echo "✔ Abdoria Supabase ativo — próximo ping agendado para 00:00 (Brasília)"
+          echo "✔ Evolyn Supabase ativo — próximo ping agendado para 00:00 (Brasília)"

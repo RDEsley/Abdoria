@@ -12,10 +12,8 @@ import {
   Coins,
   Compass,
   Flame,
-  Gamepad2,
   Gauge,
   ListChecks,
-  MessageSquareText,
   PartyPopper,
   Rocket,
   Ruler,
@@ -65,13 +63,11 @@ import {
   normalizeCicloTreinos,
   suggestNivel,
   type NivelUsuario,
-  type TomTexto,
   type TreinoBase,
 } from '@/types';
 
 type StepId =
   | 'terms'
-  | 'linguagem'
   | 'body'
   | 'level'
   | 'scope'
@@ -187,7 +183,6 @@ export function OnboardingPage() {
   const [peso, setPeso] = useState('');
   const [altura, setAltura] = useState('');
   const [nivel, setNivel] = useState<NivelUsuario | null>(null);
-  const [tomTexto, setTomTexto] = useState<TomTexto>('jogo');
   const [draft, setDraft] = useState<TrainingProfileDraft>(DEFAULT_TRAINING_DRAFT);
   const [ciclo, setCiclo] = useState<TreinoBase[]>([]);
   const [cicloRecomendado, setCicloRecomendado] = useState(false);
@@ -229,7 +224,6 @@ export function OnboardingPage() {
   const steps = useMemo<StepId[]>(
     () => [
       'terms',
-      'linguagem',
       'body',
       'level',
       'equipamento',
@@ -295,7 +289,7 @@ export function OnboardingPage() {
           sfx_volume: 0.7,
           tutorial_visto: false,
           equipamentos: draft.equipamentos,
-          tom_texto: tomTexto,
+          tom_texto: 'normal',
         },
       };
 
@@ -435,33 +429,6 @@ export function OnboardingPage() {
                 >
                   Ver termos e condições
                 </button>
-              </>
-            )}
-
-            {stepId === 'linguagem' && (
-              <>
-                <StepHeader
-                  icon={<Gamepad2 size={22} />}
-                  title="Como você prefere?"
-                  subtitle="Dá pra trocar depois nas Opções"
-                />
-                <div className="mt-4 flex flex-col gap-2">
-                  <OptionCard
-                    selected={tomTexto === 'jogo'}
-                    onClick={() => setTomTexto('jogo')}
-                    icon={<Gamepad2 size={18} />}
-                    title="Modo Gamer"
-                    subtitle="HP, XP, Heroi e o resto do vocabulário RPG — a experiência completa."
-                    recommended
-                  />
-                  <OptionCard
-                    selected={tomTexto === 'normal'}
-                    onClick={() => setTomTexto('normal')}
-                    icon={<MessageSquareText size={18} />}
-                    title="Modo Normal"
-                    subtitle="Tudo em português direto, sem termos de jogo — pra quem só quer treinar."
-                  />
-                </div>
               </>
             )}
 
@@ -649,7 +616,7 @@ export function OnboardingPage() {
                       <input
                         type="range"
                         min={10}
-                        max={300}
+                        max={600}
                         step={5}
                         value={tempoHold}
                         onChange={(e) => setTempoHold(Number(e.target.value))}

@@ -76,7 +76,7 @@ const MATERIAL_SEEDS = {
   boss_hydra: ['Presa da Hidra', 'Uma presa que parece querer se multiplicar.', '🐲'],
   boss_golem: ['Coração de Pedra', 'O núcleo ainda morno do Golem de Pedra.', '🫀'],
   boss_procrastinador: ['Relógio Adiado', 'Sempre promete tocar o alarme mais tarde.', '⏰'],
-  boss_preguica: ['Travesseiro Real', 'O travesseiro mais confortável de Abdoria.', '🛏️'],
+  boss_preguica: ['Travesseiro Real', 'O travesseiro mais confortável de Evolyn.', '🛏️'],
 } satisfies Record<AfkEnemyId, readonly [name: string, description: string, icon: string]>;
 
 export const SLIME_MATERIALS: readonly SlimeMaterialDefinition[] = (

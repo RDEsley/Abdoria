@@ -51,7 +51,7 @@ export function ScopeStep({ draft, onChange }: StepProps) {
           onClick={() => onChange({ escopo: 'abdomen', partes: null, missaoRecomendada: true })}
           icon={<Flame size={18} />}
           title="Só abdômen"
-          subtitle="Core em primeiro lugar — o caminho clássico do Abdoria."
+          subtitle="Core em primeiro lugar — o caminho clássico do Evolyn."
           recommended
         />
         <OptionCard
@@ -111,7 +111,7 @@ export function PartesStep({ draft, onChange }: StepProps) {
       <StepHeader
         icon={<Layers size={22} />}
         title="Quais áreas, além do abdômen?"
-        subtitle="O abdômen entra em toda missão — é o coração do Abdoria."
+        subtitle="O abdômen entra em toda missão — é o coração do Evolyn."
       />
       <OptionCard
         className="mt-4"

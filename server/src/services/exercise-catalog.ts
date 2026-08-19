@@ -7,6 +7,7 @@ import {
   isExerciseAvailableForUser,
   type EquipmentId,
 } from '../../../shared/equipment/index.js';
+import { isRetiredExerciseSlug } from '../../../shared/exercises.js';
 
 export interface ExerciseCatalogFilter {
   musculo?: MusculoPrincipal;
@@ -48,6 +49,7 @@ export async function findExercisesForUser(
     // Garante a regra de equipamento mesmo se algum exercício de equipamento
     // estiver salvo como `ativo: true` (não pode vazar com equipamento desmarcado).
     if (
+      !isRetiredExerciseSlug(ex.slug) &&
       matchesFilter(ex, filter) &&
       isExerciseAvailableForUser(
         { ativo: ex.ativo, equipamento: ex.equipamento as EquipmentId | null | undefined },
@@ -70,6 +72,7 @@ export async function findEquipmentLockedExercises(
   return gated
     .filter(
       (ex) =>
+        !isRetiredExerciseSlug(ex.slug) &&
         ex.equipamento &&
         equipmentAffectsExerciseAvailability(ex.equipamento as EquipmentId) &&
         !enabled.has(ex.equipamento as EquipmentId),

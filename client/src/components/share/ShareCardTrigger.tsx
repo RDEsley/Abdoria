@@ -30,7 +30,11 @@ export function ShareCardTrigger({
     setBusy(true);
     try {
       const blob = await exportShareCardBlob(cardRef.current);
-      await shareOrDownloadImage(blob, `abdoria-${data.kind}-${Date.now()}.png`, buildShareMessage(data));
+      await shareOrDownloadImage(
+        blob,
+        `evolyn-${data.kind}-${Date.now()}.png`,
+        buildShareMessage(data),
+      );
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível gerar a imagem.'), {
         variant: 'error',

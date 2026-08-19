@@ -1,4 +1,4 @@
-﻿import type { CosmeticDefinition } from '../types/index.js';
+import type { CosmeticDefinition } from '../types/index.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import { COSMETICS } from '../data/cosmetics.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
@@ -19,7 +19,7 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
   return {
     email,
     passwordHash,
-    nome: 'Admin Abdoria',
+    nome: 'Admin Evolyn',
     idade: 30,
     peso_kg: 75,
     altura_cm: 175,

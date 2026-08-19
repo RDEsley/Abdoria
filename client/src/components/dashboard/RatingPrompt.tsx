@@ -90,7 +90,7 @@ export function RatingPrompt() {
           3 dias seguidos — você está voando!
         </h2>
         <p className="mt-1 text-sm font-medium text-stone-500">
-          Está gostando do Abdoria? Sua avaliação ajuda a gente a melhorar.
+          Está gostando do Evolyn? Sua avaliação ajuda a gente a melhorar.
         </p>
 
         <div
@@ -112,9 +112,7 @@ export function RatingPrompt() {
             >
               <Star
                 size={30}
-                className={
-                  value <= (hover || stars) ? 'text-amber-400' : 'text-stone-300'
-                }
+                className={value <= (hover || stars) ? 'text-amber-400' : 'text-stone-300'}
                 fill={value <= (hover || stars) ? 'currentColor' : 'none'}
                 aria-hidden
               />

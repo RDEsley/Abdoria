@@ -186,7 +186,7 @@ export const AFK_SKILL_NODES: readonly AfkSkillNodeDefinition[] = [
   {
     id: 'vitality_2',
     branch: 'sobrevivencia',
-    name: 'Coração de Abdoria',
+    name: 'Coração de Evolyn',
     description: '+5% de vida.',
     cost: 2,
     requires: ['vitality_1'],
@@ -534,7 +534,7 @@ export const AFK_SKILL_NODES: readonly AfkSkillNodeDefinition[] = [
   {
     id: 'magic_legacy',
     branch: 'magia',
-    name: 'Arquimago de Abdoria',
+    name: 'Arquimago de Evolyn',
     description: '+2,5% de dano mágico.',
     cost: 6,
     requires: ['magic_focus_4', 'spell_fortune_4'],

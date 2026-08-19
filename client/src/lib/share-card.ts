@@ -38,7 +38,7 @@ export async function shareOrDownloadImage(
 
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'Abdoria', text });
+      await navigator.share({ files: [file], title: 'Evolyn', text });
       return;
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;

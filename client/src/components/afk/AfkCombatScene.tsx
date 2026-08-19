@@ -963,7 +963,7 @@ export function AfkCombatScene({
             type="button"
             className="game-afk-scene__back-btn"
             onClick={onBackToVillage}
-            aria-label="Voltar à Vila Abdoria"
+            aria-label="Voltar à Vila Evolyn"
           >
             <span className="game-afk-scene__back-btn-icon" aria-hidden>
               <House size={15} />

@@ -147,6 +147,12 @@ function selectByGroupQuota(scored: ScoredExercise[], dia: PlanoDia, target: num
   return selected;
 }
 
+/** Fixados são extras: nunca consomem nem substituem as vagas normais do treino. */
+export function addPinnedExercises<T extends { slug: string }>(selected: T[], pinned: T[]): T[] {
+  const pinnedSlugs = new Set(pinned.map((exercise) => exercise.slug));
+  return [...pinned, ...selected.filter((exercise) => !pinnedSlugs.has(exercise.slug))];
+}
+
 function toSugeridoExercicio(
   exercise: ExerciseDocument,
   foco: Foco,
@@ -195,12 +201,14 @@ export async function recommendFromPlano(
   const maxNivel = MAX_NIVEL_BY_USER[user.nivel] ?? 3;
 
   const catalog = await findExercisesForUserDocument(user);
-  const pool = catalog.filter(
+  const eligibleCatalog = catalog.filter(
     (ex) =>
       ex.nivel <= maxNivel &&
       !blocked.has(ex.slug) &&
-      ex.grupos.some((g) => dia.grupos.includes(g as PlanoDia['grupos'][number])) &&
       !ex.contraindicacoes.some((c) => restricoes.has(c as never)),
+  );
+  const pool = eligibleCatalog.filter((ex) =>
+    ex.grupos.some((g) => dia.grupos.includes(g as PlanoDia['grupos'][number])),
   );
 
   const recent = options.allowRepeats ? new Set<string>() : await recentExerciseSlugs(user.id);
@@ -208,7 +216,7 @@ export async function recommendFromPlano(
 
   const target = SESSION_EXERCISE_COUNT[perfil.tempo_por_sessao_min] ?? 6;
 
-  const pinned = pool.filter((ex) => pinnedSlugs.includes(ex.slug));
+  const pinned = eligibleCatalog.filter((ex) => pinnedSlugs.includes(ex.slug));
   const scored = scorePool(
     pool.filter((ex) => !pinnedSlugs.includes(ex.slug)),
     dia,
@@ -217,10 +225,7 @@ export async function recommendFromPlano(
     shuffleSeed,
   );
 
-  let selected = [
-    ...pinned,
-    ...selectByGroupQuota(scored, dia, Math.max(target - pinned.length, 0)),
-  ];
+  let selected = addPinnedExercises(selectByGroupQuota(scored, dia, target), pinned);
 
   if (selected.length < MIN_EXERCISES) {
     // Pool pequeno: refaz sem penalidade de repetição recente.
@@ -231,10 +236,7 @@ export async function recommendFromPlano(
       false,
       shuffleSeed,
     );
-    selected = [
-      ...pinned,
-      ...selectByGroupQuota(relaxed, dia, Math.max(target - pinned.length, 0)),
-    ];
+    selected = addPinnedExercises(selectByGroupQuota(relaxed, dia, target), pinned);
   }
 
   if (selected.length === 0) return null;

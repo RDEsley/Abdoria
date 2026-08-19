@@ -1,6 +1,6 @@
 {
-  "name": "abdoria",
-  "description": "App gamificado de treino de abdômen — XP, streak, conquistas, loja Abdoria e ranking. Para quem treina em casa.",
+  "name": "evolyn",
+  "description": "App gamificado de treino de abdômen — XP, streak, conquistas, loja Evolyn e ranking. Para quem treina em casa.",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -16,7 +16,7 @@
     "postinstall": "npm install --prefix client && npm install --prefix server",
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "node scripts/check-format.mjs",
     "test": "npm test --prefix server"
   },
   "dependencies": {

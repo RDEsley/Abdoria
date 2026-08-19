@@ -41,7 +41,7 @@ export function ShareCard({ data, user }: Props) {
     <div className="share-card">
       <div className="share-card__glow" aria-hidden />
 
-      <p className="share-card__brand">Abdoria · Core Quest</p>
+      <p className="share-card__brand">Evolyn · Core Quest</p>
 
       <div className="share-card__avatar">
         <CosmeticAvatar user={user} size="lg" />

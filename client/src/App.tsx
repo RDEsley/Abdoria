@@ -55,6 +55,9 @@ const CampaignBookPage = lazy(() =>
 const ExplorationPage = lazy(() =>
   import('@/pages/ExplorationPage').then((m) => ({ default: m.ExplorationPage })),
 );
+const ExplorationHubPage = lazy(() =>
+  import('@/pages/ExplorationHubPage').then((m) => ({ default: m.ExplorationHubPage })),
+);
 
 /**
  * DESATIVADO TEMPORARIAMENTE: o arquivo com todos os capítulos anteriores da
@@ -134,6 +137,22 @@ export default function App() {
                       }
                     />
                     <Route
+                      path="exploracao"
+                      element={
+                        <LazyPage>
+                          <ExplorationHubPage />
+                        </LazyPage>
+                      }
+                    />
+                    <Route
+                      path="exploracao/jornada"
+                      element={
+                        <LazyPage>
+                          <ExplorationPage />
+                        </LazyPage>
+                      }
+                    />
+                    <Route
                       path="construtor"
                       element={
                         <LazyPage>
@@ -197,20 +216,20 @@ export default function App() {
                         </LazyPage>
                       }
                     />
+                    <Route
+                      path="atividades-player"
+                      element={
+                        <LazyPage>
+                          <AtividadesPlayerPage />
+                        </LazyPage>
+                      }
+                    />
                   </Route>
                   <Route
                     path="player"
                     element={
                       <LazyPage>
                         <PlayerPage />
-                      </LazyPage>
-                    }
-                  />
-                  <Route
-                    path="atividades-player"
-                    element={
-                      <LazyPage>
-                        <AtividadesPlayerPage />
                       </LazyPage>
                     }
                   />
@@ -224,14 +243,6 @@ export default function App() {
                       }
                     />
                   ) : null}
-                  <Route
-                    path="exploracao"
-                    element={
-                      <LazyPage>
-                        <ExplorationPage />
-                      </LazyPage>
-                    }
-                  />
                 </Route>
               </Route>
 
