@@ -13,6 +13,7 @@ export interface WorkoutHistoryDocument {
   plano_dia_indice?: number | null;
   /** Métricas contextuais da Atividade; null/ausente em treinos. */
   atividade?: Record<string, unknown> | null;
+  completion_id?: string | null;
 }
 
 function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
@@ -28,6 +29,7 @@ function rowToHistory(row: Record<string, unknown>): WorkoutHistoryDocument {
     concluido_em: row.concluido_em as string,
     plano_dia_indice: row.plano_dia_indice != null ? Number(row.plano_dia_indice) : null,
     atividade: (row.atividade as Record<string, unknown> | null) ?? null,
+    completion_id: row.completion_id ? String(row.completion_id) : null,
   };
 }
 
@@ -37,6 +39,18 @@ function isMissingAtividadeColumn(error: { message?: string; code?: string } | n
   if (!error) return false;
   if (error.code === '42703' || error.code === 'PGRST204') return true;
   return /atividade/i.test(error.message ?? '') && /column|schema cache/i.test(error.message ?? '');
+}
+
+function isMissingCompletionIdColumn(error: { message?: string; code?: string } | null): boolean {
+  if (!error) return false;
+  return (
+    (error.code === '42703' || error.code === 'PGRST204') &&
+    /completion_id/i.test(error.message ?? '')
+  );
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505';
 }
 
 export const WorkoutHistory = {
@@ -121,6 +135,7 @@ export const WorkoutHistory = {
       concluido_em: data.concluido_em ?? new Date().toISOString(),
       ...(data.plano_dia_indice != null ? { plano_dia_indice: data.plano_dia_indice } : {}),
       ...(data.atividade != null ? { atividade: data.atividade } : {}),
+      ...(data.completion_id ? { completion_id: data.completion_id } : {}),
     };
 
     const { data: inserted, error } = await sb
@@ -128,6 +143,13 @@ export const WorkoutHistory = {
       .insert(row)
       .select('*')
       .single();
+
+    if (error && data.completion_id && isMissingCompletionIdColumn(error)) {
+      const { completion_id: _completionId, ...legacyRow } = row;
+      const retry = await sb.from('workout_history').insert(legacyRow).select('*').single();
+      if (retry.error) throw retry.error;
+      return rowToHistory(retry.data as Record<string, unknown>);
+    }
 
     if (error && data.atividade != null && isMissingAtividadeColumn(error)) {
       const { atividade: _omitida, ...semAtividade } = row;
@@ -138,6 +160,35 @@ export const WorkoutHistory = {
 
     if (error) throw error;
     return rowToHistory(inserted as Record<string, unknown>);
+  },
+
+  async findByCompletionId(
+    usuarioId: string,
+    completionId: string,
+  ): Promise<WorkoutHistoryDocument | null> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('workout_history')
+      .select('*')
+      .eq('usuario_id', usuarioId)
+      .eq('completion_id', completionId)
+      .maybeSingle();
+    if (error && isMissingCompletionIdColumn(error)) return null;
+    if (error) throw error;
+    return data ? rowToHistory(data as Record<string, unknown>) : null;
+  },
+
+  async createOnce(
+    data: Omit<WorkoutHistoryDocument, 'id'>,
+  ): Promise<{ history: WorkoutHistoryDocument; created: boolean }> {
+    try {
+      return { history: await WorkoutHistory.create(data), created: true };
+    } catch (error) {
+      if (!data.completion_id || !isUniqueViolation(error)) throw error;
+      const existing = await WorkoutHistory.findByCompletionId(data.usuario_id, data.completion_id);
+      if (!existing) throw error;
+      return { history: existing, created: false };
+    }
   },
 
   async exists(filter: {
