@@ -1,4 +1,5 @@
 import { getSupabase } from '../db.js';
+import type { ExerciseLaterality } from '../../../shared/types/index.js';
 
 export interface ExerciseDocument {
   id: string;
@@ -11,6 +12,7 @@ export interface ExerciseDocument {
   tempo_recomendado: number;
   prioridade: string;
   modo?: string;
+  laterality?: ExerciseLaterality;
   repeticoes_iniciante?: number;
   repeticoes_intermediario?: number;
   repeticoes_avancado?: number;
@@ -40,6 +42,9 @@ function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
     tempo_recomendado: Number(row.tempo_recomendado),
     prioridade: String(row.prioridade),
     modo: row.modo ? String(row.modo) : undefined,
+    laterality: ['none', 'per_side', 'alternating'].includes(String(row.laterality))
+      ? (String(row.laterality) as ExerciseLaterality)
+      : 'none',
     repeticoes_iniciante:
       row.repeticoes_iniciante != null ? Number(row.repeticoes_iniciante) : undefined,
     repeticoes_intermediario:
@@ -61,7 +66,8 @@ function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
     media: row.media as ExerciseDocument['media'],
     ativo: Boolean(row.ativo),
     equipamento: row.equipamento ? String(row.equipamento) : undefined,
-    grupos: Array.isArray(row.grupos) && row.grupos.length > 0 ? (row.grupos as string[]) : ['abdomen'],
+    grupos:
+      Array.isArray(row.grupos) && row.grupos.length > 0 ? (row.grupos as string[]) : ['abdomen'],
     contraindicacoes: Array.isArray(row.contraindicacoes) ? (row.contraindicacoes as string[]) : [],
   };
 }
@@ -77,6 +83,7 @@ function exerciseToRow(ex: Partial<ExerciseDocument>): Record<string, unknown> {
     tempo_recomendado: ex.tempo_recomendado,
     prioridade: ex.prioridade,
     modo: ex.modo ?? 'reps',
+    laterality: ex.laterality ?? 'none',
     repeticoes_iniciante: ex.repeticoes_iniciante,
     repeticoes_intermediario: ex.repeticoes_intermediario,
     repeticoes_avancado: ex.repeticoes_avancado,

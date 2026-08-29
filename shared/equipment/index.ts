@@ -57,8 +57,8 @@ export const EQUIPMENT_CATALOG: readonly EquipmentDefinition[] = [
   {
     id: 'pull_up_bar',
     nome: 'Barra Fixa',
-    descricao: 'Puxadas, chin-ups e suspensão isométrica para costas e grip.',
-    exerciseSlugs: ['dead-hang', 'scapular-pull-up', 'pull-up', 'chin-up'],
+    descricao: 'Elevações de joelhos e progressões suspensas para o core.',
+    exerciseSlugs: ['dead-hang', 'scapular-pull-up', 'pull-up', 'chin-up', 'hanging-knee-raise'],
     purchaseUrl: 'https://meli.la/1roA2gm',
   },
   {

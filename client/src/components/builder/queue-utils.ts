@@ -29,6 +29,7 @@ export function presetToQueue(
         repeticoes: pe.repeticoes ?? params.repeticoes,
         tempo_seg: pe.tempo_seg ?? params.tempo_seg,
         descanso_seg: pe.descanso_seg ?? params.descanso_seg,
+        laterality: ex.laterality ?? 'none',
       } satisfies WorkoutQueueItem;
     })
     .filter(Boolean) as WorkoutQueueItem[];
@@ -55,6 +56,7 @@ export function sugeridoToQueue(
         repeticoes: se.repeticoes,
         tempo_seg: se.tempo_seg,
         descanso_seg: se.descanso_seg,
+        laterality: ex.laterality ?? 'none',
       } satisfies WorkoutQueueItem;
     })
     .filter(Boolean) as WorkoutQueueItem[];

@@ -1,5 +1,6 @@
 import type {
   Banimento,
+  AbTrainingProfileV2,
   Cosmeticos,
   Gamificacao,
   Inventario,
@@ -57,6 +58,7 @@ export interface UserRecord {
   perfil_treino?: PerfilTreino | null;
   /** Plano gerado a partir do perfil. null = pipeline de presets. */
   plano_treino?: PlanoTreino | null;
+  ab_training_profile_v2?: AbTrainingProfileV2 | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }

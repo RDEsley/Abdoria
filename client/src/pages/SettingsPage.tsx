@@ -22,7 +22,7 @@ import {
 import { showGameToast } from '@/components/ui/GameToast';
 import { Modal } from '@/components/ui/Modal';
 import { TermsModal } from '@/components/legal/TermsModal';
-import { TrainingProfileModal } from '@/components/onboarding/TrainingProfileModal';
+import { AbTrainingProfileWizard } from '@/components/training/AbTrainingProfileWizard';
 import { AboutSection } from '@/components/settings/AboutSection';
 import { GiftCodeSection } from '@/components/settings/GiftCodeSection';
 import { SoundPackSection } from '@/components/settings/SoundPackSection';
@@ -676,7 +676,7 @@ export function SettingsPage() {
         onClose={handleTutorialClose}
         slides={ONBOARDING_TUTORIAL_SLIDES}
       />
-      <TrainingProfileModal
+      <AbTrainingProfileWizard
         open={showTrainingProfile}
         onClose={() => setShowTrainingProfile(false)}
       />

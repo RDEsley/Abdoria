@@ -1,5 +1,6 @@
 import type {
   IUserDocument,
+  AbTrainingProfileV2,
   MolduraId,
   OnboardingPayload,
   PerfilTreino,
@@ -54,6 +55,13 @@ export function updateTrainingProfile(
   return fetchJson('/users/me/training-profile', {
     method: 'PUT',
     body: JSON.stringify({ perfil_treino: perfil, equipamentos }),
+  });
+}
+
+export function updateAbTrainingProfileV2(profile: AbTrainingProfileV2): Promise<IUserDocument> {
+  return fetchJson('/users/me/ab-training-profile-v2', {
+    method: 'PUT',
+    body: JSON.stringify({ profile }),
   });
 }
 
