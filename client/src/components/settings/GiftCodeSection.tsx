@@ -71,7 +71,7 @@ export function GiftCodeSection() {
   // XP/level up só disparam ao fechar a tela de revelação — na hora do
   // resgate, as bolinhas de XP e a celebração de level up ficariam por
   // baixo desse mesmo modal, escondidas (mesmo ajuste feito no claim da
-  // Exploração).
+  // outras fontes de recompensa).
   const handleCloseReveal = () => {
     const reveal = rewardReveal;
     setRewardReveal(null);

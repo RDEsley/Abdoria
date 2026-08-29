@@ -35,10 +35,7 @@ function parsePeriod(raw: string | undefined): LeaderboardPeriod {
 }
 
 /** Valor vitalício da métrica — XP total e Coins totais ganhas (sem descontar gasto). */
-function globalMetricValue(
-  user: EntryUser,
-  metric: Exclude<LeaderboardMetric, 'streak'>,
-): number {
+function globalMetricValue(user: EntryUser, metric: Exclude<LeaderboardMetric, 'streak'>): number {
   if (metric === 'xp') return user.gamificacao.nivel_xp;
   return readLifetimeMoedas(user);
 }
@@ -153,7 +150,6 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       const fetched = await User.find(leaderboardFilter, {
         sort: metricSort(metric, period),
         limit: limit + 10,
-        skipAfk: true,
       });
       const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
       const podiums = await LeaderboardPodiumHistory.countsForUsers(
@@ -178,13 +174,10 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       // moedas_total_ganhas) — mesma estratégia do streak: sort+limit no
       // banco, sem puxar a tabela inteira pra ordenar em JS.
       const sortField: Record<string, 1 | -1> =
-        metric === 'xp'
-          ? { 'gamificacao.nivel_xp': -1 }
-          : { 'cosmeticos.moedas_total_ganhas': -1 };
+        metric === 'xp' ? { 'gamificacao.nivel_xp': -1 } : { 'cosmeticos.moedas_total_ganhas': -1 };
       const fetched = await User.find(leaderboardFilter, {
         sort: sortField,
         limit: limit + 10,
-        skipAfk: true,
       });
       const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
       const podiums = await LeaderboardPodiumHistory.countsForUsers(
@@ -207,9 +200,7 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     // Semanal ordena pelos acumuladores da semana em JS porque o valor pode
     // vir do acumulador corrente ou do `week_stats_prev` ainda preservado no
     // domingo até o payout fechar.
-    const all = (await User.find(leaderboardFilter, { skipAfk: true })).filter(
-      (u) => !isHiddenAdmin(u),
-    );
+    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
     const ranked = all
       .map((user) => ({ user, value: weeklyMetricValue(user, metric) }))
       .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
@@ -272,9 +263,7 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
-    const all = (await User.find(leaderboardFilter, { skipAfk: true })).filter(
-      (u) => !isHiddenAdmin(u),
-    );
+    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
     const valueOf = (target: (typeof all)[number]) =>
       period === 'global' ? globalMetricValue(target, metric) : weeklyMetricValue(target, metric);
     const myValue = valueOf(user);

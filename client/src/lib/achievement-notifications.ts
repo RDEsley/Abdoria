@@ -1,19 +1,12 @@
-import type {
-  AchievementIcon,
-  AfkEnemyId,
-  PersonalRecordNotice,
-  UnlockedAchievementNotice,
-} from '@/types';
-import { AFK_ENEMIES } from '@/types';
+import type { AchievementIcon, PersonalRecordNotice, UnlockedAchievementNotice } from '@/types';
 
-export type AchievementToastType = 'achievement' | 'enemy' | 'record';
+export type AchievementToastType = 'achievement' | 'record';
 
 export interface TriggerAchievementPayload {
   title: string;
   description: string;
   type?: AchievementToastType;
   icon?: AchievementIcon;
-  enemyId?: AfkEnemyId;
   customSoundUrl?: string;
 }
 
@@ -40,19 +33,7 @@ export function triggerAchievement(payload: TriggerAchievementPayload) {
 }
 
 export const ACHIEVEMENT_UNLOCKED_TITLE = 'Conquista desbloqueada!';
-export const ENEMY_UNLOCKED_TITLE = 'Novo inimigo!';
 export const PERSONAL_RECORD_TITLE = 'Novo recorde!';
-
-export function notifyBestiaryUnlocks(enemyIds: AfkEnemyId[]) {
-  for (const enemyId of enemyIds) {
-    triggerAchievement({
-      type: 'enemy',
-      title: ENEMY_UNLOCKED_TITLE,
-      description: AFK_ENEMIES[enemyId]?.label ?? enemyId,
-      enemyId,
-    });
-  }
-}
 
 export function notifyWorkoutAchievements(achievements: UnlockedAchievementNotice[]) {
   for (const ach of achievements) {

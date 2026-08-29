@@ -2,14 +2,12 @@ import type { CosmeticDefinition } from '../types/index.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 import { COSMETICS } from '../data/cosmetics.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
-import { MOEDA_XP_STEP, ALL_BESTIARY_ENEMY_IDS } from '../types/index.js';
-import { PATROL_WEAPONS } from '../../../shared/patrol/shop.js';
+import { MOEDA_XP_STEP } from '../types/index.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 
 const ALL_COSMETIC_IDS = COSMETICS.map((item: CosmeticDefinition) => item.id);
 const ALL_ACHIEVEMENT_IDS = ACHIEVEMENTS.map((item) => item.id);
 const ALL_EXERCISE_SLUGS = allExercises.map((item) => item.slug);
-const ALL_WEAPON_IDS = PATROL_WEAPONS.filter((w) => w.unlock.tipo !== 'futuro').map((w) => w.id);
 
 /** Payload completo para conta admin com tudo desbloqueado. */
 export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail.com') {
@@ -37,7 +35,6 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
       streak_maior: 365,
       total_minutos: 5000,
       conquistas: ALL_ACHIEVEMENT_IDS,
-      bestiario_desbloqueados: ALL_BESTIARY_ENEMY_IDS,
     },
     cosmeticos: {
       moedas: 99_999,
@@ -60,11 +57,6 @@ export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail
       reps_series_padrao: 3,
       reps_repeticoes_padrao: 12,
       tutorial_visto: true,
-      patrol_armas: {
-        desbloqueados: ALL_WEAPON_IDS,
-        arco_equipado: 'arco_01',
-        espada_equipada: 'espada_01',
-      },
     },
     dados_salvos: {
       exercicios_desbloqueados: ALL_EXERCISE_SLUGS,

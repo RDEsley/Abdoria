@@ -18,7 +18,6 @@ import {
   xpLevelFromTotal,
 } from '../types/index.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
-import { countBestiaryUnlocks } from './bestiario.js';
 import { addWeeklyMoedas, addWeeklyXp } from './weekly-stats.js';
 
 /** Garante carteira de Dorias numérica no documento do usuário. */
@@ -85,7 +84,7 @@ export function projectedMoedaAfterXpSpend(user: UserRecord, xpCost: number): nu
 export function getDailyXpCapBreakdownForUser(user: UserRecord) {
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
   const achievementsUnlocked = user.gamificacao.conquistas?.length ?? 0;
-  return dailyXpCapBreakdown(level, countBestiaryUnlocks(user), achievementsUnlocked);
+  return dailyXpCapBreakdown(level, 0, achievementsUnlocked);
 }
 
 export function getDailyXpCapForUser(user: UserRecord): number {

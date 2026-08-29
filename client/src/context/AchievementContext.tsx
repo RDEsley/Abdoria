@@ -11,9 +11,7 @@ import {
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AchievementToast } from '@/components/gamification/AchievementToast';
-import type { AfkPingResponse } from '@/lib/api';
 import {
-  notifyBestiaryUnlocks,
   notifyPersonalRecords,
   notifyWorkoutAchievements,
   registerAchievementTrigger,
@@ -39,7 +37,6 @@ function createToastItem(payload: TriggerAchievementPayload): AchievementToastIt
     description: payload.description,
     type: payload.type ?? 'achievement',
     icon: payload.icon,
-    enemyId: payload.enemyId,
     customSoundUrl: payload.customSoundUrl,
   };
 }
@@ -98,16 +95,6 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
   }, [enqueue]);
 
   useEffect(() => {
-    const onAfkSync = (event: Event) => {
-      const detail = (event as CustomEvent<AfkPingResponse>).detail;
-      const novos = detail?.bestiario_novos ?? [];
-      if (novos.length > 0) notifyBestiaryUnlocks(novos);
-    };
-    window.addEventListener('abdoria:afk-sync', onAfkSync);
-    return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
-  }, []);
-
-  useEffect(() => {
     const onAchievements = (event: Event) => {
       const detail = (event as CustomEvent<UnlockedAchievementNotice[]>).detail;
       if (detail?.length) notifyWorkoutAchievements(detail);
@@ -157,8 +144,4 @@ export function useAchievement(): AchievementContextValue {
   return ctx;
 }
 
-export {
-  triggerAchievement,
-  notifyBestiaryUnlocks,
-  notifyWorkoutAchievements,
-} from '@/lib/achievement-notifications';
+export { triggerAchievement, notifyWorkoutAchievements } from '@/lib/achievement-notifications';

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { CalendarCheck2, Map } from 'lucide-react';
+import { CalendarCheck2 } from 'lucide-react';
 import { AtividadesCard } from '@/components/dashboard/AtividadesCard';
-import { CampaignFeed } from '@/components/dashboard/CampaignFeed';
+import { ReminderCenter } from '@/components/activities/ReminderCenter';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 
@@ -19,12 +19,7 @@ export function ActivitiesPage() {
 
       <AtividadesCard />
 
-      <section className="glass-card p-4">
-        <h2 className="game-section-title flex items-center gap-2">
-          <Map size={15} aria-hidden /> Mapa de campanha
-        </h2>
-        <CampaignFeed />
-      </section>
+      <ReminderCenter />
 
       <section className="glass-card p-4">
         <h2 className="game-section-title flex items-center gap-2">

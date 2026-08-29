@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Play, Timer } from 'lucide-react';
+import { Flame, Map, Pencil, Play, Timer } from 'lucide-react';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -28,6 +28,10 @@ import {
   xpProgressFromTotal,
 } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
+import { CampaignFeed } from '@/components/dashboard/CampaignFeed';
+import { HomeLayoutEditor } from '@/components/dashboard/HomeLayoutEditor';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { normalizeHomeOptionalSections, type HomeOptionalSectionId } from '@shared/home-layout';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -35,6 +39,16 @@ const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 export function DashboardPage() {
   const { stats, loading, refresh, loadRecommendations, user } = useApp();
   const copy = useCopy();
+  const { patchPreferences } = useUserPreferences();
+  const [editingHome, setEditingHome] = useState(false);
+  const optionalOrder = useMemo(() => {
+    const normalized = normalizeHomeOptionalSections(user?.preferencias?.home_secoes_ordem);
+    return [
+      ...normalized.filter((id) => id !== 'achievements'),
+      'achievements',
+    ] as HomeOptionalSectionId[];
+  }, [user?.preferencias?.home_secoes_ordem]);
+  const hiddenSections = user?.preferencias?.home_secoes_ocultas ?? [];
 
   useEffect(() => {
     if (!loading && stats) {
@@ -163,10 +177,6 @@ export function DashboardPage() {
         <WeekSummary />
       </motion.div>
 
-      <motion.div variants={item}>
-        <WeeklyChronicle />
-      </motion.div>
-
       <motion.div variants={item} className="grid grid-cols-2 gap-3">
         <StatTile
           icon={<Flame className="text-orange-500" size={22} />}
@@ -195,18 +205,60 @@ export function DashboardPage() {
         />
       </motion.div>
 
-      <motion.div variants={item}>
-        <AchievementsPreview
-          conquistas={stats.conquistas}
-          unlockedCount={stats.conquistas.filter((c) => c.desbloqueada).length}
-          total={stats.conquistas.length}
-        />
-      </motion.div>
-
       <motion.section variants={item} className="glass-card p-4">
-        <h3 className="game-section-title mb-3">Zonas da semana</h3>
-        <MuscleBarChart muscles={stats.musculos_semana} />
+        <h3 className="game-section-title mb-3 flex items-center gap-2">
+          <Map size={16} /> Mapa de campanha
+        </h3>
+        <CampaignFeed />
       </motion.section>
+
+      {optionalOrder
+        .filter((id) => id !== 'achievements' && !hiddenSections.includes(id))
+        .map((id) => (
+          <motion.div
+            key={id}
+            variants={item}
+            className={editingHome ? 'home-section-editable' : undefined}
+          >
+            {id === 'weekly_chronicle' ? (
+              <WeeklyChronicle />
+            ) : (
+              <section className="glass-card p-4">
+                <h3 className="game-section-title mb-3">Zonas da semana</h3>
+                <MuscleBarChart muscles={stats.musculos_semana} />
+              </section>
+            )}
+          </motion.div>
+        ))}
+
+      {!hiddenSections.includes('achievements') && (
+        <motion.div variants={item} className={editingHome ? 'home-section-editable' : undefined}>
+          <AchievementsPreview
+            conquistas={stats.conquistas}
+            unlockedCount={stats.conquistas.filter((c) => c.desbloqueada).length}
+            total={stats.conquistas.length}
+          />
+        </motion.div>
+      )}
+
+      {editingHome ? (
+        <HomeLayoutEditor
+          order={optionalOrder}
+          hidden={hiddenSections}
+          onOrderChange={(order) => void patchPreferences({ home_secoes_ordem: order })}
+          onHiddenChange={(hidden) => void patchPreferences({ home_secoes_ocultas: hidden })}
+          onClose={() => setEditingHome(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditingHome(true)}
+          className="mx-auto mt-1 inline-flex items-center gap-1.5 rounded-full border border-stone-200/70 bg-stone-100/50 px-3 py-2 text-[0.68rem] font-bold text-stone-500 transition hover:bg-white"
+          aria-label="Organizar tela de início"
+        >
+          <Pencil size={12} /> Editar Início
+        </button>
+      )}
     </motion.div>
   );
 }

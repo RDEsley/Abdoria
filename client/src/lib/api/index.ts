@@ -5,7 +5,6 @@ export * from './workouts';
 export * from './leaderboard';
 export * from './shop';
 export * from './meta';
-export * from './patrol-shop';
 export * from './admin';
 
 export type { MusculoPrincipal } from '@/types';

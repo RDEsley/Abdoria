@@ -3,9 +3,6 @@
  * Mantém contratos de API, exercícios, usuário e gamificação alinhados.
  */
 
-import type { AfkCombatState, AfkEnemyId } from '../afk/combat.js';
-import { DEFAULT_AFK_COMBAT } from '../afk/combat.js';
-import { SLIME_MATERIALS, type SlimeMaterialItemId } from '../afk/slime-materials.js';
 import type { EquipmentId } from '../equipment/index.js';
 
 export type NivelUsuario = 'iniciante' | 'intermediario' | 'avancado';
@@ -208,14 +205,6 @@ export interface UserPreferencias {
   esquema_recomendado?: boolean;
   preset_favorito_id?: string | null;
   tutorial_visto: boolean;
-  /** O usuário já abriu o RPG pelo botão flutuante ao menos uma vez. */
-  rpg_fab_descoberto?: boolean;
-  /** Visual do personagem na Exploração — escolhido na 1ª entrada, antes da arma. */
-  personagem_genero?: PersonagemGenero | null;
-  /** Estilo de combate na Exploração AFK. */
-  arma_preferida?: ArmaPreferida | null;
-  /** Arcos e espadas desbloqueados na Loja da Vila. */
-  patrol_armas?: import('../patrol/shop.js').PatrolArmasState;
   /** Não exibir aviso de máx. diário de XP ao iniciar treino. */
   ocultar_aviso_xp_diario?: boolean;
   /** Slugs sempre incluídos nos treinos sugeridos. */
@@ -246,8 +235,6 @@ export interface UserPreferencias {
   atividades_agenda?: import('../atividades.js').AtividadesAgenda;
   /** Só admins: true = aparecer nos rankings (padrão: oculto). */
   admin_visivel_ranking?: boolean;
-  /** Último dia (YYYY-MM-DD, SP) em que o roll diário de Frozen Streak acertou. */
-  afk_frozen_ultimo_dia?: string | null;
   /** Idioma da interface. Só 'pt' tem conteúdo hoje — campo já existe pra
       quando inglês/espanhol chegarem, sem precisar de migração. */
   idioma?: Idioma;
@@ -257,12 +244,6 @@ export interface UserPreferencias {
   /** false = não consumir Frozen Streak automaticamente ao perder um dia de
       treino (o streak quebra normalmente). Padrão: true (ativado). */
   frozen_streak_auto_usar?: boolean;
-  /** true = abrir a Exploração automaticamente ao entrar no app quando há
-      recompensa parada pra coletar. Padrão: false (o jogador entra na
-      Home e decide se quer abrir pelo botão). */
-  exploracao_auto_abrir?: boolean;
-  /** Revela todas as recompensas do baú em uma abertura curta. */
-  baus_abertura_rapida?: boolean;
   /** true = a seção Atividades do Início mostra o Bloco de Notas em vez da
       lista de atividades de bem-estar. Persistente — não volta sozinho
       pra Atividades. */
@@ -273,15 +254,16 @@ export interface UserPreferencias {
   /** Histórico de itens concluídos do Bloco de Notas (30 dias, separado da
       lista ativa — sobrevive a "Limpar tudo"/exclusão individual). */
   bloco_notas_historico?: import('../bloco-notas.js').NotaHistoricoItem[];
+  /** Ordem das seções opcionais da Home. As seções fixas não entram nesta lista. */
+  home_secoes_ordem?: import('../home-layout.js').HomeOptionalSectionId[];
+  /** Seções opcionais ocultadas pelo usuário no modo de organização da Home. */
+  home_secoes_ocultas?: import('../home-layout.js').HomeOptionalSectionId[];
+  /** Alertas personalizados criados na página Atividades. */
+  lembretes_personalizados?: import('../reminders.js').PersonalizedReminder[];
 }
 
 export type Idioma = 'pt' | 'en' | 'es';
 export type TomTexto = 'jogo' | 'normal';
-
-export type ArmaPreferida = 'arco' | 'espada' | 'magia';
-
-/** Visual do personagem (mascote) na Exploração. */
-export type PersonagemGenero = 'masculino' | 'feminino';
 
 // —— Perfil de treino (onboarding "personal trainer") ————————————————————————
 
@@ -377,13 +359,8 @@ export interface PlanoDia {
   enfase_abs: MusculoPrincipal | null;
 }
 
-export type InventoryItemId =
-  | 'frozen_streak'
-  | 'route_drink'
-  | 'bau_patrulha'
-  | 'exp_instant'
-  | 'doria_bag'
-  | SlimeMaterialItemId;
+/** IDs são abertos para preservar itens legados já salvos sem reativar o jogo removido. */
+export type InventoryItemId = string;
 
 export interface InventoryEntry {
   item_id: InventoryItemId;
@@ -393,152 +370,6 @@ export interface InventoryEntry {
 export interface Inventario {
   itens: InventoryEntry[];
 }
-
-export interface AfkPendingReward {
-  xp: number;
-  abdoria: number;
-  frozen_streaks: number;
-  route_drinks: number;
-  cosmetic_ids: string[];
-  /** Armas da Loja da Vila desbloqueadas via drop de boss. */
-  weapon_ids: string[];
-  /** EXP Instantâneo acumulado no baú AFK. */
-  exp_instant: number;
-  /** Bolsas de Dorias acumuladas no baú AFK. */
-  doria_bags: number;
-  /** Materiais exclusivos rolados de forma independente por espécie. */
-  material_items: Partial<Record<SlimeMaterialItemId, number>>;
-  titulo_secreto: boolean;
-  /** Quantidade de vezes que um inimigo dropou loot na exploração. */
-  drop_count: number;
-}
-
-export interface AfkState {
-  last_seen_at: string | null;
-  minutos_acumulados: number;
-  pending: AfkPendingReward;
-  combat?: AfkCombatState;
-  /** Presente na resposta de stats/meta quando há loot para coletar. */
-  has_rewards?: boolean;
-  /** Não-nulo enquanto o jogador está na vila (hub) — tempo não acumula
-      nesse período; volta a correr quando o jogador entra na floresta
-      de novo (ver pauseAfk/resumeAfk em server/src/services/afk.ts). */
-  paused_at?: string | null;
-}
-
-export type {
-  AfkCombatState,
-  AfkCombatSnapshot,
-  AfkEnemyId,
-  AfkEnemyTier,
-  AfkRegionCombatProgress,
-  PatrolWeaponDamageKind,
-} from '../afk/combat.js';
-export type { AfkRegionDefinition, AfkRegionId, AfkRegionProgress } from '../afk/regions.js';
-
-export type {
-  SlimeEyeStyle,
-  SlimeMouthStyle,
-  SlimeExtraAccessory,
-  SlimeAccessoryKind,
-  SlimeAppearance,
-} from '../afk/slime-appearance.js';
-
-export {
-  BESTIARY_CATEGORIES,
-  ALL_BESTIARY_ENEMY_IDS,
-  bestiaryEnemyLabel,
-  bestiaryEnemyTier,
-  isBestiaryEnemyId,
-} from '../afk/bestiary.js';
-export type { BestiaryCategory, BestiaryCategoryId } from '../afk/bestiary.js';
-export {
-  bestiaryDropsForEnemy,
-  buildBestiaryDropCatalog,
-  inferBestiaryDropsFromKill,
-  mergeBestiaryDropDiscoveries,
-  migrateBestiaryDropId,
-  snapshotBestiaryPending,
-} from '../afk/bestiary-drops.js';
-export type {
-  BestiaryDropId,
-  BestiaryDropDiscoveryMap,
-  BestiaryPendingSnapshot,
-} from '../afk/bestiary-drops.js';
-
-export {
-  AFK_BOSS_INTERVAL,
-  AFK_ENEMIES,
-  AFK_CRIT_CHANCE,
-  AFK_CRIT_CHANCE_ESPADA,
-  AFK_CRIT_CHANCE_ARCO,
-  AFK_CRIT_CHANCE_ARCO_MULTIPLIER,
-  AFK_CRIT_BONUS_ESPADA,
-  AFK_CRIT_BONUS_ARCO,
-  AFK_CRIT_STREAK_STEP_ARCO,
-  AFK_BOSS_LEGENDARY_WEAPON_ROLL,
-  patrolCritChance,
-  patrolCritBonus,
-  patrolCritDamage,
-  formatPatrolCritChancePercent,
-  AFK_GOLDEN_SLIME_MOEDA_BONUS,
-  AFK_GOLDEN_SLIME_CHANCE,
-  AFK_MAGIC_RABBIT_CHANCE,
-  AFK_ENIGMA_CHANCE,
-  AFK_BINARIO_CHANCE,
-  AFK_HERO_DAMAGE_ARCO,
-  AFK_HERO_DAMAGE_ESPADA,
-  AFK_KILLS_PER_MINUTE,
-  AFK_SEARCH_DURATION_MIN_MS,
-  AFK_SEARCH_DURATION_MAX_MS,
-  AFK_LEGENDARY_ROLL_BOSS,
-  AFK_LEGENDARY_ROLL_NORMAL,
-  DEFAULT_AFK_COMBAT,
-  buildCombatSnapshot,
-  getEnemyMaxHp,
-  hashCombatSeed,
-  pickNextEnemy,
-  resolveNextSpawn,
-  advanceKillsUntilBoss,
-  shouldSpawnBoss,
-  shouldSpawnElite,
-  shouldSpawnGoldenSlime,
-  getEnemyAttackDamage,
-  getEnemyAttackIntervalSeconds,
-  AFK_HERO_BASE_HP,
-  AFK_HERO_DEFEAT_SECONDS,
-  AFK_COMMON_ATTACK_SECONDS,
-  AFK_ELITE_ATTACK_SECONDS,
-  AFK_BOSS_ATTACK_SECONDS,
-  AFK_GOLDEN_SLIME_COIN_DROP,
-} from '../afk/combat.js';
-export {
-  AFK_REGIONS,
-  AFK_REGION_CYCLE_KILLS,
-  getAfkRegionById,
-  getPendingAfkStoryRegion,
-  getNextAfkRegion,
-  getAfkRegionProgress,
-} from '../afk/regions.js';
-export {
-  AFK_SKILL_NODES,
-  getAfkSkillNode,
-  getAfkSkillTotal,
-  canUnlockAfkSkill,
-  afkHeroMaxHp,
-  afkDefeatDurationMs,
-  afkSearchReductionMs,
-} from '../afk/skill-tree.js';
-export type { AfkSkillBranch, AfkSkillEffect, AfkSkillNodeDefinition } from '../afk/skill-tree.js';
-
-export {
-  resolvePortraitAppearance,
-  collectSlimeAccessories,
-  rollSlimeCosmetic,
-  accessoryDropMotion,
-  SLIME_COSMETIC_POOL,
-  SLIME_COSMETIC_CHANCE,
-} from '../afk/slime-appearance.js';
 
 export interface XpDiario {
   /** XP ganho hoje (exercícios, streak, conquistas, loja — teto unificado). */
@@ -579,12 +410,6 @@ export interface Gamificacao {
       recente por último) — usado pra mostrar "as 3 últimas" no preview do
       Início em vez de ordenar por raridade. */
   conquistas_ordem?: string[];
-  /** Inimigos derrotados pela primeira vez no Bestiário. */
-  bestiario_desbloqueados?: AfkEnemyId[];
-  /** Drops já obtidos de cada inimigo (para revelar loot no bestiário). */
-  bestiario_drops_descobertos?: Partial<
-    Record<AfkEnemyId, import('../afk/bestiary-drops.js').BestiaryDropId[]>
-  >;
 }
 
 export type CosmeticKind = 'moldura_loja' | 'titulo' | 'som' | 'efeito' | 'banner';
@@ -595,17 +420,11 @@ export type CosmeticUnlockType =
   | 'conquista'
   | 'moedas'
   | 'codigo'
-  | 'afk_secreto'
-  | 'golden_slime'
-  /** Drop do inimigo especial "?" (1 em 100.000). */
-  | 'enigma_slime'
-  /** Drop do Slime Binário (1 em 101.010). */
-  | 'slime_binario'
   /** Streak máxima (dias) atingida — ver streak_dias. */
   | 'streak'
-  /** Possuir qualquer item de raridade Mítica (arma ou cosmético). */
+  /** Possuir qualquer cosmético de raridade Mítica. */
   | 'item_mitico'
-  /** Possuir o trio Flamejante: Magia de Fogo + Arco Flamejante + Espada Flamejante. */
+  /** Regra legada mantida para dados cosméticos já persistidos. */
   | 'conjunto_flamejante';
 
 export type CosmeticRarity = 'comum' | 'raro' | 'epico' | 'lendario' | 'mitico' | 'secreto';
@@ -742,86 +561,6 @@ export interface CosmeticsResponse extends ShopResponse {
   moedas_por_nivel: number;
 }
 
-export type {
-  PatrolWeaponKind,
-  PatrolWeaponRarity,
-  PatrolWeaponUnlock,
-  PatrolWeaponDefinition,
-  PatrolArmasState,
-} from '../patrol/shop.js';
-
-export {
-  DEFAULT_ARCO_ID,
-  DEFAULT_ESPADA_ID,
-  PATROL_WEAPONS,
-  PATROL_WEAPON_BY_ID,
-  PATROL_WEAPON_RARITY_LABELS,
-  PATROL_LEGENDARY_WEAPON_IDS,
-  PATROL_MYTHIC_WEAPON_IDS,
-  PATROL_SECRET_WEAPON_IDS,
-  SPELL_RARE_DROP_MULTIPLIER,
-  SPELL_REWARD_QUANTITY_MULTIPLIER_SECRET,
-  patrolWeaponsByKind,
-  patrolHeroDamage,
-  resolvePatrolArmas,
-  spellRareDropMultiplier,
-  spellRewardQuantityMultiplier,
-} from '../patrol/shop.js';
-
-export {
-  AFK_EXPLORATION_DROP_EXCLUDED_COSMETIC_IDS,
-  AFK_SECRET_WEAPON_ROLL_EXACT,
-  AFK_SECRET_WEAPON_GATE_MOD,
-  AFK_ROUTE_DRINK_DROP_THRESHOLD,
-  isExplorationLegendaryCosmeticDrop,
-} from '../afk/exploration-drops.js';
-
-export {
-  AFK_LEVEL10_BOW_DAMAGE_SPECIAL,
-  AFK_LEVEL10_SWORD_DAMAGE_SPECIAL,
-  AFK_LEVEL10_BOW_CRIT_CHANCE,
-  AFK_LEVEL10_SWORD_CRIT_CHANCE,
-  isPatrolHitKillTarget,
-  isPatrolSpecialTarget,
-  isPatrolLevel10Weapon,
-  resolvePatrolCritChancePercent,
-  resolvePatrolBaseDamage,
-  resolvePatrolAttackDamage,
-} from '../patrol/damage.js';
-export type { PatrolAttackResult } from '../patrol/damage.js';
-
-export interface PatrolShopCatalogItem {
-  id: string;
-  kind: import('../patrol/shop.js').PatrolWeaponKind;
-  nivel: number;
-  nome: string;
-  descricao: string;
-  raridade: import('../patrol/shop.js').PatrolWeaponRarity;
-  desbloqueada: boolean;
-  equipada: boolean;
-  pode_comprar: boolean;
-  futuro: boolean;
-  unlock_label: string;
-  unlock: import('../patrol/shop.js').PatrolWeaponUnlock;
-  /** @deprecated Use {@link dano_base}. */
-  dano_bonus: number;
-  dano_base: number;
-  dano_total: number;
-  crit_bonus: number;
-  dano_critico: number;
-  chance_critico: number;
-}
-
-export interface PatrolShopResponse {
-  abdoria: number;
-  armas: import('../patrol/shop.js').PatrolArmasState;
-  arma_preferida: ArmaPreferida;
-  arcos: PatrolShopCatalogItem[];
-  espadas: PatrolShopCatalogItem[];
-  magias: PatrolShopCatalogItem[];
-  materials: import('../afk/slime-materials.js').SlimeMaterialStockItem[];
-}
-
 export interface UpdateUserDadosResponse {
   user: IUserDocument;
   xp_ganho_habilidades: number;
@@ -874,8 +613,6 @@ export const XP_DAILY_CAP_BASE = 100;
 export const XP_DAILY_CAP_PER_LEVEL = 1;
 /** Limite diário no nível 1 (base + 1× bônus). */
 export const XP_DAILY_CAP = XP_DAILY_CAP_BASE + XP_DAILY_CAP_PER_LEVEL;
-/** Bônus permanente de teto diário por inimigo único no Bestiário. */
-export const XP_DAILY_CAP_PER_BESTIARY = 1;
 /** XP diário por exercício concluído (treino com mín. 3 exercícios). */
 export const XP_DAILY_PER_EXERCISE = 20;
 /** Mínimo de exercícios no treino para contar XP diário. */
@@ -895,10 +632,10 @@ export const XP_DAILY_CAP_PER_ACHIEVEMENT = 2;
 
 export function dailyXpCapForUser(
   level: number,
-  bestiaryUnlockedCount = 0,
+  _legacyBestiaryUnlockedCount = 0,
   achievementUnlockedCount = 0,
 ): number {
-  return dailyXpCapBreakdown(level, bestiaryUnlockedCount, achievementUnlockedCount).total;
+  return dailyXpCapBreakdown(level, _legacyBestiaryUnlockedCount, achievementUnlockedCount).total;
 }
 
 export interface DailyXpCapBreakdown {
@@ -912,15 +649,14 @@ export interface DailyXpCapBreakdown {
 /** Componentes permanentes do teto diário de XP. */
 export function dailyXpCapBreakdown(
   level: number,
-  bestiaryUnlockedCount = 0,
+  _legacyBestiaryUnlockedCount = 0,
   achievementUnlockedCount = 0,
 ): DailyXpCapBreakdown {
   const safeLevel = Math.max(1, Math.floor(level));
-  const safeBestiary = Math.max(0, Math.floor(bestiaryUnlockedCount));
   const safeAchievements = Math.max(0, Math.floor(achievementUnlockedCount));
   const base = XP_DAILY_CAP_BASE;
   const bonus_nivel = safeLevel * XP_DAILY_CAP_PER_LEVEL;
-  const bonus_bestiario = safeBestiary * XP_DAILY_CAP_PER_BESTIARY;
+  const bonus_bestiario = 0;
   const bonus_conquista = safeAchievements * XP_DAILY_CAP_PER_ACHIEVEMENT;
   return {
     base,
@@ -933,9 +669,6 @@ export function dailyXpCapBreakdown(
 
 export function formatDailyXpCapBreakdown(breakdown: DailyXpCapBreakdown): string {
   const parts = [`${breakdown.base} base`, `+${breakdown.bonus_nivel} nível`];
-  if (breakdown.bonus_bestiario > 0) {
-    parts.push(`+${breakdown.bonus_bestiario} bestiário`);
-  }
   if (breakdown.bonus_conquista > 0) {
     parts.push(`+${breakdown.bonus_conquista} conquistas`);
   }
@@ -985,118 +718,21 @@ export const ENERGY_DRINK_ITEM_ID = FROZEN_STREAK_ITEM_ID;
 export const ENERGY_DRINK_LABEL = FROZEN_STREAK_LABEL;
 /** @deprecated */
 export const ENERGY_DRINK_SHOP_PRICE = FROZEN_STREAK_SHOP_PRICE;
-export const ROUTE_DRINK_ITEM_ID: InventoryItemId = 'route_drink';
-export const ROUTE_DRINK_HOURS = 1;
-export const ROUTE_DRINK_LABEL = 'Route Drink';
-export const ROUTE_DRINK_SHOP_PRICE = 40;
-/** @deprecated Use {@link AFK_ROUTE_DRINK_DROP_THRESHOLD} from shared/afk/exploration-drops.js */
-export const AFK_ROUTE_DRINK_DROP_CHANCE = 0.5;
-
-export const EXP_INSTANT_ITEM_ID: InventoryItemId = 'exp_instant';
-export const EXP_INSTANT_LABEL = 'EXP Instantâneo';
-export const EXP_INSTANT_XP = 10;
-export const EXP_INSTANT_SHOP_PRICE = 12;
-
-export const DORIA_BAG_ITEM_ID: InventoryItemId = 'doria_bag';
-export const DORIA_BAG_LABEL = 'Bolsa de Coins';
-export const DORIA_BAG_MIN = 1;
-export const DORIA_BAG_MAX = 10;
-export const DORIA_BAG_SHOP_PRICE = 18;
-
-/** @deprecated Use {@link AFK_SECRET_ROLL_EXACT} from shared/afk/exploration-drops.js */
-export const AFK_SECRET_ROLL_EXACT = 9999;
-
-/** Cosméticos exclusivos do Golden Slime — ocultos da loja. */
-export const GOLDEN_SLIME_SECRET_COSMETIC_IDS = [
-  'borda_aurum_slime',
-  'fundo_ouro_liquido',
-  'titulo_toque_dourado',
-] as const;
-
 /** Moldura exclusiva de administradores — nunca listada pra não-admins
     (nem bloqueada); concedida/removida automaticamente conforme o papel. */
 export const ADMIN_MOLDURA_ID = 'borda_admin';
 
 /** Itens que nunca aparecem na Loja Evolyn nem no catálogo bloqueado. */
-/** Drops raríssimos dos inimigos especiais "?" e Slime Binário — mesmo tratamento
-    do Golden Slime: escondidos do catálogo até serem conquistados, pra não
-    entregar a surpresa. */
-export const RARE_ENEMY_SECRET_COSMETIC_IDS = [
-  'titulo_enigma',
-  'borda_binario',
-  'titulo_codigo_evolucao',
-] as const;
-
-export const SHOP_HIDDEN_COSMETIC_IDS = [
-  'titulo_secreto',
-  'titulo_dono_do_jogo',
-  ADMIN_MOLDURA_ID,
-  ...GOLDEN_SLIME_SECRET_COSMETIC_IDS,
-  ...RARE_ENEMY_SECRET_COSMETIC_IDS,
-] as const;
-
-export function isGoldenSlimeSecretCosmetic(id: string): boolean {
-  return (GOLDEN_SLIME_SECRET_COSMETIC_IDS as readonly string[]).includes(id);
-}
+export const SHOP_HIDDEN_COSMETIC_IDS = ['titulo_dono_do_jogo', ADMIN_MOLDURA_ID] as const;
 
 export function isShopHiddenCosmetic(id: string): boolean {
   return (SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(id);
 }
 
 export const INVENTORY_STACK_CAP = 99;
-export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [
-  FROZEN_STREAK_ITEM_ID,
-  ROUTE_DRINK_ITEM_ID,
-  EXP_INSTANT_ITEM_ID,
-  ...SLIME_MATERIALS.map((material) => material.id),
-];
-export const PATROL_CACHE_ITEM_ID: InventoryItemId = 'bau_patrulha';
-/** Horas de Exploração AFK concedidas ao usar o baú. */
-export const PATROL_CACHE_HOURS = 6;
-export const PATROL_CACHE_SHOP_PRICE = 50;
-export const PATROL_CACHE_LABEL = 'Baú da Exploração';
-/** @deprecated Loot não é mais por intervalo de tempo — use AFK_KILL_DROP_CHANCE_COMMON. */
-export const AFK_REWARD_INTERVAL_MINUTES = 15;
-export const AFK_KILL_DROP_CHANCE_COMMON = 4;
-export const AFK_KILL_DROP_CHANCE_ELITE = 7;
-export const AFK_KILL_DROP_CHANCE_BOSS = 35;
-/** @deprecated use tier-specific constants */
-export const AFK_KILL_DROP_CHANCE = AFK_KILL_DROP_CHANCE_COMMON;
-export const AFK_MAX_MINUTES = 24 * 60;
-
-export interface AfkKillDropChances {
-  common: number;
-  elite: number;
-  boss: number;
-}
-
-export const AFK_KILL_DROP_CHANCES: AfkKillDropChances = {
-  common: AFK_KILL_DROP_CHANCE_COMMON,
-  elite: AFK_KILL_DROP_CHANCE_ELITE,
-  boss: AFK_KILL_DROP_CHANCE_BOSS,
-};
+export const INVENTORY_STACK_CAPPED_ITEM_IDS: InventoryItemId[] = [FROZEN_STREAK_ITEM_ID];
 
 export const DEFAULT_INVENTARIO: Inventario = { itens: [] };
-
-export const DEFAULT_AFK_STATE: AfkState = {
-  last_seen_at: null,
-  minutos_acumulados: 0,
-  paused_at: null,
-  pending: {
-    xp: 0,
-    abdoria: 0,
-    frozen_streaks: 0,
-    route_drinks: 0,
-    cosmetic_ids: [],
-    weapon_ids: [],
-    exp_instant: 0,
-    doria_bags: 0,
-    material_items: {},
-    titulo_secreto: false,
-    drop_count: 0,
-  },
-  combat: { ...DEFAULT_AFK_COMBAT },
-};
 
 export const DEFAULT_XP_DIARIO: XpDiario = {
   ganho_hoje: 0,
@@ -1241,7 +877,6 @@ export interface IUser {
   dados_salvos?: UserDadosSalvos;
   xp_diario: XpDiario;
   inventario?: Inventario;
-  afk?: AfkState;
   onboarding_completed: boolean;
   terms_accepted_at?: string | null;
   muscle_map_reset_at?: string | null;
@@ -1381,18 +1016,11 @@ export interface DashboardStats {
   xp_diario_cap_bonus_conquista: number;
   xp_data_reset: string;
   inventario: Inventario;
-  afk: AfkState;
   frozen_streak_count: number;
-  route_drink_count: number;
-  patrol_cache_count: number;
-  exp_instant_count: number;
-  doria_bag_count: number;
   /** Toast único: Frozen Streak salvou a ofensiva no último sync. */
   streak_frozen_notice?: boolean;
   /** Oferta ativa de "pagar pra recuperar o streak perdido" (ver shared/streak/recovery.ts). */
   streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;
-  bestiario_desbloqueados: AfkEnemyId[];
-  bestiario_bonus_cap: number;
   conquistas: Achievement[];
   musculos_semana: Record<MusculoPrincipal, number>;
   evolucao_mensal: { mes: string; minutos: number }[];
@@ -1877,7 +1505,6 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   sfx_volume: 0.7,
   confetti_animacoes_habilitadas: true,
   frozen_streak_auto_usar: true,
-  baus_abertura_rapida: false,
   idioma: 'pt',
   tom_texto: 'normal',
   ciclo_treinos: ['A', 'B', 'C'],
@@ -1886,9 +1513,6 @@ export const DEFAULT_PREFERENCIAS: UserPreferencias = {
   reps_repeticoes_padrao: 12,
   preset_favorito_id: null,
   tutorial_visto: false,
-  rpg_fab_descoberto: false,
-  personagem_genero: null,
-  arma_preferida: null,
   ocultar_aviso_xp_diario: false,
   exercicios_fixos: [],
   exercicios_nao_recomendar: [],
@@ -2120,23 +1744,6 @@ export function getExerciseParamsForNivel(
 }
 
 export { EXERCISE_NOME_PT, formatExerciseName, resolveExerciseNomePt } from './exercise-display.js';
-export {
-  SLIME_MATERIALS,
-  SLIME_MATERIAL_BY_ID,
-  SLIME_MATERIAL_BY_ENEMY_ID,
-  SLIME_MATERIAL_DROP_CHANCE_PCT,
-  SLIME_MATERIAL_SELL_PRICE,
-  SPECIAL_SLIME_MATERIAL_DROP_CHANCE_PCT,
-  SPECIAL_SLIME_MATERIAL_SELL_PRICE,
-  getSlimeMaterialForEnemy,
-  isSlimeMaterialItemId,
-} from '../afk/slime-materials.js';
-export type {
-  SlimeMaterialDefinition,
-  SlimeMaterialItemId,
-  SlimeMaterialRarity,
-  SlimeMaterialStockItem,
-} from '../afk/slime-materials.js';
 export type { EquipmentId } from '../equipment/index.js';
 export {
   ALWAYS_AVAILABLE_PUSH_UP_SLUGS,

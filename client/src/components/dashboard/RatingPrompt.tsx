@@ -31,7 +31,7 @@ export function RatingPrompt() {
     (stats?.streak_atual ?? 0) >= 3;
 
   // Trava a decisão de mostrar uma vez satisfeita — sem isso, qualquer
-  // atualização passageira de `stats`/`user` em segundo plano (poll do AFK,
+  // atualização passageira de `stats`/`user` em segundo plano,
   // refresh de contexto) recalculava `shouldShow` a cada render e podia
   // desmontar o modal no meio da digitação, apagando o comentário.
   const [visible, setVisible] = useState(false);

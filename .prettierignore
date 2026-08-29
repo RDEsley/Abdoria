@@ -9,5 +9,6 @@ client/package-lock.json
 server/package-lock.json
 supabase/migrations
 docs/private
+Exploracao-rpg-afk
 .github
 *.md

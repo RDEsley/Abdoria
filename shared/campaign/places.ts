@@ -15,7 +15,7 @@ export interface CampaignPlace {
 export const CAMPAIGN_PLACES: CampaignPlace[] = [
   // Base (nível 1)
   { id: 'pedraverde', nome: 'Vila de Pedraverde', artigo: 'a' },
-  { id: 'bosque-slimes', nome: 'Bosque dos Slimes', artigo: 'o' },
+  { id: 'bosque-sereno', nome: 'Bosque Sereno', artigo: 'o' },
   { id: 'estrada-sal', nome: 'Estrada do Sal', artigo: 'a' },
   { id: 'brumafunda', nome: 'Moinho de Brumafunda', artigo: 'o' },
   { id: 'poco-dorias', nome: 'Poço das Moedas', artigo: 'o' },

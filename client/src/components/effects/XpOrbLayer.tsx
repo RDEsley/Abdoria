@@ -10,7 +10,7 @@ import {
 } from '@/lib/xp-orbs';
 
 /** Teto de bolinhas por leva — ganhos grandes (ex.: coletar horas de
-    Exploração acumuladas) escalam o valor de cada bolinha em vez de spawnar
+    recompensas acumuladas) escalam o valor de cada bolinha em vez de spawnar
     centenas delas. */
 const MAX_ORBS = 14;
 const ORB_TRAVEL_SEC = 0.62;

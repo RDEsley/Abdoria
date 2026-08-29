@@ -14,6 +14,7 @@ import {
 } from '@dnd-kit/sortable';
 import { SortableExerciseItem } from '@/components/builder/SortableExerciseItem';
 import type { IExerciseDocument, WorkoutQueueItem } from '@/types';
+import { ListChecks } from 'lucide-react';
 
 interface Props {
   queue: WorkoutQueueItem[];
@@ -45,22 +46,35 @@ export function WorkoutQueueList({
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-      <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-        <ul className="flex flex-col gap-2">
-          {queue.map((item, index) => (
-            <SortableExerciseItem
-              key={sortableIds[index]}
-              id={sortableIds[index]}
-              item={item}
-              index={index}
-              exercise={exerciseMap.get(item.slug)}
-              onConfigure={() => onConfigureExercise(index)}
-              onRemove={onRemove ? () => onRemove(index) : undefined}
-            />
-          ))}
-        </ul>
-      </SortableContext>
-    </DndContext>
+    <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-b from-emerald-50/80 to-white shadow-[0_12px_36px_rgba(16,185,129,0.08)]">
+      <div className="flex items-center gap-3 border-b border-emerald-100/80 px-4 py-3">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
+          <ListChecks size={18} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black text-stone-900">Fila do treino</p>
+          <p className="text-[0.68rem] font-semibold text-stone-500">
+            {queue.length} {queue.length === 1 ? 'exercício' : 'exercícios'} · segure para reordenar
+          </p>
+        </div>
+      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+          <ul className="flex flex-col gap-2 p-3">
+            {queue.map((item, index) => (
+              <SortableExerciseItem
+                key={sortableIds[index]}
+                id={sortableIds[index]}
+                item={item}
+                index={index}
+                exercise={exerciseMap.get(item.slug)}
+                onConfigure={() => onConfigureExercise(index)}
+                onRemove={onRemove ? () => onRemove(index) : undefined}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
+    </div>
   );
 }

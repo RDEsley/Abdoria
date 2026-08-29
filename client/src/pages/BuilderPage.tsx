@@ -911,8 +911,7 @@ export function BuilderPage() {
             />
           </section>
 
-          <section id="builder-queue-preview" className="glass-card p-4">
-            <h3 className="game-section-title mb-3">Fila do treino</h3>
+          <section id="builder-queue-preview">
             <WorkoutQueueList
               queue={activeQueue}
               sortableIds={sortableIds}
@@ -958,8 +957,7 @@ export function BuilderPage() {
 
           <ExercisePicker exercises={exercises} loading={exercisesLoading} onAdd={addExercise} />
 
-          <section id="builder-queue" className="glass-card p-4">
-            <h3 className="game-section-title">Ordem dos exercícios</h3>
+          <section id="builder-queue">
             <WorkoutQueueList
               queue={activeQueue}
               sortableIds={sortableIds}

@@ -4,7 +4,7 @@ import {
   Dumbbell,
   Flame,
   ListChecks,
-  Swords,
+  Sprout,
   Target,
   Trophy,
 } from 'lucide-react';
@@ -12,7 +12,7 @@ import type { TutorialSlide } from '@/components/tutorial/TutorialOverlay';
 
 // Ordem intencional: primeiro o que o app É (treino, missão diária,
 // atividade no descanso, calendário) — só depois a camada de jogo (XP,
-// moedas, exploração, ranking). Quem entende o app usa melhor o jogo.
+// moedas, MyPlant e ranking). Quem entende o app usa melhor a experiência.
 export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: Dumbbell,
@@ -45,9 +45,9 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
     body: 'Ganhe Moedas treinando e use na aba Áudio pra desbloquear pacotes de som. Molduras e títulos vêm de conquistas, códigos e eventos.',
   },
   {
-    icon: Swords,
-    title: 'Exploração sempre à mão',
-    body: 'Abra Exploração pela barra principal. Sua patrulha luta em segundo plano, evolui e traz recompensas mesmo quando você sai do app.',
+    icon: Sprout,
+    title: 'MyPlant está crescendo',
+    body: 'Acesse MyPlant pela barra principal. Uma experiência totalmente nova chegará em breve.',
   },
   {
     icon: Trophy,

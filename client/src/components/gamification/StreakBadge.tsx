@@ -3,9 +3,10 @@ import { Flame, Snowflake } from 'lucide-react';
 interface Props {
   streak: number;
   frozen?: boolean;
+  securedToday?: boolean;
 }
 
-export function StreakBadge({ streak, frozen = false }: Props) {
+export function StreakBadge({ streak, frozen = false, securedToday = false }: Props) {
   const tier = frozen
     ? 'frozen'
     : streak >= 30
@@ -26,9 +27,13 @@ export function StreakBadge({ streak, frozen = false }: Props) {
       {frozen ? (
         <Snowflake size={14} className="game-streak__snowflake" aria-hidden />
       ) : (
-        <Flame size={14} className={streak > 0 ? 'game-streak__flame--on' : undefined} />
+        <Flame
+          size={14}
+          fill={securedToday ? 'currentColor' : 'none'}
+          className={securedToday ? 'game-streak__flame--on' : 'game-streak__flame--empty'}
+        />
       )}
-      <span className="game-streak__label">Streak · {streak}d</span>
+      <span className="game-streak__label">Streak {streak}</span>
       {frozen && <span className="game-streak__ice-crust" aria-hidden />}
       {frozen && <span className="sr-only"> (congelado)</span>}
     </span>

@@ -9,20 +9,8 @@ import { describe, it } from 'vitest';
  * refatorada.
  */
 describe('scripts de verificação (scripts/dev)', () => {
-  it('verify-afk: drops por kill, cap 24h, combate e boss', async () => {
-    await import('../../scripts/dev/verify-afk.ts');
-  });
-
-  it('verify-patrol-weapons: catálogo de armas, dano, crítico e drops', async () => {
-    await import('../../scripts/dev/verify-patrol-weapons.ts');
-  });
-
   it('verify-equipment-filter: equipamento marcado + slug bloqueado nas recomendações', async () => {
     await import('../../scripts/dev/verify-equipment-filter.ts');
-  });
-
-  it('verify-inventory-bestiario: stack cap e drops de bestiário', async () => {
-    await import('../../scripts/dev/verify-inventory-bestiario.ts');
   });
 
   it('validate-equipment: exercícios gated por equipamento no seed', async () => {

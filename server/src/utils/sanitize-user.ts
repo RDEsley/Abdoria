@@ -60,7 +60,7 @@ type PublicProfileExtras = Pick<
 >;
 
 /** Perfil público de outro usuário (ranking, amigos) — whitelist positiva, nunca
-    email/idade/peso/preferências/dados_salvos/inventário/afk/perfil ou plano de treino. */
+    email/idade/peso/preferências/dados_salvos/inventário/perfil ou plano de treino. */
 export function sanitizePublicProfile(
   user: UserRecord,
   podio: { first: number; second: number; third: number },

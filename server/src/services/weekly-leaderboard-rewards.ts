@@ -57,7 +57,7 @@ export async function processWeeklyLeaderboardRewardsIfDue(): Promise<number> {
     // passarem pelo check antes de qualquer uma commitar).
     if (!(await LeaderboardWeekPayout.claim(key))) continue;
 
-    const all = await User.find(leaderboardFilter, { skipAfk: true });
+    const all = await User.find(leaderboardFilter);
     const ranked = all
       .map((user) => ({ user, value: weeklyMetricValue(user, metric, payoutWeek) }))
       .filter((row) => row.value > 0)
