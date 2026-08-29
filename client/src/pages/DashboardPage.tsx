@@ -98,7 +98,7 @@ export function DashboardPage() {
 
       <motion.div
         variants={item}
-        className={`game-quest-card ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
+        className={`game-quest-card dashboard-mission ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
       >
         <span className="game-quest-card__badge">
           {stats.treino_hoje
@@ -168,7 +168,7 @@ export function DashboardPage() {
         <WeekSummary />
       </motion.div>
 
-      <motion.div variants={item} className="grid grid-cols-2 gap-3">
+      <motion.div variants={item} className="dashboard-quick-stats grid grid-cols-2 gap-3">
         <StatTile
           icon={<Flame className="text-orange-500" size={22} />}
           title="Recorde"
@@ -196,14 +196,20 @@ export function DashboardPage() {
         />
       </motion.div>
 
-      <motion.section variants={item} className="glass-card p-4">
+      <motion.section
+        variants={item}
+        className="glass-card dashboard-surface dashboard-surface--campaign p-4"
+      >
         <h3 className="game-section-title mb-3 flex items-center gap-2">
           <Map size={16} /> Mapa de campanha
         </h3>
         <CampaignFeed />
       </motion.section>
 
-      <motion.section variants={item} className="glass-card p-4">
+      <motion.section
+        variants={item}
+        className="glass-card dashboard-surface dashboard-surface--core p-4"
+      >
         <h3 className="game-section-title mb-3">Evolução do core</h3>
         <MuscleBarChart muscles={stats.musculos_semana} />
       </motion.section>

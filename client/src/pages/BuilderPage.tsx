@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, Bookmark, GraduationCap, Trophy } from 'lucide-react';
+import { Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { resolveFila } from '@shared/atividades';
@@ -853,14 +853,19 @@ export function BuilderPage() {
         <div className="flex gap-2" aria-label="Atalhos da missão">
           <Link
             to="/biblioteca"
-            className="game-icon-btn"
+            className="game-icon-btn game-icon-btn--header"
             aria-label="Abrir biblioteca"
             title="Biblioteca"
           >
-            <BookOpen size={20} aria-hidden />
+            <LibraryBig size={20} aria-hidden />
           </Link>
-          <Link to="/ranking" className="game-icon-btn" aria-label="Abrir ranking" title="Ranking">
-            <Trophy size={20} aria-hidden />
+          <Link
+            to="/ranking"
+            className="game-icon-btn game-icon-btn--header"
+            aria-label="Abrir ranking"
+            title="Ranking"
+          >
+            <Podium size={20} aria-hidden />
           </Link>
         </div>
       </GamePageHeader>

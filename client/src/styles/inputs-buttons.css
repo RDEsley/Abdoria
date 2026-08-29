@@ -23,23 +23,45 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem;
   color: var(--game-ink);
   background: #fff;
-  border: var(--border-card);
-  border-radius: var(--radius-chip);
-  box-shadow: var(--shadow-resting);
+  border: 1px solid rgba(28, 25, 23, 0.14);
+  border-radius: 0.9rem;
+  box-shadow: 0 2px 8px rgba(28, 25, 23, 0.06);
   transition:
     background 0.15s ease,
-    transform 0.08s ease;
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
 }
 
 .game-icon-btn:hover {
-  background: #f5f5f4;
+  background: #f8faf9;
+  border-color: rgba(5, 150, 105, 0.28);
+  box-shadow: 0 4px 12px rgba(28, 25, 23, 0.08);
 }
 
-.game-icon-btn:active {
-  transform: scale(0.96);
+.game-icon-btn:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.28);
+  outline-offset: 2px;
+}
+
+.game-icon-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.game-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.game-icon-btn--header {
+  color: #176b5b;
+  background: #f4fbf7;
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 /* Badge de contagem no botão de entrada do admin (denúncias pendentes) —

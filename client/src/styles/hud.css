@@ -213,12 +213,12 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 2.15rem;
-  height: 2.15rem;
+  width: 2.75rem;
+  height: 2.75rem;
   margin-top: 0.1rem;
   color: var(--game-ink);
   background: #fff;
-  border: 2px solid var(--game-ink);
+  border: 1px solid rgba(28, 25, 23, 0.16);
   border-radius: 0.6rem;
   box-shadow: 2px 2px 0 rgba(28, 25, 23, 0.35);
   transition:
@@ -234,6 +234,11 @@
 .game-page-header__back:active {
   transform: scale(0.94);
   box-shadow: 1px 1px 0 rgba(28, 25, 23, 0.35);
+}
+
+.game-page-header__back:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.28);
+  outline-offset: 2px;
 }
 
 /* Variante "fechar" (X) — circular, mesmo padrão dos botões de fechar de

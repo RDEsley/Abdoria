@@ -198,10 +198,13 @@ export function ProfilePage() {
   ];
 
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex items-start justify-between gap-3">
+    <div className="profile-page flex flex-col gap-5">
+      <header className="profile-page__header flex items-start justify-between gap-3">
         <GamePageHeader eyebrow={copy('perfil_eyebrow')} title="Perfil" />
-        <div className="relative flex shrink-0 gap-2">
+        <div
+          className="profile-page__toolbar relative flex shrink-0 gap-2"
+          aria-label="Ações do perfil"
+        >
           <button
             type="button"
             className="game-icon-btn"
@@ -223,7 +226,7 @@ export function ProfilePage() {
             <MoreHorizontal size={20} aria-hidden />
           </button>
           {showMoreActions && (
-            <div className="absolute right-0 top-12 z-30 min-w-52 rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
+            <div className="profile-page__more-menu absolute right-0 top-12 z-30 min-w-52 p-2">
               <button
                 type="button"
                 className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-stone-700 hover:bg-stone-100"
