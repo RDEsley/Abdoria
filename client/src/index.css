@@ -25,23 +25,6 @@
 @import './styles/profile-social.css';
 @import './styles/tutorial.css';
 @import './styles/onboarding.css';
-@keyframes home-section-wiggle {
-  0%,
-  100% {
-    transform: rotate(-0.25deg);
-  }
-  50% {
-    transform: rotate(0.25deg);
-  }
-}
-
-.home-section-editable {
-  animation: home-section-wiggle 0.5s ease-in-out infinite;
-  outline: 2px dashed rgb(16 185 129 / 0.35);
-  outline-offset: 3px;
-  border-radius: 1.25rem;
-}
-
 .reminder-card--calm {
   border-color: rgb(186 230 253);
   background: linear-gradient(135deg, rgb(240 249 255), rgb(224 242 254));
@@ -82,10 +65,4 @@
   inline-size: 1.25rem;
   block-size: 1.25rem;
   accent-color: rgb(5 150 105);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-section-editable {
-    animation: none;
-  }
 }

@@ -9,6 +9,7 @@ import type {
   TreinoSugerido,
 } from '../types/index.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
+import { doseForAbProfile, exerciseCountForProfile } from '../../../shared/ab-training-profile.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
@@ -294,7 +295,61 @@ export async function getSuggestedWorkout(
       forceDia: options.forceDia,
     });
   }
-  return recommendWorkout(user, options);
+  const profile = user.ab_training_profile_v2;
+  if (!profile) return recommendWorkout(user, options);
+
+  const target = exerciseCountForProfile(profile);
+  const suggested = await recommendWorkout(user, { ...options, extraCount: target * 3 });
+  if (!suggested) return null;
+  const catalog = await findExercisesForUserDocument(user);
+  const coreCatalog = catalog.filter((exercise) => exercise.grupos.includes('abdomen'));
+  const coreSlugs = new Set(coreCatalog.map((exercise) => exercise.slug));
+  const pinned = new Set(pinnedSlugs(user));
+  const pinnedExercises = suggested.exercicios.filter((exercise) => pinned.has(exercise.slug));
+  const baseCandidates = [
+    ...suggested.exercicios.filter(
+      (exercise) => !pinned.has(exercise.slug) && coreSlugs.has(exercise.slug),
+    ),
+    ...coreCatalog.map((exercise) => ({
+      slug: exercise.slug,
+      nome: formatExerciseName(exercise),
+      series: 3,
+      modo: (exercise.modo === 'reps' ? 'reps' : 'tempo') as ModoExercicio,
+      repeticoes: exercise.repeticoes_intermediario ?? 12,
+      tempo_seg: exercise.tempo_seg_intermediario ?? exercise.tempo_recomendado ?? 30,
+      descanso_seg: exercise.descanso_seg_intermediario ?? 25,
+    })),
+  ];
+  const seen = new Set<string>();
+  const baseExercises = baseCandidates
+    .filter(
+      (exercise) =>
+        !pinned.has(exercise.slug) && !seen.has(exercise.slug) && seen.add(exercise.slug),
+    )
+    .slice(0, target);
+  const series = { leve: 2, moderado: 3, evolyn: 4 }[profile.intensity];
+  const rest = { leve: 45, moderado: 30, evolyn: 20 }[profile.intensity];
+  const exercicios = [...pinnedExercises, ...baseExercises].map((exercise) => ({
+    ...exercise,
+    series,
+    descanso_seg: rest,
+    repeticoes:
+      exercise.modo === 'reps'
+        ? doseForAbProfile(profile, 'reps', exercise.repeticoes ?? 12)
+        : undefined,
+    tempo_seg:
+      exercise.modo === 'tempo'
+        ? doseForAbProfile(profile, 'tempo', exercise.tempo_seg ?? 30)
+        : undefined,
+  }));
+  return {
+    ...suggested,
+    nome: `Missão ${profile.intensity === 'evolyn' ? 'Evolyn' : profile.intensity}`,
+    descricao: `${profile.training_days.length} dias por semana · ${profile.volume}`,
+    exercicios,
+    total_exercicios: exercicios.length,
+    primeiro_exercicio: exercicios[0]?.nome ?? null,
+  };
 }
 
 async function resolvePinnedPreset(

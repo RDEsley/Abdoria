@@ -44,6 +44,7 @@ type ProfileRow = {
   banimento?: Record<string, unknown> | null;
   perfil_treino?: Record<string, unknown> | null;
   plano_treino?: Record<string, unknown> | null;
+  ab_training_profile_v2?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 };
@@ -68,6 +69,22 @@ function resolveLegacyCosmeticFields(raw: Record<string, unknown>): UserRecord['
 }
 
 function rowToUser(profile: ProfileRow, includePassword = false): UserRecord {
+  const preferencias = {
+    ...DEFAULT_PREFERENCIAS,
+    ...(profile.preferencias as unknown as UserRecord['preferencias']),
+    exercicios_fixos:
+      (profile.preferencias as unknown as UserRecord['preferencias'])?.exercicios_fixos ?? [],
+    exercicios_nao_recomendar:
+      (profile.preferencias as unknown as UserRecord['preferencias'])?.exercicios_nao_recomendar ??
+      [],
+    treinos_fixos:
+      (profile.preferencias as unknown as UserRecord['preferencias'])?.treinos_fixos ?? [],
+    treinos_nao_recomendar:
+      (profile.preferencias as unknown as UserRecord['preferencias'])?.treinos_nao_recomendar ?? [],
+    ciclos_completados_rodada:
+      (profile.preferencias as unknown as UserRecord['preferencias'])?.ciclos_completados_rodada ??
+      {},
+  };
   const user: UserRecord = {
     id: profile.id,
     email: profile.email,
@@ -83,23 +100,7 @@ function rowToUser(profile: ProfileRow, includePassword = false): UserRecord {
     loja_diaria: profile.loja_diaria as unknown as UserRecord['loja_diaria'],
     simulacao_definicao:
       profile.simulacao_definicao as unknown as UserRecord['simulacao_definicao'],
-    preferencias: {
-      ...DEFAULT_PREFERENCIAS,
-      ...(profile.preferencias as unknown as UserRecord['preferencias']),
-      exercicios_fixos:
-        (profile.preferencias as unknown as UserRecord['preferencias'])?.exercicios_fixos ?? [],
-      exercicios_nao_recomendar:
-        (profile.preferencias as unknown as UserRecord['preferencias'])
-          ?.exercicios_nao_recomendar ?? [],
-      treinos_fixos:
-        (profile.preferencias as unknown as UserRecord['preferencias'])?.treinos_fixos ?? [],
-      treinos_nao_recomendar:
-        (profile.preferencias as unknown as UserRecord['preferencias'])?.treinos_nao_recomendar ??
-        [],
-      ciclos_completados_rodada:
-        (profile.preferencias as unknown as UserRecord['preferencias'])
-          ?.ciclos_completados_rodada ?? {},
-    },
+    preferencias,
     dados_salvos: {
       ...DEFAULT_USER_DADOS_SALVOS,
       ...(profile.dados_salvos as unknown as UserRecord['dados_salvos']),
@@ -131,6 +132,11 @@ function rowToUser(profile: ProfileRow, includePassword = false): UserRecord {
       'plano_treino' in profile
         ? ((profile.plano_treino as unknown as UserRecord['plano_treino']) ?? null)
         : undefined,
+    ab_training_profile_v2:
+      'ab_training_profile_v2' in profile
+        ? ((profile.ab_training_profile_v2 as unknown as UserRecord['ab_training_profile_v2']) ??
+          null)
+        : preferencias.ab_training_profile_v2,
     createdAt: profile.created_at,
     updatedAt: profile.updated_at,
   };
@@ -177,6 +183,9 @@ function userToProfileRow(user: UserRecord): Record<string, unknown> {
       : {}),
     ...(user.perfil_treino !== undefined ? { perfil_treino: user.perfil_treino } : {}),
     ...(user.plano_treino !== undefined ? { plano_treino: user.plano_treino } : {}),
+    ...(user.ab_training_profile_v2 !== undefined
+      ? { ab_training_profile_v2: user.ab_training_profile_v2 }
+      : {}),
   };
 }
 
@@ -187,6 +196,14 @@ function mapPatchToRow(patch: Record<string, unknown>): Record<string, unknown> 
     delete row.passwordHash;
   }
   return row;
+}
+
+function isMissingAbProfileColumn(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return (
+    (error.code === '42703' || error.code === 'PGRST204') &&
+    /ab_training_profile_v2/i.test(error.message ?? '')
+  );
 }
 
 export class UserMutable implements UserRecord {
@@ -222,6 +239,7 @@ export class UserMutable implements UserRecord {
   banimento?: UserRecord['banimento'];
   perfil_treino?: UserRecord['perfil_treino'];
   plano_treino?: UserRecord['plano_treino'];
+  ab_training_profile_v2?: UserRecord['ab_training_profile_v2'];
   createdAt?: Date | string;
   updatedAt?: Date | string;
 
@@ -270,7 +288,14 @@ export class UserMutable implements UserRecord {
         .update(profileUpdate)
         .eq('id', this.id);
 
-      if (profileError) throw profileError;
+      if (profileError && isMissingAbProfileColumn(profileError)) {
+        const legacyUpdate = { ...profileUpdate };
+        delete legacyUpdate.ab_training_profile_v2;
+        const retry = await sb.from('profiles').update(legacyUpdate).eq('id', this.id);
+        if (retry.error) throw retry.error;
+      } else if (profileError) {
+        throw profileError;
+      }
     }
 
     return this;
@@ -503,7 +528,13 @@ export const User = {
     const sb = getSupabase();
     const patch = mapPatchToRow(update.$set ?? {});
     const { error } = await sb.from('profiles').update(patch).eq('id', id);
-    if (error) throw error;
+    if (error && isMissingAbProfileColumn(error)) {
+      delete patch.ab_training_profile_v2;
+      const retry = await sb.from('profiles').update(patch).eq('id', id);
+      if (retry.error) throw retry.error;
+    } else if (error) {
+      throw error;
+    }
     return User.findById(id, { lean: true }) as Promise<UserLean | null>;
   },
 

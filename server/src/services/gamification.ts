@@ -9,6 +9,7 @@ import {
 import {
   STREAK_RECOVERY_UNLOCK_LOSSES,
   buildStreakRecoveryOffer,
+  applyStreakRecoveryAnchor,
   type StreakRecoveryOffer,
 } from '../../../shared/streak/recovery.js';
 import { isAtividadeHistory } from '../../../shared/atividades.js';
@@ -363,11 +364,24 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
   const streakAfterFreeze = computeStreakFromHistories(histories, frozenDates);
+  const recovered = applyStreakRecoveryAnchor(
+    user.gamificacao.streak_recovery_anchor,
+    [...histories.map((history) => workoutDayKey(history.concluido_em)), ...frozenDates],
+    getTodaySaoPaulo(),
+  );
+  if (!recovered.active) user.gamificacao.streak_recovery_anchor = null;
+  const persistedStreak = recovered.active
+    ? Math.max(streakAfterFreeze.atual, recovered.streak)
+    : streakAfterFreeze.atual;
 
   const previousStreak = user.gamificacao.streak_atual;
   user.gamificacao.total_minutos = Math.floor(totalSeconds / 60);
-  user.gamificacao.streak_atual = streakAfterFreeze.atual;
-  user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, streakAfterFreeze.maior);
+  user.gamificacao.streak_atual = persistedStreak;
+  user.gamificacao.streak_maior = Math.max(
+    user.gamificacao.streak_maior,
+    streakAfterFreeze.maior,
+    persistedStreak,
+  );
   const conquistasAntes = new Set(user.gamificacao.conquistas);
   user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
   // Ordem de desbloqueio (mais recente por último) — só pra saber "quais são
@@ -382,7 +396,7 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     user.gamificacao.conquistas_ordem = [...ordemAnterior, ...novasConquistas];
   }
 
-  const newRecoveryOffer = updateStreakRecoveryState(user, previousStreak, streakAfterFreeze.atual);
+  const newRecoveryOffer = updateStreakRecoveryState(user, previousStreak, persistedStreak);
 
   // Só o que esta função altera. É um dos caminhos de escrita mais quentes do
   // app (roda em /stats, na conclusão de treino e de atividade), então salvar
@@ -425,6 +439,13 @@ function updateStreakRecoveryState(
   if (user.gamificacao.streak_perdas_total < STREAK_RECOVERY_UNLOCK_LOSSES) return null;
 
   const offer = buildStreakRecoveryOffer(previousStreak, getTodaySaoPaulo());
+  if (
+    (user.gamificacao.streak_recoveries ?? []).some(
+      (receipt) => receipt.perdido_em === offer.perdido_em,
+    )
+  ) {
+    return null;
+  }
   user.gamificacao.streak_recovery_offer = offer;
   return offer;
 }

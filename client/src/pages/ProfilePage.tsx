@@ -5,6 +5,7 @@ import {
   Cake,
   Dumbbell,
   MessageSquareWarning,
+  MoreHorizontal,
   Pencil,
   Ruler,
   Save,
@@ -12,7 +13,6 @@ import {
   Share2,
   ShieldCheck,
   Target,
-  Users,
   Weight,
 } from 'lucide-react';
 import { BannerPickerModal } from '@/components/profile/BannerPickerModal';
@@ -36,6 +36,7 @@ import { playTabSwitch } from '@/lib/sounds';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { resolveIdentityBorder } from '@/lib/identity-border';
+import { shareContent } from '@/lib/platform/share';
 import {
   digitsOnly,
   formatAlturaMask,
@@ -66,6 +67,7 @@ export function ProfilePage() {
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
+  const [showMoreActions, setShowMoreActions] = useState(false);
   const [social, setSocial] = useState<{
     followers: number;
     following: number;
@@ -134,16 +136,8 @@ export function ProfilePage() {
   const shareProfile = async () => {
     const url = `${window.location.origin}/perfil/${profile.id}`;
     const text = `Vem ver meu perfil no Evolyn — nível ${xpProgressFromTotal(profile.gamificacao.nivel_xp).level}, bora treinar junto!`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'Evolyn · Core Quest', text, url });
-        return;
-      }
-    } catch {
-      return; // usuário cancelou o share
-    }
-    await navigator.clipboard.writeText(url);
-    showGameToast('Link do perfil copiado!', { variant: 'success' });
+    const result = await shareContent({ title: 'Evolyn · Core Quest', text, url });
+    if (result === 'copied') showGameToast('Link do perfil copiado!', { variant: 'success' });
   };
 
   const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
@@ -204,20 +198,13 @@ export function ProfilePage() {
   ];
 
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex items-start justify-between gap-3">
+    <div className="profile-page flex flex-col gap-5">
+      <header className="profile-page__header flex items-start justify-between gap-3">
         <GamePageHeader eyebrow={copy('perfil_eyebrow')} title="Perfil" />
-        <div className="flex shrink-0 gap-2">
-          {user?.role === 'admin' && (
-            <Link to="/admin" className="game-icon-btn admin-entry-btn" aria-label="Administração">
-              <ShieldCheck size={20} aria-hidden />
-              {pendingReports > 0 && (
-                <span className="admin-entry-btn__badge" aria-hidden>
-                  {pendingReports > 99 ? '99+' : pendingReports}
-                </span>
-              )}
-            </Link>
-          )}
+        <div
+          className="profile-page__toolbar relative flex shrink-0 gap-2"
+          aria-label="Ações do perfil"
+        >
           <button
             type="button"
             className="game-icon-btn"
@@ -226,20 +213,48 @@ export function ProfilePage() {
           >
             <Share2 size={20} aria-hidden />
           </button>
-          <Link to="/amigos" className="game-icon-btn" aria-label="Amigos">
-            <Users size={20} aria-hidden />
-          </Link>
           <Link to="/configuracoes" className="game-icon-btn" aria-label="Configurações">
             <Settings size={20} aria-hidden />
           </Link>
           <button
             type="button"
             className="game-icon-btn"
-            aria-label="Reportar bug ou sugestão"
-            onClick={() => setShowSupport(true)}
+            aria-label="Mais ações"
+            aria-expanded={showMoreActions}
+            onClick={() => setShowMoreActions((open) => !open)}
           >
-            <MessageSquareWarning size={20} aria-hidden />
+            <MoreHorizontal size={20} aria-hidden />
           </button>
+          {showMoreActions && (
+            <div className="profile-page__more-menu absolute right-0 top-12 z-30 min-w-52 p-2">
+              <button
+                type="button"
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-stone-700 hover:bg-stone-100"
+                onClick={() => {
+                  setShowMoreActions(false);
+                  setShowSupport(true);
+                }}
+              >
+                <MessageSquareWarning size={18} aria-hidden />
+                Ajuda e sugestões
+              </button>
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold text-stone-700 hover:bg-stone-100"
+                  onClick={() => setShowMoreActions(false)}
+                >
+                  <ShieldCheck size={18} aria-hidden />
+                  Administração
+                  {pendingReports > 0 && (
+                    <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+                      {pendingReports > 99 ? '99+' : pendingReports}
+                    </span>
+                  )}
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </header>
 

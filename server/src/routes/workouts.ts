@@ -267,8 +267,21 @@ workoutsRouter.post('/streak/recover', async (req: AuthRequest, res) => {
     user.gamificacao.streak_atual = offer.dias_perdidos;
     user.gamificacao.streak_maior = Math.max(user.gamificacao.streak_maior, offer.dias_perdidos);
     user.gamificacao.streak_recovery_offer = null;
+    user.gamificacao.streak_recovery_anchor = {
+      recovered_at: getTodaySaoPaulo(),
+      base_streak: offer.dias_perdidos,
+    };
+    user.gamificacao.streak_recoveries = [
+      ...(user.gamificacao.streak_recoveries ?? []),
+      {
+        perdido_em: offer.perdido_em,
+        dias_restaurados: offer.dias_perdidos,
+        custo_coins: offer.custo_coins,
+        recuperado_em: new Date().toISOString(),
+      },
+    ];
 
-    await user.save();
+    await user.saveColumns(['gamificacao', 'cosmeticos']);
 
     res.json({
       user: sanitizeUser(user),
@@ -328,12 +341,33 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { treino_nome, treino_tipo, exercicios, duracao_total_segundos, plano_dia_indice } =
-      req.body;
+    const {
+      treino_nome,
+      treino_tipo,
+      exercicios,
+      duracao_total_segundos,
+      plano_dia_indice,
+      completion_id,
+    } = req.body;
 
     if (!treino_nome || !Array.isArray(exercicios) || exercicios.length === 0) {
       res.status(400).json({ error: 'Dados do treino inválidos.' });
       return;
+    }
+
+    if (completion_id) {
+      const existing = await WorkoutHistory.findByCompletionId(user.id, String(completion_id));
+      if (existing) {
+        res.json({
+          history: existing,
+          user: sanitizeUser(user),
+          xp_ganho: existing.xp_ganho,
+          abdoria_ganha: 0,
+          streak_celebration: null,
+          level_up: null,
+        });
+        return;
+      }
     }
 
     const ciclosAtivos = normalizeCicloTreinos(
@@ -411,7 +445,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
         ? Number(plano_dia_indice)
         : null;
 
-    const history = await WorkoutHistory.create({
+    const completion = await WorkoutHistory.createOnce({
       usuario_id: user.id,
       treino_nome,
       treino_tipo: tipoResolvido,
@@ -421,7 +455,21 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       concluido_em: new Date(),
       xp_ganho: 0,
       plano_dia_indice: planoDiaIndice,
+      completion_id: completion_id ? String(completion_id) : null,
     });
+    const history = completion.history;
+    if (!completion.created) {
+      res.json({
+        history,
+        user: sanitizeUser(user),
+        xp_ganho: history.xp_ganho,
+        abdoria_ganha: 0,
+        moedas_ganhas: 0,
+        streak_celebration: null,
+        level_up: null,
+      });
+      return;
+    }
 
     const rodadaCompleta =
       planoDiaIndice != null && isPlanoUser(user)

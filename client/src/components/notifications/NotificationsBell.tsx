@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { ReminderCenter } from '@/components/activities/ReminderCenter';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -59,6 +60,7 @@ export function NotificationsBell() {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [localDismissTick, setLocalDismissTick] = useState(0);
+  const [tab, setTab] = useState<'inbox' | 'scheduled'>('inbox');
 
   const frozenAutoUse = user?.preferencias?.frozen_streak_auto_usar ?? true;
   const localNotices = useMemo(
@@ -182,39 +184,71 @@ export function NotificationsBell() {
             </button>
           )}
         </div>
-        {loading ? (
-          <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
-        ) : allItems.length === 0 ? (
-          <p className="mt-3 text-sm font-bold text-stone-500">
-            Nada por aqui ainda. Feche a semana no ranking pra começar a receber novidades.
-          </p>
-        ) : (
-          <ul className="mt-3 flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
-            {allItems.map((item) => (
-              <li
-                key={item.id}
-                className={`notifications-item${item.lida_em ? '' : ' notifications-item--unread'}`}
-              >
-                <span className="notifications-item__icon">{iconForTipo(item.tipo)}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="notifications-item__title">{item.titulo}</p>
-                  {item.corpo && <p className="notifications-item__body">{item.corpo}</p>}
-                  <p className="notifications-item__when">{formatWhen(item.criada_em)}</p>
-                </div>
-                <button
-                  type="button"
-                  className="notifications-item__dismiss"
-                  aria-label="Remover notificação"
-                  title="Remover"
-                  disabled={busyId === item.id}
-                  onClick={() => void handleDismiss(item.id)}
+        <div className="notifications-tabs" role="tablist" aria-label="Seções de notificações">
+          <button
+            type="button"
+            id="notifications-tab-inbox"
+            role="tab"
+            aria-selected={tab === 'inbox'}
+            aria-controls="notifications-panel-inbox"
+            onClick={() => setTab('inbox')}
+          >
+            Caixa de entrada
+          </button>
+          <button
+            type="button"
+            id="notifications-tab-scheduled"
+            role="tab"
+            aria-selected={tab === 'scheduled'}
+            aria-controls="notifications-panel-scheduled"
+            onClick={() => setTab('scheduled')}
+          >
+            Programadas
+          </button>
+        </div>
+        <div
+          id={tab === 'scheduled' ? 'notifications-panel-scheduled' : 'notifications-panel-inbox'}
+          role="tabpanel"
+          aria-labelledby={
+            tab === 'scheduled' ? 'notifications-tab-scheduled' : 'notifications-tab-inbox'
+          }
+        >
+          {tab === 'scheduled' ? (
+            <ReminderCenter />
+          ) : loading ? (
+            <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
+          ) : allItems.length === 0 ? (
+            <p className="mt-3 text-sm font-bold text-stone-500">
+              Nada por aqui ainda. Feche a semana no ranking pra começar a receber novidades.
+            </p>
+          ) : (
+            <ul className="mt-3 flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+              {allItems.map((item) => (
+                <li
+                  key={item.id}
+                  className={`notifications-item${item.lida_em ? '' : ' notifications-item--unread'}`}
                 >
-                  <X size={14} aria-hidden />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <span className="notifications-item__icon">{iconForTipo(item.tipo)}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="notifications-item__title">{item.titulo}</p>
+                    {item.corpo && <p className="notifications-item__body">{item.corpo}</p>}
+                    <p className="notifications-item__when">{formatWhen(item.criada_em)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="notifications-item__dismiss"
+                    aria-label="Remover notificação"
+                    title="Remover"
+                    disabled={busyId === item.id}
+                    onClick={() => void handleDismiss(item.id)}
+                  >
+                    <X size={14} aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </Modal>
     </>
   );

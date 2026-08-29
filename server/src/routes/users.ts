@@ -23,6 +23,7 @@ import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avat
 import { molduraStatusForUser } from '../services/molduras.js';
 import { mergePreferencias, mergeSimulacaoDefinicao } from '../utils/user-patch.js';
 import { focoToObjetivo, sanitizePerfilTreino } from '../utils/training-profile.js';
+import { sanitizeAbTrainingProfileV2 } from '../utils/ab-training-profile.js';
 import { buildPlanoTreino } from '../../../shared/training-plan.js';
 import { mergeDadosSalvos, resolveDadosSalvosForUser } from '../utils/user-dados.js';
 import {
@@ -705,6 +706,43 @@ usersRouter.put('/me/training-profile', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PUT /api/users/me/training-profile error:', error);
     res.status(500).json({ error: 'Erro ao salvar perfil de treino.' });
+  }
+});
+
+/** Perfil abdominal V2; o perfil legado permanece intacto para rollback. */
+usersRouter.put('/me/ab-training-profile-v2', async (req: AuthRequest, res) => {
+  try {
+    const profile = sanitizeAbTrainingProfileV2(req.body?.profile ?? req.body);
+    if (!profile) {
+      res.status(400).json({ error: 'Perfil abdominal inválido.' });
+      return;
+    }
+    const current = await loadCurrentUser(req.userId!);
+    if (!current) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const preferencias = mergePreferencias(current.preferencias, {
+      equipamentos: profile.equipment,
+      ab_training_profile_v2: profile,
+    });
+    const mutable = await User.findById(req.userId!);
+    const update: Record<string, unknown> = {
+      ab_training_profile_v2: profile,
+      preferencias,
+      objetivo: 'resistencia',
+      perfil_treino: current.perfil_treino,
+      plano_treino: null,
+    };
+    if (mutable) {
+      syncEquipmentExerciseUnlocks(mutable, preferencias);
+      update.dados_salvos = mutable.dados_salvos;
+    }
+    const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
+    res.json(sanitizeUser(user!));
+  } catch (error) {
+    console.error('PUT /api/users/me/ab-training-profile-v2 error:', error);
+    res.status(500).json({ error: 'Erro ao salvar perfil abdominal.' });
   }
 });
 

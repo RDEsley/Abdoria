@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Evolyn</string>
+    <string name="title_activity_main">Evolyn</string>
+    <string name="package_name">com.fateeight.evolyn</string>
+    <string name="custom_url_scheme">com.fateeight.evolyn</string>
+</resources>

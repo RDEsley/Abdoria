@@ -52,12 +52,13 @@ export function estimateWorkoutDurationSeconds(workout: ActiveWorkout): number {
   workout.queue.forEach((item, exerciseIndex) => {
     const series = item.series ?? 3;
     const rest = item.descanso_seg ?? defaultRest;
+    const sideFactor = item.laterality === 'per_side' ? 2 : 1;
 
     for (let seriesIndex = 0; seriesIndex < series; seriesIndex += 1) {
       if (item.modo === 'tempo') {
-        total += item.tempo_seg ?? item.tempo_recomendado ?? 30;
+        total += (item.tempo_seg ?? item.tempo_recomendado ?? 30) * sideFactor;
       } else {
-        total += (item.repeticoes ?? 12) * 3;
+        total += (item.repeticoes ?? 12) * 3 * sideFactor;
       }
 
       if (seriesIndex < series - 1) {

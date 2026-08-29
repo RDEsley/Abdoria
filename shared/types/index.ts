@@ -50,6 +50,8 @@ export type TreinoTipo = TreinoBase | 'custom';
 
 export type ModoExercicio = 'tempo' | 'reps';
 
+export type ExerciseLaterality = 'none' | 'per_side' | 'alternating';
+
 export type AchievementIcon =
   | 'medal'
   | 'flame'
@@ -112,6 +114,8 @@ export interface IExercise extends ExerciseLevelParams {
   descricao?: string;
   media: ExerciseMedia;
   ativo: boolean;
+  /** Como o exercício distribui o trabalho entre os lados. Nunca inferir pelo slug no Player. */
+  laterality?: ExerciseLaterality;
   /** Equipamento necessário — exercício só aparece se o usuário possuir o item. */
   equipamento?: EquipmentId | null;
   /** Partes do corpo trabalhadas (primeira = principal). Ausente = ['abdomen']. */
@@ -260,6 +264,8 @@ export interface UserPreferencias {
   home_secoes_ocultas?: import('../home-layout.js').HomeOptionalSectionId[];
   /** Alertas personalizados criados na página Atividades. */
   lembretes_personalizados?: import('../reminders.js').PersonalizedReminder[];
+  /** Espelho transitório do perfil V2 enquanto a migration de coluna não foi aplicada. */
+  ab_training_profile_v2?: AbTrainingProfileV2;
 }
 
 export type Idioma = 'pt' | 'en' | 'es';
@@ -340,6 +346,20 @@ export interface PerfilTreino {
   atualizado_em: string;
 }
 
+export type AbTrainingIntensity = 'leve' | 'moderado' | 'evolyn';
+export type AbTrainingVolume = 'curto' | 'equilibrado' | 'completo';
+
+/** Perfil abdominal atual. O legado continua legível durante a transição. */
+export interface AbTrainingProfileV2 {
+  version: 2;
+  intensity: AbTrainingIntensity;
+  training_days: number[];
+  volume: AbTrainingVolume;
+  equipment: Partial<Record<EquipmentId, boolean>>;
+  created_at: string;
+  updated_at: string;
+}
+
 /** Esqueleto do plano gerado — coluna própria `profiles.plano_treino`. */
 export interface PlanoTreino {
   versao: 1;
@@ -404,6 +424,9 @@ export interface Gamificacao {
       só existe depois do desbloqueio; some ao ser resgatada ou quando o jogador
       reconstrói o streak sozinho até o mesmo tamanho. */
   streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;
+  /** Recuperações compradas; impedem que /stats recrie a mesma oferta. */
+  streak_recoveries?: import('../streak/recovery.js').StreakRecoveryReceipt[];
+  streak_recovery_anchor?: import('../streak/recovery.js').StreakRecoveryAnchor | null;
   total_minutos: number;
   conquistas: string[];
   /** Mesmos ids de `conquistas`, na ordem em que foram desbloqueadas (mais
@@ -899,6 +922,7 @@ export interface IUser {
   perfil_treino?: PerfilTreino | null;
   /** Plano gerado a partir do perfil; null/ausente = pipeline de presets. */
   plano_treino?: PlanoTreino | null;
+  ab_training_profile_v2?: AbTrainingProfileV2 | null;
 }
 
 export interface IUserDocument extends IUser {
@@ -936,6 +960,7 @@ export interface IWorkoutHistory {
   plano_dia_indice?: number;
   /** Preenchido só em sessões de Atividade — métricas contextuais + OBS. */
   atividade?: import('../atividades.js').AtividadeLog | null;
+  completion_id?: string | null;
 }
 
 export interface IWorkoutHistoryDocument extends IWorkoutHistory {
@@ -1083,6 +1108,8 @@ export interface CompleteWorkoutPayload {
   duracao_total_segundos: number;
   /** Dia do plano corpo-todo que este treino conclui (modo plano). */
   plano_dia_indice?: number;
+  /** Chave idempotente da sessão restaurável. */
+  completion_id?: string;
 }
 
 export interface WorkoutQueueItem {
@@ -1097,6 +1124,7 @@ export interface WorkoutQueueItem {
   repeticoes?: number;
   tempo_seg?: number;
   descanso_seg: number;
+  laterality?: ExerciseLaterality;
 }
 
 export interface StoredRepScheme extends RepSchemeRecommendation {

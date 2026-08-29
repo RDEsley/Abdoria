@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Map, Pencil, Play, Timer } from 'lucide-react';
+import { Flame, Map, Play, Timer } from 'lucide-react';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -29,9 +29,6 @@ import {
 } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
 import { CampaignFeed } from '@/components/dashboard/CampaignFeed';
-import { HomeLayoutEditor } from '@/components/dashboard/HomeLayoutEditor';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { normalizeHomeOptionalSections, type HomeOptionalSectionId } from '@shared/home-layout';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -39,16 +36,6 @@ const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 export function DashboardPage() {
   const { stats, loading, refresh, loadRecommendations, user } = useApp();
   const copy = useCopy();
-  const { patchPreferences } = useUserPreferences();
-  const [editingHome, setEditingHome] = useState(false);
-  const optionalOrder = useMemo(() => {
-    const normalized = normalizeHomeOptionalSections(user?.preferencias?.home_secoes_ordem);
-    return [
-      ...normalized.filter((id) => id !== 'achievements'),
-      'achievements',
-    ] as HomeOptionalSectionId[];
-  }, [user?.preferencias?.home_secoes_ordem]);
-  const hiddenSections = user?.preferencias?.home_secoes_ocultas ?? [];
 
   useEffect(() => {
     if (!loading && stats) {
@@ -79,9 +66,13 @@ export function DashboardPage() {
   const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
 
   const perfilTreino = user?.perfil_treino ?? null;
+  const abProfile = user?.ab_training_profile_v2 ?? null;
   const hoje = getSaoPauloWeekday();
   // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
-  const diaDescanso = !stats.treino_hoje && stats.streak_atual > 0 && isRestDay(perfilTreino, hoje);
+  const diaDescanso =
+    !stats.treino_hoje &&
+    stats.streak_atual > 0 &&
+    (abProfile ? !abProfile.training_days.includes(hoje) : isRestDay(perfilTreino, hoje));
 
   return (
     <motion.div
@@ -107,7 +98,7 @@ export function DashboardPage() {
 
       <motion.div
         variants={item}
-        className={`game-quest-card ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
+        className={`game-quest-card dashboard-mission ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
       >
         <span className="game-quest-card__badge">
           {stats.treino_hoje
@@ -177,7 +168,7 @@ export function DashboardPage() {
         <WeekSummary />
       </motion.div>
 
-      <motion.div variants={item} className="grid grid-cols-2 gap-3">
+      <motion.div variants={item} className="dashboard-quick-stats grid grid-cols-2 gap-3">
         <StatTile
           icon={<Flame className="text-orange-500" size={22} />}
           title="Recorde"
@@ -205,60 +196,35 @@ export function DashboardPage() {
         />
       </motion.div>
 
-      <motion.section variants={item} className="glass-card p-4">
+      <motion.section
+        variants={item}
+        className="glass-card dashboard-surface dashboard-surface--campaign p-4"
+      >
         <h3 className="game-section-title mb-3 flex items-center gap-2">
           <Map size={16} /> Mapa de campanha
         </h3>
         <CampaignFeed />
       </motion.section>
 
-      {optionalOrder
-        .filter((id) => id !== 'achievements' && !hiddenSections.includes(id))
-        .map((id) => (
-          <motion.div
-            key={id}
-            variants={item}
-            className={editingHome ? 'home-section-editable' : undefined}
-          >
-            {id === 'weekly_chronicle' ? (
-              <WeeklyChronicle />
-            ) : (
-              <section className="glass-card p-4">
-                <h3 className="game-section-title mb-3">Zonas da semana</h3>
-                <MuscleBarChart muscles={stats.musculos_semana} />
-              </section>
-            )}
-          </motion.div>
-        ))}
+      <motion.section
+        variants={item}
+        className="glass-card dashboard-surface dashboard-surface--core p-4"
+      >
+        <h3 className="game-section-title mb-3">Evolução do core</h3>
+        <MuscleBarChart muscles={stats.musculos_semana} />
+      </motion.section>
 
-      {!hiddenSections.includes('achievements') && (
-        <motion.div variants={item} className={editingHome ? 'home-section-editable' : undefined}>
-          <AchievementsPreview
-            conquistas={stats.conquistas}
-            unlockedCount={stats.conquistas.filter((c) => c.desbloqueada).length}
-            total={stats.conquistas.length}
-          />
-        </motion.div>
-      )}
+      <motion.div variants={item}>
+        <WeeklyChronicle />
+      </motion.div>
 
-      {editingHome ? (
-        <HomeLayoutEditor
-          order={optionalOrder}
-          hidden={hiddenSections}
-          onOrderChange={(order) => void patchPreferences({ home_secoes_ordem: order })}
-          onHiddenChange={(hidden) => void patchPreferences({ home_secoes_ocultas: hidden })}
-          onClose={() => setEditingHome(false)}
+      <motion.div variants={item}>
+        <AchievementsPreview
+          conquistas={stats.conquistas}
+          unlockedCount={stats.conquistas.filter((c) => c.desbloqueada).length}
+          total={stats.conquistas.length}
         />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setEditingHome(true)}
-          className="mx-auto mt-1 inline-flex items-center gap-1.5 rounded-full border border-stone-200/70 bg-stone-100/50 px-3 py-2 text-[0.68rem] font-bold text-stone-500 transition hover:bg-white"
-          aria-label="Organizar tela de início"
-        >
-          <Pencil size={12} /> Editar Início
-        </button>
-      )}
+      </motion.div>
     </motion.div>
   );
 }

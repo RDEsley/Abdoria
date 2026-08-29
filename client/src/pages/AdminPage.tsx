@@ -5,7 +5,7 @@ import {
   Ban,
   Coins,
   Flag,
-  Gem,
+  Leaf,
   KeyRound,
   Lightbulb,
   Pencil,
@@ -273,7 +273,7 @@ export function AdminPage() {
                         <Coins size={11} className="text-amber-600" aria-hidden /> {entry.coins}
                       </span>
                       <span className="inline-flex items-center gap-0.5">
-                        <Gem size={11} className="text-sky-600" aria-hidden /> {entry.gems}
+                        <Leaf size={11} className="text-emerald-600" aria-hidden /> {entry.gems}
                       </span>
                     </p>
                   </div>
@@ -498,7 +498,7 @@ function AdminEditModal({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Gems
+            Folhas
             <input
               type="number"
               min={0}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, Bookmark, GraduationCap, Trophy } from 'lucide-react';
+import { Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { resolveFila } from '@shared/atividades';
@@ -17,6 +17,7 @@ import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
 import { ExerciseConfigModal } from '@/components/builder/ExerciseConfigModal';
 import { TrainPresetSection } from '@/components/builder/TrainPresetSection';
 import { WorkoutQueueList } from '@/components/builder/WorkoutQueueList';
+import { AbTrainingProfileWizard } from '@/components/training/AbTrainingProfileWizard';
 import { presetToQueue, sugeridoToQueue } from '@/components/builder/queue-utils';
 import {
   filterSimilarPresets,
@@ -36,6 +37,7 @@ import { getPresets, getRecommendWorkout, updateMe } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { resolveSelectedRepSchemeId } from '@/lib/user-dados';
 import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
+import { createWorkoutSnapshot, webWorkoutSessionStorage } from '@/lib/workout-session-storage';
 import type {
   ActiveWorkout,
   ModoExercicio,
@@ -128,6 +130,7 @@ export function BuilderPage() {
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
+  const [showAbPlan, setShowAbPlan] = useState(false);
   const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
   const [dismissedCardKey, setDismissedCardKey] = useState<string | null>(null);
   const lastAppliedQueueKeyRef = useRef('');
@@ -274,6 +277,9 @@ export function BuilderPage() {
       if (selectedPresetId === 'custom') return customWorkout;
       if (selectedSavedWorkout) return selectedSavedWorkout.queue;
       if (selectedPlanWorkout) return sugeridoToQueue(selectedPlanWorkout, exerciseMap);
+      if (suggestedWorkout && selectedPresetId === suggestedWorkout.preset_id) {
+        return sugeridoToQueue(suggestedWorkout, exerciseMap);
+      }
       if (!selectedPreset) return [];
       return presetToQueue(selectedPreset, exerciseMap, nivel);
     })();
@@ -286,6 +292,7 @@ export function BuilderPage() {
     selectedPresetId,
     selectedSavedWorkout,
     selectedPlanWorkout,
+    suggestedWorkout,
     selectedPreset,
     customWorkout,
     exerciseMap,
@@ -344,7 +351,13 @@ export function BuilderPage() {
   );
 
   useEffect(() => {
-    if (draftQueue !== null || !selectedSchemeId || baseQueue.length === 0) return;
+    if (
+      authUser?.ab_training_profile_v2 ||
+      draftQueue !== null ||
+      !selectedSchemeId ||
+      baseQueue.length === 0
+    )
+      return;
 
     const scheme = schemes.find((entry) => entry.id === selectedSchemeId);
     if (!scheme) return;
@@ -354,7 +367,15 @@ export function BuilderPage() {
     lastAppliedQueueKeyRef.current = key;
 
     applyRepScheme(scheme, 'all', { force: true, sourceQueue: baseQueue });
-  }, [selectedPresetId, baseQueue, draftQueue, selectedSchemeId, schemes, applyRepScheme]);
+  }, [
+    authUser?.ab_training_profile_v2,
+    selectedPresetId,
+    baseQueue,
+    draftQueue,
+    selectedSchemeId,
+    schemes,
+    applyRepScheme,
+  ]);
 
   const persistDraftIfCustom = useCallback(
     (next: WorkoutQueueItem[]) => {
@@ -632,6 +653,7 @@ export function BuilderPage() {
       repeticoes: scheme && params.modo !== 'tempo' ? scheme.repeticoes : params.repeticoes,
       tempo_seg: params.tempo_seg,
       descanso_seg: globalDescanso,
+      laterality: ex.laterality ?? 'none',
     };
 
     const next = [...activeQueue, item];
@@ -706,7 +728,7 @@ export function BuilderPage() {
       preset_id: selectedPresetId !== 'custom' ? selectedPresetId : undefined,
       plano_dia_indice: selectedPlanWorkout?.plano_dia_indice,
     };
-    sessionStorage.setItem('abdoria_active_workout', JSON.stringify(payload));
+    webWorkoutSessionStorage.write(createWorkoutSnapshot(payload));
     if (selectedPresetId === 'custom') setCustomWorkout(activeQueue);
     navigate('/player');
   };
@@ -827,20 +849,26 @@ export function BuilderPage() {
 
   return (
     <div className="flex flex-col gap-5 pb-24 md:pb-28">
-      <GamePageHeader eyebrow="Escolha ou monte" title="Montar treino" />
-
-      <div className="grid grid-cols-2 gap-2" aria-label="Atalhos da missão">
-        <Link to="/biblioteca">
-          <GameButton variant="secondary" className="flex w-full items-center justify-center gap-2">
-            <BookOpen size={16} aria-hidden /> Biblioteca
-          </GameButton>
-        </Link>
-        <Link to="/ranking">
-          <GameButton variant="secondary" className="flex w-full items-center justify-center gap-2">
-            <Trophy size={16} aria-hidden /> Ranking
-          </GameButton>
-        </Link>
-      </div>
+      <GamePageHeader eyebrow="Sua sessão recomendada" title="Missão de hoje">
+        <div className="flex gap-2" aria-label="Atalhos da missão">
+          <Link
+            to="/biblioteca"
+            className="game-icon-btn game-icon-btn--header"
+            aria-label="Abrir biblioteca"
+            title="Biblioteca"
+          >
+            <LibraryBig size={20} aria-hidden />
+          </Link>
+          <Link
+            to="/ranking"
+            className="game-icon-btn game-icon-btn--header"
+            aria-label="Abrir ranking"
+            title="Ranking"
+          >
+            <Podium size={20} aria-hidden />
+          </Link>
+        </div>
+      </GamePageHeader>
 
       {xpCapReached && <DailyXpCapBanner />}
 
@@ -881,36 +909,6 @@ export function BuilderPage() {
             onDismissCard={setDismissedCardKey}
           />
 
-          <section>
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-extrabold uppercase tracking-wide text-stone-800">
-                Esquemas recomendados
-              </p>
-              <button
-                type="button"
-                className="game-icon-btn shrink-0 gap-2 px-3 py-2 text-xs font-extrabold whitespace-nowrap"
-                aria-label="Trocar nível dos treinos e esquemas recomendados"
-                title={`Trocar o nível dos treinos e esquemas (atual: ${NIVEL_LABELS[schemeLevel]})`}
-                disabled={schemeLevelBusy}
-                onClick={() => void cycleSchemeLevel()}
-              >
-                <GraduationCap size={15} aria-hidden />
-                <span>Trocar nível</span>
-                <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-stone-600 leading-none">
-                  {NIVEL_LABELS[schemeLevel]}
-                </span>
-              </button>
-            </div>
-            <RepSchemeCarousel
-              schemes={schemes}
-              selectedId={selectedSchemeId}
-              nivelLabel={NIVEL_LABELS[schemeLevel]}
-              onSelect={handleSelectScheme}
-              onDelete={handleDeleteScheme}
-              onCreateClick={() => setShowCreateScheme(true)}
-            />
-          </section>
-
           <section id="builder-queue-preview">
             <WorkoutQueueList
               queue={activeQueue}
@@ -923,6 +921,40 @@ export function BuilderPage() {
               onConfigureExercise={setConfigExerciseIndex}
             />
           </section>
+
+          <details className="rounded-2xl border border-stone-200 bg-white/80 p-3">
+            <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-extrabold text-stone-700">
+              <GraduationCap size={18} aria-hidden />
+              Personalização avançada
+              <span className="ml-auto text-xs font-semibold text-stone-500">
+                {NIVEL_LABELS[schemeLevel]}
+              </span>
+            </summary>
+            <section className="mt-3 border-t border-stone-200 pt-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-extrabold text-stone-800">Esquemas de repetição</p>
+                <button
+                  type="button"
+                  className="game-icon-btn shrink-0 gap-2 px-3 py-2 text-xs font-extrabold whitespace-nowrap"
+                  aria-label="Trocar nível dos treinos e esquemas recomendados"
+                  title={`Trocar o nível dos treinos e esquemas (atual: ${NIVEL_LABELS[schemeLevel]})`}
+                  disabled={schemeLevelBusy}
+                  onClick={() => void cycleSchemeLevel()}
+                >
+                  <GraduationCap size={15} aria-hidden />
+                  <span>Trocar nível</span>
+                </button>
+              </div>
+              <RepSchemeCarousel
+                schemes={schemes}
+                selectedId={selectedSchemeId}
+                nivelLabel={NIVEL_LABELS[schemeLevel]}
+                onSelect={handleSelectScheme}
+                onDelete={handleDeleteScheme}
+                onCreateClick={() => setShowCreateScheme(true)}
+              />
+            </section>
+          </details>
         </div>
       )}
 
@@ -1055,6 +1087,19 @@ export function BuilderPage() {
         }}
         onApplyScheme={(scheme, index) => applyRepScheme(scheme, index)}
         onUpdate={updateQueueItem}
+      />
+
+      <AbTrainingProfileWizard
+        open={!authUser?.ab_training_profile_v2 || showAbPlan}
+        firstVisit={!authUser?.ab_training_profile_v2}
+        onClose={() => setShowAbPlan(false)}
+        onReady={() => {
+          lastSyncedSuggestedRef.current = null;
+          lastAppliedQueueKeyRef.current = '';
+          setDraftQueue(null);
+          setCustomizedIndices(new Set());
+          void loadRecommendations({ force: true });
+        }}
       />
 
       <BuilderStickyBar

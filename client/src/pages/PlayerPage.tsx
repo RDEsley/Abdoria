@@ -20,6 +20,7 @@ import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
+import { WorkoutCompanionLayer, WorkoutScene } from '@/components/player/WorkoutScene';
 import {
   buildCampaignPosts,
   CAMPAIGN_STREAK_MILESTONES,
@@ -66,29 +67,13 @@ import {
   type LevelUpCelebration as LevelUpData,
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
+import { readWorkoutOrLegacy, webWorkoutSessionStorage } from '@/lib/workout-session-storage';
 
-type Phase = 'ready' | 'working' | 'resting' | 'done' | 'atividades-prompt';
+type Phase = 'ready' | 'working' | 'side_transition' | 'resting' | 'done' | 'atividades-prompt';
 
-const ACTIVE_WORKOUT_KEY = 'abdoria_active_workout';
-
-const ONE_SIDE_EXERCISES = new Set(['side-plank', 'copenhagen-plank', 'single-leg-glute-bridge']);
-
-function sideInstruction(item: WorkoutQueueItem | undefined, seriesIndex: number): string | null {
-  if (!item || !ONE_SIDE_EXERCISES.has(item.slug)) return null;
-  const side = seriesIndex % 2 === 0 ? 'lado esquerdo' : 'lado direito';
-  return seriesIndex === 0 ? `Comece pelo ${side}.` : `Agora, ${side}.`;
-}
-
-function readActiveWorkout(): ActiveWorkout | null {
-  try {
-    const raw = sessionStorage.getItem(ACTIVE_WORKOUT_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as ActiveWorkout;
-    if (!parsed.queue?.length) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
+function sideInstruction(item: WorkoutQueueItem | undefined, sideIndex: 0 | 1): string | null {
+  if (!item || item.laterality !== 'per_side') return null;
+  return sideIndex === 0 ? 'Lado esquerdo' : 'Lado direito';
 }
 
 export function PlayerPage() {
@@ -96,13 +81,17 @@ export function PlayerPage() {
   const { saveWorkout, exercises, ensureExercises } = useApp();
   const { user: authUser } = useAuth();
   const atividadesFlow = useAtividadesFlow();
-  const [workout] = useState<ActiveWorkout | null>(readActiveWorkout);
-  const [exerciseIndex, setExerciseIndex] = useState(0);
-  const [seriesIndex, setSeriesIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>('ready');
-  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [initialSnapshot] = useState(readWorkoutOrLegacy);
+  const [workout] = useState<ActiveWorkout | null>(initialSnapshot?.workout ?? null);
+  const [exerciseIndex, setExerciseIndex] = useState(initialSnapshot?.exerciseIndex ?? 0);
+  const [setIndex, setSetIndex] = useState(initialSnapshot?.setIndex ?? 0);
+  const seriesIndex = setIndex;
+  const setSeriesIndex = setSetIndex;
+  const [sideIndex, setSideIndex] = useState<0 | 1>(initialSnapshot?.sideIndex ?? 0);
+  const [phase, setPhase] = useState<Phase>((initialSnapshot?.phase as Phase) ?? 'ready');
+  const [secondsLeft, setSecondsLeft] = useState(initialSnapshot?.secondsLeft ?? 0);
   const [restTotalSec, setRestTotalSec] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(initialSnapshot?.paused ?? false);
   const [saving, setSaving] = useState(false);
   const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
@@ -132,13 +121,14 @@ export function PlayerPage() {
   const countdownEnabledRef = useRef(countdownEnabled);
   const equippedEffectId = resolveCosmeticos(authUser?.cosmeticos).efeito_equipado;
   const prefsRef = useRef(authUser?.preferencias);
-  const startTimeRef = useRef(0);
+  const startTimeRef = useRef(initialSnapshot?.startedAt ?? 0);
   const endTimeRef = useRef(0);
-  const pausedMsRef = useRef(0);
+  const pausedMsRef = useRef(initialSnapshot?.pausedMs ?? 0);
   const pauseStartedRef = useRef<number | null>(null);
   const sessionStartedRef = useRef(false);
   const tickHandledRef = useRef(false);
   const spokenSideRef = useRef('');
+  const sessionIdRef = useRef(initialSnapshot?.sessionId ?? crypto.randomUUID());
 
   useEffect(() => {
     mutedRef.current = muted;
@@ -167,18 +157,36 @@ export function PlayerPage() {
   useEffect(() => {
     if (!workout) return;
 
-    const storedStart = readWorkoutStartedAt();
+    const storedStart = readWorkoutStartedAt() || initialSnapshot?.startedAt || 0;
     if (storedStart) {
       startTimeRef.current = storedStart;
       sessionStartedRef.current = true;
     }
 
-    pausedMsRef.current = readWorkoutPausedMs();
+    pausedMsRef.current = readWorkoutPausedMs() || initialSnapshot?.pausedMs || 0;
     const storedEnd = readWorkoutEndedAt();
     if (storedEnd) {
       endTimeRef.current = storedEnd;
     }
-  }, [workout]);
+  }, [workout, initialSnapshot]);
+
+  useEffect(() => {
+    if (!workout || phase === 'done' || phase === 'atividades-prompt') return;
+    webWorkoutSessionStorage.write({
+      version: 2,
+      sessionId: sessionIdRef.current,
+      workout,
+      exerciseIndex,
+      setIndex,
+      sideIndex,
+      phase,
+      secondsLeft,
+      paused,
+      startedAt: startTimeRef.current,
+      pausedMs: pausedMsRef.current,
+      updatedAt: Date.now(),
+    });
+  }, [workout, exerciseIndex, setIndex, sideIndex, phase, secondsLeft, paused]);
 
   useEffect(() => {
     if (!workout) {
@@ -188,18 +196,18 @@ export function PlayerPage() {
 
   const current: WorkoutQueueItem | undefined = workout?.queue[exerciseIndex];
   const totalSeries = current?.series ?? 3;
-  const currentSideInstruction = sideInstruction(current, seriesIndex);
+  const currentSideInstruction = sideInstruction(current, sideIndex);
 
   useEffect(() => {
     if (!current || !currentSideInstruction || muted || phase !== 'ready') return;
-    const key = `${current.slug}:${seriesIndex}`;
+    const key = `${current.slug}:${seriesIndex}:${sideIndex}`;
     if (spokenSideRef.current === key || !('speechSynthesis' in window)) return;
     spokenSideRef.current = key;
     const utterance = new SpeechSynthesisUtterance(currentSideInstruction);
     utterance.lang = 'pt-BR';
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
-  }, [current, currentSideInstruction, muted, phase, seriesIndex]);
+  }, [current, currentSideInstruction, muted, phase, seriesIndex, sideIndex]);
 
   const getTargetSeconds = useCallback(() => {
     if (!current) return 30;
@@ -230,15 +238,24 @@ export function PlayerPage() {
 
     playCompleteSet();
 
+    if (current.laterality === 'per_side' && sideIndex === 0) {
+      setPhase('side_transition');
+      setSecondsLeft(0);
+      setPaused(false);
+      return;
+    }
+
     if (seriesIndex + 1 < totalSeries) {
-      setSeriesIndex((s) => s + 1);
+      setSetIndex((s) => s + 1);
+      setSideIndex(0);
       startRest(getRestSeconds());
       return;
     }
 
     if (exerciseIndex + 1 < workout.queue.length) {
       setExerciseIndex((i) => i + 1);
-      setSeriesIndex(0);
+      setSetIndex(0);
+      setSideIndex(0);
       startRest(getRestSeconds());
       setMediaError(false);
       return;
@@ -249,7 +266,16 @@ export function PlayerPage() {
     // Atividades anexadas (se houver) só entram em cena depois da Missão
     // Completa e do capítulo da campanha — ver `proceedAfterStory`.
     setPhase('done');
-  }, [workout, current, seriesIndex, totalSeries, exerciseIndex, getRestSeconds, startRest]);
+  }, [
+    workout,
+    current,
+    sideIndex,
+    seriesIndex,
+    totalSeries,
+    exerciseIndex,
+    getRestSeconds,
+    startRest,
+  ]);
 
   const runsCountdown = phase === 'resting' || (phase === 'working' && current?.modo === 'tempo');
 
@@ -337,6 +363,13 @@ export function PlayerPage() {
     advanceAfterSeries();
   };
 
+  const continueAfterSideTransition = () => {
+    setSideIndex(1);
+    setPhase('ready');
+    setSecondsLeft(0);
+    setPaused(false);
+  };
+
   const resetForNavigation = () => {
     if (pauseStartedRef.current) {
       pausedMsRef.current += Date.now() - pauseStartedRef.current;
@@ -354,8 +387,13 @@ export function PlayerPage() {
   };
 
   const goBackOneStep = () => {
-    if (!workout || (exerciseIndex === 0 && seriesIndex === 0)) return;
+    if (!workout || (exerciseIndex === 0 && seriesIndex === 0 && sideIndex === 0)) return;
     resetForNavigation();
+
+    if (sideIndex === 1) {
+      setSideIndex(0);
+      return;
+    }
 
     if (seriesIndex > 0) {
       setSeriesIndex((index) => Math.max(index - 1, 0));
@@ -366,6 +404,7 @@ export function PlayerPage() {
     const previousSeries = Math.max((workout.queue[previousIndex]?.series ?? 1) - 1, 0);
     setExerciseIndex(previousIndex);
     setSeriesIndex(previousSeries);
+    setSideIndex(workout.queue[previousIndex]?.laterality === 'per_side' ? 1 : 0);
   };
 
   const goToNextExercise = () => {
@@ -374,6 +413,7 @@ export function PlayerPage() {
     if (exerciseIndex + 1 < workout.queue.length) {
       setExerciseIndex((index) => index + 1);
       setSeriesIndex(0);
+      setSideIndex(0);
       return;
     }
     endTimeRef.current = persistWorkoutEndedAt();
@@ -421,7 +461,7 @@ export function PlayerPage() {
   };
 
   const quitWorkout = () => {
-    sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
+    webWorkoutSessionStorage.clear();
     clearWorkoutDurationSession();
     navigate('/construtor', { replace: true });
   };
@@ -517,6 +557,7 @@ export function PlayerPage() {
         pauseStartedAt: pauseStartedRef.current,
       });
       const result = await saveWorkout({
+        completion_id: sessionIdRef.current,
         treino_nome: workout.treino_nome,
         treino_tipo: workout.treino_tipo,
         plano_dia_indice: workout.plano_dia_indice,
@@ -545,7 +586,7 @@ export function PlayerPage() {
       if (result.level_up) {
         setLevelUpCelebration(result.level_up);
       }
-      sessionStorage.removeItem(ACTIVE_WORKOUT_KEY);
+      webWorkoutSessionStorage.clear();
       clearWorkoutDurationSession();
       setSaved(true);
       setStoryPost(
@@ -691,13 +732,12 @@ export function PlayerPage() {
   const targetSeconds = getTargetSeconds();
   const prescription = formatExercisePrescription(current);
   const currentName = formatExerciseName(current);
-  const nextExercise = workout.queue[exerciseIndex + 1];
-  const nextSeriesLabel =
-    seriesIndex + 1 < totalSeries
-      ? `próxima: série ${seriesIndex + 2}`
-      : nextExercise
-        ? `próximo: ${formatExerciseName(nextExercise)}`
-        : 'última série do treino';
+  const currentInstructions = exercises.find(
+    (exercise) => exercise.slug === current.slug,
+  )?.descricao;
+  // During rest the indices already point to the next step, whether that is
+  // another set of this exercise or the first set of the next exercise.
+  const nextSeriesLabel = `${currentName} · série ${seriesIndex + 1}`;
 
   const progressPct =
     phase === 'working' && current.modo === 'tempo' && targetSeconds > 0
@@ -709,21 +749,14 @@ export function PlayerPage() {
           : 0;
 
   const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
-  const ringPodeIniciar = phase === 'ready' && countdownValue === null;
-  const ringOnClick = ringPodeIniciar ? startSeries : canTogglePause ? togglePause : undefined;
-  const ringLabel = ringPodeIniciar
-    ? `Iniciar série ${seriesIndex + 1}`
-    : canTogglePause
-      ? paused
-        ? 'Continuar cronômetro'
-        : 'Pausar cronômetro'
-      : undefined;
 
   const phaseBadge =
     phase === 'resting' ? (
       <span className="game-player-phase game-player-phase--rest">
         <Timer size={14} /> Cronômetro de descanso
       </span>
+    ) : phase === 'side_transition' ? (
+      <span className="game-player-phase game-player-phase--ready">Troca de lado</span>
     ) : phase === 'working' ? (
       <span className="game-player-phase game-player-phase--work">
         Série {seriesIndex + 1} de {totalSeries}
@@ -755,266 +788,252 @@ export function PlayerPage() {
       : null;
 
   return (
-    <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
-      <AnimatedBackground variant="player" />
-      <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setShowQuitModal(true)}
-          className="cursor-pointer font-bold text-stone-600"
-          aria-label="Desistir do treino"
-        >
-          <X size={24} />
-        </button>
-        <div className="text-center">
-          <p className="game-page-header__eyebrow !mb-0">{workout.treino_nome}</p>
-          <p className="text-xs font-extrabold text-stone-800">
-            Exercício {exerciseIndex + 1}/{workout.queue.length}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {authUser?.role === 'admin' && (
+    <WorkoutScene companion={<WorkoutCompanionLayer />}>
+      <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
+        <AnimatedBackground variant="player" />
+        <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setShowQuitModal(true)}
+            className="cursor-pointer font-bold text-stone-600"
+            aria-label="Desistir do treino"
+          >
+            <X size={24} />
+          </button>
+          <div className="text-center">
+            <p className="game-page-header__eyebrow !mb-0">{workout.treino_nome}</p>
+            <p className="text-xs font-extrabold text-stone-800">
+              Exercício {exerciseIndex + 1}/{workout.queue.length}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {authUser?.role === 'admin' && (
+              <button
+                type="button"
+                onClick={skipAllForTests}
+                className="cursor-pointer rounded-full border-2 border-purple-300 bg-purple-50 px-2 py-0.5 text-[0.6rem] font-black uppercase text-purple-700"
+                title="Pular direto pro fim do treino (só admins, para testes)"
+              >
+                Skip ADM
+              </button>
+            )}
             <button
               type="button"
-              onClick={skipAllForTests}
-              className="cursor-pointer rounded-full border-2 border-purple-300 bg-purple-50 px-2 py-0.5 text-[0.6rem] font-black uppercase text-purple-700"
-              title="Pular direto pro fim do treino (só admins, para testes)"
+              onClick={() => setCountdownEnabled((v) => !v)}
+              className={`game-player-toggle${countdownEnabled ? ' game-player-toggle--on' : ''}`}
+              aria-label={
+                countdownEnabled
+                  ? 'Desativar contagem regressiva antes dos exercícios'
+                  : 'Ativar contagem regressiva antes dos exercícios'
+              }
+              aria-pressed={countdownEnabled}
+              title={
+                countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'
+              }
             >
-              Skip ADM
+              <Hourglass size={18} />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setCountdownEnabled((v) => !v)}
-            className={`game-player-toggle${countdownEnabled ? ' game-player-toggle--on' : ''}`}
-            aria-label={
-              countdownEnabled
-                ? 'Desativar contagem regressiva antes dos exercícios'
-                : 'Ativar contagem regressiva antes dos exercícios'
-            }
-            aria-pressed={countdownEnabled}
-            title={
-              countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'
-            }
-          >
-            <Hourglass size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const next = !muted;
-              setMuted(next);
-              setSoundSettings(!next, authUser?.preferencias?.sfx_volume ?? 0.7);
-            }}
-            className={`game-player-toggle${!muted ? ' game-player-toggle--on' : ''}`}
-            aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
-            aria-pressed={!muted}
-            title={muted ? 'Som desativado' : 'Som ativado'}
-          >
-            {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
-          </button>
-        </div>
-      </header>
-
-      <div
-        className="relative z-10 flex shrink-0 gap-1 px-4 pb-1 sm:px-6"
-        role="progressbar"
-        aria-valuenow={exerciseIndex + 1}
-        aria-valuemin={1}
-        aria-valuemax={workout.queue.length}
-        aria-label={`Exercício ${exerciseIndex + 1} de ${workout.queue.length}`}
-      >
-        {workout.queue.map((item, i) => (
-          <span
-            key={`${item.slug}-${i}`}
-            className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
-              i < exerciseIndex
-                ? 'bg-emerald-500'
-                : i === exerciseIndex
-                  ? 'bg-amber-400 game-progress-dot--active'
-                  : 'bg-stone-200/80'
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
-        <div className="game-player-content flex flex-col items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-4">
-          {phaseBadge}
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${current.slug}-${exerciseIndex}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="w-full max-w-sm"
+            <button
+              type="button"
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                setSoundSettings(!next, authUser?.preferencias?.sfx_volume ?? 0.7);
+              }}
+              className={`game-player-toggle${!muted ? ' game-player-toggle--on' : ''}`}
+              aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
+              aria-pressed={!muted}
+              title={muted ? 'Som desativado' : 'Som ativado'}
             >
-              <div className="game-player-frame relative mx-auto aspect-square w-full max-w-[7.5rem] sm:max-w-[10rem]">
-                {!mediaError ? (
-                  <img
-                    src={exerciseMediaUrl(current.slug)}
-                    alt={currentName}
-                    className="h-full w-full object-cover"
-                    onError={() => setMediaError(true)}
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-5xl font-extrabold text-emerald-200">
-                    {currentName[0]}
+              {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
+            </button>
+          </div>
+        </header>
+
+        <div
+          className="relative z-10 flex shrink-0 gap-1 px-4 pb-1 sm:px-6"
+          role="progressbar"
+          aria-valuenow={exerciseIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={workout.queue.length}
+          aria-label={`Exercício ${exerciseIndex + 1} de ${workout.queue.length}`}
+        >
+          {workout.queue.map((item, i) => (
+            <span
+              key={`${item.slug}-${i}`}
+              className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
+                i < exerciseIndex
+                  ? 'bg-emerald-500'
+                  : i === exerciseIndex
+                    ? 'bg-amber-400 game-progress-dot--active'
+                    : 'bg-stone-200/80'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
+          <div className="game-player-content flex flex-col items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-4">
+            {phaseBadge}
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${current.slug}-${exerciseIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-sm"
+              >
+                <div className="game-player-frame relative mx-auto aspect-square w-full max-w-[7.5rem] sm:max-w-[10rem]">
+                  {!mediaError ? (
+                    <img
+                      src={exerciseMediaUrl(current.slug)}
+                      alt={currentName}
+                      className="h-full w-full object-cover"
+                      onError={() => setMediaError(true)}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-5xl font-extrabold text-emerald-200">
+                      {currentName[0]}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="w-full text-center">
+              <h2 className="game-page-header__title !text-base">{currentName}</h2>
+              <p className="mt-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">
+                Meta: {prescription}
+              </p>
+              {currentInstructions && (
+                <details className="game-player-instructions">
+                  <summary>Como fazer</summary>
+                  <p>{currentInstructions}</p>
+                </details>
+              )}
+              {restStatus ? (
+                <div className="game-player-rest-status mt-1.5">
+                  <p className="game-player-rest-status__main">{restStatus.main}</p>
+                  <p className="game-player-rest-status__timer tabular-nums">{restStatus.timer}</p>
+                  <p className="game-player-rest-status__next">{restStatus.next}</p>
+                </div>
+              ) : (
+                statusText && (
+                  <>
+                    {currentSideInstruction && (
+                      <p
+                        className="mx-auto mt-1.5 max-w-xs text-center text-sm font-extrabold text-emerald-700"
+                        aria-live="polite"
+                      >
+                        {currentSideInstruction}
+                      </p>
+                    )}
+                    <p className="mx-auto mt-1.5 max-w-xs text-center text-xs font-bold leading-relaxed text-stone-600">
+                      {statusText}
+                    </p>
+                  </>
+                )
+              )}
+            </div>
+
+            {phase === 'side_transition' ? (
+              <div className="game-player-side-transition" role="status" aria-live="assertive">
+                <ChevronRight size={34} aria-hidden />
+                <strong>Troque de lado</strong>
+                <span>A série {seriesIndex + 1} continua no lado direito.</span>
+              </div>
+            ) : (
+              <div className="relative">
+                <WorkoutTimerRing
+                  phase={phase as 'ready' | 'working' | 'resting'}
+                  modo={current.modo}
+                  secondsLeft={secondsLeft}
+                  seriesIndex={seriesIndex}
+                  totalSeries={totalSeries}
+                  progressPct={progressPct}
+                  paused={paused}
+                />
+
+                {countdownValue !== null && countdownValue > 0 && (
+                  <div className="game-countdown-overlay" role="status" aria-live="assertive">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={countdownValue}
+                        className="game-countdown-overlay__number"
+                        initial={{ scale: 0.4, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 1.5, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                      >
+                        {countdownValue}
+                      </motion.span>
+                    </AnimatePresence>
+                    <span className="game-countdown-overlay__hint">Prepare-se...</span>
                   </div>
                 )}
               </div>
-            </motion.div>
-          </AnimatePresence>
+            )}
 
-          <div className="w-full text-center">
-            <h2 className="game-page-header__title !text-base">{currentName}</h2>
-            <p className="mt-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">
-              Meta: {prescription}
-            </p>
-            {restStatus ? (
-              <div className="game-player-rest-status mt-1.5">
-                <p className="game-player-rest-status__main">{restStatus.main}</p>
-                <p className="game-player-rest-status__timer tabular-nums">{restStatus.timer}</p>
-                <p className="game-player-rest-status__next">{restStatus.next}</p>
-              </div>
-            ) : (
-              statusText && (
-                <>
-                  {currentSideInstruction && (
-                    <p
-                      className="mx-auto mt-1.5 max-w-xs text-center text-sm font-extrabold text-emerald-700"
-                      aria-live="polite"
-                    >
-                      {currentSideInstruction}
-                    </p>
-                  )}
-                  <p className="mx-auto mt-1.5 max-w-xs text-center text-xs font-bold leading-relaxed text-stone-600">
-                    {statusText}
-                  </p>
-                </>
-              )
+            {paused && canTogglePause && (
+              <p className="game-player-paused">
+                <Pause size={14} /> Cronômetro pausado · use o botão abaixo para continuar
+              </p>
             )}
           </div>
 
-          <div className="relative">
-            <WorkoutTimerRing
-              phase={phase}
-              modo={current.modo}
-              secondsLeft={secondsLeft}
-              seriesIndex={seriesIndex}
-              totalSeries={totalSeries}
-              progressPct={progressPct}
-              paused={paused}
-              onCenterClick={ringOnClick}
-              clickLabel={ringLabel}
-            />
-
-            {countdownValue !== null && countdownValue > 0 && (
-              <div className="game-countdown-overlay" role="status" aria-live="assertive">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={countdownValue}
-                    className="game-countdown-overlay__number"
-                    initial={{ scale: 0.4, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 1.5, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                  >
-                    {countdownValue}
-                  </motion.span>
-                </AnimatePresence>
-                <span className="game-countdown-overlay__hint">Prepare-se...</span>
-              </div>
-            )}
-          </div>
-
-          {paused && canTogglePause && (
-            <p className="game-player-paused">
-              <Pause size={14} /> Cronômetro pausado · use o botão abaixo para continuar
-            </p>
-          )}
-        </div>
-
-        <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          {(exerciseIndex > 0 || seriesIndex > 0) && (
-            <GameButton
-              size="lg"
-              variant="ghost"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={goBackOneStep}
-            >
-              <ChevronLeft size={18} />
-              {seriesIndex > 0 ? 'Voltar para a série anterior' : 'Voltar para o treino anterior'}
-            </GameButton>
-          )}
-
-          {phase === 'ready' && (
-            <GameButton
-              size="lg"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={startSeries}
-            >
-              <Play size={20} fill="currentColor" />
-              Iniciar série {seriesIndex + 1}
-            </GameButton>
-          )}
-
-          {phase === 'working' && current.modo === 'reps' && (
-            <GameButton
-              size="lg"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={completeSeries}
-            >
-              <Check size={22} />
-              Série concluída
-            </GameButton>
-          )}
-
-          {phase === 'working' && current.modo === 'tempo' && (
-            <div className="flex gap-2">
-              <GameButton
-                size="lg"
-                className="flex-[8] flex items-center justify-center gap-2"
-                variant={paused ? 'primary' : 'secondary'}
-                onClick={togglePause}
-              >
-                {paused ? (
-                  <>
-                    <Play size={20} fill="currentColor" /> Continuar exercício
-                  </>
-                ) : (
-                  <>
-                    <Pause size={20} /> Pausar exercício
-                  </>
-                )}
-              </GameButton>
+          <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+            {(exerciseIndex > 0 || seriesIndex > 0 || sideIndex > 0) && (
               <GameButton
                 size="lg"
                 variant="ghost"
-                className="flex-[2] flex items-center justify-center"
-                onClick={resetTimer}
-                aria-label="Reiniciar cronômetro do exercício"
-                title="Reiniciar cronômetro"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={goBackOneStep}
               >
-                <RotateCcw size={18} />
+                <ChevronLeft size={18} />
+                {sideIndex > 0
+                  ? 'Voltar para o lado esquerdo'
+                  : seriesIndex > 0
+                    ? 'Voltar para a série anterior'
+                    : 'Voltar para o treino anterior'}
               </GameButton>
-            </div>
-          )}
+            )}
 
-          {current.modo === 'tempo' && (
-            <GameButton
-              size="lg"
-              variant="secondary"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={goToNextExercise}
-            >
-              {exerciseIndex + 1 < workout.queue.length ? 'Próximo treino' : 'Finalizar treino'}
-              <ChevronRight size={18} />
-            </GameButton>
-          )}
+            {phase === 'ready' && (
+              <GameButton
+                size="lg"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={startSeries}
+              >
+                <Play size={20} fill="currentColor" />
+                Iniciar série {seriesIndex + 1}
+                {current.laterality === 'per_side'
+                  ? ` · ${sideIndex === 0 ? 'esquerdo' : 'direito'}`
+                  : ''}
+              </GameButton>
+            )}
 
-          {phase === 'resting' && (
-            <>
+            {phase === 'side_transition' && (
+              <GameButton
+                size="lg"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={continueAfterSideTransition}
+              >
+                Pronto, iniciar lado direito <ChevronRight size={20} />
+              </GameButton>
+            )}
+
+            {phase === 'working' && current.modo === 'reps' && (
+              <GameButton
+                size="lg"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={completeSeries}
+              >
+                <Check size={22} />
+                Série concluída
+              </GameButton>
+            )}
+
+            {phase === 'working' && current.modo === 'tempo' && (
               <div className="flex gap-2">
                 <GameButton
                   size="lg"
@@ -1024,11 +1043,11 @@ export function PlayerPage() {
                 >
                   {paused ? (
                     <>
-                      <Play size={20} fill="currentColor" /> Continuar descanso
+                      <Play size={20} fill="currentColor" /> Continuar exercício
                     </>
                   ) : (
                     <>
-                      <Pause size={20} /> Pausar descanso
+                      <Pause size={20} /> Pausar exercício
                     </>
                   )}
                 </GameButton>
@@ -1037,30 +1056,84 @@ export function PlayerPage() {
                   variant="ghost"
                   className="flex-[2] flex items-center justify-center"
                   onClick={resetTimer}
-                  aria-label="Reiniciar cronômetro de descanso"
+                  aria-label="Reiniciar cronômetro do exercício"
                   title="Reiniciar cronômetro"
                 >
                   <RotateCcw size={18} />
                 </GameButton>
               </div>
-              <GameButton
-                variant="secondary"
-                size="lg"
-                className="w-full flex items-center justify-center gap-2"
-                onClick={skipRest}
-              >
-                <SkipForward size={18} /> Pular descanso
-              </GameButton>
-            </>
-          )}
-        </div>
-      </div>
+            )}
 
-      <QuitWorkoutModal
-        open={showQuitModal}
-        onClose={() => setShowQuitModal(false)}
-        onQuit={quitWorkout}
-      />
-    </div>
+            {current.modo === 'tempo' && (
+              <GameButton
+                size="lg"
+                variant="secondary"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={goToNextExercise}
+              >
+                {exerciseIndex + 1 < workout.queue.length ? 'Próximo treino' : 'Finalizar treino'}
+                <ChevronRight size={18} />
+              </GameButton>
+            )}
+
+            {phase === 'resting' && (
+              <>
+                <div className="game-player-rest-adjust" aria-label="Ajustar descanso">
+                  <button type="button" onClick={() => setSecondsLeft((s) => Math.max(0, s - 10))}>
+                    −10s
+                  </button>
+                  <span>Próximo: {nextSeriesLabel}</span>
+                  <button type="button" onClick={() => setSecondsLeft((s) => s + 10)}>
+                    +10s
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <GameButton
+                    size="lg"
+                    className="flex-[8] flex items-center justify-center gap-2"
+                    variant={paused ? 'primary' : 'secondary'}
+                    onClick={togglePause}
+                  >
+                    {paused ? (
+                      <>
+                        <Play size={20} fill="currentColor" /> Continuar descanso
+                      </>
+                    ) : (
+                      <>
+                        <Pause size={20} /> Pausar descanso
+                      </>
+                    )}
+                  </GameButton>
+                  <GameButton
+                    size="lg"
+                    variant="ghost"
+                    className="flex-[2] flex items-center justify-center"
+                    onClick={resetTimer}
+                    aria-label="Reiniciar cronômetro de descanso"
+                    title="Reiniciar cronômetro"
+                  >
+                    <RotateCcw size={18} />
+                  </GameButton>
+                </div>
+                <GameButton
+                  variant="secondary"
+                  size="lg"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={skipRest}
+                >
+                  <SkipForward size={18} /> Pular descanso
+                </GameButton>
+              </>
+            )}
+          </div>
+        </div>
+
+        <QuitWorkoutModal
+          open={showQuitModal}
+          onClose={() => setShowQuitModal(false)}
+          onQuit={quitWorkout}
+        />
+      </div>
+    </WorkoutScene>
   );
 }

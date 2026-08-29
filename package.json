@@ -17,9 +17,21 @@
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
     "format": "prettier --write .",
     "format:check": "node scripts/check-format.mjs",
-    "test": "npm test --prefix server"
+    "test": "npm test --prefix server",
+    "cap:sync": "npm run build --prefix client && cap sync",
+    "cap:android": "npm run cap:sync && cap open android",
+    "cap:ios": "npm run cap:sync && cap open ios"
   },
   "dependencies": {
+    "@capacitor/app": "8.1.1",
+    "@capacitor/core": "8.5.0",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/keyboard": "8.0.5",
+    "@capacitor/local-notifications": "8.3.1",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/share": "8.0.1",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.3",
     "@supabase/supabase-js": "^2.112.3",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
@@ -28,6 +40,9 @@
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/cli": "8.5.0",
+    "@capacitor/ios": "8.5.0",
     "@types/node": "^26.2.0",
     "@vercel/node": "^5.10.1",
     "concurrently": "^10.0.5",

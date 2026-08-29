@@ -1,29 +1,22 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { isReminderDue } from '@shared/reminders';
+import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 
 export function usePersonalizedReminders() {
   const { user } = useAuth();
 
   useEffect(() => {
-    const check = () => {
-      if (!('Notification' in window) || Notification.permission !== 'granted') return;
-      const now = new Date();
-      for (const reminder of user?.preferencias?.lembretes_personalizados ?? []) {
-        if (!isReminderDue(reminder, now)) continue;
-        const day = now.toISOString().slice(0, 10);
-        const key = `evolyn:reminder:${reminder.id}:${day}:${reminder.time}`;
-        if (localStorage.getItem(key)) continue;
-        new Notification(reminder.title, {
-          body: reminder.message,
-          icon: '/brand/favicon-192.png',
-          tag: reminder.id,
-        });
-        localStorage.setItem(key, '1');
-      }
+    const reminders = user?.preferencias?.lembretes_personalizados ?? [];
+    const sync = () => void notificationScheduler.sync(reminders);
+    sync();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') sync();
     };
-    check();
-    const interval = window.setInterval(check, 30_000);
-    return () => window.clearInterval(interval);
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [user?.preferencias?.lembretes_personalizados]);
 }

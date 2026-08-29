@@ -1,0 +1,38 @@
+import { Capacitor } from '@capacitor/core';
+import { hydrateNativeWorkoutSnapshot } from '@/lib/workout-session-storage';
+
+export const isNativeApp = () => Capacitor.isNativePlatform();
+
+export async function initializeNativeRuntime(): Promise<() => void> {
+  if (!isNativeApp()) return () => undefined;
+  await hydrateNativeWorkoutSnapshot();
+  const [{ App }, { StatusBar, Style }, { SplashScreen }] = await Promise.all([
+    import('@capacitor/app'),
+    import('@capacitor/status-bar'),
+    import('@capacitor/splash-screen'),
+  ]);
+  await StatusBar.setStyle({ style: Style.Dark });
+  if (Capacitor.getPlatform() === 'android')
+    await StatusBar.setBackgroundColor({ color: '#f4faf7' });
+  await SplashScreen.hide();
+  const stateListener = await App.addListener('appStateChange', ({ isActive }) =>
+    window.dispatchEvent(new CustomEvent('evolyn:app-state', { detail: { isActive } })),
+  );
+  const backListener = await App.addListener('backButton', ({ canGoBack }) =>
+    canGoBack ? window.history.back() : void App.minimizeApp(),
+  );
+  const urlListener = await App.addListener('appUrlOpen', ({ url }) =>
+    window.dispatchEvent(new CustomEvent('evolyn:deep-link', { detail: { url } })),
+  );
+  return () => {
+    void stateListener.remove();
+    void backListener.remove();
+    void urlListener.remove();
+  };
+}
+
+export async function selectionHaptic(): Promise<void> {
+  if (!isNativeApp()) return;
+  const { Haptics } = await import('@capacitor/haptics');
+  await Haptics.selectionChanged();
+}

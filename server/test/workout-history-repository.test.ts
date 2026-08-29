@@ -19,6 +19,7 @@ type QueryResponse = {
 function queryReturning(response: QueryResponse, singleResponse: QueryResponse = response) {
   const query = {
     select: vi.fn(),
+    insert: vi.fn(),
     eq: vi.fn(),
     gte: vi.fn(),
     lt: vi.fn(),
@@ -27,6 +28,7 @@ function queryReturning(response: QueryResponse, singleResponse: QueryResponse =
     neq: vi.fn(),
     order: vi.fn(),
     limit: vi.fn(),
+    single: vi.fn(() => Promise.resolve(singleResponse)),
     maybeSingle: vi.fn(() => Promise.resolve(singleResponse)),
     then: (
       onFulfilled: (value: QueryResponse) => unknown,
@@ -35,6 +37,7 @@ function queryReturning(response: QueryResponse, singleResponse: QueryResponse =
   };
 
   query.select.mockReturnValue(query);
+  query.insert.mockReturnValue(query);
   query.eq.mockReturnValue(query);
   query.gte.mockReturnValue(query);
   query.lt.mockReturnValue(query);
@@ -90,6 +93,37 @@ describe('WorkoutHistory repository — propagação de erros', () => {
       WorkoutHistory.exists({ usuario_id: 'user-1', somenteTreino: true }),
     ).resolves.toBe(true);
     expect(dbMocks.from).toHaveBeenCalledTimes(2);
+  });
+
+  it('transforma colisão de completion_id em resposta idempotente', async () => {
+    const duplicate = { code: '23505', message: 'duplicate key value' };
+    const existing = {
+      id: 'history-1',
+      usuario_id: 'user-1',
+      treino_nome: 'Missão moderada',
+      exercicios: [],
+      duracao_total_segundos: 120,
+      xp_ganho: 40,
+      concluido_em: new Date().toISOString(),
+      completion_id: 'completion-1',
+    };
+    dbMocks.from
+      .mockReturnValueOnce(queryReturning({ data: null, error: duplicate }))
+      .mockReturnValueOnce(
+        queryReturning({ data: null, error: null }, { data: existing, error: null }),
+      );
+
+    await expect(
+      WorkoutHistory.createOnce({
+        usuario_id: 'user-1',
+        treino_nome: 'Missão moderada',
+        exercicios: [],
+        duracao_total_segundos: 120,
+        xp_ganho: 0,
+        concluido_em: new Date(),
+        completion_id: 'completion-1',
+      }),
+    ).resolves.toMatchObject({ created: false, history: { id: 'history-1', xp_ganho: 40 } });
   });
 
   it.each([
