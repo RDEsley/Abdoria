@@ -2,27 +2,29 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Coins } from 'lucide-react';
 
-/** Gema azul pontuda cristalizada — moeda premium (ainda sem forma de ganhar). */
+/** Folha MyPlant — apresentação visual da moeda premium `gems` durante a migração. */
 export function GemIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} className="top-navbar__gem-icon" aria-hidden>
-      <defs>
-        <linearGradient id="gem-body" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#7dd3fc" />
-          <stop offset="45%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#0369a1" />
-        </linearGradient>
-      </defs>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className="top-navbar__gem-icon"
+      aria-hidden
+    >
       <path
-        d="M12 1.5 L18.5 7 L21 12 L12 22.5 L3 12 L5.5 7 Z"
-        fill="url(#gem-body)"
-        stroke="#0c4a6e"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
+        d="M20.5 3.5C12 3.8 5.2 7.4 4 13.1c-.8 3.8 1.9 6.8 5.8 6.2 5.9-.9 9.5-7.8 10.7-15.8Z"
+        fill="#34c77b"
+        stroke="#11663f"
+        strokeWidth="1.3"
       />
-      <path d="M12 1.5 L9.5 7 L12 22.5 L14.5 7 Z" fill="rgba(224, 242, 254, 0.45)" />
-      <path d="M5.5 7 L18.5 7" stroke="rgba(12, 74, 110, 0.45)" strokeWidth="1" />
-      <path d="M7 5.2 L9.8 3.6" stroke="#e0f2fe" strokeWidth="1.3" strokeLinecap="round" />
+      <path
+        d="M5.2 19.7c2.7-4.8 6.3-8.1 11.4-11.2"
+        fill="none"
+        stroke="#eafff2"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -33,7 +35,7 @@ export interface TopNavbarProps {
   userXp: number;
   xpMax: number;
   doriasAmount: number;
-  /** Gemas azuis (moeda premium) — ainda sem fonte de ganho, só exibição. */
+  /** Folhas na UI; o contrato interno permanece `gemsAmount` por compatibilidade. */
   gemsAmount?: number;
   avatarUrl?: string | null;
   /** Sobrescreve avatarUrl quando presente (ex.: CosmeticAvatar). */

@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { ReminderCenter } from '@/components/activities/ReminderCenter';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -59,6 +60,7 @@ export function NotificationsBell() {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [localDismissTick, setLocalDismissTick] = useState(0);
+  const [tab, setTab] = useState<'inbox' | 'scheduled'>('inbox');
 
   const frozenAutoUse = user?.preferencias?.frozen_streak_auto_usar ?? true;
   const localNotices = useMemo(
@@ -182,7 +184,27 @@ export function NotificationsBell() {
             </button>
           )}
         </div>
-        {loading ? (
+        <div className="notifications-tabs" role="tablist" aria-label="Seções de notificações">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'inbox'}
+            onClick={() => setTab('inbox')}
+          >
+            Caixa de entrada
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'scheduled'}
+            onClick={() => setTab('scheduled')}
+          >
+            Programadas
+          </button>
+        </div>
+        {tab === 'scheduled' ? (
+          <ReminderCenter />
+        ) : loading ? (
           <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
         ) : allItems.length === 0 ? (
           <p className="mt-3 text-sm font-bold text-stone-500">

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Coins, Crown, Gem, Gift, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
+import { Coins, Crown, Gift, Leaf, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
 import { CelebrationBurst } from '@/components/effects/CelebrationBurst';
 import { GameButton } from '@/components/ui/GameButton';
 import type { GiftCodeRewardLine, RedeemCodeResponse } from '@/types';
@@ -21,7 +21,7 @@ function rewardIcon(line: GiftCodeRewardLine) {
   if (line.tipo === 'xp') return <Zap size={22} aria-hidden />;
   if (line.tipo === 'abdoria') return <Coins size={22} aria-hidden />;
   if (line.tipo === 'frozen_streak') return <Snowflake size={22} aria-hidden />;
-  if (line.tipo === 'gems') return <Gem size={22} aria-hidden />;
+  if (line.tipo === 'gems') return <Leaf size={22} aria-hidden />;
   return <Crown size={22} aria-hidden />;
 }
 
@@ -29,7 +29,7 @@ function rewardLabel(line: GiftCodeRewardLine): string {
   if (line.tipo === 'xp') return `+${formatRewardAmount(line.valor ?? 0)} XP`;
   if (line.tipo === 'abdoria') return `+${formatRewardAmount(line.valor ?? 0)} ${CURRENCY_NAME}`;
   if (line.tipo === 'frozen_streak') return `+${formatRewardAmount(line.valor ?? 0)} Frozen Streak`;
-  if (line.tipo === 'gems') return `+${formatRewardAmount(line.valor ?? 0)} Gems`;
+  if (line.tipo === 'gems') return `+${formatRewardAmount(line.valor ?? 0)} Folhas`;
   return line.nome ?? 'Item exclusivo';
 }
 
@@ -37,7 +37,7 @@ function rewardHint(line: GiftCodeRewardLine): string {
   if (line.tipo === 'xp') return 'Experiência extra na sua conta';
   if (line.tipo === 'abdoria') return 'Moedas para a loja';
   if (line.tipo === 'frozen_streak') return 'Protege sua sequência se faltar um dia';
-  if (line.tipo === 'gems') return 'Moeda premium';
+  if (line.tipo === 'gems') return 'Folhas premium do MyPlant';
   return 'Cosmético desbloqueado';
 }
 

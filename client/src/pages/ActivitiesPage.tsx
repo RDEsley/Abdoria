@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { CalendarCheck2 } from 'lucide-react';
 import { AtividadesCard } from '@/components/dashboard/AtividadesCard';
-import { ReminderCenter } from '@/components/activities/ReminderCenter';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 
@@ -18,8 +17,6 @@ export function ActivitiesPage() {
       <GamePageHeader eyebrow="Sua rotina" title="Atividades" />
 
       <AtividadesCard />
-
-      <ReminderCenter />
 
       <section className="glass-card p-4">
         <h2 className="game-section-title flex items-center gap-2">

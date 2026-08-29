@@ -172,3 +172,25 @@
   color: #047857;
   cursor: default;
 }
+.notifications-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #edf2f0;
+}
+.notifications-tabs button {
+  min-height: 44px;
+  padding: 0 10px;
+  color: #63746f;
+  border-radius: 11px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.notifications-tabs button[aria-selected='true'] {
+  color: #087c66;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(23, 51, 44, 0.08);
+}

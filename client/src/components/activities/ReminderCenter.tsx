@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Bell, BellRing, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import {
   REMINDER_SKINS,
   normalizeReminderWeekdays,
@@ -44,17 +45,14 @@ export function ReminderCenter() {
   const replace = (next: PersonalizedReminder[]) =>
     patchPreferences({ lembretes_personalizados: next });
 
-  const askPermission = () => {
-    if ('Notification' in window && Notification.permission === 'default')
-      void Notification.requestPermission();
-  };
+  const askPermission = () => void notificationScheduler.requestPermission();
 
   return (
     <section className="glass-card overflow-hidden p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="game-section-title flex items-center gap-2">
-            <BellRing size={16} /> Lembretes
+            <BellRing size={16} /> Notificações programadas
           </h2>
           <p className="mt-1 text-xs font-semibold leading-relaxed text-stone-500">
             Crie alertas pessoais com horário, dias e estilo próprios.
@@ -67,7 +65,7 @@ export function ReminderCenter() {
             setEditing((value) => !value);
           }}
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md transition active:scale-95"
-          aria-label="Criar lembrete"
+          aria-label="Criar notificação programada"
         >
           <Plus size={19} />
         </button>
@@ -159,7 +157,7 @@ export function ReminderCenter() {
       <div className="mt-4 space-y-2">
         {reminders.length === 0 && !editing && (
           <p className="rounded-2xl border border-dashed border-stone-300 px-3 py-5 text-center text-xs font-semibold text-stone-500">
-            Nenhum lembrete criado ainda.
+            Nenhuma notificação programada ainda.
           </p>
         )}
         {reminders.map((reminder) => (
