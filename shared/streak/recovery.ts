@@ -32,6 +32,43 @@ export interface StreakRecoveryOffer {
   perdido_em: string;
 }
 
+export interface StreakRecoveryReceipt {
+  perdido_em: string;
+  dias_restaurados: number;
+  custo_coins: number;
+  recuperado_em: string;
+}
+
+export interface StreakRecoveryAnchor {
+  recovered_at: string;
+  base_streak: number;
+}
+
+function addDays(dayKey: string, amount: number): string {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + amount, 12));
+  return date.toISOString().slice(0, 10);
+}
+
+/** Reaplica a recuperação persistida sobre o cálculo derivado do histórico. */
+export function applyStreakRecoveryAnchor(
+  anchor: StreakRecoveryAnchor | null | undefined,
+  activeDays: string[],
+  today: string,
+): { streak: number; active: boolean } {
+  if (!anchor) return { streak: 0, active: false };
+  const days = new Set(activeDays);
+  let cursor = addDays(anchor.recovered_at, 1);
+  let additions = 0;
+  while (cursor < today) {
+    if (!days.has(cursor)) return { streak: 0, active: false };
+    additions += 1;
+    cursor = addDays(cursor, 1);
+  }
+  if (cursor === today && days.has(today)) additions += 1;
+  return { streak: anchor.base_streak + additions, active: true };
+}
+
 export function buildStreakRecoveryOffer(
   diasPerdidos: number,
   perdidoEm: string,
