@@ -100,14 +100,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     descricao: 'Complete 25 Atividades no total',
     dificuldade: 'media',
   },
-  {
-    id: 'bestiario_10',
-    titulo: 'Caçador de slimes',
-    icon: 'target',
-    descricao: 'Desbloqueie 10 inimigos no Bestiário',
-    dificuldade: 'media',
-  },
-
   // —— Difíceis ——
   {
     id: 'streak_14',
@@ -319,13 +311,6 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     titulo: 'Vida equilibrada',
     icon: 'sparkles',
     descricao: 'Complete 100 Atividades no total',
-    dificuldade: 'lendaria',
-  },
-  {
-    id: 'bestiario_completo',
-    titulo: 'Mestre do bestiário',
-    icon: 'trophy',
-    descricao: 'Desbloqueie todos os inimigos do Bestiário',
     dificuldade: 'lendaria',
   },
   {

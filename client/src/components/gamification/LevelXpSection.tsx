@@ -185,8 +185,8 @@ export function LevelXpSection({
 
         {showRulesLink && (
           <p className="game-xp-section__footnote">
-            Streak, conquistas e treino compartilham o mesmo máx. diário. Nível e Bestiário aumentam
-            o máx. permanentemente.{' '}
+            Streak, conquistas e treino compartilham o mesmo máx. diário. Nível e conquistas
+            aumentam o máx. permanentemente.{' '}
             <Link to="/configuracoes#regras-xp" className="game-xp-section__link">
               Ver regras de XP
             </Link>

@@ -4,7 +4,9 @@ export const BRAND_FAVICON = {
   32: '/brand/favicon-32.png',
   48: '/brand/favicon-48.png',
   180: '/brand/favicon-180.png',
-  256: '/brand/logo.png',
+  192: '/brand/favicon-192.png',
+  256: '/brand/favicon-256.png',
+  512: '/brand/favicon-512.png',
 } as const;
 
 /** Ícone principal (telas de auth, prévias grandes). */
@@ -19,5 +21,7 @@ export function brandMarkSrc(displayPx: number): string {
   if (displayPx <= 40) return BRAND_FAVICON[32];
   if (displayPx <= 56) return BRAND_FAVICON[48];
   if (displayPx <= 140) return BRAND_FAVICON[180];
-  return BRAND_FAVICON[256];
+  if (displayPx <= 224) return BRAND_FAVICON[192];
+  if (displayPx <= 384) return BRAND_FAVICON[256];
+  return BRAND_FAVICON[512];
 }

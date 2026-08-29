@@ -1,6 +1,4 @@
 import type {
-  AfkPendingReward,
-  AfkState,
   Banimento,
   Cosmeticos,
   Gamificacao,
@@ -36,7 +34,6 @@ export interface UserRecord {
   dados_salvos: UserDadosSalvos;
   xp_diario: XpDiario;
   inventario: Inventario;
-  afk: AfkState & { pending: AfkPendingReward };
   onboarding_completed: boolean;
   terms_accepted_at?: Date | string | null;
   muscle_map_reset_at?: Date | string | null;

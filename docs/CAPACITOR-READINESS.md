@@ -9,11 +9,10 @@ projeto Android/iOS ou credencial de assinatura foi adicionado agora.
 - O build gera arquivos estáticos em `client/dist` e contém `index.html`, estrutura aceita pelo
   Capacitor.
 - A interface é responsiva, usa `100dvh` nas telas críticas e considera `safe-area-inset-*` na
-  navegação, no player e na Exploração.
+  navegação, no player e no MyPlant.
 - Dados importantes de conta, plano e progresso já vivem no servidor. O armazenamento local é
   usado principalmente para sessão e estado transitório.
-- A Exploração reconcilia o progresso no servidor quando o app volta ao primeiro plano, uma base
-  mais confiável do que depender de timers JavaScript em segundo plano.
+- Plano, preferências, layout do Início e lembretes personalizados ficam sincronizados na conta.
 
 ## Bloqueadores antes do primeiro app nativo
 
@@ -29,9 +28,10 @@ projeto Android/iOS ou credencial de assinatura foi adicionado agora.
 4. **Integrar navegação nativa.** Tratar botão Voltar do Android, retomada/pausa do app e URLs
    abertas por Universal Links/App Links. O `BrowserRouter` pode continuar, mas links externos
    precisam alimentar o React Router pelo evento `appUrlOpen`.
-5. **Substituir APIs somente web.** Migrar notificações da Web Notification API para o plugin de
-   notificações locais/push; testar voz, áudio, seleção de foto, compartilhamento e downloads em
-   aparelhos reais e fornecer fallbacks nativos quando necessário.
+5. **Substituir APIs somente web.** O novo centro de lembretes usa Web Notification enquanto o app
+   está aberto. Migrá-lo para `@capacitor/local-notifications`, agendar/cancelar cada alerta no
+   sistema operacional e reconciliar os agendamentos quando as preferências forem alteradas.
+   Testar também voz, áudio, seleção de foto, compartilhamento e downloads em aparelhos reais.
 
 ## Acabamento e publicação
 

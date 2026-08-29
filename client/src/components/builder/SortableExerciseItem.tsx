@@ -36,21 +36,23 @@ export function SortableExerciseItem({ id, item, index, exercise, onRemove, onCo
         ref={setNodeRef}
         style={style}
         className={[
-          'flex flex-col gap-2 rounded-xl border border-stone-200 bg-stone-50 p-3 transition-shadow',
-          isDragging ? 'scale-[1.02] rotate-1 shadow-lg ring-2 ring-emerald-300/60' : 'shadow-sm',
+          'flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-white p-3.5 transition-all',
+          isDragging
+            ? 'scale-[1.02] rotate-1 shadow-xl ring-2 ring-emerald-300/60'
+            : 'shadow-[0_4px_16px_rgba(28,25,23,0.05)]',
         ].join(' ')}
       >
         <div className="flex items-start gap-2">
           <button
             type="button"
-            className="mt-0.5 cursor-grab touch-none rounded-md p-0.5 text-stone-400 hover:bg-stone-200/60 hover:text-stone-600 active:cursor-grabbing"
+            className="inline-flex h-9 w-7 cursor-grab touch-none items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 active:cursor-grabbing"
             {...attributes}
             {...listeners}
             aria-label="Arrastar para reordenar"
           >
             <Grip size={18} aria-hidden />
           </button>
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-xs font-black text-emerald-700">
             {index + 1}
           </span>
           <div className="min-w-0 flex-1">
@@ -64,7 +66,7 @@ export function SortableExerciseItem({ id, item, index, exercise, onRemove, onCo
             <button
               type="button"
               onClick={onRemove}
-              className="rounded-md p-1 text-stone-400 hover:bg-red-50 hover:text-red-500"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-stone-400 hover:bg-red-50 hover:text-red-500"
               aria-label="Remover exercício"
             >
               <X size={16} />
@@ -72,7 +74,7 @@ export function SortableExerciseItem({ id, item, index, exercise, onRemove, onCo
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 pl-9">
+        <div className="grid grid-cols-2 gap-2 pl-9">
           <ExerciseQuickActions
             showPlay={Boolean(exercise)}
             onPlay={exercise ? () => setShowVideo(true) : undefined}
@@ -82,7 +84,7 @@ export function SortableExerciseItem({ id, item, index, exercise, onRemove, onCo
               type="button"
               variant="secondary"
               size="sm"
-              className="flex items-center gap-1.5"
+              className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl"
               onClick={onConfigure}
             >
               <Settings2 size={14} aria-hidden /> Configurar

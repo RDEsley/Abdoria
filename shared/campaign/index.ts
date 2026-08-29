@@ -10,12 +10,10 @@
  * resgate > poder desperto > defesa heroica > fortaleza > travessia >
  * horda > missão cumprida (volume) > monstro (piso).
  *
- * Pools sensíveis a progresso: inimigos nomeados só depois de descobertos no
- * Bestiário (fallback genérico antes disso) e lugares revelados por nível.
+ * Os lugares são revelados por nível e os encontros usam um catálogo narrativo
+ * próprio e independente de outros modos de jogo.
  */
 
-import { AFK_ENEMIES, type AfkEnemyId } from '../afk/combat.js';
-import { bestiaryEnemyTier, isBestiaryEnemyId } from '../afk/bestiary.js';
 import { resolveExerciseNomePt } from '../types/exercise-display.js';
 import { computePersonalRecords, diffNewPersonalRecords } from '../personal-records.js';
 import type { ModoExercicio } from '../types/index.js';
@@ -46,7 +44,7 @@ export const CAMPAIGN_STREAK_MILESTONES = [2, 3, 7, 14, 30, 60, 100, 365];
  */
 export const CAMPAIGN_STREAK_NARRATIVE_MIN = 7;
 
-/** Inimigos genéricos pra conta sem descobertas no Bestiário. */
+/** Encontros narrativos genéricos da campanha. */
 export const CAMPAIGN_GENERIC_ENEMIES = [
   'um vulto das brumas',
   'uma fera sem nome',
@@ -90,7 +88,6 @@ export interface CampaignCatalogInfo {
 export interface CampaignContext {
   heroi: string;
   level: number;
-  bestiarioDesbloqueados: AfkEnemyId[];
 }
 
 export interface CampaignExerciseSummary {
@@ -258,19 +255,10 @@ function templatesForTipo(
     : CAMPAIGN_TEMPLATES.filter((t) => t.tipo === 'monstro_derrotado');
 }
 
-function enemyPools(ctx: CampaignContext): { comuns: string[]; chefes: string[] } {
-  const descobertos = (ctx.bestiarioDesbloqueados ?? []).filter(isBestiaryEnemyId);
-  const comuns: string[] = [];
-  const chefes: string[] = [];
-  for (const id of descobertos) {
-    const label = AFK_ENEMIES[id]?.label;
-    if (!label) continue;
-    if (bestiaryEnemyTier(id) === 'boss') chefes.push(label);
-    else comuns.push(label);
-  }
+function enemyPools(_ctx: CampaignContext): { comuns: string[]; chefes: string[] } {
   return {
-    comuns: comuns.length > 0 ? comuns : CAMPAIGN_GENERIC_ENEMIES,
-    chefes: chefes.length > 0 ? chefes : [CAMPAIGN_GENERIC_BOSS],
+    comuns: CAMPAIGN_GENERIC_ENEMIES,
+    chefes: [CAMPAIGN_GENERIC_BOSS],
   };
 }
 
@@ -560,7 +548,11 @@ export function buildCampaignPosts(
       // só como chip informativo, a narrativa do marco não muda.
       const [principal] = session.atividadesFeitas ?? [];
       if (principal) {
-        exercicioInfo = { slug: 'atividade-principal', nome: principal.nome, detalhe: principal.detalhe };
+        exercicioInfo = {
+          slug: 'atividade-principal',
+          nome: principal.nome,
+          detalhe: principal.detalhe,
+        };
       }
     }
 

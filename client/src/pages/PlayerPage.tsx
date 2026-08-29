@@ -63,7 +63,6 @@ import {
   formatExercisePrescription,
   resolveCosmeticos,
   xpLevelFromTotal,
-  type AfkEnemyId,
   type LevelUpCelebration as LevelUpData,
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
@@ -495,8 +494,6 @@ export function PlayerPage() {
       {
         heroi: authUser.nome?.split(' ')[0] ?? 'O herói',
         level: xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
-        bestiarioDesbloqueados: (authUser.gamificacao?.bestiario_desbloqueados ??
-          []) as AfkEnemyId[],
       },
       capituloOverride,
     );

@@ -290,32 +290,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     showGameToast(error, { variant: 'error' });
   }, [error]);
 
-  useEffect(() => {
-    const onAfkSync = (event: Event) => {
-      const detail = (event as CustomEvent<import('@/lib/api').AfkPingResponse>).detail;
-      if (!detail) return;
-      setStats((prev) => {
-        if (!prev) return prev;
-        const novos = detail.bestiario_novos ?? [];
-        const mergedBestiary = novos.length
-          ? [...new Set([...(prev.bestiario_desbloqueados ?? []), ...novos])]
-          : prev.bestiario_desbloqueados;
-        return {
-          ...prev,
-          bestiario_desbloqueados: mergedBestiary,
-          afk: {
-            ...prev.afk,
-            minutos_acumulados: detail.minutos_acumulados,
-            pending: detail.pending,
-            has_rewards: detail.has_rewards,
-          },
-        };
-      });
-    };
-    window.addEventListener('abdoria:afk-sync', onAfkSync);
-    return () => window.removeEventListener('abdoria:afk-sync', onAfkSync);
-  }, []);
-
   useEffect(
     () => () => {
       if (persistTimer.current !== null) {

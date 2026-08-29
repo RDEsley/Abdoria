@@ -35,15 +35,8 @@ import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
 import { readInventarioSummary } from '../services/inventory.js';
-import {
-  afkProfileColumns,
-  hasAfkRewardsToClaim,
-  readFrozenDia,
-  syncAfkRewards,
-} from '../services/afk.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import type { TreinoBase, TreinoTipo, WorkoutExerciseEntry } from '../types/index.js';
-import { normalizePending } from '../repositories/user-repository.js';
 import {
   computePersonalRecords,
   diffNewPersonalRecords,
@@ -137,18 +130,13 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       return;
     }
 
-    // Este GET escreve (reset de XP diário, acúmulo de AFK, aviso de streak
-    // congelada). Como o Início chama /stats a cada refresh, um `save()`
+    // Este GET pode escrever o reset de XP diário e o aviso de streak congelada.
+    // Como o Início chama /stats a cada refresh, um `save()`
     // completo aqui é um dos maiores atropelos possíveis às `preferencias`
     // gravadas pelo cliente — daí o escopo explícito em cada escrita.
-    const frozenDiaAntes = readFrozenDia(user);
-
     if (resetXpDiarioIfNeeded(user)) {
       await user.saveColumns(['xp_diario']);
     }
-
-    syncAfkRewards(user);
-    await user.save({ profileColumns: afkProfileColumns(user, frozenDiaAntes) });
 
     const userId = user.id.toString();
 
@@ -204,7 +192,6 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
     });
 
     const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
-    const pending = normalizePending(user.afk?.pending);
     const inventario = readInventarioSummary(user);
     const streakFrozenNotice = Boolean(user.gamificacao.streak_freeze_notice_pending);
     if (streakFrozenNotice) {
@@ -234,19 +221,8 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       xp_diario_cap_bonus_conquista: xpCap.bonus_conquista,
       xp_data_reset: user.xp_diario?.data_reset ?? getTodaySaoPaulo(),
       inventario,
-      afk: {
-        minutos_acumulados: user.afk?.minutos_acumulados ?? 0,
-        pending,
-        has_rewards: hasAfkRewardsToClaim({ pending }),
-      },
       frozen_streak_count: inventario.frozen_streak,
-      route_drink_count: inventario.route_drink,
-      patrol_cache_count: inventario.bau_patrulha,
-      exp_instant_count: inventario.exp_instant,
-      doria_bag_count: inventario.doria_bag,
       streak_frozen_notice: streakFrozenNotice,
-      bestiario_desbloqueados: user.gamificacao.bestiario_desbloqueados ?? [],
-      bestiario_bonus_cap: (user.gamificacao.bestiario_desbloqueados ?? []).length,
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({

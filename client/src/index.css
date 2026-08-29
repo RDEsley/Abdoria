@@ -19,10 +19,73 @@
 @import './styles/builder.css';
 @import './styles/legacy-borders.css';
 @import './styles/inventory.css';
-@import './styles/bestiary-achievements.css';
 @import './styles/share-card.css';
 @import './styles/user-avatar.css';
 @import './styles/notifications.css';
 @import './styles/profile-social.css';
 @import './styles/tutorial.css';
 @import './styles/onboarding.css';
+@keyframes home-section-wiggle {
+  0%,
+  100% {
+    transform: rotate(-0.25deg);
+  }
+  50% {
+    transform: rotate(0.25deg);
+  }
+}
+
+.home-section-editable {
+  animation: home-section-wiggle 0.5s ease-in-out infinite;
+  outline: 2px dashed rgb(16 185 129 / 0.35);
+  outline-offset: 3px;
+  border-radius: 1.25rem;
+}
+
+.reminder-card--calm {
+  border-color: rgb(186 230 253);
+  background: linear-gradient(135deg, rgb(240 249 255), rgb(224 242 254));
+  color: rgb(12 74 110);
+}
+.reminder-card--energy {
+  border-color: rgb(254 215 170);
+  background: linear-gradient(135deg, rgb(255 247 237), rgb(255 237 213));
+  color: rgb(154 52 18);
+}
+.reminder-card--focus {
+  border-color: rgb(221 214 254);
+  background: linear-gradient(135deg, rgb(245 243 255), rgb(237 233 254));
+  color: rgb(91 33 182);
+}
+.reminder-card--nature {
+  border-color: rgb(167 243 208);
+  background: linear-gradient(135deg, rgb(236 253 245), rgb(209 250 229));
+  color: rgb(6 95 70);
+}
+.reminder-card--minimal {
+  border-color: rgb(231 229 228);
+  background: rgb(250 250 249);
+  color: rgb(68 64 60);
+}
+
+.settings-page > .glass-card {
+  border-radius: 1.35rem;
+  border-color: rgb(231 229 228 / 0.85);
+  box-shadow: 0 8px 28px rgb(28 25 23 / 0.055);
+}
+
+.settings-page input[type='range'] {
+  min-height: 2.75rem;
+  accent-color: rgb(5 150 105);
+}
+.settings-page input[type='checkbox'] {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  accent-color: rgb(5 150 105);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-section-editable {
+    animation: none;
+  }
+}

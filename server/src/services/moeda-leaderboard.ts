@@ -34,7 +34,7 @@ export async function syncMoedaBalancesForLeaderboard(): Promise<void> {
 }
 
 async function doSync(): Promise<void> {
-  const users = await User.find(leaderboardFilter, { skipAfk: true });
+  const users = await User.find(leaderboardFilter);
 
   const updates = users.flatMap((lean) => {
     const saldoAtual = lean.cosmeticos?.moedas ?? 0;

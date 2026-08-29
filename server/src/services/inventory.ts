@@ -1,30 +1,11 @@
-﻿import type { UserRecord } from '../domain/User.js';
+import type { UserRecord } from '../domain/User.js';
 import {
-  DORIA_BAG_ITEM_ID,
-  DORIA_BAG_LABEL,
-  DORIA_BAG_MAX,
-  DORIA_BAG_MIN,
-  EXP_INSTANT_ITEM_ID,
-  EXP_INSTANT_XP,
   FROZEN_STREAK_ITEM_ID,
   INVENTORY_STACK_CAP,
   INVENTORY_STACK_CAPPED_ITEM_IDS,
-  PATROL_CACHE_ITEM_ID,
-  ROUTE_DRINK_HOURS,
-  ROUTE_DRINK_ITEM_ID,
-  SLIME_MATERIALS,
-  SLIME_MATERIAL_BY_ID,
-  isSlimeMaterialItemId,
   type Inventario,
   type InventoryItemId,
-  type AfkPendingReward,
-  type SlimeMaterialItemId,
-  type SlimeMaterialStockItem,
 } from '../types/index.js';
-import { grantPatrolCacheRewards, grantRouteDrinkRewards } from './afk.js';
-import { grantMoeda } from './economy.js';
-import { addWeeklyXp } from './weekly-stats.js';
-import { hashKillSeed } from './afk-rolls.js';
 
 const LEGACY_ENERGY_DRINK_ID = 'energy_drink';
 
@@ -33,46 +14,25 @@ export interface AddInventoryResult {
   discarded: number;
 }
 
-export function isStackCappedItem(itemId: InventoryItemId): boolean {
-  return INVENTORY_STACK_CAPPED_ITEM_IDS.includes(itemId);
-}
-
-function migrateLegacyInventoryItems(inv: Inventario): void {
-  const legacy = inv.itens.find((e) => (e.item_id as string) === LEGACY_ENERGY_DRINK_ID);
-  if (!legacy || legacy.quantidade <= 0) return;
-
-  const frozen = inv.itens.find((e) => e.item_id === FROZEN_STREAK_ITEM_ID);
-  if (frozen) {
-    frozen.quantidade += legacy.quantidade;
-  } else {
-    inv.itens.push({ item_id: FROZEN_STREAK_ITEM_ID, quantidade: legacy.quantidade });
-  }
-  inv.itens = inv.itens.filter((e) => (e.item_id as string) !== LEGACY_ENERGY_DRINK_ID);
-}
-
 export function ensureInventario(user: UserRecord): Inventario {
-  if (!user.inventario || !Array.isArray(user.inventario.itens)) {
-    user.inventario = { itens: [] } as unknown as UserRecord['inventario'];
+  if (!user.inventario || !Array.isArray(user.inventario.itens)) user.inventario = { itens: [] };
+  const inventory = user.inventario as Inventario;
+  const legacy = inventory.itens.find((entry) => entry.item_id === LEGACY_ENERGY_DRINK_ID);
+  if (legacy?.quantidade) {
+    const current = inventory.itens.find((entry) => entry.item_id === FROZEN_STREAK_ITEM_ID);
+    if (current) current.quantidade += legacy.quantidade;
+    else inventory.itens.push({ item_id: FROZEN_STREAK_ITEM_ID, quantidade: legacy.quantidade });
+    inventory.itens = inventory.itens.filter((entry) => entry.item_id !== LEGACY_ENERGY_DRINK_ID);
   }
-  const inv = user.inventario as unknown as Inventario;
-  migrateLegacyInventoryItems(inv);
-  return inv;
+  return inventory;
 }
 
 export function getItemCount(user: UserRecord, itemId: InventoryItemId): number {
-  const inv = ensureInventario(user);
-  if (itemId === FROZEN_STREAK_ITEM_ID) {
-    const legacy =
-      inv.itens.find((e) => (e.item_id as string) === LEGACY_ENERGY_DRINK_ID)?.quantidade ?? 0;
-    const current = inv.itens.find((e) => e.item_id === FROZEN_STREAK_ITEM_ID)?.quantidade ?? 0;
-    return current + legacy;
-  }
-  return inv.itens.find((e) => e.item_id === itemId)?.quantidade ?? 0;
+  return ensureInventario(user).itens.find((entry) => entry.item_id === itemId)?.quantidade ?? 0;
 }
 
-function resolveInventoryItemId(itemId: string): InventoryItemId {
-  if (itemId === LEGACY_ENERGY_DRINK_ID) return FROZEN_STREAK_ITEM_ID;
-  return itemId as InventoryItemId;
+export function isStackCappedItem(itemId: InventoryItemId): boolean {
+  return INVENTORY_STACK_CAPPED_ITEM_IDS.includes(itemId);
 }
 
 export function addInventoryItem(
@@ -80,40 +40,20 @@ export function addInventoryItem(
   itemId: InventoryItemId | string,
   amount: number,
 ): AddInventoryResult {
-  return addInventoryItemInternal(user, resolveInventoryItemId(itemId), amount);
-}
-
-function addInventoryItemInternal(
-  user: UserRecord,
-  itemId: InventoryItemId,
-  amount: number,
-): AddInventoryResult {
+  const normalizedId = itemId === LEGACY_ENERGY_DRINK_ID ? FROZEN_STREAK_ITEM_ID : itemId;
   if (amount <= 0) return { added: 0, discarded: 0 };
-
-  const inv = ensureInventario(user);
-  const entry = inv.itens.find(
-    (e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId,
-  );
+  const inventory = ensureInventario(user);
+  const entry = inventory.itens.find((item) => item.item_id === normalizedId);
   const current = entry?.quantidade ?? 0;
-
-  let added = amount;
-  let discarded = 0;
-
-  if (isStackCappedItem(itemId)) {
-    const space = Math.max(0, INVENTORY_STACK_CAP - current);
-    added = Math.min(amount, space);
-    discarded = amount - added;
-  }
-
+  const space = isStackCappedItem(normalizedId)
+    ? Math.max(0, INVENTORY_STACK_CAP - current)
+    : amount;
+  const added = Math.min(amount, space);
   if (added > 0) {
-    if (entry) {
-      entry.quantidade = current + added;
-    } else {
-      inv.itens.push({ item_id: itemId, quantidade: added });
-    }
+    if (entry) entry.quantidade += added;
+    else inventory.itens.push({ item_id: normalizedId, quantidade: added });
   }
-
-  return { added, discarded };
+  return { added, discarded: amount - added };
 }
 
 export function consumeInventoryItem(
@@ -122,166 +62,17 @@ export function consumeInventoryItem(
   amount = 1,
 ): boolean {
   if (amount <= 0) return true;
-  const inv = ensureInventario(user);
-  migrateLegacyInventoryItems(inv);
-  const entry = inv.itens.find(
-    (e: { item_id: InventoryItemId; quantidade: number }) => e.item_id === itemId,
-  );
+  const inventory = ensureInventario(user);
+  const entry = inventory.itens.find((item) => item.item_id === itemId);
   if (!entry || entry.quantidade < amount) return false;
   entry.quantidade -= amount;
-  if (entry.quantidade <= 0) {
-    inv.itens = inv.itens.filter(
-      (e: { item_id: InventoryItemId; quantidade: number }) =>
-        e.item_id !== itemId || e.quantidade > 0,
-    );
-  }
+  inventory.itens = inventory.itens.filter((item) => item.quantidade > 0);
   return true;
 }
 
-export function readSlimeMaterialStock(user: UserRecord): SlimeMaterialStockItem[] {
-  return SLIME_MATERIALS.map((material) => ({
-    ...material,
-    quantity: getItemCount(user, material.id),
-  }));
-}
-
-export function sellSlimeMaterial(
-  user: UserRecord,
-  itemId: string,
-  quantity: number | 'all',
-):
-  | { ok: true; item_id: SlimeMaterialItemId; quantity_sold: number; coins_gained: number }
-  | { ok: false; error: string } {
-  if (!isSlimeMaterialItemId(itemId)) {
-    return { ok: false, error: 'Material de slime desconhecido.' };
-  }
-  const available = getItemCount(user, itemId);
-  if (available < 1) return { ok: false, error: 'Você não possui este material.' };
-
-  const quantityToSell =
-    quantity === 'all'
-      ? available
-      : Math.max(1, Math.min(available, Math.floor(Number(quantity) || 1)));
-  if (!consumeInventoryItem(user, itemId, quantityToSell)) {
-    return { ok: false, error: 'Não foi possível remover o material do inventário.' };
-  }
-
-  const coins_gained = quantityToSell * SLIME_MATERIAL_BY_ID[itemId].sellPrice;
-  grantMoeda(user, coins_gained);
-  return { ok: true, item_id: itemId, quantity_sold: quantityToSell, coins_gained };
-}
-
-/** Usa Baú da Exploração: recompensas equivalentes a 6h de Exploração AFK. */
-export function usePatrolCache(
-  user: UserRecord,
-): { ok: true; claimed: AfkPendingReward } | { ok: false; error: string } {
-  const available = getItemCount(user, PATROL_CACHE_ITEM_ID);
-  if (available < 1) {
-    return { ok: false, error: 'Você não tem Baú da Exploração.' };
-  }
-
-  if (!consumeInventoryItem(user, PATROL_CACHE_ITEM_ID, 1)) {
-    return { ok: false, error: 'Não foi possível consumir o item.' };
-  }
-
-  const claimed = grantPatrolCacheRewards(user);
-  return { ok: true, claimed };
-}
-
-/** Usa Route Drink: aplica 1h de loot por unidade direto na conta (ou toda a stack). */
-export function useRouteDrinkInExploration(
-  user: UserRecord,
-  quantity?: number,
-):
-  | {
-      ok: true;
-      hours: number;
-      quantity_used: number;
-      claimed: AfkPendingReward;
-      discarded_items: number;
-    }
-  | { ok: false; error: string } {
-  const available = getItemCount(user, ROUTE_DRINK_ITEM_ID);
-  if (available < 1) {
-    return { ok: false, error: 'Você não tem Route Drink.' };
-  }
-
-  const useQty = quantity == null ? available : Math.max(1, Math.min(quantity, available));
-  if (!consumeInventoryItem(user, ROUTE_DRINK_ITEM_ID, useQty)) {
-    return { ok: false, error: 'Não foi possível consumir o item.' };
-  }
-
-  const hours = ROUTE_DRINK_HOURS * useQty;
-  const { claimed, discarded_items } = grantRouteDrinkRewards(user, hours);
-  return { ok: true, hours, quantity_used: useQty, claimed, discarded_items };
-}
-
-function rollDoriaBagAmount(user: UserRecord, salt: number): number {
-  const span = DORIA_BAG_MAX - DORIA_BAG_MIN + 1;
-  const roll = hashKillSeed(String(user.id), salt) % span;
-  return DORIA_BAG_MIN + roll;
-}
-
-/** EXP Instantâneo: +10 XP por unidade (ou toda a stack). */
-export function useExpInstant(
-  user: UserRecord,
-  quantity?: number,
-): { ok: true; xp_ganho: number; quantity_used: number } | { ok: false; error: string } {
-  const available = getItemCount(user, EXP_INSTANT_ITEM_ID);
-  if (available < 1) {
-    return { ok: false, error: 'Você não tem EXP Instantâneo.' };
-  }
-
-  const useQty = quantity == null ? available : Math.max(1, Math.min(quantity, available));
-  if (!consumeInventoryItem(user, EXP_INSTANT_ITEM_ID, useQty)) {
-    return { ok: false, error: 'Não foi possível consumir o item.' };
-  }
-
-  const xpGanho = EXP_INSTANT_XP * useQty;
-  user.gamificacao.nivel_xp += xpGanho;
-  addWeeklyXp(user, xpGanho);
-  return { ok: true, xp_ganho: xpGanho, quantity_used: useQty };
-}
-
-/** Bolsa de Dorias: 4–21 Dorias aleatórias por unidade (ou toda a stack — a bolsa não tem stack cap). */
-export function useDoriaBag(
-  user: UserRecord,
-  quantity?: number,
-):
-  | { ok: true; abdoria_ganha: number; rolls: number[]; quantity_used: number }
-  | { ok: false; error: string } {
-  const available = getItemCount(user, DORIA_BAG_ITEM_ID);
-  if (available < 1) {
-    return { ok: false, error: `Você não tem ${DORIA_BAG_LABEL}.` };
-  }
-
-  const useQty = quantity == null ? available : Math.max(1, Math.min(quantity, available));
-  if (!consumeInventoryItem(user, DORIA_BAG_ITEM_ID, useQty)) {
-    return { ok: false, error: 'Não foi possível consumir o item.' };
-  }
-
-  const rolls: number[] = [];
-  let total = 0;
-  const baseSalt = Date.now() % 1_000_000;
-  for (let i = 0; i < useQty; i += 1) {
-    const amount = rollDoriaBagAmount(user, baseSalt + i + 1);
-    rolls.push(amount);
-    total += amount;
-  }
-  grantMoeda(user, total);
-  return { ok: true, abdoria_ganha: total, rolls, quantity_used: useQty };
-}
-
 export function readInventarioSummary(user: UserRecord) {
-  ensureInventario(user);
   return {
     frozen_streak: getItemCount(user, FROZEN_STREAK_ITEM_ID),
-    route_drink: getItemCount(user, ROUTE_DRINK_ITEM_ID),
-    bau_patrulha: getItemCount(user, PATROL_CACHE_ITEM_ID),
-    exp_instant: getItemCount(user, EXP_INSTANT_ITEM_ID),
-    doria_bag: getItemCount(user, DORIA_BAG_ITEM_ID),
     stack_cap: INVENTORY_STACK_CAP,
-    materials: readSlimeMaterialStock(user),
-    itens: [...user.inventario!.itens],
   };
 }

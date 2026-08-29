@@ -1,26 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarCheck2, Compass, Dumbbell, Home, Settings, User, X } from 'lucide-react';
+import { CalendarCheck2, Dumbbell, Home, Settings, Sprout, User, X } from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
-import { AfkFab } from '@/components/afk/AfkFab';
 import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
-import { TutorialOverlay, type TutorialSlide } from '@/components/tutorial/TutorialOverlay';
+import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
-import { useAfkBackgroundSync } from '@/hooks/useAfkBackgroundSync';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
+import { usePersonalizedReminders } from '@/hooks/usePersonalizedReminders';
 
 function buildNavItems() {
   return [
     { to: '/', icon: Home, label: 'Início' },
     { to: '/atividades', icon: CalendarCheck2, label: 'Atividades' },
     { to: '/construtor', icon: Dumbbell, label: 'Missão' },
-    { to: '/exploracao', icon: Compass, label: 'Exploração' },
+    { to: '/myplant', icon: Sprout, label: 'MyPlant' },
     { to: '/perfil', icon: User, label: 'Perfil' },
   ] as const;
 }
@@ -51,11 +50,7 @@ export function AppLayout() {
     return sessionStorage.getItem(VIEWPORT_NOTICE_KEY) === '1';
   });
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
-  const [tutorialSpotlight, setTutorialSpotlight] = useState<TutorialSlide['spotlight'] | null>(
-    null,
-  );
-
-  useAfkBackgroundSync(Boolean(user));
+  usePersonalizedReminders();
 
   useEffect(() => {
     setShowTutorial(shouldShowFirstTimeTutorial(user));
@@ -76,7 +71,6 @@ export function AppLayout() {
     }
   };
 
-  const isHomePage = location.pathname === '/';
   const showViewportNotice = !isMobile && !viewportNoticeDismissed;
 
   const dismissViewportNotice = () => {
@@ -175,10 +169,7 @@ export function AppLayout() {
           open={showTutorial}
           onClose={handleTutorialClose}
           slides={ONBOARDING_TUTORIAL_SLIDES}
-          onSpotlightChange={setTutorialSpotlight}
         />
-
-        {isHomePage && <AfkFab tutorialHighlight={tutorialSpotlight === 'rpg-fab'} />}
       </div>
     </MidnightRefreshProvider>
   );

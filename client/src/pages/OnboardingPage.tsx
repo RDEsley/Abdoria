@@ -20,7 +20,7 @@ import {
   SignalLow,
   SignalMedium,
   SkipForward,
-  Swords,
+  Sprout,
   Weight,
 } from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
@@ -641,10 +641,10 @@ export function OnboardingPage() {
                       className="onb-welcome-list__icon onb-welcome-list__icon--rpg"
                       aria-hidden
                     >
-                      <Swords size={15} />
+                      <Sprout size={15} />
                     </span>
-                    Abra Exploração pela barra principal para patrulhar, lutar e coletar
-                    recompensas.
+                    MyPlant terá uma experiência própria e aparece como “Em breve” na barra
+                    principal.
                   </li>
                 </motion.ul>
               </div>

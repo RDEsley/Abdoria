@@ -6,7 +6,7 @@ Bem-vindo ao Evolyn! Estes termos regulam o uso do aplicativo Evolyn ("app", "n�
 Ao marcar "Aceito os termos" ou continuar usando o app após uma atualização destes termos, você confirma que leu, entendeu e concorda em ficar vinculado a eles.
 
 2. Natureza do aplicativo
-O Evolyn é uma ferramenta educacional e de acompanhamento de treinos de abdômen com peso corporal, com uma camada de jogo (XP, streaks, conquistas, exploração e itens cosméticos). O app não substitui orientação médica, nutricional ou de educação física profissional.
+O Evolyn é uma ferramenta educacional e de acompanhamento de treinos de abdômen com peso corporal, com uma camada de jogo (XP, streaks, conquistas e itens cosméticos). O app não substitui orientação médica, nutricional ou de educação física profissional.
 
 3. Elegibilidade e idade mínima
 O uso do Evolyn é recomendado para maiores de 13 anos. Usuários entre 13 e 18 anos devem ter autorização de um responsável legal antes de seguir por conta própria o conteúdo de treino do app.

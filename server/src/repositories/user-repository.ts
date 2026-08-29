@@ -4,39 +4,12 @@ import {
   DEFAULT_USER_DADOS_SALVOS,
   DEFAULT_PREFERENCIAS,
   DEFAULT_XP_DIARIO,
-  DEFAULT_AFK_COMBAT,
-  AFK_ENEMIES,
-  AFK_REGIONS,
   FROZEN_STREAK_ITEM_ID,
-  type AfkCombatState,
-  type AfkEnemyId,
-  type AfkPendingReward,
-  type AfkState,
-  getEnemyMaxHp,
-  getAfkRegionById,
-  getAfkRegionProgress,
-  afkHeroMaxHp,
-  isSlimeMaterialItemId,
-  type SlimeMaterialItemId,
 } from '../types/index.js';
 
 /** Todo jogador novo começa com 3 Frozen Streak — colchão inicial contra falhar a streak. */
 const DEFAULT_NEW_USER_INVENTARIO = { itens: [{ item_id: FROZEN_STREAK_ITEM_ID, quantidade: 3 }] };
 import type { UserRecord, UserLean } from '../types/user-record.js';
-
-const EMPTY_AFK_PENDING: AfkPendingReward = {
-  xp: 0,
-  abdoria: 0,
-  frozen_streaks: 0,
-  route_drinks: 0,
-  cosmetic_ids: [],
-  weapon_ids: [],
-  exp_instant: 0,
-  doria_bags: 0,
-  material_items: {},
-  titulo_secreto: false,
-  drop_count: 0,
-};
 
 type ProfileRow = {
   id: string;
@@ -75,115 +48,6 @@ type ProfileRow = {
   updated_at: string;
 };
 
-type AfkRow = {
-  user_id: string;
-  last_seen_at?: string | null;
-  /** Presente só depois da migration `afk_paused_at`. */
-  paused_at?: string | null;
-  minutos_acumulados: number;
-  pending: Record<string, unknown>;
-  combat?: Record<string, unknown>;
-};
-
-const VALID_ENEMY_IDS = new Set<string>(Object.keys(AFK_ENEMIES));
-
-function normalizeCombat(raw: unknown): AfkCombatState {
-  const c = (raw && typeof raw === 'object' ? raw : {}) as Partial<AfkCombatState>;
-  const legacyRegion = getAfkRegionProgress(Number(c.kills_total ?? 0)).region;
-  const region = getAfkRegionById(c.region_id ?? legacyRegion.id);
-  const skillNodes = Array.isArray(c.skill_nodes) ? c.skill_nodes.filter(Boolean) : [];
-  const heroMaxHp = afkHeroMaxHp(skillNodes);
-  const enemy_id = VALID_ENEMY_IDS.has(String(c.enemy_id ?? ''))
-    ? (c.enemy_id as AfkEnemyId)
-    : DEFAULT_AFK_COMBAT.enemy_id;
-  const maxHp = getEnemyMaxHp(enemy_id, region.chapter);
-  const savedEnemyHp = Number(c.enemy_hp ?? maxHp);
-  // HP zero nunca é um estado persistente válido: a derrota já deveria ter
-  // gerado o próximo encontro. Recupera com 1 HP para o próximo golpe concluir
-  // a vitória, sem ressuscitar um chefe quase derrotado com vida cheia.
-  const enemy_hp = savedEnemyHp > 0 ? Math.min(maxHp, savedEnemyHp) : 1;
-  const rawProgress = c.region_progress ?? {};
-  const region_progress = Object.fromEntries(
-    AFK_REGIONS.map((entry) => {
-      const saved = rawProgress[entry.id];
-      const legacyKills = entry.id === region.id ? Number(c.kills_until_boss ?? 0) : 0;
-      return [
-        entry.id,
-        {
-          kills_until_boss: Math.max(
-            0,
-            Math.min(entry.killsToBoss, Number(saved?.kills_until_boss ?? legacyKills)),
-          ),
-          boss_defeated: Boolean(saved?.boss_defeated),
-          boss_kills: Math.max(0, Number(saved?.boss_kills ?? 0)),
-          orbs_earned: Math.max(0, Number(saved?.orbs_earned ?? 0)),
-        },
-      ];
-    }),
-  ) as NonNullable<AfkCombatState['region_progress']>;
-  const defaultUnlocked = AFK_REGIONS.filter((entry) => entry.chapter <= region.chapter).map(
-    (entry) => entry.id,
-  );
-  const unlocked = new Set(
-    (Array.isArray(c.unlocked_regions) ? c.unlocked_regions : defaultUnlocked).filter((id) =>
-      AFK_REGIONS.some((entry) => entry.id === id),
-    ),
-  );
-  unlocked.add('verdant-trail');
-  return {
-    kills_total: Math.max(0, Number(c.kills_total ?? 0)),
-    kills_until_boss: region_progress[region.id]?.kills_until_boss ?? 0,
-    enemy_id,
-    enemy_hp,
-    is_boss: Boolean(c.is_boss),
-    elite: Boolean(c.elite),
-    region_id: region.id,
-    region_progress,
-    unlocked_regions: AFK_REGIONS.filter((entry) => unlocked.has(entry.id)).map(
-      (entry) => entry.id,
-    ),
-    hero_hp: Math.max(0, Math.min(heroMaxHp, Number(c.hero_hp ?? heroMaxHp))),
-    hero_defeated_until: c.hero_defeated_until ?? null,
-    combat_last_at: c.combat_last_at ?? null,
-    search_remaining_ms: Math.max(0, Number(c.search_remaining_ms ?? 0)),
-    hero_attack_remaining_ms: Math.max(0, Number(c.hero_attack_remaining_ms ?? 0)),
-    enemy_attack_remaining_ms: Math.max(0, Number(c.enemy_attack_remaining_ms ?? 0)),
-    defeated_remaining_ms: Math.max(0, Number(c.defeated_remaining_ms ?? 0)),
-    orbs: Math.max(0, Number(c.orbs ?? 0)),
-    skill_nodes: skillNodes,
-    skill_tree_free_reset_used: Boolean(c.skill_tree_free_reset_used),
-    adventure_started: Boolean(c.adventure_started),
-    intro_seen: Boolean(c.intro_seen),
-    slime_language_unlocked: Boolean(c.slime_language_unlocked),
-    story_flags: Array.isArray(c.story_flags) ? c.story_flags.filter(Boolean) : [],
-  };
-}
-
-function normalizePending(raw: unknown): AfkPendingReward {
-  const p = (raw && typeof raw === 'object' ? raw : {}) as Partial<AfkPendingReward>;
-  const material_items = Object.fromEntries(
-    Object.entries(p.material_items ?? {})
-      .filter(([itemId, amount]) => isSlimeMaterialItemId(itemId) && Number(amount) > 0)
-      .map(([itemId, amount]) => [itemId, Math.max(0, Math.floor(Number(amount)))]),
-  ) as Partial<Record<SlimeMaterialItemId, number>>;
-  return {
-    xp: Number(p.xp ?? 0),
-    abdoria: Number(p.abdoria ?? 0),
-    frozen_streaks: Math.max(
-      0,
-      Number(p.frozen_streaks ?? (p as { energy_drinks?: number }).energy_drinks ?? 0),
-    ),
-    route_drinks: Number(p.route_drinks ?? 0),
-    cosmetic_ids: Array.isArray(p.cosmetic_ids) ? [...p.cosmetic_ids] : [],
-    weapon_ids: Array.isArray(p.weapon_ids) ? [...p.weapon_ids] : [],
-    exp_instant: Math.max(0, Number(p.exp_instant ?? 0)),
-    doria_bags: Math.max(0, Number(p.doria_bags ?? 0)),
-    material_items,
-    titulo_secreto: Boolean(p.titulo_secreto),
-    drop_count: Math.max(0, Number(p.drop_count ?? 0)),
-  };
-}
-
 /** Lê `moldura_loja_equipada`/`banner_equipado` com fallback pros nomes antigos (`borda_equipada`/`fundo_equipado`) já persistidos em contas existentes. */
 function resolveLegacyCosmeticFields(raw: Record<string, unknown>): UserRecord['cosmeticos'] {
   const legacy = raw as { borda_equipada?: string; fundo_equipado?: string };
@@ -203,16 +67,7 @@ function resolveLegacyCosmeticFields(raw: Record<string, unknown>): UserRecord['
   return merged;
 }
 
-function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = false): UserRecord {
-  const pending = normalizePending(afk?.pending);
-  const afkState: AfkState & { pending: AfkPendingReward } = {
-    last_seen_at: afk?.last_seen_at ?? null,
-    paused_at: afk?.paused_at ?? null,
-    minutos_acumulados: afk?.minutos_acumulados ?? 0,
-    pending,
-    combat: normalizeCombat(afk?.combat),
-  };
-
+function rowToUser(profile: ProfileRow, includePassword = false): UserRecord {
   const user: UserRecord = {
     id: profile.id,
     email: profile.email,
@@ -251,7 +106,6 @@ function rowToUser(profile: ProfileRow, afk?: AfkRow | null, includePassword = f
     },
     xp_diario: profile.xp_diario as unknown as UserRecord['xp_diario'],
     inventario: profile.inventario as unknown as UserRecord['inventario'],
-    afk: afkState,
     onboarding_completed: profile.onboarding_completed,
     terms_accepted_at: profile.terms_accepted_at ?? null,
     muscle_map_reset_at: profile.muscle_map_reset_at ?? null,
@@ -326,40 +180,6 @@ function userToProfileRow(user: UserRecord): Record<string, unknown> {
   };
 }
 
-async function fetchAfk(userId: string): Promise<AfkRow | null> {
-  const sb = getSupabase();
-  const { data } = await sb.from('user_afk_state').select('*').eq('user_id', userId).maybeSingle();
-  return data as AfkRow | null;
-}
-
-async function fetchAfkBatch(userIds: string[]): Promise<Map<string, AfkRow>> {
-  const map = new Map<string, AfkRow>();
-  if (userIds.length === 0) return map;
-
-  const sb = getSupabase();
-  const { data } = await sb.from('user_afk_state').select('*').in('user_id', userIds);
-  for (const row of (data ?? []) as AfkRow[]) {
-    map.set(row.user_id, row);
-  }
-  return map;
-}
-
-async function ensureAfkRow(userId: string): Promise<void> {
-  const sb = getSupabase();
-  const { data } = await sb
-    .from('user_afk_state')
-    .select('user_id')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (!data) {
-    await sb.from('user_afk_state').insert({
-      user_id: userId,
-      pending: EMPTY_AFK_PENDING,
-      combat: DEFAULT_AFK_COMBAT,
-    });
-  }
-}
-
 function mapPatchToRow(patch: Record<string, unknown>): Record<string, unknown> {
   const row = { ...patch };
   if ('passwordHash' in row) {
@@ -388,7 +208,6 @@ export class UserMutable implements UserRecord {
   dados_salvos!: UserRecord['dados_salvos'];
   xp_diario!: UserRecord['xp_diario'];
   inventario!: UserRecord['inventario'];
-  afk!: UserRecord['afk'];
   onboarding_completed!: boolean;
   terms_accepted_at?: Date | string | null;
   muscle_map_reset_at?: Date | string | null;
@@ -408,23 +227,15 @@ export class UserMutable implements UserRecord {
 
   constructor(data: UserRecord) {
     Object.assign(this, data);
-    this.afk = {
-      ...data.afk,
-      pending: normalizePending(data.afk?.pending),
-      combat: normalizeCombat(data.afk?.combat),
-    };
   }
 
   set(path: string, value: unknown): void {
     (this as Record<string, unknown>)[path] = value;
   }
 
-  /**
-   * Grava SÓ as colunas de `profiles` pedidas, sem tocar no estado de AFK.
-   * Atalho para `save({ profileColumns, skipAfk: true })` — ver o porquê lá.
-   */
+  /** Grava somente as colunas de `profiles` pedidas. */
   async saveColumns(columns: readonly (keyof ProfileRow)[]): Promise<UserMutable> {
-    return this.save({ profileColumns: columns, skipAfk: true });
+    return this.save({ profileColumns: columns });
   }
 
   /**
@@ -438,13 +249,8 @@ export class UserMutable implements UserRecord {
    *
    * `profileColumns` limita a escrita ao que a rota realmente alterou, então
    * escritas concorrentes em colunas diferentes deixam de se atropelar.
-   * `skipAfk` pula o UPDATE em `user_afk_state` — mesma ideia: quem não mexeu
-   * no AFK não deve reescrevê-lo com um snapshot potencialmente velho.
    */
-  async save(options?: {
-    profileColumns?: readonly (keyof ProfileRow)[];
-    skipAfk?: boolean;
-  }): Promise<UserMutable> {
+  async save(options?: { profileColumns?: readonly (keyof ProfileRow)[] }): Promise<UserMutable> {
     const sb = getSupabase();
     const full = userToProfileRow(this);
     delete full.email;
@@ -467,42 +273,6 @@ export class UserMutable implements UserRecord {
       if (profileError) throw profileError;
     }
 
-    if (options?.skipAfk) return this;
-
-    await ensureAfkRow(this.id);
-    const afkPayload: Record<string, unknown> = {
-      last_seen_at: this.afk.last_seen_at,
-      // Sem isto a pausa da vila só valia dentro da request que a criou: a
-      // seguinte lia `paused_at` como nulo e creditava como exploração todo o
-      // tempo parado na vila.
-      paused_at: this.afk.paused_at ?? null,
-      minutos_acumulados: this.afk.minutos_acumulados ?? 0,
-      pending: normalizePending(this.afk.pending),
-      combat: normalizeCombat(this.afk.combat),
-    };
-
-    let { error: afkError } = await sb
-      .from('user_afk_state')
-      .update(afkPayload)
-      .eq('user_id', this.id);
-
-    // Ambiente sem as migrations `afk_combat`/`afk_paused_at` aplicadas:
-    // reenvia sem a(s) coluna(s) que faltam em vez de falhar a escrita toda.
-    if (afkError?.code === 'PGRST204') {
-      const message = String(afkError.message ?? '');
-      const legacyPayload = { ...afkPayload };
-      if (message.includes('combat')) delete legacyPayload.combat;
-      if (message.includes('paused_at')) delete legacyPayload.paused_at;
-
-      if (Object.keys(legacyPayload).length !== Object.keys(afkPayload).length) {
-        ({ error: afkError } = await sb
-          .from('user_afk_state')
-          .update(legacyPayload)
-          .eq('user_id', this.id));
-      }
-    }
-
-    if (afkError) throw afkError;
     return this;
   }
 }
@@ -523,8 +293,7 @@ export const User = {
       .maybeSingle();
     if (error || !profile) return null;
 
-    const afk = await fetchAfk(id);
-    const user = rowToUser(profile as ProfileRow, afk, selectPassword);
+    const user = rowToUser(profile as ProfileRow, selectPassword);
 
     if (options?.lean) return Object.assign(new UserMutable(user), user);
     return new UserMutable(user);
@@ -542,8 +311,7 @@ export const User = {
     const { data: profile, error } = await query.maybeSingle();
     if (error || !profile) return null;
 
-    const afk = await fetchAfk(profile.id);
-    return new UserMutable(rowToUser(profile as ProfileRow, afk, selectPassword));
+    return new UserMutable(rowToUser(profile as ProfileRow, selectPassword));
   },
 
   async find(
@@ -552,10 +320,6 @@ export const User = {
       sort?: Record<string, 1 | -1>;
       limit?: number;
       select?: string;
-      /** true = pula o fetch em lote de user_afk_state — economiza uma
-          segunda ida ao banco pra quem só precisa de gamificacao/cosmeticos
-          (ex.: ranking, que nunca lê `.afk` do resultado). */
-      skipAfk?: boolean;
     },
   ): Promise<UserLean[]> {
     const sb = getSupabase();
@@ -587,9 +351,7 @@ export const User = {
     if (error || !data) return [];
 
     const profiles = data as ProfileRow[];
-    if (options?.skipAfk) return profiles.map((p) => rowToUser(p, null));
-    const afkMap = await fetchAfkBatch(profiles.map((p) => p.id));
-    return profiles.map((p) => rowToUser(p, afkMap.get(p.id) ?? null));
+    return profiles.map((p) => rowToUser(p));
   },
 
   /** Update direto, sem reler o registro depois (ao contrário de
@@ -617,8 +379,7 @@ export const User = {
     if (error || !data) return [];
 
     const profiles = data as ProfileRow[];
-    const afkMap = await fetchAfkBatch(profiles.map((p) => p.id));
-    return profiles.map((p) => rowToUser(p, afkMap.get(p.id) ?? null));
+    return profiles.map((p) => rowToUser(p));
   },
 
   async countLeaderboardRank(
@@ -731,14 +492,7 @@ export const User = {
     const { data: profile, error } = await sb.from('profiles').insert(row).select('*').single();
     if (error || !profile) throw error ?? new Error('Falha ao criar usuário');
 
-    await sb.from('user_afk_state').insert({
-      user_id: profile.id,
-      pending: EMPTY_AFK_PENDING,
-      combat: DEFAULT_AFK_COMBAT,
-    });
-
-    const afk = await fetchAfk(profile.id);
-    return new UserMutable(rowToUser(profile as ProfileRow, afk));
+    return new UserMutable(rowToUser(profile as ProfileRow));
   },
 
   async findByIdAndUpdate(
@@ -795,5 +549,3 @@ export const User = {
     await sb.from('profiles').delete().eq('id', id);
   },
 };
-
-export { normalizePending, normalizeCombat, EMPTY_AFK_PENDING };

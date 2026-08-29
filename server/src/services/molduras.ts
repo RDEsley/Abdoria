@@ -1,7 +1,6 @@
 import type { UserRecord } from '../domain/User.js';
 import type { MolduraId } from '../types/index.js';
 import { COSMETIC_BY_ID } from '../data/cosmetics.js';
-import { PATROL_SECRET_WEAPON_IDS, resolvePatrolArmas } from '../types/index.js';
 import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
 
 export interface MolduraStatus {
@@ -9,25 +8,20 @@ export interface MolduraStatus {
   first: number;
   second: number;
   third: number;
-  /** Itens secretos possuídos (cosméticos secretos + armas Secret). */
+  /** Cosméticos secretos possuídos. */
   secret_items: number;
   desbloqueadas: MolduraId[];
   equipada: MolduraId | null;
 }
 
-/** Conta itens secretos do usuário (cosméticos de raridade secreto + armas Secret). */
+/** Conta cosméticos secretos do usuário. */
 export function countSecretItems(user: UserRecord): number {
   const unlockedCosmetics = user.cosmeticos?.desbloqueados ?? [];
   const secretCosmetics = unlockedCosmetics.filter(
     (id) => COSMETIC_BY_ID[id]?.raridade === 'secreto',
   ).length;
 
-  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
-  const secretWeapons = PATROL_SECRET_WEAPON_IDS.filter((id) =>
-    armas.desbloqueados.includes(id),
-  ).length;
-
-  return secretCosmetics + secretWeapons;
+  return secretCosmetics;
 }
 
 export async function molduraStatusForUser(user: UserRecord): Promise<MolduraStatus> {

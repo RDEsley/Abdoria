@@ -54,7 +54,6 @@ import {
   XP_ACHIEVEMENT_BONUS,
   XP_DAILY_CAP_BASE,
   XP_DAILY_CAP_PER_ACHIEVEMENT,
-  XP_DAILY_CAP_PER_BESTIARY,
   XP_DAILY_CAP_PER_LEVEL,
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
@@ -250,7 +249,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-5 pb-20">
+    <div className="settings-page flex flex-col gap-4 pb-20">
       <GamePageHeader eyebrow="Sistema" title="Opções" />
 
       <section className="glass-card p-4">
@@ -445,12 +444,11 @@ export function SettingsPage() {
                   <li>
                     Máx. diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
                     <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
-                    <strong>{XP_DAILY_CAP_PER_BESTIARY}</strong> por inimigo descoberto no Bestiário
-                    + <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
+                    <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
                   </li>
                   <li>
-                    Exercícios, streak e conquistas do treino contam no mesmo máx. diário. EXP
-                    Instantâneo, Exploração e códigos presente vão direto ao total.
+                    Exercícios, streak e conquistas do treino contam no mesmo máx. diário. Códigos
+                    presente creditam suas recompensas diretamente.
                   </li>
                   <li>Após atingir o máx., o restante do dia não rende mais XP de treino.</li>
                 </ul>

@@ -6,7 +6,7 @@
 
 ### Transforme seus treinos de abdômen em uma aventura.
 
-O **Evolyn** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução de personagem, recompensas, exploração e desafios para tornar a constância muito mais divertida.
+O **Evolyn** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução, recompensas, atividades e desafios para tornar a constância muito mais divertida.
 
 [![Acessar o app](https://img.shields.io/badge/ACESSAR_O_APP-000000?style=for-the-badge\&logo=vercel\&logoColor=white)](https://abdoria-project.vercel.app)
 [![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Evolyn-Core-Quest/releases)
@@ -62,21 +62,11 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 * Perfil público com estatísticas e personalizações
 * Calendário com histórico de atividades
 
-### 🗺️ Exploração automática
+### 🌱 MyPlant
 
-Enquanto o usuário está longe, o herói continua explorando e enfrentando inimigos.
-
-A exploração permite:
-
-* Avançar por seis regiões com progresso e chefes próprios
-* Continuar o combate e a procura de inimigos mesmo fora do aplicativo
-* Encontrar slimes comuns, elites, especiais e chefes regionais
-* Coletar experiência, moedas, materiais exclusivos, armas, magias e Orbs
-* Evoluir habilidades em caminhos de espada, arco, magia e descoberta
-* Desbloquear registros e chances de drop no bestiário
-* Equipar e gerenciar armas diretamente pelo inventário
-* Abrir baús com revelação cinematográfica ou abertura rápida opcional
-* Receber no máximo um Frozen Streak por dia, com 15% de chance diária
+O **MyPlant** ocupa uma aba própria na navegação e está sendo preparado como uma nova
+experiência mobile. A implementação anterior de RPG AFK foi retirada do runtime e preservada,
+com código e imagens, em [`Exploracao-rpg-afk`](./Exploracao-rpg-afk/README.md).
 
 ### 🏆 Rankings e comunidade
 
@@ -104,10 +94,12 @@ Além dos treinos, o Evolyn oferece ferramentas para ajudar na rotina:
 * Histórico das atividades concluídas
 * Recompensas por manter hábitos saudáveis
 * Suporte para dias de descanso
+* Lembretes personalizados por horário, dias da semana e estilo visual
 
-Atividades, mapa de campanha e histórico visual ficam reunidos na página **Atividades**. A
-**Exploração** possui uma página própria para a jornada automática. A navegação principal
-(**Início, Atividades, Missão, Exploração e Perfil**) permanece fixa em todo o aplicativo, exceto
+Atividades, lembretes e histórico visual ficam reunidos na página **Atividades**. O mapa de
+campanha e as conquistas recentes ficam no **Início**, que pode ter suas seções opcionais
+reordenadas ou ocultadas. A navegação principal
+(**Início, Atividades, Missão, MyPlant e Perfil**) permanece fixa em todo o aplicativo, exceto
 durante o player de treino. Biblioteca e Ranking são atalhos da página **Missão**.
 
 ### 🎨 Personalização
@@ -120,7 +112,6 @@ Cada jogador pode construir sua própria identidade dentro do aplicativo utiliza
 * Títulos
 * Efeitos visuais
 * Sons
-* Armas
 * Cosméticos
 * Recompensas especiais
 
@@ -186,7 +177,7 @@ Desbloqueie conquistas e itens
 Evolua seu herói e seu perfil
 ```
 
-O usuário também pode enviar seu herói para exploração, concluir atividades pessoais, competir nos rankings e personalizar sua experiência.
+O usuário também pode concluir atividades pessoais, acompanhar a campanha, competir nos rankings e personalizar sua experiência.
 
 ---
 
@@ -199,7 +190,6 @@ O usuário também pode enviar seu herói para exploração, concluir atividades
 
 <br>
 
-<img src="./docs/assets/preview-exploration.png" width="48%" alt="Exploração do Evolyn" />
 <img src="./docs/assets/preview-profile.png" width="48%" alt="Perfil do jogador no Evolyn" />
 
 </div>
@@ -248,14 +238,13 @@ Evolyn/
 │   ├── services/           # Regras de negócio
 │   └── db/seeds/           # Dados iniciais
 ├── shared/
-│   ├── afk/                # Exploração e combate automático
 │   ├── equipment/          # Equipamentos disponíveis
-│   ├── patrol/             # Armas e itens da exploração
 │   ├── types/              # Tipagens compartilhadas
 │   └── utils/              # Funções auxiliares
 ├── supabase/migrations/    # Migrações do banco de dados
 ├── api/                    # Entrada serverless da Vercel
 ├── docs/                   # Documentação
+├── Exploracao-rpg-afk/     # Snapshot independente do jogo antigo
 └── scripts/                # Scripts de configuração e manutenção
 ```
 
@@ -415,12 +404,11 @@ Consulte o arquivo [CONTRIBUTING.md](./CONTRIBUTING.md) para mais informações.
 ## 🗺️ Próximos passos
 
 * Novos exercícios e treinos
-* Mais inimigos para o bestiário
 * Novos equipamentos e cosméticos
 * Eventos e recompensas especiais
 * Expansão das funcionalidades sociais
 * Melhorias no acompanhamento de progresso
-* Novas áreas de exploração
+* Lançamento da nova experiência MyPlant
 
 ---
 

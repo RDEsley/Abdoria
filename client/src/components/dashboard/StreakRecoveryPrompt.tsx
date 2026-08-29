@@ -28,7 +28,7 @@ export function StreakRecoveryPrompt() {
   const eligibleNow = !dismissed && !!user && !!offer;
 
   // Mesma trava da RatingPrompt: uma vez elegível, não desmonta se stats/user
-  // atualizarem em segundo plano (poll do AFK etc.) enquanto o jogador decide.
+  // atualizarem em segundo plano enquanto o jogador decide.
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     if (eligibleNow) setVisible(true);

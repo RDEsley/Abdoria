@@ -10,7 +10,7 @@ import {
 import { isAtividadeHistory } from '@shared/atividades';
 import { toLocalDateKey } from '@/lib/utils';
 import { formatMetricas } from '@/lib/atividade-format';
-import { xpLevelFromTotal, type AfkEnemyId } from '@/types';
+import { xpLevelFromTotal } from '@/types';
 
 /**
  * Posts do Mapa de Campanha (mais recente primeiro) — extraído do `CampaignFeed` pra
@@ -87,7 +87,6 @@ export function useCampaignPosts(): { posts: CampaignPost[]; loading: boolean } 
     return buildCampaignPosts([...treinoSessions, ...atividadeSessions], catalogBySlug, {
       heroi: user.nome?.split(' ')[0] ?? 'O herói',
       level: xpLevelFromTotal(user.gamificacao?.nivel_xp ?? 0),
-      bestiarioDesbloqueados: (user.gamificacao?.bestiario_desbloqueados ?? []) as AfkEnemyId[],
     });
   }, [history, exercises, user]);
 

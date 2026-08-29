@@ -17,10 +17,10 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 
 | Tela | Para que serve |
 |------|----------------|
-| **Início** | Resumo do dia, XP, streak e missão sugerida |
-| **Atividades** | Organizar atividades e lembretes, acompanhar a campanha e consultar o calendário |
+| **Início** | Resumo do dia, XP, streak, mapa da campanha, conquistas e missão sugerida |
+| **Atividades** | Organizar atividades e lembretes personalizados e consultar o calendário |
 | **Missão** | Escolher exercícios, configurar a fila, salvar treinos e usar presets |
-| **Exploração** | Abrir diretamente a jornada automática, a vila, o inventário e as batalhas |
+| **MyPlant** | Nova experiência mobile em desenvolvimento; por enquanto exibe “Em breve” |
 | **Biblioteca** | Abre pelo botão na Missão; reúne os exercícios e desbloqueios |
 | **Player** | Executar o treino com timer e descanso; é a única tela sem a navegação inferior |
 | **Conquistas** | Ver metas e o que já desbloqueou |
@@ -28,7 +28,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 | **Perfil** | Seus dados, estatísticas e simulador |
 | **Opções** | Som, descanso padrão, ciclo de treinos, **código presente** e sair |
 
-A barra principal com **Início, Atividades, Missão, Exploração e Perfil** permanece fixa nas telas
+A barra principal com **Início, Atividades, Missão, MyPlant e Perfil** permanece fixa nas telas
 do app. O player de treino é a única exceção.
 
 ---
@@ -82,7 +82,7 @@ No painel você vê **dois indicadores**: um amarelo (diário) e um roxo (extra)
 
 ## Coins (moeda)
 
-- Moeda do jogo para a **Loja da Exploração** (arco, espada e magia) e pacotes de **som** nas Opções.
+- Moeda do jogo usada em recursos compatíveis e pacotes de **som** nas Opções.
 - Você ganha Coins passivamente conforme sobe de XP total (**1 Coin a cada 10 XP**).
 
 ---

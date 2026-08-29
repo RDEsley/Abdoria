@@ -11,15 +11,8 @@ import {
   DEFAULT_BORDA_ID,
   REMOVED_COSMETIC_IDS,
 } from '../data/cosmetics.js';
-import {
-  CONJUNTO_FLAMEJANTE_IDS,
-  PATROL_WEAPON_BY_ID,
-  PATROL_WEAPONS,
-  resolvePatrolArmas,
-} from '../../../shared/patrol/shop.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
 import { User } from '../domain/User.js';
-import { unlockBestiaryEnemy } from './bestiario.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import type {
   CosmeticDefinition,
@@ -28,7 +21,6 @@ import type {
   ShopResponse,
 } from '../types/index.js';
 import {
-  ALL_BESTIARY_ENEMY_IDS,
   MOEDA_XP_STEP,
   CURRENCY_NAME,
   ADMIN_MOLDURA_ID,
@@ -103,9 +95,7 @@ function moedasUnlockLabel(item: CosmeticDefinition): string {
     const price = item.unlock.preco_moedas ?? 0;
     return `${price} ${CURRENCY_NAME}`;
   }
-  if (item.raridade === 'lendario' || item.raridade === 'epico') {
-    return 'Drop raro na Exploração';
-  }
+  if (item.raridade === 'lendario' || item.raridade === 'epico') return 'Recompensa especial';
   return 'Em breve — nova forma de desbloquear';
 }
 
@@ -141,15 +131,10 @@ interface UnlockContext {
   conquistas: Set<string>;
   /** Maior streak já registrada (streak_maior ∪ streak_atual). */
   streakMaior: number;
-  /** Armas/magias desbloqueadas na Exploração. */
-  armas: Set<string>;
   unlockedCosmetics: Set<string>;
 }
 
 function ownsMythicItem(ctx: UnlockContext): boolean {
-  for (const id of ctx.armas) {
-    if (PATROL_WEAPON_BY_ID[id]?.raridade === 'mitico') return true;
-  }
   for (const id of ctx.unlockedCosmetics) {
     if (COSMETIC_BY_ID[id]?.raridade === 'mitico') return true;
   }
@@ -163,9 +148,7 @@ function isAutoUnlockEligible(item: CosmeticDefinition, ctx: UnlockContext): boo
   if (tipo === 'conquista' && conquista_id && ctx.conquistas.has(conquista_id)) return true;
   if (tipo === 'streak' && streak_dias != null && ctx.streakMaior >= streak_dias) return true;
   if (tipo === 'item_mitico') return ownsMythicItem(ctx);
-  if (tipo === 'conjunto_flamejante') {
-    return CONJUNTO_FLAMEJANTE_IDS.every((id) => ctx.armas.has(id));
-  }
+  if (tipo === 'conjunto_flamejante') return false;
   return false;
 }
 
@@ -197,12 +180,10 @@ export function syncShopUnlocks(user: UserDoc): void {
   // Molduras aposentadas (Bronze/Ouro por nível) saem de contas antigas.
   for (const removedId of REMOVED_COSMETIC_IDS) unlocked.delete(removedId);
 
-  const armas = resolvePatrolArmas(user.preferencias?.patrol_armas);
   const ctx: UnlockContext = {
     level: xpLevelFromTotal(user.gamificacao.nivel_xp),
     conquistas: new Set(user.gamificacao.conquistas),
     streakMaior: Math.max(user.gamificacao.streak_maior ?? 0, user.gamificacao.streak_atual ?? 0),
-    armas: new Set(armas.desbloqueados),
     unlockedCosmetics: unlocked,
   };
 
@@ -210,7 +191,6 @@ export function syncShopUnlocks(user: UserDoc): void {
   for (const item of COSMETICS) {
     if (unlocked.has(item.id)) continue;
     if ((SHOP_HIDDEN_COSMETIC_IDS as readonly string[]).includes(item.id)) continue;
-    if (item.unlock.tipo === 'afk_secreto' || item.unlock.tipo === 'golden_slime') continue;
     if (isAutoUnlockEligible(item, ctx)) {
       unlocked.add(item.id);
       // 'gratis' entra silencioso (kit inicial); o resto merece celebração na tela.
@@ -395,14 +375,12 @@ export async function equipShopItem(userId: string, kind: CosmeticKind, itemId: 
 const MASTER_UNLOCK_CODE = 'violadearco';
 
 /**
- * Desbloqueia cosméticos, exercícios, armas/magias da Exploração e o
- * Bestiário inteiro. Não salva — quem chama decide quando dar `user.save()`.
+ * Desbloqueia cosméticos, exercícios e conquistas. Não salva — quem chama decide quando dar `user.save()`.
  * Reusado pelo código master `violadearco` e pela promoção a ADM (ADM
  * sempre entra com tudo liberado, sem precisar resgatar código nenhum).
  */
 export function unlockEverythingForUser(user: UserMutable): {
   cosmeticCount: number;
-  weaponCount: number;
   exerciseCount: number;
 } {
   const todosCosmeticos = COSMETICS.map((item) => item.id);
@@ -414,19 +392,6 @@ export function unlockEverythingForUser(user: UserMutable): {
     exercicios_desbloqueados: todosExercicios,
   });
 
-  // Arcos, espadas e magias da Exploração são um catálogo à parte do de
-  // cosméticos — sem isso, ficava de fora tudo que só se pega ali (ex.:
-  // tier Mítico, magias novas). "futuro" fica de fora: são itens ainda sem
-  // conteúdo real por trás, nem a loja normal vende.
-  const armas = resolvePatrolArmas(user.preferencias.patrol_armas);
-  const todasArmas = PATROL_WEAPONS.filter((w) => w.unlock.tipo !== 'futuro').map((w) => w.id);
-  armas.desbloqueados = [...new Set([...armas.desbloqueados, ...todasArmas])];
-  user.preferencias.patrol_armas = armas;
-
-  for (const enemyId of ALL_BESTIARY_ENEMY_IDS) {
-    unlockBestiaryEnemy(user, enemyId);
-  }
-
   // Sem isso, a própria página de Conquistas mostrava "0/N desbloqueadas"
   // pro ADM mesmo com todos os cosméticos de recompensa já liberados — as
   // duas listas são independentes (uma não implica a outra).
@@ -435,7 +400,6 @@ export function unlockEverythingForUser(user: UserMutable): {
 
   return {
     cosmeticCount: todosCosmeticos.length,
-    weaponCount: todasArmas.length,
     exerciseCount: todosExercicios.length,
   };
 }
@@ -478,7 +442,7 @@ async function redeemMasterUnlockCode(user: UserDoc) {
   redeemed.add(MASTER_UNLOCK_CODE);
   user.cosmeticos.codigos_resgatados = [...redeemed];
 
-  const { cosmeticCount, weaponCount, exerciseCount } = unlockEverythingForUser(user);
+  const { cosmeticCount, exerciseCount } = unlockEverythingForUser(user);
 
   await user.save();
 
@@ -489,7 +453,7 @@ async function redeemMasterUnlockCode(user: UserDoc) {
     abdoria_ganha: 0,
     itens_desbloqueados: COSMETICS.map((item) => item.id),
     titulo: undefined as string | undefined,
-    mensagem: `Tudo desbloqueado: ${cosmeticCount} cosméticos, ${weaponCount} armas/magias e ${exerciseCount} exercícios.`,
+    mensagem: `Tudo desbloqueado: ${cosmeticCount} cosméticos e ${exerciseCount} exercícios.`,
     recompensas: [{ tipo: 'cosmetico' as const, nome: 'Absolutamente tudo' }],
   };
 }
@@ -575,12 +539,6 @@ async function redeemGiftCodeForUser(user: UserDoc, code: string) {
 
   if (definition.titulo_equipar && unlocked.has(definition.titulo_equipar)) {
     user.cosmeticos.titulo_equipado = definition.titulo_equipar;
-  }
-
-  if (definition.unlock_bestiary) {
-    for (const enemyId of ALL_BESTIARY_ENEMY_IDS) {
-      unlockBestiaryEnemy(user, enemyId);
-    }
   }
 
   await user.save();

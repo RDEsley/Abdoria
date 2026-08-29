@@ -71,7 +71,7 @@ export function pickAchievementPreview(conquistas: Achievement[], limit: number)
   const locked = sortAchievements(conquistas).filter((c) => !c.desbloqueada);
   const picked: Achievement[] = [];
 
-  for (const item of unlocked.slice(0, limit - 1)) {
+  for (const item of unlocked.slice(0, limit)) {
     picked.push(item);
   }
   for (const item of locked) {

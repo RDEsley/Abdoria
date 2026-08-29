@@ -1,0 +1,62 @@
+import cors from 'cors';
+import express from 'express';
+import { connectDB, probeDatabase } from './db.js';
+import { adminRouter } from './routes/admin.js';
+import { authRouter } from './routes/auth.js';
+import { cosmeticsRouter } from './routes/cosmetics.js';
+import { shopRouter } from './routes/shop.js';
+import { exercisesRouter } from './routes/exercises.js';
+import { leaderboardRouter } from './routes/leaderboard.js';
+import { metaRouter } from './routes/meta.js';
+import { notificationsRouter } from './routes/notifications.js';
+import { socialRouter } from './routes/social.js';
+import { patrolShopRouter } from './routes/patrol-shop.js';
+import { presetsRouter } from './routes/presets.js';
+import { usersRouter } from './routes/users.js';
+import { workoutsRouter } from './routes/workouts.js';
+
+export function createApp() {
+  const app = express();
+
+  app.use(cors());
+  app.use(express.json());
+
+  app.get('/api/health', async (_req, res) => {
+    const probe = await probeDatabase();
+    if (probe.status === 'disconnected') {
+      console.error('Health check: Supabase probe failed:', probe.error);
+    }
+    res.json({
+      status: 'ok',
+      database: probe.status,
+      ...(probe.error ? { database_error: probe.error } : {}),
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.use(async (_req, res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      console.error('Supabase connection error:', error);
+      res.status(503).json({ error: 'Banco de dados indisponível.' });
+    }
+  });
+
+  app.use('/api/auth', authRouter);
+  app.use('/api/cosmetics', cosmeticsRouter);
+  app.use('/api/shop', shopRouter);
+  app.use('/api/exercises', exercisesRouter);
+  app.use('/api/users', usersRouter);
+  app.use('/api/workouts', workoutsRouter);
+  app.use('/api/presets', presetsRouter);
+  app.use('/api/leaderboard', leaderboardRouter);
+  app.use('/api/notifications', notificationsRouter);
+  app.use('/api/social', socialRouter);
+  app.use('/api/meta', metaRouter);
+  app.use('/api/patrol-shop', patrolShopRouter);
+  app.use('/api/admin', adminRouter);
+
+  return app;
+}

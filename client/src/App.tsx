@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AchievementProvider } from '@/context/AchievementContext';
@@ -52,8 +52,8 @@ const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default:
 const CampaignBookPage = lazy(() =>
   import('@/pages/CampaignBookPage').then((m) => ({ default: m.CampaignBookPage })),
 );
-const ExplorationPage = lazy(() =>
-  import('@/pages/ExplorationPage').then((m) => ({ default: m.ExplorationPage })),
+const MyPlantPage = lazy(() =>
+  import('@/pages/MyPlantPage').then((m) => ({ default: m.MyPlantPage })),
 );
 const ActivitiesPage = lazy(() =>
   import('@/pages/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage })),
@@ -68,6 +68,18 @@ const CAMPAIGN_ARCHIVE_ENABLED = false;
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+}
+
+/** Cada destino começa no topo, inclusive quando o navegador restaura a posição anterior. */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.querySelector('main')?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+
+  return null;
 }
 
 /** Modo minimalista: desliga Framer Motion (MotionConfig) e toda animação CSS
@@ -86,6 +98,7 @@ function MotionPreferenceGate({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <MotionPreferenceGate>
           <AchievementProvider>
@@ -145,17 +158,15 @@ export default function App() {
                       }
                     />
                     <Route
-                      path="exploracao"
+                      path="myplant"
                       element={
                         <LazyPage>
-                          <ExplorationPage />
+                          <MyPlantPage />
                         </LazyPage>
                       }
                     />
-                    <Route
-                      path="exploracao/jornada"
-                      element={<Navigate to="/exploracao" replace />}
-                    />
+                    <Route path="exploracao" element={<Navigate to="/myplant" replace />} />
+                    <Route path="exploracao/jornada" element={<Navigate to="/myplant" replace />} />
                     <Route
                       path="construtor"
                       element={

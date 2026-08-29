@@ -12,7 +12,6 @@ import {
   type CampaignContext,
   type CampaignSession,
 } from '../../shared/campaign/index.js';
-import { AFK_ENEMIES } from '../../shared/afk/combat.js';
 
 const CATALOG = new Map<string, CampaignCatalogInfo>([
   ['crunch', { nivel: 1, prioridade: 'S', musculo_principal: 'superior', grupos: ['abdomen'] }],
@@ -69,7 +68,7 @@ function session(overrides: Partial<CampaignSession> = {}): CampaignSession {
 }
 
 function ctx(overrides: Partial<CampaignContext> = {}): CampaignContext {
-  return { heroi: 'Richard', level: 1, bestiarioDesbloqueados: [], ...overrides };
+  return { heroi: 'Richard', level: 1, ...overrides };
 }
 
 /** Sessão bem antiga só pra não deixar `target` ganhar o marco "primeiro treino". */
@@ -322,38 +321,7 @@ describe('pluralização genérica de contagens', () => {
   });
 });
 
-describe('bestiário filtrado por descoberta', () => {
-  it('sem descobertas, nunca nomeia inimigo do jogo', () => {
-    const sessoes = Array.from({ length: 12 }, (_, i) =>
-      session({
-        id: `s-${i}`,
-        exercicios: [ex('burpee')],
-        concluido_em: `2026-0${(i % 9) + 1}-01T08:00:00.000Z`,
-      }),
-    );
-    const posts = buildCampaignPosts(sessoes, CATALOG, ctx({ bestiarioDesbloqueados: [] }));
-    const todasLabels = Object.values(AFK_ENEMIES).map((e) => e.label);
-    for (const post of posts) {
-      for (const label of todasLabels) {
-        expect(post.mensagem).not.toContain(label);
-      }
-    }
-  });
-
-  it('chefe descoberto passa a ser nomeado', () => {
-    const posts = buildCampaignPosts(
-      [session({ exercicios: [ex('dragon-flag')] })],
-      CATALOG,
-      ctx({ bestiarioDesbloqueados: ['boss_lich'] }),
-    );
-    if (posts[0].tipo === 'chefe_derrotado') {
-      // pode cair em template sem {inimigo} — só valida quando o slot existe.
-      const usaInimigo = posts[0].mensagem.includes(AFK_ENEMIES.boss_lich.label);
-      const usaGenerico = posts[0].mensagem.includes('sem nome nas lendas');
-      expect(usaInimigo || usaGenerico).toBe(true);
-    }
-  });
-
+describe('encontros genéricos', () => {
   it('conta nova usa o pool genérico de inimigos em algum momento', () => {
     const sessoes = Array.from({ length: 10 }, (_, i) =>
       session({

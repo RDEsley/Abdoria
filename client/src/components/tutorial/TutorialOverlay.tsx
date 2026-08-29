@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X, type LucideIcon } from 'lucide-react';
-import { AfkFabSwords } from '@/components/afk/AfkFabSwords';
 import { GameButton } from '@/components/ui/GameButton';
 import { playClick, playCompleteSet } from '@/lib/sounds';
 
@@ -9,7 +8,6 @@ export interface TutorialSlide {
   icon: LucideIcon;
   title: string;
   body: string;
-  spotlight?: 'rpg-fab';
 }
 
 interface Props {
@@ -19,26 +17,14 @@ interface Props {
   slides: readonly TutorialSlide[];
   /** Rótulo do botão final. */
   ctaLabel?: string;
-  /** Permite que a tela destaque o controle real descrito pelo slide. */
-  onSpotlightChange?: (spotlight: TutorialSlide['spotlight'] | null) => void;
 }
 
-export function TutorialOverlay({
-  open,
-  onClose,
-  slides,
-  ctaLabel = 'Entendi!',
-  onSpotlightChange,
-}: Props) {
+export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }: Props) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (open) setStep(0);
   }, [open]);
-
-  useEffect(() => {
-    onSpotlightChange?.(open ? (slides[step]?.spotlight ?? null) : null);
-  }, [onSpotlightChange, open, slides, step]);
 
   if (!open) return null;
 
@@ -97,20 +83,6 @@ export function TutorialOverlay({
             <p id={`tutorial-body-${step}`} className="mt-2 text-sm leading-relaxed text-stone-600">
               {Slide.body}
             </p>
-            {Slide.spotlight === 'rpg-fab' ? (
-              <div
-                className="tutorial-rpg-location"
-                aria-label="Botão do RPG no canto inferior direito da Home"
-              >
-                <span className="tutorial-rpg-location__button" aria-hidden>
-                  <AfkFabSwords />
-                </span>
-                <span className="tutorial-rpg-location__copy">
-                  <strong>Botão do RPG</strong>
-                  <small>Home · canto inferior direito</small>
-                </span>
-              </div>
-            ) : null}
           </motion.div>
         </AnimatePresence>
 

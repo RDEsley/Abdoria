@@ -89,6 +89,7 @@ export function useUserPreferences(onUpdated?: () => void) {
   );
 
   return {
+    patchPreferences,
     fixedExerciseSlugs,
     blockedExerciseSlugs,
     fixedWorkoutIds,
