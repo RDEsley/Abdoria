@@ -459,7 +459,7 @@ async function notifyStreakRecoveryAvailable(
       user_id: userId,
       tipo: 'streak_recovery_available',
       titulo: 'Recupere sua sequência!',
-      corpo: `Você perdeu uma sequência de ${offer.dias_perdidos} dia(s) — recupere por ${offer.custo_coins} Coins antes que expire.`,
+      corpo: `Você perdeu uma sequência de ${offer.dias_perdidos} dia(s) — recupere por ${offer.custo_coins} Folhas antes que expire.`,
       payload: { dias_perdidos: offer.dias_perdidos, custo_coins: offer.custo_coins },
     },
   ]);

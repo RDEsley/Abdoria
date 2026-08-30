@@ -44,6 +44,11 @@ export interface StreakRecoveryAnchor {
   base_streak: number;
 }
 
+export interface StreakRecordMatch {
+  streak: number;
+  anchor: StreakRecoveryAnchor;
+}
+
 function addDays(dayKey: string, amount: number): string {
   const [year, month, day] = dayKey.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day + amount, 12));
@@ -77,5 +82,26 @@ export function buildStreakRecoveryOffer(
     dias_perdidos: diasPerdidos,
     custo_coins: diasPerdidos * STREAK_RECOVERY_COST_PER_DAY,
     perdido_em: perdidoEm,
+  };
+}
+
+/**
+ * Constrói a atualização persistente de "igualar ao recorde". O mesmo
+ * anchor usado pela recuperação garante que o valor sobreviva aos próximos
+ * recálculos derivados do histórico. Retornar `null` quando o recorde já foi
+ * alcançado também torna chamadas repetidas idempotentes antes da cobrança.
+ */
+export function buildStreakRecordMatch(
+  currentStreak: number,
+  recordStreak: number,
+  today: string,
+): StreakRecordMatch | null {
+  if (currentStreak >= recordStreak) return null;
+  return {
+    streak: recordStreak,
+    anchor: {
+      recovered_at: today,
+      base_streak: recordStreak,
+    },
   };
 }
