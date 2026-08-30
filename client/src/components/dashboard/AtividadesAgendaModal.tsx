@@ -28,7 +28,8 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [comoFuncionaAberto, setComoFuncionaAberto] = useState(false);
 
-  const diasTreino = user?.perfil_treino?.dias_semana ?? [];
+  const diasTreino =
+    user?.ab_training_profile_v2?.training_days ?? user?.perfil_treino?.dias_semana ?? [];
   const temDiasTreino = diasTreino.length > 0;
 
   const alternarDia = (dia: number) => {
@@ -110,7 +111,7 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
                 </strong>
                 , até {ATIVIDADES_MIN_DESCANSO} por dia — da próxima em diante vira{' '}
                 <strong className="atividade-info-card__pill atividade-info-card__pill--coins">
-                  +{ATIVIDADE_COINS_EXTRA} Coins
+                  +{ATIVIDADE_COINS_EXTRA} Folhas
                 </strong>
                 . Uma única atividade mantém sua sequência em qualquer dia, inclusive nos dias de
                 treino, sem marcar a Missão de treino como concluída.

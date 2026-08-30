@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bell,
-  Coins,
   Dumbbell,
   Flame,
+  Leaf,
   Medal,
   Snowflake,
   Sparkles,
@@ -13,7 +13,6 @@ import {
   X,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { ReminderCenter } from '@/components/activities/ReminderCenter';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { getErrorMessage } from '@/lib/api-errors';
@@ -29,7 +28,7 @@ import {
 
 function iconForTipo(tipo: string) {
   if (tipo === 'ranking_podio') return <Medal size={16} aria-hidden />;
-  if (tipo === 'ranking_premio') return <Coins size={16} aria-hidden />;
+  if (tipo === 'ranking_premio') return <Leaf size={16} aria-hidden />;
   if (tipo === 'streak_frozen' || tipo === 'frozen_baixo')
     return <Snowflake size={16} aria-hidden />;
   if (tipo === 'streak_reset') return <TimerReset size={16} aria-hidden />;
@@ -60,7 +59,6 @@ export function NotificationsBell() {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [localDismissTick, setLocalDismissTick] = useState(0);
-  const [tab, setTab] = useState<'inbox' | 'scheduled'>('inbox');
 
   const frozenAutoUse = user?.preferencias?.frozen_streak_auto_usar ?? true;
   const localNotices = useMemo(
@@ -166,61 +164,44 @@ export function NotificationsBell() {
         open={open}
         onClose={() => setOpen(false)}
         variant="wide"
+        panelClassName="notifications-sheet"
         labelledBy="notifications-title"
       >
         <div className="flex items-center justify-between gap-2">
           <h2 id="notifications-title" className="text-base font-extrabold text-stone-800">
             Notificações
           </h2>
-          {allItems.length > 0 && (
+          <div className="notifications-sheet__actions">
+            {allItems.length > 0 && (
+              <button
+                type="button"
+                className="notifications-clear"
+                disabled={busyId === 'all'}
+                onClick={() => void handleClearAll()}
+              >
+                <Trash2 size={13} aria-hidden />
+                Limpar tudo
+              </button>
+            )}
             <button
               type="button"
-              className="notifications-clear"
-              disabled={busyId === 'all'}
-              onClick={() => void handleClearAll()}
+              className="notifications-sheet__close"
+              onClick={() => setOpen(false)}
+              aria-label="Fechar notificações"
             >
-              <Trash2 size={13} aria-hidden />
-              Limpar tudo
+              <X size={18} aria-hidden />
             </button>
-          )}
+          </div>
         </div>
-        <div className="notifications-tabs" role="tablist" aria-label="Seções de notificações">
-          <button
-            type="button"
-            id="notifications-tab-inbox"
-            role="tab"
-            aria-selected={tab === 'inbox'}
-            aria-controls="notifications-panel-inbox"
-            onClick={() => setTab('inbox')}
-          >
-            Caixa de entrada
-          </button>
-          <button
-            type="button"
-            id="notifications-tab-scheduled"
-            role="tab"
-            aria-selected={tab === 'scheduled'}
-            aria-controls="notifications-panel-scheduled"
-            onClick={() => setTab('scheduled')}
-          >
-            Programadas
-          </button>
-        </div>
-        <div
-          id={tab === 'scheduled' ? 'notifications-panel-scheduled' : 'notifications-panel-inbox'}
-          role="tabpanel"
-          aria-labelledby={
-            tab === 'scheduled' ? 'notifications-tab-scheduled' : 'notifications-tab-inbox'
-          }
-        >
-          {tab === 'scheduled' ? (
-            <ReminderCenter />
-          ) : loading ? (
+        <div className="notifications-inbox" aria-live="polite">
+          {loading ? (
             <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
           ) : allItems.length === 0 ? (
-            <p className="mt-3 text-sm font-bold text-stone-500">
-              Nada por aqui ainda. Feche a semana no ranking pra começar a receber novidades.
-            </p>
+            <div className="notifications-empty">
+              <Bell size={24} aria-hidden />
+              <p>Tudo em dia.</p>
+              <small>Os avisos do Evolyn aparecem aqui.</small>
+            </div>
           ) : (
             <ul className="mt-3 flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
               {allItems.map((item) => (

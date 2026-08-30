@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Coins, Flame } from 'lucide-react';
+import { Flame, Leaf } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -88,7 +88,7 @@ export function StreakRecoveryPrompt() {
         </p>
 
         <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3">
-          <Coins size={18} className="text-amber-600" aria-hidden />
+          <Leaf size={18} className="text-emerald-600" aria-hidden />
           <span className="text-lg font-extrabold text-amber-900">
             {offer.custo_coins} {CURRENCY_NAME}
           </span>

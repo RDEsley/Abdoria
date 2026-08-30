@@ -1,8 +1,8 @@
 # Preparação para Capacitor
 
-Status em agosto de 2026: o frontend React/Vite pode ser empacotado com Capacitor, mas o projeto
-ainda não está pronto para publicação nativa. Esta etapa é deliberadamente futura: nenhum pacote,
-projeto Android/iOS ou credencial de assinatura foi adicionado agora.
+Status em agosto de 2026: o frontend React/Vite já possui Capacitor 8, projetos Android/iOS e
+abstrações de plataforma. O projeto ainda precisa de credenciais, hardening e validação em aparelhos
+reais antes da publicação nas lojas.
 
 ## O que já está favorável
 
@@ -12,7 +12,11 @@ projeto Android/iOS ou credencial de assinatura foi adicionado agora.
   navegação, no player e no MyPlant.
 - Dados importantes de conta, plano e progresso já vivem no servidor. O armazenamento local é
   usado principalmente para sessão e estado transitório.
-- Plano, preferências, layout do Início e lembretes personalizados ficam sincronizados na conta.
+- Plano, preferências e notificações pessoais ficam sincronizados na conta.
+- O snapshot de treino ativo usa um adapter web e Preferences no runtime nativo, com gravações
+  serializadas para impedir que um write pendente recrie uma sessão já limpa.
+- Notificações pessoais recorrentes usam `@capacitor/local-notifications`; o fallback web entrega
+  apenas quando a aplicação está ativa ou volta ao foco.
 
 ## Bloqueadores antes do primeiro app nativo
 
@@ -22,16 +26,12 @@ projeto Android/iOS ou credencial de assinatura foi adicionado agora.
 2. **Trocar o armazenamento do token.** O JWT ainda usa `localStorage`/`sessionStorage`. No app,
    mover o token para armazenamento seguro do Keychain/Keystore. `@capacitor/preferences` serve
    para preferências leves, não deve ser tratado como cofre nem banco local.
-3. **Adicionar configuração e plataformas.** Instalar `@capacitor/core`, `@capacitor/cli`,
-   `@capacitor/android` e `@capacitor/ios`; criar `capacitor.config.ts` na raiz com um `appId`
-   definitivo e `webDir: 'client/dist'`; depois adicionar e sincronizar as plataformas.
-4. **Integrar navegação nativa.** Tratar botão Voltar do Android, retomada/pausa do app e URLs
-   abertas por Universal Links/App Links. O `BrowserRouter` pode continuar, mas links externos
-   precisam alimentar o React Router pelo evento `appUrlOpen`.
-5. **Substituir APIs somente web.** O novo centro de lembretes usa Web Notification enquanto o app
-   está aberto. Migrá-lo para `@capacitor/local-notifications`, agendar/cancelar cada alerta no
-   sistema operacional e reconciliar os agendamentos quando as preferências forem alteradas.
-   Testar também voz, áudio, seleção de foto, compartilhamento e downloads em aparelhos reais.
+3. **Concluir a ponte de deep links.** O runtime já encaminha `appUrlOpen`, mas o React Router ainda
+   precisa consumir e validar os destinos de Universal Links/App Links.
+4. **Validar integrações em hardware.** Testar notificações recorrentes após reboot, canais e sons
+   no Android, limites de agendamento no iOS, voz, áudio, foto e compartilhamento em aparelhos reais.
+5. **Preparar segurança e distribuição.** Definir bundle IDs finais, assinatura, Privacy Manifest,
+   políticas das lojas e pipeline nativo protegido.
 
 ## Acabamento e publicação
 
@@ -50,8 +50,8 @@ projeto Android/iOS ou credencial de assinatura foi adicionado agora.
 ## Sequência recomendada
 
 1. Introduzir a URL configurável da API e armazenamento seguro do token.
-2. Criar o shell Capacitor e fazer um smoke test Android.
-3. Integrar ciclo de vida, navegação, notificações e mídia.
+2. Fazer smoke tests Android/iOS do shell já criado e concluir deep links.
+3. Validar notificações, ciclo de vida e mídia em aparelhos reais.
 4. Fazer testes E2E em Android e iOS reais.
 5. Somente então configurar assinatura, CI/CD nativo e publicação nas lojas.
 

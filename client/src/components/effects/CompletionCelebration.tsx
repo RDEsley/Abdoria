@@ -1,15 +1,13 @@
 import { CosmeticEffectLayer } from '@/components/shop/CosmeticEffectLayer';
-import { useAuth } from '@/context/AuthContext';
+import { useReducedMotion } from 'framer-motion';
 
 interface Props {
   effectId?: string;
 }
 
 export function CompletionCelebration({ effectId = 'efeito_confete' }: Props) {
-  const { user } = useAuth();
-  if (effectId === 'efeito_confete' && !(user?.preferencias?.confetti_animacoes_habilitadas ?? true)) {
-    return null;
-  }
+  const reduceMotion = useReducedMotion();
+  if (reduceMotion) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">

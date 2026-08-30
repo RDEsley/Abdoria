@@ -4,15 +4,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
   Bell,
-  Check,
   ChevronDown,
   ClipboardList,
   Copy,
-  Dumbbell,
   HelpCircle,
   LogOut,
   PlayCircle,
-  Sparkles,
   ScrollText,
   Trash2,
   UserRound,
@@ -35,22 +32,21 @@ import { deleteAccount, updateMe } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
-import type { TreinoBase } from '@/types';
+import {
+  notificationScheduler,
+  type NotificationPermissionState,
+} from '@/lib/platform/notification-scheduler';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_XP_POR_UNIDADE,
   ATIVIDADES_MIN_DESCANSO,
 } from '@shared/atividades';
+import { AB_INTENSITY_LABELS, AB_VOLUME_LABELS } from '@shared/ab-training-profile';
 import {
   MOEDA_XP_STEP,
-  CICLO_HINTS,
-  CICLO_LABELS,
-  ESCOPO_LABELS,
-  FOCO_LABELS,
   CURRENCY_NAME,
   formatFrozenStreakDescription,
   FROZEN_STREAK_LABEL,
-  normalizeCicloTreinos,
   XP_ACHIEVEMENT_BONUS,
   XP_DAILY_CAP_BASE,
   XP_DAILY_CAP_PER_ACHIEVEMENT,
@@ -60,12 +56,6 @@ import {
   XP_STREAK_BONUS_MAX,
   XP_STREAK_BONUS_PER_DAY,
 } from '@/types';
-
-const CICLOS: TreinoBase[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
-function notificationsSupported(): boolean {
-  return typeof window !== 'undefined' && 'Notification' in window;
-}
 
 export function SettingsPage() {
   const { user, logout, refreshUser, applyUser } = useAuth();
@@ -92,13 +82,7 @@ export function SettingsPage() {
   }, [location.hash]);
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
-  const [confetti, setConfetti] = useState(
-    user?.preferencias?.confetti_animacoes_habilitadas ?? true,
-  );
   const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
-  const [ciclo, setCiclo] = useState<TreinoBase[]>(
-    normalizeCicloTreinos(user?.preferencias?.ciclo_treinos),
-  );
   const [saving, setSaving] = useState(false);
   const [hydratedUserId, setHydratedUserId] = useState<string | null>(user?.id ?? null);
 
@@ -108,9 +92,7 @@ export function SettingsPage() {
     if (!user || hydratedUserId === user.id) return;
     setSom(user.preferencias?.som_habilitado ?? true);
     setVolume(user.preferencias?.sfx_volume ?? 0.7);
-    setConfetti(user.preferencias?.confetti_animacoes_habilitadas ?? true);
     setDescanso(user.preferencias?.descanso_padrao_seg ?? 30);
-    setCiclo(normalizeCicloTreinos(user.preferencias?.ciclo_treinos));
     setHydratedUserId(user.id);
   }, [hydratedUserId, user]);
 
@@ -121,18 +103,14 @@ export function SettingsPage() {
     return (
       som !== (prefs?.som_habilitado ?? true) ||
       volume !== (prefs?.sfx_volume ?? 0.7) ||
-      confetti !== (prefs?.confetti_animacoes_habilitadas ?? true) ||
-      descanso !== (prefs?.descanso_padrao_seg ?? 30) ||
-      normalizeCicloTreinos(ciclo).join('') !== normalizeCicloTreinos(prefs?.ciclo_treinos).join('')
+      descanso !== (prefs?.descanso_padrao_seg ?? 30)
     );
-  }, [user, hydratedUserId, som, volume, confetti, descanso, ciclo]);
+  }, [user, hydratedUserId, som, volume, descanso]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
-    setConfetti(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
     setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
-    setCiclo(normalizeCicloTreinos(user?.preferencias?.ciclo_treinos));
   };
 
   const save = async () => {
@@ -143,10 +121,8 @@ export function SettingsPage() {
           ...user!.preferencias,
           som_habilitado: som,
           sfx_volume: volume,
-          confetti_animacoes_habilitadas: confetti,
           tom_texto: 'normal',
           descanso_padrao_seg: descanso,
-          ciclo_treinos: normalizeCicloTreinos(ciclo),
         },
       });
       applyUser(updated);
@@ -187,9 +163,10 @@ export function SettingsPage() {
     }
   };
 
-  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
-    notificationsSupported() ? Notification.permission : 'denied',
-  );
+  const [notifPermission, setNotifPermission] = useState<NotificationPermissionState>('prompt');
+  useEffect(() => {
+    void notificationScheduler.permissionState().then(setNotifPermission);
+  }, []);
   const notifOptOut = user?.preferencias?.notificacoes_opt_out ?? false;
   const notifAtivas = notifPermission === 'granted' && !notifOptOut;
 
@@ -207,16 +184,19 @@ export function SettingsPage() {
       return;
     }
 
-    if (!notificationsSupported()) return;
-
     if (notifPermission === 'denied') {
-      showGameToast('Notificações bloqueadas no navegador — ative nas configurações do site.', {
+      showGameToast('Notificações bloqueadas — ative nas configurações do dispositivo.', {
         variant: 'info',
       });
       return;
     }
 
-    const permission = await Notification.requestPermission();
+    if (notifPermission === 'unsupported') {
+      showGameToast('Notificações não são suportadas neste dispositivo.', { variant: 'info' });
+      return;
+    }
+
+    const permission = await notificationScheduler.requestPermission();
     setNotifPermission(permission);
     if (permission !== 'granted') return;
 
@@ -229,16 +209,6 @@ export function SettingsPage() {
       /* permissão do navegador já foi concedida — segue mesmo se o save falhar */
     }
     showGameToast('Notificações ativadas! Vamos te avisar na hora certa.', { variant: 'success' });
-  };
-
-  const toggleCiclo = (c: TreinoBase) => {
-    setCiclo((prev) => {
-      if (prev.includes(c)) {
-        if (prev.length <= 2) return prev;
-        return prev.filter((x) => x !== c);
-      }
-      return normalizeCicloTreinos([...prev, c]);
-    });
   };
 
   const handleTutorialClose = () => {
@@ -284,23 +254,21 @@ export function SettingsPage() {
           <ClipboardList size={14} /> Meu plano de treino
         </h3>
         <p className="text-xs font-medium text-stone-500">
-          {user?.perfil_treino
-            ? `${ESCOPO_LABELS[user.perfil_treino.escopo]} · ${FOCO_LABELS[user.perfil_treino.foco]} · ${user.perfil_treino.frequencia_semanal}x por semana`
-            : 'Responda o questionário de treino e receba missões montadas pro seu objetivo.'}
+          {user?.ab_training_profile_v2
+            ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${AB_VOLUME_LABELS[user.ab_training_profile_v2.volume]} · ${user.ab_training_profile_v2.training_days.length} dias/semana`
+            : 'Configure intensidade, duração, agenda e equipamentos para suas missões de core.'}
         </p>
         <GameButton
           variant="secondary"
           className="mt-3 w-full"
           onClick={() => setShowTrainingProfile(true)}
         >
-          {user?.perfil_treino ? 'Ajustar plano de treino' : 'Montar meu plano'}
+          {user?.ab_training_profile_v2 ? 'Ajustar plano de treino' : 'Montar meu plano'}
         </GameButton>
       </section>
 
       <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <Dumbbell size={14} /> Treino
-        </h3>
+        <h3 className="game-section-title mb-3">Treino</h3>
         <label className="block text-sm font-bold">
           Descanso entre séries: {descanso}s
           <input
@@ -312,34 +280,6 @@ export function SettingsPage() {
             className="mt-2 w-full cursor-pointer"
           />
         </label>
-
-        <p className="mt-5 text-sm font-bold">Focos do treino</p>
-        <p className="mt-1 mb-3 text-xs font-medium text-stone-500">
-          Os treinos sugeridos alternam entre os focos ativos (mínimo 2).
-        </p>
-        <div className="flex flex-col gap-2">
-          {CICLOS.map((c) => {
-            const active = ciclo.includes(c);
-            return (
-              <button
-                key={c}
-                type="button"
-                onClick={() => toggleCiclo(c)}
-                aria-pressed={active}
-                className={`settings-cycle${active ? ' settings-cycle--on' : ''}`}
-              >
-                <span className="settings-cycle__badge" aria-hidden>
-                  {c}
-                </span>
-                <span className="settings-cycle__text">
-                  <strong>{CICLO_LABELS[c]}</strong>
-                  <small>{CICLO_HINTS[c]}</small>
-                </span>
-                {active && <Check size={16} className="settings-cycle__check" aria-hidden />}
-              </button>
-            );
-          })}
-        </div>
       </section>
 
       <section className="glass-card p-4">
@@ -372,31 +312,10 @@ export function SettingsPage() {
 
       <section className="glass-card p-4">
         <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <Sparkles size={14} /> Celebrações
-        </h3>
-        <GameButton
-          type="button"
-          variant={confetti ? 'secondary' : 'ghost'}
-          className="flex w-full items-center justify-between gap-3"
-          onClick={() => setConfetti((value) => !value)}
-          aria-pressed={!confetti}
-        >
-          <span className="flex items-center gap-2 text-left">
-            <Sparkles size={16} aria-hidden />
-            {confetti ? 'Desativar animações de confete' : 'Ativar animações de confete'}
-          </span>
-          <span className="text-xs font-extrabold uppercase tracking-wide text-stone-500">
-            {confetti ? 'Ligadas' : 'Desligadas'}
-          </span>
-        </GameButton>
-      </section>
-
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
           <Bell size={14} /> Notificações
         </h3>
         <p className="mb-3 text-xs font-medium text-stone-500">
-          Lembretes de treino e avisos do jogo, direto no navegador.
+          Avisos de treino e do jogo, direto no navegador.
         </p>
         <GameButton
           variant="secondary"
@@ -447,8 +366,9 @@ export function SettingsPage() {
                     <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
                   </li>
                   <li>
-                    Exercícios, streak e conquistas do treino contam no mesmo máx. diário. Códigos
-                    presente creditam suas recompensas diretamente.
+                    Exercícios, streak, conquistas do treino, Atividades e desbloqueios da
+                    Biblioteca compartilham esse mesmo limite. Códigos presente creditam suas
+                    recompensas diretamente.
                   </li>
                   <li>Após atingir o máx., o restante do dia não rende mais XP de treino.</li>
                 </ul>
@@ -465,8 +385,8 @@ export function SettingsPage() {
                 <p className="mb-2 font-bold text-stone-700">Atividades</p>
                 <ul className="mb-3 list-disc space-y-1 pl-5">
                   <li>
-                    <strong>+{ATIVIDADE_XP_POR_UNIDADE} XP</strong> por atividade concluída, em
-                    qualquer dia — treino ou descanso.
+                    Até <strong>+{ATIVIDADE_XP_POR_UNIDADE} XP</strong> por atividade concluída, em
+                    qualquer dia — limitado pelo saldo restante do máximo diário unificado.
                   </li>
                   <li>
                     Vale pras primeiras <strong>{ATIVIDADES_MIN_DESCANSO}</strong> atividades do

@@ -46,21 +46,21 @@ export function WorkoutQueueList({
   }
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-b from-emerald-50/80 to-white shadow-[0_12px_36px_rgba(16,185,129,0.08)]">
-      <div className="flex items-center gap-3 border-b border-emerald-100/80 px-4 py-3">
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
-          <ListChecks size={18} />
+    <div className="workout-queue">
+      <div className="workout-queue__header">
+        <span className="workout-queue__header-icon">
+          <ListChecks size={18} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-black text-stone-900">Fila do treino</p>
-          <p className="text-[0.68rem] font-semibold text-stone-500">
+          <p className="workout-queue__title">Sequência da missão</p>
+          <p className="workout-queue__subtitle">
             {queue.length} {queue.length === 1 ? 'exercício' : 'exercícios'} · segure para reordenar
           </p>
         </div>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-          <ul className="flex flex-col gap-2 p-3">
+          <ul className="workout-queue__list">
             {queue.map((item, index) => (
               <SortableExerciseItem
                 key={sortableIds[index]}

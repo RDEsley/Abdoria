@@ -91,7 +91,7 @@ export function AtividadeCompleteModal({
   const ganhaXp = metaHoje == null || progressoHoje == null || progressoHoje < metaHoje;
   const hint = ganhaXp
     ? 'Marque como concluída só depois de fazer de verdade — vale XP e ajuda a manter sua sequência.'
-    : `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Coins e ainda ajuda sua sequência.`;
+    : `Teto de XP do dia já batido — esta te dá +${ATIVIDADE_COINS_EXTRA} Folhas e ainda ajuda sua sequência.`;
 
   return (
     <Modal
@@ -128,7 +128,7 @@ export function AtividadeCompleteModal({
         {metaHoje != null && progressoHoje != null && (
           <p className={`atividade-progresso-dia${progressoHoje >= metaHoje ? ' is-done' : ''}`}>
             {progressoHoje >= metaHoje
-              ? `Teto de XP do dia já batido — essa dá +${ATIVIDADE_COINS_EXTRA} Coins de bônus!`
+              ? `Teto de XP do dia já batido — essa dá +${ATIVIDADE_COINS_EXTRA} Folhas de bônus!`
               : `${progressoHoje}/${metaHoje} com XP hoje · falta${
                   metaHoje - progressoHoje === 1 ? '' : 'm'
                 } ${metaHoje - progressoHoje} pra completar o teto`}

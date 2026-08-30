@@ -30,7 +30,10 @@ import {
   markCycleCompleted,
 } from '../services/recommendation.js';
 import { isPlanoUser, markPlanoDayCompleted } from '../services/plan-generator.js';
-import { STREAK_RECORD_MATCH_COST } from '../../../shared/streak/recovery.js';
+import {
+  STREAK_RECORD_MATCH_COST,
+  buildStreakRecordMatch,
+} from '../../../shared/streak/recovery.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
@@ -258,7 +261,7 @@ workoutsRouter.post('/streak/recover', async (req: AuthRequest, res) => {
     const saldo = readMoedaBalance(user);
     if (saldo < offer.custo_coins) {
       res.status(400).json({
-        error: `Coins insuficientes. Faltam ${offer.custo_coins - saldo} Coins.`,
+        error: `Folhas insuficientes. Faltam ${offer.custo_coins - saldo} Folhas.`,
       });
       return;
     }
@@ -303,8 +306,12 @@ workoutsRouter.post('/streak/match-record', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { streak_atual, streak_maior } = user.gamificacao;
-    if (streak_atual >= streak_maior) {
+    const match = buildStreakRecordMatch(
+      user.gamificacao.streak_atual,
+      user.gamificacao.streak_maior,
+      getTodaySaoPaulo(),
+    );
+    if (!match) {
       res.status(400).json({ error: 'Sua sequência já está no recorde.' });
       return;
     }
@@ -312,15 +319,17 @@ workoutsRouter.post('/streak/match-record', async (req: AuthRequest, res) => {
     const saldo = readMoedaBalance(user);
     if (saldo < STREAK_RECORD_MATCH_COST) {
       res.status(400).json({
-        error: `Coins insuficientes. Faltam ${STREAK_RECORD_MATCH_COST - saldo} Coins.`,
+        error: `Folhas insuficientes. Faltam ${STREAK_RECORD_MATCH_COST - saldo} Folhas.`,
       });
       return;
     }
 
     user.cosmeticos.moedas = saldo - STREAK_RECORD_MATCH_COST;
-    user.gamificacao.streak_atual = streak_maior;
+    user.gamificacao.streak_atual = match.streak;
+    user.gamificacao.streak_recovery_anchor = match.anchor;
+    user.gamificacao.streak_recovery_offer = null;
 
-    await user.save();
+    await user.saveColumns(['gamificacao', 'cosmeticos']);
 
     res.json({
       user: sanitizeUser(user),
@@ -660,7 +669,9 @@ workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
     }
 
     const diaDeTreino = isDiaDeTreino(
-      updatedUser.perfil_treino?.dias_semana ?? null,
+      updatedUser.ab_training_profile_v2?.training_days ??
+        updatedUser.perfil_treino?.dias_semana ??
+        null,
       getSaoPauloWeekday(),
     );
 

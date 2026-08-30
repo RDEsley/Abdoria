@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronRight, Coins, Flame, ListChecks, Snowflake, Zap } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ChevronRight, Flame, Leaf, ListChecks, Snowflake, Zap } from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
@@ -30,10 +30,10 @@ function todayLabel(): string {
 
 /** Confete de missão completa — some sozinho, não faz loop. */
 function VictoryConfetti() {
-  const { user } = useApp();
   const data = useLottieAsset(CONFETTI_LOTTIE_URL);
+  const reduceMotion = useReducedMotion();
   if (!data) return null;
-  if (!(user?.preferencias?.confetti_animacoes_habilitadas ?? true)) return null;
+  if (reduceMotion) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
       <LottieView data={data} loop={false} />
@@ -215,7 +215,9 @@ export function WorkoutVictoryScreen({
                 >
                   {xpBreakdown.exercicios > 0 && <li>Exercícios +{xpBreakdown.exercicios}</li>}
                   {xpBreakdown.exercicios === 0 && xpBreakdown.total_diario === 0 && (
-                    <li className="game-victory__breakdown-cap">Mín. 3 exercícios para XP diário</li>
+                    <li className="game-victory__breakdown-cap">
+                      Mín. 3 exercícios para XP diário
+                    </li>
                   )}
                   {xpBreakdown.streak > 0 && <li>Streak +{xpBreakdown.streak}</li>}
                   {xpBreakdown.conquistas > 0 && <li>Conquistas +{xpBreakdown.conquistas}</li>}
@@ -229,13 +231,14 @@ export function WorkoutVictoryScreen({
             </div>
             {abdoriaGained > 0 && (
               <p className="game-victory__abdoria">
-                <Coins size={14} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
+                <Leaf size={14} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
               </p>
             )}
             {!!atividadesConcluidas && atividadesConcluidas > 0 && (
               <p className="game-victory__atividades">
                 <ListChecks size={13} aria-hidden /> +{atividadesConcluidas} atividade
-                {atividadesConcluidas === 1 ? '' : 's'} concluída{atividadesConcluidas === 1 ? '' : 's'}
+                {atividadesConcluidas === 1 ? '' : 's'} concluída
+                {atividadesConcluidas === 1 ? '' : 's'}
               </p>
             )}
           </div>

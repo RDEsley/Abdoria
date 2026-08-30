@@ -1,4 +1,11 @@
-import { isReminderDue, type PersonalizedReminder } from '@shared/reminders';
+import {
+  PERSONAL_NOTIFICATION_COLORS,
+  PERSONAL_NOTIFICATION_MAX_REQUESTS,
+  buildNativeNotificationSchedules,
+  isReminderDue,
+  normalizePersonalizedReminders,
+  type PersonalizedReminder,
+} from '@shared/reminders';
 import { Capacitor } from '@capacitor/core';
 
 export type NotificationPermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
@@ -30,7 +37,8 @@ export const webNotificationScheduler: NotificationScheduler = {
     const now = new Date();
     for (const reminder of reminders) {
       if (!isReminderDue(reminder, now)) continue;
-      const deliveryKey = `evolyn:notification:${reminder.id}:${now.toISOString().slice(0, 10)}:${reminder.time}`;
+      const minuteKey = now.toISOString().slice(0, 16);
+      const deliveryKey = `evolyn:notification:${reminder.id}:${minuteKey}`;
       if (localStorage.getItem(deliveryKey)) continue;
       new Notification(reminder.title, {
         body: reminder.message,
@@ -48,7 +56,7 @@ export const webNotificationScheduler: NotificationScheduler = {
   },
 };
 
-function numericId(value: string, occurrence: number): number {
+function numericId(value: string, occurrence: string): number {
   let hash = 0;
   for (const character of `${value}:${occurrence}`)
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
@@ -75,26 +83,57 @@ const nativeNotificationScheduler: NotificationScheduler = {
     const pending = await LocalNotifications.getPending();
     const personalized = pending.notifications.filter((item) => item.extra?.reminderId);
     if (personalized.length) await LocalNotifications.cancel({ notifications: personalized });
-    const now = new Date();
+    if (Capacitor.getPlatform() === 'android') {
+      await Promise.all([
+        LocalNotifications.createChannel({
+          id: 'evolyn-personal-default',
+          name: 'Notificações personalizadas',
+          description: 'Alertas pessoais programados no Evolyn',
+          importance: 3,
+          sound: 'default',
+          vibration: true,
+        }),
+        LocalNotifications.createChannel({
+          id: 'evolyn-personal-silent',
+          name: 'Notificações silenciosas',
+          description: 'Alertas pessoais sem som ou vibração',
+          importance: 2,
+          vibration: false,
+        }),
+      ]);
+    }
+
+    const now = Date.now();
     const notifications = reminders
       .filter((item) => item.enabled)
       .flatMap((reminder) => {
-        const [hour, minute] = reminder.time.split(':').map(Number);
-        return Array.from({ length: 14 }, (_, offset) => {
-          const at = new Date(now);
-          at.setDate(now.getDate() + offset);
-          at.setHours(hour, minute, 0, 0);
-          return { at, offset };
-        })
-          .filter(({ at }) => at > now && reminder.weekdays.includes(at.getDay()))
-          .map(({ at, offset }) => ({
-            id: numericId(reminder.id, offset),
+        const color = PERSONAL_NOTIFICATION_COLORS.find(({ id }) => id === reminder.color)?.hex;
+        return buildNativeNotificationSchedules(reminder)
+          .filter((descriptor) => !descriptor.at || new Date(descriptor.at).getTime() > now)
+          .map((descriptor) => ({
+            id: numericId(reminder.id, descriptor.occurrenceKey),
             title: reminder.title,
             body: reminder.message,
-            schedule: { at },
-            extra: { reminderId: reminder.id },
+            schedule: descriptor.at
+              ? { at: new Date(descriptor.at) }
+              : {
+                  on: descriptor.on as {
+                    weekday?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                    hour: number;
+                    minute: number;
+                  },
+                },
+            sound: reminder.sound === 'default' ? 'default' : undefined,
+            channelId:
+              reminder.sound === 'silent' ? 'evolyn-personal-silent' : 'evolyn-personal-default',
+            iconColor: color,
+            // Android/iOS controlam o small/app icon da notificação. A escolha
+            // do usuário continua no payload para identidade dentro do Evolyn;
+            // não prometemos trocar dinamicamente o ícone do aplicativo.
+            extra: { reminderId: reminder.id, icon: reminder.icon, color: reminder.color },
           }));
-      });
+      })
+      .slice(0, PERSONAL_NOTIFICATION_MAX_REQUESTS);
     if (notifications.length) await LocalNotifications.schedule({ notifications });
   },
   async cancel(id) {
@@ -108,3 +147,7 @@ const nativeNotificationScheduler: NotificationScheduler = {
 export const notificationScheduler: NotificationScheduler = Capacitor.isNativePlatform()
   ? nativeNotificationScheduler
   : webNotificationScheduler;
+
+export function normalizeNotificationsForScheduling(raw: unknown): PersonalizedReminder[] {
+  return normalizePersonalizedReminders(raw);
+}

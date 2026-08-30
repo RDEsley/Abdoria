@@ -287,7 +287,7 @@ export function ActivityCalendar() {
             {selectedNotas.length > 0 && (
               <div className="workout-calendar__day-detail">
                 <p className="workout-calendar__detail-title">
-                  <NotebookPen size={14} className="text-violet-600" aria-hidden /> Lembretes —{' '}
+                  <NotebookPen size={14} className="text-violet-600" aria-hidden /> Anotações —{' '}
                   {selectedNotas.length} concluída{selectedNotas.length === 1 ? '' : 's'}
                 </p>
                 <ul className="workout-calendar__detail-list">

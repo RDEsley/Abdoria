@@ -1,204 +1,559 @@
-import { useMemo, useState } from 'react';
-import { Bell, BellRing, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState, type CSSProperties } from 'react';
+import {
+  AlarmClock,
+  BellRing,
+  BookOpen,
+  Check,
+  Circle,
+  Dumbbell,
+  Droplets,
+  HeartPulse,
+  Leaf,
+  Pencil,
+  Plus,
+  ShieldPlus,
+  Star,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
+import { selectionHaptic } from '@/lib/platform/native-runtime';
+import { showGameToast } from '@/components/ui/GameToast';
 import {
-  REMINDER_SKINS,
+  PERSONAL_NOTIFICATION_COLORS,
+  PERSONAL_NOTIFICATION_ICONS,
+  PERSONAL_NOTIFICATION_VERSION,
+  describePersonalNotificationSchedule,
+  normalizePersonalizedReminders,
+  normalizeReminderTimes,
   normalizeReminderWeekdays,
+  type PersonalNotificationColor,
+  type PersonalNotificationIcon,
+  type PersonalNotificationSound,
   type PersonalizedReminder,
-  type ReminderSkin,
 } from '@shared/reminders';
 
-const DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const DAYS = [
+  { value: 0, label: 'Dom' },
+  { value: 1, label: 'Seg' },
+  { value: 2, label: 'Ter' },
+  { value: 3, label: 'Qua' },
+  { value: 4, label: 'Qui' },
+  { value: 5, label: 'Sex' },
+  { value: 6, label: 'Sáb' },
+] as const;
+
+const ICONS = {
+  neutral: Circle,
+  water: Droplets,
+  leaf: Leaf,
+  workout: Dumbbell,
+  study: BookOpen,
+  health: ShieldPlus,
+  alarm: AlarmClock,
+  heart: HeartPulse,
+  star: Star,
+} satisfies Record<PersonalNotificationIcon, typeof Circle>;
+
+type RecurrenceDraft = '' | 'once' | 'daily' | 'weekdays';
+
+function emptyDraft() {
+  return {
+    id: null as string | null,
+    title: '',
+    message: '',
+    recurrence: '' as RecurrenceDraft,
+    onceDate: '',
+    times: [''],
+    weekdays: [] as number[],
+    icon: 'neutral' as PersonalNotificationIcon,
+    color: 'neutral' as PersonalNotificationColor,
+    sound: 'default' as PersonalNotificationSound,
+    enabled: true,
+    createdAt: '',
+  };
+}
+
+type Draft = ReturnType<typeof emptyDraft>;
+
+function reminderToDraft(reminder: PersonalizedReminder): Draft {
+  if (reminder.schedule.kind === 'once') {
+    const date = new Date(reminder.schedule.at);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+      .toISOString()
+      .slice(0, 16);
+    return {
+      id: reminder.id,
+      title: reminder.title,
+      message: reminder.message,
+      recurrence: 'once',
+      onceDate: local.slice(0, 10),
+      times: [local.slice(11, 16)],
+      weekdays: [],
+      icon: reminder.icon,
+      color: reminder.color,
+      sound: reminder.sound,
+      enabled: reminder.enabled,
+      createdAt: reminder.createdAt,
+    };
+  }
+  return {
+    id: reminder.id,
+    title: reminder.title,
+    message: reminder.message,
+    recurrence: reminder.schedule.weekdays.length === 7 ? 'daily' : 'weekdays',
+    onceDate: '',
+    times: reminder.schedule.times,
+    weekdays: reminder.schedule.weekdays,
+    icon: reminder.icon,
+    color: reminder.color,
+    sound: reminder.sound,
+    enabled: reminder.enabled,
+    createdAt: reminder.createdAt,
+  };
+}
+
+function ResourceIcon({ icon }: { icon: PersonalNotificationIcon }) {
+  const Icon = ICONS[icon];
+  return <Icon size={18} aria-hidden />;
+}
 
 export function ReminderCenter() {
   const { user } = useAuth();
   const { patchPreferences } = useUserPreferences();
   const reminders = useMemo(
-    () => user?.preferencias?.lembretes_personalizados ?? [],
+    () => normalizePersonalizedReminders(user?.preferencias?.lembretes_personalizados),
     [user?.preferencias?.lembretes_personalizados],
   );
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState('Hora de cuidar de você');
-  const [message, setMessage] = useState('Uma pequena ação hoje mantém sua evolução em movimento.');
-  const [time, setTime] = useState('19:00');
-  const [weekdays, setWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [skin, setSkin] = useState<ReminderSkin>('nature');
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const save = async () => {
-    if (!title.trim() || weekdays.length === 0) return;
-    const reminder: PersonalizedReminder = {
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      message: message.trim(),
-      time,
-      weekdays: normalizeReminderWeekdays(weekdays),
-      skin,
-      enabled: true,
-      createdAt: new Date().toISOString(),
-    };
-    await patchPreferences({ lembretes_personalizados: [...reminders, reminder] });
+  const closeForm = () => {
     setEditing(false);
+    setDraft(emptyDraft());
+    setError('');
   };
 
-  const replace = (next: PersonalizedReminder[]) =>
-    patchPreferences({ lembretes_personalizados: next });
+  const openCreate = () => {
+    setDraft(emptyDraft());
+    setError('');
+    setEditing(true);
+  };
 
-  const askPermission = () => void notificationScheduler.requestPermission();
+  const openEdit = (reminder: PersonalizedReminder) => {
+    setDraft(reminderToDraft(reminder));
+    setError('');
+    setEditing(true);
+  };
+
+  const buildReminder = (): PersonalizedReminder | null => {
+    const title = draft.title.trim();
+    const times = normalizeReminderTimes(draft.times);
+    if (!title) {
+      setError('Informe um título.');
+      return null;
+    }
+    if (!draft.recurrence) {
+      setError('Escolha como a notificação deve se repetir.');
+      return null;
+    }
+    if (times.length === 0) {
+      setError('Adicione pelo menos um horário.');
+      return null;
+    }
+
+    let schedule: PersonalizedReminder['schedule'];
+    if (draft.recurrence === 'once') {
+      if (!draft.onceDate) {
+        setError('Escolha a data da notificação.');
+        return null;
+      }
+      const at = new Date(`${draft.onceDate}T${times[0]}:00`);
+      if (!Number.isFinite(at.getTime()) || at.getTime() <= Date.now()) {
+        setError('Escolha uma data e horário futuros.');
+        return null;
+      }
+      schedule = { kind: 'once', at: at.toISOString() };
+    } else {
+      const weekdays =
+        draft.recurrence === 'daily'
+          ? DAYS.map(({ value }) => value)
+          : normalizeReminderWeekdays(draft.weekdays);
+      if (weekdays.length === 0) {
+        setError('Escolha pelo menos um dia da semana.');
+        return null;
+      }
+      schedule = { kind: 'recurring', times, weekdays };
+    }
+
+    const now = new Date().toISOString();
+    return {
+      version: PERSONAL_NOTIFICATION_VERSION,
+      id: draft.id ?? crypto.randomUUID(),
+      title,
+      message: draft.message.trim(),
+      icon: draft.icon,
+      color: draft.color,
+      sound: draft.sound,
+      schedule,
+      enabled: draft.enabled,
+      createdAt: draft.createdAt || now,
+      updatedAt: now,
+    };
+  };
+
+  const save = async () => {
+    const reminder = buildReminder();
+    if (!reminder) return;
+    setSaving(true);
+    try {
+      const next = draft.id
+        ? reminders.map((item) => (item.id === draft.id ? reminder : item))
+        : [...reminders, reminder];
+      await patchPreferences({ lembretes_personalizados: next });
+      const permission = await notificationScheduler.permissionState();
+      const finalPermission =
+        permission === 'prompt' ? await notificationScheduler.requestPermission() : permission;
+      await notificationScheduler.sync(next);
+      showGameToast(draft.id ? 'Notificação atualizada.' : 'Notificação programada.', {
+        variant: 'success',
+      });
+      if (finalPermission === 'denied' || finalPermission === 'unsupported') {
+        showGameToast('Alerta salvo. Ative as notificações do dispositivo para recebê-lo.', {
+          variant: 'info',
+        });
+      }
+      closeForm();
+    } catch {
+      setError('Não foi possível salvar. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const replace = async (next: PersonalizedReminder[]) => {
+    await patchPreferences({ lembretes_personalizados: next });
+    await notificationScheduler.sync(next);
+  };
+
+  const toggleEnabled = async (reminder: PersonalizedReminder) => {
+    const next = reminders.map((item) =>
+      item.id === reminder.id
+        ? { ...item, enabled: !item.enabled, updatedAt: new Date().toISOString() }
+        : item,
+    );
+    await selectionHaptic();
+    await replace(next);
+  };
+
+  const remove = async (reminder: PersonalizedReminder) => {
+    await replace(reminders.filter((item) => item.id !== reminder.id));
+    await notificationScheduler.cancel(reminder.id);
+  };
 
   return (
-    <section className="glass-card overflow-hidden p-4">
-      <div className="flex items-start justify-between gap-3">
+    <section className="personal-notifications app-surface app-surface--notifications">
+      <header className="personal-notifications__header">
         <div>
+          <p className="app-section-eyebrow">No seu ritmo</p>
           <h2 className="game-section-title flex items-center gap-2">
-            <BellRing size={16} /> Notificações programadas
+            <BellRing size={17} aria-hidden /> Notificações personalizadas
           </h2>
-          <p className="mt-1 text-xs font-semibold leading-relaxed text-stone-500">
-            Crie alertas pessoais com horário, dias e estilo próprios.
-          </p>
+          <p>Alertas locais para qualquer parte da sua rotina.</p>
         </div>
         <button
           type="button"
-          onClick={() => {
-            askPermission();
-            setEditing((value) => !value);
-          }}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md transition active:scale-95"
-          aria-label="Criar notificação programada"
+          onClick={editing ? closeForm : openCreate}
+          className="personal-notifications__add"
+          aria-label={editing ? 'Fechar formulário' : 'Criar notificação personalizada'}
         >
-          <Plus size={19} />
+          {editing ? <X size={19} aria-hidden /> : <Plus size={19} aria-hidden />}
         </button>
-      </div>
+      </header>
 
       {editing && (
-        <div className="mt-4 space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3">
-          <label className="block text-xs font-extrabold text-stone-700">
-            Título
+        <div className="personal-notification-form" aria-label="Configurar notificação">
+          <label>
+            <span>Título</span>
             <input
-              value={title}
-              maxLength={50}
-              onChange={(event) => setTitle(event.target.value)}
-              className="mt-1 min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm outline-none focus:border-emerald-500"
+              value={draft.title}
+              maxLength={60}
+              placeholder="Ex.: Beber água"
+              onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))}
+              aria-invalid={Boolean(error) && !draft.title.trim()}
+              aria-describedby={error ? 'personal-notification-error' : undefined}
             />
           </label>
-          <label className="block text-xs font-extrabold text-stone-700">
-            Mensagem
+          <label>
+            <span>
+              Mensagem <small>opcional</small>
+            </span>
             <textarea
-              value={message}
-              maxLength={120}
-              onChange={(event) => setMessage(event.target.value)}
+              value={draft.message}
+              maxLength={160}
               rows={2}
-              className="mt-1 w-full resize-none rounded-xl border border-stone-200 bg-white p-3 text-sm outline-none focus:border-emerald-500"
+              placeholder="Ex.: Hora de tomar um copo de água"
+              onChange={(event) => setDraft((value) => ({ ...value, message: event.target.value }))}
             />
           </label>
-          <label className="block text-xs font-extrabold text-stone-700">
-            Horário
-            <input
-              type="time"
-              value={time}
-              onChange={(event) => setTime(event.target.value)}
-              className="mt-1 min-h-11 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm"
-            />
-          </label>
-          <div className="flex justify-between gap-1" aria-label="Dias da semana">
-            {DAYS.map((day, index) => (
-              <button
-                key={`${day}-${index}`}
-                type="button"
-                onClick={() =>
-                  setWeekdays((current) =>
-                    current.includes(index)
-                      ? current.filter((value) => value !== index)
-                      : [...current, index],
-                  )
+
+          <fieldset>
+            <legend>Repetição</legend>
+            <div className="personal-notification-form__segments">
+              {(
+                [
+                  ['once', 'Uma vez'],
+                  ['daily', 'Todos os dias'],
+                  ['weekdays', 'Dias específicos'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={draft.recurrence === value}
+                  onClick={() => {
+                    void selectionHaptic();
+                    setDraft((current) => ({ ...current, recurrence: value }));
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          {draft.recurrence === 'once' && (
+            <label>
+              <span>Data</span>
+              <input
+                type="date"
+                value={draft.onceDate}
+                onChange={(event) =>
+                  setDraft((value) => ({ ...value, onceDate: event.target.value }))
                 }
-                className={`h-9 w-9 rounded-full text-xs font-black transition ${weekdays.includes(index) ? 'bg-emerald-600 text-white' : 'bg-white text-stone-500'}`}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-5 gap-1.5">
-            {REMINDER_SKINS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                title={option.description}
-                onClick={() => setSkin(option.id)}
-                className={`rounded-xl border px-1 py-2 text-center text-lg ${skin === option.id ? 'border-emerald-500 bg-white ring-2 ring-emerald-200' : 'border-transparent bg-white/60'}`}
-              >
-                <span aria-hidden>{option.emoji}</span>
-                <span className="mt-0.5 block text-[0.58rem] font-bold text-stone-600">
-                  {option.label}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className="min-h-11 flex-1 rounded-xl bg-white text-sm font-bold text-stone-600"
+              />
+            </label>
+          )}
+
+          {draft.recurrence === 'weekdays' && (
+            <fieldset>
+              <legend>Dias</legend>
+              <div className="personal-notification-form__days">
+                {DAYS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={draft.weekdays.includes(value)}
+                    onClick={() => {
+                      void selectionHaptic();
+                      setDraft((current) => ({
+                        ...current,
+                        weekdays: current.weekdays.includes(value)
+                          ? current.weekdays.filter((day) => day !== value)
+                          : [...current.weekdays, value].sort(),
+                      }));
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
+          <fieldset>
+            <legend>{draft.recurrence === 'once' ? 'Horário' : 'Horários'}</legend>
+            <div className="personal-notification-form__times">
+              {draft.times.map((time, index) => (
+                <div key={index}>
+                  <input
+                    type="time"
+                    value={time}
+                    aria-label={`Horário ${index + 1}`}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        times: current.times.map((entry, itemIndex) =>
+                          itemIndex === index ? event.target.value : entry,
+                        ),
+                      }))
+                    }
+                  />
+                  {draft.times.length > 1 && (
+                    <button
+                      type="button"
+                      aria-label={`Remover horário ${index + 1}`}
+                      onClick={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          times: current.times.filter((_, itemIndex) => itemIndex !== index),
+                        }))
+                      }
+                    >
+                      <X size={16} aria-hidden />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {draft.recurrence !== 'once' && (
+                <button
+                  type="button"
+                  className="personal-notification-form__add-time"
+                  onClick={() =>
+                    setDraft((current) => ({ ...current, times: [...current.times, ''] }))
+                  }
+                >
+                  <Plus size={15} aria-hidden /> Adicionar horário
+                </button>
+              )}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Ícone no Evolyn</legend>
+            <div className="personal-notification-form__icons">
+              {PERSONAL_NOTIFICATION_ICONS.map((option) => {
+                const Icon = ICONS[option.id];
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    title={option.label}
+                    aria-label={option.label}
+                    aria-pressed={draft.icon === option.id}
+                    onClick={() => {
+                      void selectionHaptic();
+                      setDraft((value) => ({ ...value, icon: option.id }));
+                    }}
+                  >
+                    <Icon size={18} aria-hidden />
+                  </button>
+                );
+              })}
+            </div>
+            <p className="personal-notification-form__hint">
+              No celular, o sistema pode usar o ícone padrão do aplicativo.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Cor</legend>
+            <div className="personal-notification-form__colors">
+              {PERSONAL_NOTIFICATION_COLORS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  title={option.label}
+                  aria-label={option.label}
+                  aria-pressed={draft.color === option.id}
+                  style={{ '--notification-color': option.hex } as CSSProperties}
+                  onClick={() => {
+                    void selectionHaptic();
+                    setDraft((value) => ({ ...value, color: option.id }));
+                  }}
+                >
+                  {draft.color === option.id && <Check size={14} aria-hidden />}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Som</legend>
+            <div className="personal-notification-form__segments">
+              {(
+                [
+                  ['default', 'Padrão'],
+                  ['soft', 'Suave'],
+                  ['nature', 'Natureza'],
+                  ['motivational', 'Motivacional'],
+                  ['silent', 'Silencioso'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={draft.sound === value}
+                  onClick={() => setDraft((current) => ({ ...current, sound: value }))}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="personal-notification-form__hint">
+              O dispositivo pode usar o som padrão quando não oferecer sons personalizados.
+            </p>
+          </fieldset>
+
+          {error && (
+            <p
+              id="personal-notification-error"
+              role="alert"
+              className="personal-notification-form__error"
             >
+              {error}
+            </p>
+          )}
+          <div className="personal-notification-form__actions">
+            <button type="button" onClick={closeForm}>
               Cancelar
             </button>
-            <button
-              type="button"
-              onClick={() => void save()}
-              className="min-h-11 flex-1 rounded-xl bg-emerald-600 text-sm font-black text-white"
-            >
-              Salvar
+            <button type="button" disabled={saving} onClick={() => void save()}>
+              {saving ? 'Salvando…' : draft.id ? 'Salvar alterações' : 'Programar'}
             </button>
           </div>
         </div>
       )}
 
-      <div className="mt-4 space-y-2">
+      <div className="personal-notifications__list">
         {reminders.length === 0 && !editing && (
-          <p className="rounded-2xl border border-dashed border-stone-300 px-3 py-5 text-center text-xs font-semibold text-stone-500">
-            Nenhuma notificação programada ainda.
-          </p>
+          <div className="personal-notifications__empty">
+            <BellRing size={24} aria-hidden />
+            <p>Nenhum alerta pessoal programado.</p>
+            <small>Crie quando quiser receber um toque do Evolyn.</small>
+          </div>
         )}
         {reminders.map((reminder) => (
           <article
             key={reminder.id}
-            className={`reminder-card reminder-card--${reminder.skin} flex items-center gap-3 rounded-2xl border p-3`}
+            className={`personal-notification-card personal-notification-card--${reminder.color}`}
           >
-            <Bell size={18} className="shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-black">{reminder.title}</p>
-              <p className="text-[0.68rem] font-semibold opacity-70">
-                {reminder.time} ·{' '}
-                {reminder.weekdays.length === 7
-                  ? 'todos os dias'
-                  : `${reminder.weekdays.length} dias/semana`}
-              </p>
+            <span className="personal-notification-card__icon">
+              <ResourceIcon icon={reminder.icon} />
+            </span>
+            <div className="personal-notification-card__content">
+              <strong>{reminder.title}</strong>
+              <small>{describePersonalNotificationSchedule(reminder)}</small>
             </div>
             <button
               type="button"
               role="switch"
+              aria-label={`${reminder.enabled ? 'Desativar' : 'Ativar'} ${reminder.title}`}
               aria-checked={reminder.enabled}
-              onClick={() =>
-                void replace(
-                  reminders.map((item) =>
-                    item.id === reminder.id ? { ...item, enabled: !item.enabled } : item,
-                  ),
-                )
-              }
-              className={`h-6 w-11 rounded-full p-0.5 transition ${reminder.enabled ? 'bg-emerald-600' : 'bg-stone-300'}`}
+              onClick={() => void toggleEnabled(reminder)}
+              className="personal-notification-card__switch"
             >
-              <span
-                className={`block h-5 w-5 rounded-full bg-white shadow transition ${reminder.enabled ? 'translate-x-5' : ''}`}
-              />
+              <span />
             </button>
             <button
               type="button"
-              onClick={() => void replace(reminders.filter((item) => item.id !== reminder.id))}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-stone-500"
+              onClick={() => openEdit(reminder)}
+              className="personal-notification-card__action"
+              aria-label={`Editar ${reminder.title}`}
+            >
+              <Pencil size={15} aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => void remove(reminder)}
+              className="personal-notification-card__action personal-notification-card__action--danger"
               aria-label={`Excluir ${reminder.title}`}
             >
-              <Trash2 size={15} />
+              <Trash2 size={15} aria-hidden />
             </button>
           </article>
         ))}

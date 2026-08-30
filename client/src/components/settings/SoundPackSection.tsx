@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Coins, Lock, Volume2 } from 'lucide-react';
+import { Check, Leaf, Lock, Volume2 } from 'lucide-react';
 import {
   PurchaseConfirmDialog,
   type PurchaseConfirmDetails,
@@ -137,12 +137,14 @@ export function SoundPackSection() {
                 disabled={busyId === item.id}
                 onClick={() => requestPurchase(item)}
               >
-                <Coins size={12} aria-hidden /> {item.unlock.preco_moedas}
+                <Leaf size={12} aria-hidden /> {item.unlock.preco_moedas}
               </button>
             ) : (
               <span className="settings-sound__locked" title={item.unlock_label}>
                 <Lock size={12} aria-hidden />
-                {item.unlock.tipo === 'moedas' ? `${item.unlock.preco_moedas} ${CURRENCY_NAME}` : ''}
+                {item.unlock.tipo === 'moedas'
+                  ? `${item.unlock.preco_moedas} ${CURRENCY_NAME}`
+                  : ''}
               </span>
             )}
           </li>

@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export interface CosmeticEffectLayerProps {
   effectId: string;
@@ -53,10 +52,9 @@ export function CosmeticEffectLayer({
   preview = false,
   className = '',
 }: CosmeticEffectLayerProps) {
-  const { user } = useAuth();
-  const confettiEnabled = user?.preferencias?.confetti_animacoes_habilitadas ?? true;
+  const reduceMotion = useReducedMotion();
   if (!active) return null;
-  if (effectId === 'efeito_confete' && !confettiEnabled) return null;
+  if (reduceMotion && mode === 'burst') return null;
 
   const loop = repeat(mode);
   const rootClass = [

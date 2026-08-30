@@ -24,7 +24,7 @@ Você deve fornecer informações verdadeiras no cadastro. É responsável por m
 Ao usar o Evolyn, você concorda em não: (a) tentar burlar, hackear ou explorar falhas do sistema de gamificação; (b) enviar fotos de perfil ofensivas, ilegais ou que violem direitos de terceiros; (c) assediar, ofender ou se passar por outros usuários no ranking ou perfil público; (d) usar o app para qualquer finalidade ilegal.
 
 8. Gamificação, moedas virtuais e itens cosméticos
-XP, streaks, Coins, Folhas (moeda premium), molduras, títulos, banners e demais itens são recursos virtuais e motivacionais, sem valor monetário real, não conversíveis em dinheiro e não representam avaliação clínica, médica ou de performance física real. Podemos ajustar taxas, recompensas, preços ou remover itens a qualquer momento, por motivos de balanceamento do jogo.
+XP, streaks, Folhas, Gotas de Água (moeda premium), molduras, títulos, banners e demais itens são recursos virtuais e motivacionais, sem valor monetário real, não conversíveis em dinheiro e não representam avaliação clínica, médica ou de performance física real. Podemos ajustar taxas, recompensas, preços ou remover itens a qualquer momento, por motivos de balanceamento do jogo.
 
 9. Seus dados e privacidade
 Guardamos apenas o necessário para o app funcionar: progresso de treino, preferências, e-mail de cadastro e, se você enviar, sua foto de perfil. Seus dados são armazenados em infraestrutura com práticas de segurança padrão do mercado. Não vendemos seus dados a terceiros. Você pode excluir sua conta e todos os dados associados a qualquer momento em Configurações.

@@ -195,7 +195,7 @@ export interface UserPreferencias {
   descanso_padrao_seg: number;
   som_habilitado: boolean;
   sfx_volume: number;
-  /** Desativa animações de confete e celebrações com partículas. */
+  /** @deprecated Mantido apenas para ler contas antigas; a UI respeita reduced motion. */
   confetti_animacoes_habilitadas?: boolean;
   /** Contagem 3-2-1 antes de exercícios de tempo, pra dar tempo de se posicionar. Default: true. */
   contagem_regressiva_habilitada?: boolean;
@@ -242,8 +242,7 @@ export interface UserPreferencias {
   /** Idioma da interface. Só 'pt' tem conteúdo hoje — campo já existe pra
       quando inglês/espanhol chegarem, sem precisar de migração. */
   idioma?: Idioma;
-  /** Tom do texto: 'jogo' (RPG, padrão) ou 'normal' (direto, sem jargão de
-      jogo) — independente do idioma escolhido. */
+  /** @deprecated Compatibilidade persistida; a interface usa sempre linguagem normal. */
   tom_texto?: TomTexto;
   /** false = não consumir Frozen Streak automaticamente ao perder um dia de
       treino (o streak quebra normalmente). Padrão: true (ativado). */
@@ -716,7 +715,10 @@ export const SHOP_XP_COST_PER_MOEDA = 25;
 export const SHOP_MOEDA_COST_PER_XP = 5;
 /** Dorias passivas: 1 moeda a cada N XP totais ganhos. */
 export const MOEDA_XP_STEP = 10;
-export const CURRENCY_NAME = 'Coins';
+/** Nome de apresentação da moeda comum; o campo persistido continua `moedas`. */
+export const CURRENCY_NAME = 'Folhas';
+/** Nome de apresentação da moeda premium; o campo persistido continua `gems`. */
+export const PREMIUM_CURRENCY_NAME = 'Gotas de Água';
 
 /** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
 export const NAME_CHANGE_COST = 10_000;

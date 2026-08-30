@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 const COLORS = ['#059669', '#34d399', '#fbbf24', '#f97316', '#38bdf8', '#a78bfa', '#f472b6'];
 
@@ -9,15 +9,17 @@ interface Props {
 }
 
 export function UnlockCelebration({ label = 'DESBLOQUEADO!', onComplete }: Props) {
+  const reduceMotion = useReducedMotion();
+
   useEffect(() => {
-    const timer = window.setTimeout(onComplete, 1600);
+    const timer = window.setTimeout(onComplete, reduceMotion ? 250 : 900);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, [onComplete, reduceMotion]);
 
   return (
-    <div className="unlock-celebration" role="presentation">
+    <div className="unlock-celebration" role="status" aria-live="polite">
       <div className="unlock-celebration__burst" aria-hidden />
-      {Array.from({ length: 28 }).map((_, i) => (
+      {Array.from({ length: reduceMotion ? 0 : 20 }).map((_, i) => (
         <motion.span
           key={i}
           className="unlock-celebration__particle"
@@ -30,8 +32,8 @@ export function UnlockCelebration({ label = 'DESBLOQUEADO!', onComplete }: Props
           animate={{
             opacity: [1, 1, 0],
             scale: [0.5, 1.2, 0.3],
-            x: Math.cos((i / 28) * Math.PI * 2) * (60 + (i % 5) * 18),
-            y: Math.sin((i / 28) * Math.PI * 2) * (60 + (i % 4) * 22) - 20,
+            x: Math.cos((i / 20) * Math.PI * 2) * (60 + (i % 5) * 18),
+            y: Math.sin((i / 20) * Math.PI * 2) * (60 + (i % 4) * 22) - 20,
             rotate: (i % 2 === 0 ? 1 : -1) * (180 + i * 12),
           }}
           transition={{ duration: 1.4, ease: 'easeOut', delay: i * 0.02 }}

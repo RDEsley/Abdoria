@@ -2,8 +2,12 @@ import { memo, useCallback, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { UnlockCelebration } from '@/components/effects/UnlockCelebration';
 import { ExerciseVideoModal } from '@/components/library/ExerciseVideoModal';
-import { ExerciseQuickActions } from '@/components/library/PreferenceToggleButtons';
+import {
+  ExercisePlayButton,
+  PreferenceToggleButtons,
+} from '@/components/library/PreferenceToggleButtons';
 import { exerciseMediaUrl } from '@/lib/media';
+import { successHaptic } from '@/lib/platform/native-runtime';
 import { playUnlock } from '@/lib/sounds';
 import type { IExerciseDocument } from '@/types';
 import { PRIORIDADE_LABELS } from '@/types';
@@ -34,46 +38,46 @@ export const ExerciseCard = memo(function ExerciseCard({
   const [unlocking, setUnlocking] = useState(false);
   const displayName = formatExerciseName(exercise);
   const [showVideo, setShowVideo] = useState(false);
+  const [mediaFailed, setMediaFailed] = useState(false);
 
   const finishUnlock = useCallback(() => {
-    onUnlock(exercise.slug);
     setUnlocking(false);
-  }, [exercise.slug, onUnlock]);
+  }, []);
 
   const handleUnlockClick = () => {
     if (unlocked || unlocking) return;
     setUnlocking(true);
+    onUnlock(exercise.slug);
     playUnlock();
+    void successHaptic();
   };
 
   const handlePlay = () => {
     setShowVideo(true);
   };
 
-  if (!unlocked) {
+  if (!unlocked && !unlocking) {
     return (
-      <article className={`game-item-card game-item-card--locked ${compact ? 'p-2' : ''}`}>
+      <article
+        className={`library-exercise-card library-exercise-card--locked ${compact ? 'p-2' : ''}`}
+      >
         <button
           type="button"
-          className="game-item-card__unlock-btn"
+          className="library-exercise-card__unlock"
           onClick={handleUnlockClick}
           disabled={unlocking}
           aria-label={`Desbloquear ${displayName}`}
         >
-          <div className="game-item-card__thumb game-item-card__thumb--locked">
-            {unlocking ? (
-              <UnlockCelebration onComplete={finishUnlock} />
-            ) : (
-              <>
-                <Lock size={22} strokeWidth={2.5} />
-                <span className="game-item-card__mystery">?</span>
-              </>
-            )}
+          <div className="library-exercise-card__media library-exercise-card__media--locked">
+            <Lock size={22} strokeWidth={2.5} />
+            <span className="library-exercise-card__mystery">?</span>
           </div>
-          <div className="min-w-0 flex-1 text-left">
-            <h3 className="game-item-card__hidden-title">???</h3>
-            <p className="mt-1 text-xs font-bold text-stone-400">Habilidade secreta</p>
-            <span className="game-item-card__rarity game-item-card__rarity--locked">
+          <div className="library-exercise-card__content text-left">
+            <h3 className="library-exercise-card__title library-exercise-card__title--locked">
+              ???
+            </h3>
+            <p className="library-exercise-card__meta">Exercício bloqueado</p>
+            <span className="library-exercise-card__badge library-exercise-card__badge--locked">
               Toque para revelar
             </span>
           </div>
@@ -84,51 +88,51 @@ export const ExerciseCard = memo(function ExerciseCard({
 
   return (
     <>
-      <article className={`game-item-card game-item-card--unlocked ${compact ? 'p-2' : ''}`}>
-        <div className="flex gap-3">
-          <div className="game-item-card__thumb">
-            <img
-              src={exerciseMediaUrl(exercise.slug)}
-              alt={displayName}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.parentElement) {
-                  const fallback = document.createElement('span');
-                  fallback.className = 'text-lg font-extrabold text-stone-400';
-                  fallback.textContent = exercise.nome[0] ?? '?';
-                  e.currentTarget.parentElement.appendChild(fallback);
-                }
-              }}
-            />
+      <article className={`library-exercise-card ${compact ? 'p-2' : ''}`}>
+        {unlocking && <UnlockCelebration onComplete={finishUnlock} />}
+        <div className="library-exercise-card__main">
+          <div className="library-exercise-card__media">
+            {mediaFailed ? (
+              <span className="library-exercise-card__fallback" aria-hidden>
+                {displayName[0] ?? '?'}
+              </span>
+            ) : (
+              <img
+                src={exerciseMediaUrl(exercise.slug)}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                onError={() => setMediaFailed(true)}
+              />
+            )}
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-extrabold leading-tight text-stone-900">{displayName}</h3>
-            <div className="mt-0.5">
+          <div className="library-exercise-card__content">
+            <h3 className="library-exercise-card__title">{displayName}</h3>
+            <div className="library-exercise-card__details">
               <MuscleZoneLabel muscle={exercise.musculo_principal} showHint className="text-xs" />
-              <p className="mt-0.5 text-xs font-semibold text-stone-500">
+              <p className="library-exercise-card__meta">
                 Nv.{exercise.nivel} · {exercise.tempo_recomendado}s
               </p>
             </div>
-            <span className="game-item-card__rarity">{PRIORIDADE_LABELS[exercise.prioridade]}</span>
-            {!compact && exercise.descricao && (
-              <p className="mt-2 line-clamp-2 text-xs text-stone-500">{exercise.descricao}</p>
-            )}
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <ExerciseQuickActions
-                showPlay
-                onPlay={handlePlay}
-                showPreferences={Boolean(onTogglePin && onToggleBlock)}
-                isPinned={isPinned}
-                isBlocked={isBlocked}
-                onTogglePin={onTogglePin ? () => onTogglePin(exercise.slug) : () => {}}
-                onToggleBlock={onToggleBlock ? () => onToggleBlock(exercise.slug) : () => {}}
-              />
-            </div>
+            <span className="library-exercise-card__badge">
+              {PRIORIDADE_LABELS[exercise.prioridade]}
+            </span>
           </div>
         </div>
+        {!compact && exercise.descricao && (
+          <p className="library-exercise-card__description">{exercise.descricao}</p>
+        )}
+        <footer className="library-exercise-card__actions">
+          <ExercisePlayButton onClick={handlePlay} className="library-exercise-card__play" />
+          {onTogglePin && onToggleBlock && (
+            <PreferenceToggleButtons
+              isPinned={isPinned}
+              isBlocked={isBlocked}
+              onTogglePin={() => onTogglePin(exercise.slug)}
+              onToggleBlock={() => onToggleBlock(exercise.slug)}
+            />
+          )}
+        </footer>
       </article>
 
       {showVideo && <ExerciseVideoModal exercise={exercise} onClose={() => setShowVideo(false)} />}

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Coins, Flame, Zap } from 'lucide-react';
+import { Flame, Leaf, Zap } from 'lucide-react';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import {
   CURRENCY_NAME,
@@ -30,7 +30,7 @@ function podiumMetricUnit(metric: LeaderboardMetric): string {
 
 function PodiumMetricIcon({ metric }: { metric: LeaderboardMetric }) {
   if (metric === 'streak') return <Flame size={14} aria-hidden />;
-  if (metric === 'moedas') return <Coins size={14} aria-hidden />;
+  if (metric === 'moedas') return <Leaf size={14} aria-hidden />;
   return <Zap size={14} aria-hidden />;
 }
 
@@ -84,9 +84,7 @@ export function LeaderboardPodium({
             <p className="game-podium__name">{entry.nome}</p>
             <p className={`game-podium__metric game-podium__metric--${slot.medal}`}>
               <PodiumMetricIcon metric={metric} />
-              <span className="game-podium__metric-value">
-                {podiumMetricValue(entry, metric)}
-              </span>
+              <span className="game-podium__metric-value">{podiumMetricValue(entry, metric)}</span>
               <span className="game-podium__metric-unit">{podiumMetricUnit(metric)}</span>
             </p>
             <div
@@ -101,7 +99,7 @@ export function LeaderboardPodium({
                 metric !== 'streak' &&
                 weeklyLeaderboardReward(entry.rank) && (
                   <span className="game-podium__reward">
-                    <Coins size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
+                    <Leaf size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
                   </span>
                 )}
             </div>

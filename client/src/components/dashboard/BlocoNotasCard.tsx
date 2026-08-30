@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { CheckCircle2, History, NotebookPen, Plus, Trash2, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
@@ -71,7 +71,7 @@ export function BlocoNotasCard() {
   const idPrefix = useId();
   const novoIdSeqRef = useRef(0);
 
-  const minimal = !(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
+  const minimal = Boolean(useReducedMotion());
   const notas = ordenarNotas(resolveBlocoNotas(user?.preferencias));
   const feitas = notas.filter((n) => n.feita);
   const noLimite = notas.length >= BLOCO_NOTAS_MAX;
@@ -169,7 +169,7 @@ export function BlocoNotasCard() {
   };
 
   const limparTudo = () => {
-    persist({ bloco_notas: [] }, 'Lembretes limpos.');
+    persist({ bloco_notas: [] }, 'Anotações limpas.');
     setConfirmarLimparTudo(false);
   };
 
@@ -206,7 +206,7 @@ export function BlocoNotasCard() {
           }}
           placeholder="O que você quer anotar?"
           maxLength={NOTA_TEXTO_MAX}
-          aria-label="Novo lembrete"
+          aria-label="Nova anotação"
           className="bloco-notas__input"
         />
         <button
@@ -224,7 +224,7 @@ export function BlocoNotasCard() {
         <div className="bloco-notas__empty">
           <NotebookPen size={26} aria-hidden />
           <p>
-            Sua lista está vazia. Use pra tarefas do dia a dia, lista de compras, lembretes — o que
+            Sua lista está vazia. Use pra tarefas do dia a dia, lista de compras, ideias — o que
             você quiser.
           </p>
         </div>
@@ -278,11 +278,7 @@ export function BlocoNotasCard() {
       {notas.length > 0 && (
         <div className="bloco-notas__footer">
           {feitas.length > 0 && (
-            <GameButton
-              variant="secondary"
-              className="!w-auto flex-1"
-              onClick={limparConcluidas}
-            >
+            <GameButton variant="secondary" className="!w-auto flex-1" onClick={limparConcluidas}>
               Limpar concluídas
             </GameButton>
           )}
@@ -354,7 +350,7 @@ export function BlocoNotasCard() {
         labelledBy="bloco-notas-clear-title"
       >
         <h2 id="bloco-notas-clear-title" className="text-base font-extrabold text-stone-800">
-          Limpar todos os lembretes?
+          Limpar todas as anotações?
         </h2>
         <p className="mt-2 text-sm font-medium text-stone-600">
           Isso apaga os {notas.length} itens da lista, feitos e pendentes. Não dá pra desfazer.

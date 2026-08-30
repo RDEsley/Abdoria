@@ -36,7 +36,7 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
   const preview = pickAchievementPreview(conquistas, 4);
 
   return (
-    <section className="glass-card p-4">
+    <section className="glass-card dashboard-surface dashboard-surface--achievements p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <h3 className="game-section-title mb-0">Conquistas</h3>
         <p className="text-xs font-bold text-stone-500">

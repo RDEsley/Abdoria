@@ -42,13 +42,13 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 ### 💪 Treinos personalizados
 
 * Biblioteca com exercícios focados em abdômen e core
-* Treinos prontos para diferentes objetivos
+* Treinos prontos nas intensidades Leve, Moderado e Evolyn
 * Criação de rotinas personalizadas
 * Organização dos exercícios por arrastar e soltar
 * Configuração individual de séries, repetições, duração e descanso direto na fila
 * Exercícios realizados por tempo ou repetições
 * Timer de descanso e execução guiada
-* Equipamentos opcionais, como barra fixa, roda abdominal e prancha de flexão
+* Equipamentos opcionais, como barra fixa, roda abdominal e bola de estabilidade
 * Sistema de favoritos, preferências e bloqueios de recomendação
 * Exercícios fixados somados a todas as recomendações, sem substituir a fila-base
 
@@ -57,7 +57,7 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 * Experiência e evolução de nível
 * Sequência de dias treinados
 * Conquistas e recompensas
-* Moedas utilizadas dentro do aplicativo
+* Folhas como moeda de progressão e Gotas de Água como recurso premium do futuro MyPlant
 * Ranking global, semanal e entre amigos
 * Perfil público com estatísticas e personalizações
 * Calendário com histórico de atividades
@@ -74,13 +74,13 @@ O sistema competitivo permite comparar o progresso dos jogadores por:
 
 * **XP semanal** — experiência conquistada desde o último domingo
 * **XP global** — experiência acumulada durante toda a jornada
-* **Coins semanais** — moedas conquistadas na semana, sem descontar compras
-* **Coins globais** — total vitalício de moedas conquistadas
+* **Folhas semanais** — Folhas conquistadas na semana, sem descontar compras
+* **Folhas globais** — total vitalício de Folhas conquistadas
 * **Dias seguidos (semanal)** — sequência de treinos atualmente ativa
 * **Dias seguidos (global)** — maior sequência já alcançada pelo jogador
 * Ranking entre amigos
 
-Os rankings semanais de XP e Coins são fechados aos domingos e concedem recompensas por posição. Dias seguidos não possuem premiação semanal. Os personagens fictícios usados para compor a comunidade permanecem visíveis como jogadores inativos, com streak atual e recorde zerados, sem conquistas de streak.
+Os rankings semanais de XP e Folhas são fechados aos domingos e concedem recompensas por posição. Dias seguidos não possuem premiação semanal. Os personagens fictícios usados para compor a comunidade permanecem visíveis como jogadores inativos, com streak atual e recorde zerados, sem conquistas de streak.
 
 Os jogadores também podem acessar perfis públicos, acompanhar conquistas e interagir com a comunidade.
 
@@ -94,11 +94,11 @@ Além dos treinos, o Evolyn oferece ferramentas para ajudar na rotina:
 * Histórico das atividades concluídas
 * Recompensas por manter hábitos saudáveis
 * Suporte para dias de descanso
-* Lembretes personalizados por horário, dias da semana e estilo visual
+* Notificações pessoais com data única ou recorrência, múltiplos horários, ícone, cor e som
 
-Atividades, lembretes e histórico visual ficam reunidos na página **Atividades**. O mapa de
-campanha e as conquistas recentes ficam no **Início**, que pode ter suas seções opcionais
-reordenadas ou ocultadas. A navegação principal
+Atividades, Bloco de Notas, notificações pessoais e histórico visual ficam reunidos na página
+**Atividades**. O sino exibe apenas avisos internos do sistema. O mapa de campanha e as conquistas
+recentes ficam no **Início**. A navegação principal
 (**Início, Atividades, Missão, MyPlant e Perfil**) permanece fixa em todo o aplicativo, exceto
 durante o player de treino. Biblioteca e Ranking são atalhos da página **Missão**.
 

@@ -1,32 +1,10 @@
 ﻿import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Coins } from 'lucide-react';
+import { Droplets, Leaf } from 'lucide-react';
 
-/** Folha MyPlant — apresentação visual da moeda premium `gems` durante a migração. */
+/** Gota MyPlant — apresentação visual da moeda premium `gems` durante a migração. */
 export function GemIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      className="top-navbar__gem-icon"
-      aria-hidden
-    >
-      <path
-        d="M20.5 3.5C12 3.8 5.2 7.4 4 13.1c-.8 3.8 1.9 6.8 5.8 6.2 5.9-.9 9.5-7.8 10.7-15.8Z"
-        fill="#34c77b"
-        stroke="#11663f"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M5.2 19.7c2.7-4.8 6.3-8.1 11.4-11.2"
-        fill="none"
-        stroke="#eafff2"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Droplets size={size} className="top-navbar__gem-icon" aria-hidden />;
 }
 
 export interface TopNavbarProps {
@@ -35,7 +13,7 @@ export interface TopNavbarProps {
   userXp: number;
   xpMax: number;
   doriasAmount: number;
-  /** Folhas na UI; o contrato interno permanece `gemsAmount` por compatibilidade. */
+  /** Gotas de Água na UI; o contrato interno permanece `gemsAmount` por compatibilidade. */
   gemsAmount?: number;
   avatarUrl?: string | null;
   /** Sobrescreve avatarUrl quando presente (ex.: CosmeticAvatar). */
@@ -57,12 +35,13 @@ function formatAmount(value: number): string {
 interface ResourcePillProps {
   icon: ReactNode;
   amount: number;
+  label: string;
   pulse?: number | null;
 }
 
-function ResourcePill({ icon, amount, pulse }: ResourcePillProps) {
+function ResourcePill({ icon, amount, label, pulse }: ResourcePillProps) {
   return (
-    <div className="top-navbar__pill">
+    <div className="top-navbar__pill" aria-label={`${formatAmount(amount)} ${label}`}>
       <div className="top-navbar__pill-icon" aria-hidden>
         {icon}
       </div>
@@ -142,11 +121,12 @@ export function TopNavbar({
 
         <div className="top-navbar__resources flex shrink-0 items-center gap-2.5 sm:gap-3">
           <ResourcePill
-            icon={<Coins size={20} strokeWidth={2.5} className="top-navbar__coin-icon" />}
+            icon={<Leaf size={20} strokeWidth={2.5} className="top-navbar__coin-icon" />}
             amount={doriasAmount}
+            label="Folhas"
             pulse={coinsEarnedPulse}
           />
-          <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} />
+          <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} label="Gotas de Água" />
           {actions}
         </div>
       </div>

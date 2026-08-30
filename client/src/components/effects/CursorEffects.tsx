@@ -18,10 +18,9 @@ interface Ripple {
  * clique em qualquer lugar do app, confirmando o ponto sem atrapalhar.
  * Tudo `pointer-events: none`: nunca intercepta um clique de verdade.
  *
- * Some sozinha com "Celebrações" desligado nas Configurações — mesma
- * preferência que já controla o resto da flourish visual do app
- * (`confetti_animacoes_habilitadas`, lida aqui via `useReducedMotion`
- * porque o <MotionConfig> em App.tsx já espelha essa preferência).
+ * Some quando o sistema pede redução de movimento. A antiga preferência
+ * manual de celebrações não controla mais a experiência; acessibilidade é
+ * centralizada por `prefers-reduced-motion`/`MotionConfig`.
  */
 export function CursorEffects() {
   const reduceMotion = useReducedMotion();
@@ -83,9 +82,7 @@ export function CursorEffects() {
 function CursorTrail() {
   const dotsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const mouseRef = useRef({ x: -100, y: -100 });
-  const positionsRef = useRef(
-    Array.from({ length: TRAIL_COUNT }, () => ({ x: -100, y: -100 })),
-  );
+  const positionsRef = useRef(Array.from({ length: TRAIL_COUNT }, () => ({ x: -100, y: -100 })));
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {

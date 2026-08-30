@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Coins, Crown, Gift, Leaf, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
+import { Crown, Droplets, Gift, Leaf, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
 import { CelebrationBurst } from '@/components/effects/CelebrationBurst';
 import { GameButton } from '@/components/ui/GameButton';
 import type { GiftCodeRewardLine, RedeemCodeResponse } from '@/types';
@@ -19,9 +19,9 @@ function formatRewardAmount(value: number): string {
 
 function rewardIcon(line: GiftCodeRewardLine) {
   if (line.tipo === 'xp') return <Zap size={22} aria-hidden />;
-  if (line.tipo === 'abdoria') return <Coins size={22} aria-hidden />;
+  if (line.tipo === 'abdoria') return <Leaf size={22} aria-hidden />;
   if (line.tipo === 'frozen_streak') return <Snowflake size={22} aria-hidden />;
-  if (line.tipo === 'gems') return <Leaf size={22} aria-hidden />;
+  if (line.tipo === 'gems') return <Droplets size={22} aria-hidden />;
   return <Crown size={22} aria-hidden />;
 }
 
@@ -29,15 +29,15 @@ function rewardLabel(line: GiftCodeRewardLine): string {
   if (line.tipo === 'xp') return `+${formatRewardAmount(line.valor ?? 0)} XP`;
   if (line.tipo === 'abdoria') return `+${formatRewardAmount(line.valor ?? 0)} ${CURRENCY_NAME}`;
   if (line.tipo === 'frozen_streak') return `+${formatRewardAmount(line.valor ?? 0)} Frozen Streak`;
-  if (line.tipo === 'gems') return `+${formatRewardAmount(line.valor ?? 0)} Folhas`;
+  if (line.tipo === 'gems') return `+${formatRewardAmount(line.valor ?? 0)} Gotas de Água`;
   return line.nome ?? 'Item exclusivo';
 }
 
 function rewardHint(line: GiftCodeRewardLine): string {
   if (line.tipo === 'xp') return 'Experiência extra na sua conta';
-  if (line.tipo === 'abdoria') return 'Moedas para a loja';
+  if (line.tipo === 'abdoria') return 'Folhas para a loja';
   if (line.tipo === 'frozen_streak') return 'Protege sua sequência se faltar um dia';
-  if (line.tipo === 'gems') return 'Folhas premium do MyPlant';
+  if (line.tipo === 'gems') return 'Gotas premium do MyPlant';
   return 'Cosmético desbloqueado';
 }
 

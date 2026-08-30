@@ -1,4 +1,4 @@
-import { Clock3, Sparkles } from 'lucide-react';
+import { ExternalLink, Sparkles } from 'lucide-react';
 import {
   DiscordIcon,
   FacebookIcon,
@@ -81,17 +81,22 @@ export function AboutSection() {
             <small>rdesley</small>
           </span>
         </a>
-        <span className="settings-social-link settings-social-link--soon" aria-disabled="true">
+        <a
+          className="settings-social-link"
+          href="https://discord.gg/jPFMb3tp3W"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <span className="settings-social-link__icon" aria-hidden>
             <DiscordIcon size={15} />
           </span>
           <span className="settings-social-link__text">
             <strong>Discord do Evolyn</strong>
             <small>
-              <Clock3 size={10} aria-hidden /> Em breve
+              Comunidade oficial <ExternalLink size={10} aria-hidden />
             </small>
           </span>
-        </span>
+        </a>
       </div>
     </section>
   );

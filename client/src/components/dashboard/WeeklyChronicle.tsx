@@ -1,5 +1,13 @@
 import { useEffect, useMemo } from 'react';
-import { Dumbbell, ListChecks, Minus, ScrollText, TrendingDown, TrendingUp, Zap } from 'lucide-react';
+import {
+  Dumbbell,
+  ListChecks,
+  Minus,
+  ScrollText,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { toLocalDateKey } from '@/lib/utils';
 import { isAtividadeHistory } from '@shared/atividades';
@@ -100,7 +108,7 @@ export function WeeklyChronicle() {
   };
 
   return (
-    <section className="glass-card p-4">
+    <section className="glass-card dashboard-surface dashboard-surface--progression p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="game-section-title !mb-0 flex items-center gap-1.5">
           <ScrollText size={16} aria-hidden /> Crônica da semana

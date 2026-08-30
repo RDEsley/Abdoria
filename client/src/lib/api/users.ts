@@ -3,7 +3,6 @@ import type {
   AbTrainingProfileV2,
   MolduraId,
   OnboardingPayload,
-  PerfilTreino,
   PublicProfile,
   UpdateUserDadosResponse,
   UserPreferencias,
@@ -46,16 +45,6 @@ export function updateUserDados(data: Partial<UserDadosSalvos>): Promise<UpdateU
 
 export function completeOnboarding(data: OnboardingPayload): Promise<IUserDocument> {
   return fetchJson('/users/me/onboarding', { method: 'PATCH', body: JSON.stringify(data) });
-}
-
-export function updateTrainingProfile(
-  perfil: Omit<PerfilTreino, 'atualizado_em'>,
-  equipamentos?: UserPreferencias['equipamentos'],
-): Promise<IUserDocument> {
-  return fetchJson('/users/me/training-profile', {
-    method: 'PUT',
-    body: JSON.stringify({ perfil_treino: perfil, equipamentos }),
-  });
 }
 
 export function updateAbTrainingProfileV2(profile: AbTrainingProfileV2): Promise<IUserDocument> {
