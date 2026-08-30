@@ -38,6 +38,7 @@ import { getErrorMessage } from '@/lib/api-errors';
 import { resolveSelectedRepSchemeId } from '@/lib/user-dados';
 import { estimateWorkoutDurationSeconds } from '@/lib/workout-duration';
 import { createWorkoutSnapshot, webWorkoutSessionStorage } from '@/lib/workout-session-storage';
+import { actionHaptic } from '@/lib/platform/native-runtime';
 import type {
   ActiveWorkout,
   ModoExercicio,
@@ -728,6 +729,7 @@ export function BuilderPage() {
       preset_id: selectedPresetId !== 'custom' ? selectedPresetId : undefined,
       plano_dia_indice: selectedPlanWorkout?.plano_dia_indice,
     };
+    void actionHaptic();
     webWorkoutSessionStorage.write(createWorkoutSnapshot(payload));
     if (selectedPresetId === 'custom') setCustomWorkout(activeQueue);
     navigate('/player');
@@ -848,9 +850,9 @@ export function BuilderPage() {
   }, [activeQueue, globalDescanso]);
 
   return (
-    <div className="flex flex-col gap-5 pb-24 md:pb-28">
+    <div className="builder-page flex flex-col gap-5 pb-44 md:pb-8">
       <GamePageHeader eyebrow="Sua sessão recomendada" title="Missão de hoje">
-        <div className="flex gap-2" aria-label="Atalhos da missão">
+        <div className="builder-header__actions flex gap-2" aria-label="Atalhos da missão">
           <Link
             to="/biblioteca"
             className="game-icon-btn game-icon-btn--header"
