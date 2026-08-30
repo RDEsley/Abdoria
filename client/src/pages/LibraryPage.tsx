@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
-  Dumbbell,
+  CheckCircle2,
   Flame,
   Lock,
   Search,
@@ -94,6 +94,10 @@ export function LibraryPage() {
     () => filtered.filter((ex) => isUnlocked(ex.slug)).length,
     [filtered, isUnlocked],
   );
+  const totalUnlockedCount = useMemo(
+    () => exercises.filter((exercise) => isUnlocked(exercise.slug)).length,
+    [exercises, isUnlocked],
+  );
 
   const lockedInView = useMemo(
     () => filtered.filter((ex) => !isUnlocked(ex.slug)),
@@ -101,8 +105,7 @@ export function LibraryPage() {
   );
 
   const secondaryFilterCount = (nivelFilter !== '' ? 1 : 0) + (prioridadeFilter !== '' ? 1 : 0);
-  const hasAnyFilter =
-    Boolean(muscleFilter) || secondaryFilterCount > 0 || search.trim() !== '';
+  const hasAnyFilter = Boolean(muscleFilter) || secondaryFilterCount > 0 || search.trim() !== '';
 
   const clearAllFilters = useCallback(() => {
     setMuscleFilter(null);
@@ -129,7 +132,15 @@ export function LibraryPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Inventário" title="Biblioteca" />
+      <GamePageHeader eyebrow="Inventário" title="Biblioteca">
+        <span
+          className="library-counter-pill"
+          aria-label={`${totalUnlockedCount} de ${exercises.length} exercícios desbloqueados`}
+        >
+          <CheckCircle2 size={14} aria-hidden />
+          <strong>{totalUnlockedCount}</strong>/{exercises.length}
+        </span>
+      </GamePageHeader>
 
       <div className="library-toolbar">
         <label className="library-search">
@@ -260,13 +271,12 @@ export function LibraryPage() {
             Carregando itens...
           </p>
         ) : (
-          <p className="library-results-count">
-            <span className="library-results-count__icon" aria-hidden>
-              <Dumbbell size={12} />
+          <p className="library-results-count" aria-live="polite">
+            <strong>{filtered.length}</strong>
+            <span className="library-results-count__label">
+              resultado{filtered.length === 1 ? '' : 's'} · {filteredUnlockedCount} disponível
+              {filteredUnlockedCount === 1 ? '' : 'is'}
             </span>
-            <strong>{filteredUnlockedCount}</strong>
-            <span className="library-results-count__slash">/{filtered.length}</span>
-            <span className="library-results-count__label">desbloqueadas</span>
           </p>
         )}
         {!exercisesLoading && lockedInView.length > 0 && (
@@ -310,15 +320,21 @@ export function LibraryPage() {
                 EQUIPMENT_CATALOG.find((item) => item.id === exercise.equipamento)?.nome ??
                 'equipamento';
               return (
-                <div key={exercise.slug} className="library-locked-card">
-                  <span className="library-locked-card__icon" aria-hidden>
-                    <Lock size={16} />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="library-locked-card__name">{formatExerciseName(exercise)}</p>
-                    <p className="library-locked-card__hint">
-                      Requer {equipmentName} — marque em Meus Equipamentos pra liberar.
-                    </p>
+                <div key={exercise.slug} className="library-exercise-card library-locked-card">
+                  <div className="library-exercise-card__main">
+                    <span
+                      className="library-exercise-card__media library-locked-card__icon"
+                      aria-hidden
+                    >
+                      <Lock size={22} />
+                    </span>
+                    <div className="library-exercise-card__content">
+                      <p className="library-locked-card__name">{formatExerciseName(exercise)}</p>
+                      <p className="library-locked-card__hint">
+                        Requer {equipmentName}. Marque-o em Meus Equipamentos para liberar.
+                      </p>
+                      <span className="library-exercise-card__badge">Equipamento necessário</span>
+                    </div>
                   </div>
                 </div>
               );

@@ -6,6 +6,25 @@
   flex-wrap: wrap;
 }
 
+.library-counter-pill {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgb(5 150 105 / 24%);
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.library-counter-pill strong {
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
 /* Botão "Desbloquear" — ação em lote, merece se destacar dos outros */
 .library-unlock-all-btn {
   display: inline-flex !important;
@@ -44,13 +63,7 @@
 
 /* Exercícios bloqueados por equipamento */
 .library-locked-card {
-  display: flex;
-  gap: 0.65rem;
-  align-items: flex-start;
-  padding: 0.7rem 0.8rem;
   background: #fafaf9;
-  border: 1px dashed rgba(28, 25, 23, 0.18);
-  border-radius: var(--radius-card);
   opacity: 0.85;
 }
 
@@ -58,25 +71,176 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  flex-shrink: 0;
-  border-radius: 999px;
   background: #e7e5e4;
   color: #57534e;
 }
 
+.library-locked-card__hint {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #78716c;
+}
+
 .library-locked-card__name {
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.88rem;
+  font-weight: 850;
   color: #44403c;
 }
 
-.library-locked-card__hint {
-  margin-top: 0.1rem;
-  font-size: 0.7rem;
-  font-weight: 600;
+.library-exercise-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 10.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgb(28 25 23 / 12%);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #fff 0%, #fbfdfc 100%);
+  box-shadow: 0 5px 18px rgb(28 25 23 / 6%);
+  overflow: hidden;
+}
+
+.library-exercise-card__main,
+.library-exercise-card__unlock {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.library-exercise-card__unlock {
+  width: 100%;
+  min-height: 7.25rem;
+  text-align: left;
+}
+
+.library-exercise-card__media {
+  position: relative;
+  display: grid;
+  width: 5.5rem;
+  height: 5.5rem;
+  flex: 0 0 5.5rem;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  background: linear-gradient(145deg, #e8f8f1, #f3faf7);
+  color: #047857;
+}
+
+.library-exercise-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.library-exercise-card__media--locked {
+  background: #eeecea;
   color: #78716c;
+}
+
+.library-exercise-card__mystery {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.library-exercise-card__fallback {
+  font-size: 1.65rem;
+  font-weight: 900;
+}
+
+.library-exercise-card__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.library-exercise-card__title,
+.library-locked-card__name {
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.library-exercise-card__title {
+  color: #1c1917;
+  font-size: 0.92rem;
+  font-weight: 850;
+}
+
+.library-exercise-card__title--locked {
+  color: #78716c;
+}
+
+.library-exercise-card__details {
+  margin-top: 0.28rem;
+}
+
+.library-exercise-card__meta {
+  margin-top: 0.18rem;
+  color: #78716c;
+  font-size: 0.69rem;
+  font-weight: 650;
+}
+
+.library-exercise-card__badge {
+  display: inline-flex;
+  margin-top: 0.45rem;
+  padding: 0.18rem 0.48rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.58rem;
+  font-weight: 850;
+}
+
+.library-exercise-card__badge--locked {
+  background: #e7e5e4;
+  color: #57534e;
+}
+
+.library-exercise-card__description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #78716c;
+  font-size: 0.72rem;
+  font-weight: 550;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.library-exercise-card__actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgb(28 25 23 / 8%);
+}
+
+.library-exercise-card__play {
+  min-height: 2.75rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.library-exercise-card__actions .game-item-card__action-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+@media (max-width: 359px) {
+  .library-exercise-card__media {
+    width: 4.75rem;
+    height: 4.75rem;
+    flex-basis: 4.75rem;
+  }
 }
 
 /* Calendário estilo grade */
