@@ -5,6 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  CircleHelp,
   Hourglass,
   ListChecks,
   Pause,
@@ -17,10 +18,13 @@ import {
   X,
 } from 'lucide-react';
 import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
+import { PlayerPauseOverlay } from '@/components/player/PlayerPauseOverlay';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
 import { WorkoutCompanionLayer, WorkoutScene } from '@/components/player/WorkoutScene';
+import { ExerciseDemo } from '@/components/exercises/ExerciseDemo';
+import { ExerciseGuideSheet } from '@/components/exercises/ExerciseGuideSheet';
 import {
   buildCampaignPosts,
   CAMPAIGN_STREAK_MILESTONES,
@@ -30,12 +34,12 @@ import {
   type CapituloOverride,
 } from '@shared/campaign';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
+import { shouldPauseWorkoutForGuide } from '@shared/workout-player';
 import { GameButton } from '@/components/ui/GameButton';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
-import { exerciseMediaUrl } from '@/lib/media';
 import {
   playBeep,
   playCompleteSet,
@@ -48,7 +52,6 @@ import {
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/components/ui/GameToast';
 import { getRecommendWorkout, updateMe } from '@/lib/api';
-import { formatTime } from '@/lib/utils';
 import {
   clearWorkoutDurationSession,
   computeWorkoutElapsedSeconds,
@@ -90,16 +93,21 @@ export function PlayerPage() {
   const [sideIndex, setSideIndex] = useState<0 | 1>(initialSnapshot?.sideIndex ?? 0);
   const [phase, setPhase] = useState<Phase>((initialSnapshot?.phase as Phase) ?? 'ready');
   const [secondsLeft, setSecondsLeft] = useState(initialSnapshot?.secondsLeft ?? 0);
-  const [restTotalSec, setRestTotalSec] = useState(0);
+  const [restTotalSec, setRestTotalSec] = useState(
+    initialSnapshot?.phase === 'resting'
+      ? (initialSnapshot.timerTotalSeconds ?? initialSnapshot.secondsLeft)
+      : 0,
+  );
   const [paused, setPaused] = useState(initialSnapshot?.paused ?? false);
   const [saving, setSaving] = useState(false);
-  const [mediaError, setMediaError] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const [coinsGained, setCoinsGained] = useState(0);
+  const [workoutDurationSeconds, setWorkoutDurationSeconds] = useState(0);
   const [xpBreakdown, setXpBreakdown] = useState<XpBreakdown | null>(null);
   const [streakCelebration, setStreakCelebration] = useState<number | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<LevelUpData | null>(null);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [showExerciseGuide, setShowExerciseGuide] = useState(false);
   const [showRodadaModal, setShowRodadaModal] = useState(false);
   const [rodadaBusy, setRodadaBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -181,12 +189,13 @@ export function PlayerPage() {
       sideIndex,
       phase,
       secondsLeft,
+      timerTotalSeconds: phase === 'resting' ? restTotalSec : undefined,
       paused,
       startedAt: startTimeRef.current,
       pausedMs: pausedMsRef.current,
       updatedAt: Date.now(),
     });
-  }, [workout, exerciseIndex, setIndex, sideIndex, phase, secondsLeft, paused]);
+  }, [workout, exerciseIndex, setIndex, sideIndex, phase, secondsLeft, restTotalSec, paused]);
 
   useEffect(() => {
     if (!workout) {
@@ -195,6 +204,9 @@ export function PlayerPage() {
   }, [workout, navigate]);
 
   const current: WorkoutQueueItem | undefined = workout?.queue[exerciseIndex];
+  const currentExerciseDefinition = current
+    ? exercises.find((exercise) => exercise.slug === current.slug)
+    : undefined;
   const totalSeries = current?.series ?? 3;
   const currentSideInstruction = sideInstruction(current, sideIndex);
 
@@ -257,7 +269,6 @@ export function PlayerPage() {
       setSetIndex(0);
       setSideIndex(0);
       startRest(getRestSeconds());
-      setMediaError(false);
       return;
     }
 
@@ -383,7 +394,6 @@ export function PlayerPage() {
     setRestTotalSec(0);
     setPaused(false);
     setCountdownValue(null);
-    setMediaError(false);
   };
 
   const goBackOneStep = () => {
@@ -458,6 +468,18 @@ export function PlayerPage() {
       }
       return next;
     });
+  };
+
+  const openExerciseGuide = () => {
+    const shouldPause =
+      phase !== 'atividades-prompt' &&
+      current &&
+      shouldPauseWorkoutForGuide(phase, current.modo, paused);
+    if (shouldPause) {
+      pauseStartedRef.current = Date.now();
+      setPaused(true);
+    }
+    setShowExerciseGuide(true);
   };
 
   const quitWorkout = () => {
@@ -556,6 +578,7 @@ export function PlayerPage() {
         pausedMs: pausedMsRef.current,
         pauseStartedAt: pauseStartedRef.current,
       });
+      setWorkoutDurationSeconds(Math.max(duration, 1));
       const result = await saveWorkout({
         completion_id: sessionIdRef.current,
         treino_nome: workout.treino_nome,
@@ -677,6 +700,9 @@ export function PlayerPage() {
     return (
       <WorkoutVictoryScreen
         workoutName={workout.treino_nome}
+        durationSeconds={workoutDurationSeconds}
+        exerciseCount={workout.queue.length}
+        setCount={workout.queue.reduce((total, item) => total + item.series, 0)}
         xpGained={xpGained}
         abdoriaGained={coinsGained}
         xpBreakdown={xpBreakdown}
@@ -732,9 +758,6 @@ export function PlayerPage() {
   const targetSeconds = getTargetSeconds();
   const prescription = formatExercisePrescription(current);
   const currentName = formatExerciseName(current);
-  const currentInstructions = exercises.find(
-    (exercise) => exercise.slug === current.slug,
-  )?.descricao;
   // During rest the indices already point to the next step, whether that is
   // another set of this exercise or the first set of the next exercise.
   const nextSeriesLabel = `${currentName} · série ${seriesIndex + 1}`;
@@ -753,7 +776,7 @@ export function PlayerPage() {
   const phaseBadge =
     phase === 'resting' ? (
       <span className="game-player-phase game-player-phase--rest">
-        <Timer size={14} /> Cronômetro de descanso
+        <Timer size={14} /> Próximo {exerciseIndex + 1}/{workout.queue.length}
       </span>
     ) : phase === 'side_transition' ? (
       <span className="game-player-phase game-player-phase--ready">Troca de lado</span>
@@ -778,24 +801,17 @@ export function PlayerPage() {
           : `Segure a posição · o tempo conta sozinho.`
         : null;
 
-  const restStatus =
-    phase === 'resting'
-      ? {
-          main: paused ? 'Descanso pausado' : `Descanso · ${formatTime(restTotalSec)}`,
-          timer: formatTime(secondsLeft),
-          next: nextSeriesLabel,
-        }
-      : null;
-
   return (
     <WorkoutScene companion={<WorkoutCompanionLayer />}>
-      <div className="game-player game-app fixed inset-0 z-50 flex flex-col overflow-hidden">
+      <div
+        className={`game-player game-player--${phase} game-app fixed inset-0 z-50 flex flex-col overflow-hidden`}
+      >
         <AnimatedBackground variant="player" />
         <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setShowQuitModal(true)}
-            className="cursor-pointer font-bold text-stone-600"
+            className="game-player-close"
             aria-label="Desistir do treino"
           >
             <X size={24} />
@@ -850,29 +866,31 @@ export function PlayerPage() {
           </div>
         </header>
 
-        <div
-          className="relative z-10 flex shrink-0 gap-1 px-4 pb-1 sm:px-6"
-          role="progressbar"
-          aria-valuenow={exerciseIndex + 1}
-          aria-valuemin={1}
-          aria-valuemax={workout.queue.length}
-          aria-label={`Exercício ${exerciseIndex + 1} de ${workout.queue.length}`}
-        >
-          {workout.queue.map((item, i) => (
-            <span
-              key={`${item.slug}-${i}`}
-              className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
-                i < exerciseIndex
-                  ? 'bg-emerald-500'
-                  : i === exerciseIndex
-                    ? 'bg-amber-400 game-progress-dot--active'
-                    : 'bg-stone-200/80'
-              }`}
-            />
-          ))}
-        </div>
+        <nav className="relative z-10 shrink-0" aria-label="Progresso do treino">
+          <div
+            className="flex gap-1 px-4 pb-1 sm:px-6"
+            role="progressbar"
+            aria-valuenow={exerciseIndex + 1}
+            aria-valuemin={1}
+            aria-valuemax={workout.queue.length}
+            aria-label={`Exercício ${exerciseIndex + 1} de ${workout.queue.length}`}
+          >
+            {workout.queue.map((item, i) => (
+              <span
+                key={`${item.slug}-${i}`}
+                className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
+                  i < exerciseIndex
+                    ? 'bg-emerald-500'
+                    : i === exerciseIndex
+                      ? 'bg-amber-400 game-progress-dot--active'
+                      : 'bg-stone-200/80'
+                }`}
+              />
+            ))}
+          </div>
+        </nav>
 
-        <div className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
+        <main className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
           <div className="game-player-content flex flex-col items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-4">
             {phaseBadge}
 
@@ -883,40 +901,34 @@ export function PlayerPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-sm"
               >
-                <div className="game-player-frame relative mx-auto aspect-square w-full max-w-[7.5rem] sm:max-w-[10rem]">
-                  {!mediaError ? (
-                    <img
-                      src={exerciseMediaUrl(current.slug)}
-                      alt={currentName}
-                      className="h-full w-full object-cover"
-                      onError={() => setMediaError(true)}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-5xl font-extrabold text-emerald-200">
-                      {currentName[0]}
-                    </div>
-                  )}
-                </div>
+                <ExerciseDemo
+                  name={currentName}
+                  mediaFile={currentExerciseDefinition?.media?.gif ?? `${current.slug}.gif`}
+                  className="game-player-frame"
+                  decorative
+                />
               </motion.div>
             </AnimatePresence>
 
             <div className="w-full text-center">
-              <h2 className="game-page-header__title !text-base">{currentName}</h2>
+              <div className="game-player-exercise-title">
+                <h2>{currentName}</h2>
+                {currentExerciseDefinition && (
+                  <button
+                    type="button"
+                    onClick={openExerciseGuide}
+                    aria-label={`Como fazer ${currentName}`}
+                  >
+                    <CircleHelp size={19} aria-hidden />
+                    <span>Como fazer</span>
+                  </button>
+                )}
+              </div>
               <p className="mt-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">
                 Meta: {prescription}
               </p>
-              {currentInstructions && (
-                <details className="game-player-instructions">
-                  <summary>Como fazer</summary>
-                  <p>{currentInstructions}</p>
-                </details>
-              )}
-              {restStatus ? (
-                <div className="game-player-rest-status mt-1.5">
-                  <p className="game-player-rest-status__main">{restStatus.main}</p>
-                  <p className="game-player-rest-status__timer tabular-nums">{restStatus.timer}</p>
-                  <p className="game-player-rest-status__next">{restStatus.next}</p>
-                </div>
+              {phase === 'resting' ? (
+                <p className="game-player-rest-next">Prepare-se para {nextSeriesLabel}</p>
               ) : (
                 statusText && (
                   <>
@@ -950,6 +962,7 @@ export function PlayerPage() {
                   secondsLeft={secondsLeft}
                   seriesIndex={seriesIndex}
                   totalSeries={totalSeries}
+                  targetReps={targetReps}
                   progressPct={progressPct}
                   paused={paused}
                 />
@@ -1064,7 +1077,7 @@ export function PlayerPage() {
               </div>
             )}
 
-            {current.modo === 'tempo' && (
+            {phase === 'working' && current.modo === 'tempo' && (
               <GameButton
                 size="lg"
                 variant="secondary"
@@ -1078,7 +1091,7 @@ export function PlayerPage() {
 
             {phase === 'resting' && (
               <>
-                <div className="game-player-rest-adjust" aria-label="Ajustar descanso">
+                <div className="game-player-rest-adjust" role="group" aria-label="Ajustar descanso">
                   <button type="button" onClick={() => setSecondsLeft((s) => Math.max(0, s - 10))}>
                     −10s
                   </button>
@@ -1126,13 +1139,42 @@ export function PlayerPage() {
               </>
             )}
           </div>
-        </div>
+        </main>
 
         <QuitWorkoutModal
           open={showQuitModal}
           onClose={() => setShowQuitModal(false)}
           onQuit={quitWorkout}
         />
+
+        {paused &&
+          canTogglePause &&
+          !showExerciseGuide &&
+          !showQuitModal &&
+          currentExerciseDefinition && (
+            <PlayerPauseOverlay
+              exercise={currentExerciseDefinition}
+              exerciseIndex={exerciseIndex}
+              exerciseCount={workout.queue.length}
+              setIndex={seriesIndex}
+              setCount={totalSeries}
+              sideLabel={currentSideInstruction}
+              isResting={phase === 'resting'}
+              onResume={togglePause}
+              onRestart={resetTimer}
+              onExit={() => setShowQuitModal(true)}
+            />
+          )}
+
+        {currentExerciseDefinition && (
+          <ExerciseGuideSheet
+            exercise={currentExerciseDefinition}
+            open={showExerciseGuide}
+            onClose={() => setShowExerciseGuide(false)}
+            prescriptionLabel={prescription}
+            sideLabel={currentSideInstruction}
+          />
+        )}
       </div>
     </WorkoutScene>
   );

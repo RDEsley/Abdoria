@@ -118,7 +118,12 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     <AchievementContext.Provider value={value}>
       {children}
       {createPortal(
-        <div className="achievement-toast-stack" aria-label="Notificações de conquista">
+        <div
+          className="achievement-toast-stack"
+          role="status"
+          aria-live="polite"
+          aria-label="Notificações de conquista"
+        >
           <AnimatePresence mode="popLayout">
             {items.map((item, index) => (
               <AchievementToast

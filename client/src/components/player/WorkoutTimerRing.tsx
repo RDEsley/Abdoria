@@ -8,6 +8,7 @@ interface Props {
   secondsLeft: number;
   seriesIndex: number;
   totalSeries: number;
+  targetReps?: number;
   progressPct: number;
   paused?: boolean;
   /** Presente = o anel vira um botão (iniciar série ou pausar/retomar). */
@@ -27,6 +28,7 @@ export function WorkoutTimerRing({
   secondsLeft,
   seriesIndex,
   totalSeries,
+  targetReps,
   progressPct,
   paused = false,
   onCenterClick,
@@ -51,10 +53,12 @@ export function WorkoutTimerRing({
       )
     ) : phase === 'working' ? (
       <>
-        <span className="game-timer-ring__label tabular-nums">
-          {seriesIndex + 1}/{totalSeries}
+        <span className="game-timer-ring__label game-timer-ring__label--reps tabular-nums">
+          × {targetReps ?? 0}
         </span>
-        <span className="game-timer-ring__sublabel">série</span>
+        <span className="game-timer-ring__sublabel">
+          repetições · série {seriesIndex + 1}/{totalSeries}
+        </span>
       </>
     ) : (
       <>

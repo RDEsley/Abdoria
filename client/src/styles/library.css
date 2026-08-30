@@ -79,7 +79,7 @@
   margin-top: 0.25rem;
   font-size: 0.72rem;
   font-weight: 600;
-  color: #78716c;
+  color: #57534e;
 }
 
 .library-locked-card__name {
@@ -233,6 +233,402 @@
 .library-exercise-card__actions .game-item-card__action-icon {
   width: 2.75rem;
   height: 2.75rem;
+}
+
+/* Demonstração compartilhada entre Biblioteca, guia, Player e descanso. */
+.exercise-demo {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 80% 10%, rgb(52 211 153 / 18%), transparent 34%),
+    linear-gradient(145deg, #f0fdf8, #f8faf9 62%, #ecfdf5);
+}
+
+.exercise-demo__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.exercise-demo__fallback {
+  display: flex;
+  max-width: 17rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.25rem;
+  color: #047857;
+  text-align: center;
+}
+
+.exercise-demo__fallback strong {
+  color: #1c1917;
+  font-size: 0.92rem;
+  font-weight: 850;
+}
+
+.exercise-demo__fallback span {
+  color: #64736f;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+/* Guia educacional: bottom sheet no mobile e painel central em telas largas. */
+.exercise-guide-overlay {
+  z-index: 90;
+  align-items: flex-end;
+  padding: 0;
+  background: rgb(15 23 42 / 62%);
+  backdrop-filter: blur(3px);
+}
+
+.exercise-guide-sheet {
+  position: relative;
+  display: flex;
+  width: min(100%, 32rem);
+  max-height: min(92dvh, 54rem);
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 1.5rem 1.5rem 0 0;
+  box-shadow: 0 -18px 55px rgb(15 23 42 / 22%);
+  animation: exercise-guide-enter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.exercise-guide-sheet::before {
+  content: '';
+  width: 2.75rem;
+  height: 0.28rem;
+  flex: 0 0 auto;
+  margin: 0.55rem auto 0;
+  border-radius: 999px;
+  background: #d6d3d1;
+}
+
+@keyframes exercise-guide-enter {
+  from {
+    transform: translateY(2rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.exercise-guide-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 0.6rem;
+}
+
+.exercise-guide-sheet__header h2 {
+  overflow-wrap: anywhere;
+  color: #1c1917;
+  font-size: clamp(1.15rem, 5vw, 1.45rem);
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.exercise-guide-sheet__header p:not(.exercise-guide-sheet__eyebrow) {
+  margin-top: 0.3rem;
+  color: #64736f;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.exercise-guide-sheet__eyebrow {
+  margin-bottom: 0.18rem;
+  color: #07816b;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exercise-guide-sheet__header > button {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #f5f5f4;
+  color: #44403c;
+}
+
+.exercise-guide-sheet__header > button:focus-visible,
+.exercise-guide-tabs button:focus-visible,
+.exercise-guide-sheet__footer button:focus-visible {
+  outline: 3px solid rgb(16 185 129 / 35%);
+  outline-offset: 2px;
+}
+
+.exercise-guide-sheet__prescription {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 1rem 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(5 150 105 / 22%);
+  border-radius: 0.85rem;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.72rem;
+}
+
+.exercise-guide-sheet__prescription strong {
+  font-weight: 850;
+}
+.exercise-guide-sheet__prescription span {
+  margin-left: auto;
+  font-weight: 800;
+}
+
+.exercise-guide-tabs {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 0.2rem;
+  margin: 0 1rem;
+  padding: 0.2rem;
+  border-radius: 0.9rem;
+  background: #f1f0ef;
+}
+
+.exercise-guide-tabs button {
+  min-height: 2.55rem;
+  padding-inline: 0.4rem;
+  border-radius: 0.72rem;
+  color: #57534e;
+  font-size: clamp(0.68rem, 3.3vw, 0.76rem);
+  font-weight: 800;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.exercise-guide-tabs button.is-active {
+  background: #fff;
+  box-shadow: 0 2px 9px rgb(28 25 23 / 9%);
+  color: #047857;
+}
+
+.exercise-guide-tabs button:active {
+  transform: scale(0.98);
+}
+
+.exercise-guide-sheet__body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.85rem 1rem 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.exercise-guide-demo {
+  width: 100%;
+  min-height: 14rem;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgb(28 25 23 / 9%);
+  border-radius: 1.1rem;
+}
+
+.exercise-guide-sheet__media-hint,
+.exercise-guide-note,
+.exercise-guide-safety {
+  margin: 0.7rem auto 0;
+  color: #78716c;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.exercise-guide-muscles {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.exercise-guide-focus-card {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgb(28 25 23 / 9%);
+  border-radius: 1rem;
+  background: #fafaf9;
+}
+
+.exercise-guide-focus-card--primary {
+  border-color: rgb(5 150 105 / 22%);
+  background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+}
+
+.exercise-guide-focus-card > span {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: 0 0 2.6rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: #fff;
+  color: #07816b;
+  box-shadow: 0 3px 10px rgb(28 25 23 / 7%);
+}
+
+.exercise-guide-focus-card small {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: #78716c;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.exercise-guide-focus-card strong {
+  color: #292524;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.exercise-guide-instructions ol {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exercise-guide-instructions ol > li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.exercise-guide-instructions ol > li > span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: #d1fae5;
+  color: #047857;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.exercise-guide-instructions ol p {
+  padding-top: 0.28rem;
+  color: #44403c;
+  font-size: 0.8rem;
+  font-weight: 620;
+  line-height: 1.5;
+}
+
+.exercise-guide-callout {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+  padding: 0.75rem;
+  border-radius: 0.9rem;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.exercise-guide-callout--breathing {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.exercise-guide-callout svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+.exercise-guide-callout strong {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+.exercise-guide-callout p {
+  margin-top: 0.12rem;
+  font-size: 0.72rem;
+  font-weight: 620;
+  line-height: 1.45;
+}
+
+.exercise-guide-mistakes {
+  margin-top: 0.9rem;
+  padding: 0.75rem;
+  border: 1px solid rgb(244 63 94 / 15%);
+  border-radius: 0.9rem;
+  background: #fff1f2;
+}
+
+.exercise-guide-mistakes > strong {
+  color: #be123c;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+.exercise-guide-mistakes ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.05rem;
+  color: #9f1239;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.exercise-guide-sheet__footer {
+  flex: 0 0 auto;
+  padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgb(28 25 23 / 9%);
+  background: rgb(255 255 255 / 96%);
+}
+
+.exercise-guide-sheet__footer button {
+  width: 100%;
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #047857, #065f46);
+  box-shadow: 0 6px 18px rgb(8 124 102 / 22%);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+@media (min-width: 640px) {
+  .exercise-guide-overlay {
+    align-items: center;
+    padding: 1rem;
+  }
+  .exercise-guide-sheet {
+    border-radius: 1.5rem;
+  }
+  .exercise-guide-sheet::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exercise-guide-sheet {
+    animation: none;
+  }
+  .exercise-guide-tabs button {
+    transition: none;
+  }
 }
 
 @media (max-width: 359px) {

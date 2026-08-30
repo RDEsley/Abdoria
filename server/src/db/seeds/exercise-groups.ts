@@ -11,6 +11,19 @@ export const EXERCISE_GRUPOS: Record<string, ParteCorpo[]> = {
   'plank-jacks': ['abdomen', 'pernas'],
   'bear-crawl': ['abdomen', 'ombros', 'pernas'],
 
+  // Peso corporal complementar — o core estabiliza, mas não é o foco principal.
+  'bodyweight-squat': ['pernas', 'gluteos'],
+  'sumo-squat': ['pernas', 'gluteos'],
+  lunge: ['pernas', 'gluteos'],
+  'reverse-lunge': ['pernas', 'gluteos'],
+  'glute-bridge': ['gluteos', 'pernas'],
+  'single-leg-glute-bridge': ['gluteos', 'pernas'],
+  'wall-sit': ['pernas', 'gluteos'],
+  'squat-jump': ['pernas', 'gluteos'],
+  'pike-push-up': ['ombros', 'bracos'],
+  superman: ['costas', 'gluteos'],
+  'bird-dog': ['costas', 'gluteos'],
+
   // Flexões — peito/braços com core estabilizador.
   'push-up': ['peito', 'bracos'],
   'incline-push-up': ['peito', 'bracos'],

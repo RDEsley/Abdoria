@@ -1,5 +1,7 @@
 import { getSupabase } from '../db.js';
-import type { ExerciseLaterality } from '../../../shared/types/index.js';
+import { getExerciseEducationDefinition } from '../../../shared/exercise-education.js';
+import { resolveExerciseLaterality } from '../../../shared/exercises.js';
+import type { ExerciseEducation, ExerciseLaterality } from '../../../shared/types/index.js';
 
 export interface ExerciseDocument {
   id: string;
@@ -23,6 +25,7 @@ export interface ExerciseDocument {
   descanso_seg_intermediario?: number;
   descanso_seg_avancado?: number;
   descricao?: string;
+  education?: ExerciseEducation;
   media: { gif: string; video?: string };
   ativo: boolean;
   equipamento?: string | null;
@@ -31,20 +34,20 @@ export interface ExerciseDocument {
 }
 
 function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
+  const slug = String(row.slug);
+  const educationDefinition = getExerciseEducationDefinition(slug);
   return {
     id: String(row.id),
-    slug: String(row.slug),
+    slug,
     nome: String(row.nome),
-    nome_pt: row.nome_pt ? String(row.nome_pt) : undefined,
+    nome_pt: row.nome_pt ? String(row.nome_pt) : educationDefinition?.nomePt,
     nivel: Number(row.nivel),
     musculo_principal: String(row.musculo_principal),
     musculos_secundarios: (row.musculos_secundarios as string[]) ?? [],
     tempo_recomendado: Number(row.tempo_recomendado),
     prioridade: String(row.prioridade),
     modo: row.modo ? String(row.modo) : undefined,
-    laterality: ['none', 'per_side', 'alternating'].includes(String(row.laterality))
-      ? (String(row.laterality) as ExerciseLaterality)
-      : 'none',
+    laterality: resolveExerciseLaterality(slug, row.laterality),
     repeticoes_iniciante:
       row.repeticoes_iniciante != null ? Number(row.repeticoes_iniciante) : undefined,
     repeticoes_intermediario:
@@ -63,6 +66,7 @@ function rowToExercise(row: Record<string, unknown>): ExerciseDocument {
     descanso_seg_avancado:
       row.descanso_seg_avancado != null ? Number(row.descanso_seg_avancado) : undefined,
     descricao: row.descricao ? String(row.descricao) : undefined,
+    education: educationDefinition,
     media: row.media as ExerciseDocument['media'],
     ativo: Boolean(row.ativo),
     equipamento: row.equipamento ? String(row.equipamento) : undefined,

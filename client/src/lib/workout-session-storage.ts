@@ -24,6 +24,8 @@ export interface ActiveWorkoutSnapshot {
   sideIndex: WorkoutSideIndex;
   phase: WorkoutPlayerPhase;
   secondsLeft: number;
+  /** Duração original da fase atual, necessária para restaurar/reiniciar o descanso. */
+  timerTotalSeconds?: number;
   paused: boolean;
   startedAt: number;
   pausedMs: number;
@@ -108,6 +110,7 @@ export function createWorkoutSnapshot(workout: ActiveWorkout): ActiveWorkoutSnap
     sideIndex: 0,
     phase: 'ready',
     secondsLeft: 0,
+    timerTotalSeconds: 0,
     paused: false,
     startedAt: 0,
     pausedMs: 0,

@@ -1,4 +1,5 @@
 import type { Prioridade } from '../../types/index.js';
+import type { ExerciseLaterality } from '../../../../shared/types/index.js';
 
 export interface ExerciseSeedBase {
   slug: string;
@@ -11,6 +12,7 @@ export interface ExerciseSeedBase {
   descricao: string;
   media: { gif: string };
   ativo: boolean;
+  laterality?: ExerciseLaterality;
 }
 
 export const prioritySExercises: ExerciseSeedBase[] = [
@@ -46,6 +48,7 @@ export const prioritySExercises: ExerciseSeedBase[] = [
     prioridade: 'S',
     descricao: 'Movimento alternado de cotovelo e joelho para oblíquos e core.',
     media: { gif: 'bicycle-crunch.gif' },
+    laterality: 'alternating',
     ativo: true,
   },
   {
@@ -57,6 +60,7 @@ export const prioritySExercises: ExerciseSeedBase[] = [
     prioridade: 'S',
     descricao: 'Cardio dinâmico que estimula todo o core com alta intensidade.',
     media: { gif: 'mountain-climbers.gif' },
+    laterality: 'alternating',
     ativo: true,
   },
   {

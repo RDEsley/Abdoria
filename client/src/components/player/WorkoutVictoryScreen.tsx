@@ -1,6 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronRight, Flame, Leaf, ListChecks, Snowflake, Zap } from 'lucide-react';
+import {
+  ChevronRight,
+  Clock3,
+  Dumbbell,
+  Flame,
+  Layers3,
+  Leaf,
+  ListChecks,
+  Snowflake,
+  Zap,
+} from 'lucide-react';
 import { CompletionCelebration } from '@/components/effects/CompletionCelebration';
 import { LevelUpCelebration } from '@/components/effects/LevelUpCelebration';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
@@ -12,6 +22,7 @@ import { ShareCardTrigger } from '@/components/share/ShareCardTrigger';
 import { useApp } from '@/hooks/useApp';
 import { useLottieAsset } from '@/hooks/useLottieAsset';
 import { toLocalDateKey } from '@/lib/utils';
+import { formatTime } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { CURRENCY_NAME, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { XpBreakdown } from '@/types';
@@ -54,6 +65,9 @@ function VictoryCheck() {
 
 interface Props {
   workoutName: string;
+  durationSeconds?: number;
+  exerciseCount?: number;
+  setCount?: number;
   xpGained: number;
   abdoriaGained: number;
   /** Atividades encadeadas depois do treino que também entraram nesse resumo. */
@@ -80,6 +94,9 @@ interface Props {
  */
 export function WorkoutVictoryScreen({
   workoutName,
+  durationSeconds,
+  exerciseCount,
+  setCount,
   xpGained,
   abdoriaGained,
   atividadesConcluidas,
@@ -121,6 +138,11 @@ export function WorkoutVictoryScreen({
   }, [history, saved, user?.gamificacao?.streak_congelamentos]);
 
   const streakShown = streakCelebration ?? stats?.streak_atual ?? 0;
+  const completedChallengeDays = useMemo(() => {
+    const days = new Set(history.map((entry) => toLocalDateKey(entry.concluido_em)));
+    if (saved) days.add(toLocalDateKey(new Date()));
+    return Math.min(days.size, 30);
+  }, [history, saved]);
 
   return (
     <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
@@ -141,6 +163,26 @@ export function WorkoutVictoryScreen({
         </MiniErrorBoundary>
         <h2 className="game-victory__title">MISSÃO COMPLETA!</h2>
         <p className="mt-2 text-sm font-bold text-stone-600">{workoutName}</p>
+
+        {saved && durationSeconds != null && exerciseCount != null && setCount != null && (
+          <div className="game-victory__session-stats" aria-label="Resumo da missão">
+            <span>
+              <Clock3 size={15} aria-hidden />
+              <strong>{formatTime(durationSeconds)}</strong>
+              <small>tempo</small>
+            </span>
+            <span>
+              <Dumbbell size={15} aria-hidden />
+              <strong>{exerciseCount}</strong>
+              <small>exercícios</small>
+            </span>
+            <span>
+              <Layers3 size={15} aria-hidden />
+              <strong>{setCount}</strong>
+              <small>séries</small>
+            </span>
+          </div>
+        )}
 
         {levelUpCelebration && (
           <LevelUpCelebration
@@ -190,6 +232,30 @@ export function WorkoutVictoryScreen({
                     ) : null}
                   </motion.span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {saved && exerciseCount != null && (
+          <div className="game-victory-challenge">
+            <div className="game-victory-challenge__header">
+              <div>
+                <small>Jornada abdominal</small>
+                <strong>Dia {Math.max(completedChallengeDays, 1)} de 30</strong>
+              </div>
+              <span>{Math.round((completedChallengeDays / 30) * 100)}%</span>
+            </div>
+            <div
+              className="game-victory-challenge__grid"
+              role="img"
+              aria-label={`${completedChallengeDays} de 30 dias concluídos`}
+            >
+              {Array.from({ length: 30 }, (_, index) => (
+                <span
+                  key={index}
+                  className={`${index < completedChallengeDays ? 'is-complete' : ''}${index === completedChallengeDays - 1 ? ' is-current' : ''}`}
+                />
               ))}
             </div>
           </div>
