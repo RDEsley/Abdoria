@@ -1,5 +1,6 @@
 import type { ActiveWorkout } from '@/types';
 import type { WorkoutPlayerPhase, WorkoutSideIndex } from '@shared/workout-player';
+import { SerializedOperationQueue } from '@shared/persistence/serialized-operation-queue';
 import { Capacitor } from '@capacitor/core';
 
 const SNAPSHOT_KEY = 'evolyn_active_workout_v2';
@@ -12,6 +13,7 @@ const VALID_PHASES = new Set<WorkoutPlayerPhase>([
   'resting',
   'done',
 ]);
+const nativeSnapshotQueue = new SerializedOperationQueue();
 
 export interface ActiveWorkoutSnapshot {
   version: 2;
@@ -66,27 +68,34 @@ export const webWorkoutSessionStorage: WorkoutSessionStorageAdapter = {
   write(snapshot) {
     const value = JSON.stringify(snapshot);
     localStorage.setItem(SNAPSHOT_KEY, value);
-    if (Capacitor.isNativePlatform())
-      void import('@capacitor/preferences').then(({ Preferences }) =>
-        Preferences.set({ key: SNAPSHOT_KEY, value }),
-      );
+    if (Capacitor.isNativePlatform()) {
+      nativeSnapshotQueue.enqueueLatestWrite(async () => {
+        const { Preferences } = await import('@capacitor/preferences');
+        await Preferences.set({ key: SNAPSHOT_KEY, value });
+      });
+    }
   },
   clear() {
     localStorage.removeItem(SNAPSHOT_KEY);
     sessionStorage.removeItem(LEGACY_KEY);
-    if (Capacitor.isNativePlatform())
-      void import('@capacitor/preferences').then(({ Preferences }) =>
-        Preferences.remove({ key: SNAPSHOT_KEY }),
-      );
+    if (Capacitor.isNativePlatform()) {
+      nativeSnapshotQueue.enqueueBarrier(async () => {
+        const { Preferences } = await import('@capacitor/preferences');
+        await Preferences.remove({ key: SNAPSHOT_KEY });
+      });
+    }
   },
 };
 
 /** Hidrata o espelho síncrono antes de uma retomada nativa. */
 export async function hydrateNativeWorkoutSnapshot(): Promise<void> {
   if (!Capacitor.isNativePlatform() || localStorage.getItem(SNAPSHOT_KEY)) return;
+  const revision = nativeSnapshotQueue.captureRevision();
   const { Preferences } = await import('@capacitor/preferences');
   const { value } = await Preferences.get({ key: SNAPSHOT_KEY });
-  if (value) localStorage.setItem(SNAPSHOT_KEY, value);
+  if (value && nativeSnapshotQueue.isCurrent(revision) && !localStorage.getItem(SNAPSHOT_KEY)) {
+    localStorage.setItem(SNAPSHOT_KEY, value);
+  }
 }
 
 export function createWorkoutSnapshot(workout: ActiveWorkout): ActiveWorkoutSnapshot {
