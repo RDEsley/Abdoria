@@ -63,9 +63,9 @@ export function useAtividadesFlow() {
   const hojeNaAgenda = useMemo(() => agendaCobreDia(agenda, getSaoPauloWeekday()), [agenda]);
 
   const diaDeTreino = useMemo(() => {
-    const dias = user?.perfil_treino?.dias_semana;
+    const dias = user?.ab_training_profile_v2?.training_days ?? user?.perfil_treino?.dias_semana;
     return Array.isArray(dias) && dias.length > 0 && dias.includes(getSaoPauloWeekday());
-  }, [user?.perfil_treino?.dias_semana]);
+  }, [user?.ab_training_profile_v2?.training_days, user?.perfil_treino?.dias_semana]);
 
   const concluidasHoje = useMemo(() => {
     const todayKey = toLocalDateKey(new Date());

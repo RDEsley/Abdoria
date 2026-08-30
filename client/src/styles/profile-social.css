@@ -292,7 +292,9 @@
   background: #fff;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .cosmetic-picker__trigger:hover {
@@ -513,7 +515,8 @@
   pointer-events: none;
 }
 
-.profile-banner-option.profile-banner-option--locked:nth-of-type(2n) .profile-banner-option__swatch::after {
+.profile-banner-option.profile-banner-option--locked:nth-of-type(2n)
+  .profile-banner-option__swatch::after {
   animation-delay: 0.9s;
 }
 
@@ -780,89 +783,6 @@ a.profile-counts__item:hover strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Opções — focos do treino */
-.settings-cycle {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  text-align: left;
-  border: 1.5px solid rgba(28, 25, 23, 0.14);
-  border-radius: 0.85rem;
-  background: #fff;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-}
-
-.settings-cycle--on {
-  border-color: rgba(5, 150, 105, 0.5);
-  background: #f0fdf4;
-}
-
-.settings-cycle__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 1.8rem;
-  height: 1.8rem;
-  border: 2px solid var(--game-ink);
-  border-radius: 0.5rem;
-  background: #fafaf9;
-  font-size: 0.78rem;
-  font-weight: 900;
-  color: #57534e;
-}
-
-.settings-cycle--on .settings-cycle__badge {
-  background: #10b981;
-  color: #fff;
-  border-color: var(--game-green-dark);
-}
-
-.settings-cycle__text {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.08rem;
-}
-
-.settings-cycle__text strong {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #1c1917;
-}
-
-.settings-cycle__optional {
-  padding: 0.05rem 0.4rem;
-  border-radius: 999px;
-  background: #f5f5f4;
-  font-size: 0.55rem;
-  font-style: normal;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #78716c;
-}
-
-.settings-cycle__text small {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: #78716c;
-}
-
-.settings-cycle__check {
-  flex-shrink: 0;
-  color: #059669;
 }
 
 /* Ajuste de foto (crop estilo WhatsApp) */
@@ -1254,7 +1174,10 @@ a.profile-counts__item:hover strong {
   font-size: 0.75rem;
   font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    border-color 0.15s ease;
 }
 
 .profile-like-btn:hover:not(:disabled) {
