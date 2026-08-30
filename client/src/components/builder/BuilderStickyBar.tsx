@@ -22,7 +22,7 @@ export function BuilderStickyBar({
   const hasTime = estimatedMinutes !== null && exerciseCount > 0;
 
   return (
-    <div className="builder-action-shelf" aria-label="Iniciar missão">
+    <div className="builder-action-shelf" role="region" aria-label="Iniciar missão">
       <div className="builder-action-shelf__inner">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="builder-start-pills flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
