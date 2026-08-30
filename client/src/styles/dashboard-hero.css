@@ -2617,6 +2617,35 @@
   background: rgba(167, 139, 250, 0.1);
 }
 
+.dashboard-surface--streak {
+  background: linear-gradient(145deg, #fffaf1 0%, #ffffff 64%, #fff7ed 100%);
+}
+
+.dashboard-surface--streak::after {
+  background: rgb(251 146 60 / 9%);
+}
+
+.dashboard-surface--progression {
+  background: linear-gradient(145deg, #f7f5ff 0%, #ffffff 62%, #f0fdfa 100%);
+}
+
+.dashboard-surface--progression::after {
+  background: rgb(139 92 246 / 9%);
+}
+
+.dashboard-surface--achievements {
+  background: linear-gradient(145deg, #fffbeb 0%, #ffffff 60%, #fff7ed 100%);
+}
+
+.dashboard-surface--achievements::after {
+  background: rgb(245 158 11 / 10%);
+}
+
+.dashboard-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
 .activities-page__routine,
 .activities-page__calendar {
   min-width: 0;

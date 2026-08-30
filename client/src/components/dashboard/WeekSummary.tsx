@@ -65,7 +65,7 @@ export function WeekSummary() {
   }, [history, frozenDays]);
 
   return (
-    <section className="glass-card p-4">
+    <section className="glass-card dashboard-surface dashboard-surface--streak p-4">
       <h3 className="game-section-title">Sua semana</h3>
 
       <div className="mt-3 flex items-center justify-between gap-1">
@@ -128,7 +128,10 @@ export function WeekSummary() {
 
       <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-3 text-center">
         <div>
-          <p className="stat-number" style={{ '--val-len': String(totals.workouts).length } as CSSProperties}>
+          <p
+            className="stat-number"
+            style={{ '--val-len': String(totals.workouts).length } as CSSProperties}
+          >
             {totals.workouts}
           </p>
           <p className="stat-label mt-1">Treinos</p>
