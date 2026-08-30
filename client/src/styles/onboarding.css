@@ -861,3 +861,403 @@
     transition: none;
   }
 }
+
+/* Plano abdominal V2 — painel estável, cards de seleção e conclusão premium. */
+.ab-plan-wizard {
+  height: min(
+    45rem,
+    calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))
+  );
+  max-height: none;
+  background: #fbfdfc;
+  box-shadow: 0 24px 64px rgba(23, 51, 44, 0.22);
+}
+
+.ab-plan-wizard__header {
+  min-height: 6.75rem;
+  align-items: flex-start;
+  padding: 1.25rem 1.25rem 0.85rem;
+}
+
+.ab-plan-wizard__header .game-icon-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+}
+
+.ab-plan-wizard__progress {
+  margin-inline: 1.25rem;
+}
+
+.ab-plan-wizard__content {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  scrollbar-width: thin;
+}
+
+.ab-plan-wizard__content > * {
+  width: 100%;
+  margin: auto 0;
+}
+
+.ab-plan-option {
+  position: relative;
+  min-height: 6.1rem;
+  padding: 0.9rem 2.35rem 0.9rem 0.9rem;
+  border-color: rgba(72, 102, 93, 0.16);
+  box-shadow: 0 4px 14px rgba(23, 51, 44, 0.035);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.ab-plan-option:focus-visible,
+.ab-plan-days button:focus-visible,
+.ab-plan-equipment button:focus-visible {
+  outline: 3px solid rgba(10, 152, 117, 0.25);
+  outline-offset: 2px;
+}
+
+.ab-plan-option.is-selected {
+  background: linear-gradient(135deg, #f0fdf8, #fff);
+  box-shadow:
+    0 0 0 2px rgba(10, 167, 127, 0.13),
+    0 8px 22px rgba(10, 126, 96, 0.08);
+}
+
+.ab-plan-option.is-evolyn.is-selected {
+  background: linear-gradient(135deg, #fff5f2, #fff);
+  box-shadow:
+    0 0 0 2px rgba(232, 93, 74, 0.11),
+    0 8px 24px rgba(217, 47, 69, 0.08);
+}
+
+.ab-plan-option__check {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  color: #0a9875;
+}
+
+.ab-plan-option.is-evolyn .ab-plan-option__check {
+  color: #e44d4d;
+}
+
+.ab-plan-days-step {
+  padding-block: 0.75rem;
+}
+
+.ab-plan-days {
+  gap: 0.35rem;
+}
+
+.ab-plan-days button {
+  position: relative;
+  display: grid;
+  min-height: 4rem;
+  place-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0;
+  font-size: 0.68rem;
+  border: 1px solid transparent;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease;
+}
+
+.ab-plan-days button[aria-pressed='true'] {
+  border-color: #087c66;
+  box-shadow: 0 5px 14px rgba(10, 152, 117, 0.2);
+}
+
+.ab-plan-days-step__count {
+  margin-top: 1rem;
+  text-align: center;
+  color: #087c66;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.ab-plan-equipment > button {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 1.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 5.25rem;
+  padding: 0.85rem;
+  text-align: left;
+  color: #2f4b43;
+  background: #fff;
+  border: 1px solid rgba(72, 102, 93, 0.16);
+  border-radius: 1.1rem;
+  box-shadow: 0 4px 14px rgba(23, 51, 44, 0.035);
+}
+
+.ab-plan-equipment > button.is-selected {
+  background: #f0fdf8;
+  border-color: #0a9875;
+  box-shadow: 0 0 0 2px rgba(10, 167, 127, 0.11);
+}
+
+.ab-plan-equipment__icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  color: #087c66;
+  background: #e5faf3;
+  border-radius: 0.85rem;
+}
+
+.ab-plan-equipment__copy {
+  min-width: 0;
+}
+
+.ab-plan-equipment__copy strong,
+.ab-plan-equipment__copy small {
+  display: block;
+}
+
+.ab-plan-equipment__copy small {
+  margin-top: 0.2rem;
+  color: #6b7d78;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.ab-plan-equipment__check {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  color: #fff;
+  background: #fff;
+  border: 1.5px solid #bac9c4;
+  border-radius: 0.45rem;
+}
+
+.ab-plan-equipment .is-selected .ab-plan-equipment__check {
+  background: #0a9875;
+  border-color: #0a9875;
+}
+
+.ab-plan-summary {
+  position: relative;
+  overflow: hidden;
+  padding: 1.3rem 1rem;
+  background:
+    radial-gradient(circle at 10% 5%, rgba(16, 185, 129, 0.16), transparent 30%),
+    linear-gradient(145deg, #e8fbf5, #fff 65%);
+  border: 1px solid rgba(10, 152, 117, 0.14);
+}
+
+.ab-plan-summary__success {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, #16b88c, #087c66);
+  border-radius: 1.35rem;
+  box-shadow: 0 10px 26px rgba(9, 116, 89, 0.22);
+}
+
+.ab-plan-summary__eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 1rem;
+  color: #087c66;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ab-plan-summary h3 {
+  margin-top: 0.3rem;
+}
+
+.ab-plan-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.ab-plan-summary__grid > span {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.15rem 0.4rem;
+  min-width: 0;
+  padding: 0.65rem;
+  color: #087c66;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(10, 152, 117, 0.1);
+  border-radius: 0.85rem;
+}
+
+.ab-plan-summary__grid small,
+.ab-plan-summary__grid strong {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.ab-plan-summary__grid small {
+  color: #73837e;
+  font-size: 0.58rem;
+}
+
+.ab-plan-summary__grid strong {
+  overflow: hidden;
+  color: #28463e;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.ab-plan-summary__particles i {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  width: 0.35rem;
+  height: 0.65rem;
+  background: #fbbf24;
+  border-radius: 99px;
+  opacity: 0;
+  animation: ab-plan-particle 0.75s ease-out calc(var(--particle-index, 0) * 35ms) 1;
+}
+
+.ab-plan-summary__particles i:nth-child(1) {
+  --particle-index: 1;
+  --particle-x: -6rem;
+  --particle-y: 2rem;
+}
+.ab-plan-summary__particles i:nth-child(2) {
+  --particle-index: 2;
+  --particle-x: -4rem;
+  --particle-y: -1rem;
+  background: #38bdf8;
+}
+.ab-plan-summary__particles i:nth-child(3) {
+  --particle-index: 3;
+  --particle-x: -2rem;
+  --particle-y: 3rem;
+  background: #fb7185;
+}
+.ab-plan-summary__particles i:nth-child(4) {
+  --particle-index: 4;
+  --particle-x: 2rem;
+  --particle-y: -1rem;
+}
+.ab-plan-summary__particles i:nth-child(5) {
+  --particle-index: 5;
+  --particle-x: 4rem;
+  --particle-y: 2.5rem;
+  background: #a78bfa;
+}
+.ab-plan-summary__particles i:nth-child(6) {
+  --particle-index: 6;
+  --particle-x: 5.5rem;
+  --particle-y: 0;
+  background: #34d399;
+}
+.ab-plan-summary__particles i:nth-child(7) {
+  --particle-index: 7;
+  --particle-x: 0;
+  --particle-y: 3.5rem;
+  background: #f97316;
+}
+
+@keyframes ab-plan-particle {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--particle-x), var(--particle-y)) rotate(160deg);
+  }
+}
+
+.ab-plan-wizard__footer {
+  min-height: 5.25rem;
+  align-items: center;
+  padding: 0.75rem 1.25rem max(0.85rem, env(safe-area-inset-bottom));
+}
+
+.ab-plan-wizard__footer .game-btn {
+  min-height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 1rem;
+}
+
+.ab-plan-wizard__back {
+  flex: 0 0 6.5rem;
+}
+
+.ab-plan-wizard__back.is-placeholder {
+  visibility: hidden;
+}
+
+.ab-plan-wizard__next {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 350px) {
+  .ab-plan-wizard__header {
+    min-height: 5.8rem;
+    padding: 1rem 1rem 0.65rem;
+  }
+  .ab-plan-wizard__header h2 {
+    font-size: 1.12rem;
+  }
+  .ab-plan-wizard__progress {
+    margin-inline: 1rem;
+  }
+  .ab-plan-wizard__content {
+    padding: 0.75rem 1rem;
+  }
+  .ab-plan-option {
+    min-height: 5.45rem;
+    padding-block: 0.65rem;
+  }
+  .ab-plan-days {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .ab-plan-days button {
+    min-height: 2.9rem;
+  }
+  .ab-plan-summary__grid {
+    grid-template-columns: 1fr;
+  }
+  .ab-plan-wizard__footer {
+    padding-inline: 1rem;
+  }
+  .ab-plan-wizard__back {
+    flex-basis: 5.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-plan-summary__particles {
+    display: none;
+  }
+  .ab-plan-option,
+  .ab-plan-days button {
+    transition: none;
+  }
+}

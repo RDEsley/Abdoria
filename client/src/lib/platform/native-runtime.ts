@@ -36,3 +36,15 @@ export async function selectionHaptic(): Promise<void> {
   const { Haptics } = await import('@capacitor/haptics');
   await Haptics.selectionChanged();
 }
+
+export async function actionHaptic(): Promise<void> {
+  if (!isNativeApp()) return;
+  const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+  await Haptics.impact({ style: ImpactStyle.Medium });
+}
+
+export async function successHaptic(): Promise<void> {
+  if (!isNativeApp()) return;
+  const { Haptics, NotificationType } = await import('@capacitor/haptics');
+  await Haptics.notification({ type: NotificationType.Success });
+}
