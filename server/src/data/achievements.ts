@@ -203,7 +203,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: 'moedas_1000',
     titulo: 'Tesouro do herói',
     icon: 'gem',
-    descricao: 'Acumule 1.000 Coins ganhos na jornada',
+    descricao: 'Acumule 1.000 Folhas ganhas na jornada',
     dificuldade: 'dificil',
   },
   {

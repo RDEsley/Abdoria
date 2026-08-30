@@ -111,7 +111,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     id: 'titulo_lenda',
     kind: 'titulo',
     nome: 'Lenda viva',
-    descricao: 'Compre na loja com Coins.',
+    descricao: 'Compre na loja com Folhas.',
     icon: 'gem',
     raridade: 'lendario',
     unlock: { tipo: 'moedas', preco_moedas: 85 },

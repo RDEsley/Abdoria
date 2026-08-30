@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Ban,
-  Coins,
+  Droplets,
   Flag,
   Leaf,
   KeyRound,
@@ -270,10 +270,10 @@ export function AdminPage() {
                     </p>
                     <p className="mt-0.5 flex items-center gap-2 text-[0.65rem] font-bold text-stone-600">
                       <span className="inline-flex items-center gap-0.5">
-                        <Coins size={11} className="text-amber-600" aria-hidden /> {entry.coins}
+                        <Leaf size={11} className="text-emerald-600" aria-hidden /> {entry.coins}
                       </span>
                       <span className="inline-flex items-center gap-0.5">
-                        <Leaf size={11} className="text-emerald-600" aria-hidden /> {entry.gems}
+                        <Droplets size={11} className="text-sky-600" aria-hidden /> {entry.gems}
                       </span>
                     </p>
                   </div>
@@ -488,7 +488,7 @@ function AdminEditModal({
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm font-semibold">
-            Coins
+            Folhas
             <input
               type="number"
               min={0}
@@ -498,7 +498,7 @@ function AdminEditModal({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Folhas
+            Gotas de Água
             <input
               type="number"
               min={0}

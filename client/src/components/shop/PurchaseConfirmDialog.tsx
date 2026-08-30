@@ -1,6 +1,7 @@
-import { Coins, ShoppingBag } from 'lucide-react';
+import { Leaf, ShoppingBag } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
+import { actionHaptic } from '@/lib/platform/native-runtime';
 
 export interface PurchaseConfirmDetails {
   itemName: string;
@@ -55,7 +56,7 @@ export function PurchaseConfirmDialog({
           </p>
         )}
         <p className="game-purchase-confirm__price">
-          <Coins size={14} aria-hidden />
+          <Leaf size={14} aria-hidden />
           <span>{details.priceLabel}</span>
         </p>
         {details.balanceHint && (
@@ -67,7 +68,14 @@ export function PurchaseConfirmDialog({
         <GameButton variant="secondary" className="flex-1" disabled={busy} onClick={onCancel}>
           Cancelar
         </GameButton>
-        <GameButton className="flex-1" disabled={busy} onClick={onConfirm}>
+        <GameButton
+          className="flex-1"
+          disabled={busy}
+          onClick={() => {
+            void actionHaptic();
+            onConfirm();
+          }}
+        >
           {busy ? busyLabel : confirmLabel}
         </GameButton>
       </div>

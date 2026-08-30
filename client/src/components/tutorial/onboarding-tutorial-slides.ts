@@ -1,8 +1,8 @@
 import {
   CalendarDays,
-  Coins,
   Dumbbell,
   Flame,
+  Leaf,
   ListChecks,
   Sprout,
   Target,
@@ -40,9 +40,9 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
     body: 'Cada treino ou Atividade concluída rende XP e mantém sua sequência de dias viva. O contador de XP zera à meia-noite.',
   },
   {
-    icon: Coins,
-    title: 'Moedas e personalização',
-    body: 'Ganhe Moedas treinando e use na aba Áudio pra desbloquear pacotes de som. Molduras e títulos vêm de conquistas, códigos e eventos.',
+    icon: Leaf,
+    title: 'Folhas e personalização',
+    body: 'Ganhe Folhas treinando e use na aba Áudio pra desbloquear pacotes de som. Molduras e títulos vêm de conquistas, códigos e eventos.',
   },
   {
     icon: Sprout,
@@ -52,6 +52,6 @@ export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: Trophy,
     title: 'Suba no ranking',
-    body: 'Dispute a Arena semanal de XP e Moedas contra outros jogadores e mantenha sua sequência de dias no topo.',
+    body: 'Dispute a Arena semanal de XP e Folhas contra outros jogadores e mantenha sua sequência de dias no topo.',
   },
 ];

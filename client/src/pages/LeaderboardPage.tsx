@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, Coins, Eye, EyeOff, Globe, Trophy } from 'lucide-react';
+import { CalendarDays, Eye, EyeOff, Globe, Leaf, Trophy } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
@@ -21,7 +21,7 @@ import {
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: 'xp', label: 'Pontos (XP)' },
-  { id: 'moedas', label: 'Coins' },
+  { id: 'moedas', label: 'Folhas' },
   { id: 'streak', label: 'Dias seguidos' },
 ];
 
@@ -58,7 +58,7 @@ function WeeklyRewardBadge({
 
   return (
     <span className="game-rank-reward">
-      <Coins size={11} aria-hidden />+{reward}
+      <Leaf size={11} aria-hidden />+{reward}
     </span>
   );
 }
@@ -66,7 +66,7 @@ function WeeklyRewardBadge({
 function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: LeaderboardMetric }) {
   return (
     <span className="game-rank-row__value">
-      {metric === 'moedas' && <Coins size={14} aria-hidden />}
+      {metric === 'moedas' && <Leaf size={14} aria-hidden />}
       {metric === 'xp'
         ? `${entry.week_value ?? entry.nivel_xp} XP`
         : metric === 'streak'
@@ -297,7 +297,7 @@ export function LeaderboardPage() {
           >
             {id === 'moedas' ? (
               <span className="game-rank-tabs__label">
-                <Coins size={14} aria-hidden />
+                <Leaf size={14} aria-hidden />
                 {label}
               </span>
             ) : (
