@@ -8,6 +8,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { useAuth } from '@/context/AuthContext';
 import { ackCosmeticCelebration, getShop } from '@/lib/api';
 import { playEquip } from '@/lib/sounds';
+import { successHaptic } from '@/lib/platform/native-runtime';
 import { COSMETIC_RARITY_LABELS, type ShopCatalogItem, type ShopResponse } from '@/types';
 
 const KIND_LABELS: Record<string, string> = {
@@ -73,6 +74,7 @@ export function CosmeticUnlockCelebration() {
         setIndex(0);
         setItems(resolved);
         playEquip();
+        void successHaptic();
       })
       .catch(() => {
         /* sem catálogo, tenta de novo no próximo refresh */

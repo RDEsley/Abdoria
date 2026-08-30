@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, type CSSProperties } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { StreakCountdown } from '@/components/gamification/StreakCountdown';
@@ -35,7 +36,7 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
         : `game-xp-section__hero game-xp-section__hero--skinned game-card-banner--${fundoKey}`;
 
   const levelPct = xpToNext > 0 ? Math.min(100, Math.round((xpInLevel / xpToNext) * 100)) : 100;
-  const minimal = !(user?.preferencias?.confetti_animacoes_habilitadas ?? true);
+  const minimal = Boolean(useReducedMotion());
 
   // O anel/barra enchem do zero até o valor real toda vez que a Home é
   // montada (o usuário entra na tela). Sem ref pra "já animou uma vez": um

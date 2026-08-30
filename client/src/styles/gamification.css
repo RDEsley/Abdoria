@@ -720,24 +720,34 @@
 
 .game-toast {
   position: fixed;
-  top: calc(var(--top-navbar-height) + 0.65rem);
-  right: 0.75rem;
-  left: auto;
+  right: auto;
+  bottom: calc(var(--bottom-nav-height, 4.75rem) + env(safe-area-inset-bottom) + 0.75rem);
+  left: 50%;
   z-index: 120;
-  width: min(19rem, calc(100vw - 1.5rem));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 1.5rem));
   overflow: hidden;
-  padding: 0.65rem 0.8rem 0.55rem;
-  font-size: 0.72rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.75rem;
   font-weight: 800;
   line-height: 1.35;
   color: #fff;
   text-align: left;
   pointer-events: none;
   background: rgba(28, 25, 23, 0.94);
-  border: 2px solid var(--game-ink);
-  border-radius: 0.65rem;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.28);
-  animation: game-toast-in 0.12s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  box-shadow: 0 10px 28px rgba(28, 25, 23, 0.2);
+  transform: translateX(-50%);
+  animation: game-toast-in 0.2s ease-out;
+}
+
+.game-toast__icon {
+  flex: none;
+  margin-right: 0.55rem;
 }
 
 .game-toast__message {
@@ -745,10 +755,14 @@
 }
 
 .game-toast__bar {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  left: 0.75rem;
   display: block;
   width: 100%;
   height: 2px;
-  margin-top: 0.5rem;
+  margin-top: 0;
   background: rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   overflow: hidden;
@@ -763,8 +777,7 @@
 }
 
 .game-toast--success {
-  border-color: #10b981;
-  box-shadow: 3px 3px 0 rgba(4, 120, 87, 0.35);
+  background: rgba(6, 78, 59, 0.96);
 }
 
 .game-toast--success .game-toast__bar-fill {
@@ -774,7 +787,6 @@
 .game-toast--error {
   background: rgba(69, 10, 10, 0.96);
   border-color: #f87171;
-  box-shadow: 3px 3px 0 rgba(127, 29, 29, 0.45);
 }
 
 .game-toast--error .game-toast__bar-fill {
@@ -784,7 +796,6 @@
 .game-toast--warn {
   background: rgba(69, 45, 10, 0.96);
   border-color: #fbbf24;
-  box-shadow: 3px 3px 0 rgba(120, 53, 15, 0.4);
 }
 
 .game-toast--warn .game-toast__bar-fill {
@@ -794,21 +805,36 @@
 .game-toast--info {
   background: rgba(12, 45, 72, 0.96);
   border-color: #38bdf8;
-  box-shadow: 3px 3px 0 rgba(7, 58, 102, 0.4);
 }
 
 .game-toast--info .game-toast__bar-fill {
   background: #38bdf8;
 }
 
+.game-toast--player {
+  bottom: calc(0.9rem + env(safe-area-inset-bottom));
+}
+
 @keyframes game-toast-in {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translate(-50%, 0.65rem) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@media (min-width: 768px) {
+  .game-toast {
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-toast {
+    animation-duration: 0.01ms;
   }
 }
 

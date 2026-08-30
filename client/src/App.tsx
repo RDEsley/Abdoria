@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { AchievementProvider } from '@/context/AchievementContext';
 import { AppDataProvider } from '@/components/auth/AppDataProvider';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/ProtectedRoute';
@@ -82,17 +82,9 @@ function ScrollToTop() {
   return null;
 }
 
-/** Modo minimalista: desliga Framer Motion (MotionConfig) e toda animação CSS
-    (classe global, ver base.css) a partir da mesma preferência do usuário. */
+/** Framer Motion segue a preferência de acessibilidade do sistema. */
 function MotionPreferenceGate({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  const minimal = user?.preferencias?.confetti_animacoes_habilitadas === false;
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('game-minimal-mode', minimal);
-  }, [minimal]);
-
-  return <MotionConfig reducedMotion={minimal ? 'always' : 'never'}>{children}</MotionConfig>;
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }
 
 export default function App() {

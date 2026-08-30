@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 import type { AchievementToastItem } from '@/lib/achievement-notifications';
+import { successHaptic } from '@/lib/platform/native-runtime';
 
 const DISPLAY_MS = 4500;
 
@@ -12,7 +13,13 @@ interface Props {
 }
 
 export function AchievementToast({ item, stackIndex, onDismiss }: Props) {
+  const hapticSentRef = useRef(false);
+
   useEffect(() => {
+    if (!hapticSentRef.current) {
+      hapticSentRef.current = true;
+      void successHaptic();
+    }
     const timer = window.setTimeout(() => onDismiss(item.id), DISPLAY_MS);
     return () => window.clearTimeout(timer);
   }, [item.id, onDismiss]);
