@@ -755,7 +755,7 @@
 
 .game-tab--active {
   color: #fff;
-  background: var(--game-green);
+  background: var(--game-green-dark);
   border-color: var(--game-ink);
   box-shadow: 2px 2px 0 var(--game-green-dark);
 }

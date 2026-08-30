@@ -4,6 +4,7 @@ import {
   continueAfterSideTransition,
   goBackWorkoutStep,
   INITIAL_WORKOUT_PLAYER_STATE,
+  shouldPauseWorkoutForGuide,
 } from '../../shared/workout-player.js';
 
 describe('progressão bilateral do Player', () => {
@@ -29,5 +30,13 @@ describe('progressão bilateral do Player', () => {
     expect(
       goBackWorkoutStep({ exerciseIndex: 1, setIndex: 0, sideIndex: 0, phase: 'ready' }, queue),
     ).toMatchObject({ exerciseIndex: 0, setIndex: 1, sideIndex: 1 });
+  });
+
+  it('pausa somente cronômetros ativos ao abrir o guia', () => {
+    expect(shouldPauseWorkoutForGuide('working', 'tempo', false)).toBe(true);
+    expect(shouldPauseWorkoutForGuide('resting', 'reps', false)).toBe(true);
+    expect(shouldPauseWorkoutForGuide('working', 'reps', false)).toBe(false);
+    expect(shouldPauseWorkoutForGuide('ready', 'tempo', false)).toBe(false);
+    expect(shouldPauseWorkoutForGuide('working', 'tempo', true)).toBe(false);
   });
 });

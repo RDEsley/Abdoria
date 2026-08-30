@@ -23,6 +23,23 @@
   box-shadow: var(--shadow-resting);
 }
 
+.game-player-close {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #57534e;
+  cursor: pointer;
+}
+
+.game-player-close:hover,
+.game-player-close:focus-visible {
+  background: #f5f5f4;
+  color: #1c1917;
+}
+
 /* Botões de som/contagem regressiva no header: precisam parecer toggles
    (ligado/desligado), não só ícones com opacidade diferente. */
 .game-player-toggle {
@@ -30,8 +47,8 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 2.15rem;
-  height: 2.15rem;
+  width: 2.75rem;
+  height: 2.75rem;
   color: #a8a29e;
   cursor: pointer;
   background: #f5f5f4;
@@ -186,8 +203,8 @@
 }
 
 .game-timer-ring__svg {
-  width: clamp(6rem, 26vw, 9.5rem);
-  height: clamp(6rem, 26vw, 9.5rem);
+  width: clamp(8.5rem, 34vw, 11.5rem);
+  height: clamp(8.5rem, 34vw, 11.5rem);
 }
 
 .game-player-actions {
@@ -200,11 +217,58 @@
 }
 
 .game-player-frame {
-  overflow: hidden;
-  border: var(--border-card);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-raised);
-  background: #000;
+  width: min(100%, 19rem);
+  min-height: clamp(11rem, 31dvh, 18rem);
+  max-height: 19rem;
+  aspect-ratio: 4 / 3;
+  margin-inline: auto;
+  border: 1px solid rgb(28 25 23 / 10%);
+  border-radius: 1.25rem;
+  box-shadow: 0 12px 34px rgb(8 124 102 / 9%);
+  background: linear-gradient(145deg, #f0fdf8, #fff);
+}
+
+.game-player-exercise-title {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.game-player-exercise-title h2 {
+  overflow-wrap: anywhere;
+  color: #1c1917;
+  font-size: clamp(1rem, 4.8vw, 1.35rem);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.game-player-exercise-title button {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  color: #087c66;
+  background: #e6f7f2;
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.game-player-exercise-title button:focus-visible {
+  outline: 3px solid rgb(16 185 129 / 35%);
+  outline-offset: 2px;
+}
+
+.game-player-rest-next {
+  margin: 0.35rem auto 0;
+  color: #45645d;
+  font-size: 0.72rem;
+  font-weight: 750;
 }
 
 .game-timer-ring {
@@ -259,6 +323,11 @@
   color: var(--game-ink);
 }
 
+.game-timer-ring__label--reps {
+  font-size: clamp(2.15rem, 9vw, 3.25rem);
+  letter-spacing: -0.05em;
+}
+
 .game-timer-ring__sublabel {
   margin-top: 0.35rem;
   font-size: 0.7rem;
@@ -296,6 +365,25 @@
   background: #e0f2fe;
 }
 
+.game-player--resting {
+  background:
+    radial-gradient(circle at 82% 18%, rgb(125 211 252 / 34%), transparent 34%),
+    linear-gradient(180deg, #effcff 0%, #f4fbfa 58%, #fff 100%);
+}
+
+.game-player--resting .game-player-hud {
+  background: rgb(240 253 250 / 92%);
+  border-bottom-color: rgb(14 116 144 / 14%);
+}
+
+.game-player--resting .game-player-frame {
+  width: min(100%, 16rem);
+  min-height: clamp(9rem, 22dvh, 12rem);
+  border-color: rgb(14 116 144 / 18%);
+  box-shadow: 0 14px 38px rgb(14 116 144 / 12%);
+  background: linear-gradient(145deg, #ecfeff, #fff);
+}
+
 .game-player-paused {
   display: inline-flex;
   align-items: center;
@@ -310,12 +398,101 @@
   border-radius: 999px;
 }
 
+.game-player-pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem
+    calc(1rem + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(circle at 50% 15%, rgb(52 211 153 / 18%), transparent 34%),
+    linear-gradient(160deg, #073a35, #07554b 50%, #0a332f);
+}
+
+.game-player-pause-panel {
+  display: flex;
+  width: min(100%, 24rem);
+  max-height: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  overflow-y: auto;
+  padding: 1.1rem;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 1.4rem;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
+  text-align: center;
+}
+
+.game-player-pause-panel__progress {
+  color: #087c66;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.game-player-pause-panel__demo {
+  width: 7rem;
+  height: 7rem;
+  flex: 0 0 7rem;
+  border-radius: 1rem;
+}
+
+.game-player-pause-panel__eyebrow {
+  color: #087c66;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.game-player-pause-panel h2 {
+  margin-top: 0.18rem;
+  color: #1c1917;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.game-player-pause-panel__side {
+  margin-top: 0.25rem;
+  color: #047857;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.game-player-pause-panel__exit {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-inline: 1rem;
+  color: #9f1239;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.game-player-pause-panel__exit:focus-visible {
+  border-radius: 0.75rem;
+  outline: 3px solid rgb(244 63 94 / 25%);
+}
+
 .game-victory {
+  width: min(100%, 25rem);
+  max-height: calc(
+    100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+  );
+  overflow-y: auto;
   padding: 1.5rem;
   text-align: center;
   background: var(--game-paper);
-  border: 4px solid var(--game-ink);
-  box-shadow: 6px 6px 0 var(--game-ink);
+  border: 1px solid rgb(28 25 23 / 12%);
+  border-radius: 1.5rem;
+  box-shadow: 0 22px 65px rgb(28 25 23 / 16%);
 }
 
 .game-victory__check {
@@ -366,6 +543,37 @@
 
 .game-victory__rewards {
   margin-top: 0.5rem;
+}
+
+.game-victory__session-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+.game-victory__session-stats > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.25rem;
+  border-radius: 0.8rem;
+  background: #f5f7f6;
+  color: #087c66;
+}
+
+.game-victory__session-stats strong {
+  color: #292524;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.game-victory__session-stats small {
+  color: #78716c;
+  font-size: 0.55rem;
+  font-weight: 700;
 }
 
 .game-victory__abdoria {
@@ -583,6 +791,69 @@
   animation: victory-fire-pop 1.6s ease-in-out infinite;
 }
 
+.game-victory-challenge {
+  margin-top: 0.65rem;
+  padding: 0.7rem;
+  border: 1px solid rgb(5 150 105 / 18%);
+  border-radius: 0.9rem;
+  background: linear-gradient(145deg, #ecfdf5, #f8fffc);
+  text-align: left;
+}
+
+.game-victory-challenge__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.game-victory-challenge__header div {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-victory-challenge__header small {
+  color: #64736f;
+  font-size: 0.56rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.game-victory-challenge__header strong {
+  color: #064e3b;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.game-victory-challenge__header > span {
+  color: #047857;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.game-victory-challenge__grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin-top: 0.55rem;
+}
+
+.game-victory-challenge__grid span {
+  aspect-ratio: 1;
+  border-radius: 0.25rem;
+  background: #dfe7e4;
+}
+
+.game-victory-challenge__grid span.is-complete {
+  background: linear-gradient(145deg, #34d399, #059669);
+}
+
+.game-victory-challenge__grid span.is-current {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #f59e0b;
+}
+
 @keyframes victory-fire-pop {
   0%,
   100% {
@@ -788,4 +1059,36 @@
   line-height: 1.5;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-height: 700px) {
+  .game-player-frame {
+    min-height: 9rem;
+    max-height: 11rem;
+    width: min(100%, 15rem);
+  }
+
+  .game-player-content {
+    gap: 0.35rem !important;
+    padding-block: 0.35rem !important;
+  }
+
+  .game-timer-ring__svg {
+    width: 7.5rem;
+    height: 7.5rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .game-player-hud {
+    padding-inline: 0.65rem;
+  }
+
+  .game-player-exercise-title button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
 }

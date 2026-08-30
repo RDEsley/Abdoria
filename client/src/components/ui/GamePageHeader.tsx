@@ -42,7 +42,7 @@ export function GamePageHeader({
         <div className="min-w-0 flex-1">
           {eyebrow && <p className="game-page-header__eyebrow">{eyebrow}</p>}
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="game-page-header__title">{title}</h2>
+            <h1 className="game-page-header__title">{title}</h1>
             {children}
           </div>
         </div>

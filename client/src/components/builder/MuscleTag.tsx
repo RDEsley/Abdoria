@@ -46,7 +46,11 @@ export function MuscleTagGroup({ muscles, compact = false, className = '' }: Gro
   if (muscles.length === 0) return null;
 
   return (
-    <div className={`flex flex-wrap gap-1 ${className}`.trim()} aria-label="Zonas do abdômen">
+    <div
+      className={`flex flex-wrap gap-1 ${className}`.trim()}
+      role="group"
+      aria-label="Zonas do abdômen"
+    >
       {muscles.map((muscle) => (
         <MuscleTag key={muscle} muscle={muscle} compact={compact} />
       ))}

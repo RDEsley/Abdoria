@@ -61,7 +61,7 @@ export function SwapExerciseButton({ onClick, disabled = false, className = '' }
   );
 }
 
-/** Botão de demonstração com o mesmo padrão visual das demais ações da fila. */
+/** Botão do guia com o mesmo padrão visual das demais ações da fila. */
 export function ExercisePlayButton({ onClick, className = '' }: PlayProps) {
   return (
     <GameButton
@@ -70,10 +70,10 @@ export function ExercisePlayButton({ onClick, className = '' }: PlayProps) {
       size="sm"
       className={`flex items-center gap-1.5 ${className}`.trim()}
       onClick={onClick}
-      aria-label="Ver treino"
+      aria-label="Como fazer o exercício"
     >
       <Play size={14} aria-hidden />
-      Ver treino
+      Como fazer
     </GameButton>
   );
 }

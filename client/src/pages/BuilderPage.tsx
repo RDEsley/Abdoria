@@ -852,7 +852,11 @@ export function BuilderPage() {
   return (
     <div className="builder-page flex flex-col gap-5 pb-44 md:pb-8">
       <GamePageHeader eyebrow="Sua sessão recomendada" title="Missão de hoje">
-        <div className="builder-header__actions flex gap-2" aria-label="Atalhos da missão">
+        <div
+          className="builder-header__actions flex gap-2"
+          role="group"
+          aria-label="Atalhos da missão"
+        >
           <Link
             to="/biblioteca"
             className="game-icon-btn game-icon-btn--header"

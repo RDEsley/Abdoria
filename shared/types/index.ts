@@ -89,6 +89,20 @@ export interface ExerciseMedia {
   video?: string;
 }
 
+/** Conteúdo educacional canônico usado pela Biblioteca e pelo Player. */
+export interface ExerciseEducation {
+  /** Explicação curta do objetivo do movimento. */
+  summary: string;
+  /** Passos ordenados, da posição inicial ao retorno. */
+  steps: string[];
+  primaryMuscles: string[];
+  secondaryMuscles?: string[];
+  tips?: string[];
+  commonMistakes?: string[];
+  breathing?: string;
+  safety?: string;
+}
+
 export interface ExerciseLevelParams {
   repeticoes_iniciante: number;
   repeticoes_intermediario: number;
@@ -112,6 +126,7 @@ export interface IExercise extends ExerciseLevelParams {
   prioridade: Prioridade;
   modo: ModoExercicio | 'ambos';
   descricao?: string;
+  education?: ExerciseEducation;
   media: ExerciseMedia;
   ativo: boolean;
   /** Como o exercício distribui o trabalho entre os lados. Nunca inferir pelo slug no Player. */

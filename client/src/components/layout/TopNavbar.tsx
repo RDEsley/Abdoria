@@ -41,7 +41,7 @@ interface ResourcePillProps {
 
 function ResourcePill({ icon, amount, label, pulse }: ResourcePillProps) {
   return (
-    <div className="top-navbar__pill" aria-label={`${formatAmount(amount)} ${label}`}>
+    <div className="top-navbar__pill" role="group" aria-label={`${formatAmount(amount)} ${label}`}>
       <div className="top-navbar__pill-icon" aria-hidden>
         {icon}
       </div>

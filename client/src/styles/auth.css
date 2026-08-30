@@ -121,10 +121,7 @@
   inset: -22px;
   display: block;
   border-radius: 50%;
-  background: repeating-conic-gradient(
-    rgba(253, 224, 71, 0.55) 0deg 7deg,
-    transparent 7deg 30deg
-  );
+  background: repeating-conic-gradient(rgba(253, 224, 71, 0.55) 0deg 7deg, transparent 7deg 30deg);
   -webkit-mask: radial-gradient(circle, transparent 54%, #fff 56% 74%, transparent 76%);
   mask: radial-gradient(circle, transparent 54%, #fff 56% 74%, transparent 76%);
   animation: game-celestial-spin 26s linear infinite;
@@ -365,7 +362,6 @@
     transform: rotate(1.1deg);
   }
 }
-
 
 .game-login__clouds {
   position: absolute;
@@ -1065,12 +1061,12 @@
 }
 
 .game-btn--primary {
-  background: #10b981;
+  background: #047857;
   box-shadow: 2px 2px 0 var(--game-green-dark, #047857);
 }
 
 .game-btn--primary:hover:not(:disabled) {
-  background: #059669;
+  background: #065f46;
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0 var(--game-green-dark, #047857);
 }

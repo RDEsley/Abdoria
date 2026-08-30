@@ -94,6 +94,7 @@ export const bodyweightExercises: IExercise[] = [
       descricao:
         'Ponte de glúteos com uma perna estendida — dobro de carga no glúteo de apoio, quadril sempre nivelado.',
       media: { gif: 'single-leg-glute-bridge.gif' },
+      laterality: 'per_side',
       ativo: true,
       grupos: ['gluteos', 'pernas'],
     },

@@ -1,4 +1,4 @@
-import type { ExerciseLaterality } from './types/index.js';
+import type { ExerciseLaterality, ModoExercicio } from './types/index.js';
 
 export type WorkoutPlayerPhase = 'ready' | 'working' | 'side_transition' | 'resting' | 'done';
 export type WorkoutSideIndex = 0 | 1;
@@ -21,6 +21,16 @@ export const INITIAL_WORKOUT_PLAYER_STATE: WorkoutPlayerState = {
   sideIndex: 0,
   phase: 'ready',
 };
+
+/** Abrir o guia congela apenas fases com cronômetro ativo; nunca altera reps ou índices. */
+export function shouldPauseWorkoutForGuide(
+  phase: WorkoutPlayerPhase,
+  mode: ModoExercicio,
+  paused: boolean,
+): boolean {
+  if (paused) return false;
+  return phase === 'resting' || (phase === 'working' && mode === 'tempo');
+}
 
 export function completeWorkingPhase(
   state: WorkoutPlayerState,

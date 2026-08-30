@@ -23,6 +23,7 @@ export const additionalExercises = [
     prioridade: 'A',
     descricao: 'Toques alternados nos calcanhares para ativar os oblíquos.',
     media: { gif: 'heel-touches.gif' },
+    laterality: 'alternating',
     ativo: true,
   }),
   withLevelParams({
@@ -59,6 +60,7 @@ export const additionalExercises = [
     prioridade: 'A',
     descricao: 'Chutes alternados para abdômen inferior.',
     media: { gif: 'scissor-kicks.gif' },
+    laterality: 'alternating',
     ativo: true,
   }),
   withLevelParams({
@@ -82,6 +84,7 @@ export const additionalExercises = [
     prioridade: 'B',
     descricao: 'Rotação controlada das pernas para oblíquos avançados.',
     media: { gif: 'windshield-wipers.gif' },
+    laterality: 'alternating',
     ativo: true,
   }),
   withCustomParams(
@@ -151,6 +154,7 @@ export const additionalExercises = [
     prioridade: 'A',
     descricao: 'Chutes alternados rápidos para abdômen inferior.',
     media: { gif: 'flutter-kicks.gif' },
+    laterality: 'alternating',
     ativo: true,
   }),
   withLevelParams({
@@ -215,6 +219,7 @@ export const additionalExercises = [
     prioridade: 'B',
     descricao: 'Prancha com joelho ao cotovelo alternado.',
     media: { gif: 'spiderman-plank.gif' },
+    laterality: 'alternating',
     ativo: true,
   }),
   withCustomParams(
