@@ -6,7 +6,6 @@ import type { LeaderboardMetric } from '../types/index.js';
 import { LEADERBOARD_DISPLAY_LIMIT, xpLevelFromTotal } from '../types/index.js';
 import { readLifetimeMoedas, readMoedaBalance } from '../services/economy.js';
 import { syncMoedaBalancesForLeaderboard } from '../services/moeda-leaderboard.js';
-import { processWeeklyLeaderboardRewardsIfDue } from '../services/weekly-leaderboard-rewards.js';
 import { weeklyMetricValue } from '../services/weekly-stats.js';
 import {
   LeaderboardPodiumHistory,
@@ -143,7 +142,6 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
     if (metric === 'moedas') {
       await syncMoedaBalancesForLeaderboard();
     }
-    await processWeeklyLeaderboardRewardsIfDue();
 
     if (metric === 'streak') {
       // Busca com folga porque admins ocultos são removidos depois da query.

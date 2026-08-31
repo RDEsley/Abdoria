@@ -258,12 +258,15 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  width: 5.2rem;
-  height: 5.2rem;
+  width: 5.65rem;
+  height: 5.65rem;
   border-radius: 50%;
   /* Trilho de fundo sutil atrás do arco — sem ele o arco parecia flutuar
      sozinho, sem nenhuma superfície "colada" no medalhão. */
-  box-shadow: inset 0 0 0 0.42rem rgba(28, 25, 23, 0.08);
+  box-shadow:
+    inset 0 0 0 0.48rem rgba(255, 255, 255, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.42),
+    0 10px 26px rgba(14, 165, 233, 0.18);
 }
 
 /* Anel grosso e colado no medalhão: arco de progresso ocupa quase toda a
@@ -282,10 +285,10 @@
   );
   -webkit-mask: radial-gradient(
     farthest-side,
-    transparent calc(100% - 0.42rem),
-    #000 calc(100% - 0.42rem)
+    transparent calc(100% - 0.48rem),
+    #000 calc(100% - 0.48rem)
   );
-  mask: radial-gradient(farthest-side, transparent calc(100% - 0.42rem), #000 calc(100% - 0.42rem));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 0.48rem), #000 calc(100% - 0.48rem));
   filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.45));
 }
 
@@ -298,8 +301,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.05rem;
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 4.75rem;
+  height: 4.75rem;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 34%, #fffdf7 0%, #fef3c7 62%, #fde68a 100%);
   box-shadow:
@@ -2623,6 +2626,37 @@
 
 .dashboard-surface--streak::after {
   background: rgb(251 146 60 / 9%);
+}
+
+.week-summary-day {
+  position: relative;
+}
+
+.week-summary-day--complete {
+  background: linear-gradient(145deg, #34d399, #059669);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 42%),
+    0 5px 12px rgb(5 150 105 / 24%);
+}
+
+.week-summary-day--complete::after {
+  content: '';
+  position: absolute;
+  inset: -0.28rem;
+  border: 1px solid rgb(16 185 129 / 28%);
+  border-radius: 0.75rem;
+  animation: week-check-ripple 0.8s ease-out both;
+}
+
+@keyframes week-check-ripple {
+  from {
+    opacity: 0.8;
+    transform: scale(0.65);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35);
+  }
 }
 
 .dashboard-surface--progression {

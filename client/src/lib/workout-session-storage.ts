@@ -70,6 +70,7 @@ export const webWorkoutSessionStorage: WorkoutSessionStorageAdapter = {
   write(snapshot) {
     const value = JSON.stringify(snapshot);
     localStorage.setItem(SNAPSHOT_KEY, value);
+    window.dispatchEvent(new CustomEvent('evolyn:workout-snapshot'));
     if (Capacitor.isNativePlatform()) {
       nativeSnapshotQueue.enqueueLatestWrite(async () => {
         const { Preferences } = await import('@capacitor/preferences');
@@ -80,6 +81,7 @@ export const webWorkoutSessionStorage: WorkoutSessionStorageAdapter = {
   clear() {
     localStorage.removeItem(SNAPSHOT_KEY);
     sessionStorage.removeItem(LEGACY_KEY);
+    window.dispatchEvent(new CustomEvent('evolyn:workout-snapshot'));
     if (Capacitor.isNativePlatform()) {
       nativeSnapshotQueue.enqueueBarrier(async () => {
         const { Preferences } = await import('@capacitor/preferences');

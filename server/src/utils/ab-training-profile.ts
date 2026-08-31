@@ -12,6 +12,8 @@ export function sanitizeAbTrainingProfileV2(raw: unknown): AbTrainingProfileV2 |
     ? [...new Set(value.training_days.map(Number).filter((day) => day >= 0 && day <= 6))].sort()
     : [];
   if (value.version !== 2 || !intensity || !volume || days.length < 2) return null;
+  const rawRest = Number(value.rest_seconds ?? 30);
+  const restSeconds = Math.min(120, Math.max(10, Math.round(rawRest / 5) * 5));
 
   const now = new Date().toISOString();
   return {
@@ -19,6 +21,7 @@ export function sanitizeAbTrainingProfileV2(raw: unknown): AbTrainingProfileV2 |
     intensity,
     training_days: days,
     volume,
+    rest_seconds: restSeconds,
     created_at: typeof value.created_at === 'string' ? value.created_at : now,
     updated_at: now,
   };

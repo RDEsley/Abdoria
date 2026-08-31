@@ -682,7 +682,8 @@
 }
 
 .ab-plan-wizard {
-  width: min(100%, 520px);
+  width: min(calc(100vw - 2.5rem), 36rem);
+  width: min(100%, 36rem);
   max-height: min(88dvh, 760px);
   display: flex;
   flex-direction: column;
@@ -722,11 +723,162 @@
   transition: width 0.2s ease;
 }
 .ab-plan-wizard__content {
+  position: relative;
   min-height: 0;
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 20px 22px;
+}
+
+.ab-plan-rest-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ab-plan-rest-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ab-plan-rest-options button {
+  position: relative;
+  display: grid;
+  min-height: 7rem;
+  place-items: center;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(72, 102, 93, 0.16);
+  border-radius: 1.2rem;
+  color: #537068;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(23, 51, 44, 0.04);
+}
+
+.ab-plan-rest-options button > strong {
+  color: #173c33;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.ab-plan-rest-options button > small {
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.ab-plan-rest-options button > svg:last-child {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+}
+
+.ab-plan-rest-options button.is-selected {
+  color: #078665;
+  border-color: #10b981;
+  background: linear-gradient(145deg, #eafbf5, #fff);
+  box-shadow:
+    0 0 0 2px rgb(16 185 129 / 12%),
+    0 10px 25px rgb(5 150 105 / 10%);
+}
+
+.ab-plan-step-leaves {
+  position: absolute;
+  inset: -0.5rem 0 auto;
+  z-index: 4;
+  height: 6rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ab-plan-step-leaves i {
+  --leaf-x: 50%;
+  position: absolute;
+  top: -1rem;
+  left: var(--leaf-x);
+  width: 0.55rem;
+  height: 0.9rem;
+  border-radius: 80% 20% 70% 30%;
+  background: linear-gradient(135deg, #34d399, #059669);
+  opacity: 0;
+  animation: ab-plan-leaf-fall 1.25s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.ab-plan-step-leaves i:nth-child(1) {
+  --leaf-x: 5%;
+  animation-delay: 0s;
+}
+.ab-plan-step-leaves i:nth-child(2) {
+  --leaf-x: 14%;
+  animation-delay: 0.12s;
+}
+.ab-plan-step-leaves i:nth-child(3) {
+  --leaf-x: 24%;
+  animation-delay: 0.04s;
+}
+.ab-plan-step-leaves i:nth-child(4) {
+  --leaf-x: 35%;
+  animation-delay: 0.2s;
+}
+.ab-plan-step-leaves i:nth-child(5) {
+  --leaf-x: 45%;
+  animation-delay: 0.08s;
+}
+.ab-plan-step-leaves i:nth-child(6) {
+  --leaf-x: 55%;
+  animation-delay: 0.26s;
+}
+.ab-plan-step-leaves i:nth-child(7) {
+  --leaf-x: 64%;
+  animation-delay: 0.05s;
+}
+.ab-plan-step-leaves i:nth-child(8) {
+  --leaf-x: 73%;
+  animation-delay: 0.18s;
+}
+.ab-plan-step-leaves i:nth-child(9) {
+  --leaf-x: 82%;
+  animation-delay: 0.1s;
+}
+.ab-plan-step-leaves i:nth-child(10) {
+  --leaf-x: 91%;
+  animation-delay: 0.24s;
+}
+.ab-plan-step-leaves i:nth-child(11) {
+  --leaf-x: 30%;
+  animation-delay: 0.32s;
+}
+.ab-plan-step-leaves i:nth-child(12) {
+  --leaf-x: 69%;
+  animation-delay: 0.36s;
+}
+
+@keyframes ab-plan-leaf-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -1rem, 0) rotate(0);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(1.5rem, 6.5rem, 0) rotate(220deg);
+  }
+}
+
+.ab-plan-summary__confetti {
+  position: absolute;
+  inset: -2rem -1rem auto;
+  z-index: 0;
+  height: 12rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ab-plan-summary > :not(.ab-plan-summary__confetti) {
+  position: relative;
+  z-index: 1;
 }
 .ab-plan-options {
   display: grid;
@@ -1252,12 +1404,23 @@
   }
 }
 
+@media (max-width: 640px) {
+  .ab-plan-wizard {
+    width: calc(100vw - 1.25rem);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ab-plan-summary__particles {
     display: none;
   }
   .ab-plan-option,
-  .ab-plan-days button {
+  .ab-plan-days button,
+  .ab-plan-rest-options button {
     transition: none;
+  }
+  .ab-plan-step-leaves,
+  .ab-plan-summary__confetti {
+    display: none;
   }
 }

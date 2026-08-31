@@ -1,4 +1,5 @@
 import { Pause, Play } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { formatTime } from '@/lib/utils';
 import type { ModoExercicio } from '@/types';
 
@@ -34,7 +35,10 @@ export function WorkoutTimerRing({
   onCenterClick,
   clickLabel,
 }: Props) {
+  const reduceMotion = useReducedMotion();
   const ringStroke = phase === 'resting' ? 'var(--game-sky-dark)' : 'var(--game-green-dark)';
+  const normalizedProgress = Math.min(100, Math.max(0, progressPct));
+  const circumference = 2 * Math.PI * 45;
 
   const center =
     phase === 'resting' || (phase === 'working' && modo === 'tempo') ? (
@@ -78,22 +82,26 @@ export function WorkoutTimerRing({
         stroke={ringStroke}
         strokeWidth="6"
         strokeLinecap="round"
-        strokeDasharray={`${progressPct * 2.83} 283`}
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference * (1 - normalizedProgress / 100)}
+        className="game-timer-ring__progress"
       />
     </svg>
   );
 
   if (onCenterClick) {
     return (
-      <button
+      <motion.button
         type="button"
         onClick={onCenterClick}
         className={`game-timer-ring game-timer-ring--action ${phase === 'resting' ? 'game-timer-ring--rest' : ''}`}
         aria-label={clickLabel}
+        whileTap={reduceMotion ? undefined : { scale: 0.93, rotate: -2 }}
+        transition={{ type: 'spring', stiffness: 420, damping: 20 }}
       >
         {svg}
         <div className="absolute inset-0 flex flex-col items-center justify-center">{center}</div>
-      </button>
+      </motion.button>
     );
   }
 

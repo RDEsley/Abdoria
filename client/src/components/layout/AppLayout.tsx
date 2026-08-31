@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { CalendarCheck2, Dumbbell, Home, Settings, Sprout, User, X } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
@@ -13,6 +14,7 @@ import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import { usePersonalizedReminders } from '@/hooks/usePersonalizedReminders';
+import { ResumeWorkoutPrompt } from '@/components/player/ResumeWorkoutPrompt';
 
 function buildNavItems() {
   return [
@@ -45,6 +47,7 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMobileViewport();
+  const reduceMotion = useReducedMotion();
   const [viewportNoticeDismissed, setViewportNoticeDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem(VIEWPORT_NOTICE_KEY) === '1';
@@ -142,7 +145,18 @@ export function AppLayout() {
                 </button>
               </div>
             )}
-            <Outlet />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={location.pathname}
+                className="game-page-transition"
+                initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.992 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={{ type: 'spring', stiffness: 330, damping: 30 }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </main>
 
           <nav className="game-bottom-nav md:hidden" aria-label="Navegação principal">
@@ -170,6 +184,7 @@ export function AppLayout() {
           onClose={handleTutorialClose}
           slides={ONBOARDING_TUTORIAL_SLIDES}
         />
+        {!showTutorial && <ResumeWorkoutPrompt />}
       </div>
     </MidnightRefreshProvider>
   );

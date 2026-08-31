@@ -16,7 +16,7 @@ const ActivityCalendar = lazy(() =>
 export function ActivitiesPage() {
   return (
     <div className="activities-page flex flex-col gap-5 pb-24">
-      <GamePageHeader eyebrow="Sua rotina" title="Atividades" />
+      <GamePageHeader eyebrow="Pequenos passos, grandes sequências" title="Sua jornada diária" />
 
       <section className="activities-page__routine" aria-label="Rotina de hoje">
         <AtividadesCard />

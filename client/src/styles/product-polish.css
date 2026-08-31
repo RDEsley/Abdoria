@@ -831,8 +831,9 @@ body {
   display: block;
   margin-top: 0.15rem;
   color: #20342f;
-  font-size: 0.75rem;
+  font-size: clamp(1rem, 4vw, 1.2rem);
   font-weight: 850;
+  letter-spacing: -0.025em;
 }
 
 .game-player-close,
@@ -853,6 +854,16 @@ body {
   color: var(--evolyn-primary);
   border-color: rgb(8 124 102 / 13%);
   background: #eaf7f3;
+}
+
+.game-player-admin-skip {
+  width: 3.4rem;
+  flex-basis: 3.4rem;
+  color: #7e22ce;
+  border-color: rgb(168 85 247 / 22%);
+  background: #faf5ff;
+  font-size: 0.6rem;
+  font-weight: 900;
 }
 
 .game-player-progress {
@@ -890,9 +901,13 @@ body {
 .game-player-phase {
   border: 0;
   border-radius: 999px;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
+  min-height: 2.55rem;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 0.9rem;
 }
 
 .game-player-phase--ready,
@@ -911,10 +926,24 @@ body {
   min-height: 2.75rem;
   align-items: center;
   gap: 0.25rem;
-  padding: 0 0.5rem;
+  padding: 0 0.8rem;
   color: #687873;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 750;
+}
+
+.game-timer-ring__progress {
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.game-player-actions .game-btn {
+  transition:
+    transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+    box-shadow 0.16s ease;
+}
+
+.game-player-actions .game-btn:active {
+  transform: scale(0.965) translateY(2px);
 }
 
 .game-player-media-shell {
@@ -1128,13 +1157,30 @@ body {
   padding: 0.65rem 0.75rem;
   border: 1px solid rgb(15 23 42 / 8%);
   border-radius: 1rem;
-  background: rgb(255 255 255 / 88%);
+  background-color: rgb(255 255 255 / 88%);
   box-shadow: 0 8px 24px rgb(15 118 110 / 5%);
 }
 
 .leaderboard-page .game-rank-row--me {
   border-color: rgb(8 124 102 / 22%);
-  background: #eaf8f4;
+  background-color: #eaf8f4;
+}
+
+.leaderboard-page .game-rank-row--skinned {
+  border-color: rgb(255 255 255 / 28%);
+  background-color: transparent;
+}
+
+.leaderboard-admin-visibility {
+  color: #64748b;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 7px 20px rgb(15 23 42 / 8%);
+}
+
+.leaderboard-admin-visibility.is-active {
+  color: #047857;
+  border-color: rgb(16 185 129 / 28%);
+  background: #eafbf5;
 }
 
 .leaderboard-page .game-rank-row:hover,
@@ -1173,6 +1219,36 @@ body {
   border-color: var(--evolyn-line);
   border-radius: 1.25rem;
   box-shadow: var(--shadow-resting);
+}
+
+.profile-page .glass-card:not(.game-xp-section) {
+  background:
+    radial-gradient(circle at 100% 0%, rgb(167 243 208 / 12%), transparent 9rem),
+    rgb(255 255 255 / 92%);
+}
+
+.profile-page .personal-records-panel {
+  background:
+    radial-gradient(circle at 94% 4%, rgb(251 191 36 / 17%), transparent 9rem),
+    linear-gradient(145deg, #fffdf5, #fff 58%, #f0fdf8);
+}
+
+.builder-advanced {
+  background:
+    radial-gradient(circle at 100% 0%, rgb(167 243 208 / 22%), transparent 10rem),
+    rgb(255 255 255 / 88%);
+  box-shadow: 0 8px 26px rgb(15 118 110 / 6%);
+}
+
+.builder-advanced__copy {
+  margin-top: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.85rem;
+  color: #5f716c;
+  background: rgb(236 253 245 / 72%);
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.55;
 }
 
 .profile-page .game-achievement {

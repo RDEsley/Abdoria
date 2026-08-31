@@ -1,13 +1,7 @@
 import { motion } from 'framer-motion';
 import { Flame, Leaf, Zap } from 'lucide-react';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
-import {
-  CURRENCY_NAME,
-  weeklyLeaderboardReward,
-  type LeaderboardEntry,
-  type LeaderboardMetric,
-  type LeaderboardPeriod,
-} from '@/types';
+import { CURRENCY_NAME, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
 
 const PODIUM_SLOTS = [
   { entryIndex: 1, medal: 'silver', height: 'h-28', avatarSize: 'md' },
@@ -37,12 +31,10 @@ function PodiumMetricIcon({ metric }: { metric: LeaderboardMetric }) {
 export function LeaderboardPodium({
   top3,
   metric,
-  period,
   onOpen,
 }: {
   top3: LeaderboardEntry[];
   metric: LeaderboardMetric;
-  period: LeaderboardPeriod;
   /** Abre o perfil público do jogador ao tocar no slot. */
   onOpen?: (entry: LeaderboardEntry) => void;
 }) {
@@ -89,19 +81,12 @@ export function LeaderboardPodium({
             </p>
             <div
               className={
-                entry.is_me && entry.banner_equipado && entry.banner_equipado !== 'fundo_padrao'
+                entry.banner_equipado && entry.banner_equipado !== 'fundo_padrao'
                   ? `game-podium__bar game-podium__bar--skinned game-card-banner--${entry.banner_equipado.replace('fundo_', '')} ${slot.height}`
                   : `game-podium__bar game-podium__bar--${slot.medal} ${slot.height}`
               }
             >
               <span className="game-podium__rank">#{entry.rank}</span>
-              {period === 'semanal' &&
-                metric !== 'streak' &&
-                weeklyLeaderboardReward(entry.rank) && (
-                  <span className="game-podium__reward">
-                    <Leaf size={10} aria-hidden />+{weeklyLeaderboardReward(entry.rank)}
-                  </span>
-                )}
             </div>
           </motion.div>
         );

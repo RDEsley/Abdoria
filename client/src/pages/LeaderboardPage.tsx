@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, Eye, EyeOff, Globe, Leaf, Trophy } from 'lucide-react';
+import { CalendarDays, Eye, EyeOff, Flame, Globe, Leaf, Trophy, Zap } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
@@ -13,16 +13,15 @@ import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import {
   CURRENCY_NAME,
-  weeklyLeaderboardReward,
   type LeaderboardEntry,
   type LeaderboardMetric,
   type LeaderboardPeriod,
 } from '@/types';
 
-const METRICS: { id: LeaderboardMetric; label: string }[] = [
-  { id: 'xp', label: 'Pontos (XP)' },
-  { id: 'moedas', label: 'Folhas' },
-  { id: 'streak', label: 'Dias seguidos' },
+const METRICS: { id: LeaderboardMetric; label: string; icon: typeof Zap }[] = [
+  { id: 'xp', label: 'Experiência', icon: Zap },
+  { id: 'moedas', label: 'Folhas', icon: Leaf },
+  { id: 'streak', label: 'Dias seguidos', icon: Flame },
 ];
 
 const PERIODS: { id: LeaderboardPeriod; label: string; icon: typeof Globe }[] = [
@@ -42,27 +41,6 @@ function formatRankBand(rank: number, total: number | null | undefined): string 
   return total > 1000 ? '1000+' : undefined;
 }
 
-function WeeklyRewardBadge({
-  rank,
-  metric,
-  period,
-}: {
-  rank: number;
-  metric: LeaderboardMetric;
-  period: LeaderboardPeriod;
-}) {
-  // Recompensa de fechamento só existe no ciclo semanal.
-  if (metric === 'streak' || period === 'global') return null;
-  const reward = weeklyLeaderboardReward(rank);
-  if (!reward) return null;
-
-  return (
-    <span className="game-rank-reward">
-      <Leaf size={11} aria-hidden />+{reward}
-    </span>
-  );
-}
-
 function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: LeaderboardMetric }) {
   return (
     <span className="game-rank-row__value">
@@ -79,7 +57,6 @@ function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: Leaderb
 function RankRow({
   entry,
   metric,
-  period,
   label,
   rankLabel,
   onOpen,
@@ -87,13 +64,12 @@ function RankRow({
 }: {
   entry: LeaderboardEntry;
   metric: LeaderboardMetric;
-  period: LeaderboardPeriod;
   label?: string;
   rankLabel?: string;
   onOpen?: () => void;
   pinned?: boolean;
 }) {
-  const skinned = entry.is_me && entry.banner_equipado && entry.banner_equipado !== 'fundo_padrao';
+  const skinned = entry.banner_equipado && entry.banner_equipado !== 'fundo_padrao';
   const skinClass = skinned
     ? ` game-rank-row--skinned game-card-banner--${entry.banner_equipado.replace('fundo_', '')}`
     : '';
@@ -116,7 +92,6 @@ function RankRow({
       <LeaderboardUserAvatar entry={entry} size="sm" />
       <div className="game-rank-row__main">
         <span className="game-rank-row__name">{label ?? entry.nome}</span>
-        <WeeklyRewardBadge rank={entry.rank} metric={metric} period={period} />
       </div>
       <RankValue entry={entry} metric={metric} />
     </li>
@@ -135,15 +110,13 @@ export function LeaderboardPage() {
   const [hasScrolledDown, setHasScrolledDown] = useState(false);
   const [visBusy, setVisBusy] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
-  const listWrapRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.role === 'admin';
   const adminVisivel = user?.preferencias?.admin_visivel_ranking === true;
 
   // Dias seguidos também tem Global x Semanal: Semanal = sequência em
-  // andamento, Global = recorde (streak_maior) — só não tem recompensa
-  // semanal em coins (ver WeeklyRewardBadge), já que não existe acumulador
-  // que reseta toda semana pra essa métrica.
+  // andamento e Global = recorde (streak_maior). O ranking é competitivo,
+  // sem pagamento automático de recompensas.
 
   useEffect(() => {
     setLoading(true);
@@ -201,29 +174,29 @@ export function LeaderboardPage() {
 
   // A linha fixa embaixo só aparece enquanto a posição real do usuário está fora da tela.
   useEffect(() => {
-    if (loading || !isMeInTop) {
+    if (loading || !me) {
       setMyRowVisible(false);
       return;
     }
-    const target = meInList
-      ? document.getElementById('my-rank-row')
-      : document.getElementById('rank-podium');
+    const target = meInPodium
+      ? document.getElementById('rank-podium')
+      : document.getElementById('my-rank-row');
     if (!target) {
       setMyRowVisible(false);
       return;
     }
     const observer = new IntersectionObserver(
       ([observed]) => setMyRowVisible(observed?.isIntersecting ?? false),
-      { threshold: meInList ? 0.6 : 0.3 },
+      { threshold: meInPodium ? 0.3 : 0.6 },
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [loading, isMeInTop, meInList, entries]);
+  }, [loading, me, meInPodium, entries]);
 
   const scrollToMyRow = () => {
-    const target = meInList
-      ? document.getElementById('my-rank-row')
-      : document.getElementById('rank-podium');
+    const target = meInPodium
+      ? document.getElementById('rank-podium')
+      : document.getElementById('my-rank-row');
     target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
@@ -233,7 +206,7 @@ export function LeaderboardPage() {
 
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
-  const showPinnedMe = me != null && !loading && hasScrolledDown && (!isMeInTop || !myRowVisible);
+  const showPinnedMe = me != null && !loading && hasScrolledDown && !myRowVisible;
 
   return (
     <div className="leaderboard-page flex flex-col gap-5">
@@ -247,7 +220,7 @@ export function LeaderboardPage() {
         {isAdmin && (
           <button
             type="button"
-            className="game-icon-btn shrink-0"
+            className={`game-icon-btn leaderboard-admin-visibility shrink-0${adminVisivel ? ' is-active' : ''}`}
             disabled={visBusy}
             aria-pressed={adminVisivel}
             aria-label={
@@ -288,7 +261,7 @@ export function LeaderboardPage() {
       {metric !== 'streak' && period === 'semanal' && <LeaderboardResetCountdown />}
 
       <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
-        {METRICS.map(({ id, label }) => (
+        {METRICS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
@@ -297,14 +270,10 @@ export function LeaderboardPage() {
             onClick={() => setMetric(id)}
             className={`game-tab${metric === id ? ' game-tab--active' : ''}`}
           >
-            {id === 'moedas' ? (
-              <span className="game-rank-tabs__label">
-                <Leaf size={14} aria-hidden />
-                {label}
-              </span>
-            ) : (
-              <span className="game-rank-tabs__label">{label}</span>
-            )}
+            <span className="game-rank-tabs__label">
+              <Icon size={14} aria-hidden />
+              {label}
+            </span>
           </button>
         ))}
       </div>
@@ -312,26 +281,34 @@ export function LeaderboardPage() {
       {loading ? (
         <PageLoader />
       ) : (
-        <div ref={listWrapRef} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5">
           <div id="rank-podium">
-            <LeaderboardPodium top3={top3} metric={metric} period={period} onOpen={openProfile} />
+            <LeaderboardPodium top3={top3} metric={metric} onOpen={openProfile} />
           </div>
 
-          {rest.length > 0 && (
+          {(rest.length > 0 || (me && !isMeInTop)) && (
             <ul className="game-rank-list">
               {rest.map((entry) => (
                 <RankRow
                   key={entry.user_id}
                   entry={entry}
                   metric={metric}
-                  period={period}
                   onOpen={() => openProfile(entry)}
                 />
               ))}
+              {me && !isMeInTop && (
+                <RankRow
+                  entry={me}
+                  metric={metric}
+                  label="Você"
+                  rankLabel={formatRankBand(me.rank, me.total)}
+                  onOpen={() => openProfile(me)}
+                />
+              )}
             </ul>
           )}
 
-          {entries.length === 0 && (
+          {entries.length === 0 && !me && (
             <p className="text-center text-sm font-bold text-stone-500">
               <Trophy size={16} className="mr-1 inline" />
               Nenhum guerreiro no ranking ainda.
@@ -353,10 +330,9 @@ export function LeaderboardPage() {
               <RankRow
                 entry={me}
                 metric={metric}
-                period={period}
                 label="Você"
                 rankLabel={isMeInTop ? undefined : formatRankBand(me.rank, me.total)}
-                onOpen={isMeInTop ? scrollToMyRow : undefined}
+                onOpen={scrollToMyRow}
                 pinned
               />
             </ul>

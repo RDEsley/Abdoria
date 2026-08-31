@@ -26,6 +26,7 @@ const MUSCLE_ICONS: Record<MusculoPrincipal, LucideIcon> = {
 };
 
 export function MuscleBarChart({ muscles }: Props) {
+  const total = Object.values(muscles).reduce((sum, count) => sum + count, 0);
   const maxMuscle = Math.max(...Object.values(muscles), 1);
   const entries = MUSCLE_ORDER.map((muscle) => ({ muscle, count: muscles[muscle] }));
   const mostTrained = entries.reduce(
@@ -35,6 +36,20 @@ export function MuscleBarChart({ muscles }: Props) {
   const leastTrained = entries
     .filter((item) => item.count > 0)
     .reduce((best, item) => (item.count < best.count ? item : best), mostTrained);
+
+  if (total === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/70 px-4 py-5 text-center">
+        <PersonStanding className="mx-auto text-emerald-600" size={24} aria-hidden />
+        <p className="mt-2 text-sm font-extrabold text-stone-700">
+          Seu mapa começa no próximo treino
+        </p>
+        <p className="mt-1 text-xs font-semibold text-stone-500">
+          Conclua uma missão para revelar o equilíbrio dos estímulos.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

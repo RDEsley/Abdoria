@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, Info, WifiOff } from 'lucide-react';
@@ -115,13 +115,9 @@ export function GameToastHost() {
       className={`game-toast game-toast--${toast.variant}${pathname === '/player' ? ' game-toast--player' : ''}`}
       role={toast.variant === 'error' ? 'alert' : 'status'}
       aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
-      style={{ '--toast-duration': `${toast.duration}ms` } as CSSProperties}
     >
       <Icon className="game-toast__icon" size={17} strokeWidth={2.4} aria-hidden />
       <p className="game-toast__message">{toast.message}</p>
-      <span className="game-toast__bar" aria-hidden>
-        <span className="game-toast__bar-fill" />
-      </span>
     </div>,
     document.body,
   );

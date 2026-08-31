@@ -55,13 +55,15 @@ substitui nenhum exercício da fila normal.
   exercício anterior.
 - Em exercícios de segurar posição, use **Próximo treino** para avançar manualmente quando quiser.
 - Exercícios de um lado por vez indicam o lado esquerdo/direito na tela e por voz quando o som está ativo.
-- O descanso de cada exercício é ajustado em **Missão → fila → Configurar**; as Opções definem
-  apenas o valor padrão para novos itens.
+- O descanso definido em **Opções** ou no **Plano de core** é aplicado às recomendações. Treinos
+  personalizados ainda podem guardar um ajuste específico por exercício.
+- Se o app for fechado ou o celular interromper a sessão, use **Voltar a treinar** para retornar
+  exatamente ao exercício e à série em que parou. Em dispositivos compatíveis, o Player mantém a tela ativa.
 - Ao terminar, você vê quanto **XP** ganhou e se subiu de nível.
 
 ---
 
-## Pontos (XP)
+## Experiência (XP)
 
 ### XP diário unificado
 
@@ -76,11 +78,11 @@ substitui nenhum exercício da fila normal.
 
 ---
 
-## Folhas e Gotas de Água
+## Folhas e Folhas douradas
 
 - **Folhas** são a moeda normal usada em recursos compatíveis e pacotes de **som** nas Opções.
 - Você ganha Folhas passivamente conforme sobe de XP total (**1 Folha a cada 10 XP**).
-- **Gotas de Água** são a moeda premium ligada ao futuro MyPlant. Elas são diferentes das Folhas.
+- **Folhas douradas** são a moeda premium ligada ao futuro MyPlant. Elas são diferentes das Folhas verdes.
 
 ---
 
@@ -103,13 +105,12 @@ Em **Opções → Código presente**, digite um código promocional (se tiver um
 
 Na **Missão**, toque no botão **Ranking** e alterne entre:
 
-- **Pontos (XP)** — quem treinou mais no total
+- **Experiência** — quem acumulou mais XP
 - **Dias seguidos** — maior streak
 - **Folhas** — quem acumulou mais Folhas
 
-Cada critério também tem **Semanal × Global**: Semanal reseta todo domingo (com recompensa em
-Folhas pro top 10); Global mostra o total vitalício (no caso de Dias seguidos, o seu recorde —
-sem recompensa semanal nessa métrica).
+Cada critério também tem **Semanal × Global**: Semanal considera o ciclo atual; Global mostra o
+total vitalício (no caso de Dias seguidos, o seu recorde). Rankings não concedem recompensas.
 
 Aparecem até **25** posições; se você estiver fora do top, sua linha aparece no final.
 

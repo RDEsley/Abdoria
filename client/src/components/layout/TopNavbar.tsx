@@ -1,10 +1,10 @@
 ﻿import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Droplets, Leaf } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 
-/** Gota MyPlant — apresentação visual da moeda premium `gems` durante a migração. */
+/** Folha dourada — apresentação visual da moeda premium `gems`. */
 export function GemIcon({ size = 18 }: { size?: number }) {
-  return <Droplets size={size} className="top-navbar__gem-icon" aria-hidden />;
+  return <Leaf size={size} className="top-navbar__gem-icon" fill="currentColor" aria-hidden />;
 }
 
 export interface TopNavbarProps {
@@ -13,7 +13,7 @@ export interface TopNavbarProps {
   userXp: number;
   xpMax: number;
   doriasAmount: number;
-  /** Gotas de Água na UI; o contrato interno permanece `gemsAmount` por compatibilidade. */
+  /** Folhas douradas na UI; o contrato interno permanece `gemsAmount` por compatibilidade. */
   gemsAmount?: number;
   avatarUrl?: string | null;
   /** Sobrescreve avatarUrl quando presente (ex.: CosmeticAvatar). */
@@ -126,7 +126,7 @@ export function TopNavbar({
             label="Folhas"
             pulse={coinsEarnedPulse}
           />
-          <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} label="Gotas de Água" />
+          <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} label="Folhas douradas" />
           {actions}
         </div>
       </div>

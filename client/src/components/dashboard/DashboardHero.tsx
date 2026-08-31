@@ -1,16 +1,13 @@
 ﻿import { useEffect, useState, type CSSProperties } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
-import { StreakBadge } from '@/components/gamification/StreakBadge';
-import { StreakCountdown } from '@/components/gamification/StreakCountdown';
 import { useAuth } from '@/context/AuthContext';
 import { useCopy } from '@/hooks/useCopy';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
-import { resolveCosmeticos, type DashboardStats } from '@/types';
+import { resolveCosmeticos } from '@/types';
 
 interface Props {
-  stats: DashboardStats;
   level: number;
   xpInLevel: number;
   xpToNext: number;
@@ -19,10 +16,10 @@ interface Props {
 
 /**
  * Cabeçalho do painel no padrão "atleta primeiro": anel de nível, nome,
- * progresso de XP e streak. Reusa as classes visuais de .game-xp-section
+ * progresso de XP. Reusa as classes visuais de .game-xp-section
  * (incluindo a skin do fundo cosmético equipado).
  */
-export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp }: Props) {
+export function DashboardHero({ level, xpInLevel, xpToNext, xpParaLevelUp }: Props) {
   const { user } = useAuth();
   const copy = useCopy();
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
@@ -112,19 +109,6 @@ export function DashboardHero({ stats, level, xpInLevel, xpToNext, xpParaLevelUp
                 anel) — sem transition CSS aqui, senão o preenchimento fica
                 "chicoteando" atrás dos frames do RAF em vez de acompanhar. */}
             <div className="game-xp-section__hero-bar-fill" style={{ width: `${displayPct}%` }} />
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StreakBadge
-              streak={stats.streak_atual}
-              frozen={!!stats.streak_frozen_notice}
-              securedToday={stats.sequencia_garantida_hoje ?? stats.treino_hoje}
-            />
-            <StreakCountdown
-              sequenciaGarantida={stats.sequencia_garantida_hoje ?? stats.treino_hoje}
-              streak={stats.streak_atual}
-              frozenCount={stats.frozen_streak_count}
-              frozenAutoUse={user?.preferencias?.frozen_streak_auto_usar ?? true}
-            />
           </div>
         </div>
       </header>

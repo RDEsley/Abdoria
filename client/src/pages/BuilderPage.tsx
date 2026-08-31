@@ -13,6 +13,7 @@ import { SimilarExerciseModal } from '@/components/builder/SimilarExerciseModal'
 import { ExercisePicker } from '@/components/builder/ExercisePicker';
 import { BuilderTabs, type BuilderTab } from '@/components/builder/BuilderTabs';
 import { BuilderStickyBar } from '@/components/builder/BuilderStickyBar';
+import { BuilderSkeleton } from '@/components/builder/BuilderSkeleton';
 import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
 import { ExerciseConfigModal } from '@/components/builder/ExerciseConfigModal';
 import { TrainPresetSection } from '@/components/builder/TrainPresetSection';
@@ -83,6 +84,7 @@ export function BuilderPage() {
     setSelectedRepSchemeId,
     flushPendingUserDados,
     exercisesLoading,
+    loading,
     ensureExercises,
     user,
     refresh,
@@ -120,6 +122,7 @@ export function BuilderPage() {
     modeFromUrl === 'personalizar' ? 'customize' : 'train',
   );
   const [allPresets, setAllPresets] = useState<IWorkoutPresetDocument[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(true);
   const [selectedPresetId, setSelectedPresetId] = useState<string | 'custom'>('custom');
   const [draftQueue, setDraftQueue] = useState<WorkoutQueueItem[] | null>(null);
   const [configExerciseIndex, setConfigExerciseIndex] = useState<number | null>(null);
@@ -209,6 +212,7 @@ export function BuilderPage() {
   }, [flushPendingUserDados]);
 
   useEffect(() => {
+    setPresetsLoading(true);
     void getPresets()
       .then((list) => {
         setAllPresets(list);
@@ -217,7 +221,8 @@ export function BuilderPage() {
           setActiveTab('train');
         }
       })
-      .catch(() => setAllPresets([]));
+      .catch(() => setAllPresets([]))
+      .finally(() => setPresetsLoading(false));
   }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo]);
 
   useEffect(() => {
@@ -284,10 +289,14 @@ export function BuilderPage() {
       if (!selectedPreset) return [];
       return presetToQueue(selectedPreset, exerciseMap, nivel);
     })();
-    // O valor global é apenas fallback. Ajustes feitos em cada exercício são preservados.
+    // Em recomendações/presets, a configuração do usuário é a fonte de verdade.
+    // Treinos personalizados/salvos preservam ajustes explícitos por exercício.
+    const preservesPerExerciseRest = selectedPresetId === 'custom' || Boolean(selectedSavedWorkout);
     return raw.map((item) => ({
       ...item,
-      descanso_seg: item.descanso_seg ?? globalDescanso,
+      descanso_seg: preservesPerExerciseRest
+        ? (item.descanso_seg ?? globalDescanso)
+        : globalDescanso,
     }));
   }, [
     selectedPresetId,
@@ -849,6 +858,8 @@ export function BuilderPage() {
     return Math.max(1, Math.round(estimateWorkoutDurationSeconds(payload) / 60));
   }, [activeQueue, globalDescanso]);
 
+  if (loading || (presetsLoading && allPresets.length === 0)) return <BuilderSkeleton />;
+
   return (
     <div className="builder-page flex flex-col gap-5 pb-44 md:pb-8">
       <GamePageHeader eyebrow="Sua sessão recomendada" title="Missão de hoje">
@@ -928,7 +939,7 @@ export function BuilderPage() {
             />
           </section>
 
-          <details className="rounded-2xl border border-stone-200 bg-white/80 p-3">
+          <details className="builder-advanced rounded-2xl border border-stone-200 bg-white/80 p-3">
             <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-extrabold text-stone-700">
               <GraduationCap size={18} aria-hidden />
               Personalização avançada
@@ -936,6 +947,10 @@ export function BuilderPage() {
                 {NIVEL_LABELS[schemeLevel]}
               </span>
             </summary>
+            <p className="builder-advanced__copy">
+              Controle o ritmo de todos os exercícios com um toque. A recomendação acompanha seu
+              nível e seus ajustes manuais continuam preservados.
+            </p>
             <section className="mt-3 border-t border-stone-200 pt-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-extrabold text-stone-800">Esquemas de repetição</p>
