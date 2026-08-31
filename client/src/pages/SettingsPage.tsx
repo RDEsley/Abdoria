@@ -86,6 +86,11 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [hydratedUserId, setHydratedUserId] = useState<string | null>(user?.id ?? null);
 
+  // Prévia instantânea: os mesmos valores globais já usados pelo Player.
+  useEffect(() => {
+    setSoundSettings(som, volume);
+  }, [som, volume]);
+
   // O provider pode terminar de carregar depois do primeiro render. Hidratamos
   // uma vez por conta antes de comparar o formulário, evitando um falso "alterado".
   useEffect(() => {
@@ -255,7 +260,7 @@ export function SettingsPage() {
         </h3>
         <p className="text-xs font-medium text-stone-500">
           {user?.ab_training_profile_v2
-            ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${AB_VOLUME_LABELS[user.ab_training_profile_v2.volume]} · ${user.ab_training_profile_v2.training_days.length} dias/semana`
+            ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${AB_VOLUME_LABELS[user.ab_training_profile_v2.volume]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso`
             : 'Configure intensidade, duração e agenda das suas missões de core com peso corporal.'}
         </p>
         <GameButton

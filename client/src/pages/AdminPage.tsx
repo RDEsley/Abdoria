@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Ban,
-  Droplets,
   Flag,
   Leaf,
   KeyRound,
@@ -273,7 +272,13 @@ export function AdminPage() {
                         <Leaf size={11} className="text-emerald-600" aria-hidden /> {entry.coins}
                       </span>
                       <span className="inline-flex items-center gap-0.5">
-                        <Droplets size={11} className="text-sky-600" aria-hidden /> {entry.gems}
+                        <Leaf
+                          size={11}
+                          className="text-amber-500"
+                          fill="currentColor"
+                          aria-hidden
+                        />{' '}
+                        {entry.gems}
                       </span>
                     </p>
                   </div>
@@ -498,7 +503,7 @@ function AdminEditModal({
             />
           </label>
           <label className="block text-sm font-semibold">
-            Gotas de Água
+            Folhas douradas
             <input
               type="number"
               min={0}

@@ -33,10 +33,10 @@ export function QuitWorkoutModal({ open, onClose, onQuit }: Props) {
           outro treino.
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          <GameButton variant="secondary" size="lg" className="w-full" onClick={onClose}>
+          <GameButton size="lg" className="w-full" onClick={onClose}>
             Continuar treinando
           </GameButton>
-          <GameButton size="lg" className="w-full !bg-red-600 hover:!bg-red-700" onClick={onQuit}>
+          <GameButton variant="ghost" size="lg" className="w-full !text-red-700" onClick={onQuit}>
             Sim, desistir
           </GameButton>
         </div>

@@ -1,10 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { updateMe } from '@/lib/api';
+import { usePreferencesPersist } from '@/hooks/usePreferencesPersist';
 import type { UserPreferencias } from '@/types';
 
 export function useUserPreferences(onUpdated?: () => void) {
-  const { user, refreshUser } = useAuth();
+  const { user, persist } = usePreferencesPersist();
 
   const fixedExerciseSlugs = useMemo(
     () => user?.preferencias?.exercicios_fixos ?? [],
@@ -25,17 +24,9 @@ export function useUserPreferences(onUpdated?: () => void) {
 
   const patchPreferences = useCallback(
     async (patch: Partial<UserPreferencias>) => {
-      if (!user) return;
-      await updateMe({
-        preferencias: {
-          ...user.preferencias,
-          ...patch,
-        },
-      });
-      await refreshUser();
-      onUpdated?.();
+      persist(patch, undefined, onUpdated);
     },
-    [user, refreshUser, onUpdated],
+    [persist, onUpdated],
   );
 
   const toggleExercisePin = useCallback(

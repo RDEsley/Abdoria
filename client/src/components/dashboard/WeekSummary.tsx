@@ -1,4 +1,5 @@
 import { useEffect, useMemo, type CSSProperties } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Check, Flame, Snowflake } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -23,6 +24,7 @@ interface DayCell {
  * treinos, tempo e XP. Base do resumo semanal completo planejado na Fase 7.
  */
 export function WeekSummary() {
+  const reduceMotion = useReducedMotion();
   const { history, ensureHistory, historyLoading, user } = useApp();
   const frozenDays = user?.gamificacao?.streak_congelamentos;
 
@@ -93,7 +95,7 @@ export function WeekSummary() {
                 <Snowflake size={14} className="text-sky-700" aria-hidden />
               </button>
             ) : (
-              <span
+              <motion.span
                 aria-hidden
                 title={
                   day.trained
@@ -104,19 +106,29 @@ export function WeekSummary() {
                         ? 'Dia futuro'
                         : 'Dia sem treino'
                 }
-                className={`flex h-7 w-7 items-center justify-center rounded-lg border-2 ${
+                className={`week-summary-day flex h-7 w-7 items-center justify-center rounded-lg border-2 ${
                   day.trained
-                    ? 'border-emerald-500 bg-emerald-400'
+                    ? 'week-summary-day--complete border-emerald-500 bg-emerald-400'
                     : day.isToday
                       ? 'border-dashed border-emerald-600 bg-emerald-50'
                       : day.isFuture
                         ? 'border-stone-200 bg-transparent'
                         : 'border-stone-200 bg-stone-100'
                 }`}
+                initial={
+                  day.trained && !reduceMotion ? { scale: 0.35, rotate: -24, opacity: 0 } : false
+                }
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 460,
+                  damping: 18,
+                  delay: day.trained ? 0.08 : 0,
+                }}
               >
                 {day.trained && <Check size={14} className="text-white" strokeWidth={3} />}
                 {!day.trained && day.isToday && <Flame size={13} className="text-emerald-600" />}
-              </span>
+              </motion.span>
             )}
           </div>
         ))}

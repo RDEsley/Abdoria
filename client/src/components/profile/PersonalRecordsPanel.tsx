@@ -38,12 +38,10 @@ export function PersonalRecordsPanel() {
   const novoLimite = openedAt - NOVO_RECORDE_DIAS * 24 * 60 * 60 * 1000;
   const quenteLimite = openedAt - RECORDE_QUENTE_HORAS * 60 * 60 * 1000;
 
-  const novosCount = records.filter(
-    (r) => new Date(r.concluido_em).getTime() >= novoLimite,
-  ).length;
+  const novosCount = records.filter((r) => new Date(r.concluido_em).getTime() >= novoLimite).length;
 
   return (
-    <section className="glass-card p-4">
+    <section className="glass-card personal-records-panel p-4">
       <div className="mb-1 flex items-center justify-between gap-2">
         <h3 className="game-section-title">Recordes pessoais</h3>
         {records.length > 0 && (

@@ -175,13 +175,22 @@
   box-shadow: var(--shadow-resting);
 }
 
+.top-navbar__resources .top-navbar__pill:first-child .top-navbar__pill-icon {
+  background: #dcfce7;
+}
+
+.top-navbar__resources .top-navbar__pill:nth-child(2) .top-navbar__pill-icon {
+  background: #fef3c7;
+}
+
 .top-navbar__coin-icon {
-  color: #b45309;
+  color: #059669;
 }
 
 .top-navbar__gem-icon {
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 0 rgba(12, 74, 110, 0.25));
+  color: #d89b13;
+  filter: drop-shadow(0 1px 1px rgba(146, 64, 14, 0.28));
 }
 
 .top-navbar__pill-value {

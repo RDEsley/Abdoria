@@ -89,7 +89,7 @@ export function WeeklyChronicle() {
     if (!hasPrevious || delta === null) return null;
     if (delta === 0) {
       return (
-        <span className="ml-auto shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-[0.6rem] font-extrabold text-stone-500">
+        <span className="mt-1 shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-[0.55rem] font-extrabold text-stone-500">
           = semana passada
         </span>
       );
@@ -97,7 +97,7 @@ export function WeeklyChronicle() {
     const up = delta > 0;
     return (
       <span
-        className={`ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[0.6rem] font-extrabold ${up ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
+        className={`mt-1 inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[0.55rem] font-extrabold ${up ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
       >
         {up ? <TrendingUp size={11} aria-hidden /> : <TrendingDown size={11} aria-hidden />}
         {up ? '+' : ''}
@@ -109,7 +109,7 @@ export function WeeklyChronicle() {
 
   return (
     <section className="glass-card dashboard-surface dashboard-surface--progression p-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="game-section-title !mb-0 flex items-center gap-1.5">
           <ScrollText size={16} aria-hidden /> Crônica da semana
         </h3>
@@ -120,15 +120,19 @@ export function WeeklyChronicle() {
           {headline}
         </span>
       </div>
-      <ul className="mt-3 flex flex-col gap-2">
-        <li className="flex items-center gap-2 rounded-xl border-2 border-stone-100 bg-stone-50 px-3 py-2">
+      <p className="mt-3 max-w-md text-xs font-semibold leading-relaxed text-stone-500">
+        Cada sessão escreve um trecho da sua evolução. Compare o ritmo sem perder de vista a
+        constância.
+      </p>
+      <ul className="mt-3 grid grid-cols-3 gap-2">
+        <li className="flex min-w-0 flex-col items-center gap-1 rounded-xl border border-violet-100 bg-violet-50/70 px-2 py-3 text-center">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
             <Zap size={14} aria-hidden />
           </span>
           <span className="text-xs font-extrabold text-stone-700">+{current.xp} XP</span>
           {deltaChip(xpDeltaPct, '%')}
         </li>
-        <li className="flex items-center gap-2 rounded-xl border-2 border-stone-100 bg-stone-50 px-3 py-2">
+        <li className="flex min-w-0 flex-col items-center gap-1 rounded-xl border border-emerald-100 bg-emerald-50/70 px-2 py-3 text-center">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
             <Dumbbell size={14} aria-hidden />
           </span>
@@ -137,17 +141,15 @@ export function WeeklyChronicle() {
           </span>
           {deltaChip(hasPrevious ? treinosDelta : null, '')}
         </li>
-        {(current.atividades > 0 || previous.atividades > 0) && (
-          <li className="flex items-center gap-2 rounded-xl border-2 border-stone-100 bg-stone-50 px-3 py-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
-              <ListChecks size={14} aria-hidden />
-            </span>
-            <span className="text-xs font-extrabold text-stone-700">
-              {current.atividades} atividade{current.atividades !== 1 ? 's' : ''}
-            </span>
-            {deltaChip(hasPrevious ? atividadesDelta : null, '')}
-          </li>
-        )}
+        <li className="flex min-w-0 flex-col items-center gap-1 rounded-xl border border-sky-100 bg-sky-50/70 px-2 py-3 text-center">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+            <ListChecks size={14} aria-hidden />
+          </span>
+          <span className="text-xs font-extrabold text-stone-700">
+            {current.atividades} atividade{current.atividades !== 1 ? 's' : ''}
+          </span>
+          {deltaChip(hasPrevious ? atividadesDelta : null, '')}
+        </li>
       </ul>
     </section>
   );

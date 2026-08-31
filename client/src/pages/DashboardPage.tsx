@@ -88,7 +88,6 @@ export function DashboardPage() {
 
       <motion.div variants={item}>
         <DashboardHero
-          stats={stats}
           level={level}
           xpInLevel={xpInLevel}
           xpToNext={xpToNext}
@@ -171,9 +170,9 @@ export function DashboardPage() {
       <motion.div variants={item} className="dashboard-quick-stats grid grid-cols-2 gap-3">
         <StatTile
           icon={<Flame className="text-orange-500" size={22} />}
-          title="Recorde"
-          value={`${stats.streak_maior}d`}
-          hint="Dias seguidos treinando"
+          title="Streak atual"
+          value={`${stats.streak_atual}d`}
+          hint={`Seu recorde é ${stats.streak_maior} dias`}
         />
         <StatTile
           icon={<Timer className="text-sky-600" size={22} />}
@@ -210,7 +209,10 @@ export function DashboardPage() {
         variants={item}
         className="glass-card dashboard-surface dashboard-surface--core p-4"
       >
-        <h3 className="game-section-title mb-3">Evolução do core</h3>
+        <h3 className="game-section-title !mb-1">Equilíbrio do core</h3>
+        <p className="mb-3 text-xs font-semibold text-stone-500">
+          Como seus treinos distribuíram os estímulos nesta semana.
+        </p>
         <MuscleBarChart muscles={stats.musculos_semana} />
       </motion.section>
 

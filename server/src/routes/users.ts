@@ -680,6 +680,7 @@ usersRouter.put('/me/ab-training-profile-v2', async (req: AuthRequest, res) => {
     }
     const preferencias = mergePreferencias(current.preferencias, {
       ab_training_profile_v2: profile,
+      descanso_padrao_seg: profile.rest_seconds,
     });
     // Limpa a configuração legada: equipamento não altera mais o Evolyn.
     delete preferencias.equipamentos;

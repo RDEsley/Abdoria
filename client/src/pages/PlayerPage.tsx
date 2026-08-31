@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Check,
@@ -21,6 +21,7 @@ import { QuitWorkoutModal } from '@/components/player/QuitWorkoutModal';
 import { PlayerPauseOverlay } from '@/components/player/PlayerPauseOverlay';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
+import { WorkoutRecoveryModal } from '@/components/player/WorkoutRecoveryModal';
 import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
 import { WorkoutCompanionLayer, WorkoutScene } from '@/components/player/WorkoutScene';
 import { ExerciseDemo } from '@/components/exercises/ExerciseDemo';
@@ -62,7 +63,6 @@ import {
   readWorkoutStartedAt,
 } from '@/lib/workout-duration';
 import {
-  formatExerciseName,
   formatExercisePrescription,
   resolveCosmeticos,
   xpLevelFromTotal,
@@ -70,6 +70,8 @@ import {
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
 import { readWorkoutOrLegacy, webWorkoutSessionStorage } from '@/lib/workout-session-storage';
+import { keepScreenAwake } from '@/lib/platform/screen-awake';
+import { actionHaptic } from '@/lib/platform/native-runtime';
 
 type Phase = 'ready' | 'working' | 'side_transition' | 'resting' | 'done' | 'atividades-prompt';
 
@@ -80,10 +82,15 @@ function sideInstruction(item: WorkoutQueueItem | undefined, sideIndex: 0 | 1): 
 
 export function PlayerPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { saveWorkout, exercises, ensureExercises } = useApp();
   const { user: authUser } = useAuth();
   const atividadesFlow = useAtividadesFlow();
   const [initialSnapshot] = useState(readWorkoutOrLegacy);
+  const resumeRequested = Boolean(
+    (location.state as { resumingWorkout?: boolean } | null)?.resumingWorkout,
+  );
+  const isRecoveryStart = Boolean(initialSnapshot?.startedAt && !resumeRequested);
   const [workout] = useState<ActiveWorkout | null>(initialSnapshot?.workout ?? null);
   const [exerciseIndex, setExerciseIndex] = useState(initialSnapshot?.exerciseIndex ?? 0);
   const [setIndex, setSetIndex] = useState(initialSnapshot?.setIndex ?? 0);
@@ -97,7 +104,8 @@ export function PlayerPage() {
       ? (initialSnapshot.timerTotalSeconds ?? initialSnapshot.secondsLeft)
       : 0,
   );
-  const [paused, setPaused] = useState(initialSnapshot?.paused ?? false);
+  const [paused, setPaused] = useState(isRecoveryStart || (initialSnapshot?.paused ?? false));
+  const [recoveringWorkout, setRecoveringWorkout] = useState(isRecoveryStart);
   const [saving, setSaving] = useState(false);
   const [xpGained, setXpGained] = useState(0);
   const [coinsGained, setCoinsGained] = useState(0);
@@ -131,6 +139,10 @@ export function PlayerPage() {
   const startTimeRef = useRef(initialSnapshot?.startedAt ?? 0);
   const endTimeRef = useRef(0);
   const pausedMsRef = useRef(initialSnapshot?.pausedMs ?? 0);
+  const [recoveredOfflineMs] = useState(() =>
+    isRecoveryStart && initialSnapshot ? Math.max(0, Date.now() - initialSnapshot.updatedAt) : 0,
+  );
+  const recoveredOfflineMsRef = useRef(recoveredOfflineMs);
   const pauseStartedRef = useRef<number | null>(null);
   const sessionStartedRef = useRef(false);
   const tickHandledRef = useRef(false);
@@ -146,6 +158,8 @@ export function PlayerPage() {
   useEffect(() => {
     countdownEnabledRef.current = countdownEnabled;
   }, [countdownEnabled]);
+
+  useEffect(() => keepScreenAwake(), []);
 
   useEffect(() => {
     return () => {
@@ -439,6 +453,16 @@ export function PlayerPage() {
     setPaused(false);
   };
 
+  const adjustRestSeconds = (delta: number) => {
+    setSecondsLeft((currentLeft) => {
+      const elapsed = Math.max(0, restTotalSec - currentLeft);
+      const nextLeft = Math.max(0, currentLeft + delta);
+      setRestTotalSec(Math.max(1, elapsed + nextLeft));
+      return nextLeft;
+    });
+    void actionHaptic();
+  };
+
   /** Reinicia o cronômetro da fase atual (exercício de tempo ou descanso) do zero. */
   const resetTimer = () => {
     if (phase === 'resting') {
@@ -485,6 +509,17 @@ export function PlayerPage() {
     webWorkoutSessionStorage.clear();
     clearWorkoutDurationSession();
     navigate('/construtor', { replace: true });
+  };
+
+  const resumeRecoveredWorkout = () => {
+    if (recoveredOfflineMsRef.current > 0) {
+      pausedMsRef.current += recoveredOfflineMsRef.current;
+      persistWorkoutPausedMs(pausedMsRef.current);
+      recoveredOfflineMsRef.current = 0;
+    }
+    setRecoveringWorkout(false);
+    setPaused(false);
+    void actionHaptic();
   };
 
   /** Só admins (testes): pula direto pra tela de missão completa. */
@@ -755,7 +790,7 @@ export function PlayerPage() {
   const targetReps = getTargetReps();
   const targetSeconds = getTargetSeconds();
   const prescription = formatExercisePrescription(current);
-  const currentName = formatExerciseName(current);
+  const currentName = current.nome;
   // During rest the indices already point to the next step, whether that is
   // another set of this exercise or the first set of the next exercise.
   const nextSeriesLabel = `${currentName} · série ${seriesIndex + 1}`;
@@ -766,7 +801,7 @@ export function PlayerPage() {
       : phase === 'working' && current.modo === 'reps'
         ? ((seriesIndex + 1) / totalSeries) * 100
         : phase === 'resting' && restTotalSec > 0
-          ? ((restTotalSec - secondsLeft) / restTotalSec) * 100
+          ? Math.min(100, Math.max(0, ((restTotalSec - secondsLeft) / restTotalSec) * 100))
           : 0;
 
   const canTogglePause = phase === 'resting' || (phase === 'working' && current.modo === 'tempo');
@@ -805,32 +840,31 @@ export function PlayerPage() {
         className={`game-player game-player--${phase} game-app fixed inset-0 z-50 flex flex-col overflow-hidden`}
       >
         <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
-          <button
+          <motion.button
             type="button"
             onClick={() => setShowQuitModal(true)}
             className="game-player-close"
             aria-label="Desistir do treino"
+            whileTap={{ scale: 0.88, rotate: -8 }}
           >
             <X size={24} />
-          </button>
+          </motion.button>
           <div className="game-player-hud__title text-center">
-            <p>{workout.treino_nome}</p>
-            <strong>
-              Exercício {exerciseIndex + 1}/{workout.queue.length}
-            </strong>
+            <strong>Treinando</strong>
           </div>
           <div className="flex items-center gap-3">
             {authUser?.role === 'admin' && (
-              <button
+              <motion.button
                 type="button"
                 onClick={skipAllForTests}
-                className="cursor-pointer rounded-full border-2 border-purple-300 bg-purple-50 px-2 py-0.5 text-[0.6rem] font-black uppercase text-purple-700"
+                className="game-player-toggle game-player-admin-skip"
                 title="Pular direto pro fim do treino (só admins, para testes)"
+                whileTap={{ scale: 0.88, rotate: -4 }}
               >
-                Skip ADM
-              </button>
+                SKIP
+              </motion.button>
             )}
-            <button
+            <motion.button
               type="button"
               onClick={() => setCountdownEnabled((v) => !v)}
               className={`game-player-toggle${countdownEnabled ? ' game-player-toggle--on' : ''}`}
@@ -843,10 +877,12 @@ export function PlayerPage() {
               title={
                 countdownEnabled ? 'Contagem regressiva ativada' : 'Contagem regressiva desativada'
               }
+              whileTap={{ scale: 0.84, rotate: 12 }}
+              onTap={() => void actionHaptic()}
             >
               <Hourglass size={18} />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={() => {
                 const next = !muted;
@@ -857,9 +893,11 @@ export function PlayerPage() {
               aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
               aria-pressed={!muted}
               title={muted ? 'Som desativado' : 'Som ativado'}
+              whileTap={{ scale: 0.84, rotate: muted ? -12 : 12 }}
+              onTap={() => void actionHaptic()}
             >
               {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
-            </button>
+            </motion.button>
           </div>
         </header>
 
@@ -975,6 +1013,16 @@ export function PlayerPage() {
                   targetReps={targetReps}
                   progressPct={progressPct}
                   paused={paused}
+                  onCenterClick={
+                    phase === 'ready' ? startSeries : canTogglePause ? togglePause : undefined
+                  }
+                  clickLabel={
+                    phase === 'ready'
+                      ? `Iniciar série ${seriesIndex + 1}`
+                      : paused
+                        ? 'Continuar cronômetro'
+                        : 'Pausar cronômetro'
+                  }
                 />
 
                 {countdownValue !== null && countdownValue > 0 && (
@@ -1086,11 +1134,11 @@ export function PlayerPage() {
             {phase === 'resting' && (
               <>
                 <div className="game-player-rest-adjust" role="group" aria-label="Ajustar descanso">
-                  <button type="button" onClick={() => setSecondsLeft((s) => Math.max(0, s - 10))}>
+                  <button type="button" onClick={() => adjustRestSeconds(-10)}>
                     −10s
                   </button>
                   <span>Próximo: {nextSeriesLabel}</span>
-                  <button type="button" onClick={() => setSecondsLeft((s) => s + 10)}>
+                  <button type="button" onClick={() => adjustRestSeconds(10)}>
                     +10s
                   </button>
                 </div>
@@ -1141,9 +1189,19 @@ export function PlayerPage() {
           onQuit={quitWorkout}
         />
 
+        {recoveringWorkout && (
+          <WorkoutRecoveryModal
+            exerciseName={currentName}
+            progress={`Exercício ${exerciseIndex + 1} de ${workout.queue.length} · série ${seriesIndex + 1}`}
+            onResume={resumeRecoveredWorkout}
+            onQuit={quitWorkout}
+          />
+        )}
+
         {paused &&
           canTogglePause &&
           !showExerciseGuide &&
+          !recoveringWorkout &&
           !showQuitModal &&
           currentExerciseDefinition && (
             <PlayerPauseOverlay

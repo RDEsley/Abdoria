@@ -369,6 +369,8 @@ export interface AbTrainingProfileV2 {
   intensity: AbTrainingIntensity;
   training_days: number[];
   volume: AbTrainingVolume;
+  /** Descanso desejado entre séries, em segundos. */
+  rest_seconds: number;
   created_at: string;
   updated_at: string;
 }
@@ -732,7 +734,7 @@ export const MOEDA_XP_STEP = 10;
 /** Nome de apresentação da moeda comum; o campo persistido continua `moedas`. */
 export const CURRENCY_NAME = 'Folhas';
 /** Nome de apresentação da moeda premium; o campo persistido continua `gems`. */
-export const PREMIUM_CURRENCY_NAME = 'Gotas de Água';
+export const PREMIUM_CURRENCY_NAME = 'Folhas douradas';
 
 /** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
 export const NAME_CHANGE_COST = 10_000;

@@ -23,9 +23,11 @@ describe('perfil abdominal V2', () => {
       intensity: 'leve',
       volume: 'curto',
       training_days: [5, 1, 1],
+      rest_seconds: 44,
       equipment: { ab_wheel: true, unknown: true },
     });
     expect(profile?.training_days).toEqual([1, 5]);
+    expect(profile?.rest_seconds).toBe(45);
     expect(profile).not.toHaveProperty('equipment');
     expect(sanitizeAbTrainingProfileV2({ version: 1 })).toBeNull();
   });

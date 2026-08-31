@@ -48,12 +48,14 @@ export function doseForAbProfile(
 
 export function createDefaultAbTrainingProfile(
   now = new Date().toISOString(),
+  restSeconds = 30,
 ): AbTrainingProfileV2 {
   return {
     version: 2,
     intensity: 'moderado',
     training_days: [1, 3, 5],
     volume: 'equilibrado',
+    rest_seconds: restSeconds,
     created_at: now,
     updated_at: now,
   };

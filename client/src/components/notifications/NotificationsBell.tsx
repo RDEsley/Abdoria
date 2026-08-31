@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Bell,
+  Inbox,
   Dumbbell,
   Flame,
   Leaf,
@@ -76,11 +76,16 @@ export function NotificationsBell() {
       setLocalDismissTick((tick) => tick + 1);
       return;
     }
+    const previous = items;
+    setItems((current) => current.filter((item) => item.id !== id));
+    setUnread((current) =>
+      Math.max(0, current - (items.find((item) => item.id === id)?.lida_em ? 0 : 1)),
+    );
     setBusyId(id);
     try {
       await dismissNotification(id);
-      setItems((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
+      setItems(previous);
       showGameToast(getErrorMessage(err, 'Não foi possível remover.'), { variant: 'error' });
     } finally {
       setBusyId(null);
@@ -88,14 +93,18 @@ export function NotificationsBell() {
   };
 
   const handleClearAll = async () => {
+    const previousItems = items;
+    const previousUnread = unread;
     setBusyId('all');
+    setItems([]);
+    setUnread(0);
     try {
       for (const notice of localNotices) dismissLocalNotice(notice.id);
       setLocalDismissTick((tick) => tick + 1);
       await clearAllNotifications();
-      setItems([]);
-      setUnread(0);
     } catch (err) {
+      setItems(previousItems);
+      setUnread(previousUnread);
       showGameToast(getErrorMessage(err, 'Não foi possível limpar.'), { variant: 'error' });
     } finally {
       setBusyId(null);
@@ -152,7 +161,7 @@ export function NotificationsBell() {
             : 'Notificações'
         }
       >
-        <Bell size={20} strokeWidth={2.2} aria-hidden />
+        <Inbox size={20} strokeWidth={2.2} aria-hidden />
         {unread + urgentLocalCount > 0 && (
           <span className="notifications-bell__badge tabular-nums" aria-hidden>
             {unread + urgentLocalCount > 99 ? '99+' : unread + urgentLocalCount}
@@ -198,7 +207,7 @@ export function NotificationsBell() {
             <p className="mt-3 text-sm font-bold text-stone-500">Carregando...</p>
           ) : allItems.length === 0 ? (
             <div className="notifications-empty">
-              <Bell size={24} aria-hidden />
+              <Inbox size={24} aria-hidden />
               <p>Tudo em dia.</p>
               <small>Os avisos do Evolyn aparecem aqui.</small>
             </div>

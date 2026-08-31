@@ -13,6 +13,7 @@ import {
   PersonStanding,
   Sparkles,
   Timer,
+  TimerReset,
   X,
   Zap,
 } from 'lucide-react';
@@ -21,13 +22,20 @@ import {
   AB_VOLUME_LABELS,
   createDefaultAbTrainingProfile,
 } from '@shared/ab-training-profile';
-import type { AbTrainingIntensity, AbTrainingProfileV2, AbTrainingVolume } from '@/types';
+import type {
+  AbTrainingIntensity,
+  AbTrainingProfileV2,
+  AbTrainingVolume,
+  IUserDocument,
+} from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { updateAbTrainingProfileV2 } from '@/lib/api';
 import { selectionHaptic, successHaptic } from '@/lib/platform/native-runtime';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
+import { LottieView } from '@/components/ui/LottieView';
+import { useLottieAsset } from '@/hooks/useLottieAsset';
 
 interface Props {
   open: boolean;
@@ -43,23 +51,36 @@ const TITLES = [
   'Escolha sua intensidade',
   'Monte sua semana',
   'Defina o ritmo da missão',
+  'Escolha seu descanso',
   'Seu plano está pronto',
 ];
+const TOTAL_STEPS = TITLES.length;
+const REST_OPTIONS = [20, 30, 45, 60] as const;
+
+function resolveProfile(user: IUserDocument | null): AbTrainingProfileV2 {
+  const restSeconds = user?.preferencias?.descanso_padrao_seg ?? 30;
+  if (!user?.ab_training_profile_v2) {
+    return createDefaultAbTrainingProfile(undefined, restSeconds);
+  }
+  return {
+    ...user.ab_training_profile_v2,
+    rest_seconds: user.ab_training_profile_v2.rest_seconds ?? restSeconds,
+  };
+}
 
 export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: Props) {
   const { user, applyUser, refreshUser } = useAuth();
   const reduceMotion = useReducedMotion();
+  const confetti = useLottieAsset('/assets/Confetti.json');
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<AbTrainingProfileV2>(
-    () => user?.ab_training_profile_v2 ?? createDefaultAbTrainingProfile(),
-  );
+  const [profile, setProfile] = useState<AbTrainingProfileV2>(() => resolveProfile(user));
 
   useEffect(() => {
     if (!open) return;
-    setProfile(user?.ab_training_profile_v2 ?? createDefaultAbTrainingProfile());
+    setProfile(resolveProfile(user));
     setStep(0);
-  }, [open, user?.ab_training_profile_v2]);
+  }, [open, user]);
 
   const canContinue = step !== 1 || profile.training_days.length >= 2;
   const choose = (update: (current: AbTrainingProfileV2) => Partial<AbTrainingProfileV2>) => {
@@ -93,7 +114,9 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
     >
       <header className="ab-plan-wizard__header">
         <div>
-          <small>Plano de core · {step + 1} de 4</small>
+          <small>
+            Plano de core · {step + 1} de {TOTAL_STEPS}
+          </small>
           <h2 id="ab-plan-title">{TITLES[step]}</h2>
         </div>
         {!firstVisit && (
@@ -107,13 +130,20 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         role="progressbar"
         aria-label="Progresso da configuração"
         aria-valuemin={1}
-        aria-valuemax={4}
+        aria-valuemax={TOTAL_STEPS}
         aria-valuenow={step + 1}
       >
-        <span style={{ width: `${((step + 1) / 4) * 100}%` }} />
+        <span style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }} />
       </div>
 
       <div className="ab-plan-wizard__content">
+        {!reduceMotion && step > 0 && (
+          <span className="ab-plan-step-leaves" key={`leaves-${step}`} aria-hidden>
+            {Array.from({ length: 12 }, (_, index) => (
+              <i key={index} />
+            ))}
+          </span>
+        )}
         {step === 0 && (
           <div className="ab-plan-options" role="radiogroup" aria-label="Intensidade">
             {(['leve', 'moderado', 'evolyn'] as AbTrainingIntensity[]).map((intensity) => {
@@ -212,12 +242,54 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         )}
 
         {step === 3 && (
+          <div className="ab-plan-rest-step" role="radiogroup" aria-label="Descanso entre séries">
+            <p className="ab-plan-helper">
+              Esse tempo será respeitado pelo Player e poderá ser ajustado durante o treino.
+            </p>
+            <div className="ab-plan-rest-options">
+              {REST_OPTIONS.map((seconds) => {
+                const selected = profile.rest_seconds === seconds;
+                return (
+                  <motion.button
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    key={seconds}
+                    className={selected ? 'is-selected' : ''}
+                    whileTap={reduceMotion ? undefined : { scale: 0.94, rotate: -1 }}
+                    onClick={() => choose(() => ({ rest_seconds: seconds }))}
+                  >
+                    <TimerReset size={20} aria-hidden />
+                    <strong>{seconds}s</strong>
+                    <small>
+                      {seconds <= 20
+                        ? 'Ritmo rápido'
+                        : seconds <= 30
+                          ? 'Equilibrado'
+                          : seconds <= 45
+                            ? 'Recuperação maior'
+                            : 'Pausa completa'}
+                    </small>
+                    {selected && <Check size={16} aria-hidden />}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
           <motion.div
             className="ab-plan-summary"
             initial={reduceMotion ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.24 }}
           >
+            {!reduceMotion && confetti != null && (
+              <span className="ab-plan-summary__confetti" aria-hidden>
+                <LottieView data={confetti} loop={false} />
+              </span>
+            )}
             {!reduceMotion && (
               <span className="ab-plan-summary__particles" aria-hidden>
                 {Array.from({ length: 7 }, (_, index) => (
@@ -253,6 +325,11 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                 <small>Modalidade</small>
                 <strong>Peso corporal</strong>
               </span>
+              <span>
+                <TimerReset size={16} />
+                <small>Descanso</small>
+                <strong>{profile.rest_seconds}s entre séries</strong>
+              </span>
             </div>
           </motion.div>
         )}
@@ -272,13 +349,15 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         <GameButton
           className="ab-plan-wizard__next"
           disabled={!canContinue || saving}
-          onClick={() => (step === 3 ? void save() : setStep((current) => current + 1))}
+          onClick={() =>
+            step === TOTAL_STEPS - 1 ? void save() : setStep((current) => current + 1)
+          }
         >
           {saving ? (
             <>
               <LoaderCircle className="animate-spin" size={18} aria-hidden /> Preparando…
             </>
-          ) : step === 3 ? (
+          ) : step === TOTAL_STEPS - 1 ? (
             <>
               {firstVisit ? 'Começar primeira missão' : 'Salvar plano'}{' '}
               <ChevronRight size={18} aria-hidden />

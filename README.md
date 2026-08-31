@@ -49,6 +49,9 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 * Configuração individual de séries, repetições, duração e descanso direto na fila
 * Exercícios realizados por tempo ou repetições
 * Timer de descanso e execução guiada
+* Recuperação automática da sessão exatamente no exercício, série, lado e cronômetro em que parou
+* Tela mantida ativa durante o Player em dispositivos compatíveis
+* Plano de core com intensidade, agenda, duração e descanso entre séries sincronizado às Opções
 * Catálogo inteiramente baseado em movimentos de peso corporal, sem acessórios
 * Sistema de favoritos, preferências e bloqueios de recomendação
 * Exercícios fixados somados a todas as recomendações, sem substituir a fila-base
@@ -58,7 +61,7 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 * Experiência e evolução de nível
 * Sequência de dias treinados
 * Conquistas e recompensas
-* Folhas como moeda de progressão e Gotas de Água como recurso premium do futuro MyPlant
+* Folhas verdes como moeda de progressão e Folhas douradas como recurso premium do futuro MyPlant
 * Ranking global, semanal e entre amigos
 * Perfil público com estatísticas e personalizações
 * Calendário com histórico de atividades
@@ -81,7 +84,7 @@ O sistema competitivo permite comparar o progresso dos jogadores por:
 * **Dias seguidos (global)** — maior sequência já alcançada pelo jogador
 * Ranking entre amigos
 
-Os rankings semanais de XP e Folhas são fechados aos domingos e concedem recompensas por posição. Dias seguidos não possuem premiação semanal. Os personagens fictícios usados para compor a comunidade permanecem visíveis como jogadores inativos, com streak atual e recorde zerados, sem conquistas de streak.
+Os rankings são competitivos e não concedem recompensas por posição. Os personagens fictícios usados para compor a comunidade permanecem visíveis como jogadores inativos, com streak atual e recorde zerados, sem conquistas de streak.
 
 Os jogadores também podem acessar perfis públicos, acompanhar conquistas e interagir com a comunidade.
 
@@ -98,7 +101,7 @@ Além dos treinos, o Evolyn oferece ferramentas para ajudar na rotina:
 * Notificações pessoais com data única ou recorrência, múltiplos horários, ícone, cor e som
 
 Atividades, Bloco de Notas, notificações pessoais e histórico visual ficam reunidos na página
-**Atividades**. O sino exibe apenas avisos internos do sistema. O mapa de campanha e as conquistas
+**Atividades**. A caixa de entrada exibe apenas avisos internos do sistema. O mapa de campanha e as conquistas
 recentes ficam no **Início**. A navegação principal
 (**Início, Atividades, Missão, MyPlant e Perfil**) permanece fixa em todo o aplicativo, exceto
 durante o player de treino. Biblioteca e Ranking são atalhos da página **Missão**.

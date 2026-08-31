@@ -41,7 +41,11 @@ export function usePreferencesPersist() {
     applyAppUser(merged);
   };
 
-  const persist = (patch: Record<string, unknown>, mensagem?: string): void => {
+  const persist = (
+    patch: Record<string, unknown>,
+    mensagem?: string,
+    onPersisted?: () => void,
+  ): void => {
     const base = userRef.current;
     if (!base) return;
 
@@ -60,6 +64,7 @@ export function usePreferencesPersist() {
         userRef.current = atualizado;
         applyUser(atualizado);
         applyAppUser(atualizado);
+        onPersisted?.();
       })
       .catch((err) => {
         if (seq !== seqRef.current) return;

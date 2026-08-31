@@ -3,7 +3,6 @@ import { ExerciseDemo } from '@/components/exercises/ExerciseDemo';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import type { IExerciseDocument } from '@/types';
-import { formatExerciseName } from '@/types';
 
 interface Props {
   exercise: IExerciseDocument;
@@ -30,7 +29,7 @@ export function PlayerPauseOverlay({
   onRestart,
   onExit,
 }: Props) {
-  const name = formatExerciseName(exercise);
+  const name = exercise.nome;
   return (
     <Modal
       open
@@ -44,6 +43,14 @@ export function PlayerPauseOverlay({
       <p className="game-player-pause-panel__progress">
         Exercício {exerciseIndex + 1} de {exerciseCount} · série {setIndex + 1} de {setCount}
       </p>
+      <span
+        className="game-player-pause-panel__orb game-player-pause-panel__orb--one"
+        aria-hidden
+      />
+      <span
+        className="game-player-pause-panel__orb game-player-pause-panel__orb--two"
+        aria-hidden
+      />
       <ExerciseDemo
         name={name}
         mediaFile={exercise.media?.gif}
