@@ -89,6 +89,7 @@ export function GameAuthPanel({
         <BrandMark
           size={logoSize === 'lg' ? 176 : 112}
           alt="Evolyn"
+          variant="full"
           className={`game-login__logo${logoSize === 'lg' ? ' game-login__logo--lg' : ''}`}
         />
       )}

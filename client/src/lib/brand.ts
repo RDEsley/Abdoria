@@ -9,6 +9,9 @@ export const BRAND_FAVICON = {
   512: '/brand/favicon-512.png',
 } as const;
 
+/** Assinatura completa para superfícies amplas de apresentação da marca. */
+export const BRAND_LOGO_SRC = '/brand/logo.png';
+
 /** Ícone principal (telas de auth, prévias grandes). */
 export const BRAND_MARK_SRC = BRAND_FAVICON[256];
 
