@@ -236,12 +236,14 @@ export function LeaderboardPage() {
   const showPinnedMe = me != null && !loading && hasScrolledDown && (!isMeInTop || !myRowVisible);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-start justify-between gap-3">
-        <GamePageHeader
-          eyebrow="Comunidade Evolyn"
-          title={period === 'global' ? 'Classificação Global' : 'Classificação Semanal'}
-        />
+    <div className="leaderboard-page flex flex-col gap-5">
+      <GamePageHeader
+        eyebrow="Comunidade Evolyn"
+        title={period === 'global' ? 'Classificação Global' : 'Classificação Semanal'}
+        onBack={() => navigate('/construtor')}
+        backIcon="x"
+        backAlign="right"
+      >
         {isAdmin && (
           <button
             type="button"
@@ -261,7 +263,7 @@ export function LeaderboardPage() {
             {adminVisivel ? <Eye size={18} aria-hidden /> : <EyeOff size={18} aria-hidden />}
           </button>
         )}
-      </div>
+      </GamePageHeader>
 
       <div
         className="game-rank-period game-rank-period--split"

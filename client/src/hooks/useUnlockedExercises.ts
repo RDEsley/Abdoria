@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useApp } from '@/hooks/useApp';
-import { ALWAYS_AVAILABLE_PUSH_UP_SLUGS } from '@/types';
+import { ALWAYS_AVAILABLE_PUSH_UP_SLUGS } from '@shared/exercises';
 
 export function useUnlockedExercises() {
   const { unlockedExercises, unlockExercise, unlockExercises: unlockManySlugs } = useApp();

@@ -116,8 +116,12 @@ export function LoginPage() {
   const showSystemAlert = apiOnline === false || (apiOnline === true && dbOnline === false);
 
   return (
-    <GameAuthScene variant="day">
-      <GameAuthPanel logoSize="lg" className="game-login__panel--login">
+    <GameAuthScene>
+      <GameAuthPanel
+        title="Boas-vindas de volta"
+        subtitle="Entre para continuar sua evolução."
+        className="game-login__panel--login"
+      >
         {registerState?.accountCreated && (
           <GameAlertBanner
             variant="success"
@@ -207,7 +211,7 @@ export function LoginPage() {
             disabled={loading || guestLoading}
             className="game-btn game-btn--primary"
           >
-            {loading ? 'Entrando…' : 'Jogar'}
+            {loading ? 'Entrando…' : 'Entrar'}
           </button>
 
           {submitError && (
@@ -226,7 +230,7 @@ export function LoginPage() {
         </div>
 
         <Link to="/register" className="game-btn game-btn--outline">
-          Criar conta
+          Criar minha conta
         </Link>
 
         <button

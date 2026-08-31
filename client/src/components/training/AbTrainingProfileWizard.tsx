@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Activity,
@@ -6,15 +6,13 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  CircleDot,
   Flame,
   Gauge,
   Goal,
   LoaderCircle,
-  MoveHorizontal,
+  PersonStanding,
   Sparkles,
   Timer,
-  Trophy,
   X,
   Zap,
 } from 'lucide-react';
@@ -23,7 +21,6 @@ import {
   AB_VOLUME_LABELS,
   createDefaultAbTrainingProfile,
 } from '@shared/ab-training-profile';
-import { EQUIPMENT_CATALOG, type EquipmentId } from '@shared/equipment';
 import type { AbTrainingIntensity, AbTrainingProfileV2, AbTrainingVolume } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { updateAbTrainingProfileV2 } from '@/lib/api';
@@ -42,17 +39,10 @@ interface Props {
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const INTENSITY_ICONS = { leve: Activity, moderado: Gauge, evolyn: Flame } as const;
 const VOLUME_ICONS = { curto: Zap, equilibrado: Timer, completo: Goal } as const;
-const EQUIPMENT_ICONS: Record<Exclude<EquipmentId, 'push_up_board'>, typeof CircleDot> = {
-  pull_up_bar: MoveHorizontal,
-  ab_wheel: CircleDot,
-  stability_ball: CircleDot,
-};
-
 const TITLES = [
   'Escolha sua intensidade',
   'Monte sua semana',
   'Defina o ritmo da missão',
-  'Selecione seus equipamentos',
   'Seu plano está pronto',
 ];
 
@@ -72,14 +62,6 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
   }, [open, user?.ab_training_profile_v2]);
 
   const canContinue = step !== 1 || profile.training_days.length >= 2;
-  const equipmentNames = useMemo(
-    () =>
-      EQUIPMENT_CATALOG.filter(
-        (item) => item.id !== 'push_up_board' && profile.equipment[item.id],
-      ).map((item) => item.nome),
-    [profile.equipment],
-  );
-
   const choose = (update: (current: AbTrainingProfileV2) => Partial<AbTrainingProfileV2>) => {
     void selectionHaptic();
     setProfile((current) => ({ ...current, ...update(current) }));
@@ -111,7 +93,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
     >
       <header className="ab-plan-wizard__header">
         <div>
-          <small>Plano de core · {step + 1} de 5</small>
+          <small>Plano de core · {step + 1} de 4</small>
           <h2 id="ab-plan-title">{TITLES[step]}</h2>
         </div>
         {!firstVisit && (
@@ -125,10 +107,10 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         role="progressbar"
         aria-label="Progresso da configuração"
         aria-valuemin={1}
-        aria-valuemax={5}
+        aria-valuemax={4}
         aria-valuenow={step + 1}
       >
-        <span style={{ width: `${((step + 1) / 5) * 100}%` }} />
+        <span style={{ width: `${((step + 1) / 4) * 100}%` }} />
       </div>
 
       <div className="ab-plan-wizard__content">
@@ -230,41 +212,6 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         )}
 
         {step === 3 && (
-          <div className="ab-plan-equipment">
-            <p className="ab-plan-helper">Selecione apenas o que você já pode usar.</p>
-            {EQUIPMENT_CATALOG.filter((item) => item.id !== 'push_up_board').map((item) => {
-              const Icon = EQUIPMENT_ICONS[item.id as Exclude<EquipmentId, 'push_up_board'>];
-              const selected = profile.equipment[item.id] === true;
-              return (
-                <motion.button
-                  type="button"
-                  key={item.id}
-                  aria-pressed={selected}
-                  className={selected ? 'is-selected' : ''}
-                  whileTap={reduceMotion ? undefined : { scale: 0.985 }}
-                  onClick={() =>
-                    choose((current) => ({
-                      equipment: { ...current.equipment, [item.id]: !selected },
-                    }))
-                  }
-                >
-                  <span className="ab-plan-equipment__icon">
-                    <Icon size={21} aria-hidden />
-                  </span>
-                  <span className="ab-plan-equipment__copy">
-                    <strong>{item.nome}</strong>
-                    <small>{item.descricao}</small>
-                  </span>
-                  <span className="ab-plan-equipment__check" aria-hidden>
-                    {selected && <Check size={15} />}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-        )}
-
-        {step === 4 && (
           <motion.div
             className="ab-plan-summary"
             initial={reduceMotion ? false : { opacity: 0, y: 10 }}
@@ -302,11 +249,9 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                 <strong>{profile.training_days.length} dias/semana</strong>
               </span>
               <span>
-                <Trophy size={16} />
-                <small>Equipamentos</small>
-                <strong>
-                  {equipmentNames.length ? equipmentNames.join(', ') : 'Peso corporal'}
-                </strong>
+                <PersonStanding size={16} />
+                <small>Modalidade</small>
+                <strong>Peso corporal</strong>
               </span>
             </div>
           </motion.div>
@@ -327,13 +272,13 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         <GameButton
           className="ab-plan-wizard__next"
           disabled={!canContinue || saving}
-          onClick={() => (step === 4 ? void save() : setStep((current) => current + 1))}
+          onClick={() => (step === 3 ? void save() : setStep((current) => current + 1))}
         >
           {saving ? (
             <>
               <LoaderCircle className="animate-spin" size={18} aria-hidden /> Preparando…
             </>
-          ) : step === 4 ? (
+          ) : step === 3 ? (
             <>
               {firstVisit ? 'Começar primeira missão' : 'Salvar plano'}{' '}
               <ChevronRight size={18} aria-hidden />

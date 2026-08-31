@@ -57,13 +57,14 @@ export function RegisterPage() {
   };
 
   return (
-    <GameAuthScene variant="night">
+    <GameAuthScene>
       <GameAuthPanel
-        showLogo={false}
+        title="Comece no seu ritmo"
+        subtitle="Crie sua conta e prepare sua primeira missão de core."
         className="game-login__panel--register"
         footer={
           <Link to="/login" className="game-login__link">
-            Já tem conta?
+            Já tem conta? Entrar
           </Link>
         }
       >

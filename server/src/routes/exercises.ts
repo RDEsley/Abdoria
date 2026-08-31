@@ -2,10 +2,7 @@ import { Router } from 'express';
 import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
-import {
-  findEquipmentLockedExercises,
-  findExercisesForUser,
-} from '../services/exercise-catalog.js';
+import { findExercisesForUser } from '../services/exercise-catalog.js';
 import { findSimilarExercisesForUser } from '../services/similar-exercises.js';
 import type { MusculoPrincipal, Prioridade } from '../types/index.js';
 
@@ -49,18 +46,6 @@ exercisesRouter.get('/', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('GET /api/exercises error:', error);
     res.status(500).json({ error: 'Erro ao listar exercícios.' });
-  }
-});
-
-/** Exercícios bloqueados por equipamento não possuído — exibidos com cadeado na Biblioteca. */
-exercisesRouter.get('/locked', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    const user = await User.findById(req.userId!);
-    const locked = await findEquipmentLockedExercises(user?.preferencias ?? null);
-    res.json(locked);
-  } catch (error) {
-    console.error('GET /api/exercises/locked error:', error);
-    res.status(500).json({ error: 'Erro ao listar exercícios bloqueados.' });
   }
 });
 

@@ -1,34 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  BarChart3,
-  CheckCircle2,
-  Flame,
-  Lock,
-  Search,
-  SlidersHorizontal,
-  Sparkles,
-  X,
-} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BarChart3, Flame, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { ExerciseCard } from '@/components/library/ExerciseCard';
-import { EquipmentPanel } from '@/components/library/EquipmentPanel';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { showGameToast } from '@/components/ui/GameToast';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { getLockedExercises } from '@/lib/api/exercises';
 import { playUnlock } from '@/lib/sounds';
 import type { IExerciseDocument, MusculoPrincipal, Prioridade } from '@/types';
-import {
-  EQUIPMENT_CATALOG,
-  MUSCULO_LABELS,
-  MUSCULO_HINTS,
-  PRIORIDADE_LABELS,
-  formatExerciseName,
-} from '@/types';
+import { MUSCULO_HINTS, MUSCULO_LABELS, PRIORIDADE_LABELS, formatExerciseName } from '@/types';
 
 export function LibraryPage() {
+  const navigate = useNavigate();
   const {
     exercises,
     muscleFilter,
@@ -41,7 +26,6 @@ export function LibraryPage() {
   const [nivelFilter, setNivelFilter] = useState<number | ''>('');
   const [prioridadeFilter, setPrioridadeFilter] = useState<Prioridade | ''>('');
   const [search, setSearch] = useState('');
-  const [lockedExercises, setLockedExercises] = useState<IExerciseDocument[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const refreshRecommendations = useCallback(() => {
@@ -55,52 +39,28 @@ export function LibraryPage() {
     void ensureExercises();
   }, [ensureExercises]);
 
-  // Bloqueados por equipamento aparecem com cadeado (recarrega quando o catálogo muda).
-  useEffect(() => {
-    let cancelled = false;
-    getLockedExercises()
-      .then((items) => {
-        if (!cancelled) setLockedExercises(items);
-      })
-      .catch(() => {
-        if (!cancelled) setLockedExercises([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [exercises]);
-
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return exercises.filter((ex) => {
+    const query = search.trim().toLowerCase();
+    return exercises.filter((exercise) => {
       if (
         muscleFilter &&
-        ex.musculo_principal !== muscleFilter &&
-        !ex.musculos_secundarios?.includes(muscleFilter)
+        exercise.musculo_principal !== muscleFilter &&
+        !exercise.musculos_secundarios?.includes(muscleFilter)
       ) {
         return false;
       }
-      if (nivelFilter !== '' && ex.nivel !== nivelFilter) return false;
-      if (prioridadeFilter !== '' && ex.prioridade !== prioridadeFilter) return false;
-      if (q) {
-        const name = formatExerciseName(ex).toLowerCase();
-        if (!name.includes(q) && !ex.slug.includes(q)) return false;
-      }
-      return true;
+      if (nivelFilter !== '' && exercise.nivel !== nivelFilter) return false;
+      if (prioridadeFilter !== '' && exercise.prioridade !== prioridadeFilter) return false;
+      if (!query) return true;
+      return (
+        formatExerciseName(exercise).toLowerCase().includes(query) ||
+        exercise.slug.toLowerCase().includes(query)
+      );
     });
   }, [exercises, muscleFilter, nivelFilter, prioridadeFilter, search]);
 
-  const filteredUnlockedCount = useMemo(
-    () => filtered.filter((ex) => isUnlocked(ex.slug)).length,
-    [filtered, isUnlocked],
-  );
-  const totalUnlockedCount = useMemo(
-    () => exercises.filter((exercise) => isUnlocked(exercise.slug)).length,
-    [exercises, isUnlocked],
-  );
-
   const lockedInView = useMemo(
-    () => filtered.filter((ex) => !isUnlocked(ex.slug)),
+    () => filtered.filter((exercise) => !isUnlocked(exercise.slug)),
     [filtered, isUnlocked],
   );
 
@@ -114,13 +74,8 @@ export function LibraryPage() {
     setSearch('');
   }, [setMuscleFilter]);
 
-  // 1 update otimista + 1 persist pro lote inteiro (ver `unlockExercises` no
-  // AppContext) — chamar `unlock()` dezenas de vezes em sequência disparava N
-  // requests concorrentes que podiam resolver fora de ordem e reverter itens
-  // já desbloqueados. Feedback é imediato pra todo mundo (sem animação
-  // escalonada por item, que não se sustentava com dezenas de exercícios).
   const handleUnlockAll = useCallback(() => {
-    const slugs = lockedInView.map((ex) => ex.slug);
+    const slugs = lockedInView.map((exercise) => exercise.slug);
     if (slugs.length === 0) return;
     unlockAll(slugs);
     playUnlock();
@@ -131,25 +86,33 @@ export function LibraryPage() {
   }, [lockedInView, unlockAll]);
 
   return (
-    <div className="flex flex-col gap-5">
-      <GamePageHeader eyebrow="Inventário" title="Biblioteca">
-        <span
-          className="library-counter-pill"
-          aria-label={`${totalUnlockedCount} de ${exercises.length} exercícios desbloqueados`}
-        >
-          <CheckCircle2 size={14} aria-hidden />
-          <strong>{totalUnlockedCount}</strong>/{exercises.length}
+    <div className="library-page flex flex-col gap-5">
+      <GamePageHeader
+        eyebrow="Movimentos de core"
+        title="Biblioteca"
+        onBack={() => navigate('/construtor')}
+        backIcon="x"
+        backAlign="right"
+      />
+
+      <section className="library-intro" aria-label="Sobre a biblioteca">
+        <span className="library-intro__icon" aria-hidden>
+          <Sparkles size={19} />
         </span>
-      </GamePageHeader>
+        <div>
+          <strong>Treine onde estiver</strong>
+          <p>Movimentos de peso corporal organizados por região e nível.</p>
+        </div>
+      </section>
 
       <div className="library-toolbar">
         <label className="library-search">
-          <Search size={16} className="library-search__icon" aria-hidden />
+          <Search size={18} className="library-search__icon" aria-hidden />
           <input
             type="search"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar exercício..."
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar movimento"
             className="library-search__input"
             aria-label="Buscar exercício"
           />
@@ -160,7 +123,7 @@ export function LibraryPage() {
               onClick={() => setSearch('')}
               aria-label="Limpar busca"
             >
-              <X size={14} />
+              <X size={16} aria-hidden />
             </button>
           )}
         </label>
@@ -169,17 +132,17 @@ export function LibraryPage() {
           <button
             type="button"
             className={`game-tab game-tab--scroll library-filter-btn${secondaryFilterCount > 0 ? ' game-tab--active' : ''}`}
-            onClick={() => setFiltersOpen((v) => !v)}
+            onClick={() => setFiltersOpen((current) => !current)}
             aria-expanded={filtersOpen}
           >
-            <SlidersHorizontal size={14} aria-hidden />
+            <SlidersHorizontal size={15} aria-hidden />
             Filtros
             {secondaryFilterCount > 0 && (
               <span className="library-filter-btn__badge tabular-nums">{secondaryFilterCount}</span>
             )}
           </button>
 
-          <div className="library-muscle-tabs" role="group" aria-label="Filtrar por músculo">
+          <div className="library-muscle-tabs" role="group" aria-label="Filtrar por região">
             <button
               type="button"
               className={`game-tab game-tab--scroll${!muscleFilter ? ' game-tab--active' : ''}`}
@@ -187,160 +150,103 @@ export function LibraryPage() {
             >
               Todos
             </button>
-            {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((m) => (
+            {(Object.keys(MUSCULO_LABELS) as MusculoPrincipal[]).map((muscle) => (
               <button
-                key={m}
+                key={muscle}
                 type="button"
-                className={`game-tab game-tab--scroll${muscleFilter === m ? ' game-tab--active' : ''}`}
-                onClick={() => setMuscleFilter(muscleFilter === m ? null : m)}
+                className={`game-tab game-tab--scroll${muscleFilter === muscle ? ' game-tab--active' : ''}`}
+                onClick={() => setMuscleFilter(muscleFilter === muscle ? null : muscle)}
               >
-                {MUSCULO_LABELS[m]}
+                {MUSCULO_LABELS[muscle]}
               </button>
             ))}
           </div>
         </div>
+
+        {filtersOpen && (
+          <div className="library-filters-panel">
+            <div className="library-filters-panel__group">
+              <p className="library-filters-panel__label">
+                <BarChart3 size={14} aria-hidden /> Nível
+              </p>
+              <div className="library-chip-row">
+                {[1, 2, 3, 4].map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    className={`game-tab game-tab--scroll${nivelFilter === level ? ' game-tab--active' : ''}`}
+                    onClick={() => setNivelFilter(nivelFilter === level ? '' : level)}
+                  >
+                    Nível {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="library-filters-panel__group">
+              <p className="library-filters-panel__label">
+                <Flame size={14} aria-hidden /> Prioridade
+              </p>
+              <div className="library-chip-row">
+                {(Object.keys(PRIORIDADE_LABELS) as Prioridade[]).map((priority) => (
+                  <button
+                    key={priority}
+                    type="button"
+                    className={`game-tab game-tab--scroll${prioridadeFilter === priority ? ' game-tab--active' : ''}`}
+                    onClick={() =>
+                      setPrioridadeFilter(prioridadeFilter === priority ? '' : priority)
+                    }
+                  >
+                    {PRIORIDADE_LABELS[priority]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {hasAnyFilter && (
           <button type="button" className="library-clear-btn" onClick={clearAllFilters}>
             Limpar filtros
           </button>
         )}
-
-        {filtersOpen && (
-          <div className="library-filters-panel">
-            <div className="library-filters-panel__group">
-              <p className="library-filters-panel__label">
-                <BarChart3 size={13} aria-hidden /> Nível
-              </p>
-              <div className="library-chip-row">
-                <button
-                  type="button"
-                  className={`game-tab game-tab--scroll${nivelFilter === '' ? ' game-tab--active' : ''}`}
-                  onClick={() => setNivelFilter('')}
-                >
-                  Todos
-                </button>
-                {[1, 2, 3, 4].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`game-tab game-tab--scroll${nivelFilter === n ? ' game-tab--active' : ''}`}
-                    onClick={() => setNivelFilter(nivelFilter === n ? '' : n)}
-                  >
-                    Nível {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="library-filters-panel__group">
-              <p className="library-filters-panel__label">
-                <Flame size={13} aria-hidden /> Prioridade
-              </p>
-              <div className="library-chip-row">
-                <button
-                  type="button"
-                  className={`game-tab game-tab--scroll${prioridadeFilter === '' ? ' game-tab--active' : ''}`}
-                  onClick={() => setPrioridadeFilter('')}
-                >
-                  Todas
-                </button>
-                {(Object.keys(PRIORIDADE_LABELS) as Prioridade[]).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    className={`game-tab game-tab--scroll${prioridadeFilter === p ? ' game-tab--active' : ''}`}
-                    onClick={() => setPrioridadeFilter(prioridadeFilter === p ? '' : p)}
-                  >
-                    {PRIORIDADE_LABELS[p]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {muscleFilter && <p className="muscle-zone-hint -mt-2">{MUSCULO_HINTS[muscleFilter]}</p>}
+      {muscleFilter && <p className="muscle-zone-hint">{MUSCULO_HINTS[muscleFilter]}</p>}
 
-      <EquipmentPanel onEquipmentChange={refreshRecommendations} />
-
-      <div className="library-results-row flex items-center justify-between gap-2">
-        {exercisesLoading ? (
-          <p className="library-results-count text-xs font-bold text-stone-500">
-            Carregando itens...
-          </p>
-        ) : (
-          <p className="library-results-count" aria-live="polite">
-            <strong>{filtered.length}</strong>
-            <span className="library-results-count__label">
-              resultado{filtered.length === 1 ? '' : 's'} · {filteredUnlockedCount} disponível
-              {filteredUnlockedCount === 1 ? '' : 'is'}
-            </span>
-          </p>
-        )}
-        {!exercisesLoading && lockedInView.length > 0 && (
-          <GameButton
-            size="sm"
-            onClick={handleUnlockAll}
-            className="library-unlock-all-btn shrink-0"
-          >
-            <span className="library-unlock-all-btn__icon" aria-hidden>
-              <Sparkles size={13} />
-            </span>
-            Desbloquear
-            <span className="library-unlock-all-btn__count">{lockedInView.length}</span>
+      {!exercisesLoading && lockedInView.length > 0 && (
+        <div className="library-unlock-row">
+          <p>Há novos movimentos disponíveis nesta seleção.</p>
+          <GameButton size="sm" onClick={handleUnlockAll} className="library-unlock-all-btn">
+            <Sparkles size={14} aria-hidden /> Desbloquear
           </GameButton>
-        )}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2" aria-live="polite">
+        {!exercisesLoading &&
+          filtered.map((exercise: IExerciseDocument) => (
+            <ExerciseCard
+              key={exercise.slug}
+              exercise={exercise}
+              unlocked={isUnlocked(exercise.slug)}
+              onUnlock={unlock}
+              isPinned={fixedExerciseSlugs.includes(exercise.slug)}
+              isBlocked={blockedExerciseSlugs.includes(exercise.slug)}
+              onTogglePin={toggleExercisePin}
+              onToggleBlock={toggleExerciseBlock}
+            />
+          ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {exercisesLoading
-          ? null
-          : filtered.map((exercise) => (
-              <ExerciseCard
-                key={exercise.slug}
-                exercise={exercise}
-                unlocked={isUnlocked(exercise.slug)}
-                onUnlock={unlock}
-                isPinned={fixedExerciseSlugs.includes(exercise.slug)}
-                isBlocked={blockedExerciseSlugs.includes(exercise.slug)}
-                onTogglePin={toggleExercisePin}
-                onToggleBlock={toggleExerciseBlock}
-              />
-            ))}
-      </div>
-
-      {lockedExercises.length > 0 && (
-        <section aria-label="Exercícios bloqueados por equipamento">
-          <h3 className="game-section-title">Bloqueados por equipamento</h3>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {lockedExercises.map((exercise) => {
-              const equipmentName =
-                EQUIPMENT_CATALOG.find((item) => item.id === exercise.equipamento)?.nome ??
-                'equipamento';
-              return (
-                <div key={exercise.slug} className="library-exercise-card library-locked-card">
-                  <div className="library-exercise-card__main">
-                    <span
-                      className="library-exercise-card__media library-locked-card__icon"
-                      aria-hidden
-                    >
-                      <Lock size={22} />
-                    </span>
-                    <div className="library-exercise-card__content">
-                      <p className="library-locked-card__name">{formatExerciseName(exercise)}</p>
-                      <p className="library-locked-card__hint">
-                        Requer {equipmentName}. Marque-o em Meus Equipamentos para liberar.
-                      </p>
-                      <span className="library-exercise-card__badge">Equipamento necessário</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+      {!exercisesLoading && filtered.length === 0 && (
+        <div className="library-empty">
+          <Search size={24} aria-hidden />
+          <strong>Nenhum movimento encontrado</strong>
+          <p>Tente remover um filtro ou buscar por outro nome.</p>
+          <button type="button" onClick={clearAllFilters}>
+            Limpar busca
+          </button>
+        </div>
       )}
     </div>
   );

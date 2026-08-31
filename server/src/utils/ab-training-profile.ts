@@ -1,4 +1,3 @@
-import { EQUIPMENT_IDS } from '../../../shared/equipment/index.js';
 import type { AbTrainingProfileV2 } from '../../../shared/types/index.js';
 
 const INTENSITIES: AbTrainingProfileV2['intensity'][] = ['leve', 'moderado', 'evolyn'];
@@ -14,18 +13,12 @@ export function sanitizeAbTrainingProfileV2(raw: unknown): AbTrainingProfileV2 |
     : [];
   if (value.version !== 2 || !intensity || !volume || days.length < 2) return null;
 
-  const rawEquipment =
-    value.equipment && typeof value.equipment === 'object' && !Array.isArray(value.equipment)
-      ? (value.equipment as Record<string, unknown>)
-      : {};
-  const equipment = Object.fromEntries(EQUIPMENT_IDS.map((id) => [id, rawEquipment[id] === true]));
   const now = new Date().toISOString();
   return {
     version: 2,
     intensity,
     training_days: days,
     volume,
-    equipment,
     created_at: typeof value.created_at === 'string' ? value.created_at : now,
     updated_at: now,
   };

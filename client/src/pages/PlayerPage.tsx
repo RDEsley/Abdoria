@@ -36,7 +36,6 @@ import {
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { shouldPauseWorkoutForGuide } from '@shared/workout-player';
 import { GameButton } from '@/components/ui/GameButton';
-import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
 import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
@@ -725,7 +724,6 @@ export function PlayerPage() {
     const n = atividadesFlow.filaPendente.length;
     return (
       <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
-        <AnimatedBackground variant="player" />
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -776,7 +774,7 @@ export function PlayerPage() {
   const phaseBadge =
     phase === 'resting' ? (
       <span className="game-player-phase game-player-phase--rest">
-        <Timer size={14} /> Próximo {exerciseIndex + 1}/{workout.queue.length}
+        <Timer size={14} /> Descanso
       </span>
     ) : phase === 'side_transition' ? (
       <span className="game-player-phase game-player-phase--ready">Troca de lado</span>
@@ -806,7 +804,6 @@ export function PlayerPage() {
       <div
         className={`game-player game-player--${phase} game-app fixed inset-0 z-50 flex flex-col overflow-hidden`}
       >
-        <AnimatedBackground variant="player" />
         <header className="game-player-hud relative z-10 shrink-0 flex items-center justify-between">
           <button
             type="button"
@@ -816,11 +813,11 @@ export function PlayerPage() {
           >
             <X size={24} />
           </button>
-          <div className="text-center">
-            <p className="game-page-header__eyebrow !mb-0">{workout.treino_nome}</p>
-            <p className="text-xs font-extrabold text-stone-800">
+          <div className="game-player-hud__title text-center">
+            <p>{workout.treino_nome}</p>
+            <strong>
               Exercício {exerciseIndex + 1}/{workout.queue.length}
-            </p>
+            </strong>
           </div>
           <div className="flex items-center gap-3">
             {authUser?.role === 'admin' && (
@@ -866,7 +863,10 @@ export function PlayerPage() {
           </div>
         </header>
 
-        <nav className="relative z-10 shrink-0" aria-label="Progresso do treino">
+        <nav
+          className="game-player-progress relative z-10 shrink-0"
+          aria-label="Progresso do treino"
+        >
           <div
             className="flex gap-1 px-4 pb-1 sm:px-6"
             role="progressbar"
@@ -878,7 +878,7 @@ export function PlayerPage() {
             {workout.queue.map((item, i) => (
               <span
                 key={`${item.slug}-${i}`}
-                className={`game-progress-dot h-1.5 flex-1 rounded-full border border-stone-900/25 ${
+                className={`game-progress-dot h-1.5 flex-1 rounded-full ${
                   i < exerciseIndex
                     ? 'bg-emerald-500'
                     : i === exerciseIndex
@@ -892,14 +892,26 @@ export function PlayerPage() {
 
         <main className="game-player-body relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
           <div className="game-player-content flex flex-col items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 sm:py-4">
-            {phaseBadge}
+            <div className="game-player-status-row">
+              {phaseBadge}
+              {(exerciseIndex > 0 || seriesIndex > 0 || sideIndex > 0) && (
+                <button type="button" className="game-player-backstep" onClick={goBackOneStep}>
+                  <ChevronLeft size={16} aria-hidden />
+                  {sideIndex > 0
+                    ? 'Lado anterior'
+                    : seriesIndex > 0
+                      ? 'Série anterior'
+                      : 'Exercício anterior'}
+                </button>
+              )}
+            </div>
 
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${current.slug}-${exerciseIndex}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-sm"
+                className="game-player-media-shell w-full max-w-sm"
               >
                 <ExerciseDemo
                   name={currentName}
@@ -910,7 +922,10 @@ export function PlayerPage() {
               </motion.div>
             </AnimatePresence>
 
-            <div className="w-full text-center">
+            <div className="game-player-exercise-info w-full text-center">
+              <p className="game-player-prescription">
+                {phase === 'resting' ? 'A seguir' : `Meta · ${prescription}`}
+              </p>
               <div className="game-player-exercise-title">
                 <h2>{currentName}</h2>
                 {currentExerciseDefinition && (
@@ -924,9 +939,6 @@ export function PlayerPage() {
                   </button>
                 )}
               </div>
-              <p className="mt-0.5 text-[0.65rem] font-extrabold uppercase tracking-wide text-emerald-700">
-                Meta: {prescription}
-              </p>
               {phase === 'resting' ? (
                 <p className="game-player-rest-next">Prepare-se para {nextSeriesLabel}</p>
               ) : (
@@ -940,9 +952,7 @@ export function PlayerPage() {
                         {currentSideInstruction}
                       </p>
                     )}
-                    <p className="mx-auto mt-1.5 max-w-xs text-center text-xs font-bold leading-relaxed text-stone-600">
-                      {statusText}
-                    </p>
+                    <p className="game-player-status-copy">{statusText}</p>
                   </>
                 )
               )}
@@ -955,7 +965,7 @@ export function PlayerPage() {
                 <span>A série {seriesIndex + 1} continua no lado direito.</span>
               </div>
             ) : (
-              <div className="relative">
+              <div className="game-player-metric relative">
                 <WorkoutTimerRing
                   phase={phase as 'ready' | 'working' | 'resting'}
                   modo={current.modo}
@@ -995,22 +1005,6 @@ export function PlayerPage() {
           </div>
 
           <div className="game-player-actions mt-auto flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:gap-3 sm:px-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-            {(exerciseIndex > 0 || seriesIndex > 0 || sideIndex > 0) && (
-              <GameButton
-                size="lg"
-                variant="ghost"
-                className="w-full flex items-center justify-center gap-2"
-                onClick={goBackOneStep}
-              >
-                <ChevronLeft size={18} />
-                {sideIndex > 0
-                  ? 'Voltar para o lado esquerdo'
-                  : seriesIndex > 0
-                    ? 'Voltar para a série anterior'
-                    : 'Voltar para o treino anterior'}
-              </GameButton>
-            )}
-
             {phase === 'ready' && (
               <GameButton
                 size="lg"

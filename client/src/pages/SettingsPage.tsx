@@ -256,7 +256,7 @@ export function SettingsPage() {
         <p className="text-xs font-medium text-stone-500">
           {user?.ab_training_profile_v2
             ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${AB_VOLUME_LABELS[user.ab_training_profile_v2.volume]} · ${user.ab_training_profile_v2.training_days.length} dias/semana`
-            : 'Configure intensidade, duração, agenda e equipamentos para suas missões de core.'}
+            : 'Configure intensidade, duração e agenda das suas missões de core com peso corporal.'}
         </p>
         <GameButton
           variant="secondary"

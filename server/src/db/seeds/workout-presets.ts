@@ -1,4 +1,7 @@
 import type { IWorkoutPreset } from '../../types/index.js';
+import { allExercises } from './all-exercises.js';
+
+const activeExerciseSlugs = new Set(allExercises.map((exercise) => exercise.slug));
 
 function preset(
   p: Omit<IWorkoutPreset, 'exercicios'> & {
@@ -19,14 +22,16 @@ function preset(
     ciclo_id: p.ciclo_id,
     descricao: p.descricao,
     recomendado: p.recomendado,
-    exercicios: p.slugs.map((s) => ({
-      slug: s.slug,
-      series: s.series ?? 3,
-      modo: s.modo ?? 'reps',
-      repeticoes: s.repeticoes,
-      tempo_seg: s.tempo_seg,
-      descanso_seg: s.descanso_seg ?? 30,
-    })),
+    exercicios: p.slugs
+      .filter((exercise) => activeExerciseSlugs.has(exercise.slug))
+      .map((s) => ({
+        slug: s.slug,
+        series: s.series ?? 3,
+        modo: s.modo ?? 'reps',
+        repeticoes: s.repeticoes,
+        tempo_seg: s.tempo_seg,
+        descanso_seg: s.descanso_seg ?? 30,
+      })),
   };
 }
 

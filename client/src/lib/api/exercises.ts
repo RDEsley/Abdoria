@@ -10,11 +10,6 @@ export function getExercises(filters: ExerciseFilters = {}): Promise<IExerciseDo
   return fetchJson(`/exercises${query ? `?${query}` : ''}`);
 }
 
-/** Exercícios travados por equipamento não possuído (exibidos com cadeado na Biblioteca). */
-export function getLockedExercises(): Promise<IExerciseDocument[]> {
-  return fetchJson('/exercises/locked');
-}
-
 export interface SimilarExercisesResponse {
   reference: {
     slug: string;

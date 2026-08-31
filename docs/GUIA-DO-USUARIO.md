@@ -8,7 +8,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 
 1. **Crie sua conta** ou entre como visitante (funcionalidades limitadas).
 2. Aceite os **termos de uso** e conclua a breve apresentação do Evolyn.
-3. Na primeira visita à **Missão**, configure intensidade, dias, duração e equipamentos.
+3. Na primeira visita à **Missão**, configure intensidade, dias e duração.
 4. Toque em **Começar primeira missão**. O mesmo plano pode ser ajustado depois em **Opções**.
 
 ---
@@ -36,8 +36,8 @@ do app. O player de treino é a única exceção.
 ## Treino
 
 ### Treino sugerido
-O app monta sugestões de abdômen/core com base no plano abdominal V2, intensidade, agenda,
-volume, equipamento, restrições e histórico.
+O app monta sugestões de abdômen/core com peso corporal com base no plano abdominal V2,
+intensidade, agenda, volume, restrições e histórico.
 Basta tocar em **Iniciar treino** no painel.
 
 ### Montar o seu

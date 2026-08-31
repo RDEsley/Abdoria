@@ -1,10 +1,9 @@
 import type { ParteCorpo, RestricaoFisica } from '../../types/index.js';
 import { withCustomParams, withLevelParams } from '../../utils/exercise-params.js';
 import { prioritySExercises } from './priority-s-exercises.js';
-import { equipmentExercises } from './equipment-exercises.js';
 import { bodyweightExercises } from './bodyweight-exercises.js';
 import { EXERCISE_CONTRAINDICACOES, EXERCISE_GRUPOS } from './exercise-groups.js';
-import { filterRetiredExercises } from '../../../../shared/exercises.js';
+import { filterBodyweightExercises, filterRetiredExercises } from '../../../../shared/exercises.js';
 
 const priorityBase = prioritySExercises.map((e) =>
   withLevelParams({
@@ -222,37 +221,6 @@ export const additionalExercises = [
     laterality: 'alternating',
     ativo: true,
   }),
-  withCustomParams(
-    {
-      slug: 'hanging-knee-raise',
-      nome: 'Hanging Knee Raise',
-      nivel: 4,
-      musculo_principal: 'inferior',
-      tempo_recomendado: 30,
-      prioridade: 'B',
-      descricao: 'Elevação de joelhos na barra fixa.',
-      media: { gif: 'hanging-knee-raise.gif' },
-      equipamento: 'pull_up_bar',
-      ativo: true,
-    },
-    { repeticoes_iniciante: 8, repeticoes_intermediario: 12, repeticoes_avancado: 15 },
-  ),
-  withCustomParams(
-    {
-      slug: 'stability-ball-crunch',
-      nome: 'Stability Ball Crunch',
-      nivel: 2,
-      musculo_principal: 'superior',
-      tempo_recomendado: 30,
-      prioridade: 'B',
-      descricao:
-        'Crunch sobre a bola suíça com maior amplitude — apoie a lombar na bola e suba contraindo o abdômen.',
-      media: { gif: 'stability-ball-crunch.gif' },
-      ativo: false,
-      equipamento: 'stability_ball',
-    },
-    { repeticoes_iniciante: 10, repeticoes_intermediario: 15, repeticoes_avancado: 20 },
-  ),
   withLevelParams({
     slug: 'thread-the-needle',
     nome: 'Thread the Needle',
@@ -294,24 +262,6 @@ export const additionalExercises = [
       ativo: true,
     },
     { tempo_seg_iniciante: 10, tempo_seg_intermediario: 20, tempo_seg_avancado: 30 },
-  ),
-  withCustomParams(
-    {
-      slug: 'ab-wheel',
-      nome: 'Ab Wheel Rollout',
-      nome_pt: 'Rolinho abdominal',
-      nivel: 3,
-      musculo_principal: 'core',
-      musculos_secundarios: ['superior'],
-      tempo_recomendado: 30,
-      prioridade: 'B',
-      descricao: 'Rolinho abdominal com amplitude média — requer roda abdominal.',
-      media: { gif: 'ab-wheel.gif' },
-      ativo: false,
-      equipamento: 'ab_wheel',
-      modo: 'reps',
-    },
-    { repeticoes_iniciante: 5, repeticoes_intermediario: 8, repeticoes_avancado: 12 },
   ),
   withCustomParams(
     {
@@ -496,7 +446,7 @@ function withGroupTags<
 }
 
 export const allExercises = filterRetiredExercises(
-  [...priorityBase, ...additionalExercises, ...bodyweightExercises, ...equipmentExercises].map(
+  filterBodyweightExercises([...priorityBase, ...additionalExercises, ...bodyweightExercises]).map(
     withGroupTags,
   ),
 );

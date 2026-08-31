@@ -17,7 +17,7 @@ describe('perfil abdominal V2', () => {
     expect(doseForAbProfile(evolyn, 'tempo', 9999)).toBe(600);
   });
 
-  it('normaliza agenda/equipamento e rejeita versões inválidas', () => {
+  it('normaliza a agenda, descarta equipamento legado e rejeita versões inválidas', () => {
     const profile = sanitizeAbTrainingProfileV2({
       version: 2,
       intensity: 'leve',
@@ -26,7 +26,7 @@ describe('perfil abdominal V2', () => {
       equipment: { ab_wheel: true, unknown: true },
     });
     expect(profile?.training_days).toEqual([1, 5]);
-    expect(profile?.equipment.ab_wheel).toBe(true);
+    expect(profile).not.toHaveProperty('equipment');
     expect(sanitizeAbTrainingProfileV2({ version: 1 })).toBeNull();
   });
 });
