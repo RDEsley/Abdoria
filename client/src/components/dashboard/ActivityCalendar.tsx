@@ -379,26 +379,20 @@ export function ActivityCalendar() {
                           ? `${meta.count} treino(s) · ${meta.minutes} min${streakNum ? ` · streak ${streakNum}` : ''}`
                           : 'Sem treinos'
                     }
+                    aria-label={`${cell.day} de ${MONTH_NAMES[visibleMonth.getMonth()]}${frozen ? ', dia congelado' : hasTreino ? ', treino concluído' : hasAtividade ? ', atividade concluída' : ', sem registros'}`}
                   >
-                    {frozen ? (
-                      <span className="workout-calendar__cell-icon" aria-hidden>
-                        <Snowflake size={14} />
-                      </span>
-                    ) : hasTreino ? (
-                      <span className="workout-calendar__cell-icon" aria-hidden>
+                    <span className="workout-calendar__day">{cell.day}</span>
+                    <span className="workout-calendar__events" aria-hidden>
+                      {frozen && <Snowflake size={12} />}
+                      {hasTreino && (
                         <Flame
-                          size={14}
+                          size={12}
                           className="workout-calendar__cell-flame"
                           fill="currentColor"
                         />
-                      </span>
-                    ) : hasAtividade ? (
-                      <span className="workout-calendar__cell-icon" aria-hidden>
-                        <Sparkles size={14} />
-                      </span>
-                    ) : (
-                      <span className="workout-calendar__day">{cell.day}</span>
-                    )}
+                      )}
+                      {hasAtividade && <Sparkles size={12} />}
+                    </span>
                   </button>
                 );
               })}

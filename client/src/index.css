@@ -25,6 +25,7 @@
 @import './styles/profile-social.css';
 @import './styles/tutorial.css';
 @import './styles/onboarding.css';
+@import './styles/product-polish.css';
 .reminder-card--calm {
   border-color: rgb(186 230 253);
   background: linear-gradient(135deg, rgb(240 249 255), rgb(224 242 254));
