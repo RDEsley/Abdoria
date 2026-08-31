@@ -1253,15 +1253,10 @@ body {
 
 .profile-page .game-achievement {
   min-height: 3.3rem;
-  border: 1px solid rgb(15 23 42 / 7%);
-  border-radius: 0.9rem;
-  background: rgb(248 251 250 / 90%);
-  box-shadow: none;
 }
 
 .profile-page .game-achievement--locked {
-  opacity: 0.68;
-  filter: saturate(0.45);
+  opacity: 0.78;
 }
 
 .profile-page .game-xp-section__panel {
