@@ -18,11 +18,13 @@ O repositório usa a integração Git da Vercel:
 - branches e pull requests geram Preview Deployments;
 - `main` gera o deployment de produção;
 - o build de produção executa `npm run build:vercel` conforme `vercel.json`;
-- migrations do Supabase não são executadas automaticamente.
+- a integração do Supabase valida o histórico de migrations e executa a ação de banco associada a
+  pushes na `main`.
 
-Essa separação evita que uma migration seja aplicada por inferência durante o deploy. Richard deve
-revisar e aplicar manualmente cada arquivo novo de `supabase/migrations/` antes de depender do novo
-schema em produção.
+Toda migration deve ser criada e revisada em `supabase/migrations/`, validada em transação ou banco
+de preview e mesclada somente com o CI aprovado. Depois do merge, confirme que o check do Supabase
+terminou com sucesso e que `supabase migration list --linked` mantém os históricos local e remoto
+alinhados. Não altere manualmente o schema de produção sem registrar a migration correspondente.
 
 ## Estratégia de branches
 

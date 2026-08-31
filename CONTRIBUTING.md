@@ -5,7 +5,7 @@ Obrigado por considerar contribuir. Este projeto é mantido em português (Brasi
 ## Antes de começar
 
 1. Leia o [README](./README.md) e o [Guia do usuário](./docs/GUIA-DO-USUARIO.md) para entender o produto.
-2. Configure o ambiente local (`npm install`, `server/.env`, `npm run seed`, `npm run dev`).
+2. Use Node.js 22 e configure o ambiente local (`npm install`, `server/.env`, `npm run seed`, `npm run dev`).
 3. Abra uma **issue** para bugs ou ideias antes de grandes mudanças.
 
 ## Padrões de código
@@ -21,12 +21,16 @@ Obrigado por considerar contribuir. Este projeto é mantido em português (Brasi
 ```bash
 git checkout -b feat/minha-melhoria
 # ... alterações ...
+npm run format:check
+npm run lint
+npm test
 npm run build
 git commit -m "feat: descrição clara do porquê"
 git push origin feat/minha-melhoria
 ```
 
-Abra um Pull Request descrevendo **o que mudou** e **como testar**.
+Abra um Pull Request descrevendo **o que mudou** e **como testar**. Mudanças nativas também devem
+executar `npm run cap:sync`; no Android, valide ao menos `gradlew assembleDebug`.
 
 ## Commits
 
