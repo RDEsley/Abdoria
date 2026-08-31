@@ -1,15 +1,15 @@
 <div align="center">
 
-<img src="./docs/assets/evolyn-logo.png" width="220" alt="Logo do Evolyn Core Quest" />
+<img src="./client/public/brand/logo.png" width="220" alt="Logo oficial do Evolyn" />
 
 # ⚔️ Evolyn · Core Quest
 
-### Transforme seus treinos de abdômen em uma aventura.
+### Plantando a sua evolução.
 
 O **Evolyn** é um aplicativo gamificado de treinos em casa que combina exercícios, evolução, recompensas, atividades e desafios para tornar a constância muito mais divertida.
 
 [![Acessar o app](https://img.shields.io/badge/ACESSAR_O_APP-000000?style=for-the-badge\&logo=vercel\&logoColor=white)](https://abdoria-project.vercel.app)
-[![Versão](https://img.shields.io/badge/VERSÃO-5.0.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Evolyn-Core-Quest/releases)
+[![Versão](https://img.shields.io/badge/VERSÃO-6.3.0-10B981?style=for-the-badge)](https://github.com/RDEsley/Evolyn-Core-Quest/releases)
 [![Licença](https://img.shields.io/badge/LICENÇA-MIT-blue?style=for-the-badge)](./LICENSE)
 [![CI](https://github.com/RDEsley/Evolyn-Core-Quest/actions/workflows/ci.yml/badge.svg)](https://github.com/RDEsley/Evolyn-Core-Quest/actions/workflows/ci.yml)
 
@@ -29,7 +29,8 @@ O **Evolyn** é um aplicativo gamificado de treinos em casa que combina exercíc
 
 O **Evolyn · Core Quest** foi criado para ajudar pessoas a manterem uma rotina de exercícios por meio de uma experiência inspirada em jogos.
 
-No aplicativo, o usuário pode montar treinos, seguir sessões guiadas, acumular experiência, desbloquear conquistas, disputar posições no ranking e evoluir um herói durante sua jornada.
+No aplicativo, o usuário pode seguir missões guiadas de abdômen e core, acumular experiência,
+desbloquear conquistas, disputar posições no ranking e acompanhar sua evolução.
 
 Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso dentro de uma aventura.
 
@@ -144,7 +145,7 @@ Metas, streaks, conquistas e recompensas ajudam a transformar o treino em um há
 
 ### ⚔️ Evolua jogando
 
-Cada atividade contribui para o crescimento do perfil e para a evolução do herói.
+Cada atividade contribui para o crescimento do perfil e para a progressão da jornada.
 
 </td>
 <td width="50%" valign="top">
@@ -174,7 +175,7 @@ Suba de nível
             ↓
 Desbloqueie conquistas e itens
             ↓
-Evolua seu herói e seu perfil
+Evolua sua jornada e seu perfil
 ```
 
 O usuário também pode concluir atividades pessoais, acompanhar a campanha, competir nos rankings e personalizar sua experiência.
@@ -201,7 +202,7 @@ O usuário também pode concluir atividades pessoais, acompanhar a campanha, com
 <div align="center">
 
 ![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=for-the-badge\&logo=typescript\&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript_7-3178C6?style=for-the-badge\&logo=typescript\&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge\&logo=vite\&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge\&logo=tailwindcss\&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge\&logo=framer\&logoColor=white)
@@ -243,6 +244,8 @@ Evolyn/
 │   └── utils/              # Funções auxiliares
 ├── supabase/migrations/    # Migrações do banco de dados
 ├── api/                    # Entrada serverless da Vercel
+├── android/                # Projeto nativo Android (Capacitor)
+├── ios/                    # Projeto nativo iOS (Capacitor)
 ├── docs/                   # Documentação
 ├── Exploracao-rpg-afk/     # Snapshot independente do jogo antigo
 └── scripts/                # Scripts de configuração e manutenção
@@ -256,7 +259,7 @@ Evolyn/
 
 Antes de começar, tenha instalado:
 
-* [Node.js](https://nodejs.org/) 20.x
+* [Node.js](https://nodejs.org/) 22.x
 * Git
 * Uma conta e um projeto no [Supabase](https://supabase.com/)
 
@@ -336,6 +339,10 @@ O projeto ficará disponível nos seguintes endereços:
 | `npm run dev`          | Inicia o frontend e o backend        |
 | `npm run build`        | Gera a versão de produção            |
 | `npm run build:vercel` | Executa o build para a Vercel        |
+| `npm run format:check` | Valida a formatação                   |
+| `npm run lint`         | Executa a análise estática            |
+| `npm test`             | Executa os testes do servidor         |
+| `npm run cap:sync`     | Sincroniza os projetos Android e iOS  |
 | `npm run seed`         | Popula o banco com dados iniciais    |
 | `npm run setup`        | Executa o assistente de configuração |
 
@@ -350,7 +357,7 @@ O projeto está preparado para deploy contínuo na **Vercel**.
 ```text
 Install Command: npm install
 Build Command: npm run build:vercel
-Node.js: 20.x
+Node.js: 22.x
 ```
 
 Configure no painel da Vercel as variáveis de ambiente utilizadas pelo backend.
@@ -374,6 +381,9 @@ https://abdoria-project.vercel.app
 | -------------------------------------------- | ------------------------------------------------ |
 | [Guia do usuário](./docs/GUIA-DO-USUARIO.md) | Orientações para quem utiliza o aplicativo       |
 | [Guia de contribuição](./CONTRIBUTING.md)    | Informações para desenvolvedores e colaboradores |
+| [Identidade visual](./docs/BRANDING.md)       | Logos, favicons, PWA e assets nativos             |
+| [Preparação Capacitor](./docs/CAPACITOR-READINESS.md) | Estado e pendências dos aplicativos nativos |
+| [CI/CD e deploy](./docs/DEPLOYMENT.md)        | Gates, branches, Vercel e migrations              |
 | [Licença](./LICENSE)                         | Termos de uso do projeto                         |
 
 ---

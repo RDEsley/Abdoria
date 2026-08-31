@@ -17,6 +17,8 @@ reais antes da publicação nas lojas.
   serializadas para impedir que um write pendente recrie uma sessão já limpa.
 - Notificações pessoais recorrentes usam `@capacitor/local-notifications`; o fallback web entrega
   apenas quando a aplicação está ativa ou volta ao foco.
+- A identidade oficial já está aplicada nos launcher icons adaptativos/legados do Android, App Icon
+  do iOS, favicons, ícones PWA e splash screens de todas as densidades versionadas.
 
 ## Bloqueadores antes do primeiro app nativo
 
@@ -37,7 +39,7 @@ reais antes da publicação nas lojas.
 
 - Configurar Status Bar, Splash Screen, Keyboard e orientação; validar recortes, ilha dinâmica,
   barras de gestos e teclado em iOS e Android.
-- Gerar ícones e splash em todas as densidades e revisar nome, bundle ID, versão e permissões.
+- Revisar nome, bundle ID, versão e permissões antes de cada publicação nas lojas.
 - Criar Privacy Manifest no iOS para APIs/plugins aplicáveis e preencher as declarações de
   privacidade das lojas.
 - Testar rede lenta/offline, expiração do JWT, retomada após o sistema encerrar o processo,

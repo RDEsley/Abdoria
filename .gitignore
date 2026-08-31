@@ -29,6 +29,16 @@ build/
 client/dist/
 server/dist/
 
+# Native build output
+android/.gradle/
+android/local.properties
+android/**/build/
+ios/DerivedData/
+ios/**/xcuserdata/
+*.apk
+*.aab
+*.ipa
+
 # Logs & debug
 *.log
 npm-debug.log*
@@ -100,3 +110,8 @@ docs/private
 .private
 NOTES.md
 entregas.md
+
+# Local brand source drops (generated assets are versioned in client/android/ios)
+/logos-icons/
+/favicons-atualizar/
+/resources/
