@@ -10,8 +10,8 @@ import { workoutPresets } from '../db/seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
-import { LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS } from '../../../shared/equipment/index.js';
 import {
+  LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS,
   RETIRED_EXERCISE_SLUGS as PRODUCT_RETIRED_EXERCISE_SLUGS,
   filterRetiredExercises,
 } from '../../../shared/exercises.js';

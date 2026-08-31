@@ -54,7 +54,6 @@ export function createDefaultAbTrainingProfile(
     intensity: 'moderado',
     training_days: [1, 3, 5],
     volume: 'equilibrado',
-    equipment: {},
     created_at: now,
     updated_at: now,
   };

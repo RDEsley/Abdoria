@@ -1,13 +1,7 @@
 import { Exercise, type ExerciseDocument } from '../domain/Exercise.js';
 import type { UserRecord } from '../domain/User.js';
 import type { MusculoPrincipal, Prioridade, UserPreferencias } from '../types/index.js';
-import {
-  equipmentAffectsExerciseAvailability,
-  getEnabledEquipmentIds,
-  isExerciseAvailableForUser,
-  type EquipmentId,
-} from '../../../shared/equipment/index.js';
-import { isRetiredExerciseSlug } from '../../../shared/exercises.js';
+import { isBodyweightExercise, isRetiredExerciseSlug } from '../../../shared/exercises.js';
 
 export interface ExerciseCatalogFilter {
   musculo?: MusculoPrincipal;
@@ -15,67 +9,37 @@ export interface ExerciseCatalogFilter {
   prioridade?: Prioridade;
 }
 
-function matchesFilter(ex: ExerciseDocument, filter: ExerciseCatalogFilter): boolean {
-  if (filter.musculo && ex.musculo_principal !== filter.musculo) {
-    const secondary = ex.musculos_secundarios ?? [];
+function matchesFilter(exercise: ExerciseDocument, filter: ExerciseCatalogFilter): boolean {
+  if (filter.musculo && exercise.musculo_principal !== filter.musculo) {
+    const secondary = exercise.musculos_secundarios ?? [];
     if (!secondary.includes(filter.musculo)) return false;
   }
-  if (filter.nivel != null && ex.nivel !== filter.nivel) return false;
-  if (filter.prioridade && ex.prioridade !== filter.prioridade) return false;
+  if (filter.nivel != null && exercise.nivel !== filter.nivel) return false;
+  if (filter.prioridade && exercise.prioridade !== filter.prioridade) return false;
   return true;
 }
 
 function sortExercises(a: ExerciseDocument, b: ExerciseDocument): number {
-  const pa = a.prioridade.localeCompare(b.prioridade);
-  if (pa !== 0) return pa;
-  return a.nome.localeCompare(b.nome);
+  const priority = a.prioridade.localeCompare(b.prioridade);
+  return priority !== 0 ? priority : a.nome.localeCompare(b.nome);
 }
 
-/** Lista exercícios disponíveis para o usuário (catálogo + equipamentos possuídos). */
+/**
+ * Lista exclusivamente movimentos ativos de peso corporal. `preferencias`
+ * permanece na assinatura para compatibilidade com os consumidores atuais;
+ * preferências legadas não alteram mais o catálogo.
+ */
 export async function findExercisesForUser(
-  preferencias?: UserPreferencias | null,
+  _preferencias?: UserPreferencias | null,
   filter: ExerciseCatalogFilter = {},
 ): Promise<ExerciseDocument[]> {
-  const enabled = getEnabledEquipmentIds(preferencias);
-  const [active, gated] = await Promise.all([
-    Exercise.find({ ativo: true }, { sort: { prioridade: 1, nome: 1 } }),
-    enabled.length > 0
-      ? Exercise.find({ ativo: false, equipamento: { $in: enabled } })
-      : Promise.resolve([]),
-  ]);
-
-  const merged = new Map<string, ExerciseDocument>();
-  for (const ex of [...active, ...gated]) {
-    // Garante a regra de equipamento mesmo se algum exercício de equipamento
-    // estiver salvo como `ativo: true` (não pode vazar com equipamento desmarcado).
-    if (
-      !isRetiredExerciseSlug(ex.slug) &&
-      matchesFilter(ex, filter) &&
-      isExerciseAvailableForUser(
-        { ativo: ex.ativo, equipamento: ex.equipamento as EquipmentId | null | undefined },
-        preferencias,
-      )
-    ) {
-      merged.set(ex.slug, ex);
-    }
-  }
-
-  return [...merged.values()].sort(sortExercises);
-}
-
-/** Exercícios travados por equipamento que o usuário NÃO possui (pra exibir bloqueados). */
-export async function findEquipmentLockedExercises(
-  preferencias?: UserPreferencias | null,
-): Promise<ExerciseDocument[]> {
-  const enabled = new Set(getEnabledEquipmentIds(preferencias));
-  const gated = await Exercise.find({ ativo: false }, { sort: { prioridade: 1, nome: 1 } });
-  return gated
+  const active = await Exercise.find({ ativo: true }, { sort: { prioridade: 1, nome: 1 } });
+  return active
     .filter(
-      (ex) =>
-        !isRetiredExerciseSlug(ex.slug) &&
-        ex.equipamento &&
-        equipmentAffectsExerciseAvailability(ex.equipamento as EquipmentId) &&
-        !enabled.has(ex.equipamento as EquipmentId),
+      (exercise) =>
+        !isRetiredExerciseSlug(exercise.slug) &&
+        isBodyweightExercise(exercise) &&
+        matchesFilter(exercise, filter),
     )
     .sort(sortExercises);
 }
@@ -84,20 +48,21 @@ export function filterRowsByAvailableSlugs<T extends { slug: string }>(
   rows: T[],
   available: ExerciseDocument[],
 ): T[] {
-  const slugs = new Set(available.map((e) => e.slug));
+  const slugs = new Set(available.map((exercise) => exercise.slug));
   return rows.filter((row) => slugs.has(row.slug));
 }
 
 export function isSlugAvailable(
   slug: string,
   exercises: ExerciseDocument[],
-  preferencias?: UserPreferencias | null,
+  _preferencias?: UserPreferencias | null,
 ): boolean {
-  const ex = exercises.find((e) => e.slug === slug);
-  if (!ex) return false;
-  return isExerciseAvailableForUser(
-    { ativo: ex.ativo, equipamento: ex.equipamento as EquipmentId | null | undefined },
-    preferencias,
+  const exercise = exercises.find((item) => item.slug === slug);
+  return Boolean(
+    exercise &&
+    exercise.ativo &&
+    isBodyweightExercise(exercise) &&
+    !isRetiredExerciseSlug(exercise.slug),
   );
 }
 

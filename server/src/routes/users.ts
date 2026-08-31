@@ -14,7 +14,6 @@ import {
   type MolduraId,
 } from '../types/index.js';
 import { COSMETICS } from '../data/cosmetics.js';
-import { EQUIPMENT_IDS } from '../../../shared/equipment/index.js';
 import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
@@ -33,7 +32,6 @@ import {
   countNewSkillUnlocks,
 } from '../services/economy.js';
 import { NOTA_XP_POR_CHECK } from '../../../shared/bloco-notas.js';
-import { syncEquipmentExerciseUnlocks } from '../services/equipment-sync.js';
 import { syncUserGamification } from '../services/gamification.js';
 import { sanitizePublicProfile } from '../utils/sanitize-user.js';
 import { LeaderboardPodiumHistory } from '../repositories/leaderboard-podium-repository.js';
@@ -294,13 +292,8 @@ usersRouter.patch('/me', async (req: AuthRequest, res) => {
 
     if (req.body.preferencias !== undefined) {
       const mergedPrefs = mergePreferencias(current.preferencias, req.body.preferencias);
+      delete mergedPrefs.equipamentos;
       update.preferencias = mergedPrefs;
-
-      const mutable = await User.findById(req.userId!);
-      if (mutable) {
-        syncEquipmentExerciseUnlocks(mutable, mergedPrefs);
-        update.dados_salvos = mutable.dados_salvos;
-      }
     }
 
     if (req.body.simulacao_definicao !== undefined) {
@@ -589,15 +582,8 @@ usersRouter.patch('/me/onboarding', async (req: AuthRequest, res) => {
 
     if (body.preferencias !== undefined) {
       const mergedPrefs = mergePreferencias(current.preferencias, body.preferencias);
+      delete mergedPrefs.equipamentos;
       update.preferencias = mergedPrefs;
-
-      // Equipamento coletado no onboarding precisa liberar os exercícios gated
-      // (mesmo sync do PATCH /me).
-      const mutable = await User.findById(req.userId!);
-      if (mutable) {
-        syncEquipmentExerciseUnlocks(mutable, mergedPrefs);
-        update.dados_salvos = mutable.dados_salvos;
-      }
     }
 
     const perfilTreino = sanitizePerfilTreino(body.perfil_treino);
@@ -666,36 +652,6 @@ usersRouter.put('/me/training-profile', async (req: AuthRequest, res) => {
       objetivo: focoToObjetivo(perfilTreino.foco),
     };
 
-    // Perfil e equipamento formam uma única configuração de recomendação.
-    // Persistir os dois na mesma requisição evita um plano novo usando o
-    // equipamento antigo quando uma das duas gravações falha no meio do fluxo.
-    if (
-      req.body?.equipamentos !== undefined &&
-      (!req.body.equipamentos ||
-        typeof req.body.equipamentos !== 'object' ||
-        Array.isArray(req.body.equipamentos))
-    ) {
-      res.status(400).json({ error: 'Configuração de equipamentos inválida.' });
-      return;
-    }
-
-    if (req.body?.equipamentos) {
-      const rawEquipamentos = req.body.equipamentos as Record<string, unknown>;
-      const equipamentos = Object.fromEntries(
-        EQUIPMENT_IDS.map((id) => [id, rawEquipamentos[id] === true]),
-      );
-      const preferencias = mergePreferencias(current.preferencias, {
-        equipamentos,
-      });
-      update.preferencias = preferencias;
-
-      const mutable = await User.findById(req.userId!);
-      if (mutable) {
-        syncEquipmentExerciseUnlocks(mutable, preferencias);
-        update.dados_salvos = mutable.dados_salvos;
-      }
-    }
-
     const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
@@ -723,10 +679,10 @@ usersRouter.put('/me/ab-training-profile-v2', async (req: AuthRequest, res) => {
       return;
     }
     const preferencias = mergePreferencias(current.preferencias, {
-      equipamentos: profile.equipment,
       ab_training_profile_v2: profile,
     });
-    const mutable = await User.findById(req.userId!);
+    // Limpa a configuração legada: equipamento não altera mais o Evolyn.
+    delete preferencias.equipamentos;
     const update: Record<string, unknown> = {
       ab_training_profile_v2: profile,
       preferencias,
@@ -734,10 +690,6 @@ usersRouter.put('/me/ab-training-profile-v2', async (req: AuthRequest, res) => {
       perfil_treino: current.perfil_treino,
       plano_treino: null,
     };
-    if (mutable) {
-      syncEquipmentExerciseUnlocks(mutable, preferencias);
-      update.dados_salvos = mutable.dados_salvos;
-    }
     const user = await User.findByIdAndUpdate(req.userId!, { $set: update }, { new: true });
     res.json(sanitizeUser(user!));
   } catch (error) {

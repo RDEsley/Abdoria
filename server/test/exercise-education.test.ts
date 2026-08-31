@@ -50,7 +50,7 @@ describe('catálogo educacional do programa', () => {
   });
 
   it('declara corretamente os exercícios unilaterais', () => {
-    for (const slug of ['side-plank', 'copenhagen-plank', 'single-leg-glute-bridge']) {
+    for (const slug of ['side-plank', 'single-leg-glute-bridge']) {
       expect(catalogBySlug.get(slug)?.laterality, `${slug}: lateralidade incorreta`).toBe(
         'per_side',
       );

@@ -3,7 +3,7 @@
  * Mantém contratos de API, exercícios, usuário e gamificação alinhados.
  */
 
-import type { EquipmentId } from '../equipment/index.js';
+import type { LegacyEquipmentId } from '../exercises.js';
 
 export type NivelUsuario = 'iniciante' | 'intermediario' | 'avancado';
 
@@ -131,8 +131,8 @@ export interface IExercise extends ExerciseLevelParams {
   ativo: boolean;
   /** Como o exercício distribui o trabalho entre os lados. Nunca inferir pelo slug no Player. */
   laterality?: ExerciseLaterality;
-  /** Equipamento necessário — exercício só aparece se o usuário possuir o item. */
-  equipamento?: EquipmentId | null;
+  /** Campo legado, mantido somente para desativar registros antigos com segurança. */
+  equipamento?: LegacyEquipmentId | null;
   /** Partes do corpo trabalhadas (primeira = principal). Ausente = ['abdomen']. */
   grupos?: ParteCorpo[];
   /** Regiões sensíveis que excluem o exercício das recomendações. */
@@ -236,8 +236,8 @@ export interface UserPreferencias {
   treinos_nao_recomendar?: string[];
   /** Controle de rodada por ciclo (A, B, C…). */
   ciclos_completados_rodada?: Partial<Record<TreinoBase, boolean>>;
-  /** Equipamentos que o usuário possui — desbloqueia exercícios gated. */
-  equipamentos?: Partial<Record<EquipmentId, boolean>>;
+  /** @deprecated O Evolyn atual utiliza somente peso corporal. */
+  equipamentos?: Partial<Record<LegacyEquipmentId, boolean>>;
   /** Vezes que o convite de re-onboarding foi dispensado (2+ esconde o card). */
   reonboarding_dispensado?: number;
   /** true = já avaliou o app ou pediu pra não perguntar de novo. */
@@ -369,7 +369,6 @@ export interface AbTrainingProfileV2 {
   intensity: AbTrainingIntensity;
   training_days: number[];
   volume: AbTrainingVolume;
-  equipment: Partial<Record<EquipmentId, boolean>>;
   created_at: string;
   updated_at: string;
 }
@@ -1789,18 +1788,6 @@ export function getExerciseParamsForNivel(
 }
 
 export { EXERCISE_NOME_PT, formatExerciseName, resolveExerciseNomePt } from './exercise-display.js';
-export type { EquipmentId } from '../equipment/index.js';
-export {
-  ALWAYS_AVAILABLE_PUSH_UP_SLUGS,
-  EQUIPMENT_CATALOG,
-  EQUIPMENT_IDS,
-  getAllEquipmentExerciseSlugs,
-  getEnabledEquipmentIds,
-  getExerciseSlugsForEquipment,
-  isExerciseAvailableForUser,
-  resolveUserEquipment,
-  slugsUnlockedByEquipment,
-} from '../equipment/index.js';
 export {
   xpFloorForCurrentLevel,
   spendableXpForShop,

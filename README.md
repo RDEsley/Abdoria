@@ -49,7 +49,7 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 * Configuração individual de séries, repetições, duração e descanso direto na fila
 * Exercícios realizados por tempo ou repetições
 * Timer de descanso e execução guiada
-* Equipamentos opcionais, como barra fixa, roda abdominal e bola de estabilidade
+* Catálogo inteiramente baseado em movimentos de peso corporal, sem acessórios
 * Sistema de favoritos, preferências e bloqueios de recomendação
 * Exercícios fixados somados a todas as recomendações, sem substituir a fila-base
 
@@ -239,7 +239,6 @@ Evolyn/
 │   ├── services/           # Regras de negócio
 │   └── db/seeds/           # Dados iniciais
 ├── shared/
-│   ├── equipment/          # Equipamentos disponíveis
 │   ├── types/              # Tipagens compartilhadas
 │   └── utils/              # Funções auxiliares
 ├── supabase/migrations/    # Migrações do banco de dados
@@ -414,7 +413,7 @@ Consulte o arquivo [CONTRIBUTING.md](./CONTRIBUTING.md) para mais informações.
 ## 🗺️ Próximos passos
 
 * Novos exercícios e treinos
-* Novos equipamentos e cosméticos
+* Novos movimentos de peso corporal e cosméticos
 * Eventos e recompensas especiais
 * Expansão das funcionalidades sociais
 * Melhorias no acompanhamento de progresso
