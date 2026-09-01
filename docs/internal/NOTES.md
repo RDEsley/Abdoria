@@ -1,0 +1,42 @@
+# Evolyn — Notas técnicas ativas
+
+Este arquivo contém apenas decisões e riscos que continuam relevantes para manutenção.
+
+## Identidade e nomenclatura
+
+- A identidade pública atual é **Evolyn**.
+- A assinatura oficial é **“Plantando a sua evolução.”**
+- A área pública de treino usa **Treino** e a rota principal é `/treino`.
+- Evitar na interface/documentação atual nomenclaturas antigas como Abdoria, Dorias, Coins, Gems, Construtor, RPG e AFK.
+- Identificadores persistidos legados (`abdoria_*`, campos antigos, eventos ou chaves de storage) podem permanecer quando necessários para compatibilidade. Não renomear sem avaliar migração e impacto em usuários existentes.
+
+## Branding
+
+- Fonte de verdade dos originais: `docs/internal/logos-icons/`.
+- Runtime Web: `client/public/brand/` e manifest/metadata correspondentes.
+- Alterações de marca devem considerar Web, PWA, Android e iOS.
+- `docs/internal/` nunca deve ser uma dependência de runtime.
+
+## Legado RPG/AFK
+
+- `docs/internal/Exploracao-rpg-afk/` é apenas histórico.
+- Não incluir esse conteúdo em runtime, lint, testes ou bundle atual.
+- Reaproveitamento exige implementação compatível com a arquitetura atual.
+
+## Banco de dados
+
+- Migrations aplicadas são imutáveis; mudanças de schema devem criar novas migrations.
+- Evitar snapshots completos de perfil quando apenas campos específicos mudaram.
+- Preferir escritas parciais quando aplicável para reduzir risco de sobrescrever alterações concorrentes.
+- Ter cuidado especial com alterações concorrentes em `preferencias`.
+
+## Plataforma
+
+- O produto é mobile-first, mas desktop deve continuar responsivo e funcional.
+- Mudanças nativas devem considerar Capacitor, Android e iOS quando aplicável.
+
+## Segurança
+
+- Nenhum diretório versionado é realmente privado.
+- Credenciais e dados reais devem permanecer fora do Git.
+- `.env.example` deve conter apenas placeholders.

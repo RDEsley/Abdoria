@@ -9,8 +9,8 @@ const ALL_COSMETIC_IDS = COSMETICS.map((item: CosmeticDefinition) => item.id);
 const ALL_ACHIEVEMENT_IDS = ACHIEVEMENTS.map((item) => item.id);
 const ALL_EXERCISE_SLUGS = allExercises.map((item) => item.slug);
 
-/** Payload completo para conta admin com tudo desbloqueado. */
-export function buildAdminUserPayload(passwordHash: string, email = 'admin@gmail.com') {
+/** Payload completo para uma conta administrativa explicitamente informada. */
+export function buildAdminUserPayload(passwordHash: string, email: string) {
   const nivelXp = 50_000;
   const today = getTodaySaoPaulo();
 

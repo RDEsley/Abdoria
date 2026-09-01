@@ -4,3 +4,9 @@ client/dist
 node_modules
 server/node_modules
 client/node_modules
+
+# Arquivos que não participam do deploy web
+docs
+.github
+android
+ios

@@ -16,6 +16,10 @@ client/.env
 *.key
 *.p12
 *.pfx
+*.jks
+*.keystore
+*.mobileprovision
+**/key.properties
 
 *.local
 
@@ -89,6 +93,9 @@ $RECYCLE.BIN/
 .claude/
 CLAUDE.md
 
+# AI / agent instructions
+/AGENTS.md
+
 # Vercel (link local do CLI)
 .vercel/
 
@@ -107,13 +114,12 @@ dump/
 # Supabase CLI temp
 supabase/.temp/
 
-# DOCS
-docs/private
-.private
-NOTES.md
-entregas.md
+# Arquivos locais opcionais da raiz
+/NOTES.md
+/entregas.md
+/.private/
 
-# Local brand source drops (generated assets are versioned in client/android/ios)
+# Local brand source drops antigos
 /logos-icons/
 /favicons-atualizar/
 /resources/

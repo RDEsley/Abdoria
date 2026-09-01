@@ -1,21 +1,125 @@
-MIT License
+EVOLYN CONTRIBUTION-ONLY SOURCE LICENSE
+Version 1.0 — 1 September 2026
 
-Copyright (c) 2025 Richard Esley
+Copyright (c) 2025-2026 Richard Esley.
+All rights reserved except for the limited permissions expressly granted below.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+IMPORTANT: THIS IS NOT AN OPEN-SOURCE LICENSE.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Scope
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This license applies to the Evolyn source code, documentation, project-specific
+assets, visual identity, and other material distributed with this repository
+(the "Project"), except for third-party material that is clearly identified as
+being governed by another license.
+
+The official Evolyn application may be used only under its applicable Terms of
+Use. Public availability of this repository does not grant a general right to
+reuse the Project's source code or assets.
+
+2. Limited permission for contribution
+
+You may:
+
+a) view and inspect the Project;
+
+b) fork, clone, or make copies of the Project only to the extent reasonably
+   necessary to prepare a contribution to the official Evolyn repository;
+
+c) modify and run the Project locally only for development, testing, review, or
+   validation of a contribution intended for the official Evolyn repository;
+
+d) submit issues, patches, pull requests, documentation, tests, fixes, or other
+   contributions to the official Evolyn repository.
+
+These permissions are limited to contribution to Evolyn and do not grant any
+right to use the Project as an independent product or project.
+
+3. Prohibited uses
+
+Unless you receive prior written permission from the copyright holder, you may
+not:
+
+a) deploy, host, publish, operate, or make available your own instance of Evolyn;
+
+b) use the Project, or a substantial portion of it, in another application,
+   website, service, product, repository, or commercial offering;
+
+c) distribute, mirror, republish, sell, sublicense, rent, or otherwise make the
+   Project or derivative versions available to third parties, except for the
+   limited GitHub functionality necessary to prepare a contribution;
+
+d) create or publish a clone, rebrand, competing version, derivative product, or
+   substantially similar application based on the Project;
+
+e) remove or alter copyright, attribution, trademark, licensing, or ownership
+   notices;
+
+f) use the Evolyn name, logo, icons, slogans, visual identity, or other branding
+   in a way that suggests affiliation, endorsement, or ownership;
+
+g) use Project source code, assets, or documentation to train, fine-tune, or
+   build a dataset for a third-party commercial software-generation product,
+   except where such restriction is ineffective under mandatory law or the
+   applicable GitHub Terms of Service.
+
+4. Contributions
+
+By intentionally submitting a contribution to the official Evolyn repository,
+you represent that you have the right to submit it and you grant the Project
+maintainer a perpetual, worldwide, non-exclusive, irrevocable, royalty-free,
+transferable, and sublicensable license to use, reproduce, modify, adapt, merge,
+publish, distribute, commercialize, relicense, and otherwise exploit that
+contribution as part of Evolyn or related Evolyn products and services.
+
+You retain copyright in material you authored unless a separate written
+agreement states otherwise.
+
+Submitting a contribution does not grant you ownership of Evolyn, its brand,
+the repository, or other contributors' work.
+
+5. Third-party components
+
+Third-party libraries, dependencies, fonts, images, or other components keep
+their own licenses. This license does not reduce rights independently granted
+to you by those third-party licenses.
+
+6. GitHub functionality
+
+Nothing in this license is intended to restrict rights that GitHub itself must
+receive, or functionality that GitHub users receive, under the GitHub Terms of
+Service for a public repository.
+
+A GitHub fork or repository copy made through GitHub functionality does not, by
+itself, grant permission to deploy, redistribute, commercialize, rebrand, or use
+the Project outside the limited contribution purposes described in this
+license.
+
+7. Termination
+
+The permissions granted by this license terminate automatically if you violate
+its terms. On termination, you must stop the unauthorized use and remove copies
+under your control, except to the extent retention is required by law or by
+GitHub's platform operation.
+
+8. No warranty
+
+THE PROJECT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY
+LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR CLAIMS, DAMAGES, OR OTHER
+LIABILITY ARISING FROM THE PROJECT OR ITS USE.
+
+9. Prior versions
+
+This license does not purport to revoke permissions that were validly granted
+for copies of earlier Project versions under a previous license. Versions
+distributed under the MIT License remain subject to the rights granted for
+those versions.
+
+10. Governing law
+
+To the extent permitted by applicable law, this license is governed by the laws
+of Brazil.
+
+For permissions beyond this license, contact the repository maintainer.
