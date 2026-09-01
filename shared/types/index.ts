@@ -1447,21 +1447,14 @@ export function formatExercisePrescription(item: {
   repeticoes?: number;
   tempo_seg?: number;
   tempo_recomendado?: number;
+  descanso_seg?: number;
 }): string {
+  const rest = item.descanso_seg != null ? ` · ${item.descanso_seg}s descanso` : '';
   if (item.modo === 'reps') {
-    return `${item.repeticoes ?? 12} reps × ${item.series} séries`;
+    return `${item.repeticoes ?? 12} reps × ${item.series} séries${rest}`;
   }
   const secs = item.tempo_seg ?? item.tempo_recomendado ?? 30;
-  return `${secs}s × ${item.series} séries`;
-}
-
-/** Prêmios do fechamento semanal dos rankings de XP e Dorias (pago em Dorias). */
-export function weeklyLeaderboardReward(rank: number): number | null {
-  if (rank < 1) return null;
-  if (rank === 1) return 1000;
-  if (rank === 2) return 700;
-  if (rank === 3) return 300;
-  return 100;
+  return `${secs}s × ${item.series} séries${rest}`;
 }
 
 export const REP_SCHEME_BY_NIVEL: Record<NivelUsuario, RepSchemeRecommendation[]> = {

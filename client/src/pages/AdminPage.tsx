@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Ban,
   Flag,
-  Leaf,
   KeyRound,
   Lightbulb,
   Pencil,
@@ -21,6 +20,7 @@ import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { showGameToast } from '@/components/ui/GameToast';
+import { GameLeafIcon, GoldenLeafIcon } from '@/components/ui/CurrencyIcon';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -269,16 +269,10 @@ export function AdminPage() {
                     </p>
                     <p className="mt-0.5 flex items-center gap-2 text-[0.65rem] font-bold text-stone-600">
                       <span className="inline-flex items-center gap-0.5">
-                        <Leaf size={11} className="text-emerald-600" aria-hidden /> {entry.coins}
+                        <GameLeafIcon size={14} aria-hidden /> {entry.coins}
                       </span>
                       <span className="inline-flex items-center gap-0.5">
-                        <Leaf
-                          size={11}
-                          className="text-amber-500"
-                          fill="currentColor"
-                          aria-hidden
-                        />{' '}
-                        {entry.gems}
+                        <GoldenLeafIcon size={14} aria-hidden /> {entry.gems}
                       </span>
                     </p>
                   </div>

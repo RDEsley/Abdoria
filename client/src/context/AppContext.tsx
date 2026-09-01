@@ -17,6 +17,7 @@ import {
   mergeUserDadosSalvos,
 } from '@/lib/user-dados';
 import { AppContext } from '@/context/app-context';
+import { useAuth } from '@/context/AuthContext';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import type {
   CompleteWorkoutPayload,
@@ -37,7 +38,8 @@ import { resolveUserDadosSalvos } from '@/types';
 const PERSIST_DEBOUNCE_MS = 450;
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<IUserDocument | null>(null);
+  const { user: authenticatedUser, applyUser: applyAuthenticatedUser } = useAuth();
+  const [user, setUser] = useState<IUserDocument | null>(authenticatedUser);
   const [exercises, setExercises] = useState<IExerciseDocument[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [history, setHistory] = useState<IWorkoutHistoryDocument[]>([]);
@@ -57,31 +59,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const recommendationsLoaded = useRef(false);
   const statsRequestVersion = useRef(0);
   const frozenNoticeShown = useRef(false);
+  const initialHydrationFor = useRef<string | null>(null);
 
   useEffect(() => {
     userDadosRef.current = userDados;
   }, [userDados]);
 
-  const applyUserDados = useCallback((next: UserDadosSalvos, syncedUser?: IUserDocument) => {
-    // Ref atualizada de forma síncrona: leitores (getRepSchemes etc.) que rodam
-    // durante o MESMO render disparado por este set já enxergam o valor novo.
-    userDadosRef.current = next;
-    setUserDados(next);
-    if (syncedUser) {
-      setUser(syncedUser);
-      window.dispatchEvent(new CustomEvent('abdoria:user-updated', { detail: syncedUser }));
-    }
-  }, []);
+  const applyUserDados = useCallback(
+    (next: UserDadosSalvos, syncedUser?: IUserDocument) => {
+      // Ref atualizada de forma síncrona: leitores (getRepSchemes etc.) que rodam
+      // durante o MESMO render disparado por este set já enxergam o valor novo.
+      userDadosRef.current = next;
+      setUserDados(next);
+      if (syncedUser) {
+        setUser(syncedUser);
+        applyAuthenticatedUser(syncedUser);
+      }
+    },
+    [applyAuthenticatedUser],
+  );
 
   /**
    * Atualiza só o usuário do AppContext (otimista ou resposta de API), sem
    * refetch — pra interações que precisam refletir na hora (fila de
    * atividades, preferências) sem pagar um `refresh()` completo.
    */
-  const applyUser = useCallback((next: IUserDocument) => {
-    setUser(next);
-    window.dispatchEvent(new CustomEvent('abdoria:user-updated', { detail: next }));
-  }, []);
+  const applyUser = useCallback(
+    (next: IUserDocument) => {
+      setUser(next);
+      applyAuthenticatedUser(next);
+    },
+    [applyAuthenticatedUser],
+  );
 
   /** Ignora respostas de /stats ultrapassadas e evita repetir o mesmo aviso. */
   const commitStats = useCallback((next: DashboardStats, requestVersion: number) => {
@@ -228,7 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [userRes, statsRes] = await Promise.allSettled([getMe(), getDashboardStats()]);
 
     if (userRes.status === 'fulfilled') {
-      setUser(userRes.value);
+      applyUser(userRes.value);
       await hydrateAccountData(userRes.value);
     } else {
       errors.push(
@@ -249,7 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setError(errors.length > 0 ? errors.join(' · ') : null);
     setLoading(false);
-  }, [applyUserDados, commitStats, hydrateAccountData]);
+  }, [applyUser, applyUserDados, commitStats, hydrateAccountData]);
 
   const ensureExercises = useCallback(async (options?: { force?: boolean }) => {
     if (exercisesLoaded.current && !options?.force) return;
@@ -282,8 +291,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (!authenticatedUser) {
+      setUser(null);
+      setLoading(false);
+      initialHydrationFor.current = null;
+      return;
+    }
+
+    // AuthProvider already loaded /users/me before the protected application
+    // mounts. Reuse that snapshot so entering the app does not trigger a
+    // second visible hydration and a redundant account request.
+    setUser(authenticatedUser);
+    if (initialHydrationFor.current === authenticatedUser.id) return;
+    initialHydrationFor.current = authenticatedUser.id;
+
+    void (async () => {
+      const statsVersion = ++statsRequestVersion.current;
+      try {
+        await hydrateAccountData(authenticatedUser);
+        const nextStats = await getDashboardStats();
+        commitStats(nextStats, statsVersion);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar estatisticas');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [authenticatedUser, commitStats, hydrateAccountData]);
 
   useEffect(() => {
     if (!error) return;
@@ -388,6 +423,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyUserDados, schedulePersist],
   );
 
+  /** Atualiza lista e seleção juntas: um clique, uma gravação, sem corrida entre requests. */
+  const setRepSchemeConfiguration = useCallback(
+    (nivel: NivelUsuario, schemes: StoredRepScheme[], selectedId: string) => {
+      const patch = {
+        esquemas_reps: { [nivel]: schemes },
+        esquema_reps_selecionado: { [nivel]: selectedId },
+      };
+      const next = mergeUserDadosSalvos(userDadosRef.current, patch);
+      applyUserDados(next);
+      schedulePersist(patch, true);
+    },
+    [applyUserDados, schedulePersist],
+  );
+
   const addRepScheme = useCallback(
     (nivel: NivelUsuario, scheme: Omit<RepSchemeRecommendation, 'id'> & { isCustom?: boolean }) => {
       const current = getRepSchemesForNivel(userDadosRef.current, nivel);
@@ -450,9 +499,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const saveWorkout = useCallback(
     async (payload: CompleteWorkoutPayload) => {
       const result = await completeWorkout(payload);
-      setUser(result.user);
+      applyUser(result.user);
       await hydrateAccountData(result.user);
-      window.dispatchEvent(new CustomEvent('abdoria:user-updated', { detail: result.user }));
 
       const abdoriaGanha = result.abdoria_ganha ?? result.moedas_ganhas ?? 0;
       if (abdoriaGanha > 0) {
@@ -514,7 +562,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rodada_completa: result.rodada_completa ?? false,
       };
     },
-    [commitStats, hydrateAccountData],
+    [applyUser, commitStats, hydrateAccountData],
   );
 
   const value = useMemo(
@@ -548,6 +596,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       saveWorkoutPreset,
       getRepSchemes,
       saveRepSchemes,
+      setRepSchemeConfiguration,
       addRepScheme,
       removeRepScheme,
       unlockExercise,
@@ -579,6 +628,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       saveWorkoutPreset,
       getRepSchemes,
       saveRepSchemes,
+      setRepSchemeConfiguration,
       addRepScheme,
       removeRepScheme,
       unlockExercise,

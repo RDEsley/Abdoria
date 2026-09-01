@@ -1,11 +1,6 @@
 ﻿import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Leaf } from 'lucide-react';
-
-/** Folha dourada — apresentação visual da moeda premium `gems`. */
-export function GemIcon({ size = 18 }: { size?: number }) {
-  return <Leaf size={size} className="top-navbar__gem-icon" fill="currentColor" aria-hidden />;
-}
+import { GameLeafIcon, GoldenLeafIcon } from '@/components/ui/CurrencyIcon';
 
 export interface TopNavbarProps {
   userName: string;
@@ -37,11 +32,16 @@ interface ResourcePillProps {
   amount: number;
   label: string;
   pulse?: number | null;
+  tone: 'leaf' | 'golden';
 }
 
-function ResourcePill({ icon, amount, label, pulse }: ResourcePillProps) {
+function ResourcePill({ icon, amount, label, pulse, tone }: ResourcePillProps) {
   return (
-    <div className="top-navbar__pill" role="group" aria-label={`${formatAmount(amount)} ${label}`}>
+    <div
+      className={`top-navbar__pill top-navbar__pill--${tone}`}
+      role="group"
+      aria-label={`${formatAmount(amount)} ${label}`}
+    >
       <div className="top-navbar__pill-icon" aria-hidden>
         {icon}
       </div>
@@ -121,12 +121,18 @@ export function TopNavbar({
 
         <div className="top-navbar__resources flex shrink-0 items-center gap-2.5 sm:gap-3">
           <ResourcePill
-            icon={<Leaf size={20} strokeWidth={2.5} className="top-navbar__coin-icon" />}
+            icon={<GameLeafIcon size={22} animated />}
             amount={doriasAmount}
             label="Folhas"
             pulse={coinsEarnedPulse}
+            tone="leaf"
           />
-          <ResourcePill icon={<GemIcon size={18} />} amount={gemsAmount} label="Folhas douradas" />
+          <ResourcePill
+            icon={<GoldenLeafIcon size={21} animated />}
+            amount={gemsAmount}
+            label="Folhas douradas"
+            tone="golden"
+          />
           {actions}
         </div>
       </div>

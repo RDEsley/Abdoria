@@ -1,0 +1,91 @@
+.currency-icon {
+  display: inline-grid;
+  width: var(--currency-icon-size, 18px);
+  height: var(--currency-icon-size, 18px);
+  flex: 0 0 auto;
+  place-items: center;
+  vertical-align: -0.18em;
+  transform-origin: 50% 58%;
+}
+
+.currency-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.currency-icon__leaf {
+  stroke-width: 1.35;
+  stroke-linejoin: round;
+}
+
+.currency-icon--leaf .currency-icon__leaf {
+  stroke: #036b52;
+}
+
+.currency-icon--golden .currency-icon__leaf {
+  stroke: #8d4707;
+}
+
+.currency-icon__highlight {
+  fill: rgba(255, 255, 255, 0.24);
+}
+
+.currency-icon__vein {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.currency-icon__facet {
+  fill: rgba(255, 255, 255, 0.2);
+  stroke: rgba(146, 64, 14, 0.18);
+  stroke-width: 0.45;
+}
+
+.currency-icon__sparkle {
+  fill: none;
+  stroke: #fff7c2;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 1.5px rgba(251, 191, 36, 0.9));
+}
+
+.currency-icon__dew {
+  fill: rgba(236, 253, 245, 0.88);
+}
+
+.currency-icon--leaf {
+  filter: drop-shadow(0 2px 2px rgba(4, 120, 87, 0.24));
+}
+
+.currency-icon--golden {
+  filter: drop-shadow(0 2px 2px rgba(180, 83, 9, 0.3));
+}
+
+.currency-icon--animated {
+  animation: currency-icon-float 3.2s ease-in-out infinite;
+}
+
+.currency-icon--golden.currency-icon--animated {
+  animation-delay: -1.1s;
+}
+
+@keyframes currency-icon-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-1.5px) rotate(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currency-icon--animated {
+    animation: none;
+  }
+}

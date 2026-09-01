@@ -7,6 +7,7 @@ import { formatTrainingDurationCompact } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { FROZEN_STREAK_LABEL } from '@/types';
+import { usePageEntranceReady } from '@/context/PageEntranceContext';
 
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
@@ -24,6 +25,7 @@ interface DayCell {
  * treinos, tempo e XP. Base do resumo semanal completo planejado na Fase 7.
  */
 export function WeekSummary() {
+  const pageReady = usePageEntranceReady();
   const reduceMotion = useReducedMotion();
   const { history, ensureHistory, historyLoading, user } = useApp();
   const frozenDays = user?.gamificacao?.streak_congelamentos;
@@ -71,7 +73,7 @@ export function WeekSummary() {
       <h3 className="game-section-title">Sua semana</h3>
 
       <div className="mt-3 flex items-center justify-between gap-1">
-        {days.map((day) => (
+        {days.map((day, index) => (
           <div key={day.key} className="flex flex-1 flex-col items-center gap-1">
             <span
               className={`text-[0.55rem] font-extrabold ${day.isToday ? 'text-emerald-700' : 'text-stone-400'}`}
@@ -118,12 +120,16 @@ export function WeekSummary() {
                 initial={
                   day.trained && !reduceMotion ? { scale: 0.35, rotate: -24, opacity: 0 } : false
                 }
-                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                animate={
+                  day.trained && !reduceMotion && !pageReady
+                    ? { scale: 0.35, rotate: -24, opacity: 0 }
+                    : { scale: 1, rotate: 0, opacity: 1 }
+                }
                 transition={{
                   type: 'spring',
                   stiffness: 460,
                   damping: 18,
-                  delay: day.trained ? 0.08 : 0,
+                  delay: day.trained ? 0.06 + index * 0.055 : 0,
                 }}
               >
                 {day.trained && <Check size={14} className="text-white" strokeWidth={3} />}

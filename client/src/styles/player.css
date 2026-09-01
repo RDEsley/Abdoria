@@ -417,10 +417,13 @@
   position: relative;
   display: flex;
   width: min(100%, 32rem);
+  min-width: 0;
   max-height: 100%;
+  box-sizing: border-box;
   flex-direction: column;
   align-items: center;
   gap: 0.9rem;
+  overflow-x: clip;
   overflow-y: auto;
   padding: clamp(1.2rem, 4vw, 2rem);
   border: 1px solid rgb(255 255 255 / 18%);
@@ -477,17 +480,34 @@
 .game-player-pause-panel > :not(.game-player-pause-panel__orb) {
   position: relative;
   z-index: 1;
+  max-width: 100%;
 }
 
 .game-player-pause-panel__orb--one {
   top: 8%;
-  right: -2rem;
+  right: 0.35rem;
 }
 
 .game-player-pause-panel__orb--two {
   bottom: 12%;
-  left: -2.3rem;
+  left: 0.35rem;
   animation-delay: -2.2s;
+}
+
+@media (max-width: 420px) {
+  .game-player-pause-overlay {
+    padding-inline: 0.65rem;
+  }
+
+  .game-player-pause-panel {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 1.45rem;
+  }
+
+  .game-player-pause-panel__demo {
+    width: min(100%, 13.5rem);
+  }
 }
 
 @keyframes player-pause-float {

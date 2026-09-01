@@ -121,22 +121,49 @@
 .profile-edit-modal {
   display: flex;
   flex-direction: column;
-  width: min(30rem, calc(100vw - 2rem));
-  max-height: min(88vh, 44rem);
+  width: min(38rem, calc(100vw - 1rem));
+  max-width: 38rem;
+  padding: 0;
+  max-height: min(92dvh, 50rem);
   overflow: hidden;
+  border: 1px solid rgba(6, 95, 70, 0.14);
+  box-shadow: 0 28px 80px rgba(6, 78, 59, 0.22);
+}
+
+.profile-banner-modal {
+  width: min(44rem, calc(100vw - 1rem));
+  max-width: 44rem;
 }
 
 .profile-edit-modal__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.15rem 0.75rem;
+  padding: 1rem 1.15rem 0.9rem;
+  border-bottom: 1px solid rgba(6, 95, 70, 0.09);
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(240, 249, 255, 0.78));
 }
 
 .profile-edit-modal__head h2 {
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 1.18rem;
+  font-weight: 900;
   color: #1c1917;
+}
+
+.profile-edit-modal__eyebrow {
+  margin-bottom: 0.1rem;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #047857;
+}
+
+.profile-edit-modal__subtitle {
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+  color: #78716c;
 }
 
 .profile-edit-modal__close {
@@ -160,8 +187,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  padding: 0.25rem 1.15rem 1rem;
+  padding: 1rem 1.15rem 1.25rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  background: linear-gradient(180deg, #fbfefd 0%, #f7faf9 100%);
 }
 
 .profile-edit-photo {
@@ -169,6 +198,21 @@
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid rgba(16, 185, 129, 0.16);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(110, 231, 183, 0.2), transparent 34%),
+    linear-gradient(135deg, #ffffff, #ecfdf5);
+}
+
+.profile-edit-photo__label {
+  align-self: flex-start;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #047857;
 }
 
 .profile-edit-photo__btn {
@@ -221,6 +265,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(28, 25, 23, 0.09);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035);
 }
 
 .profile-edit-field__label {
@@ -231,7 +280,8 @@
 
 .profile-edit-field__input {
   width: 100%;
-  padding: 0.55rem 0.75rem;
+  min-height: 2.85rem;
+  padding: 0.65rem 0.8rem;
   font: inherit;
   font-weight: 600;
   color: #1c1917;
@@ -239,11 +289,16 @@
   border: 1px solid #d6d3d1;
   border-radius: 0.75rem;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 .profile-edit-field__input:focus {
   border-color: #10b981;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 .profile-edit-field__input--area {
@@ -407,7 +462,7 @@
    jogador só via o resultado depois de já ter salvo e fechado o form. */
 .profile-banner-preview {
   position: relative;
-  height: 5.5rem;
+  height: clamp(6.5rem, 24vw, 9rem);
   margin-bottom: 0.9rem;
   border-radius: 0.9rem;
   border: 2px solid var(--game-ink);
@@ -446,17 +501,18 @@
 /* Seletor de banner (lápis do hero do Perfil). */
 .profile-banner-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.8rem;
 }
 
 .profile-banner-option {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  border: none;
-  background: none;
-  padding: 0;
+  gap: 0.45rem;
+  border: 1px solid rgba(28, 25, 23, 0.09);
+  border-radius: 1rem;
+  background: #fff;
+  padding: 0.45rem;
   cursor: pointer;
   text-align: left;
 }
@@ -468,7 +524,7 @@
 .profile-banner-option__swatch {
   position: relative;
   display: block;
-  height: 3.6rem;
+  height: clamp(5rem, 18vw, 7rem);
   border-radius: 0.8rem;
   border: 2px solid rgba(28, 25, 23, 0.1);
   background-color: #e7e5e4;
@@ -488,6 +544,12 @@
 .profile-banner-option--active .profile-banner-option__swatch {
   border-color: var(--game-green, #059669);
   box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
+}
+
+.profile-banner-option--active {
+  border-color: rgba(5, 150, 105, 0.55);
+  background: #ecfdf5;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.1);
 }
 
 /* Bloqueado fica só um pouco escurecido — a ideia é o banner continuar
@@ -567,9 +629,10 @@
 }
 
 .profile-banner-option__name {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #57534e;
+  padding: 0 0.35rem 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+  color: #44403c;
 }
 
 .profile-edit-modal__footer {
@@ -577,6 +640,17 @@
   gap: 0.5rem;
   padding: 0.75rem 1.15rem 1rem;
   border-top: 1px solid rgba(28, 25, 23, 0.08);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 -12px 28px rgba(15, 23, 42, 0.04);
+}
+
+@media (min-width: 640px) {
+  .profile-edit-modal__head,
+  .profile-edit-modal__body,
+  .profile-edit-modal__footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 /* Cancelar e Salvar dividem a largura em 50/50 (base 0 pra ignorar a
@@ -904,6 +978,165 @@ a.profile-counts__item:hover strong {
 /* Opções — pacotes de som. Scroll próprio (não mais "Ver mais"/"Ver menos")
    — a lista inteira já fica ali, só rolando, igual às listas de Atividades
    e Lembretes. */
+.settings-audio-card {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.1), transparent 9rem),
+    radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.1), transparent 10rem),
+    rgba(255, 255, 255, 0.9);
+}
+
+.settings-audio-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.settings-audio-card__header p {
+  margin-top: 0.2rem;
+  color: #6b7d78;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.settings-audio-card__icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 0.9rem;
+  background: linear-gradient(145deg, #d1fae5, #fff);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.1);
+}
+
+.settings-audio-toggle,
+.settings-audio-volume {
+  display: flex;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(28, 25, 23, 0.09);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.settings-audio-toggle {
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.settings-audio-toggle > span,
+.settings-audio-toggle strong,
+.settings-audio-toggle small {
+  display: block;
+}
+
+.settings-audio-toggle strong,
+.settings-audio-volume strong {
+  color: #29473f;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.settings-audio-toggle small {
+  margin-top: 0.18rem;
+  color: #7b8b86;
+  font-size: 0.64rem;
+  font-weight: 650;
+}
+
+.settings-audio-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-audio-toggle i {
+  position: relative;
+  width: 2.8rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #d6d3d1;
+  transition: background 0.18s ease;
+}
+
+.settings-audio-toggle i::after {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.22);
+  transition: transform 0.18s ease;
+}
+
+.settings-audio-toggle input:checked + i {
+  background: #0a9875;
+}
+
+.settings-audio-toggle input:checked + i::after {
+  transform: translateX(1.25rem);
+}
+
+.settings-audio-toggle:focus-within {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.settings-audio-volume {
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.settings-audio-volume > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-audio-volume output {
+  color: #047857;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.settings-audio-volume input {
+  width: 100%;
+  accent-color: #0a9875;
+  cursor: pointer;
+}
+
+.settings-audio-volume.is-disabled {
+  opacity: 0.55;
+}
+
+.settings-sound-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(28, 25, 23, 0.08);
+}
+
+.settings-sound-section__title {
+  color: #29473f;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.settings-sound-section__hint {
+  margin: 0.2rem 0 0.65rem;
+  color: #6b7d78;
+  font-size: 0.67rem;
+  font-weight: 650;
+}
+
 .settings-sound-list {
   max-height: 16rem;
   margin: 0;

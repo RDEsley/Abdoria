@@ -7,6 +7,7 @@ import { AppDataProvider } from '@/components/auth/AppDataProvider';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { PwaInstallProvider } from '@/context/PwaInstallContext';
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() =>
@@ -89,175 +90,180 @@ function MotionPreferenceGate({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <AuthProvider>
-        <MotionPreferenceGate>
-          <AchievementProvider>
-            <Routes>
-              <Route element={<PublicOnlyRoute />}>
-                <Route
-                  path="login"
-                  element={
-                    <LazyPage>
-                      <LoginPage />
-                    </LazyPage>
-                  }
-                />
-                <Route
-                  path="register"
-                  element={
-                    <LazyPage>
-                      <RegisterPage />
-                    </LazyPage>
-                  }
-                />
-              </Route>
-
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppDataProvider />}>
+    <PwaInstallProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <AuthProvider>
+          <MotionPreferenceGate>
+            <AchievementProvider>
+              <Routes>
+                <Route element={<PublicOnlyRoute />}>
                   <Route
-                    path="onboarding"
+                    path="login"
                     element={
                       <LazyPage>
-                        <OnboardingPage />
+                        <LoginPage />
                       </LazyPage>
                     }
                   />
-                  <Route element={<AppLayout />}>
-                    <Route
-                      index
-                      element={
-                        <LazyPage>
-                          <DashboardPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="biblioteca"
-                      element={
-                        <LazyPage>
-                          <LibraryPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="atividades"
-                      element={
-                        <LazyPage>
-                          <ActivitiesPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="myplant"
-                      element={
-                        <LazyPage>
-                          <MyPlantPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route path="exploracao" element={<Navigate to="/myplant" replace />} />
-                    <Route path="exploracao/jornada" element={<Navigate to="/myplant" replace />} />
-                    <Route
-                      path="construtor"
-                      element={
-                        <LazyPage>
-                          <BuilderPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="ranking"
-                      element={
-                        <LazyPage>
-                          <LeaderboardPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="perfil"
-                      element={
-                        <LazyPage>
-                          <ProfilePage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="perfil/:userId"
-                      element={
-                        <LazyPage>
-                          <PublicProfilePage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="amigos"
-                      element={
-                        <LazyPage>
-                          <FriendsPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="configuracoes"
-                      element={
-                        <LazyPage>
-                          <SettingsPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="conquistas"
-                      element={
-                        <LazyPage>
-                          <AchievementsPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="admin"
-                      element={
-                        <LazyPage>
-                          <AdminPage />
-                        </LazyPage>
-                      }
-                    />
-                    <Route
-                      path="atividades-player"
-                      element={
-                        <LazyPage>
-                          <AtividadesPlayerPage />
-                        </LazyPage>
-                      }
-                    />
-                  </Route>
                   <Route
-                    path="player"
+                    path="register"
                     element={
                       <LazyPage>
-                        <PlayerPage />
+                        <RegisterPage />
                       </LazyPage>
                     }
                   />
-                  {CAMPAIGN_ARCHIVE_ENABLED ? (
-                    <Route
-                      path="campanha"
-                      element={
-                        <LazyPage>
-                          <CampaignBookPage />
-                        </LazyPage>
-                      }
-                    />
-                  ) : null}
                 </Route>
-              </Route>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </AchievementProvider>
-        </MotionPreferenceGate>
-      </AuthProvider>
-    </BrowserRouter>
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AppDataProvider />}>
+                    <Route
+                      path="onboarding"
+                      element={
+                        <LazyPage>
+                          <OnboardingPage />
+                        </LazyPage>
+                      }
+                    />
+                    <Route element={<AppLayout />}>
+                      <Route
+                        index
+                        element={
+                          <LazyPage>
+                            <DashboardPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="biblioteca"
+                        element={
+                          <LazyPage>
+                            <LibraryPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="atividades"
+                        element={
+                          <LazyPage>
+                            <ActivitiesPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="myplant"
+                        element={
+                          <LazyPage>
+                            <MyPlantPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route path="exploracao" element={<Navigate to="/myplant" replace />} />
+                      <Route
+                        path="exploracao/jornada"
+                        element={<Navigate to="/myplant" replace />}
+                      />
+                      <Route
+                        path="construtor"
+                        element={
+                          <LazyPage>
+                            <BuilderPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="ranking"
+                        element={
+                          <LazyPage>
+                            <LeaderboardPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="perfil"
+                        element={
+                          <LazyPage>
+                            <ProfilePage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="perfil/:userId"
+                        element={
+                          <LazyPage>
+                            <PublicProfilePage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="amigos"
+                        element={
+                          <LazyPage>
+                            <FriendsPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="configuracoes"
+                        element={
+                          <LazyPage>
+                            <SettingsPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="conquistas"
+                        element={
+                          <LazyPage>
+                            <AchievementsPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="admin"
+                        element={
+                          <LazyPage>
+                            <AdminPage />
+                          </LazyPage>
+                        }
+                      />
+                      <Route
+                        path="atividades-player"
+                        element={
+                          <LazyPage>
+                            <AtividadesPlayerPage />
+                          </LazyPage>
+                        }
+                      />
+                    </Route>
+                    <Route
+                      path="player"
+                      element={
+                        <LazyPage>
+                          <PlayerPage />
+                        </LazyPage>
+                      }
+                    />
+                    {CAMPAIGN_ARCHIVE_ENABLED ? (
+                      <Route
+                        path="campanha"
+                        element={
+                          <LazyPage>
+                            <CampaignBookPage />
+                          </LazyPage>
+                        }
+                      />
+                    ) : null}
+                  </Route>
+                </Route>
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AchievementProvider>
+          </MotionPreferenceGate>
+        </AuthProvider>
+      </BrowserRouter>
+    </PwaInstallProvider>
   );
 }

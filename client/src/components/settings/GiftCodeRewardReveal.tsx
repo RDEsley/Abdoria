@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { Crown, Gift, Leaf, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
+import { Crown, Gift, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
 import { CelebrationBurst } from '@/components/effects/CelebrationBurst';
 import { GameButton } from '@/components/ui/GameButton';
 import type { GiftCodeRewardLine, RedeemCodeResponse } from '@/types';
 import { CURRENCY_NAME } from '@/types';
+import { GameLeafIcon, GoldenLeafIcon } from '@/components/ui/CurrencyIcon';
 
 interface Props {
   result: RedeemCodeResponse;
@@ -19,9 +20,9 @@ function formatRewardAmount(value: number): string {
 
 function rewardIcon(line: GiftCodeRewardLine) {
   if (line.tipo === 'xp') return <Zap size={22} aria-hidden />;
-  if (line.tipo === 'abdoria') return <Leaf size={22} aria-hidden />;
+  if (line.tipo === 'abdoria') return <GameLeafIcon size={24} aria-hidden />;
   if (line.tipo === 'frozen_streak') return <Snowflake size={22} aria-hidden />;
-  if (line.tipo === 'gems') return <Leaf size={22} fill="currentColor" aria-hidden />;
+  if (line.tipo === 'gems') return <GoldenLeafIcon size={24} aria-hidden />;
   return <Crown size={22} aria-hidden />;
 }
 

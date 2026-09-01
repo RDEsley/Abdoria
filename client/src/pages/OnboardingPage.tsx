@@ -19,7 +19,7 @@ const FEATURES = [
 
 /** Entrada curta. A configuração do treino acontece no contexto da Missão. */
 export function OnboardingPage() {
-  const { user, applyUser, refreshUser } = useAuth();
+  const { user, applyUser } = useAuth();
   const navigate = useNavigate();
   const [termsAccepted, setTermsAccepted] = useState(Boolean(user?.terms_accepted_at));
   const [showTerms, setShowTerms] = useState(!user?.terms_accepted_at);
@@ -36,10 +36,9 @@ export function OnboardingPage() {
       const updated = await completeOnboarding({
         onboarding_completed: true,
         terms_accepted: !user?.terms_accepted_at,
-        preferencias: { tom_texto: 'normal', tutorial_visto: true },
+        preferencias: { tom_texto: 'normal', tutorial_visto: false },
       });
       applyUser(updated);
-      await refreshUser();
       navigate('/', { replace: true });
     } catch {
       showGameToast('Não foi possível entrar agora. Tente novamente.', { variant: 'error' });

@@ -4,6 +4,7 @@ import {
   Activity,
   Cake,
   Dumbbell,
+  Download,
   MessageSquareWarning,
   MoreHorizontal,
   Pencil,
@@ -22,7 +23,6 @@ import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
-import { StreakBadge } from '@/components/gamification/StreakBadge';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -37,6 +37,7 @@ import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { resolveIdentityBorder } from '@/lib/identity-border';
 import { shareContent } from '@/lib/platform/share';
+import { usePwaInstall } from '@/context/PwaInstallContext';
 import {
   digitsOnly,
   formatAlturaMask,
@@ -58,9 +59,10 @@ import {
 type Tab = 'dados' | 'progresso' | 'definicao';
 
 export function ProfilePage() {
-  const { user: appUser, stats, refresh } = useApp();
-  const { user, refreshUser } = useAuth();
+  const { user: appUser, stats, refresh, loading: appLoading } = useApp();
+  const { user } = useAuth();
   const copy = useCopy();
+  const { install: installPwa, installed: pwaInstalled } = usePwaInstall();
   const profile = user ?? appUser;
   const [tab, setTab] = useState<Tab>('progresso');
   const [saving, setSaving] = useState(false);
@@ -129,7 +131,7 @@ export function ProfilePage() {
     };
   }, [user?.role]);
 
-  if (!profile) {
+  if (!profile || appLoading) {
     return <PageLoader />;
   }
 
@@ -138,6 +140,31 @@ export function ProfilePage() {
     const text = `Vem ver meu perfil no Evolyn — nível ${xpProgressFromTotal(profile.gamificacao.nivel_xp).level}, bora treinar junto!`;
     const result = await shareContent({ title: 'Evolyn · Core Quest', text, url });
     if (result === 'copied') showGameToast('Link do perfil copiado!', { variant: 'success' });
+  };
+
+  const handleInstallApp = async () => {
+    setShowMoreActions(false);
+    const result = await installPwa();
+    if (result === 'accepted') {
+      showGameToast('Instalação do Evolyn iniciada.', { variant: 'success' });
+    } else if (result === 'dismissed') {
+      showGameToast('Instalação cancelada. Você pode tentar novamente quando quiser.', {
+        variant: 'info',
+      });
+    } else if (result === 'already-installed') {
+      showGameToast('O Evolyn já está instalado neste dispositivo.', { variant: 'success' });
+    } else if (result === 'ios-instructions') {
+      showGameToast('No Safari, toque em Compartilhar e depois em Adicionar à Tela de Início.', {
+        variant: 'info',
+      });
+    } else {
+      showGameToast(
+        'Abra o menu do navegador e escolha Instalar aplicativo ou Adicionar à tela inicial.',
+        {
+          variant: 'info',
+        },
+      );
+    }
   };
 
   const cosmeticos = resolveCosmeticos(profile.cosmeticos, profile.gamificacao.nivel_xp);
@@ -153,7 +180,6 @@ export function ProfilePage() {
   const xpLevel = xpProgressFromTotal(profile.gamificacao.nivel_xp).level;
 
   const handleRefresh = async () => {
-    await refreshUser();
     await refresh();
   };
 
@@ -179,7 +205,6 @@ export function ProfilePage() {
         nivel: nivelDraft,
         objetivo: objetivoDraft,
       });
-      await refreshUser();
       await refresh();
       showGameToast('Dados atualizados!', { variant: 'success' });
     } catch (err) {
@@ -227,6 +252,14 @@ export function ProfilePage() {
           </button>
           {showMoreActions && (
             <div className="profile-page__more-menu absolute right-0 top-12 z-30 min-w-52 p-2">
+              <button
+                type="button"
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-stone-700 hover:bg-stone-100"
+                onClick={() => void handleInstallApp()}
+              >
+                <Download size={18} aria-hidden />
+                {pwaInstalled ? 'Aplicativo instalado' : 'Instalar aplicativo'}
+              </button>
               <button
                 type="button"
                 className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-stone-700 hover:bg-stone-100"
@@ -314,11 +347,6 @@ export function ProfilePage() {
               <p className="game-profile-hero__bio game-profile-hero__bio--hint">
                 Toque no lápis e escreva sua descrição.
               </p>
-            )}
-            {stats && (
-              <div className="mt-2 flex items-center gap-2">
-                <StreakBadge streak={stats.streak_atual} frozen={!!stats.streak_frozen_notice} />
-              </div>
             )}
           </div>
         </div>

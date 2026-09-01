@@ -8,8 +8,8 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 
 1. **Crie sua conta** ou entre como visitante (funcionalidades limitadas).
 2. Aceite os **termos de uso** e conclua a breve apresentação do Evolyn.
-3. Na primeira visita à **Missão**, configure intensidade, dias e duração.
-4. Toque em **Começar primeira missão**. O mesmo plano pode ser ajustado depois em **Opções**.
+3. Na primeira visita à **Missão**, configure intensidade, dias, som e descanso entre séries.
+4. Toque em **Começar**. O mesmo plano pode ser ajustado depois em **Opções**.
 
 ---
 
@@ -26,7 +26,7 @@ Este guia é para **quem vai treinar**, não para quem programa. Se algo aqui n�
 | **Conquistas** | Ver metas e o que já desbloqueou |
 | **Ranking** | Abre pelo botão na Missão; compara XP, dias seguidos ou Folhas |
 | **Perfil** | Seus dados, estatísticas e simulador |
-| **Opções** | Plano abdominal V2, som, descanso padrão, notificações, **código presente** e conta |
+| **Opções** | Plano de core, áudio, notificações, **código presente** e conta |
 
 A barra principal com **Início, Atividades, Missão, MyPlant e Perfil** permanece fixa nas telas
 do app. O player de treino é a única exceção.
@@ -36,8 +36,8 @@ do app. O player de treino é a única exceção.
 ## Treino
 
 ### Treino sugerido
-O app monta sugestões de abdômen/core com peso corporal com base no plano abdominal V2,
-intensidade, agenda, volume, restrições e histórico.
+O app monta sugestões de abdômen/core com peso corporal com base no plano de core,
+intensidade, agenda, descanso, restrições e histórico.
 Basta tocar em **Iniciar treino** no painel.
 
 ### Montar o seu
@@ -55,7 +55,7 @@ substitui nenhum exercício da fila normal.
   exercício anterior.
 - Em exercícios de segurar posição, use **Próximo treino** para avançar manualmente quando quiser.
 - Exercícios de um lado por vez indicam o lado esquerdo/direito na tela e por voz quando o som está ativo.
-- O descanso definido em **Opções** ou no **Plano de core** é aplicado às recomendações. Treinos
+- O descanso definido no **Plano de core** é aplicado às recomendações. Treinos
   personalizados ainda podem guardar um ajuste específico por exercício.
 - Se o app for fechado ou o celular interromper a sessão, use **Voltar a treinar** para retornar
   exatamente ao exercício e à série em que parou. Em dispositivos compatíveis, o Player mantém a tela ativa.
@@ -95,6 +95,13 @@ Toque na sua **foto** no Perfil para abrir o formulário de Editar Perfil. Lá v
 - Testa e equipa bordas, banners, títulos e efeitos
 - A maioria dos itens vem de **conquistas, códigos ou eventos** — não são comprados com Folhas
 - Sons são a exceção: compre pacotes de som nas **Opções → Áudio**
+
+### Instalar no celular
+
+No **Perfil**, abra o menu de três pontos e toque em **Instalar aplicativo**. Quando o navegador
+oferecer instalação nativa, confirme o prompt. No Safari do iPhone/iPad, use **Compartilhar →
+Adicionar à Tela de Início**; em outros navegadores sem prompt, abra o menu e escolha **Instalar
+aplicativo** ou **Adicionar à tela inicial**.
 
 ### Código presente
 Em **Opções → Código presente**, digite um código promocional (se tiver um).

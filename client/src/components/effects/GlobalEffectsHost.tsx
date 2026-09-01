@@ -1,11 +1,26 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { XpOrbLayer } from '@/components/effects/XpOrbLayer';
-import { LevelUpOverlay } from '@/components/effects/LevelUpOverlay';
-import { CursorEffects } from '@/components/effects/CursorEffects';
-import { CosmeticUnlockCelebration } from '@/components/cosmetics/CosmeticUnlockCelebration';
 import { GameToastHost } from '@/components/ui/GameToast';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
+
+const XpOrbLayer = lazy(() =>
+  import('@/components/effects/XpOrbLayer').then((module) => ({ default: module.XpOrbLayer })),
+);
+const LevelUpOverlay = lazy(() =>
+  import('@/components/effects/LevelUpOverlay').then((module) => ({
+    default: module.LevelUpOverlay,
+  })),
+);
+const CursorEffects = lazy(() =>
+  import('@/components/effects/CursorEffects').then((module) => ({
+    default: module.CursorEffects,
+  })),
+);
+const CosmeticUnlockCelebration = lazy(() =>
+  import('@/components/cosmetics/CosmeticUnlockCelebration').then((module) => ({
+    default: module.CosmeticUnlockCelebration,
+  })),
+);
 
 /**
  * Camadas globais de efeito (bolinhas de XP, level up, desbloqueio de
@@ -39,19 +54,21 @@ export function GlobalEffectsHost() {
 
   return (
     <>
-      <AnimatePresence>
-        {levelUpLevel !== null && (
-          <LevelUpOverlay
-            key={levelUpLevel}
-            level={levelUpLevel}
-            onDone={() => setLevelUpLevel(null)}
-          />
-        )}
-      </AnimatePresence>
+      <Suspense fallback={null}>
+        <AnimatePresence>
+          {levelUpLevel !== null && (
+            <LevelUpOverlay
+              key={levelUpLevel}
+              level={levelUpLevel}
+              onDone={() => setLevelUpLevel(null)}
+            />
+          )}
+        </AnimatePresence>
 
-      <CursorEffects />
-      <XpOrbLayer />
-      <CosmeticUnlockCelebration />
+        <CursorEffects />
+        <XpOrbLayer />
+        <CosmeticUnlockCelebration />
+      </Suspense>
       <GameToastHost />
     </>
   );

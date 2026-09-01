@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Flame, Leaf, Zap } from 'lucide-react';
+import { Flame, Zap } from 'lucide-react';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 import { CURRENCY_NAME, type LeaderboardEntry, type LeaderboardMetric } from '@/types';
 
 const PODIUM_SLOTS = [
@@ -24,7 +25,7 @@ function podiumMetricUnit(metric: LeaderboardMetric): string {
 
 function PodiumMetricIcon({ metric }: { metric: LeaderboardMetric }) {
   if (metric === 'streak') return <Flame size={14} aria-hidden />;
-  if (metric === 'moedas') return <Leaf size={14} aria-hidden />;
+  if (metric === 'moedas') return <GameLeafIcon size={15} aria-hidden />;
   return <Zap size={14} aria-hidden />;
 }
 

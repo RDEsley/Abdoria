@@ -1,10 +1,28 @@
+import { useEffect } from 'react';
 import { useLottie } from 'lottie-react';
 
 /** Renderiza um JSON Lottie já carregado (ver `useLottieAsset`) — fonte única pro app inteiro. */
-export function LottieView({ data, loop }: { data: unknown | null; loop: boolean }) {
-  const { View } = useLottie(
-    { animationData: data ?? undefined, loop },
+export function LottieView({
+  data,
+  loop,
+  cover = false,
+  speed = 1,
+}: {
+  data: unknown | null;
+  loop: boolean;
+  cover?: boolean;
+  speed?: number;
+}) {
+  const { View, setSpeed } = useLottie(
+    {
+      animationData: data ?? undefined,
+      loop,
+      rendererSettings: cover ? { preserveAspectRatio: 'xMidYMin slice' } : undefined,
+    },
     { width: '100%', height: '100%' },
   );
+  useEffect(() => {
+    setSpeed(speed);
+  }, [setSpeed, speed]);
   return View;
 }

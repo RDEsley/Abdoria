@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
+import { ArrowRight, Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { resolveFila } from '@shared/atividades';
@@ -77,7 +77,7 @@ export function BuilderPage() {
     setCustomWorkoutName,
     saveWorkoutPreset,
     getRepSchemes,
-    saveRepSchemes,
+    setRepSchemeConfiguration,
     addRepScheme,
     removeRepScheme,
     selectedRepSchemeIds,
@@ -87,7 +87,6 @@ export function BuilderPage() {
     loading,
     ensureExercises,
     user,
-    refresh,
   } = useApp();
   const { user: authUser, applyUser } = useAuth();
   const navigate = useNavigate();
@@ -109,7 +108,6 @@ export function BuilderPage() {
         },
       });
       applyUser(atualizado);
-      await refresh();
       showGameToast('Atividades tiradas do treino de hoje.', { variant: 'success' });
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível remover as atividades.'), {
@@ -317,10 +315,16 @@ export function BuilderPage() {
     (
       scheme: RepSchemeRecommendation,
       scope: 'all' | number,
-      options?: { force?: boolean; sourceQueue?: WorkoutQueueItem[] },
+      options?: {
+        force?: boolean;
+        sourceQueue?: WorkoutQueueItem[];
+        persistSelection?: boolean;
+      },
     ) => {
       setSelectedSchemeId(scheme.id);
-      setSelectedRepSchemeId(nivel, scheme.id);
+      if (options?.persistSelection !== false) {
+        setSelectedRepSchemeId(nivel, scheme.id);
+      }
       const base = options?.sourceQueue ?? draftQueue ?? baseQueue;
       const force = options?.force ?? false;
 
@@ -433,19 +437,17 @@ export function BuilderPage() {
       ...scheme,
       isCustom: false,
     }));
-    saveRepSchemes(nextLevel, recommended);
     lastAppliedQueueKeyRef.current = '';
     const first = recommended[0];
     if (first) {
+      setRepSchemeConfiguration(nextLevel, recommended, first.id);
       setSelectedSchemeId(first.id);
-      setSelectedRepSchemeId(nextLevel, first.id);
-      applyRepScheme(first, 'all', { force: true });
+      applyRepScheme(first, 'all', { force: true, persistSelection: false });
     }
 
     try {
       const atualizado = await updateMe({ nivel: nextLevel });
       applyUser(atualizado);
-      await refresh();
       void loadRecommendations({ force: true });
       showGameToast(`Nível ${NIVEL_LABELS[nextLevel]} — treinos e esquemas atualizados.`, {
         variant: 'success',
@@ -951,12 +953,20 @@ export function BuilderPage() {
               Controle o ritmo de todos os exercícios com um toque. A recomendação acompanha seu
               nível e seus ajustes manuais continuam preservados.
             </p>
+            <Link
+              to="/configuracoes#ajustar-plano"
+              state={{ highlightTrainingPlan: true }}
+              className="builder-plan-link"
+            >
+              Ajustar intensidade, agenda, som e descanso
+              <ArrowRight size={16} aria-hidden />
+            </Link>
             <section className="mt-3 border-t border-stone-200 pt-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-extrabold text-stone-800">Esquemas de repetição</p>
                 <button
                   type="button"
-                  className="game-icon-btn shrink-0 gap-2 px-3 py-2 text-xs font-extrabold whitespace-nowrap"
+                  className="builder-level-switch"
                   aria-label="Trocar nível dos treinos e esquemas recomendados"
                   title={`Trocar o nível dos treinos e esquemas (atual: ${NIVEL_LABELS[schemeLevel]})`}
                   disabled={schemeLevelBusy}

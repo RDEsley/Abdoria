@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { MusculoPrincipal } from '@/types';
 import { MUSCULO_TAG_LABELS } from '@/types';
+import { usePageEntranceReady } from '@/context/PageEntranceContext';
 
 interface Props {
   muscles: Record<MusculoPrincipal, number>;
@@ -26,6 +27,7 @@ const MUSCLE_ICONS: Record<MusculoPrincipal, LucideIcon> = {
 };
 
 export function MuscleBarChart({ muscles }: Props) {
+  const pageReady = usePageEntranceReady();
   const total = Object.values(muscles).reduce((sum, count) => sum + count, 0);
   const maxMuscle = Math.max(...Object.values(muscles), 1);
   const entries = MUSCLE_ORDER.map((muscle) => ({ muscle, count: muscles[muscle] }));
@@ -98,10 +100,10 @@ export function MuscleBarChart({ muscles }: Props) {
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-stone-200">
                   <div
-                    className={`h-full rounded-full transition-all ${
+                    className={`h-full rounded-full transition-all duration-700 ${
                       isMost ? 'bg-emerald-600' : isLeast ? 'bg-amber-500' : 'bg-emerald-500'
                     }`}
-                    style={{ width: `${pct}%` }}
+                    style={{ width: pageReady ? `${pct}%` : '0%' }}
                   />
                 </div>
               </div>

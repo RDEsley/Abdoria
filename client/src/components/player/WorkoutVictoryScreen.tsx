@@ -6,7 +6,6 @@ import {
   Dumbbell,
   Flame,
   Layers3,
-  Leaf,
   ListChecks,
   Snowflake,
   Zap,
@@ -26,6 +25,7 @@ import { formatTime } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { CURRENCY_NAME, type LevelUpCelebration as LevelUpData } from '@/types';
 import type { XpBreakdown } from '@/types';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const CONFETTI_LOTTIE_URL = '/assets/Confetti.json';
@@ -297,7 +297,7 @@ export function WorkoutVictoryScreen({
             </div>
             {abdoriaGained > 0 && (
               <p className="game-victory__abdoria">
-                <Leaf size={14} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
+                <GameLeafIcon size={16} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
               </p>
             )}
             {!!atividadesConcluidas && atividadesConcluidas > 0 && (

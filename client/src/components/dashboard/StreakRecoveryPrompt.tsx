@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Flame, Leaf } from 'lucide-react';
+import { Flame } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/components/ui/GameToast';
@@ -8,6 +8,7 @@ import { recoverStreak } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/hooks/useApp';
 import { CURRENCY_NAME, resolveCosmeticos } from '@/types';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 
 const SESSION_KEY = 'abdoria_streak_recovery_prompt_seen';
 
@@ -88,7 +89,7 @@ export function StreakRecoveryPrompt() {
         </p>
 
         <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3">
-          <Leaf size={18} className="text-emerald-600" aria-hidden />
+          <GameLeafIcon size={19} aria-hidden />
           <span className="text-lg font-extrabold text-amber-900">
             {offer.custo_coins} {CURRENCY_NAME}
           </span>

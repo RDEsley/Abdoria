@@ -50,6 +50,7 @@ lerna-debug.log*
 # Test & coverage
 coverage/
 .nyc_output/
+test-results/
 
 # Caches
 .cache/
@@ -94,6 +95,7 @@ CLAUDE.md
 # Temporary files
 tmp/
 temp/
+.codex-tmp/
 *.tmp
 *.bak
 *.orig

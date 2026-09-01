@@ -6,6 +6,7 @@ import { useCopy } from '@/hooks/useCopy';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
 import { resolveCosmeticos } from '@/types';
+import { usePageEntranceReady } from '@/context/PageEntranceContext';
 
 interface Props {
   level: number;
@@ -20,6 +21,7 @@ interface Props {
  * (incluindo a skin do fundo cosmético equipado).
  */
 export function DashboardHero({ level, xpInLevel, xpToNext, xpParaLevelUp }: Props) {
+  const pageReady = usePageEntranceReady();
   const { user } = useAuth();
   const copy = useCopy();
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
@@ -45,9 +47,13 @@ export function DashboardHero({ level, xpInLevel, xpToNext, xpParaLevelUp }: Pro
   // execução do efeito agora usa seu próprio `cancelled` local (fechado
   // nessa run específica), então a 2ª invocação do StrictMode sempre roda
   // sua própria animação limpa, sem interferência da 1ª.
-  const [displayPct, setDisplayPct] = useState(minimal ? levelPct : 0);
+  const [displayPct, setDisplayPct] = useState(minimal && pageReady ? levelPct : 0);
 
   useEffect(() => {
+    if (!pageReady) {
+      setDisplayPct(0);
+      return undefined;
+    }
     if (minimal) {
       setDisplayPct(levelPct);
       return undefined;
@@ -69,7 +75,7 @@ export function DashboardHero({ level, xpInLevel, xpToNext, xpParaLevelUp }: Pro
       cancelled = true;
       cancelAnimationFrame(raf);
     };
-  }, [levelPct, minimal]);
+  }, [levelPct, minimal, pageReady]);
 
   return (
     <section className="game-xp-section glass-card overflow-hidden">
