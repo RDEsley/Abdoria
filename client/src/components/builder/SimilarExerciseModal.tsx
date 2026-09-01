@@ -7,7 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { exerciseMediaUrl } from '@/lib/media';
 import type { SimilarExerciseRef } from '@/components/builder/similar-exercises';
 
-export interface SimilarExerciseOption extends SimilarExerciseRef {
+interface SimilarExerciseOption extends SimilarExerciseRef {
   nome: string;
   nome_pt?: string;
 }

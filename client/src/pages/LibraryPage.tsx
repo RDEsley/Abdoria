@@ -4,7 +4,7 @@ import { BarChart3, Flame, Search, SlidersHorizontal, Sparkles, X } from 'lucide
 import { ExerciseCard } from '@/components/library/ExerciseCard';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { useUnlockedExercises } from '@/hooks/useUnlockedExercises';
 import { useApp } from '@/hooks/useApp';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -90,7 +90,7 @@ export function LibraryPage() {
       <GamePageHeader
         eyebrow="Movimentos de core"
         title="Biblioteca"
-        onBack={() => navigate('/construtor')}
+        onBack={() => navigate('/treino')}
         backIcon="x"
         backAlign="right"
       />

@@ -7,7 +7,6 @@ import { cosmeticsRouter } from './routes/cosmetics.js';
 import { shopRouter } from './routes/shop.js';
 import { exercisesRouter } from './routes/exercises.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
-import { metaRouter } from './routes/meta.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { socialRouter } from './routes/social.js';
 import { presetsRouter } from './routes/presets.js';
@@ -17,7 +16,32 @@ import { workoutsRouter } from './routes/workouts.js';
 export function createApp() {
   const app = express();
 
-  app.use(cors());
+  const configuredOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const allowedOrigins = new Set([
+    'https://evolyn-core-quest.vercel.app',
+    'http://localhost:5173',
+    'http://localhost',
+    'capacitor://localhost',
+    ...configuredOrigins,
+  ]);
+
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+        const isProjectPreview = /^https:\/\/evolyn-core-quest(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(
+          origin,
+        );
+        callback(null, allowedOrigins.has(origin) || isProjectPreview);
+      },
+    }),
+  );
   app.use(express.json());
 
   app.get('/api/health', async (_req, res) => {
@@ -28,7 +52,6 @@ export function createApp() {
     res.json({
       status: 'ok',
       database: probe.status,
-      ...(probe.error ? { database_error: probe.error } : {}),
       timestamp: new Date().toISOString(),
     });
   });
@@ -53,7 +76,6 @@ export function createApp() {
   app.use('/api/leaderboard', leaderboardRouter);
   app.use('/api/notifications', notificationsRouter);
   app.use('/api/social', socialRouter);
-  app.use('/api/meta', metaRouter);
   app.use('/api/admin', adminRouter);
 
   return app;

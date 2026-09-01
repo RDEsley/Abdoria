@@ -1,5 +1,5 @@
 /** Marca Evolyn — arte oficial em `client/public/brand/`. */
-export const BRAND_FAVICON = {
+const BRAND_FAVICON = {
   16: '/brand/favicon-16.png',
   32: '/brand/favicon-32.png',
   48: '/brand/favicon-48.png',
@@ -11,12 +11,6 @@ export const BRAND_FAVICON = {
 
 /** Assinatura completa para superfícies amplas de apresentação da marca. */
 export const BRAND_LOGO_SRC = '/brand/logo.png';
-
-/** Ícone principal (telas de auth, prévias grandes). */
-export const BRAND_MARK_SRC = BRAND_FAVICON[256];
-
-/** Sidebar desktop (48×48). */
-export const BRAND_SIDEBAR_SRC = BRAND_FAVICON[48];
 
 /** Escolhe o PNG mais nítido para o tamanho exibido em px. */
 export function brandMarkSrc(displayPx: number): string {

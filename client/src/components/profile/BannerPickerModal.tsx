@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Lock, X } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { playEquip } from '@/lib/sounds';
 import { equipShopItem, getShop } from '@/lib/api';

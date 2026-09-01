@@ -377,7 +377,7 @@ usersRouter.post('/me/moldura', async (req: AuthRequest, res) => {
   }
 });
 
-/** Troca de nome: a primeira é grátis, as seguintes custam NAME_CHANGE_COST Coins. */
+/** A primeira troca de nome é grátis; as seguintes custam Folhas. */
 usersRouter.post('/me/name', async (req: AuthRequest, res) => {
   try {
     const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : '';
@@ -696,36 +696,5 @@ usersRouter.put('/me/ab-training-profile-v2', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('PUT /api/users/me/ab-training-profile-v2 error:', error);
     res.status(500).json({ error: 'Erro ao salvar perfil abdominal.' });
-  }
-});
-
-/** Re-roll manual do plano gerado (mantém o perfil, redistribui os dias). */
-usersRouter.post('/me/training-plan/regenerate', async (req: AuthRequest, res) => {
-  try {
-    const current = await loadCurrentUser(req.userId!);
-    if (!current) {
-      res.status(404).json({ error: 'Usuário não encontrado.' });
-      return;
-    }
-    if (!current.perfil_treino) {
-      res.status(400).json({ error: 'Nenhum perfil de treino configurado.' });
-      return;
-    }
-
-    const plano = buildPlanoTreino(current.perfil_treino, new Date().toISOString());
-    const user = await User.findByIdAndUpdate(
-      req.userId!,
-      { $set: { plano_treino: plano } },
-      { new: true },
-    );
-    if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado.' });
-      return;
-    }
-
-    res.json(sanitizeUser(user));
-  } catch (error) {
-    console.error('POST /api/users/me/training-plan/regenerate error:', error);
-    res.status(500).json({ error: 'Erro ao regenerar plano.' });
   }
 });

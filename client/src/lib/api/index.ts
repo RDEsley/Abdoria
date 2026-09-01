@@ -6,6 +6,3 @@ export * from './leaderboard';
 export * from './shop';
 export * from './meta';
 export * from './admin';
-
-export type { MusculoPrincipal } from '@/types';
-export type { ApiError } from '@/lib/api-errors';

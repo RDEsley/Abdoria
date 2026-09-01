@@ -1,4 +1,4 @@
-import { Ban, Pin, Play, Shuffle } from 'lucide-react';
+import { Ban, Pin, Play } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import {
   EXERCISE_BLOCK_OFF,
@@ -10,58 +10,13 @@ import {
   WORKOUT_PIN_OFF,
   WORKOUT_PIN_ON,
   showGameToast,
-} from '@/components/ui/GameToast';
+} from '@/lib/game-toast';
 
 interface PlayProps {
   onClick: () => void;
   className?: string;
 }
 
-interface SwapProps {
-  onClick: () => void;
-  disabled?: boolean;
-  className?: string;
-  ariaLabel?: string;
-}
-
-/** Ícone para trocar o treino selecionado por opção muscular similar. */
-export function SwapWorkoutButton({
-  onClick,
-  disabled = false,
-  className = '',
-  ariaLabel = 'Trocar treino',
-}: SwapProps) {
-  return (
-    <button
-      type="button"
-      className={`game-item-card__action-icon game-item-card__action-icon--swap ${className}`.trim()}
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      title={ariaLabel}
-    >
-      <Shuffle size={13} aria-hidden />
-    </button>
-  );
-}
-
-/** Ícone para trocar um exercício da fila por opção similar. */
-export function SwapExerciseButton({ onClick, disabled = false, className = '' }: SwapProps) {
-  return (
-    <button
-      type="button"
-      className={`game-item-card__action-icon game-item-card__action-icon--swap ${className}`.trim()}
-      onClick={onClick}
-      disabled={disabled}
-      aria-label="Trocar exercício"
-      title="Trocar exercício"
-    >
-      <Shuffle size={13} aria-hidden />
-    </button>
-  );
-}
-
-/** Botão do guia com o mesmo padrão visual das demais ações da fila. */
 export function ExercisePlayButton({ onClick, className = '' }: PlayProps) {
   return (
     <GameButton
@@ -104,7 +59,6 @@ function blockFeedback(nextBlocked: boolean, kind: FeedbackKind): string {
   return nextBlocked ? EXERCISE_BLOCK_ON : EXERCISE_BLOCK_OFF;
 }
 
-/** Botões icônicos pin/ban — mesmo visual pixel do botão Ver treino. */
 export function PreferenceToggleButtons({
   isPinned,
   isBlocked,
@@ -180,70 +134,6 @@ export function PreferenceToggleButtons({
       >
         <Ban size={13} aria-hidden />
       </button>
-    </div>
-  );
-}
-
-interface QuickActionsProps {
-  onPlay?: () => void;
-  onSwapWorkout?: () => void;
-  onSwapExercise?: () => void;
-  isPinned?: boolean;
-  isBlocked?: boolean;
-  onTogglePin?: () => void;
-  onToggleBlock?: () => void;
-  showPlay?: boolean;
-  showSwapWorkout?: boolean;
-  showSwapExercise?: boolean;
-  swapWorkoutDisabled?: boolean;
-  swapExerciseDisabled?: boolean;
-  showPreferences?: boolean;
-  pinAriaLabel?: string;
-  blockAriaLabel?: string;
-  feedbackKind?: FeedbackKind;
-  className?: string;
-}
-
-/** Grupo padronizado: ver treino + preferências. */
-export function ExerciseQuickActions({
-  onPlay,
-  onSwapWorkout,
-  onSwapExercise,
-  isPinned = false,
-  isBlocked = false,
-  onTogglePin,
-  onToggleBlock,
-  showPlay = false,
-  showSwapWorkout = false,
-  showSwapExercise = false,
-  swapWorkoutDisabled = false,
-  swapExerciseDisabled = false,
-  showPreferences = false,
-  pinAriaLabel,
-  blockAriaLabel,
-  feedbackKind = 'exercise',
-  className = '',
-}: QuickActionsProps) {
-  return (
-    <div className={`game-exercise-actions ${className}`.trim()}>
-      {showPlay && onPlay && <ExercisePlayButton onClick={onPlay} />}
-      {showSwapExercise && onSwapExercise && (
-        <SwapExerciseButton onClick={onSwapExercise} disabled={swapExerciseDisabled} />
-      )}
-      {showSwapWorkout && onSwapWorkout && (
-        <SwapWorkoutButton onClick={onSwapWorkout} disabled={swapWorkoutDisabled} />
-      )}
-      {showPreferences && onTogglePin && onToggleBlock && (
-        <PreferenceToggleButtons
-          isPinned={isPinned}
-          isBlocked={isBlocked}
-          onTogglePin={onTogglePin}
-          onToggleBlock={onToggleBlock}
-          pinAriaLabel={pinAriaLabel}
-          blockAriaLabel={blockAriaLabel}
-          feedbackKind={feedbackKind}
-        />
-      )}
     </div>
   );
 }

@@ -2,12 +2,12 @@ import { useEffect, useMemo, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Check, Flame, Snowflake } from 'lucide-react';
 import { useApp } from '@/hooks/useApp';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { formatTrainingDurationCompact } from '@/lib/utils';
 import { toLocalDateKey } from '@/lib/utils';
 import { addDaysSaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { FROZEN_STREAK_LABEL } from '@/types';
-import { usePageEntranceReady } from '@/context/PageEntranceContext';
+import { usePageEntranceReady } from '@/hooks/usePageEntranceReady';
 
 const DAY_LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 

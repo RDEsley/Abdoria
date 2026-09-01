@@ -462,7 +462,7 @@
   background: #059669;
 }
 
-/* Missão V2 — fila compacta, legível e centrada no exercício. */
+/* Fila compacta, legível e centrada no exercício. */
 .workout-queue {
   overflow: hidden;
   background: #fbfdfc;
@@ -717,7 +717,7 @@
   outline-offset: 2px;
 }
 
-/* Surface reutilizável do card de missão/ciclo. */
+/* Superfície reutilizável do card de treino/ciclo. */
 .game-cycle-card {
   overflow: hidden;
   background:

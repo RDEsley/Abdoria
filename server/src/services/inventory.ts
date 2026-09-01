@@ -14,7 +14,7 @@ export interface AddInventoryResult {
   discarded: number;
 }
 
-export function ensureInventario(user: UserRecord): Inventario {
+function ensureInventario(user: UserRecord): Inventario {
   if (!user.inventario || !Array.isArray(user.inventario.itens)) user.inventario = { itens: [] };
   const inventory = user.inventario as Inventario;
   const legacy = inventory.itens.find((entry) => entry.item_id === LEGACY_ENERGY_DRINK_ID);
@@ -31,7 +31,7 @@ export function getItemCount(user: UserRecord, itemId: InventoryItemId): number 
   return ensureInventario(user).itens.find((entry) => entry.item_id === itemId)?.quantidade ?? 0;
 }
 
-export function isStackCappedItem(itemId: InventoryItemId): boolean {
+function isStackCappedItem(itemId: InventoryItemId): boolean {
   return INVENTORY_STACK_CAPPED_ITEM_IDS.includes(itemId);
 }
 

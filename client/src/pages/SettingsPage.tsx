@@ -16,7 +16,7 @@ import {
   Volume2,
   Zap,
 } from 'lucide-react';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { Modal } from '@/components/ui/Modal';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { AbTrainingProfileWizard } from '@/components/training/AbTrainingProfileWizard';
@@ -27,7 +27,7 @@ import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tut
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { deleteAccount, updateMe } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { setSoundSettings } from '@/lib/sounds';
@@ -270,7 +270,7 @@ export function SettingsPage() {
         <p className="text-xs font-medium text-stone-500">
           {user?.ab_training_profile_v2
             ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso · som personalizado`
-            : 'Configure intensidade, agenda, som e descanso das suas missões de core.'}
+            : 'Configure intensidade, agenda, som e descanso dos seus treinos.'}
         </p>
         <GameButton
           variant="secondary"
@@ -407,9 +407,9 @@ export function SettingsPage() {
                   </li>
                   <li>
                     Sequência (streak): uma única atividade concluída já mantém a sequência, em
-                    qualquer dia — treino ou descanso. Treino e atividades não se substituem: os
-                    dois contam pra streak, mas concluir atividades não marca a missão de treino do
-                    dia como feita.
+                    qualquer dia — treino ou descanso. Treino e atividades não se substituem: os os
+                    dois contam para o streak, mas concluir atividades não marca o treino do dia
+                    como feita.
                   </li>
                 </ul>
                 <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>

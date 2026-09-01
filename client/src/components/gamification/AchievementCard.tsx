@@ -5,7 +5,8 @@ import { Check, ChevronRight, LockKeyhole, Sparkles, Trophy } from 'lucide-react
 import type { Achievement } from '@/types';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 import { GameButton } from '@/components/ui/GameButton';
-import { usePageEntranceReady } from '@/context/PageEntranceContext';
+import { usePageEntranceReady } from '@/hooks/usePageEntranceReady';
+import { pickAchievementPreview } from '@/lib/achievements';
 
 interface Props {
   achievement: Achievement;
@@ -163,38 +164,4 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
       </GameButton>
     </motion.section>
   );
-}
-
-/** As desbloqueadas do preview são sempre as MAIS RECENTES (não as mais
-    raras) — o jogador quer ver o que acabou de conquistar, não uma vitrine
-    de raridade. `desbloqueada_ordem` maior = desbloqueada depois; ausente
-    (conquista de antes desse rastreio existir) fica por último. */
-export function pickAchievementPreview(conquistas: Achievement[], limit: number): Achievement[] {
-  const unlocked = conquistas
-    .filter((c) => c.desbloqueada)
-    .sort((a, b) => (b.desbloqueada_ordem ?? -1) - (a.desbloqueada_ordem ?? -1));
-  const locked = sortAchievements(conquistas).filter((c) => !c.desbloqueada);
-  const picked: Achievement[] = [];
-
-  for (const item of unlocked.slice(0, limit)) {
-    picked.push(item);
-  }
-  for (const item of locked) {
-    if (picked.length >= limit) break;
-    if (!picked.some((p) => p.id === item.id)) picked.push(item);
-  }
-
-  return picked.slice(0, limit);
-}
-
-/** Lista única (sem seções por dificuldade): desbloqueadas primeiro, depois por
-    % real ASC (as mais raras — menor % de jogadores — vêm primeiro). Vale
-    tanto pra lista cheia quanto pro preview (pickAchievementPreview), que
-    reusa esse sort — mostrar a conquista rara logo de cara é bem mais
-    interessante do que a mais comum. */
-export function sortAchievements(conquistas: Achievement[]): Achievement[] {
-  return [...conquistas].sort((a, b) => {
-    if (a.desbloqueada !== b.desbloqueada) return a.desbloqueada ? -1 : 1;
-    return a.pct_jogadores - b.pct_jogadores;
-  });
 }

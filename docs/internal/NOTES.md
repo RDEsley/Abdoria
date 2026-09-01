@@ -9,6 +9,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - A área pública de treino usa **Treino** e a rota principal é `/treino`.
 - Evitar na interface/documentação atual nomenclaturas antigas como Abdoria, Dorias, Coins, Gems, Construtor, RPG e AFK.
 - Identificadores persistidos legados (`abdoria_*`, campos antigos, eventos ou chaves de storage) podem permanecer quando necessários para compatibilidade. Não renomear sem avaliar migração e impacto em usuários existentes.
+- Campos de API como `abdoria`, `coins` e `gems` permanecem em alguns contratos administrativos e de loja; a interface deve apresentá-los como **Folhas** e **Folhas douradas**.
 
 ## Branding
 

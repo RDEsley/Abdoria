@@ -1,15 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  lazy,
-  Suspense,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import {
@@ -30,12 +19,6 @@ const AchievementToast = lazy(() =>
 
 /** Uma conquista por vez, em fila (estilo notificação da Steam). */
 const MAX_VISIBLE = 1;
-
-interface AchievementContextValue {
-  triggerAchievement: (payload: TriggerAchievementPayload) => void;
-}
-
-const AchievementContext = createContext<AchievementContextValue | null>(null);
 
 function createToastItem(payload: TriggerAchievementPayload): AchievementToastItem {
   return {
@@ -66,8 +49,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // O som toca quando o toast APARECE (não ao enfileirar) — vários unlocks de
-  // uma vez não sobrepõem áudio: cada um soa na sua vez, como na Steam.
+  // Reproduzir o som só quando o item fica visível evita sobreposição em desbloqueios em lote.
   useEffect(() => {
     for (const item of items) {
       if (!playedRef.current.has(item.id)) {
@@ -119,10 +101,8 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('abdoria:personal-records-unlocked', onPersonalRecords);
   }, []);
 
-  const value = useMemo(() => ({ triggerAchievement: enqueue }), [enqueue]);
-
   return (
-    <AchievementContext.Provider value={value}>
+    <>
       {children}
       {createPortal(
         <div
@@ -146,16 +126,6 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
         </div>,
         document.body,
       )}
-    </AchievementContext.Provider>
+    </>
   );
 }
-
-export function useAchievement(): AchievementContextValue {
-  const ctx = useContext(AchievementContext);
-  if (!ctx) {
-    throw new Error('useAchievement must be used within AchievementProvider');
-  }
-  return ctx;
-}
-
-export { triggerAchievement, notifyWorkoutAchievements } from '@/lib/achievement-notifications';

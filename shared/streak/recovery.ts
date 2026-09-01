@@ -1,5 +1,5 @@
 /**
- * "Recuperar Streak" — sistema estilo Duolingo: paga Coins pra restaurar uma
+ * Recuperação de streak: usa Folhas para restaurar uma
  * sequência recém-perdida, sem precisar reconstruir do zero.
  *
  * Regras:

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { deleteAdminUser } from '@/lib/api/admin';
 

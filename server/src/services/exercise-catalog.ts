@@ -52,20 +52,6 @@ export function filterRowsByAvailableSlugs<T extends { slug: string }>(
   return rows.filter((row) => slugs.has(row.slug));
 }
 
-export function isSlugAvailable(
-  slug: string,
-  exercises: ExerciseDocument[],
-  _preferencias?: UserPreferencias | null,
-): boolean {
-  const exercise = exercises.find((item) => item.slug === slug);
-  return Boolean(
-    exercise &&
-    exercise.ativo &&
-    isBodyweightExercise(exercise) &&
-    !isRetiredExerciseSlug(exercise.slug),
-  );
-}
-
 export async function findExercisesForUserDocument(
   user: UserRecord,
   filter?: ExerciseCatalogFilter,

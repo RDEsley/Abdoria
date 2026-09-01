@@ -19,7 +19,7 @@ export function recoverStreak(): Promise<{ user: IUserDocument; streak_atual: nu
   return fetchJson('/workouts/streak/recover', { method: 'POST' });
 }
 
-/** Paga STREAK_RECORD_MATCH_COST Coins pra puxar a sequência atual pro recorde pessoal. */
+/** Usa Folhas para igualar a sequência atual ao recorde pessoal. */
 export function matchStreakRecord(): Promise<{ user: IUserDocument; streak_atual: number }> {
   return fetchJson('/workouts/streak/match-record', { method: 'POST' });
 }
@@ -52,7 +52,7 @@ export interface CompleteAtividadeResponse {
 /**
  * Conclui uma Atividade da fila do dia com as métricas do form contextual.
  * Em qualquer dia, uma conclusão sustenta a streak. As primeiras atividades
- * do dia pagam XP; depois do teto diário, passam a pagar Coins.
+ * do dia concedem XP; depois do limite diário, passam a conceder Folhas.
  */
 export function completeAtividade(
   atividadeId: string,
@@ -71,7 +71,7 @@ export function completeAtividade(
 /**
  * Preenche/corrige os dados de uma atividade já registrada. Serve pra quem
  * concluiu sem informar nada na hora e quer completar depois — não recalcula
- * XP/Coins/streak, só o conteúdo do registro.
+ * XP, Folhas ou streak; altera somente o conteúdo do registro.
  */
 export function completeWorkout(payload: CompleteWorkoutPayload): Promise<CompleteWorkoutResponse> {
   return fetchJson('/workouts/complete', { method: 'POST', body: JSON.stringify(payload) });
@@ -79,10 +79,6 @@ export function completeWorkout(payload: CompleteWorkoutPayload): Promise<Comple
 
 export function getPresets(): Promise<IWorkoutPresetDocument[]> {
   return fetchJson('/presets');
-}
-
-export function getRecommendedPresets(): Promise<IWorkoutPresetDocument[]> {
-  return fetchJson('/presets/recommended');
 }
 
 export function getRecommendWorkout(options?: {
@@ -102,8 +98,4 @@ export function getRecommendWorkout(options?: {
   if (options?.dia != null) params.set('dia', String(options.dia));
   const q = params.toString();
   return fetchJson(`/presets/recommend${q ? `?${q}` : ''}`);
-}
-
-export function getPreset(id: string): Promise<IWorkoutPresetDocument> {
-  return fetchJson(`/presets/${id}`);
 }

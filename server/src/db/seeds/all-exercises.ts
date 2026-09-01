@@ -12,7 +12,7 @@ const priorityBase = prioritySExercises.map((e) =>
   }),
 );
 
-export const additionalExercises = [
+const additionalExercises = [
   withLevelParams({
     slug: 'heel-touches',
     nome: 'Heel Touches',

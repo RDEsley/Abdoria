@@ -11,7 +11,7 @@ import type {
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 import { doseForAbProfile, exerciseCountForProfile } from '../../../shared/ab-training-profile.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
-import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
+import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
 import { filterRowsByAvailableSlugs, findExercisesForUserDocument } from './exercise-catalog.js';
 import { getPlanoAlerts, isPlanoUser, recommendFromPlano } from './plan-generator.js';
@@ -217,10 +217,6 @@ export async function markCycleCompleted(user: UserMutable, treinoTipo?: string)
   return false;
 }
 
-export function resetCycleRound(user: UserMutable): void {
-  user.preferencias.ciclos_completados_rodada = {};
-}
-
 export async function getRecommendationAlerts(user: UserRecord): Promise<RecommendationAlert[]> {
   // Modo plano: rotação de dias já garante variedade; o alerta relevante é o
   // desbalanceamento por parte do corpo (não por zona abdominal).
@@ -344,7 +340,7 @@ export async function getSuggestedWorkout(
   }));
   return {
     ...suggested,
-    nome: `Missão ${profile.intensity === 'evolyn' ? 'Evolyn' : profile.intensity}`,
+    nome: `Treino ${profile.intensity === 'evolyn' ? 'Evolyn' : profile.intensity}`,
     descricao: `${profile.training_days.length} dias por semana · ${profile.volume}`,
     exercicios,
     total_exercicios: exercicios.length,
@@ -365,7 +361,7 @@ async function resolvePinnedPreset(
   return null;
 }
 
-export async function recommendWorkout(
+async function recommendWorkout(
   user: UserRecord,
   options: RecommendWorkoutOptions = {},
 ): Promise<TreinoSugerido | null> {
@@ -506,9 +502,3 @@ export async function recommendWorkout(
     blocked,
   );
 }
-
-export async function getRecommendedPresetsList(user: UserRecord) {
-  return presetsForUserCycles(user);
-}
-
-export { getWeekStartSaoPaulo };

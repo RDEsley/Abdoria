@@ -5,10 +5,10 @@ import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { StatTile } from '@/components/ui/StatTile';
 import { PurchaseConfirmDialog } from '@/components/shop/PurchaseConfirmDialog';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { matchStreakRecord } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/hooks/useApp';
 import { formatTrainingDuration } from '@/lib/utils';
 import {
@@ -90,7 +90,9 @@ export function ProfileProgressPanel({ stats }: Props) {
           onClick={podeIgualarRecorde ? () => setConfirmOpen(true) : undefined}
         />
         <StatTile
-          icon={<Trophy className="text-amber-600" size={20} fill="currentColor" fillOpacity={0.18} />}
+          icon={
+            <Trophy className="text-amber-600" size={20} fill="currentColor" fillOpacity={0.18} />
+          }
           title="Conquistas"
           value={`${unlockedAchievements}/${stats.conquistas.length}`}
           hint={

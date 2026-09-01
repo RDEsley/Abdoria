@@ -834,7 +834,7 @@
   color: #57534e;
 }
 
-/* Semana na tela de missão completa — foguinho marca dia de streak */
+/* Semana na tela de conclusão; a chama marca dias de streak. */
 .game-victory-week {
   margin-top: 1rem;
   padding: 0.75rem 0.65rem 0.65rem;

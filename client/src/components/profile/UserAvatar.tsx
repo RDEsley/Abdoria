@@ -19,7 +19,7 @@ interface Props {
 /**
  * Avatar de identidade (estilo Strava): círculo com a foto do usuário ou a
  * inicial do nome, com a borda de perfil equipada — de pódio (moldura) ou de
- * conquista (borderLoja). O herói cosmético RPG continua sendo o CosmeticAvatar.
+ * conquista (borderLoja). Avatares cosméticos completos usam `CosmeticAvatar`.
  */
 export function UserAvatar({
   nome,
@@ -31,7 +31,8 @@ export function UserAvatar({
   className = '',
 }: Props) {
   const initial = (nome.trim().charAt(0) || 'A').toUpperCase();
-  const lojaKey = borderLoja && borderLoja !== 'borda_basica' ? borderLoja.replace('borda_', '') : '';
+  const lojaKey =
+    borderLoja && borderLoja !== 'borda_basica' ? borderLoja.replace('borda_', '') : '';
   const showCount = !lojaKey && moldura != null && molduraCount != null && molduraCount > 1;
 
   return (

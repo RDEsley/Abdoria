@@ -4,10 +4,10 @@ import {
   PurchaseConfirmDialog,
   type PurchaseConfirmDetails,
 } from '@/components/shop/PurchaseConfirmDialog';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { equipShopItem, getShop, purchaseShopItem } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { playEquip, playPurchase, previewSfxPack, setSfxPack } from '@/lib/sounds';
 import { CURRENCY_NAME, type ShopCatalogItem } from '@/types';
 import { GameLeafIcon } from '@/components/ui/CurrencyIcon';

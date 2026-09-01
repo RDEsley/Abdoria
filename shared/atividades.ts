@@ -1,17 +1,17 @@
 import type { AchievementIcon, UserPreferencias } from './types/index.js';
 
 /**
- * Atividades: tarefas de bem-estar que o usuário enfileira na Missão Diária.
+ * Atividades: tarefas de bem-estar que o usuário organiza na rotina diária.
  *
  * Regra de negócio (2026-07-31, streak revista):
  * - XP: toda atividade concluída dá `ATIVIDADE_XP_POR_UNIDADE` XP, em
  *   QUALQUER dia (treino ou descanso), até `ATIVIDADES_MIN_DESCANSO` por dia
  *   (`ATIVIDADES_XP_MAX_DIARIO` no total). Atividade extra além desse limite
- *   não dá XP — dá `ATIVIDADE_COINS_EXTRA` Coins.
+ *   não dá XP — concede `ATIVIDADE_COINS_EXTRA` Folhas.
  * - Streak: uma única atividade concluída já mantém a sequência, em
  *   QUALQUER dia (treino ou descanso) — não tem mais mínimo de 3 nem
  *   distinção por tipo de dia. Treino e Atividades não se substituem: os
- *   dois contam pra streak, mas concluir Atividades nunca marca a Missão
+ *   os dois contam para o streak, mas concluir Atividades nunca marca o treino
  *   de treino do dia como feita (só um treino de verdade faz isso).
  *
  * A lista é do usuário: começa como cópia do catálogo padrão e vira uma
@@ -69,7 +69,7 @@ export const ATIVIDADES_MIN_DESCANSO = 3;
 export const ATIVIDADE_XP_POR_UNIDADE = 15;
 /** Teto diário de XP vindo de atividades (3 × 15). */
 export const ATIVIDADES_XP_MAX_DIARIO = ATIVIDADES_MIN_DESCANSO * ATIVIDADE_XP_POR_UNIDADE;
-/** Coins dados por atividade extra do dia, depois de bater o teto de XP. */
+/** Folhas concedidas por atividade extra depois do limite diário de XP. */
 export const ATIVIDADE_COINS_EXTRA = 5;
 
 export const ATIVIDADES_LIMITE_MSG =
@@ -131,7 +131,7 @@ const CAMPO_TEMPO: AtividadeCampo = {
 };
 
 /** Campos por tipo — o que perguntamos ao concluir cada atividade. Todos
-    opcionais: servem só pro registro no calendário/campanha, nunca bloqueiam
+    opcionais: servem apenas para o registro no calendário e nunca bloqueiam
     a conclusão (XP e streak não dependem de nenhum valor preenchido aqui). */
 export const ATIVIDADE_CAMPOS: Record<AtividadeTipo, AtividadeCampo[]> = {
   leitura: [

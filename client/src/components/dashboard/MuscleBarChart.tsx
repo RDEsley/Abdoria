@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { MusculoPrincipal } from '@/types';
 import { MUSCULO_TAG_LABELS } from '@/types';
-import { usePageEntranceReady } from '@/context/PageEntranceContext';
+import { usePageEntranceReady } from '@/hooks/usePageEntranceReady';
 
 interface Props {
   muscles: Record<MusculoPrincipal, number>;
@@ -47,7 +47,7 @@ export function MuscleBarChart({ muscles }: Props) {
           Seu mapa começa no próximo treino
         </p>
         <p className="mt-1 text-xs font-semibold text-stone-500">
-          Conclua uma missão para revelar o equilíbrio dos estímulos.
+          Conclua um treino para revelar o equilíbrio dos estímulos.
         </p>
       </div>
     );

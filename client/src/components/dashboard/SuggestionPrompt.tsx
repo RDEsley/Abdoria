@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { submitAppSuggestion, updateMe } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/hooks/useApp';
 
 const SESSION_KEY = 'abdoria_suggestion_prompt_seen';

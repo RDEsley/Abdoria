@@ -12,6 +12,9 @@ docs/internal/logos-icons/
 
 Esse diretório funciona como **fonte de origem**, não como dependência do runtime.
 
+O conjunto oficial é composto por `logo-oficial/`, `logo-completa-transparente/` e
+`app-icon.png`. Não mantenha variantes antigas em diretórios paralelos.
+
 Arquivos consumidos pela aplicação devem continuar nos diretórios apropriados:
 
 - `client/public/brand/` — logo, favicons e ícones PWA;

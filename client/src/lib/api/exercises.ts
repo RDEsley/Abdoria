@@ -9,29 +9,3 @@ export function getExercises(filters: ExerciseFilters = {}): Promise<IExerciseDo
   const query = params.toString();
   return fetchJson(`/exercises${query ? `?${query}` : ''}`);
 }
-
-export interface SimilarExercisesResponse {
-  reference: {
-    slug: string;
-    musculo_principal: string;
-    modo: string;
-    prioridade?: string;
-  } | null;
-  similares: Array<{
-    slug: string;
-    nome: string;
-    musculo_principal: string;
-    modo: string;
-    prioridade?: string;
-    score: number;
-  }>;
-}
-
-export function getSimilarExercises(
-  slug: string,
-  queueSlugs: string[] = [],
-): Promise<SimilarExercisesResponse> {
-  const params = new URLSearchParams({ slug });
-  if (queueSlugs.length > 0) params.set('queueSlugs', queueSlugs.join(','));
-  return fetchJson(`/exercises/similar?${params.toString()}`);
-}

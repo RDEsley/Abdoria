@@ -1872,9 +1872,9 @@
 }
 
 /* Cartão "Como funciona" da agenda de atividades — os números de
-   recompensa (XP/Coins) viram pílulas coloridas em vez de texto corrido,
+   recompensas viram pílulas coloridas em vez de texto corrido,
    pra reforçar visualmente que aquilo é uma recompensa (mesma linguagem de
-   cor usada nos pills de XP/Coins do resto do app). */
+   seguindo as cores usadas no restante do app). */
 .atividade-info-card {
   padding: 0.75rem 0.85rem;
   background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
@@ -2551,7 +2551,7 @@
   max-width: min(94vw, 30rem);
 }
 
-/* Surfaces mobile: cada bloco da Home indica sua função sem competir com a missão. */
+/* No mobile, cada bloco da Home indica sua função sem competir com o treino. */
 .dashboard-mission {
   overflow: hidden;
   padding: 1.1rem;

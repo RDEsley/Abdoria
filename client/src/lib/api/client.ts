@@ -1,7 +1,13 @@
 import { getToken, clearToken } from '@/lib/auth-storage';
 import { mapHttpStatus, toApiError } from '@/lib/api-errors';
 
-const API_BASE = '/api';
+function resolveApiBase(configuredBase: string | undefined): string {
+  const base = configuredBase?.trim().replace(/\/+$/, '');
+  if (!base) return '/api';
+  return base.endsWith('/api') ? base : `${base}/api`;
+}
+
+const API_BASE = resolveApiBase(import.meta.env.VITE_API_BASE_URL);
 const REQUEST_TIMEOUT_MS = 20_000;
 
 export async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {

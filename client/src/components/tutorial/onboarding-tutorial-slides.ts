@@ -10,24 +10,22 @@ import {
 } from 'lucide-react';
 import type { TutorialSlide } from '@/components/tutorial/TutorialOverlay';
 
-// Ordem intencional: primeiro o que o app É (treino, missão diária,
-// atividade no descanso, calendário) — só depois a camada de jogo (XP,
-// moedas, MyPlant e ranking). Quem entende o app usa melhor a experiência.
+// A apresentação começa pela rotina e depois explica a progressão gamificada.
 export const ONBOARDING_TUTORIAL_SLIDES: readonly TutorialSlide[] = [
   {
     icon: Dumbbell,
     title: 'Bem-vindo ao Evolyn',
-    body: 'Um app de treino de abdômen de verdade — com evolução real e um pouco de RPG pra deixar o hábito mais gostoso de manter.',
+    body: 'Treinos, atividades e organização pessoal em uma experiência gamificada que valoriza sua constância.',
   },
   {
     icon: Target,
-    title: 'Sua missão diária',
-    body: 'A Home sugere o treino do dia. Toque em Iniciar treino; cada exercício pode ser configurado diretamente na fila da Missão.',
+    title: 'Seu treino do dia',
+    body: 'A tela inicial sugere o treino do dia. Cada exercício pode ser configurado diretamente na fila de Treino.',
   },
   {
     icon: ListChecks,
     title: 'Atividades em um só lugar',
-    body: 'No item Atividades da barra principal você organiza sua rotina, acompanha a campanha e mantém a sequência até nos dias de descanso.',
+    body: 'Em Atividades você organiza sua rotina e mantém a sequência até nos dias de descanso.',
   },
   {
     icon: CalendarDays,

@@ -59,7 +59,7 @@ export function ResumeWorkoutPrompt() {
       >
         <RotateCcw size={25} aria-hidden />
       </motion.span>
-      <p className="resume-workout-card__eyebrow">Sua missão continua</p>
+      <p className="resume-workout-card__eyebrow">Seu treino continua</p>
       <h2 id="resume-workout-title">Voltar de onde parou?</h2>
       <p>
         <strong>{current?.nome ?? snapshot.workout.treino_nome}</strong>

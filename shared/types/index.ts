@@ -64,7 +64,7 @@ export type AchievementIcon =
   | 'moon'
   | 'calendar'
   | 'clock'
-  | 'gem'
+  | 'golden-leaf'
   | 'rocket'
   | 'dumbbell'
   | 'heart'
@@ -503,14 +503,14 @@ export const MOLDURA_LABELS: Record<MolduraId, string> = {
 };
 
 export interface Cosmeticos {
-  /** Saldo de Dorias. */
+  /** Saldo de Folhas; o nome do campo é legado por compatibilidade. */
   moedas: number;
   /**
-   * Total vitalício de Coins ganhas (nunca desconta gasto) — base do ranking
+   * Total vitalício de Folhas recebidas, sem descontar gastos.
    * global. Contas antigas inicializam no saldo atual (piso do vitalício real).
    */
   moedas_total_ganhas?: number;
-  /** Blocos de XP já convertidos em Dorias. */
+  /** Blocos de XP já convertidos em Folhas. */
   moedas_xp_blocos: number;
   moldura_loja_equipada: string;
   titulo_equipado: string | null;
@@ -539,7 +539,7 @@ export interface LojaDiariaSlot {
   valor: number;
   raridade: DailyRewardRarity;
   preco_abdoria: number;
-  /** Custo em XP (progresso do nível) para ofertas de Dorias ou pacotes mistos. */
+  /** Custo em XP (progresso do nível) para ofertas de Folhas ou pacotes mistos. */
   preco_xp?: number;
   resgatado: boolean;
   label: string;
@@ -574,13 +574,13 @@ export interface ShopResponse {
   spendable_xp: number;
   /** XP necessário para comprar 1 Doria na loja. */
   shop_xp_cost_per_abdoria: number;
-  /** Dorias necessárias para comprar 1 XP na loja. */
+  /** Folhas necessárias para comprar 1 XP na loja. */
   shop_abdoria_cost_per_xp: number;
   /** @deprecated Use shop_xp_cost_per_abdoria */
   xp_to_abdoria_rate: number;
   /** @deprecated Use shop_abdoria_cost_per_xp */
   abdoria_to_xp_rate: number;
-  /** Dorias passivas a cada N XP totais. */
+  /** Folhas passivas a cada N XP totais. */
   abdoria_por_xp: number;
   moldura_loja_equipada: string;
   titulo_equipado: string | null;
@@ -727,16 +727,16 @@ export const XP_PER_EXERCISE = XP_DAILY_PER_EXERCISE;
 export const XP_PER_SKILL_UNLOCK = 1;
 /** Loja: comprar 1 Doria custa N XP (progresso do nível). */
 export const SHOP_XP_COST_PER_MOEDA = 25;
-/** Loja: comprar 1 XP custa N Dorias. */
+/** Loja: comprar 1 XP custa N Folhas. */
 export const SHOP_MOEDA_COST_PER_XP = 5;
-/** Dorias passivas: 1 moeda a cada N XP totais ganhos. */
+/** Folhas passivas: 1 moeda a cada N XP totais ganhos. */
 export const MOEDA_XP_STEP = 10;
 /** Nome de apresentação da moeda comum; o campo persistido continua `moedas`. */
 export const CURRENCY_NAME = 'Folhas';
 /** Nome de apresentação da moeda premium; o campo persistido continua `gems`. */
 export const PREMIUM_CURRENCY_NAME = 'Folhas douradas';
 
-/** Custo em Dorias pra trocar de nome depois da primeira troca gratuita. */
+/** Custo em Folhas para trocar de nome depois da primeira troca gratuita. */
 export const NAME_CHANGE_COST = 10_000;
 
 /** Tamanho máximo do nome de exibição (cadastro e troca de nome) — nomes já
@@ -796,7 +796,7 @@ export function xpCostForMoedaReward(abdoriaAmount: number): number {
   return Math.max(1, Math.ceil(abdoriaAmount * SHOP_XP_COST_PER_MOEDA));
 }
 
-/** Estima Dorias restantes após gastar XP na loja (conversão passiva por blocos). */
+/** Estima Folhas restantes após gastar XP na loja (conversão passiva por blocos). */
 export function projectedMoedaAfterXpSpend(
   nivelXp: number,
   moedas: number,
@@ -1274,7 +1274,7 @@ export interface LeaderboardEntry {
   level: number;
   streak_atual: number;
   moedas: number;
-  /** Acumulado da semana corrente (rankings semanais de XP/Dorias); null no de streak. */
+  /** Acumulado da semana corrente (rankings semanais de XP/Folhas); null no de streak. */
   week_value?: number | null;
   /** Foto de perfil; null = círculo com a inicial do nome. */
   avatar_url?: string | null;

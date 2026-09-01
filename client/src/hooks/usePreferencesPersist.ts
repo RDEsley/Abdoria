@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { updateMe } from '@/lib/api';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Update otimista de `preferencias`, serializado numa fila — a UI atualiza

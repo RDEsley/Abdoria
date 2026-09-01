@@ -3,10 +3,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarCog, ChevronDown, Dumbbell, Info, Moon } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { updateMe } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { playClick } from '@/lib/sounds';
 import {
   ATIVIDADE_COINS_EXTRA,
@@ -114,7 +114,7 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
                   +{ATIVIDADE_COINS_EXTRA} Folhas
                 </strong>
                 . Uma única atividade mantém sua sequência em qualquer dia, inclusive nos dias de
-                treino, sem marcar a Missão de treino como concluída.
+                treino, sem marcar o treino como concluído.
               </p>
             </motion.div>
           )}
@@ -204,8 +204,8 @@ export function AtividadesAgendaModal({ onClose }: { onClose: () => void }) {
         <span>
           <strong>Fazer junto com o treino</strong>
           <small>
-            Ligado, as atividades aparecem logo depois da Missão Diária; desligado, ficam separadas
-            no Início.
+            Ligado, as atividades aparecem logo depois do treino; desligado, ficam separadas no
+            Início.
           </small>
         </span>
       </label>

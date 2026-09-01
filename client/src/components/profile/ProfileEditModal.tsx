@@ -5,7 +5,7 @@ import { CosmeticScrollPicker } from '@/components/profile/CosmeticScrollPicker'
 import { PhotoCropper } from '@/components/profile/PhotoCropper';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { resolveIdentityBorder } from '@/lib/identity-border';
 import { playEquip } from '@/lib/sounds';

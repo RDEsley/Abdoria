@@ -4,20 +4,27 @@ import { Award, Flame, ListChecks, Sparkles, Sprout, Target } from 'lucide-react
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
-import { useAuth } from '@/context/AuthContext';
+import { showGameToast } from '@/lib/game-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { completeOnboarding } from '@/lib/api';
 
 const FEATURES = [
-  { icon: Target, title: 'Core em primeiro lugar', text: 'Missões focadas em abdômen e core.' },
-  { icon: ListChecks, title: 'Rotina completa', text: 'Atividades para cuidar da sua constância.' },
+  {
+    icon: Target,
+    title: 'Treino no seu ritmo',
+    text: 'Sessões guiadas e ajustáveis à sua rotina.',
+  },
+  {
+    icon: ListChecks,
+    title: 'Organização pessoal',
+    text: 'Atividades, notas e lembretes em um só lugar.',
+  },
   { icon: Sparkles, title: 'Progresso visível', text: 'XP, níveis e recompensas a cada avanço.' },
   { icon: Flame, title: 'Streak', text: 'Um incentivo simples para voltar amanhã.' },
   { icon: Award, title: 'Conquistas', text: 'Marcos que celebram sua evolução.' },
   { icon: Sprout, title: 'MyPlant', text: 'Uma nova companhia chegará em breve.' },
 ];
 
-/** Entrada curta. A configuração do treino acontece no contexto da Missão. */
 export function OnboardingPage() {
   const { user, applyUser } = useAuth();
   const navigate = useNavigate();
@@ -54,7 +61,7 @@ export function OnboardingPage() {
         <div className="onb-v2-copy">
           <span className="onb-v2-eyebrow">Sua evolução começa aqui</span>
           <h1 id="welcome-title">Bem-vindo ao Evolyn</h1>
-          <p>Treinos de abdômen com a energia de um jogo e a clareza de um app fitness premium.</p>
+          <p>Plante bons hábitos, acompanhe seu progresso e evolua no seu ritmo.</p>
         </div>
         <div className="onb-v2-features">
           {FEATURES.map(({ icon: Icon, title, text }) => (

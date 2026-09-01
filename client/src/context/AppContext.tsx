@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import {
   completeWorkout,
   getDashboardRecommendations,
@@ -17,7 +17,7 @@ import {
   mergeUserDadosSalvos,
 } from '@/lib/user-dados';
 import { AppContext } from '@/context/app-context';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import type {
   CompleteWorkoutPayload,

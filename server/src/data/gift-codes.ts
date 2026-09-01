@@ -17,7 +17,7 @@ export interface GiftCodeDefinition {
   expires_at?: string;
 }
 
-export const GIFT_CODES: GiftCodeDefinition[] = [
+const GIFT_CODES: GiftCodeDefinition[] = [
   {
     code: 'abdoria',
     xp: 0,

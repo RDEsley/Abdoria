@@ -28,7 +28,7 @@ describe('weekly-stats', () => {
     expect(stats).toEqual({ week_key: CURRENT_WEEK, xp: 0, moedas: 0 });
   });
 
-  it('acumula ganhos de XP e Dorias na semana corrente', () => {
+  it('acumula ganhos de XP e Folhas na semana corrente', () => {
     const user = fakeUser();
     ensureWeekStats(user, CURRENT_WEEK);
     addWeeklyXp(user, 40);

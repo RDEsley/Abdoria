@@ -1,6 +1,6 @@
 import { NOME_MAX_LENGTH, NOME_MIN_LENGTH } from '@/types';
 
-export type AuthFieldKey = 'nome' | 'email' | 'password' | 'confirmPassword';
+type AuthFieldKey = 'nome' | 'email' | 'password' | 'confirmPassword';
 
 export type AuthFieldErrors = Partial<Record<AuthFieldKey, string>>;
 

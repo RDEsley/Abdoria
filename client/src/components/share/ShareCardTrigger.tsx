@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import { Share2 } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { buildShareMessage, exportShareCardBlob, shareOrDownloadImage } from '@/lib/share-card';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { ShareCard, type ShareCardData } from '@/components/share/ShareCard';
 
 interface Props {

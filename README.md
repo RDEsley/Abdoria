@@ -77,7 +77,7 @@ O projeto combina uma interface inspirada em jogos com ferramentas práticas par
 
 ### 🌱 MyPlant
 
-O **MyPlant** é uma experiência em desenvolvimento dentro do Evolyn. A proposta é expandir a representação visual da evolução do usuário sem reintroduzir a antiga implementação RPG/AFK no runtime atual.
+O **MyPlant** é uma experiência em desenvolvimento dentro do Evolyn. A proposta é expandir a representação visual da evolução do usuário.
 
 ---
 
@@ -140,7 +140,6 @@ Evolyn-Core-Quest/
 ├── docs/                   # Documentação pública
 │   ├── assets/             # Imagens usadas na documentação
 │   └── internal/           # Memória técnica e referências internas versionadas
-├── AGENTS.md               # Regras permanentes para agentes
 └── .github/                # CI, templates e governança do repositório
 ```
 
@@ -178,10 +177,18 @@ Variáveis principais do backend:
 ```env
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_ANON_KEY=
 JWT_SECRET=
 JWT_EXPIRES_IN=7d
+CORS_ORIGINS=
 ```
+
+Para builds nativos ou quando frontend e API usam origens diferentes, configure no cliente:
+
+```env
+VITE_API_BASE_URL=https://evolyn-core-quest.vercel.app
+```
+
+Na Web hospedada junto da API, a variável pode ficar vazia e o cliente usa `/api`.
 
 > 🔐 Nunca exponha `SUPABASE_SERVICE_ROLE_KEY`, JWT secrets ou outras credenciais no frontend ou no repositório.
 

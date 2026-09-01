@@ -15,7 +15,7 @@ export interface MolduraStatus {
 }
 
 /** Conta cosméticos secretos do usuário. */
-export function countSecretItems(user: UserRecord): number {
+function countSecretItems(user: UserRecord): number {
   const unlockedCosmetics = user.cosmeticos?.desbloqueados ?? [];
   const secretCosmetics = unlockedCosmetics.filter(
     (id) => COSMETIC_BY_ID[id]?.raridade === 'secreto',
@@ -44,12 +44,4 @@ export async function molduraStatusForUser(user: UserRecord): Promise<MolduraSta
     desbloqueadas,
     equipada: equipada && desbloqueadas.includes(equipada) ? equipada : null,
   };
-}
-
-/** Contador sobreposto à moldura (quantas vezes conquistou aquela posição/segredo). */
-export function molduraCount(status: MolduraStatus, moldura: MolduraId): number {
-  if (moldura === 'ouro') return status.first;
-  if (moldura === 'prata') return status.second;
-  if (moldura === 'bronze') return status.third;
-  return status.secret_items;
 }

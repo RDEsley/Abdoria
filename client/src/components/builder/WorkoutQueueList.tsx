@@ -52,7 +52,7 @@ export function WorkoutQueueList({
           <ListChecks size={18} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="workout-queue__title">Sequência da missão</p>
+          <p className="workout-queue__title">Sequência do treino</p>
           <p className="workout-queue__subtitle">
             {queue.length} {queue.length === 1 ? 'exercício' : 'exercícios'} · segure para reordenar
           </p>

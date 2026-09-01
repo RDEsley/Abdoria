@@ -18,7 +18,7 @@ import {
   validatePassword,
   type AuthFieldErrors,
 } from '@/lib/auth-validation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export function LoginPage() {
   const { login, loginAsGuest } = useAuth();

@@ -2,7 +2,7 @@ import { Flame, Medal, Trophy, Zap } from 'lucide-react';
 import { CosmeticAvatar } from '@/components/cosmetics/CosmeticAvatar';
 import type { IUserDocument } from '@/types';
 
-export interface WorkoutShareData {
+interface WorkoutShareData {
   kind: 'workout';
   workoutName: string;
   dateLabel: string;
@@ -10,7 +10,7 @@ export interface WorkoutShareData {
   streakAtual?: number;
 }
 
-export interface RecordShareData {
+interface RecordShareData {
   kind: 'record';
   exerciseName: string;
   previousValue: number;
@@ -19,7 +19,7 @@ export interface RecordShareData {
   dateLabel: string;
 }
 
-export interface StreakShareData {
+interface StreakShareData {
   kind: 'streak';
   streakAtual: number;
   streakMaior?: number;
@@ -41,7 +41,7 @@ export function ShareCard({ data, user }: Props) {
     <div className="share-card">
       <div className="share-card__glow" aria-hidden />
 
-      <p className="share-card__brand">Evolyn · Core Quest</p>
+      <p className="share-card__brand">Evolyn · Plantando a sua evolução.</p>
 
       <div className="share-card__avatar">
         <CosmeticAvatar user={user} size="lg" />
@@ -78,7 +78,7 @@ export function ShareCard({ data, user }: Props) {
             <Zap size={26} />
           </div>
           <div>
-            <h2 className="share-card__title">Missão completa</h2>
+            <h2 className="share-card__title">Treino concluído</h2>
             <p className="share-card__name">{data.workoutName}</p>
           </div>
           <div className="share-card__value-row">

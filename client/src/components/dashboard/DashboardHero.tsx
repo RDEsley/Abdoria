@@ -1,12 +1,12 @@
-﻿import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useCopy } from '@/hooks/useCopy';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { scrollToDashboardLevelXp } from '@/lib/dashboard-scroll';
 import { resolveCosmeticos } from '@/types';
-import { usePageEntranceReady } from '@/context/PageEntranceContext';
+import { usePageEntranceReady } from '@/hooks/usePageEntranceReady';
 
 interface Props {
   level: number;

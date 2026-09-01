@@ -6,18 +6,8 @@
  * garante que todo cosmético (inclusive os novos) apareça sempre.
  */
 import { COSMETICS } from '@shared/cosmetics';
-import type { CosmeticDefinition, CosmeticRarity } from '@/types';
+import type { CosmeticDefinition } from '@/types';
 
 export const COSMETIC_BY_ID: Record<string, CosmeticDefinition> = Object.fromEntries(
   COSMETICS.map((item) => [item.id, item]),
-);
-
-export const COSMETIC_DISPLAY: Record<
-  string,
-  { nome: string; descricao: string; icon: string; raridade: CosmeticRarity }
-> = Object.fromEntries(
-  COSMETICS.map((item) => [
-    item.id,
-    { nome: item.nome, descricao: item.descricao, icon: item.icon, raridade: item.raridade },
-  ]),
 );

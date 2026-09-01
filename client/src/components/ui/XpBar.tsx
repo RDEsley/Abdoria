@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { usePageEntranceReady } from '@/context/PageEntranceContext';
+import { usePageEntranceReady } from '@/hooks/usePageEntranceReady';
 
 interface Props {
   value: number;

@@ -15,7 +15,7 @@ export interface AdminUserEntry {
   is_guest: boolean;
 }
 
-export interface AppSuggestionEntry {
+interface AppSuggestionEntry {
   id: string;
   user_id: string;
   nome: string;

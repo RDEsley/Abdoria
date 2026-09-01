@@ -247,7 +247,7 @@
   border-radius: 999px;
 }
 
-/* Cards de missão / quest */
+/* Cards de treino recomendado. */
 .game-quest-card {
   position: relative;
   padding: var(--space-2);

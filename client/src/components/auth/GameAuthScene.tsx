@@ -47,9 +47,9 @@ export function GameAuthScene({ children }: GameAuthSceneProps) {
       <section className="game-auth-intro" aria-label="Evolyn">
         <BrandMark size={176} alt="Evolyn" variant="full" className="game-auth-intro__logo" />
         <div className="game-auth-intro__copy">
-          <p className="game-auth-intro__eyebrow">Seu treino, sua evolução</p>
-          <h2>Core forte. Rotina possível.</h2>
-          <p>Missões curtas, progresso visível e motivação para continuar no seu ritmo.</p>
+          <p className="game-auth-intro__eyebrow">Sua rotina, sua evolução</p>
+          <h2>Pequenos passos. Grandes mudanças.</h2>
+          <p>Treinos, atividades e organização para evoluir com constância no seu ritmo.</p>
         </div>
         <div className="game-auth-intro__features">
           <span>

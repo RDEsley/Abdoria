@@ -5,7 +5,7 @@ import { Sparkles } from 'lucide-react';
 import { CelebrationBurst } from '@/components/effects/CelebrationBurst';
 import { CosmeticIcon } from '@/components/cosmetics/CosmeticIcon';
 import { GameButton } from '@/components/ui/GameButton';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { ackCosmeticCelebration, getShop } from '@/lib/api';
 import { playEquip } from '@/lib/sounds';
 import { successHaptic } from '@/lib/platform/native-runtime';

@@ -1,12 +1,11 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApp } from '@/hooks/useApp';
 import { completeAtividade, updateMe } from '@/lib/api';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { playCompleteSet } from '@/lib/sounds';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import { toLocalDateKey } from '@/lib/utils';
-import { formatMetricas } from '@/lib/atividade-format';
 import {
   agendaCobreDia,
   isAtividadeHistory,
@@ -25,8 +24,6 @@ export interface AtividadesFluxoResumo {
   moedas: number;
   streakCelebration: number | null;
   levelUp: LevelUpData | null;
-  /** Nome + detalhe de cada atividade concluída no fluxo — vira o capítulo de campanha. */
-  feitas: { nome: string; detalhe: string }[];
 }
 
 /**
@@ -53,8 +50,7 @@ export function useAtividadesFlow() {
     total: number;
     streakCelebration: number | null;
     levelUp: LevelUpData | null;
-    feitas: { nome: string; detalhe: string }[];
-  }>({ xp: 0, moedas: 0, total: 0, streakCelebration: null, levelUp: null, feitas: [] });
+  }>({ xp: 0, moedas: 0, total: 0, streakCelebration: null, levelUp: null });
 
   const hoje = getTodaySaoPaulo();
   const atividades = useMemo(() => resolveAtividades(user?.preferencias), [user?.preferencias]);
@@ -140,10 +136,6 @@ export function useAtividadesFlow() {
       acumulado.current.moedas += res.abdoria_ganha;
       acumulado.current.total += 1;
       emitXpEarned(res.xp_ganho);
-      acumulado.current.feitas.push({
-        nome: atividade.nome,
-        detalhe: formatMetricas(dados.metricas),
-      });
       if (res.streak_celebration)
         acumulado.current.streakCelebration = res.streak_celebration.streak_atual;
       if (res.level_up) {
@@ -183,7 +175,6 @@ export function useAtividadesFlow() {
       total: 0,
       streakCelebration: null,
       levelUp: null,
-      feitas: [],
     };
     return resumo;
   };

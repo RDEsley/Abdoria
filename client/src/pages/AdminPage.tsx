@@ -19,10 +19,10 @@ import { ModerationModal } from '@/components/admin/ModerationModal';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { GameLeafIcon, GoldenLeafIcon } from '@/components/ui/CurrencyIcon';
 import { getErrorMessage } from '@/lib/api-errors';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import {
   getAdminOverview,
   getAdminReports,

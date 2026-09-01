@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Map, Play, Timer } from 'lucide-react';
+import { Flame, Play, Timer } from 'lucide-react';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -28,7 +28,6 @@ import {
   xpProgressFromTotal,
 } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
-import { CampaignFeed } from '@/components/dashboard/CampaignFeed';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -63,12 +62,12 @@ export function DashboardPage() {
   const sugerido = stats.treino_sugerido;
 
   const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
-  const playLink = sugerido?.preset_id ? `/construtor?preset=${sugerido.preset_id}` : '/construtor';
+  const playLink = sugerido?.preset_id ? `/treino?preset=${sugerido.preset_id}` : '/treino';
 
   const perfilTreino = user?.perfil_treino ?? null;
   const abProfile = user?.ab_training_profile_v2 ?? null;
   const hoje = getSaoPauloWeekday();
-  // Streak 0 = primeiro treino (ou recomeço): nunca oferecer descanso — sempre missão normal.
+  // Streak 0 indica primeiro treino ou recomeço, portanto o app não sugere descanso.
   const diaDescanso =
     !stats.treino_hoje &&
     stats.streak_atual > 0 &&
@@ -142,7 +141,7 @@ export function DashboardPage() {
         ))}
         {!stats.treino_hoje && !sugerido && (
           <p className="mt-2 text-xs font-bold text-stone-500">
-            Escolha ou monte um treino na aba <strong>Missão</strong>.
+            Escolha ou monte um treino na aba <strong>Treino</strong>.
           </p>
         )}
         {!stats.treino_hoje && (
@@ -194,16 +193,6 @@ export function DashboardPage() {
           hideHero
         />
       </motion.div>
-
-      <motion.section
-        variants={item}
-        className="glass-card dashboard-surface dashboard-surface--campaign p-4"
-      >
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <Map size={16} /> Mapa de campanha
-        </h3>
-        <CampaignFeed />
-      </motion.section>
 
       <motion.section
         variants={item}

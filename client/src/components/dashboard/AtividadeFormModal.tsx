@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { ACHIEVEMENT_ICON_COMPONENTS } from '@/components/gamification/achievement-icons';
 import { playClick } from '@/lib/sounds';
 import {
@@ -212,7 +212,11 @@ function AtividadeIconField({
               <h2 id="atividade-icon-sheet-title" className="game-picker-sheet__title">
                 Ícone da atividade
               </h2>
-              <div className="atividade-icon-sheet-grid" role="listbox" aria-label="Ícone da atividade">
+              <div
+                className="atividade-icon-sheet-grid"
+                role="listbox"
+                aria-label="Ícone da atividade"
+              >
                 {ATIVIDADE_ICONES.map((option) => {
                   const Icon = ACHIEVEMENT_ICON_COMPONENTS[option];
                   const ativo = value === option;
@@ -277,7 +281,9 @@ export function AtividadeFormModal({
   );
   const [unidade, setUnidade] = useState(atividade?.meta_unidade ?? '');
   const [detalhesAbertos, setDetalhesAbertos] = useState(
-    Boolean(atividade && ((atividade.tipo && atividade.tipo !== 'generico') || atividade.descricao)),
+    Boolean(
+      atividade && ((atividade.tipo && atividade.tipo !== 'generico') || atividade.descricao),
+    ),
   );
   const descricaoRef = useRef<HTMLTextAreaElement>(null);
 
@@ -297,7 +303,10 @@ export function AtividadeFormModal({
       return;
     }
     const metaValor = metaTipo === 'tempo' ? minutos : Number(quantidade);
-    if (metaTipo === 'numero' && (!quantidade.trim() || !Number.isFinite(metaValor) || metaValor <= 0)) {
+    if (
+      metaTipo === 'numero' &&
+      (!quantidade.trim() || !Number.isFinite(metaValor) || metaValor <= 0)
+    ) {
       showGameToast('Diga uma meta (ex.: 5 páginas, 3 km...).', { variant: 'warn' });
       return;
     }
@@ -316,7 +325,12 @@ export function AtividadeFormModal({
   };
 
   return (
-    <Modal open onClose={onClose} labelledBy="atividade-form-title" panelClassName="atividade-form-modal">
+    <Modal
+      open
+      onClose={onClose}
+      labelledBy="atividade-form-title"
+      panelClassName="atividade-form-modal"
+    >
       <div className="atividade-form-modal__head">
         <h2 id="atividade-form-title" className="text-base font-extrabold text-stone-800">
           {atividade ? 'Editar atividade' : 'Nova atividade'}
@@ -338,7 +352,11 @@ export function AtividadeFormModal({
         </div>
 
         <div className="atividade-meta-card">
-          <div className="atividade-meta-segmented" role="tablist" aria-label="Como medir a atividade">
+          <div
+            className="atividade-meta-segmented"
+            role="tablist"
+            aria-label="Como medir a atividade"
+          >
             <button
               type="button"
               role="tab"
@@ -415,7 +433,9 @@ export function AtividadeFormModal({
             setDetalhesAbertos((v) => !v);
           }}
         >
-          <span>Mais detalhes <span className="text-stone-400 font-medium">(tipo, descrição)</span></span>
+          <span>
+            Mais detalhes <span className="text-stone-400 font-medium">(tipo, descrição)</span>
+          </span>
           <ChevronDown
             size={16}
             className={`atividade-form-modal__advanced-chevron${detalhesAbertos ? ' atividade-form-modal__advanced-chevron--open' : ''}`}

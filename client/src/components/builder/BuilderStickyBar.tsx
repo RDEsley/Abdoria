@@ -7,7 +7,7 @@ interface Props {
   onStart: () => void;
   /** Atividades na fila do dia — entram na sequência depois do treino. */
   atividadesNaFila?: number;
-  /** Presente = mostra o X pra tirar as atividades da fila sem sair do Construtor. */
+  /** Presente = mostra o X para tirar as atividades anexadas ao treino. */
   onRemoverAtividades?: () => void;
 }
 
@@ -22,7 +22,7 @@ export function BuilderStickyBar({
   const hasTime = estimatedMinutes !== null && exerciseCount > 0;
 
   return (
-    <div className="builder-action-shelf" role="region" aria-label="Iniciar missão">
+    <div className="builder-action-shelf" role="region" aria-label="Iniciar treino">
       <div className="builder-action-shelf__inner">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="builder-start-pills flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">

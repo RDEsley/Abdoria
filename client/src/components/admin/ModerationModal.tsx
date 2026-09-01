@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Ban, Clock3, ShieldCheck } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { banAdminUser, unbanAdminUser } from '@/lib/api';
 import type { Banimento } from '@/types';
@@ -99,7 +99,9 @@ export function ModerationModal({ open, userId, userName, banimento, onClose, on
               type="button"
               onClick={() => setTipo('suspensao')}
               className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 py-2.5 text-sm font-bold ${
-                tipo === 'suspensao' ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-stone-200'
+                tipo === 'suspensao'
+                  ? 'border-amber-500 bg-amber-50 text-amber-800'
+                  : 'border-stone-200'
               }`}
             >
               <Clock3 size={15} /> Suspender

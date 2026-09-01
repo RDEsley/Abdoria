@@ -18,11 +18,11 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import {
   PERSONAL_NOTIFICATION_COLORS,
   PERSONAL_NOTIFICATION_ICONS,

@@ -1,13 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   getMe,
   login as apiLogin,
@@ -19,20 +10,7 @@ import { clearToken, getToken, setSavedEmail, setToken } from '@/lib/auth-storag
 import { clearLegacyLocalData } from '@/lib/user-dados';
 import { setSfxPack, setSoundSettings } from '@/lib/sounds';
 import type { IUserDocument } from '@/types';
-
-interface AuthContextValue {
-  user: IUserDocument | null;
-  loading: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<void>;
-  loginAsGuest: () => Promise<void>;
-  register: (email: string, password: string, nome: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-  applyUser: (user: IUserDocument) => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from '@/context/auth-context';
 
 /** Estado de sessão JWT: login, registro, perfil e sincronização de preferências. */
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -142,10 +120,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
 }

@@ -1,9 +1,9 @@
-/** Skeleton inicial do Construtor: preserva a hierarquia visual enquanto os presets chegam. */
+/** Preserva a hierarquia visual da página enquanto os treinos chegam. */
 export function BuilderSkeleton() {
   return (
     <div
       className="builder-page flex animate-pulse flex-col gap-5 pb-44"
-      aria-label="Carregando missão"
+      aria-label="Carregando treino"
     >
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2">

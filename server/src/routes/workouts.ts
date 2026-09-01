@@ -242,7 +242,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
   }
 });
 
-/** Paga Coins pra restaurar a sequência da oferta ativa de "Recuperar Streak"
+/** Usa Folhas para restaurar a sequência da oferta ativa de recuperação de streak
     (ver shared/streak/recovery.ts) — some da conta ao ser resgatada. */
 workoutsRouter.post('/streak/recover', async (req: AuthRequest, res) => {
   try {
@@ -296,7 +296,7 @@ workoutsRouter.post('/streak/recover', async (req: AuthRequest, res) => {
   }
 });
 
-/** Paga `STREAK_RECORD_MATCH_COST` Coins pra puxar a sequência atual direto
+/** Usa `STREAK_RECORD_MATCH_COST` Folhas para igualar a sequência atual
     pro recorde pessoal (tile de Streak na Evolução do perfil). */
 workoutsRouter.post('/streak/match-record', async (req: AuthRequest, res) => {
   try {
@@ -577,13 +577,13 @@ const ATIVIDADE_REENVIO_MS = 20_000;
 /**
  * Conclui uma Atividade da fila do dia.
  *
- * XP/Coins/streak (ver CLAUDE.md → Sistema de Atividades):
+ * Regras de XP, Folhas e streak para atividades:
  * - XP: `ATIVIDADE_XP_POR_UNIDADE` por atividade, em qualquer dia, até
  *   `ATIVIDADES_MIN_DESCANSO` atividades no dia — da 4ª em diante vira
- *   `ATIVIDADE_COINS_EXTRA` Coins em vez de XP. Ainda sujeito ao teto diário
+ *   `ATIVIDADE_COINS_EXTRA` Folhas em vez de XP. Ainda sujeito ao limite diário
  *   geral de XP (`awardDailyXp` corta se o orçamento do dia já estourou).
  * - Streak: uma única atividade concluída já sustenta a sequência, em
- *   qualquer dia (treino ou descanso) — mas nunca marca a Missão de treino
+ *   qualquer dia, de treino ou descanso, mas nunca marca o treino
  *   do dia como concluída (`hasTrainedToday` exige treino de verdade).
  */
 workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
@@ -676,7 +676,7 @@ workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
     );
 
     // Mesma regra em qualquer dia: as primeiras `ATIVIDADES_MIN_DESCANSO` do
-    // dia pagam XP fixo; da próxima em diante, Coins em vez de XP.
+    // dia concedem XP fixo; as seguintes concedem Folhas.
     const atividadesHojeAntes = sessoesHoje.filter((entry) =>
       isAtividadeHistory(entry.treino_nome),
     ).length;

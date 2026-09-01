@@ -38,7 +38,7 @@ export function addWeeklyXp(user: UserRecord, amount: number): void {
   ensureWeekStats(user).xp += amount;
 }
 
-/** Registra ganho de Dorias na semana corrente (só ganhos contam — compra não desconta). */
+/** Registra ganho de Folhas na semana corrente (só ganhos contam — compra não desconta). */
 export function addWeeklyMoedas(user: UserRecord, amount: number): void {
   if (amount <= 0) return;
   ensureWeekStats(user).moedas += amount;

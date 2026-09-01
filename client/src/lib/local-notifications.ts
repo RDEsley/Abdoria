@@ -97,7 +97,7 @@ export function buildLocalNotices(
     notices.push({
       id: `local-lembrete-${today}`,
       tipo: 'lembrete_treino',
-      titulo: 'Sua missão de hoje te espera',
+      titulo: 'Seu treino de hoje espera por você',
       // Com o dia já garantido por Atividades, prometer "manter a sequência
       // viva" seria mentira — o convite aqui é pelo XP do treino.
       corpo: sequenciaGarantida

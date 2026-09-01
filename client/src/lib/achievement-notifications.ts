@@ -1,6 +1,6 @@
 import type { AchievementIcon, PersonalRecordNotice, UnlockedAchievementNotice } from '@/types';
 
-export type AchievementToastType = 'achievement' | 'record';
+type AchievementToastType = 'achievement' | 'record';
 
 export interface TriggerAchievementPayload {
   title: string;
@@ -24,7 +24,7 @@ export function registerAchievementTrigger(listener: TriggerListener | null) {
 }
 
 /** Dispara uma notificação global de conquista — funciona fora de componentes React. */
-export function triggerAchievement(payload: TriggerAchievementPayload) {
+function triggerAchievement(payload: TriggerAchievementPayload) {
   if (triggerListener) {
     triggerListener(payload);
     return;
@@ -32,8 +32,8 @@ export function triggerAchievement(payload: TriggerAchievementPayload) {
   window.dispatchEvent(new CustomEvent('abdoria:achievement-trigger', { detail: payload }));
 }
 
-export const ACHIEVEMENT_UNLOCKED_TITLE = 'Conquista desbloqueada!';
-export const PERSONAL_RECORD_TITLE = 'Novo recorde!';
+const ACHIEVEMENT_UNLOCKED_TITLE = 'Conquista desbloqueada!';
+const PERSONAL_RECORD_TITLE = 'Novo recorde!';
 
 export function notifyWorkoutAchievements(achievements: UnlockedAchievementNotice[]) {
   for (const ach of achievements) {

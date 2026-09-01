@@ -5,7 +5,7 @@ import { UserAvatar } from '@/components/profile/UserAvatar';
 import { resolveIdentityBorder } from '@/lib/identity-border';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { playTabSwitch } from '@/lib/sounds';
 import {
@@ -29,11 +29,11 @@ const TABS: { id: Tab; label: string }[] = [
 
 /** Convite via Web Share (fallback: copia o link). */
 async function shareInvite() {
-  const text = 'Bora treinar comigo no Evolyn — treino de abdômen com XP, streak e ranking!';
+  const text = 'Bora evoluir comigo no Evolyn — treinos, atividades, XP, streak e conquistas!';
   const url = window.location.origin;
   try {
     if (navigator.share) {
-      await navigator.share({ title: 'Evolyn · Core Quest', text, url });
+      await navigator.share({ title: 'Evolyn', text, url });
       return;
     }
   } catch {

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Lightbulb, Save, Scale, Sparkles, Target, TrendingDown } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { updateMe } from '@/lib/api';
 import { imcFaixa } from '@/lib/utils';
 import type { DashboardStats, IUserDocument, NivelUsuario, SexoBiologico } from '@/types';

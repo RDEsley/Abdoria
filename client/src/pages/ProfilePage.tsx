@@ -26,10 +26,10 @@ import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel'
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { useApp } from '@/hooks/useApp';
 import { useCopy } from '@/hooks/useCopy';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { getAdminReportsPendingCount, updateMe } from '@/lib/api';
 import { getMySocial } from '@/lib/api/social';
 import { playTabSwitch } from '@/lib/sounds';
@@ -37,7 +37,7 @@ import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { resolveIdentityBorder } from '@/lib/identity-border';
 import { shareContent } from '@/lib/platform/share';
-import { usePwaInstall } from '@/context/PwaInstallContext';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
 import {
   digitsOnly,
   formatAlturaMask,
@@ -138,7 +138,7 @@ export function ProfilePage() {
   const shareProfile = async () => {
     const url = `${window.location.origin}/perfil/${profile.id}`;
     const text = `Vem ver meu perfil no Evolyn — nível ${xpProgressFromTotal(profile.gamificacao.nivel_xp).level}, bora treinar junto!`;
-    const result = await shareContent({ title: 'Evolyn · Core Quest', text, url });
+    const result = await shareContent({ title: 'Evolyn', text, url });
     if (result === 'copied') showGameToast('Link do perfil copiado!', { variant: 'success' });
   };
 

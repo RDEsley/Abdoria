@@ -54,7 +54,7 @@ describe('buildPlanoTreino', () => {
       for (const dia of plano!.dias) {
         expect(dia.grupos).toContain('abdomen');
         expect(dia.enfase_abs).toBe(ABS_ENFASE_ROTATION[dia.indice % ABS_ENFASE_ROTATION.length]);
-        expect(dia.titulo).toContain(`Missão ${dia.indice + 1}`);
+        expect(dia.titulo).toContain(`Treino ${dia.indice + 1}`);
       }
     }
   });

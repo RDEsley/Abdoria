@@ -52,8 +52,6 @@ import {
 } from './economy.js';
 import { addInventoryItem } from './inventory.js';
 
-export { COSMETICS, COSMETIC_BY_ID, CURRENCY_NAME };
-
 type UserDoc = UserMutable;
 
 const DEFAULT_SOM_ID = 'som_classico';
@@ -85,7 +83,7 @@ function ensureCosmeticos(user: UserDoc): void {
 }
 
 /**
- * Sons continuam à venda por Dorias (aba Áudio das Opções). Os demais
+ * Sons continuam à venda por Folhas (aba Áudio das Opções). Os demais
  * cosméticos com regra legada `moedas` (Personalização do Perfil) saíram
  * de venda — decisão de produto de 2026-07-18: passam a ser obtidos por
  * conquistas, códigos e eventos, sem preço exposto na interface.
@@ -99,7 +97,7 @@ function moedasUnlockLabel(item: CosmeticDefinition): string {
   return 'Em breve — nova forma de desbloquear';
 }
 
-export function buildUnlockLabel(item: CosmeticDefinition): string {
+function buildUnlockLabel(item: CosmeticDefinition): string {
   switch (item.unlock.tipo) {
     case 'gratis':
       return 'Grátis para todos';
@@ -606,9 +604,6 @@ export async function acknowledgeCosmeticUnlocks(userId: string) {
   return { user };
 }
 
-/** Compatibilidade com serviço anterior. */
-export const syncCosmeticUnlocks = syncShopUnlocks;
-export const awardLevelCoins = awardMoedaFromXpProgress;
 export function buildCosmeticsResponse(
   user: UserDoc,
 ): ShopResponse & { moedas: number; moedas_por_nivel: number } {
@@ -619,6 +614,3 @@ export function buildCosmeticsResponse(
     moedas_por_nivel: shop.abdoria_por_xp,
   };
 }
-export const purchaseCosmetic = purchaseShopItem;
-export const equipCosmetic = equipShopItem;
-export const loadUserForCosmetics = loadUserForShop;

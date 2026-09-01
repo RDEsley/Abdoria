@@ -22,23 +22,13 @@ import { PlayerPauseOverlay } from '@/components/player/PlayerPauseOverlay';
 import { WorkoutTimerRing } from '@/components/player/WorkoutTimerRing';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { WorkoutRecoveryModal } from '@/components/player/WorkoutRecoveryModal';
-import { CampaignStoryScreen } from '@/components/player/CampaignStoryScreen';
 import { WorkoutCompanionLayer, WorkoutScene } from '@/components/player/WorkoutScene';
 import { ExerciseDemo } from '@/components/exercises/ExerciseDemo';
 import { ExerciseGuideSheet } from '@/components/exercises/ExerciseGuideSheet';
-import {
-  buildCampaignPosts,
-  CAMPAIGN_STREAK_MILESTONES,
-  CAMPAIGN_STREAK_NARRATIVE_MIN,
-  type CampaignCatalogInfo,
-  type CampaignPost,
-  type CapituloOverride,
-} from '@shared/campaign';
-import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { shouldPauseWorkoutForGuide } from '@shared/workout-player';
 import { GameButton } from '@/components/ui/GameButton';
 import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
 import {
   playBeep,
@@ -50,7 +40,7 @@ import {
   setSoundSettings,
 } from '@/lib/sounds';
 import { getErrorMessage } from '@/lib/api-errors';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getRecommendWorkout, updateMe } from '@/lib/api';
 import {
   clearWorkoutDurationSession,
@@ -65,7 +55,6 @@ import {
 import {
   formatExercisePrescription,
   resolveCosmeticos,
-  xpLevelFromTotal,
   type LevelUpCelebration as LevelUpData,
 } from '@/types';
 import type { ActiveWorkout, WorkoutQueueItem, XpBreakdown } from '@/types';
@@ -83,7 +72,7 @@ function sideInstruction(item: WorkoutQueueItem | undefined, sideIndex: 0 | 1): 
 export function PlayerPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { saveWorkout, exercises, ensureExercises } = useApp();
+  const { saveWorkout, exercises } = useApp();
   const { user: authUser } = useAuth();
   const atividadesFlow = useAtividadesFlow();
   const [initialSnapshot] = useState(readWorkoutOrLegacy);
@@ -118,14 +107,6 @@ export function PlayerPage() {
   const [showRodadaModal, setShowRodadaModal] = useState(false);
   const [rodadaBusy, setRodadaBusy] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [storyPost, setStoryPost] = useState<CampaignPost | null>(null);
-  const [showStory, setShowStory] = useState(false);
-  // Snapshot pré-treino (só roda no mount, via inicializador de useState): se
-  // a conta nunca teve streak nenhum, esta sessão (treino ou atividade) é
-  // genuinamente a primeira da vida da conta — capturado uma única vez pra
-  // não virar "sempre primeiro" caso `authUser` seja atualizado em segundo
-  // plano depois do save.
-  const [isFirstEver] = useState(() => (authUser?.gamificacao?.streak_maior ?? 0) === 0);
   const [muted, setMuted] = useState(() => !(authUser?.preferencias?.som_habilitado ?? true));
   const [countdownEnabled, setCountdownEnabled] = useState(
     () => authUser?.preferencias?.contagem_regressiva_habilitada ?? true,
@@ -212,7 +193,7 @@ export function PlayerPage() {
 
   useEffect(() => {
     if (!workout) {
-      navigate('/construtor', { replace: true });
+      navigate('/treino', { replace: true });
     }
   }, [workout, navigate]);
 
@@ -287,8 +268,7 @@ export function PlayerPage() {
 
     endTimeRef.current = persistWorkoutEndedAt();
     playWorkoutComplete();
-    // Atividades anexadas (se houver) só entram em cena depois da Missão
-    // Completa e do capítulo da campanha — ver `proceedAfterStory`.
+    // Atividades anexadas, quando existirem, são oferecidas após a conclusão.
     setPhase('done');
   }, [
     workout,
@@ -508,7 +488,7 @@ export function PlayerPage() {
   const quitWorkout = () => {
     webWorkoutSessionStorage.clear();
     clearWorkoutDurationSession();
-    navigate('/construtor', { replace: true });
+    navigate('/treino', { replace: true });
   };
 
   const resumeRecoveredWorkout = () => {
@@ -522,84 +502,13 @@ export function PlayerPage() {
     void actionHaptic();
   };
 
-  /** Só admins (testes): pula direto pra tela de missão completa. */
+  /** Atalho administrativo usado para validar a conclusão do treino. */
   const skipAllForTests = () => {
     endTimeRef.current = Date.now();
     persistWorkoutEndedAt(endTimeRef.current);
     playWorkoutComplete();
     setPhase('done');
   };
-
-  /** Capítulo de campanha gerado pela missão recém-concluída (mesma lógica do feed).
-      `streakAtualHoje` só vem preenchido quando o servidor confirma que ESTA
-      sessão de fato estendeu o streak (ver `streak_celebration` na resposta
-      de salvar) — sem isso, nunca forçamos um marco de capítulo. Sessão
-      chaveada por dia (não por timestamp) pra repetir o MESMO capítulo se o
-      usuário passar pela tela de novo no mesmo dia, em vez de sortear outro. */
-  const buildStoryPost = (
-    xpGanho: number,
-    duracao: number,
-    streakAtualHoje: number | null,
-  ): CampaignPost | null => {
-    if (!workout || !authUser) return null;
-    const sessionId = `sessao-${getTodaySaoPaulo()}`;
-    const capituloOverride: CapituloOverride | null = isFirstEver
-      ? { sessionId, marco: { tipo: 'primeiro' } }
-      : streakAtualHoje != null &&
-          streakAtualHoje >= CAMPAIGN_STREAK_NARRATIVE_MIN &&
-          CAMPAIGN_STREAK_MILESTONES.includes(streakAtualHoje)
-        ? { sessionId, marco: { tipo: 'streak', dias: streakAtualHoje } }
-        : null;
-    const catalogBySlug = new Map<string, CampaignCatalogInfo>(
-      exercises.map((ex) => [
-        ex.slug,
-        {
-          nivel: ex.nivel,
-          prioridade: ex.prioridade,
-          musculo_principal: ex.musculo_principal,
-          grupos: ex.grupos,
-          nome_pt: ex.nome_pt,
-        },
-      ]),
-    );
-    const posts = buildCampaignPosts(
-      [
-        {
-          id: sessionId,
-          treino_nome: workout.treino_nome,
-          exercicios: workout.queue.map((item) => ({
-            exercicio_id: item.exercicio_id ?? '',
-            slug: item.slug,
-            nome: item.nome,
-            duracao_segundos:
-              item.modo === 'tempo'
-                ? (item.tempo_seg ?? item.tempo_recomendado)
-                : (item.repeticoes ?? 12) * 3,
-            musculo_principal: item.musculo_principal,
-            series: item.series,
-            repeticoes_realizadas: item.modo === 'reps' ? item.repeticoes : undefined,
-            modo: item.modo,
-            descanso_seg: item.descanso_seg,
-          })),
-          duracao_total_segundos: duracao,
-          xp_ganho: xpGanho,
-          concluido_em: new Date().toISOString(),
-        },
-      ],
-      catalogBySlug,
-      {
-        heroi: authUser.nome?.split(' ')[0] ?? 'O herói',
-        level: xpLevelFromTotal(authUser.gamificacao?.nivel_xp ?? 0),
-      },
-      capituloOverride,
-    );
-    return posts[0] ?? null;
-  };
-
-  useEffect(() => {
-    // Catálogo pronto pra montar o capítulo de campanha no fim da missão.
-    void ensureExercises();
-  }, [ensureExercises]);
 
   const handleFinish = async () => {
     if (!workout || saving || saved) return;
@@ -646,13 +555,6 @@ export function PlayerPage() {
       webWorkoutSessionStorage.clear();
       clearWorkoutDurationSession();
       setSaved(true);
-      setStoryPost(
-        buildStoryPost(
-          result.xp_ganho ?? 0,
-          Math.max(duration, 1),
-          result.streak_celebration?.streak_atual ?? null,
-        ),
-      );
       if (result.rodada_completa) {
         setShowRodadaModal(true);
       }
@@ -668,8 +570,7 @@ export function PlayerPage() {
   const finishTriggeredRef = useRef(false);
   useEffect(() => {
     // Salva o treino assim que os exercícios terminam — sem esperar o
-    // usuário tocar em nada — pra "Missão Completa" não parecer uma
-    // segunda tela que exige ação manual.
+    // usuário tocar em nada, mantendo a conclusão imediata e previsível.
     if (phase === 'done' && !finishTriggeredRef.current) {
       finishTriggeredRef.current = true;
       void handleFinish();
@@ -677,13 +578,7 @@ export function PlayerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só na transição de fase, handleFinish já se protege com `saving`/`saved`
   }, [phase]);
 
-  /**
-   * Depois da Missão Completa (e do capítulo da campanha, se houver): só
-   * agora — nunca antes — checa se vale oferecer as atividades anexadas.
-   * Feito assim de propósito, pra não interromper o fluxo normal de
-   * "treino → missão → capítulo" com nada extra no meio.
-   */
-  const proceedAfterStory = () => {
+  const continueAfterWorkout = () => {
     const podeOferecerAtividades =
       atividadesFlow.agenda.junto_com_treino && atividadesFlow.filaPendente.length > 0;
     if (podeOferecerAtividades) {
@@ -695,17 +590,12 @@ export function PlayerPage() {
 
   /** Leva pra tela de escolha das atividades — nenhuma abre sozinha, o
       usuário escolhe da lista qual quer fazer primeiro. */
-  const iniciarAtividadesDaMissao = () => {
+  const startQueuedActivities = () => {
     navigate('/atividades-player');
   };
 
   const handleRodadaManter = () => {
     setShowRodadaModal(false);
-  };
-
-  const handleVictoryContinue = () => {
-    if (storyPost) setShowStory(true);
-    else proceedAfterStory();
   };
 
   const handleRodadaTrocar = async () => {
@@ -716,10 +606,10 @@ export function PlayerPage() {
         excludePresetId: workout?.preset_id ?? null,
       });
       setShowRodadaModal(false);
-      navigate(`/construtor?preset=${treino.preset_id}`);
+      navigate(`/treino?preset=${treino.preset_id}`);
     } catch {
       setShowRodadaModal(false);
-      navigate('/construtor');
+      navigate('/treino');
     } finally {
       setRodadaBusy(false);
     }
@@ -728,9 +618,6 @@ export function PlayerPage() {
   if (!workout || !current) return null;
 
   if (phase === 'done') {
-    if (showStory && storyPost) {
-      return <CampaignStoryScreen post={storyPost} onContinue={proceedAfterStory} />;
-    }
     return (
       <WorkoutVictoryScreen
         workoutName={workout.treino_nome}
@@ -746,7 +633,7 @@ export function PlayerPage() {
         saving={saving}
         saved={saved}
         onFinish={() => void handleFinish()}
-        onContinue={handleVictoryContinue}
+        onContinue={continueAfterWorkout}
         showRodadaModal={showRodadaModal}
         rodadaBusy={rodadaBusy}
         onRodadaKeep={handleRodadaManter}
@@ -769,13 +656,13 @@ export function PlayerPage() {
           </span>
           <h2 className="game-victory__title !text-base">QUER FAZER AS ATIVIDADES AGORA?</h2>
           <p className="mt-2 text-sm font-bold text-stone-600">
-            Você anexou {n} atividade{n === 1 ? '' : 's'} a esta missão — dá pra fazer agora, na
+            Você anexou {n} atividade{n === 1 ? '' : 's'} a este treino — dá para fazer agora, na
             sequência, ou deixar pra mais tarde.
           </p>
           <GameButton
             size="lg"
             className="mt-5 flex w-full items-center justify-center gap-2"
-            onClick={iniciarAtividadesDaMissao}
+            onClick={startQueuedActivities}
           >
             Sim, fazer agora <ChevronRight size={18} />
           </GameButton>

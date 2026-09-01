@@ -5,7 +5,6 @@ import type {
   OnboardingPayload,
   PublicProfile,
   UpdateUserDadosResponse,
-  UserPreferencias,
   UserDadosSalvos,
 } from '@/types';
 import { fetchJson } from './client';
@@ -31,14 +30,6 @@ export function updateMe(data: Partial<IUserDocument>): Promise<IUserDocument> {
   return fetchJson('/users/me', { method: 'PATCH', body: JSON.stringify(data) });
 }
 
-/** Atualiza somente as preferências informadas; o servidor faz o merge com o perfil atual. */
-export function updatePreferences(preferencias: Partial<UserPreferencias>): Promise<IUserDocument> {
-  return fetchJson('/users/me', {
-    method: 'PATCH',
-    body: JSON.stringify({ preferencias }),
-  });
-}
-
 export function updateUserDados(data: Partial<UserDadosSalvos>): Promise<UpdateUserDadosResponse> {
   return fetchJson('/users/me/dados', { method: 'PATCH', body: JSON.stringify(data) });
 }
@@ -52,10 +43,6 @@ export function updateAbTrainingProfileV2(profile: AbTrainingProfileV2): Promise
     method: 'PUT',
     body: JSON.stringify({ profile }),
   });
-}
-
-export function regenerateTrainingPlan(): Promise<IUserDocument> {
-  return fetchJson('/users/me/training-plan/regenerate', { method: 'POST' });
 }
 
 export function changeName(nome: string): Promise<{ user: IUserDocument; custo_pago: number }> {
@@ -73,12 +60,10 @@ export function removeProfilePhoto(): Promise<{ user: IUserDocument }> {
   return fetchJson('/users/me/avatar', { method: 'DELETE' });
 }
 
-/** Apaga a conta em definitivo — sem volta. */
 export function deleteAccount(): Promise<{ ok: boolean }> {
   return fetchJson('/users/me', { method: 'DELETE' });
 }
 
-/** Concluir um Lembrete — XP fixo, sem toast próprio (ver shared/bloco-notas). */
 export function grantLembreteXp(): Promise<{ user: IUserDocument; xp_ganho: number }> {
   return fetchJson('/users/me/lembrete-xp', { method: 'POST' });
 }

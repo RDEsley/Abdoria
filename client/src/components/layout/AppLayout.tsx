@@ -8,7 +8,7 @@ import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import { usePersonalizedReminders } from '@/hooks/usePersonalizedReminders';
@@ -19,7 +19,7 @@ function buildNavItems() {
   return [
     { to: '/', icon: Home, label: 'Início' },
     { to: '/atividades', icon: CalendarCheck2, label: 'Atividades' },
-    { to: '/construtor', icon: Dumbbell, label: 'Missão' },
+    { to: '/treino', icon: Dumbbell, label: 'Treino' },
     { to: '/myplant', icon: Sprout, label: 'MyPlant' },
     { to: '/perfil', icon: User, label: 'Perfil' },
   ] as const;
@@ -89,7 +89,7 @@ export function AppLayout() {
             <BrandMark size={48} alt="" className="game-sidebar__logo" />
             <div>
               <p className="game-sidebar__tag">Evolyn</p>
-              <h1 className="game-sidebar__title">Core Quest</h1>
+              <h1 className="game-sidebar__title">Plantando a sua evolução.</h1>
             </div>
           </div>
 

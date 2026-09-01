@@ -257,7 +257,7 @@ export async function recommendFromPlano(
     primeiro_exercicio: exercicios[0]?.nome ?? null,
     plano_dia_indice: dia.indice,
     plano_total_dias: plano.dias.length,
-    plano_titulo: `Missão ${dia.indice + 1}/${plano.dias.length}`,
+    plano_titulo: `Treino ${dia.indice + 1}/${plano.dias.length}`,
   };
 }
 

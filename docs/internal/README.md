@@ -18,7 +18,6 @@ Nunca salve neste diretório:
 
 Antes de alterações relevantes, consulte:
 
-- `AGENTS.md` — regras permanentes de trabalho;
 - `docs/internal/NOTES.md` — decisões e riscos atuais;
 - entradas recentes de `docs/internal/DEVLOG.md` — contexto recente útil.
 
@@ -55,6 +54,10 @@ Registre apenas acontecimentos relevantes e compacte/remova entradas que perdere
 ## logos-icons/
 
 É a **fonte de verdade dos arquivos originais da identidade visual**.
+
+- `logo-oficial/` — símbolo transparente usado em favicons e superfícies pequenas;
+- `logo-completa-transparente/` — assinatura completa usada em superfícies amplas;
+- `app-icon.png` — composição quadrada usada nos launchers e ícones instaláveis.
 
 Antes de criar ou reutilizar uma logo, consulte este diretório. Ao atualizar branding, revise também os consumidores reais em:
 

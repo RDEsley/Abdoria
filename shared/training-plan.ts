@@ -134,7 +134,7 @@ function tituloDoDia(indice: number, grupos: ParteCorpo[]): string {
     principais.length > 0
       ? principais.map((g) => PARTE_CORPO_LABELS[g]).join(' + ')
       : PARTE_CORPO_LABELS.abdomen;
-  return `Missão ${indice + 1} — ${foco}`;
+  return `Treino ${indice + 1} — ${foco}`;
 }
 
 /** Frequência aceita pelo gerador (fora disso, aproxima pro limite). */

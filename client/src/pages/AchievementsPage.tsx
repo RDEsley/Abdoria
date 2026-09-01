@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, Trophy } from 'lucide-react';
-import { AchievementCard, sortAchievements } from '@/components/gamification/AchievementCard';
+import { AchievementCard } from '@/components/gamification/AchievementCard';
+import { sortAchievements } from '@/lib/achievements';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';

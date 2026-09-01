@@ -50,7 +50,7 @@ function muscleOverlap(a: Set<MusculoPrincipal>, b: Set<MusculoPrincipal>): numb
   return intersection / union;
 }
 
-export function similarityScore(
+function similarityScore(
   reference: Map<MusculoPrincipal, number>,
   candidate: Map<MusculoPrincipal, number>,
 ): number {
@@ -143,16 +143,4 @@ export function listSimilarWorkoutChoices(
     ...similarPresets.map((preset) => ({ kind: 'preset' as const, id: preset.id })),
     ...similarSaved.map((saved) => ({ kind: 'saved' as const, id: saved.id })),
   ];
-}
-
-export function pickNextSimilarWorkout(
-  choices: SimilarWorkoutChoice[],
-  cursor: number,
-): { choice: SimilarWorkoutChoice; nextCursor: number } | null {
-  if (choices.length === 0) return null;
-  const index = cursor % choices.length;
-  return {
-    choice: choices[index]!,
-    nextCursor: (index + 1) % choices.length,
-  };
 }

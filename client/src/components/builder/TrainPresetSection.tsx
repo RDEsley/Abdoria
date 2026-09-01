@@ -15,8 +15,8 @@ import type {
 } from '@/types';
 import { CICLO_LABELS, PARTE_CORPO_LABELS } from '@/types';
 
-/** Dados do plano corpo-todo — quando presente, os chips viram Missões 1..N. */
-export interface PlanSectionData {
+/** Dados do plano de corpo inteiro exibidos na sequência semanal. */
+interface PlanSectionData {
   dias: PlanoDia[];
   completados: number[];
   selecionadoIndice: number | null;
@@ -42,7 +42,7 @@ interface Props {
   onDismissCard: (key: string) => void;
 }
 
-/** Aba Treinar: progresso dos ciclos/missões, banner do recomendado e card do selecionado. */
+/** Aba Treinar: progresso do plano, recomendação e treino selecionado. */
 export function TrainPresetSection({
   cicloTreinos,
   rodadaDone,
@@ -79,7 +79,7 @@ export function TrainPresetSection({
           <div
             className="game-builder-cycle-progress"
             role="tablist"
-            aria-label={plan ? 'Missões do plano' : 'Ciclos de treino'}
+            aria-label={plan ? 'Treinos do plano' : 'Ciclos de treino'}
           >
             {plan
               ? plan.dias.map((dia, i) => {

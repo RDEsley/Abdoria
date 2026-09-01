@@ -15,10 +15,10 @@ for (const line of raw.split('\n')) {
 
 const syncKeys = [
   'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
   'JWT_SECRET',
   'JWT_EXPIRES_IN',
+  'CORS_ORIGINS',
 ];
 
 const environments = ['production', 'preview'];

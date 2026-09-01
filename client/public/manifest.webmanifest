@@ -1,11 +1,13 @@
 {
-  "name": "Evolyn — Core Quest",
+  "id": "/",
+  "name": "Evolyn",
   "short_name": "Evolyn",
-  "description": "Treinos gamificados de abdômen e core.",
+  "description": "Evolução pessoal gamificada com treinos, atividades, organização, XP, conquistas e constância.",
   "lang": "pt-BR",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "categories": ["fitness", "health", "lifestyle", "productivity"],
   "background_color": "#f4faf7",
   "theme_color": "#f4faf7",
   "icons": [

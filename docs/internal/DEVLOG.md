@@ -10,19 +10,21 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ### Organização e limpeza do projeto
 
-- `CLAUDE.md` removido; `AGENTS.md` concentra as regras permanentes para agentes.
 - A documentação interna foi padronizada em `docs/internal/` para evitar a falsa impressão de que uma pasta chamada `private` seria confidencial em um repositório público.
 - Assets oficiais da identidade passam a usar `docs/internal/logos-icons/` como fonte de verdade.
 - O snapshot da antiga experiência RPG/AFK permanece somente como material histórico em `docs/internal/Exploracao-rpg-afk/`.
 - `NOTES.md` passa a registrar apenas decisões técnicas ativas e riscos relevantes.
 - README e guia do usuário foram alinhados à identidade Evolyn, ao domínio atual e à nomenclatura **Treino**.
 
-### Pendências úteis
+### Auditoria do produto atual
 
-- Fazer auditoria global das logos e ícones ainda consumidos pelo runtime.
-- Confirmar visualmente favicon, metadata/Open Graph, PWA, Android e iOS após a atualização de branding.
-- Continuar removendo textos públicos antigos sem renomear identificadores persistidos que ainda sejam necessários por compatibilidade.
-- Avaliar futuramente se o snapshot RPG/AFK deve permanecer na árvore principal ou ser preservado apenas por tag/branch histórica para reduzir o peso do repositório.
+- A campanha narrativa, páginas de livro, feed, inventário visual e código RPG que ainda alcançavam o runtime foram removidos; o snapshot histórico continua isolado.
+- A página pública passou de Missão/Construtor para **Treino**, com `/treino` canônica e redirecionamento de `/construtor`.
+- Componentes, hooks, services, endpoints, testes e assets sem consumidor foram removidos após cruzamento de referências e análise estática.
+- Contextos e hooks React foram separados para preservar Fast Refresh e reduzir exports mistos.
+- Branding, metadata, PWA e ícones nativos foram sincronizados a partir da fonte oficial.
+- A URL da API ficou configurável para builds nativos e o CORS do servidor passou a usar uma lista explícita de origens.
+- Identificadores persistidos antigos continuam apenas onde a compatibilidade com contas, eventos e respostas existentes exige.
 
 ---
 

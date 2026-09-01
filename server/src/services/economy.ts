@@ -7,20 +7,14 @@ import {
   XP_DAILY_MIN_EXERCISES,
   XP_DAILY_PER_EXERCISE,
   XP_PER_SKILL_UNLOCK,
-  XP_STREAK_BONUS_MAX,
-  XP_STREAK_BONUS_PER_DAY,
   dailyXpCapBreakdown,
-  dailyXpCapForLevel,
-  spendableXpForShop,
   streakXpBonus,
-  projectedMoedaAfterXpSpend as projectedMoedaAfterXpSpendFromState,
-  xpFloorForCurrentLevel,
   xpLevelFromTotal,
 } from '../types/index.js';
 import { resetXpDiarioIfNeeded } from './gamification.js';
 import { addWeeklyMoedas, addWeeklyXp } from './weekly-stats.js';
 
-/** Garante carteira de Dorias numérica no documento do usuário. */
+/** Garante uma carteira numérica de Folhas no documento do usuário. */
 export function ensureMoedaWallet(user: UserRecord): void {
   if (!user.cosmeticos || typeof user.cosmeticos !== 'object') {
     user.cosmeticos = { ...DEFAULT_COSMETICOS } as UserRecord['cosmeticos'];
@@ -46,7 +40,7 @@ export function ensureMoedaWallet(user: UserRecord): void {
   }
 }
 
-/** Total vitalício de Coins ganhas — base do ranking global (nunca desconta gasto). */
+/** Total vitalício de Folhas recebidas, sem descontar gastos. */
 export function readLifetimeMoedas(user: {
   gamificacao: { nivel_xp: number };
   cosmeticos?: {
@@ -60,7 +54,7 @@ export function readLifetimeMoedas(user: {
   return typeof total === 'number' && !Number.isNaN(total) ? Math.max(total, saldo) : saldo;
 }
 
-/** Saldo de Dorias — sempre usa valor persistido após primeira sincronização. */
+/** Saldo de Folhas — sempre usa valor persistido após a primeira sincronização. */
 export function readMoedaBalance(user: {
   gamificacao: { nivel_xp: number };
   cosmeticos?: { moedas?: number | null; moedas_xp_blocos?: number | null } | null;
@@ -70,30 +64,14 @@ export function readMoedaBalance(user: {
   return Math.floor(Math.max(0, user.gamificacao.nivel_xp) / MOEDA_XP_STEP);
 }
 
-/** Saldo de Dorias após gastar XP na loja (desconta conversão passiva por blocos). */
-export function projectedMoedaAfterXpSpend(user: UserRecord, xpCost: number): number {
-  ensureMoedaWallet(user);
-  return projectedMoedaAfterXpSpendFromState(
-    user.gamificacao.nivel_xp,
-    readMoedaBalance(user),
-    user.cosmeticos.moedas_xp_blocos,
-    xpCost,
-  );
-}
-
 export function getDailyXpCapBreakdownForUser(user: UserRecord) {
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
   const achievementsUnlocked = user.gamificacao.conquistas?.length ?? 0;
   return dailyXpCapBreakdown(level, 0, achievementsUnlocked);
 }
 
-export function getDailyXpCapForUser(user: UserRecord): number {
+function getDailyXpCapForUser(user: UserRecord): number {
   return getDailyXpCapBreakdownForUser(user).total;
-}
-
-export function isDailyXpCapReached(user: UserRecord): boolean {
-  resetXpDiarioIfNeeded(user);
-  return user.xp_diario.ganho_hoje >= getDailyXpCapForUser(user);
 }
 
 /** XP contabilizado no teto diário unificado (exercícios, streak, conquistas, loja, habilidades). */
@@ -176,40 +154,6 @@ export function grantMoeda(user: UserRecord, amount: number): void {
   addWeeklyMoedas(user, amount);
 }
 
-export function spendXpForShop(
-  user: UserRecord,
-  amount: number,
-): { spent: number } | { error: string } {
-  if (amount <= 0) return { spent: 0 };
-
-  const totalXp = user.gamificacao.nivel_xp;
-  const spendable = spendableXpForShop(totalXp);
-  if (amount > spendable) {
-    return {
-      error: `XP insuficiente no progresso do nível. Você pode usar até ${spendable} XP (0–99% do nível atual).`,
-    };
-  }
-
-  const currentLevel = xpLevelFromTotal(totalXp);
-  const nextTotal = totalXp - amount;
-  if (xpLevelFromTotal(nextTotal) < currentLevel) {
-    return { error: 'Não é possível gastar XP abaixo do patamar do seu nível atual.' };
-  }
-
-  user.gamificacao.nivel_xp = nextTotal;
-
-  const floor = xpFloorForCurrentLevel(nextTotal);
-  ensureMoedaWallet(user);
-  const newBlocks = Math.floor(nextTotal / MOEDA_XP_STEP);
-  const previousBlocks = user.cosmeticos.moedas_xp_blocos;
-  if (newBlocks < previousBlocks) {
-    user.cosmeticos.moedas = Math.max(0, user.cosmeticos.moedas - (previousBlocks - newBlocks));
-    user.cosmeticos.moedas_xp_blocos = Math.max(newBlocks, Math.floor(floor / MOEDA_XP_STEP));
-  }
-
-  return { spent: amount };
-}
-
 export function awardSkillUnlockXp(user: UserRecord, newUnlockCount: number): number {
   if (newUnlockCount <= 0) return 0;
   return awardDailyXp(user, newUnlockCount * XP_PER_SKILL_UNLOCK);
@@ -219,13 +163,3 @@ export function countNewSkillUnlocks(previous: string[], next: string[]): number
   const prev = new Set(previous);
   return next.filter((slug) => slug && !prev.has(slug)).length;
 }
-
-export {
-  dailyXpCapForLevel,
-  dailyXpCapBreakdown,
-  MOEDA_XP_STEP,
-  streakXpBonus,
-  XP_PER_SKILL_UNLOCK,
-  XP_STREAK_BONUS_PER_DAY,
-  XP_STREAK_BONUS_MAX,
-};

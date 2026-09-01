@@ -1,10 +1,10 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationsBell } from '@/components/notifications/NotificationsBell';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { TopNavbar } from '@/components/layout/TopNavbar';
 import { useApp } from '@/hooks/useApp';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { resolveIdentityBorder } from '@/lib/identity-border';
@@ -22,6 +22,7 @@ export function GameHud() {
   const { user: authUser } = useAuth();
   const user = appUser ?? authUser;
   const [coinsEarnedPulse, setCoinsEarnedPulse] = useState<number | null>(null);
+  const coinsPulseTimer = useRef<number | undefined>(undefined);
   // Segura a barra de XP no valor de ANTES do ganho (offset negativo) até as
   // bolinhas (XpOrbLayer) irem "pousando" — cada pouso devolve um pedaço via
   // XP_ORB_LANDED_EVENT, subindo a barra na ordem de chegada em vez de pular
@@ -32,11 +33,15 @@ export function GameHud() {
     const onCoinsEarned = (event: Event) => {
       const amount = (event as CustomEvent<{ amount: number }>).detail?.amount ?? 0;
       if (amount <= 0) return;
+      if (coinsPulseTimer.current) window.clearTimeout(coinsPulseTimer.current);
       setCoinsEarnedPulse(amount);
-      window.setTimeout(() => setCoinsEarnedPulse(null), 2200);
+      coinsPulseTimer.current = window.setTimeout(() => setCoinsEarnedPulse(null), 2200);
     };
     window.addEventListener('abdoria:coins-earned', onCoinsEarned);
-    return () => window.removeEventListener('abdoria:coins-earned', onCoinsEarned);
+    return () => {
+      window.removeEventListener('abdoria:coins-earned', onCoinsEarned);
+      if (coinsPulseTimer.current) window.clearTimeout(coinsPulseTimer.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -60,7 +65,9 @@ export function GameHud() {
 
   const xpTotal = (stats?.nivel_xp ?? user?.gamificacao.nivel_xp ?? 0) + xpDisplayOffset;
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(xpTotal);
-  const firstName = user?.is_guest ? user?.nome ?? 'Visitante' : user?.nome?.split(' ')[0] ?? 'Atleta';
+  const firstName = user?.is_guest
+    ? (user?.nome ?? 'Visitante')
+    : (user?.nome?.split(' ')[0] ?? 'Atleta');
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const identityBorder = resolveIdentityBorder(cosmeticos);
   const resolvedTitle = resolveEquippedTitle(cosmeticos.titulo_equipado);

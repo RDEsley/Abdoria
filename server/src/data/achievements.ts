@@ -202,14 +202,14 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'moedas_1000',
     titulo: 'Tesouro do herói',
-    icon: 'gem',
+    icon: 'golden-leaf',
     descricao: 'Acumule 1.000 Folhas ganhas na jornada',
     dificuldade: 'dificil',
   },
   {
     id: 'item_mitico',
     titulo: 'Toque mítico',
-    icon: 'gem',
+    icon: 'golden-leaf',
     descricao: 'Possua qualquer item de raridade Mítica',
     dificuldade: 'dificil',
   },
@@ -239,7 +239,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'nivel_10',
     titulo: 'Lenda do core',
-    icon: 'gem',
+    icon: 'golden-leaf',
     descricao: 'Alcance o nível 10',
     dificuldade: 'lendaria',
   },
@@ -260,7 +260,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'streak_365',
     titulo: 'Ano imparável',
-    icon: 'gem',
+    icon: 'golden-leaf',
     descricao: 'Mantenha 365 dias de streak',
     dificuldade: 'lendaria',
   },
@@ -288,7 +288,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'xp_25000',
     titulo: 'Fonte infinita de XP',
-    icon: 'gem',
+    icon: 'golden-leaf',
     descricao: 'Acumule 25.000 XP no total',
     dificuldade: 'lendaria',
   },

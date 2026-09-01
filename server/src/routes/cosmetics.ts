@@ -4,9 +4,9 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   buildCosmeticsResponse,
-  equipCosmetic,
-  loadUserForCosmetics,
-  purchaseCosmetic,
+  equipShopItem,
+  loadUserForShop,
+  purchaseShopItem,
 } from '../services/shop.js';
 import type { CosmeticKind } from '../types/index.js';
 
@@ -16,7 +16,7 @@ cosmeticsRouter.use(requireAuth);
 
 cosmeticsRouter.get('/', async (req: AuthRequest, res) => {
   try {
-    const user = await loadUserForCosmetics(req.userId!);
+    const user = await loadUserForShop(req.userId!);
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
@@ -36,7 +36,7 @@ cosmeticsRouter.post('/purchase', async (req: AuthRequest, res) => {
       return;
     }
 
-    const result = await purchaseCosmetic(req.userId!, cosmeticId);
+    const result = await purchaseShopItem(req.userId!, cosmeticId);
     if ('error' in result) {
       res.status(result.status ?? 400).json({ error: result.error });
       return;
@@ -67,7 +67,7 @@ cosmeticsRouter.patch('/equip', async (req: AuthRequest, res) => {
       return;
     }
 
-    const result = await equipCosmetic(req.userId!, kind, cosmeticId);
+    const result = await equipShopItem(req.userId!, kind, cosmeticId);
     if ('error' in result) {
       res.status(result.status ?? 400).json({ error: result.error });
       return;

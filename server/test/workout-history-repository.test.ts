@@ -100,7 +100,7 @@ describe('WorkoutHistory repository — propagação de erros', () => {
     const existing = {
       id: 'history-1',
       usuario_id: 'user-1',
-      treino_nome: 'Missão moderada',
+      treino_nome: 'Treino moderado',
       exercicios: [],
       duracao_total_segundos: 120,
       xp_ganho: 40,
@@ -116,7 +116,7 @@ describe('WorkoutHistory repository — propagação de erros', () => {
     await expect(
       WorkoutHistory.createOnce({
         usuario_id: 'user-1',
-        treino_nome: 'Missão moderada',
+        treino_nome: 'Treino moderado',
         exercicios: [],
         duracao_total_segundos: 120,
         xp_ganho: 0,

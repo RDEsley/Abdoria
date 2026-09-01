@@ -36,14 +36,6 @@ function getWeekStart(date: Date): Date {
   return new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
 }
 
-export async function countTotalExercises(userId: string): Promise<number> {
-  const result = await WorkoutHistory.aggregate([
-    { $match: { usuario_id: userId } },
-    { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
-  ]);
-  return (result[0] as { total?: number })?.total ?? 0;
-}
-
 type HistorySummary = {
   concluido_em: Date | string;
   exercicios: unknown[];
@@ -71,10 +63,7 @@ function computeStreakFromHistories(
  * limite de itens no inventário). Retorna as datas efetivamente congeladas nesta chamada
  * (vazio se nenhum congelamento foi aplicado) — usado pelo chamador pra gerar a notificação.
  */
-export function applyStreakFreezeProtection(
-  user: UserRecord,
-  histories: HistorySummary[],
-): string[] {
+function applyStreakFreezeProtection(user: UserRecord, histories: HistorySummary[]): string[] {
   if (!user.gamificacao.streak_congelamentos) {
     user.gamificacao.streak_congelamentos = [];
   }
@@ -208,15 +197,7 @@ export function resetXpDiarioIfNeeded(user: UserRecord): boolean {
   return false;
 }
 
-export async function evaluateAchievements(user: UserRecord): Promise<string[]> {
-  const histories = await WorkoutHistory.find(
-    { usuario_id: user.id },
-    { sort: { concluido_em: -1 } },
-  );
-  return evaluateAchievementsFromHistories(user, histories as HistorySummary[]);
-}
-
-export function evaluateAchievementsFromHistories(
+function evaluateAchievementsFromHistories(
   user: UserRecord,
   histories: HistorySummary[],
 ): string[] {
@@ -479,7 +460,7 @@ async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise
 }
 
 /** "Treinou hoje" = treino de verdade, não Atividades — uma sozinha nunca
-    marca a Missão Diária como concluída (ela sustenta a streak, mas não
+    marca o treino diário como concluído (ele sustenta a streak, mas não
     "completa" o card de treino; só um treino de verdade faz isso). */
 export function hasTrainedToday(userId: string): Promise<boolean> {
   const todayStart = startOfDaySaoPaulo();
@@ -495,7 +476,7 @@ export function hasTrainedToday(userId: string): Promise<boolean> {
 /** A sequência de hoje já está garantida? Ao contrário de `hasTrainedToday`,
     aqui QUALQUER entrada do dia conta (treino ou Atividade), porque é
     exatamente isso que sustenta a streak. Existe separado porque os dois
-    respondem perguntas diferentes: "a Missão de treino foi cumprida?" e "o
+    respondem perguntas diferentes: "o treino foi concluído?" e "o
     dia já está pago?" — usar o primeiro pelo segundo fazia o contador
     regressivo alarmar "pra manter a sequência" com o dia já garantido por
     atividades. */

@@ -16,7 +16,7 @@ function npcMoedasBonus(nivelXp: number): number {
 let inFlight: Promise<void> | null = null;
 
 /**
- * Garante que os NPCs demo tenham o saldo de Coins alvo pra aparecerem
+ * Garante que os perfis de demonstração tenham o total de Folhas necessário para aparecer
  * corretamente no ranking. Antes fazia um `findById` + `save()` completo
  * (2-4 idas ao banco) por usuário, SEMPRE — inclusive pra quem já estava
  * em dia — virando uma varredura sequencial de centenas de round-trips com

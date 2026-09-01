@@ -269,7 +269,7 @@
 }
 
 /* Telas bem estreitas (ex.: iPhone SE): mais um degrau de compactação nas
-   pills de Coins/Gems pra caber junto do sino de notificações sem cortar
+   saldos de Folhas para caber junto das notificações sem cortar
    o nome do jogador. */
 @media (max-width: 340px) {
   .top-navbar__resources {

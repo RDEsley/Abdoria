@@ -11,7 +11,7 @@ export const XP_BAR_TARGET_ATTR = 'data-xp-bar-target';
     dividem certinho vai todo pra última bolinha da leva. */
 export const XP_PER_ORB = 5;
 
-export interface XpEarnedOriginRect {
+interface XpEarnedOriginRect {
   left: number;
   top: number;
   width: number;

@@ -3,7 +3,6 @@ import {
   PERSONAL_NOTIFICATION_MAX_REQUESTS,
   buildNativeNotificationSchedules,
   isReminderDue,
-  normalizePersonalizedReminders,
   type PersonalizedReminder,
 } from '@shared/reminders';
 import { Capacitor } from '@capacitor/core';
@@ -23,7 +22,7 @@ function webPermissionState(): NotificationPermissionState {
 }
 
 /** Fallback web: entrega no carregamento/retorno ao app; não promete execução em background. */
-export const webNotificationScheduler: NotificationScheduler = {
+const webNotificationScheduler: NotificationScheduler = {
   async permissionState() {
     return webPermissionState();
   },
@@ -147,7 +146,3 @@ const nativeNotificationScheduler: NotificationScheduler = {
 export const notificationScheduler: NotificationScheduler = Capacitor.isNativePlatform()
   ? nativeNotificationScheduler
   : webNotificationScheduler;
-
-export function normalizeNotificationsForScheduling(raw: unknown): PersonalizedReminder[] {
-  return normalizePersonalizedReminders(raw);
-}

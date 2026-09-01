@@ -3,7 +3,7 @@ import { WorkoutPreset } from '../domain/WorkoutPreset.js';
 import { User } from '../domain/User.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
-import { getSuggestedWorkout, getRecommendedPresetsList } from '../services/recommendation.js';
+import { getSuggestedWorkout } from '../services/recommendation.js';
 import type { TreinoBase } from '../types/index.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
 
@@ -61,23 +61,6 @@ presetsRouter.get('/recommend', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('GET /api/presets/recommend error:', error);
     res.status(500).json({ error: 'Erro ao recomendar treino.' });
-  }
-});
-
-presetsRouter.get('/recommended', async (req: AuthRequest, res) => {
-  try {
-    const user = await User.findById(req.userId!);
-    if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado.' });
-      return;
-    }
-
-    const presets = await getRecommendedPresetsList(user);
-
-    res.json(presets);
-  } catch (error) {
-    console.error('GET /api/presets/recommended error:', error);
-    res.status(500).json({ error: 'Erro ao buscar recomendações.' });
   }
 });
 

@@ -1,8 +1,8 @@
-﻿import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart2, Flame, Sun, Zap } from 'lucide-react';
 import { XpBar } from '@/components/ui/XpBar';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { formatDailyXpCapBreakdown, resolveCosmeticos, type DashboardStats } from '@/types';
 
 interface Props {

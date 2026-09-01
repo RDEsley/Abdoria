@@ -26,12 +26,12 @@ import type {
   IUserDocument,
   ShopCatalogItem,
 } from '@/types';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { equipShopItem, getShop, updateAbTrainingProfileV2 } from '@/lib/api';
 import { selectionHaptic, successHaptic } from '@/lib/platform/native-runtime';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { LottieView } from '@/components/ui/LottieView';
 import { useLottieAsset } from '@/hooks/useLottieAsset';
 import { previewSfxPack, setSfxPack } from '@/lib/sounds';
@@ -231,7 +231,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                         ? '4–5 exercícios, volume menor e pausas maiores.'
                         : intensity === 'moderado'
                           ? '6–7 exercícios com ritmo equilibrado.'
-                          : '8–9 exercícios e uma missão mais intensa.'}
+                          : '8–9 exercícios em um treino mais intenso.'}
                     </small>
                     {selected && <Check className="ab-plan-option__check" size={17} aria-hidden />}
                   </motion.button>

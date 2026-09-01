@@ -29,7 +29,7 @@ export function QuitWorkoutModal({ open, onClose, onQuit }: Props) {
         </h3>
         <p className="mt-2 text-sm font-bold text-stone-600">
           Se você sair agora, este treino não será contado — nada do que fez até aqui será salvo.
-          Para treinar de novo, volte na aba <strong>Missão</strong> (ícone de haltere) e inicie
+          Para treinar de novo, volte na aba <strong>Treino</strong> (ícone de haltere) e inicie
           outro treino.
         </p>
         <div className="mt-5 flex flex-col gap-2">

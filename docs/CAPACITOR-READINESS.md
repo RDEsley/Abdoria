@@ -19,20 +19,20 @@ reais antes da publicação nas lojas.
   apenas quando a aplicação está ativa ou volta ao foco.
 - A identidade oficial já está aplicada nos launcher icons adaptativos/legados do Android, App Icon
   do iOS, favicons, ícones PWA e splash screens de todas as densidades versionadas.
+- A URL da API pode ser definida com `VITE_API_BASE_URL`; sem a variável, a Web usa `/api`.
+- O servidor limita CORS à aplicação oficial, origens nativas/locais e origens extras declaradas em
+  `CORS_ORIGINS`.
 
 ## Bloqueadores antes do primeiro app nativo
 
-1. **Separar a URL da API.** Hoje o cliente usa `/api`. Dentro do WebView isso aponta para a origem
-   local do app, não para a API publicada. Criar `VITE_API_BASE_URL`, manter `/api` no web e usar a
-   URL HTTPS da produção nos builds nativos. Restringir o CORS do servidor às origens oficiais.
-2. **Trocar o armazenamento do token.** O JWT ainda usa `localStorage`/`sessionStorage`. No app,
+1. **Trocar o armazenamento do token.** O JWT ainda usa `localStorage`/`sessionStorage`. No app,
    mover o token para armazenamento seguro do Keychain/Keystore. `@capacitor/preferences` serve
    para preferências leves, não deve ser tratado como cofre nem banco local.
-3. **Concluir a ponte de deep links.** O runtime já encaminha `appUrlOpen`, mas o React Router ainda
+2. **Concluir a ponte de deep links.** O runtime já encaminha `appUrlOpen`, mas o React Router ainda
    precisa consumir e validar os destinos de Universal Links/App Links.
-4. **Validar integrações em hardware.** Testar notificações recorrentes após reboot, canais e sons
+3. **Validar integrações em hardware.** Testar notificações recorrentes após reboot, canais e sons
    no Android, limites de agendamento no iOS, voz, áudio, foto e compartilhamento em aparelhos reais.
-5. **Preparar segurança e distribuição.** Definir bundle IDs finais, assinatura, Privacy Manifest,
+4. **Preparar segurança e distribuição.** Definir bundle IDs finais, assinatura, Privacy Manifest,
    políticas das lojas e pipeline nativo protegido.
 
 ## Acabamento e publicação
@@ -51,7 +51,7 @@ reais antes da publicação nas lojas.
 
 ## Sequência recomendada
 
-1. Introduzir a URL configurável da API e armazenamento seguro do token.
+1. Migrar o token para armazenamento seguro nativo.
 2. Fazer smoke tests Android/iOS do shell já criado e concluir deep links.
 3. Validar notificações, ciclo de vida e mídia em aparelhos reais.
 4. Fazer testes E2E em Android e iOS reais.

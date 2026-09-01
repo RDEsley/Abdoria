@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Flag } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { reportUser } from '@/lib/api/social';
 import { REPORT_MOTIVOS, REPORT_MOTIVO_LABELS, type ReportMotivo } from '@/types';

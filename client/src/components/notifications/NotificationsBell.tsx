@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { useMidnightSecondsLeft } from '@/context/MidnightRefreshContext';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useApp } from '@/hooks/useApp';

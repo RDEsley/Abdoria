@@ -103,7 +103,7 @@ function isEmptyDadosSalvos(dados: UserDadosSalvos): boolean {
   );
 }
 
-export function collectLegacyLocalData(userId: string): Partial<UserDadosSalvos> {
+function collectLegacyLocalData(userId: string): Partial<UserDadosSalvos> {
   const patch: Partial<UserDadosSalvos> = {};
   const custom = readLegacyCustomWorkout();
   const saved = readLegacySavedWorkouts();
@@ -118,7 +118,7 @@ export function collectLegacyLocalData(userId: string): Partial<UserDadosSalvos>
   return patch;
 }
 
-export function hasLegacyLocalData(userId: string): boolean {
+function hasLegacyLocalData(userId: string): boolean {
   if (localStorage.getItem(LEGACY_CUSTOM_WORKOUT)) return true;
   if (localStorage.getItem(LEGACY_SAVED_WORKOUTS)) return true;
   if (localStorage.getItem(`${LEGACY_UNLOCKED_PREFIX}:${userId}`)) return true;
@@ -153,4 +153,4 @@ export function buildMigrationPatch(
   return mergeUserDadosSalvos(current, legacy);
 }
 
-export { mergeUserDadosSalvos, resolveUserDadosSalvos };
+export { mergeUserDadosSalvos };

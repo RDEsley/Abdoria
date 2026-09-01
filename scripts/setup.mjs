@@ -21,6 +21,6 @@ if (!existsSync(envPath)) {
 
 console.log('\nPróximos passos:');
 console.log('  1. Configure server/.env (Supabase + JWT_SECRET)');
-console.log('  2. Aplique supabase/migrations/20250620000000_initial_schema.sql no SQL Editor');
+console.log('  2. Aplique as migrations com supabase db push');
 console.log('  3. npm run seed   — popular exercícios e usuário demo');
 console.log('  4. npm run dev    — iniciar client (5173) e API (3001)');

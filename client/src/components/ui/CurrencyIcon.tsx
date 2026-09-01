@@ -1,6 +1,6 @@
 import { useId, type CSSProperties } from 'react';
 
-export interface CurrencyIconProps {
+interface CurrencyIconProps {
   variant?: 'leaf' | 'golden';
   size?: number;
   className?: string;
@@ -9,8 +9,7 @@ export interface CurrencyIconProps {
   'aria-hidden'?: boolean;
 }
 
-/** Símbolo oficial das moedas do Evolyn: folha orgânica e folha dourada facetada. */
-export function CurrencyIcon({
+function CurrencyIcon({
   variant = 'leaf',
   size = 18,
   className = '',

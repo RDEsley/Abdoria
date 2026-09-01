@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Bell, Flame, Snowflake, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { updateMe } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 const SESSION_KEY = 'abdoria_notif_prompt_seen';
 const SHOW_DELAY_MS = 1600;

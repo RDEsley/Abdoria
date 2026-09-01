@@ -12,7 +12,7 @@ const ActivityCalendar = lazy(() =>
   })),
 );
 
-/** Área dedicada às atividades, ao mapa da campanha e ao histórico diário. */
+/** Área dedicada à organização pessoal e ao histórico diário. */
 export function ActivitiesPage() {
   return (
     <div className="activities-page flex flex-col gap-5 pb-24">

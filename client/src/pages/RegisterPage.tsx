@@ -14,7 +14,7 @@ import {
   validateConfirmPassword,
   type AuthFieldErrors,
 } from '@/lib/auth-validation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { NOME_MAX_LENGTH } from '@/types';
 
 export function RegisterPage() {
@@ -60,7 +60,7 @@ export function RegisterPage() {
     <GameAuthScene>
       <GameAuthPanel
         title="Comece no seu ritmo"
-        subtitle="Crie sua conta e prepare sua primeira missão de core."
+        subtitle="Crie sua conta e comece a plantar a sua evolução."
         className="game-login__panel--register"
         footer={
           <Link to="/login" className="game-login__link">

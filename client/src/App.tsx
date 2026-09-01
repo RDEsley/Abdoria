@@ -22,8 +22,8 @@ const DashboardPage = lazy(() =>
 const LibraryPage = lazy(() =>
   import('@/pages/LibraryPage').then((m) => ({ default: m.LibraryPage })),
 );
-const BuilderPage = lazy(() =>
-  import('@/pages/BuilderPage').then((m) => ({ default: m.BuilderPage })),
+const TrainingPage = lazy(() =>
+  import('@/pages/TrainingPage').then((m) => ({ default: m.TrainingPage })),
 );
 const LeaderboardPage = lazy(() =>
   import('@/pages/LeaderboardPage').then((m) => ({ default: m.LeaderboardPage })),
@@ -50,22 +50,12 @@ const AtividadesPlayerPage = lazy(() =>
   import('@/pages/AtividadesPlayerPage').then((m) => ({ default: m.AtividadesPlayerPage })),
 );
 const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })));
-const CampaignBookPage = lazy(() =>
-  import('@/pages/CampaignBookPage').then((m) => ({ default: m.CampaignBookPage })),
-);
 const MyPlantPage = lazy(() =>
   import('@/pages/MyPlantPage').then((m) => ({ default: m.MyPlantPage })),
 );
 const ActivitiesPage = lazy(() =>
   import('@/pages/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage })),
 );
-
-/**
- * DESATIVADO TEMPORARIAMENTE: o arquivo com todos os capítulos anteriores da
- * Campanha continua preservado, mas não deve possuir rota nem acesso no front-end.
- * O Mapa de Campanha exibe somente o capítulo atual e o imediatamente anterior.
- */
-const CAMPAIGN_ARCHIVE_ENABLED = false;
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
@@ -165,13 +155,14 @@ export default function App() {
                         element={<Navigate to="/myplant" replace />}
                       />
                       <Route
-                        path="construtor"
+                        path="treino"
                         element={
                           <LazyPage>
-                            <BuilderPage />
+                            <TrainingPage />
                           </LazyPage>
                         }
                       />
+                      <Route path="construtor" element={<Navigate to="/treino" replace />} />
                       <Route
                         path="ranking"
                         element={
@@ -245,16 +236,6 @@ export default function App() {
                         </LazyPage>
                       }
                     />
-                    {CAMPAIGN_ARCHIVE_ENABLED ? (
-                      <Route
-                        path="campanha"
-                        element={
-                          <LazyPage>
-                            <CampaignBookPage />
-                          </LazyPage>
-                        }
-                      />
-                    ) : null}
                   </Route>
                 </Route>
 

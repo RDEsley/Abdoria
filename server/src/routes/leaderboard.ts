@@ -33,7 +33,7 @@ function parsePeriod(raw: string | undefined): LeaderboardPeriod {
   return raw === 'global' ? 'global' : 'semanal';
 }
 
-/** Valor vitalício da métrica — XP total e Coins totais ganhas (sem descontar gasto). */
+/** Valor vitalício da métrica: XP ou Folhas recebidas, sem descontar gastos. */
 function globalMetricValue(user: EntryUser, metric: Exclude<LeaderboardMetric, 'streak'>): number {
   if (metric === 'xp') return user.gamificacao.nivel_xp;
   return readLifetimeMoedas(user);
@@ -115,7 +115,7 @@ function toEntry(
 
 // `find`/`countDocuments` só reconhecem comparação estrita (`is_guest === false`);
 // `{ $ne: true }` não batia com nenhum dos dois e nunca filtrou nada de fato — os
-// 21 convidados onboarded do banco vinham entrando na semanal de XP/Dorias.
+// Contas de demonstração não devem entrar nos rankings semanais de XP/Folhas.
 const leaderboardFilter = {
   onboarding_completed: true,
   is_guest: false,

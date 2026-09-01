@@ -8,18 +8,17 @@ Add-Type -AssemblyName System.Drawing
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $officialDirectory = Join-Path $SourceDirectory 'logo-oficial'
-$fullLogoDirectory = Get-ChildItem -LiteralPath $SourceDirectory -Directory |
-  Where-Object { $_.Name -like 'logo-completa-fundo-invis*' } |
-  Select-Object -First 1 -ExpandProperty FullName
+$fullLogoDirectory = Join-Path $SourceDirectory 'logo-completa-transparente'
 $brandDirectory = Join-Path $projectRoot 'client/public/brand'
 $officialSource = Join-Path $officialDirectory 'favicon-512x512.png'
-
-if (-not $fullLogoDirectory) {
-  throw 'Diretório da logo completa transparente não encontrado.'
-}
+$appIconSource = Join-Path $SourceDirectory 'app-icon.png'
 
 if (-not (Test-Path -LiteralPath $officialSource)) {
   throw "Logo oficial não encontrada em: $officialSource"
+}
+
+if (-not (Test-Path -LiteralPath $appIconSource)) {
+  throw "Ícone do aplicativo não encontrado em: $appIconSource"
 }
 
 New-Item -ItemType Directory -Force -Path $brandDirectory | Out-Null
@@ -40,7 +39,7 @@ function New-BrandImage {
     [Parameter(Mandatory = $true)][string]$Destination,
     [Parameter(Mandatory = $true)][int]$Width,
     [Parameter(Mandatory = $true)][int]$Height,
-    [Parameter(Mandatory = $true)][ValidateSet('square', 'round', 'foreground', 'background', 'splash')][string]$Kind,
+    [Parameter(Mandatory = $true)][ValidateSet('app', 'square', 'round', 'foreground', 'background', 'splash')][string]$Kind,
     [switch]$Opaque
   )
 
@@ -57,7 +56,7 @@ function New-BrandImage {
   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 
   $background = [System.Drawing.ColorTranslator]::FromHtml('#F4FAF7')
-  if ($Kind -in @('square', 'background', 'splash')) {
+  if ($Kind -in @('app', 'square', 'background', 'splash')) {
     $graphics.Clear($background)
   } else {
     $graphics.Clear([System.Drawing.Color]::Transparent)
@@ -71,6 +70,7 @@ function New-BrandImage {
 
   if ($Kind -notin @('background')) {
     $scale = switch ($Kind) {
+      'app' { 1.0 }
       'square' { 0.92 }
       'round' { 0.84 }
       'foreground' { 0.88 }
@@ -90,9 +90,10 @@ function New-BrandImage {
 }
 
 $sourceImage = [System.Drawing.Image]::FromFile($officialSource)
+$appIconImage = [System.Drawing.Image]::FromFile($appIconSource)
 try {
-  New-BrandImage $sourceImage (Join-Path $brandDirectory 'icon-maskable-192.png') 192 192 'square'
-  New-BrandImage $sourceImage (Join-Path $brandDirectory 'icon-maskable-512.png') 512 512 'square'
+  New-BrandImage $appIconImage (Join-Path $brandDirectory 'icon-maskable-192.png') 192 192 'app' -Opaque
+  New-BrandImage $appIconImage (Join-Path $brandDirectory 'icon-maskable-512.png') 512 512 'app' -Opaque
 
   $androidDensities = @{
     'ldpi' = @{ legacy = 36; adaptive = 81 }
@@ -107,15 +108,15 @@ try {
     $directory = Join-Path $projectRoot "android/app/src/main/res/mipmap-$density"
     $legacySize = $androidDensities[$density].legacy
     $adaptiveSize = $androidDensities[$density].adaptive
-    New-BrandImage $sourceImage (Join-Path $directory 'ic_launcher.png') $legacySize $legacySize 'square'
-    New-BrandImage $sourceImage (Join-Path $directory 'ic_launcher_round.png') $legacySize $legacySize 'round'
+    New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher.png') $legacySize $legacySize 'app' -Opaque
+    New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_round.png') $legacySize $legacySize 'app' -Opaque
     New-BrandImage $sourceImage (Join-Path $directory 'ic_launcher_foreground.png') $adaptiveSize $adaptiveSize 'foreground'
     New-BrandImage $sourceImage (Join-Path $directory 'ic_launcher_background.png') $adaptiveSize $adaptiveSize 'background'
   }
 
-  New-BrandImage $sourceImage `
+  New-BrandImage $appIconImage `
     (Join-Path $projectRoot 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png') `
-    1024 1024 'square' -Opaque
+    1024 1024 'app' -Opaque
 
   Get-ChildItem (Join-Path $projectRoot 'android/app/src/main/res') -Filter 'splash.png' -File -Recurse | ForEach-Object {
     $existing = [System.Drawing.Image]::FromFile($_.FullName)
@@ -139,6 +140,7 @@ try {
     New-BrandImage $sourceImage $_.FullName $width $height 'splash'
   }
 } finally {
+  $appIconImage.Dispose()
   $sourceImage.Dispose()
 }
 

@@ -39,7 +39,7 @@ function todayLabel(): string {
   });
 }
 
-/** Confete de missão completa — some sozinho, não faz loop. */
+/** Confete da conclusão — some sozinho e não faz loop. */
 function VictoryConfetti() {
   const data = useLottieAsset(CONFETTI_LOTTIE_URL);
   const reduceMotion = useReducedMotion();
@@ -89,7 +89,7 @@ interface Props {
 }
 
 /**
- * Tela única de missão completa: semana com foguinhos de streak, XP ganho e
+ * Tela de treino concluído: semana com indicadores de streak, XP ganho e
  * compartilhamento. Só sai daqui quando o jogador toca em Continuar.
  */
 export function WorkoutVictoryScreen({
@@ -161,11 +161,11 @@ export function WorkoutVictoryScreen({
         <MiniErrorBoundary fallback={<div className="game-level-badge mx-auto mb-4">✓</div>}>
           <VictoryCheck />
         </MiniErrorBoundary>
-        <h2 className="game-victory__title">MISSÃO COMPLETA!</h2>
+        <h2 className="game-victory__title">TREINO CONCLUÍDO!</h2>
         <p className="mt-2 text-sm font-bold text-stone-600">{workoutName}</p>
 
         {saved && durationSeconds != null && exerciseCount != null && setCount != null && (
-          <div className="game-victory__session-stats" aria-label="Resumo da missão">
+          <div className="game-victory__session-stats" aria-label="Resumo do treino">
             <span>
               <Clock3 size={15} aria-hidden />
               <strong>{formatTime(durationSeconds)}</strong>
@@ -314,7 +314,7 @@ export function WorkoutVictoryScreen({
 
         {!saved ? (
           <GameButton onClick={onFinish} size="lg" className="mt-6 w-full" disabled={saving}>
-            {saving ? 'Salvando...' : 'Concluir missão'}
+            {saving ? 'Salvando...' : 'Concluir treino'}
           </GameButton>
         ) : (
           <>

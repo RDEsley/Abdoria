@@ -202,8 +202,8 @@ function AtividadeItem({
  * card só monta a fila e navega pra lá.
  *
  * Regra: uma única atividade sustenta a streak em qualquer dia. As primeiras
- * atividades do dia pagam XP até o teto próprio; as seguintes pagam Coins.
- * Concluir uma atividade não marca a Missão de treino como concluída.
+ * atividades do dia concedem XP até o limite próprio; as seguintes concedem Folhas.
+ * Concluir uma atividade não marca o treino como concluído.
  */
 export function AtividadesCard() {
   const { persist } = usePreferencesPersist();

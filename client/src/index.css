@@ -19,12 +19,10 @@
 @import './styles/library.css';
 @import './styles/builder.css';
 @import './styles/legacy-borders.css';
-@import './styles/inventory.css';
 @import './styles/share-card.css';
 @import './styles/user-avatar.css';
 @import './styles/notifications.css';
 @import './styles/profile-social.css';
-@import './styles/tutorial.css';
 @import './styles/onboarding.css';
 @import './styles/product-polish.css';
 .reminder-card--calm {

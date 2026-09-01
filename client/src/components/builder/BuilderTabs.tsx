@@ -9,7 +9,7 @@ interface Props {
 
 export function BuilderTabs({ active, onChange }: Props) {
   return (
-    <div className="flex gap-2" role="tablist" aria-label="Modo do construtor de treino">
+    <div className="flex gap-2" role="tablist" aria-label="Modo do treino">
       <button
         type="button"
         role="tab"

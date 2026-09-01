@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { hydrateNativeWorkoutSnapshot } from '@/lib/workout-session-storage';
 
-export const isNativeApp = () => Capacitor.isNativePlatform();
+const isNativeApp = () => Capacitor.isNativePlatform();
 
 export async function initializeNativeRuntime(): Promise<() => void> {
   if (!isNativeApp()) return () => undefined;

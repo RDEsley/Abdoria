@@ -214,5 +214,3 @@ function buildDemoUsers(): DemoUserSeed[] {
 }
 
 export const DEMO_USERS: DemoUserSeed[] = buildDemoUsers();
-
-export const DEMO_USER_EMAILS = DEMO_USERS.map((u) => u.email);

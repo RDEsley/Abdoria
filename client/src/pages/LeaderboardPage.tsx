@@ -6,8 +6,8 @@ import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank, updateMe } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
-import { showGameToast } from '@/components/ui/GameToast';
+import { useAuth } from '@/hooks/useAuth';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
@@ -218,7 +218,7 @@ export function LeaderboardPage() {
       <GamePageHeader
         eyebrow="Comunidade Evolyn"
         title={period === 'global' ? 'Classificação Global' : 'Classificação Semanal'}
-        onBack={() => navigate('/construtor')}
+        onBack={() => navigate('/treino')}
         backIcon="x"
         backAlign="right"
       >

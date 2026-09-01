@@ -1,9 +1,5 @@
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 
-/** Duração padrão de trabalho e descanso (segundos) quando o exercício não define valores. */
-export const WORK_SECONDS = 30;
-export const REST_SECONDS = 15;
-
 /** Formata duração acumulada de treino para exibição no dashboard/perfil. */
 export function formatTrainingDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.round(totalSeconds));
@@ -54,18 +50,13 @@ export function toLocalDateKey(date: Date | string): string {
   return getTodaySaoPaulo(typeof date === 'string' ? new Date(date) : date);
 }
 
-/** Início do dia civil local (00:00:00) para comparações de data. */
-export function startOfLocalDay(date: Date = new Date()): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
 /** Mantém apenas dígitos (campos numéricos em texto). */
 export function digitsOnly(value: string): string {
   return value.replace(/\D/g, '');
 }
 
 /** Converte string numérica opcional; vazio retorna null. */
-export function parseOptionalInt(value: string): number | null {
+function parseOptionalInt(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   const n = Number.parseInt(trimmed, 10);
@@ -73,7 +64,7 @@ export function parseOptionalInt(value: string): number | null {
 }
 
 /** Converte string decimal opcional (aceita vírgula ou ponto); vazio retorna null. */
-export function parseOptionalDecimal(value: string): number | null {
+function parseOptionalDecimal(value: string): number | null {
   const trimmed = value.trim().replace(',', '.');
   if (!trimmed) return null;
   const n = Number.parseFloat(trimmed);
@@ -105,7 +96,10 @@ export function sanitizeDecimalInput(value: string, maxDecimals = 1): string {
   const firstDot = cleaned.indexOf('.');
   if (firstDot === -1) return cleaned.slice(0, 3);
   const intPart = cleaned.slice(0, firstDot).slice(0, 3);
-  const decPart = cleaned.slice(firstDot + 1).replace(/\./g, '').slice(0, maxDecimals);
+  const decPart = cleaned
+    .slice(firstDot + 1)
+    .replace(/\./g, '')
+    .slice(0, maxDecimals);
   return `${intPart}.${decPart}`;
 }
 

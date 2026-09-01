@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { CheckCircle2, History, NotebookPen, Plus, Trash2, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { usePreferencesPersist } from '@/hooks/usePreferencesPersist';
 import { grantLembreteXp } from '@/lib/api/users';
 import { emitXpEarned } from '@/lib/xp-orbs';

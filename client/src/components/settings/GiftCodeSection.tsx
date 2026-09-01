@@ -4,8 +4,8 @@ import { GiftCodeRewardReveal } from '@/components/settings/GiftCodeRewardReveal
 import { GameButton } from '@/components/ui/GameButton';
 import { redeemGiftCode } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
-import { showGameToast } from '@/components/ui/GameToast';
-import { useAuth } from '@/context/AuthContext';
+import { showGameToast } from '@/lib/game-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/hooks/useApp';
 import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';

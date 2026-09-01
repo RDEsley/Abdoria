@@ -127,7 +127,7 @@ authRouter.post('/logout', (_req, res) => {
 authRouter.post('/guest', async (_req, res) => {
   try {
     const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
-    const email = `guest_${suffix}@guest.abdoria.local`;
+    const email = `guest_${suffix}@guest.evolyn.local`;
     const passwordHash = await bcrypt.hash(crypto.randomUUID(), 10);
     const today = getTodaySaoPaulo();
 

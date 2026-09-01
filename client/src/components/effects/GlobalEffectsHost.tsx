@@ -25,7 +25,7 @@ const CosmeticUnlockCelebration = lazy(() =>
 /**
  * Camadas globais de efeito (bolinhas de XP, level up, desbloqueio de
  * cosmético, toasts) — vivem em AppDataProvider (não em AppLayout) porque
- * `player`/`atividades-player`/`campanha`/`myplant` são rotas irmãs de
+ * `player`, `atividades-player` e `myplant` são rotas irmãs de
  * AppLayout, sem a chrome (TopNavbar/sidebar). Antes disso, ganhar XP/level
  * up durante um treino ou atividade (as fontes principais de XP do app)
  * disparava o evento pro vazio: nenhum listener estava montado pra reagir. */

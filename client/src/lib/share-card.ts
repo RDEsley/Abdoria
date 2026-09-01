@@ -25,7 +25,7 @@ export function buildShareMessage(data: ShareCardData): string {
     typeof data.streakAtual === 'number' && data.streakAtual > 0
       ? ` (${data.streakAtual} dias seguidos)`
       : '';
-  return `Mais uma missão concluída: ${data.workoutName}, +${data.xpGained} XP${streakSuffix} 💪`;
+  return `Mais um treino concluído: ${data.workoutName}, +${data.xpGained} XP${streakSuffix} 💪`;
 }
 
 /** Compartilha via Web Share API (com arquivo) quando disponível; senão baixa o PNG. */

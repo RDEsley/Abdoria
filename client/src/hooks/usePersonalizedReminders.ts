@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { normalizePersonalizedReminders } from '@shared/reminders';
 

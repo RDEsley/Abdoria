@@ -14,7 +14,7 @@ const SPECIAL_TITLE_CLASS: Record<string, string> = {
 };
 
 /** Títulos cujo texto pula caractere a caractere (ver AnimatedTitleText). */
-export const CHARACTER_WAVE_TITLE_IDS: ReadonlySet<string> = new Set(['titulo_enigma']);
+const CHARACTER_WAVE_TITLE_IDS: ReadonlySet<string> = new Set(['titulo_enigma']);
 
 export interface ResolvedTitle {
   id: string;

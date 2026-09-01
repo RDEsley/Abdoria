@@ -1552,7 +1552,7 @@ a.game-btn {
 
 /* Terra e grama em gradiente liso (em vez do padrão "tijolinho" repetido)
    — mesma linguagem "grama viva sobre terra" da vila da Exploração, pra
-   as duas cenas RPG do app conversarem entre si visualmente. */
+   as telas de autenticação manterem a mesma linguagem visual. */
 .game-login__dirt {
   position: absolute;
   right: 0;

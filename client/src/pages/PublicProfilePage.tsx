@@ -17,7 +17,7 @@ import { ModerationModal } from '@/components/admin/ModerationModal';
 import { ReportUserModal } from '@/components/social/ReportUserModal';
 import { UserAvatar } from '@/components/profile/UserAvatar';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { showGameToast } from '@/components/ui/GameToast';
+import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { getPublicProfile } from '@/lib/api';
 import { followUser, likeProfile, unfollowUser, unlikeProfile } from '@/lib/api/social';
@@ -25,7 +25,7 @@ import { AnimatedTitleText } from '@/components/ui/AnimatedTitleText';
 import { resolveEquippedTitle } from '@/lib/cosmetic-title';
 import { resolveIdentityBorder } from '@/lib/identity-border';
 import { formatTrainingDuration } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import type { MolduraId, PublicProfile } from '@/types';
 
 function molduraCountOf(profile: PublicProfile, moldura: MolduraId | null): number | null {
@@ -168,9 +168,7 @@ export function PublicProfilePage() {
               <Flag size={16} aria-hidden />
             </button>
           )}
-          {relacao.segue_voce && !relacao.amigo && (
-            <span className="friends-chip">segue você</span>
-          )}
+          {relacao.segue_voce && !relacao.amigo && <span className="friends-chip">segue você</span>}
           <button
             type="button"
             className={`profile-like-btn${likes?.eu_curti ? ' profile-like-btn--on' : ''}`}
@@ -188,7 +186,11 @@ export function PublicProfilePage() {
             disabled={followBusy}
             onClick={() => void toggleFollow()}
           >
-            {relacao.seguindo ? <Check size={14} aria-hidden /> : <UserPlus size={14} aria-hidden />}
+            {relacao.seguindo ? (
+              <Check size={14} aria-hidden />
+            ) : (
+              <UserPlus size={14} aria-hidden />
+            )}
             {followLabel}
           </button>
         </div>
@@ -206,10 +208,7 @@ export function PublicProfilePage() {
               molduraCount={molduraCountOf(profile, identityBorder.moldura)}
               size="lg"
             />
-            <span
-              className="game-profile-hero__level-badge"
-              aria-label={`Nível ${profile.level}`}
-            >
+            <span className="game-profile-hero__level-badge" aria-label={`Nível ${profile.level}`}>
               {profile.level}
             </span>
           </span>

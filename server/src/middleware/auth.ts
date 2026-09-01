@@ -1,8 +1,16 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-/** Em produção, JWT_SECRET deve ser definido em server/.env. */
-const JWT_SECRET = process.env.JWT_SECRET ?? 'abdoria-dev-secret-change-in-production';
+function readJwtSecret(): string {
+  const configured = process.env.JWT_SECRET?.trim();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET é obrigatório em produção.');
+  }
+  return 'evolyn-local-development-only-secret';
+}
+
+const JWT_SECRET = readJwtSecret();
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -49,5 +57,3 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
   }
   next();
 }
-
-export { JWT_SECRET };

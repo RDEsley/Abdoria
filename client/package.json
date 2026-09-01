@@ -1,7 +1,8 @@
 {
   "name": "evolyn-client",
+  "description": "Interface mobile-first do Evolyn para treinos, atividades, organização e progresso gamificado.",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

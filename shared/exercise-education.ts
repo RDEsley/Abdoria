@@ -49,7 +49,7 @@ function pushUp(
 }
 
 /**
- * Curadoria educacional do catálogo utilizado nas missões.
+ * Curadoria educacional do catálogo utilizado nos treinos.
  * Fica fora do Player para que Biblioteca, preview e treino usem a mesma fonte.
  */
 export const EXERCISE_EDUCATION: Readonly<Record<string, ExerciseEducationDefinition>> = {
