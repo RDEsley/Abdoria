@@ -9,7 +9,6 @@ import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
 import { workoutPresets } from '../db/seeds/workout-presets.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
-import { getTodaySaoPaulo } from '../utils/timezone.js';
 import {
   LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS,
   RETIRED_EXERCISE_SLUGS as PRODUCT_RETIRED_EXERCISE_SLUGS,
@@ -66,62 +65,36 @@ async function seed() {
   console.log(`Total presets: ${workoutPresets.length}`);
 
   if (process.env.NODE_ENV === 'production') {
-    console.log('Seed de usuários demo ignorado em produção.');
+    console.log('Seed de usuários ignorado em produção.');
     console.log('Seed concluído.');
     return;
   }
 
-  const adminHash = await bcrypt.hash('admin123', 10);
-  const gmailAdminHash = await bcrypt.hash('1234569', 10);
-  const today = getTodaySaoPaulo();
+  const devAdminEmail = process.env.DEV_ADMIN_EMAIL?.trim().toLowerCase();
+  const devAdminPassword = process.env.DEV_ADMIN_PASSWORD;
 
-  await User.findOneAndUpdate(
-    { email: 'admin@abdoria.local' },
-    {
-      $set: {
-        passwordHash: adminHash,
-        nome: 'Admin Evolyn',
-        idade: 30,
-        peso_kg: 75,
-        altura_cm: 175,
-        imc: 24.5,
-        nivel: 'intermediario',
-        objetivo: 'definicao',
-        onboarding_completed: true,
-        terms_accepted_at: new Date().toISOString(),
-        gamificacao: {
-          nivel_xp: 240,
-          streak_atual: 4,
-          streak_maior: 6,
-          total_minutos: 42,
-          conquistas: ['primeiro_treino', 'streak_2', 'streak_3'],
-        },
-        preferencias: {
-          descanso_padrao_seg: 25,
-          som_habilitado: true,
-          sfx_volume: 0.7,
-          confetti_animacoes_habilitadas: true,
-          ciclo_treinos: ['A', 'B', 'C', 'D', 'E'],
-          modo_padrao: 'tempo',
-          tutorial_visto: true,
-        },
-        xp_diario: { ganho_hoje: 0, data_reset: today },
-        simulacao_definicao: { gordura_atual_pct: 18, gordura_meta_pct: 12 },
-      },
-    },
-    { upsert: true },
-  );
+  if (devAdminEmail || devAdminPassword) {
+    if (!devAdminEmail || !devAdminPassword) {
+      throw new Error('Defina DEV_ADMIN_EMAIL e DEV_ADMIN_PASSWORD juntos.');
+    }
+    if (devAdminPassword.length < 12) {
+      throw new Error('DEV_ADMIN_PASSWORD deve ter pelo menos 12 caracteres.');
+    }
 
-  await User.findOneAndUpdate(
-    { email: 'admin@gmail.com' },
-    { $set: buildAdminUserPayload(gmailAdminHash) },
-    { upsert: true },
-  );
+    const adminHash = await bcrypt.hash(devAdminPassword, 10);
+    await User.findOneAndUpdate(
+      { email: devAdminEmail },
+      { $set: buildAdminUserPayload(adminHash, devAdminEmail) },
+      { upsert: true },
+    );
+    console.log(`Administrador de desenvolvimento preparado: ${devAdminEmail}`);
+  } else {
+    console.log(
+      'Administrador de desenvolvimento não criado. Defina DEV_ADMIN_EMAIL e DEV_ADMIN_PASSWORD se necessário.',
+    );
+  }
 
   await seedDemoUsers();
-
-  console.log('Administrador: admin@abdoria.local / admin123');
-  console.log('Admin completo: admin@gmail.com / 1234569');
   console.log('Seed concluído.');
 }
 
