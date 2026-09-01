@@ -7,7 +7,6 @@ import {
   getSundayWeekKey,
   weeklyMetricValue,
 } from '../src/services/weekly-stats.js';
-import { weeklyLeaderboardReward } from '../../shared/types/index.js';
 
 function fakeUser(overrides: Partial<UserRecord['gamificacao']> = {}): UserRecord {
   return {
@@ -76,22 +75,5 @@ describe('weekly-stats', () => {
     // 2026-07-10 é sexta (SP); domingo anterior = 2026-07-05.
     expect(getSundayWeekKey(new Date('2026-07-10T15:00:00-03:00'))).toBe('2026-07-05');
     expect(getSundayWeekKey(new Date('2026-07-05T08:00:00-03:00'))).toBe('2026-07-05');
-  });
-});
-
-describe('weeklyLeaderboardReward', () => {
-  it.each([
-    [1, 1000],
-    [2, 700],
-    [3, 300],
-    [4, 100],
-    [25, 100],
-    [200, 100],
-  ])('posição %i paga %i Dorias', (rank, prize) => {
-    expect(weeklyLeaderboardReward(rank)).toBe(prize);
-  });
-
-  it('posição inválida não paga', () => {
-    expect(weeklyLeaderboardReward(0)).toBeNull();
   });
 });

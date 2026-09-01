@@ -17,9 +17,17 @@ interface Props {
   slides: readonly TutorialSlide[];
   /** Rótulo do botão final. */
   ctaLabel?: string;
+  /** First-time onboarding is mandatory; replays may still be dismissed. */
+  dismissible?: boolean;
 }
 
-export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }: Props) {
+export function TutorialOverlay({
+  open,
+  onClose,
+  slides,
+  ctaLabel = 'Entendi!',
+  dismissible = true,
+}: Props) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -59,14 +67,16 @@ export function TutorialOverlay({ open, onClose, slides, ctaLabel = 'Entendi!' }
         aria-labelledby={`tutorial-title-${step}`}
         aria-describedby={`tutorial-body-${step}`}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Pular tutorial"
-          className="absolute right-3 top-3 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600"
-        >
-          <X size={24} />
-        </button>
+        {dismissible && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar tutorial"
+            className="absolute right-3 top-3 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+          >
+            <X size={24} />
+          </button>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

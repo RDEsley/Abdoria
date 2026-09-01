@@ -48,6 +48,11 @@ export interface AppContextValue {
   saveWorkoutPreset: (preset: SavedWorkoutPreset) => SavedWorkoutPreset[];
   getRepSchemes: (nivel: NivelUsuario) => StoredRepScheme[];
   saveRepSchemes: (nivel: NivelUsuario, schemes: StoredRepScheme[]) => StoredRepScheme[];
+  setRepSchemeConfiguration: (
+    nivel: NivelUsuario,
+    schemes: StoredRepScheme[],
+    selectedId: string,
+  ) => void;
   addRepScheme: (
     nivel: NivelUsuario,
     scheme: Omit<RepSchemeRecommendation, 'id'> & { isCustom?: boolean },

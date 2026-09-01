@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -37,6 +38,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IUserDocument | null>(null);
   const [loading, setLoading] = useState(true);
+  const initialHydrationStarted = useRef(false);
 
   const applyUser = useCallback((next: IUserDocument) => {
     setUser(next);
@@ -65,20 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // React StrictMode executa effects de montagem duas vezes em desenvolvimento.
+    // Sem esta trava, a sessão fazia duas chamadas /users/me e a árvore protegida
+    // parecia carregar duas vezes ao abrir uma rota diretamente.
+    if (initialHydrationStarted.current) return;
+    initialHydrationStarted.current = true;
     void (async () => {
       await refreshUser();
       setLoading(false);
     })();
   }, [refreshUser]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<IUserDocument>).detail;
-      if (detail) applyUser(detail);
-    };
-    window.addEventListener('abdoria:user-updated', handler);
-    return () => window.removeEventListener('abdoria:user-updated', handler);
-  }, [applyUser]);
 
   useEffect(() => {
     const handler = () => {
@@ -98,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       res.user.preferencias?.som_habilitado ?? true,
       res.user.preferencias?.sfx_volume ?? 0.7,
     );
+    setSfxPack(res.user.cosmeticos?.som_equipado ?? 'som_classico');
   }, []);
 
   const loginAsGuest = useCallback(async () => {
@@ -109,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       res.user.preferencias?.som_habilitado ?? true,
       res.user.preferencias?.sfx_volume ?? 0.7,
     );
+    setSfxPack(res.user.cosmeticos?.som_equipado ?? 'som_classico');
   }, []);
 
   const register = useCallback(async (email: string, password: string, nome: string) => {

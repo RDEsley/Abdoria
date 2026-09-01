@@ -6,11 +6,12 @@ import {
   useMemo,
   useRef,
   useState,
+  lazy,
+  Suspense,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
-import { AchievementToast } from '@/components/gamification/AchievementToast';
 import {
   notifyPersonalRecords,
   notifyWorkoutAchievements,
@@ -20,6 +21,12 @@ import {
 } from '@/lib/achievement-notifications';
 import { playAchievementUnlock } from '@/lib/sounds';
 import type { PersonalRecordNotice, UnlockedAchievementNotice } from '@/types';
+
+const AchievementToast = lazy(() =>
+  import('@/components/gamification/AchievementToast').then((module) => ({
+    default: module.AchievementToast,
+  })),
+);
 
 /** Uma conquista por vez, em fila (estilo notificação da Steam). */
 const MAX_VISIBLE = 1;
@@ -124,16 +131,18 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
           aria-live="polite"
           aria-label="Notificações de conquista"
         >
-          <AnimatePresence mode="popLayout">
-            {items.map((item, index) => (
-              <AchievementToast
-                key={item.id}
-                item={item}
-                stackIndex={index}
-                onDismiss={handleDismiss}
-              />
-            ))}
-          </AnimatePresence>
+          <Suspense fallback={null}>
+            <AnimatePresence mode="popLayout">
+              {items.map((item, index) => (
+                <AchievementToast
+                  key={item.id}
+                  item={item}
+                  stackIndex={index}
+                  onDismiss={handleDismiss}
+                />
+              ))}
+            </AnimatePresence>
+          </Suspense>
         </div>,
         document.body,
       )}

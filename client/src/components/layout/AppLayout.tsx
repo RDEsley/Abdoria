@@ -1,20 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarCheck2, Dumbbell, Home, Settings, Sprout, User, X } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { CalendarCheck2, Dumbbell, Home, Settings, Sprout, User } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { BrandMark } from '@/components/brand/BrandMark';
-import { GameAlertBanner } from '@/components/ui/GameToast';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameHud } from '@/components/layout/GameHud';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/context/AuthContext';
-import { useMobileViewport } from '@/hooks/useMobileViewport';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import { usePersonalizedReminders } from '@/hooks/usePersonalizedReminders';
 import { ResumeWorkoutPrompt } from '@/components/player/ResumeWorkoutPrompt';
+import { PageEntranceProvider } from '@/context/PageEntranceContext';
 
 function buildNavItems() {
   return [
@@ -26,16 +25,12 @@ function buildNavItems() {
   ] as const;
 }
 
-const VIEWPORT_NOTICE_KEY = 'abdoria_viewport_notice_dismissed';
-
 function MidnightRefreshListener() {
-  const { refreshUser } = useAuth();
   const { refresh: refreshApp } = useApp();
 
   const handleRefresh = useCallback(() => {
     void refreshApp();
-    void refreshUser();
-  }, [refreshApp, refreshUser]);
+  }, [refreshApp]);
 
   useMidnightRefresh(handleRefresh);
   return null;
@@ -46,12 +41,8 @@ export function AppLayout() {
   const navItems = buildNavItems();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMobileViewport();
   const reduceMotion = useReducedMotion();
-  const [viewportNoticeDismissed, setViewportNoticeDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(VIEWPORT_NOTICE_KEY) === '1';
-  });
+  const [pageEntrance, setPageEntrance] = useState({ pathname: '', ready: false });
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
   usePersonalizedReminders();
 
@@ -67,18 +58,24 @@ export function AppLayout() {
     navigate(location.pathname, { replace: true, state: null });
   }, [location.pathname, location.state, navigate]);
 
+  useEffect(() => {
+    setPageEntrance({ pathname: location.pathname, ready: Boolean(reduceMotion) });
+    if (reduceMotion) return undefined;
+
+    // A rota entra primeiro; os indicadores internos recebem o sinal logo
+    // depois do stagger dos cards principais. Assim barras, checks e números
+    // não terminam enquanto seu próprio card ainda está aparecendo.
+    const timer = window.setTimeout(() => {
+      setPageEntrance({ pathname: location.pathname, ready: true });
+    }, 620);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, reduceMotion]);
+
   const handleTutorialClose = () => {
     setShowTutorial(false);
     if (user && !user.preferencias?.tutorial_visto) {
       void markTutorialSeen(user).then(() => refreshUser());
     }
-  };
-
-  const showViewportNotice = !isMobile && !viewportNoticeDismissed;
-
-  const dismissViewportNotice = () => {
-    sessionStorage.setItem(VIEWPORT_NOTICE_KEY, '1');
-    setViewportNoticeDismissed(true);
   };
 
   return (
@@ -122,41 +119,19 @@ export function AppLayout() {
           <GameHud />
 
           <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]">
-            {showViewportNotice && (
-              // Precisa viver DENTRO do <main>: a TopNavbar é `position: fixed`
-              // (não ocupa espaço no fluxo) e só o <main> compensa a altura dela
-              // via padding-top. Como irmão do <main> (fora dele), o aviso nascia
-              // colado no topo do container e ficava coberto pela navbar fixa —
-              // o bug reportado de "aviso atrás da top-navbar".
-              <div className="relative mb-4">
-                <GameAlertBanner
-                  variant="info"
-                  title="Melhor experiência no celular"
-                  message="O Evolyn foi desenhado para telas de celular. Em computador ou tablet, alguns elementos podem não se encaixar perfeitamente."
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-500 shadow-sm transition hover:bg-stone-100 hover:text-stone-700"
-                  onClick={dismissViewportNotice}
-                  aria-label="Fechar aviso de compatibilidade de tela"
-                  title="Fechar aviso"
-                >
-                  <X size={16} aria-hidden />
-                </button>
-              </div>
-            )}
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={location.pathname}
-                className="game-page-transition"
-                initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.992 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
-                transition={{ type: 'spring', stiffness: 330, damping: 30 }}
+            <motion.div
+              key={location.pathname}
+              className="game-page-transition"
+              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <PageEntranceProvider
+                ready={pageEntrance.pathname === location.pathname && pageEntrance.ready}
               >
                 <Outlet />
-              </motion.div>
-            </AnimatePresence>
+              </PageEntranceProvider>
+            </motion.div>
           </main>
 
           <nav className="game-bottom-nav md:hidden" aria-label="Navegação principal">
@@ -183,6 +158,7 @@ export function AppLayout() {
           open={showTutorial}
           onClose={handleTutorialClose}
           slides={ONBOARDING_TUTORIAL_SLIDES}
+          dismissible={Boolean(user?.preferencias?.tutorial_visto)}
         />
         {!showTutorial && <ResumeWorkoutPrompt />}
       </div>

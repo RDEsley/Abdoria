@@ -13,6 +13,13 @@
   .game-bird__wing--r {
     animation: none !important;
   }
+
+  .game-app .glass-card,
+  .game-app .glass-panel-strong,
+  .game-app .profile-page__more-menu {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

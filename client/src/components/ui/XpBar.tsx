@@ -1,3 +1,7 @@
+import { useEffect, useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
+import { usePageEntranceReady } from '@/context/PageEntranceContext';
+
 interface Props {
   value: number;
   max: number;
@@ -21,9 +25,16 @@ export function XpBar({
   valueOnly = false,
   pulseWhenFull = false,
 }: Props) {
+  const pageReady = usePageEntranceReady();
+  const reduceMotion = useReducedMotion();
   const isFull = !valueOnly && max > 0 && value >= max;
   const visualMax = valueOnly ? Math.max(value, 30) : max;
   const pct = visualMax > 0 ? Math.min(100, (value / visualMax) * 100) : 0;
+  const [displayPct, setDisplayPct] = useState(pageReady || reduceMotion ? pct : 0);
+
+  useEffect(() => {
+    setDisplayPct(pageReady || reduceMotion ? pct : 0);
+  }, [pageReady, pct, reduceMotion]);
   const wrapClass = ['game-xp-bar-wrap', pulseWhenFull && isFull ? 'game-xp-bar-wrap--full' : '']
     .filter(Boolean)
     .join(' ');
@@ -50,7 +61,7 @@ export function XpBar({
         aria-valuemin={0}
         aria-valuemax={valueOnly ? visualMax : max}
       >
-        <div className="game-xp-bar__fill" style={{ width: `${pct}%` }} />
+        <div className="game-xp-bar__fill" style={{ width: `${displayPct}%` }} />
       </div>
     </div>
   );

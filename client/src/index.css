@@ -4,6 +4,7 @@
 @import './styles/theme.css';
 @import './styles/navbar.css';
 @import './styles/hud.css';
+@import './styles/currency.css';
 @import './styles/gamification.css';
 @import './styles/modals.css';
 @import './styles/inputs-buttons.css';

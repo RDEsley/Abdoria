@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Leaf, Lock, Volume2 } from 'lucide-react';
+import { Check, Lock, Volume2 } from 'lucide-react';
 import {
   PurchaseConfirmDialog,
   type PurchaseConfirmDetails,
@@ -10,6 +10,7 @@ import { equipShopItem, getShop, purchaseShopItem } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { playEquip, playPurchase, previewSfxPack, setSfxPack } from '@/lib/sounds';
 import { CURRENCY_NAME, type ShopCatalogItem } from '@/types';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 
 /** Pacotes de som do jogo — escolhidos aqui nas Opções (não na personalização). */
 export function SoundPackSection() {
@@ -100,11 +101,9 @@ export function SoundPackSection() {
   }
 
   return (
-    <div className="mt-5">
-      <p className="text-sm font-bold">Pacote de sons</p>
-      <p className="mt-1 mb-2 text-xs font-medium text-stone-500">
-        Toque em ouvir para testar antes de ativar.
-      </p>
+    <div className="settings-sound-section">
+      <p className="settings-sound-section__title">Pacote de sons</p>
+      <p className="settings-sound-section__hint">Toque em ouvir para testar antes de ativar.</p>
       <ul className="settings-sound-list flex flex-col gap-1.5">
         {sons.map((item) => (
           <li key={item.id} className="settings-sound">
@@ -137,7 +136,7 @@ export function SoundPackSection() {
                 disabled={busyId === item.id}
                 onClick={() => requestPurchase(item)}
               >
-                <Leaf size={12} aria-hidden /> {item.unlock.preco_moedas}
+                <GameLeafIcon size={14} aria-hidden /> {item.unlock.preco_moedas}
               </button>
             ) : (
               <span className="settings-sound__locked" title={item.unlock_label}>

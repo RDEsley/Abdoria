@@ -1,7 +1,8 @@
-import { Leaf, ShoppingBag } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { actionHaptic } from '@/lib/platform/native-runtime';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 
 export interface PurchaseConfirmDetails {
   itemName: string;
@@ -56,7 +57,7 @@ export function PurchaseConfirmDialog({
           </p>
         )}
         <p className="game-purchase-confirm__price">
-          <Leaf size={14} aria-hidden />
+          <GameLeafIcon size={16} aria-hidden />
           <span>{details.priceLabel}</span>
         </p>
         {details.balanceHint && (

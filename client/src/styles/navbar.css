@@ -154,9 +154,19 @@
   height: 2.05rem;
   padding: 0 0.35rem 0 1.45rem;
   border-radius: 999px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.96);
   border: var(--border-card);
   box-shadow: var(--shadow-resting);
+}
+
+.top-navbar__pill--leaf {
+  border-color: rgba(5, 150, 105, 0.15);
+  background: linear-gradient(105deg, rgba(236, 253, 245, 0.96), #fff 58%);
+}
+
+.top-navbar__pill--golden {
+  border-color: rgba(217, 119, 6, 0.17);
+  background: linear-gradient(105deg, rgba(255, 251, 235, 0.98), #fff 58%);
 }
 
 .top-navbar__pill-icon {
@@ -170,27 +180,35 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #fef3c7;
+  isolation: isolate;
+  background: #fff;
   border: 2px solid #fff;
-  box-shadow: var(--shadow-resting);
+  box-shadow:
+    0 4px 11px rgba(15, 23, 42, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-.top-navbar__resources .top-navbar__pill:first-child .top-navbar__pill-icon {
-  background: #dcfce7;
+.top-navbar__pill-icon::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0.18rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: inherit;
 }
 
-.top-navbar__resources .top-navbar__pill:nth-child(2) .top-navbar__pill-icon {
-  background: #fef3c7;
+.top-navbar__pill--leaf .top-navbar__pill-icon {
+  background: radial-gradient(circle at 35% 28%, #ecfdf5 0%, #bbf7d0 58%, #6ee7b7 100%);
+  box-shadow:
+    0 4px 12px rgba(5, 150, 105, 0.2),
+    inset 0 -2px 4px rgba(5, 150, 105, 0.12);
 }
 
-.top-navbar__coin-icon {
-  color: #059669;
-}
-
-.top-navbar__gem-icon {
-  flex-shrink: 0;
-  color: #d89b13;
-  filter: drop-shadow(0 1px 1px rgba(146, 64, 14, 0.28));
+.top-navbar__pill--golden .top-navbar__pill-icon {
+  background: radial-gradient(circle at 35% 28%, #fffde6 0%, #fde68a 58%, #fbbf24 100%);
+  box-shadow:
+    0 4px 12px rgba(180, 83, 9, 0.22),
+    inset 0 -2px 4px rgba(180, 83, 9, 0.14);
 }
 
 .top-navbar__pill-value {

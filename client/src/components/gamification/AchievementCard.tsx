@@ -5,6 +5,7 @@ import { Check, ChevronRight, LockKeyhole, Sparkles, Trophy } from 'lucide-react
 import type { Achievement } from '@/types';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 import { GameButton } from '@/components/ui/GameButton';
+import { usePageEntranceReady } from '@/context/PageEntranceContext';
 
 interface Props {
   achievement: Achievement;
@@ -96,6 +97,7 @@ interface PreviewProps {
 export function AchievementsPreview({ conquistas, unlockedCount, total }: PreviewProps) {
   const navigate = useNavigate();
   const reduceMotion = Boolean(useReducedMotion());
+  const pageReady = usePageEntranceReady();
   const preview = pickAchievementPreview(conquistas, 4);
   const progress = total > 0 ? Math.round((unlockedCount / total) * 100) : 0;
 
@@ -112,7 +114,7 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
           <motion.span
             className="achievements-preview__trophy"
             aria-hidden
-            animate={reduceMotion ? undefined : { rotate: [0, -5, 5, 0] }}
+            animate={reduceMotion || !pageReady ? undefined : { rotate: [0, -5, 5, 0] }}
             transition={{ duration: 0.75, delay: 0.35 }}
           >
             <Trophy size={20} fill="currentColor" fillOpacity={0.22} />
@@ -140,7 +142,7 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
       >
         <motion.span
           initial={reduceMotion ? false : { width: 0 }}
-          animate={{ width: `${progress}%` }}
+          animate={{ width: pageReady || reduceMotion ? `${progress}%` : '0%' }}
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
         />
       </div>
@@ -154,7 +156,7 @@ export function AchievementsPreview({ conquistas, unlockedCount, total }: Previe
         variant="secondary"
         size="sm"
         onClick={() => navigate('/conquistas')}
-        className="achievements-preview__button"
+        className="w-full achievements-preview__button"
       >
         <span>Explorar todas as conquistas</span>
         <ChevronRight size={16} aria-hidden />

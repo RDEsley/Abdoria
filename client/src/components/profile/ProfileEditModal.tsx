@@ -52,9 +52,7 @@ const MOLDURA_OPTIONS: MolduraId[] = ['bronze', 'prata', 'ouro', 'especial'];
 
 /** Rascunho da borda selecionada — só vira mudança real ao clicar em Salvar. */
 type BordaDraft =
-  | { fonte: 'nenhuma' }
-  | { fonte: 'podio'; moldura: MolduraId }
-  | { fonte: 'loja'; itemId: string };
+  { fonte: 'nenhuma' } | { fonte: 'podio'; moldura: MolduraId } | { fonte: 'loja'; itemId: string };
 
 function bordaDraftEquals(a: BordaDraft, b: BordaDraft): boolean {
   if (a.fonte !== b.fonte) return false;
@@ -157,10 +155,9 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
   const handleSave = async () => {
     const nome = nameDraft.trim();
     if (nameChanged && (nome.length < NOME_MIN_LENGTH || nome.length > NOME_MAX_LENGTH)) {
-      showGameToast(
-        `Nome deve ter entre ${NOME_MIN_LENGTH} e ${NOME_MAX_LENGTH} caracteres.`,
-        { variant: 'error' },
-      );
+      showGameToast(`Nome deve ter entre ${NOME_MIN_LENGTH} e ${NOME_MAX_LENGTH} caracteres.`, {
+        variant: 'error',
+      });
       return;
     }
 
@@ -209,8 +206,7 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
     label: string;
     lockHint: string;
   } & (
-    | { kind: 'podio'; moldura: MolduraId; count: number | null }
-    | { kind: 'loja'; itemId: string }
+    { kind: 'podio'; moldura: MolduraId; count: number | null } | { kind: 'loja'; itemId: string }
   );
 
   const podioOptions: BordaOption[] = MOLDURA_OPTIONS.map((moldura) => ({
@@ -253,14 +249,24 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <header className="profile-edit-modal__head">
-          <h2 id="profile-edit-title">Editar perfil</h2>
-          <button type="button" className="profile-edit-modal__close" aria-label="Fechar" onClick={onClose}>
+          <div>
+            <p className="profile-edit-modal__eyebrow">Sua identidade</p>
+            <h2 id="profile-edit-title">Editar perfil</h2>
+            <p className="profile-edit-modal__subtitle">Ajuste sua foto, apresentação e estilo.</p>
+          </div>
+          <button
+            type="button"
+            className="profile-edit-modal__close"
+            aria-label="Fechar"
+            onClick={onClose}
+          >
             <X size={20} />
           </button>
         </header>
 
         <div className="profile-edit-modal__body">
           <div className="profile-edit-photo">
+            <span className="profile-edit-photo__label">Prévia ao vivo</span>
             <button
               type="button"
               className="profile-edit-photo__btn"
@@ -376,7 +382,9 @@ export function ProfileEditModal({ open, profile, onClose, onChanged }: Props) {
                       nome={profile.nome}
                       avatarUrl={profile.avatar_url}
                       moldura={option.kind === 'podio' ? option.moldura : null}
-                      molduraCount={option.kind === 'podio' && option.unlocked ? option.count : null}
+                      molduraCount={
+                        option.kind === 'podio' && option.unlocked ? option.count : null
+                      }
                       borderLoja={option.kind === 'loja' ? option.itemId : null}
                       size="sm"
                     />

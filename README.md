@@ -51,7 +51,8 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 * Timer de descanso e execução guiada
 * Recuperação automática da sessão exatamente no exercício, série, lado e cronômetro em que parou
 * Tela mantida ativa durante o Player em dispositivos compatíveis
-* Plano de core com intensidade, agenda, duração e descanso entre séries sincronizado às Opções
+* Plano de core com intensidade, agenda, pacote de som e descanso entre séries sincronizados às Opções e ao Player
+* Instalação como PWA pelo menu do Perfil, com orientação específica quando o navegador não oferece o prompt nativo
 * Catálogo inteiramente baseado em movimentos de peso corporal, sem acessórios
 * Sistema de favoritos, preferências e bloqueios de recomendação
 * Exercícios fixados somados a todas as recomendações, sem substituir a fila-base

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, Eye, EyeOff, Flame, Globe, Leaf, Trophy, Zap } from 'lucide-react';
+import { CalendarDays, Eye, EyeOff, Flame, Globe, Trophy, Zap } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
 import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
@@ -11,6 +11,7 @@ import { showGameToast } from '@/components/ui/GameToast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 import {
   CURRENCY_NAME,
   type LeaderboardEntry,
@@ -18,9 +19,13 @@ import {
   type LeaderboardPeriod,
 } from '@/types';
 
-const METRICS: { id: LeaderboardMetric; label: string; icon: typeof Zap }[] = [
+const METRICS: {
+  id: LeaderboardMetric;
+  label: string;
+  icon: ComponentType<{ size?: number; 'aria-hidden'?: boolean }>;
+}[] = [
   { id: 'xp', label: 'Experiência', icon: Zap },
-  { id: 'moedas', label: 'Folhas', icon: Leaf },
+  { id: 'moedas', label: 'Folhas', icon: GameLeafIcon },
   { id: 'streak', label: 'Dias seguidos', icon: Flame },
 ];
 
@@ -44,7 +49,7 @@ function formatRankBand(rank: number, total: number | null | undefined): string 
 function RankValue({ entry, metric }: { entry: LeaderboardEntry; metric: LeaderboardMetric }) {
   return (
     <span className="game-rank-row__value">
-      {metric === 'moedas' && <Leaf size={14} aria-hidden />}
+      {metric === 'moedas' && <GameLeafIcon size={15} aria-hidden />}
       {metric === 'xp'
         ? `${entry.week_value ?? entry.nivel_xp} XP`
         : metric === 'streak'

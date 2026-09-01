@@ -104,14 +104,18 @@ export function BannerPickerModal({ open, onClose, onChanged }: Props) {
   return createPortal(
     <div className="game-modal-overlay" role="presentation" onClick={onClose}>
       <div
-        className="game-modal profile-edit-modal"
+        className="game-modal profile-edit-modal profile-banner-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="banner-picker-title"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="profile-edit-modal__head">
-          <h2 id="banner-picker-title">Banner do perfil</h2>
+          <div>
+            <p className="profile-edit-modal__eyebrow">Plano de fundo</p>
+            <h2 id="banner-picker-title">Banner do perfil</h2>
+            <p className="profile-edit-modal__subtitle">Veja o banner inteiro antes de escolher.</p>
+          </div>
           <button
             type="button"
             className="profile-edit-modal__close"

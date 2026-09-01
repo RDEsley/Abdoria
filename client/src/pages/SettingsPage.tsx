@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -41,7 +41,7 @@ import {
   ATIVIDADE_XP_POR_UNIDADE,
   ATIVIDADES_MIN_DESCANSO,
 } from '@shared/atividades';
-import { AB_INTENSITY_LABELS, AB_VOLUME_LABELS } from '@shared/ab-training-profile';
+import { AB_INTENSITY_LABELS } from '@shared/ab-training-profile';
 import {
   MOEDA_XP_STEP,
   CURRENCY_NAME,
@@ -70,6 +70,7 @@ export function SettingsPage() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showTrainingProfile, setShowTrainingProfile] = useState(false);
   const [showXpRules, setShowXpRules] = useState(() => location.hash === '#regras-xp');
+  const planHighlightHandled = useRef(false);
 
   // Deep link "Ver regras de XP": expande o dropdown e rola até ele.
   useEffect(() => {
@@ -80,9 +81,22 @@ export function SettingsPage() {
     }, 260);
     return () => window.clearTimeout(timer);
   }, [location.hash]);
+  useEffect(() => {
+    if (location.hash !== '#ajustar-plano' || planHighlightHandled.current) return;
+    planHighlightHandled.current = true;
+    const timer = window.setTimeout(() => {
+      document.getElementById('ajustar-plano')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+      showGameToast('Você chegou ao plano. Toque em Ajustar plano de treino.', {
+        variant: 'info',
+      });
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
-  const [descanso, setDescanso] = useState(user?.preferencias?.descanso_padrao_seg ?? 30);
   const [saving, setSaving] = useState(false);
   const [hydratedUserId, setHydratedUserId] = useState<string | null>(user?.id ?? null);
 
@@ -97,7 +111,6 @@ export function SettingsPage() {
     if (!user || hydratedUserId === user.id) return;
     setSom(user.preferencias?.som_habilitado ?? true);
     setVolume(user.preferencias?.sfx_volume ?? 0.7);
-    setDescanso(user.preferencias?.descanso_padrao_seg ?? 30);
     setHydratedUserId(user.id);
   }, [hydratedUserId, user]);
 
@@ -105,17 +118,12 @@ export function SettingsPage() {
   const dirty = useMemo(() => {
     if (!user || hydratedUserId !== user.id) return false;
     const prefs = user.preferencias;
-    return (
-      som !== (prefs?.som_habilitado ?? true) ||
-      volume !== (prefs?.sfx_volume ?? 0.7) ||
-      descanso !== (prefs?.descanso_padrao_seg ?? 30)
-    );
-  }, [user, hydratedUserId, som, volume, descanso]);
+    return som !== (prefs?.som_habilitado ?? true) || volume !== (prefs?.sfx_volume ?? 0.7);
+  }, [user, hydratedUserId, som, volume]);
 
   const discard = () => {
     setSom(user?.preferencias?.som_habilitado ?? true);
     setVolume(user?.preferencias?.sfx_volume ?? 0.7);
-    setDescanso(user?.preferencias?.descanso_padrao_seg ?? 30);
   };
 
   const save = async () => {
@@ -127,12 +135,10 @@ export function SettingsPage() {
           som_habilitado: som,
           sfx_volume: volume,
           tom_texto: 'normal',
-          descanso_padrao_seg: descanso,
         },
       });
       applyUser(updated);
       setSoundSettings(som, volume);
-      await refreshUser();
       showGameToast('Configurações salvas.', { variant: 'success' });
     } catch (error) {
       showGameToast(getErrorMessage(error, 'Não foi possível salvar as configurações.'), {
@@ -254,14 +260,17 @@ export function SettingsPage() {
         </p>
       </section>
 
-      <section className="glass-card p-4">
+      <section
+        id="ajustar-plano"
+        className={`glass-card settings-plan-card p-4${location.hash === '#ajustar-plano' ? ' is-highlighted' : ''}`}
+      >
         <h3 className="game-section-title mb-2 flex items-center gap-2">
           <ClipboardList size={14} /> Meu plano de treino
         </h3>
         <p className="text-xs font-medium text-stone-500">
           {user?.ab_training_profile_v2
-            ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${AB_VOLUME_LABELS[user.ab_training_profile_v2.volume]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso`
-            : 'Configure intensidade, duração e agenda das suas missões de core com peso corporal.'}
+            ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso · som personalizado`
+            : 'Configure intensidade, agenda, som e descanso das suas missões de core.'}
         </p>
         <GameButton
           variant="secondary"
@@ -272,44 +281,39 @@ export function SettingsPage() {
         </GameButton>
       </section>
 
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3">Treino</h3>
-        <label className="block text-sm font-bold">
-          Descanso entre séries: {descanso}s
-          <input
-            type="range"
-            min={10}
-            max={90}
-            value={descanso}
-            onChange={(e) => setDescanso(Number(e.target.value))}
-            className="mt-2 w-full cursor-pointer"
-          />
+      <section className="glass-card settings-audio-card p-4">
+        <header className="settings-audio-card__header">
+          <span className="settings-audio-card__icon" aria-hidden>
+            <Volume2 size={19} />
+          </span>
+          <div>
+            <h3 className="game-section-title !mb-0">Áudio</h3>
+            <p>O mesmo pacote acompanha ações, descanso e Player.</p>
+          </div>
+        </header>
+        <label className="settings-audio-toggle">
+          <span>
+            <strong>Sons do Evolyn</strong>
+            <small>
+              {som ? 'Ativos em todo o aplicativo' : 'Silenciados em todo o aplicativo'}
+            </small>
+          </span>
+          <input type="checkbox" checked={som} onChange={(e) => setSom(e.target.checked)} />
+          <i aria-hidden />
         </label>
-      </section>
-
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-4 flex items-center gap-2">
-          <Volume2 size={14} /> Áudio
-        </h3>
-        <label className="flex cursor-pointer items-center gap-3 font-semibold">
-          <input
-            type="checkbox"
-            checked={som}
-            onChange={(e) => setSom(e.target.checked)}
-            className="cursor-pointer"
-          />
-          Sons habilitados
-        </label>
-        <label className="mt-4 block text-sm font-bold">
-          Volume: {Math.round(volume * 100)}%
+        <label className={`settings-audio-volume${som ? '' : ' is-disabled'}`}>
+          <span>
+            <strong>Volume</strong>
+            <output>{Math.round(volume * 100)}%</output>
+          </span>
           <input
             type="range"
             min={0}
             max={1}
             step={0.1}
             value={volume}
+            disabled={!som}
             onChange={(e) => setVolume(Number(e.target.value))}
-            className="mt-2 w-full cursor-pointer"
           />
         </label>
         <SoundPackSection />

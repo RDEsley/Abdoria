@@ -1,12 +1,9 @@
-import { motion } from 'framer-motion';
 import { Leaf, Sparkles, Sprout } from 'lucide-react';
 
 export function MyPlantPage() {
   return (
     <div className="flex min-h-[calc(100dvh-10rem)] items-center justify-center pb-20">
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
+      <section
         className="relative w-full overflow-hidden rounded-[2rem] border border-emerald-100 bg-white/90 px-6 py-12 text-center shadow-[0_24px_70px_rgba(16,185,129,0.12)] backdrop-blur-xl"
         aria-labelledby="myplant-title"
       >
@@ -33,7 +30,7 @@ export function MyPlantPage() {
         <span className="relative mt-7 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-extrabold text-emerald-800">
           <Leaf size={15} aria-hidden /> Em breve
         </span>
-      </motion.section>
+      </section>
     </div>
   );
 }

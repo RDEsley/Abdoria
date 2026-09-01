@@ -3,7 +3,6 @@ import {
   Inbox,
   Dumbbell,
   Flame,
-  Leaf,
   Medal,
   Snowflake,
   Sparkles,
@@ -25,10 +24,11 @@ import {
   markAllNotificationsRead,
   type AppNotification,
 } from '@/lib/api/notifications';
+import { GameLeafIcon } from '@/components/ui/CurrencyIcon';
 
 function iconForTipo(tipo: string) {
   if (tipo === 'ranking_podio') return <Medal size={16} aria-hidden />;
-  if (tipo === 'ranking_premio') return <Leaf size={16} aria-hidden />;
+  if (tipo === 'ranking_premio') return <GameLeafIcon size={17} aria-hidden />;
   if (tipo === 'streak_frozen' || tipo === 'frozen_baixo')
     return <Snowflake size={16} aria-hidden />;
   if (tipo === 'streak_reset') return <TimerReset size={16} aria-hidden />;
