@@ -71,7 +71,8 @@ Mais do que registrar exercícios, o Evolyn transforma cada treino em progresso 
 
 O **MyPlant** ocupa uma aba própria na navegação e está sendo preparado como uma nova
 experiência mobile. A implementação anterior de RPG AFK foi retirada do runtime e preservada,
-com código e imagens, em [`Exploracao-rpg-afk`](./Exploracao-rpg-afk/README.md).
+com código e imagens, em
+[`docs/assets/private/Exploracao-rpg-afk`](./docs/assets/private/Exploracao-rpg-afk/README.md).
 
 ### 🏆 Rankings e comunidade
 
@@ -250,7 +251,7 @@ Evolyn/
 ├── android/                # Projeto nativo Android (Capacitor)
 ├── ios/                    # Projeto nativo iOS (Capacitor)
 ├── docs/                   # Documentação
-├── Exploracao-rpg-afk/     # Snapshot independente do jogo antigo
+│   └── assets/private/     # Referências internas, identidade e snapshot histórico
 └── scripts/                # Scripts de configuração e manutenção
 ```
 
