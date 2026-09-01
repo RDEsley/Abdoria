@@ -1,31 +1,40 @@
 # Identidade visual do Evolyn
 
-A marca oficial usa o símbolo de broto em verde e a assinatura “Plantando a sua evolução”. Os
-arquivos consumidos pelo produto ficam versionados; pastas locais usadas apenas para receber artes
-originais não fazem parte do repositório.
+A identidade oficial do Evolyn usa o símbolo de broto em verde e a assinatura **“Plantando a sua evolução.”**
 
-## Assets versionados
+## Fonte de verdade
 
-- `client/public/brand/`: logo completa, favicons e ícones PWA.
-- `client/public/manifest.webmanifest`: metadados de instalação web e ícones maskable.
-- `android/app/src/main/res/`: launcher icons adaptativos/legados e splash screens por densidade.
-- `ios/App/App/Assets.xcassets/`: App Icon e splash screens do iOS.
+Os arquivos originais e atuais da marca ficam versionados em:
 
-Use o símbolo isolado em favicons, ícones de aplicativo e superfícies pequenas. Use a assinatura
-completa apenas em áreas amplas, como autenticação e apresentação institucional. Não use imagens
-com texto dentro de ícones de launcher.
+```text
+docs/internal/logos-icons/
+```
 
-## Regenerar os assets
+Esse diretório funciona como **fonte de origem**, não como dependência do runtime.
 
-Coloque as artes recebidas em uma pasta local `logos-icons/` com as variações `logo-oficial` e
-`logo-completa-fundo-invisível`. Em Windows, execute:
+Arquivos consumidos pela aplicação devem continuar nos diretórios apropriados:
+
+- `client/public/brand/` — logo, favicons e ícones PWA;
+- `client/public/manifest.webmanifest` — metadados e ícones de instalação;
+- `android/app/src/main/res/` — launcher icons e splash do Android;
+- `ios/App/App/Assets.xcassets/` — App Icon e splash do iOS.
+
+Use o símbolo isolado em favicons, ícones de aplicativo e superfícies pequenas. Use a assinatura completa apenas quando houver espaço adequado.
+
+## Atualizar os assets
+
+No Windows, use os arquivos de `docs/internal/logos-icons/` como origem:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-brand-assets.ps1 `
-  -SourceDirectory ./logos-icons
+  -SourceDirectory ./docs/internal/logos-icons
 ```
 
-Depois, valide:
+O script atualiza as variantes usadas pela Web, Android e iOS.
+
+## Validação
+
+Depois de atualizar a identidade:
 
 ```bash
 npm run format:check
@@ -35,6 +44,17 @@ npm run build
 npm run cap:sync
 ```
 
-No Android, execute também `gradlew assembleDebug`. O App Icon do iOS é gerado sem canal alpha,
-como exigido pela distribuição da Apple. Revise visualmente máscaras circulares, quadradas e
-recortadas antes de publicar nas lojas.
+No Android, valide também o build nativo quando o ambiente estiver disponível.
+
+Revise visualmente:
+
+- favicon;
+- PWA/manifest;
+- metadata e Open Graph;
+- login/cadastro;
+- ícone Android legado e adaptativo;
+- splash Android;
+- App Icon iOS;
+- splash iOS.
+
+Não mantenha versões antigas sem consumidor apenas por histórico. O histórico de código e assets já é preservado pelo Git.

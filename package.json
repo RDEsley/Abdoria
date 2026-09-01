@@ -1,8 +1,9 @@
 {
   "name": "evolyn",
-  "description": "App gamificado de treino de abdômen — XP, streak, conquistas, loja Evolyn e ranking. Para quem treina em casa.",
+  "description": "Aplicativo mobile-first de evolução pessoal gamificada com treinos, atividades, organização, XP, streaks, conquistas e progressão.",
   "private": true,
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "type": "module",
   "engines": {
     "node": "22.x"
