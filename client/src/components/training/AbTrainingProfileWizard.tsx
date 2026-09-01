@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -53,6 +54,14 @@ const TITLES = [
 ];
 const TOTAL_STEPS = TITLES.length;
 const REST_OPTIONS = [20, 30, 45, 60] as const;
+const STEP_LEAVES = Array.from({ length: 18 }, (_, index) => ({
+  id: index,
+  left: 3 + ((index * 29) % 94),
+  delay: (index % 6) * 0.11,
+  duration: 2.45 + (index % 5) * 0.2,
+  drift: (index % 2 === 0 ? 1 : -1) * (22 + (index % 4) * 9),
+  scale: 0.72 + (index % 4) * 0.12,
+}));
 
 function resolveProfile(user: IUserDocument | null): AbTrainingProfileV2 {
   const restSeconds = user?.preferencias?.descanso_padrao_seg ?? 30;
@@ -128,7 +137,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
 
   const selectedSound = soundOptions?.find((item) => item.id === selectedSoundId) ?? null;
   const celebration =
-    open && step > 0 && !reduceMotion && confetti != null
+    open && step === TOTAL_STEPS - 1 && !reduceMotion && confetti != null
       ? createPortal(
           <div
             key={`ab-plan-celebration-${step}`}
@@ -136,6 +145,30 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
             aria-hidden
           >
             <LottieView data={confetti} loop={false} cover speed={0.72} />
+          </div>,
+          document.body,
+        )
+      : null;
+  const fallingLeaves =
+    open && step < TOTAL_STEPS - 1 && !reduceMotion
+      ? createPortal(
+          <div key={`ab-plan-leaves-${step}`} className="ab-plan-leaves-layer" aria-hidden>
+            {STEP_LEAVES.map((leaf) => (
+              <span
+                key={leaf.id}
+                className="ab-plan-falling-leaf"
+                style={
+                  {
+                    '--leaf-left': `${leaf.left}%`,
+                    '--leaf-delay': `${leaf.delay}s`,
+                    '--leaf-duration': `${leaf.duration}s`,
+                    '--leaf-drift': `${leaf.drift}px`,
+                    '--leaf-end-drift': `${leaf.drift * -0.45}px`,
+                    '--leaf-scale': leaf.scale,
+                  } as CSSProperties
+                }
+              />
+            ))}
           </div>,
           document.body,
         )
@@ -414,6 +447,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
         </footer>
       </Modal>
       {celebration}
+      {fallingLeaves}
     </>
   );
 }
