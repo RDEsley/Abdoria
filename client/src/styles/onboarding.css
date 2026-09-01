@@ -892,6 +892,71 @@
   height: 100% !important;
 }
 
+.ab-plan-leaves-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.ab-plan-falling-leaf {
+  --leaf-left: 50%;
+  --leaf-delay: 0s;
+  --leaf-duration: 2.8s;
+  --leaf-drift: 28px;
+  --leaf-end-drift: -13px;
+  --leaf-scale: 1;
+  position: absolute;
+  top: -28px;
+  left: var(--leaf-left);
+  width: 12px;
+  height: 19px;
+  border-radius: 85% 15% 75% 25%;
+  background: linear-gradient(145deg, #71e8b4 0%, #15b884 48%, #087b61 100%);
+  box-shadow:
+    inset -2px -2px 3px rgba(4, 93, 69, 0.2),
+    0 3px 7px rgba(9, 129, 94, 0.16);
+  opacity: 0;
+  transform-origin: 50% 100%;
+  animation: ab-plan-leaf-fall var(--leaf-duration) cubic-bezier(0.3, 0.05, 0.72, 0.95)
+    var(--leaf-delay) both;
+}
+
+.ab-plan-falling-leaf::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  width: 1px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(235, 255, 246, 0.72);
+  transform: rotate(27deg);
+  transform-origin: bottom;
+}
+
+@keyframes ab-plan-leaf-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -4vh, 0) rotate(-35deg) scale(var(--leaf-scale));
+  }
+  9% {
+    opacity: 0.92;
+  }
+  48% {
+    transform: translate3d(var(--leaf-drift), 48vh, 0) rotate(225deg) scale(var(--leaf-scale));
+  }
+  88% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--leaf-end-drift), 108vh, 0) rotate(510deg) scale(var(--leaf-scale));
+  }
+}
+
 .ab-plan-options {
   display: grid;
   gap: 10px;
