@@ -1,0 +1,114 @@
+:root {
+  --evolyn-boot-bg: #f4faf7;
+}
+
+html.evolyn-boot-active,
+html.evolyn-boot-active body {
+  background-color: var(--evolyn-boot-bg);
+}
+
+.app-boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.5rem
+    calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  background: var(--evolyn-boot-bg);
+  opacity: 1;
+  transition: opacity 0.28s ease;
+  pointer-events: auto;
+}
+
+.app-boot-overlay--exit {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-boot-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  width: min(100%, 18rem);
+  text-align: center;
+}
+
+.app-boot-screen__glow {
+  position: absolute;
+  width: min(72vw, 12rem);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0) 72%);
+  animation: app-boot-glow 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.app-boot-screen__mark-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 6.5rem;
+  height: 6.5rem;
+}
+
+.app-boot-screen__mark {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: contain;
+  animation: app-boot-grow 2.1s ease-in-out infinite;
+  filter: drop-shadow(0 10px 18px rgba(8, 124, 102, 0.14));
+}
+
+.app-boot-screen__tagline {
+  margin: 0;
+  max-width: 14rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: #60746f;
+}
+
+@keyframes app-boot-grow {
+  0%,
+  100% {
+    transform: translateY(1px) scale(0.97);
+    opacity: 0.94;
+  }
+
+  50% {
+    transform: translateY(-2px) scale(1.03);
+    opacity: 1;
+  }
+}
+
+@keyframes app-boot-glow {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-boot-overlay {
+    transition-duration: 0.12s;
+  }
+
+  .app-boot-screen__mark,
+  .app-boot-screen__glow {
+    animation: none;
+  }
+}

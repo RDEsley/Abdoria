@@ -1,5 +1,4 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { LoadingScreen } from '@/components/auth/LoadingScreen';
 import { useAuth } from '@/hooks/useAuth';
 
 export function ProtectedRoute() {
@@ -7,7 +6,7 @@ export function ProtectedRoute() {
   const location = useLocation();
 
   if (loading) {
-    return <LoadingScreen />;
+    return null;
   }
 
   if (!isAuthenticated) {
@@ -29,7 +28,7 @@ export function PublicOnlyRoute() {
   const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
-    return <LoadingScreen />;
+    return null;
   }
 
   if (isAuthenticated) {

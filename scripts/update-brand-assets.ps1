@@ -73,8 +73,8 @@ function New-BrandImage {
       'app' { 1.0 }
       'square' { 0.92 }
       'round' { 0.84 }
-      'foreground' { 0.88 }
-      'splash' { 0.28 }
+      'foreground' { 0.62 }
+      'splash' { 0.18 }
     }
     $side = [int]([Math]::Round([Math]::Min($Width, $Height) * $scale))
     $x = [int](($Width - $side) / 2)
@@ -94,6 +94,14 @@ $appIconImage = [System.Drawing.Image]::FromFile($appIconSource)
 try {
   New-BrandImage $appIconImage (Join-Path $brandDirectory 'icon-maskable-192.png') 192 192 'app' -Opaque
   New-BrandImage $appIconImage (Join-Path $brandDirectory 'icon-maskable-512.png') 512 512 'app' -Opaque
+  Copy-Item -LiteralPath (Join-Path $brandDirectory 'icon-maskable-192.png') `
+    -Destination (Join-Path $brandDirectory 'app-icon-192.png') -Force
+  Copy-Item -LiteralPath (Join-Path $brandDirectory 'icon-maskable-512.png') `
+    -Destination (Join-Path $brandDirectory 'app-icon-512.png') -Force
+  Copy-Item -LiteralPath (Join-Path $brandDirectory 'icon-maskable-192.png') `
+    -Destination (Join-Path $brandDirectory 'app-icon-maskable-192.png') -Force
+  Copy-Item -LiteralPath (Join-Path $brandDirectory 'icon-maskable-512.png') `
+    -Destination (Join-Path $brandDirectory 'app-icon-maskable-512.png') -Force
 
   $androidDensities = @{
     'ldpi' = @{ legacy = 36; adaptive = 81 }
@@ -126,7 +134,7 @@ try {
     } finally {
       $existing.Dispose()
     }
-    New-BrandImage $sourceImage $_.FullName $width $height 'splash'
+    New-BrandImage $appIconImage $_.FullName $width $height 'splash'
   }
 
   Get-ChildItem (Join-Path $projectRoot 'ios/App/App/Assets.xcassets/Splash.imageset') -Filter '*.png' -File | ForEach-Object {
@@ -137,7 +145,7 @@ try {
     } finally {
       $existing.Dispose()
     }
-    New-BrandImage $sourceImage $_.FullName $width $height 'splash'
+    New-BrandImage $appIconImage $_.FullName $width $height 'splash'
   }
 } finally {
   $appIconImage.Dispose()

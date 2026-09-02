@@ -2,19 +2,25 @@ import { Capacitor } from '@capacitor/core';
 import { hydrateNativeWorkoutSnapshot } from '@/lib/workout-session-storage';
 
 const isNativeApp = () => Capacitor.isNativePlatform();
+let nativeSplashHidden = false;
+
+export async function hideNativeSplash(): Promise<void> {
+  if (!isNativeApp() || nativeSplashHidden) return;
+  nativeSplashHidden = true;
+  const { SplashScreen } = await import('@capacitor/splash-screen');
+  await SplashScreen.hide();
+}
 
 export async function initializeNativeRuntime(): Promise<() => void> {
   if (!isNativeApp()) return () => undefined;
   await hydrateNativeWorkoutSnapshot();
-  const [{ App }, { StatusBar, Style }, { SplashScreen }] = await Promise.all([
+  const [{ App }, { StatusBar, Style }] = await Promise.all([
     import('@capacitor/app'),
     import('@capacitor/status-bar'),
-    import('@capacitor/splash-screen'),
   ]);
   await StatusBar.setStyle({ style: Style.Dark });
   if (Capacitor.getPlatform() === 'android')
     await StatusBar.setBackgroundColor({ color: '#f4faf7' });
-  await SplashScreen.hide();
   const stateListener = await App.addListener('appStateChange', ({ isActive }) =>
     window.dispatchEvent(new CustomEvent('evolyn:app-state', { detail: { isActive } })),
   );
