@@ -1,5 +1,5 @@
 export const COPY = {
-  dashboard_quest_badge: 'Treino de hoje',
+  dashboard_treino_badge: 'Treino de hoje',
   perfil_eyebrow: 'Seus dados',
   xp_unit: 'pontos',
   conquistas_eyebrow: 'Suas conquistas',

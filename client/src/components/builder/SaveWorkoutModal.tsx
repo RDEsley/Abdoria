@@ -73,7 +73,7 @@ export function SaveWorkoutModal({
           className="game-input mt-2 w-full"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          placeholder="Ex.: Meu treino de abdômen"
+          placeholder="Ex.: Treino em casa"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSave();

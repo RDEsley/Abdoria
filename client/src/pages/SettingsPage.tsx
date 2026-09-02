@@ -407,9 +407,9 @@ export function SettingsPage() {
                   </li>
                   <li>
                     Sequência (streak): uma única atividade concluída já mantém a sequência, em
-                    qualquer dia — treino ou descanso. Treino e atividades não se substituem: os os
+                    qualquer dia — treino ou descanso. Treino e atividades não se substituem: os
                     dois contam para o streak, mas concluir atividades não marca o treino do dia
-                    como feita.
+                    como feito.
                   </li>
                 </ul>
                 <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>

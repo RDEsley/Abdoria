@@ -96,14 +96,14 @@ export function DashboardPage() {
 
       <motion.div
         variants={item}
-        className={`game-quest-card dashboard-mission ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
+        className={`game-quest-card dashboard-treino ${stats.treino_hoje ? 'game-quest-card--done' : ''}`}
       >
         <span className="game-quest-card__badge">
           {stats.treino_hoje
-            ? 'Concluída'
+            ? 'Concluído'
             : diaDescanso
               ? 'Dia de descanso'
-              : copy('dashboard_quest_badge')}
+              : copy('dashboard_treino_badge')}
         </span>
         <p className="game-quest-card__status">
           {stats.treino_hoje ? 'Treino de hoje concluído.' : stats.proximo_treino}
