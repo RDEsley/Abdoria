@@ -1,0 +1,15 @@
+﻿# Snapshot histórico — não usar como referência do app atual
+docs/internal/Exploracao-rpg-afk/
+
+# Build e dependências
+node_modules/
+client/dist/
+server/dist/
+android/**/build/
+ios/DerivedData/
+lib/server-dist/
+
+# Artefatos locais
+.vercel/
+.cursor/
+coverage/

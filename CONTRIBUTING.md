@@ -37,7 +37,7 @@ A licença não autoriza publicar uma cópia do app, hospedar uma versão própr
 - Não edite migrations já aplicadas apenas para reorganização ou estética.
 - Não commite `.env`, `.env.vercel.*`, secrets, chaves de assinatura, dumps, `.vercel/` ou arquivos locais.
 
-## Fluxo sugerido
+## Fluxo sugerido (contribuições externas)
 
 ```bash
 git checkout -b feat/minha-melhoria
@@ -53,12 +53,28 @@ git commit -m "feat: descreve a melhoria"
 git push origin feat/minha-melhoria
 ```
 
-Abra um Pull Request explicando:
+Abra um Pull Request para `main` explicando:
 
 - o que mudou;
 - por que a mudança é necessária;
 - como testar;
 - impactos de compatibilidade ou migrations, quando existirem.
+
+## Fluxo do mantenedor e agentes autorizados
+
+A branch canônica é `main`. O repositório pode exigir Pull Request e checks de CI antes do merge — nesse caso, use **no máximo uma branch temporária por entrega** (não abra branch por arquivo ou micro-fix).
+
+Fluxo preferido quando houver permissão de merge automático:
+
+1. alterar e validar localmente (`format:check`, `lint`, `test`, `build`);
+2. commit em branch única;
+3. push e abertura de PR para `main`;
+4. acompanhar checks e fazer merge quando verde;
+5. excluir a branch temporária e sincronizar com `main`.
+
+Não crie Issues, Releases ou Tags automaticamente para tarefas rotineiras. Não use force push nem reescreva histórico publicado sem necessidade real.
+
+Se a proteção da `main` permitir push direto do mantenedor (sem exigir PR), o fluxo pode ser simplificado para commit direto em `main` após os mesmos checks locais.
 
 Mudanças nativas também devem executar `npm run cap:sync`; no Android, valide ao menos `gradlew assembleDebug` quando aplicável.
 

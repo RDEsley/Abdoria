@@ -85,16 +85,12 @@ $RECYCLE.BIN/
 
 # Cursor / AI (config local — não versionar)
 .cursor/
-.cursorignore
 .cursor/plans/
 
 # Claude Code (config local — não versionar)
 .claudecode
 .claude/
 CLAUDE.md
-
-# AI / agent instructions
-/AGENTS.md
 
 # Vercel (link local do CLI)
 .vercel/

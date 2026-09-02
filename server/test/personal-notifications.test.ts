@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildNativeNotificationSchedules,
+  isReminderDueInTimeZone,
   normalizePersonalizedReminder,
   normalizePersonalizedReminders,
   type PersonalizedReminder,
@@ -81,5 +82,10 @@ describe('notificações personalizadas V2', () => {
       schedule: { kind: 'once', at: '2026-09-10T12:30:00.000Z' },
     });
     expect(schedules).toEqual([{ occurrenceKey: 'once', at: '2026-09-10T12:30:00.000Z' }]);
+  });
+
+  it('detecta lembrete recorrente no fuso informado', () => {
+    const instant = new Date('2026-09-02T11:00:00.000Z');
+    expect(isReminderDueInTimeZone(recurring, instant, 'America/Sao_Paulo')).toBe(true);
   });
 });

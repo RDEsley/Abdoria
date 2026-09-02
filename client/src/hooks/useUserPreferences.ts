@@ -24,7 +24,7 @@ export function useUserPreferences(onUpdated?: () => void) {
 
   const patchPreferences = useCallback(
     async (patch: Partial<UserPreferencias>) => {
-      persist(patch, undefined, onUpdated);
+      await persist(patch, undefined, onUpdated);
     },
     [persist, onUpdated],
   );

@@ -36,6 +36,7 @@ import {
   notificationScheduler,
   type NotificationPermissionState,
 } from '@/lib/platform/notification-scheduler';
+import { ensureWebPushSubscription, removeWebPushSubscription } from '@/lib/platform/web-push';
 import {
   ATIVIDADE_COINS_EXTRA,
   ATIVIDADE_XP_POR_UNIDADE,
@@ -184,10 +185,12 @@ export function SettingsPage() {
   const toggleNotifications = async () => {
     if (notifAtivas) {
       try {
+        await removeWebPushSubscription().catch(() => undefined);
         const updated = await updateMe({
           preferencias: { ...user!.preferencias, notificacoes_opt_out: true },
         });
         applyUser(updated);
+        await notificationScheduler.sync([], { optOut: true });
         showGameToast('Notificações desativadas.', { variant: 'info' });
       } catch (err) {
         showGameToast(getErrorMessage(err, 'Não foi possível desativar.'), { variant: 'error' });
@@ -216,6 +219,7 @@ export function SettingsPage() {
         preferencias: { ...user!.preferencias, notificacoes_opt_out: false },
       });
       applyUser(updated);
+      await ensureWebPushSubscription().catch(() => undefined);
     } catch {
       /* permissão do navegador já foi concedida — segue mesmo se o save falhar */
     }

@@ -6,13 +6,19 @@ import {
   type PersonalizedReminder,
 } from '@shared/reminders';
 import { Capacitor } from '@capacitor/core';
+import { ensureWebPushSubscription } from '@/lib/platform/web-push';
 
 export type NotificationPermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
+
+export interface NotificationSyncOptions {
+  /** Quando true, cancela entregas locais/push sem apagar os lembretes salvos. */
+  optOut?: boolean;
+}
 
 export interface NotificationScheduler {
   permissionState(): Promise<NotificationPermissionState>;
   requestPermission(): Promise<NotificationPermissionState>;
-  sync(reminders: PersonalizedReminder[]): Promise<void>;
+  sync(reminders: PersonalizedReminder[], options?: NotificationSyncOptions): Promise<void>;
   cancel(id: string): Promise<void>;
 }
 
@@ -21,7 +27,37 @@ function webPermissionState(): NotificationPermissionState {
   return Notification.permission === 'default' ? 'prompt' : Notification.permission;
 }
 
-/** Fallback web: entrega no carregamento/retorno ao app; não promete execução em background. */
+/**
+ * Fallback web quando o app está aberto: entrega imediata no minuto exato.
+ * Não substitui Web Push — só cobre o caso em que o usuário já está com o app ativo.
+ */
+async function deliverFocusedWebReminders(reminders: PersonalizedReminder[]): Promise<void> {
+  if (webPermissionState() !== 'granted') return;
+  const now = new Date();
+  for (const reminder of reminders) {
+    if (!isReminderDue(reminder, now)) continue;
+    const minuteKey = now.toISOString().slice(0, 16);
+    const deliveryKey = `evolyn:notification:${reminder.id}:${minuteKey}`;
+    if (localStorage.getItem(deliveryKey)) continue;
+
+    const registration = await navigator.serviceWorker?.getRegistration('/');
+    if (registration) {
+      await registration.showNotification(reminder.title, {
+        body: reminder.message,
+        icon: '/brand/favicon-192.png',
+        tag: reminder.id,
+      });
+    } else {
+      new Notification(reminder.title, {
+        body: reminder.message,
+        icon: '/brand/favicon-192.png',
+        tag: reminder.id,
+      });
+    }
+    localStorage.setItem(deliveryKey, '1');
+  }
+}
+
 const webNotificationScheduler: NotificationScheduler = {
   async permissionState() {
     return webPermissionState();
@@ -31,20 +67,14 @@ const webNotificationScheduler: NotificationScheduler = {
     const result = await Notification.requestPermission();
     return result === 'default' ? 'prompt' : result;
   },
-  async sync(reminders) {
+  async sync(reminders, options) {
+    if (options?.optOut) return;
     if (webPermissionState() !== 'granted') return;
-    const now = new Date();
-    for (const reminder of reminders) {
-      if (!isReminderDue(reminder, now)) continue;
-      const minuteKey = now.toISOString().slice(0, 16);
-      const deliveryKey = `evolyn:notification:${reminder.id}:${minuteKey}`;
-      if (localStorage.getItem(deliveryKey)) continue;
-      new Notification(reminder.title, {
-        body: reminder.message,
-        icon: '/brand/favicon-192.png',
-        tag: reminder.id,
-      });
-      localStorage.setItem(deliveryKey, '1');
+
+    const enabled = reminders.filter((item) => item.enabled);
+    const subscribed = await ensureWebPushSubscription().catch(() => false);
+    if (!subscribed) {
+      await deliverFocusedWebReminders(enabled);
     }
   },
   async cancel(id) {
@@ -75,13 +105,15 @@ const nativeNotificationScheduler: NotificationScheduler = {
     const result = await LocalNotifications.requestPermissions();
     return result.display === 'granted' ? 'granted' : 'denied';
   },
-  async sync(reminders) {
+  async sync(reminders, options) {
     const { LocalNotifications } = await import('@capacitor/local-notifications');
     const permission = await LocalNotifications.checkPermissions();
-    if (permission.display !== 'granted') return;
     const pending = await LocalNotifications.getPending();
     const personalized = pending.notifications.filter((item) => item.extra?.reminderId);
     if (personalized.length) await LocalNotifications.cancel({ notifications: personalized });
+
+    if (options?.optOut || permission.display !== 'granted') return;
+
     if (Capacitor.getPlatform() === 'android') {
       await Promise.all([
         LocalNotifications.createChannel({
@@ -126,14 +158,17 @@ const nativeNotificationScheduler: NotificationScheduler = {
             channelId:
               reminder.sound === 'silent' ? 'evolyn-personal-silent' : 'evolyn-personal-default',
             iconColor: color,
-            // Android/iOS controlam o small/app icon da notificação. A escolha
-            // do usuário continua no payload para identidade dentro do Evolyn;
-            // não prometemos trocar dinamicamente o ícone do aplicativo.
             extra: { reminderId: reminder.id, icon: reminder.icon, color: reminder.color },
           }));
       })
       .slice(0, PERSONAL_NOTIFICATION_MAX_REQUESTS);
-    if (notifications.length) await LocalNotifications.schedule({ notifications });
+
+    if (notifications.length) {
+      const result = await LocalNotifications.schedule({ notifications });
+      if (result.notifications.length !== notifications.length) {
+        throw new Error('Nem todas as notificações nativas foram agendadas.');
+      }
+    }
   },
   async cancel(id) {
     const { LocalNotifications } = await import('@capacitor/local-notifications');

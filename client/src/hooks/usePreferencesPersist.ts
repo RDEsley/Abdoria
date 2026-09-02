@@ -45,25 +45,25 @@ export function usePreferencesPersist() {
     patch: Record<string, unknown>,
     mensagem?: string,
     onPersisted?: () => void,
-  ): void => {
+  ): Promise<void> => {
     const base = userRef.current;
-    if (!base) return;
+    if (!base) return Promise.resolve();
 
     const preferencias = { ...base.preferencias, ...patch };
     const otimista = { ...base, preferencias };
     userRef.current = otimista;
     applyUser(otimista);
     applyAppUser(otimista);
-    if (mensagem) showGameToast(mensagem, { variant: 'success' });
 
     const seq = ++seqRef.current;
-    chainRef.current = chainRef.current
+    const task = chainRef.current
       .then(() => updateMe({ preferencias }))
       .then((atualizado) => {
         if (seq !== seqRef.current) return;
         userRef.current = atualizado;
         applyUser(atualizado);
         applyAppUser(atualizado);
+        if (mensagem) showGameToast(mensagem, { variant: 'success' });
         onPersisted?.();
       })
       .catch((err) => {
@@ -71,8 +71,12 @@ export function usePreferencesPersist() {
         showGameToast(getErrorMessage(err, 'Não foi possível salvar — desfazendo.'), {
           variant: 'error',
         });
-        void refresh();
-      });
+        return refresh();
+      })
+      .then(() => undefined);
+
+    chainRef.current = task;
+    return task;
   };
 
   return { user, persist, applyServerUser };

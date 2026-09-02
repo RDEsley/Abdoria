@@ -212,26 +212,35 @@ export function ReminderCenter() {
     const reminder = buildReminder();
     if (!reminder) return;
     setSaving(true);
+    setError('');
     try {
       const next = draft.id
         ? reminders.map((item) => (item.id === draft.id ? reminder : item))
         : [...reminders, reminder];
       await patchPreferences({ lembretes_personalizados: next });
-      const permission = await notificationScheduler.permissionState();
-      const finalPermission =
-        permission === 'prompt' ? await notificationScheduler.requestPermission() : permission;
-      await notificationScheduler.sync(next);
+
+      const optOut = user?.preferencias?.notificacoes_opt_out ?? false;
+      let finalPermission = await notificationScheduler.permissionState();
+      if (!optOut && finalPermission === 'prompt') {
+        finalPermission = await notificationScheduler.requestPermission();
+      }
+      if (!optOut && finalPermission === 'granted') {
+        await notificationScheduler.sync(next, { optOut });
+      } else if (!optOut) {
+        await notificationScheduler.sync(next, { optOut: true });
+      }
+
       showGameToast(draft.id ? 'Notificação atualizada.' : 'Notificação programada.', {
         variant: 'success',
       });
-      if (finalPermission === 'denied' || finalPermission === 'unsupported') {
+      if (!optOut && (finalPermission === 'denied' || finalPermission === 'unsupported')) {
         showGameToast('Alerta salvo. Ative as notificações do dispositivo para recebê-lo.', {
           variant: 'info',
         });
       }
       closeForm();
     } catch {
-      setError('Não foi possível salvar. Tente novamente.');
+      setError('Não foi possível salvar ou programar o alerta. Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -239,7 +248,8 @@ export function ReminderCenter() {
 
   const replace = async (next: PersonalizedReminder[]) => {
     await patchPreferences({ lembretes_personalizados: next });
-    await notificationScheduler.sync(next);
+    const optOut = user?.preferencias?.notificacoes_opt_out ?? false;
+    await notificationScheduler.sync(next, { optOut });
   };
 
   const toggleEnabled = async (reminder: PersonalizedReminder) => {
