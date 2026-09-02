@@ -1,4 +1,4 @@
-export type DeliveryStatus = "pending" | "sent" | "failed";
+export type DeliveryStatus = 'pending' | 'sent' | 'failed';
 
 export interface DeliveryClaimState {
   status: DeliveryStatus;
@@ -18,25 +18,25 @@ export const DEFAULT_DELIVERY_CLAIM_OPTIONS: DeliveryClaimOptions = {
   retryCooldownMs: 60_000,
 };
 
-export type DeliveryClaimDecision = "insert" | "retry" | "skip";
+export type DeliveryClaimDecision = 'insert' | 'retry' | 'skip';
 
 export function decideDeliveryClaim(
   existing: DeliveryClaimState | null,
   nowMs: number,
   options: DeliveryClaimOptions = DEFAULT_DELIVERY_CLAIM_OPTIONS,
 ): DeliveryClaimDecision {
-  if (!existing) return "insert";
-  if (existing.status === "sent") return "skip";
+  if (!existing) return 'insert';
+  if (existing.status === 'sent') return 'skip';
 
-  if (existing.status === "pending") {
-    if (nowMs - existing.updatedAtMs < options.pendingLeaseMs) return "skip";
-    if (existing.attempts >= options.maxAttempts) return "skip";
-    return "retry";
+  if (existing.status === 'pending') {
+    if (nowMs - existing.updatedAtMs < options.pendingLeaseMs) return 'skip';
+    if (existing.attempts >= options.maxAttempts) return 'skip';
+    return 'retry';
   }
 
-  if (existing.attempts >= options.maxAttempts) return "skip";
-  if (nowMs - existing.updatedAtMs < options.retryCooldownMs) return "skip";
-  return "retry";
+  if (existing.attempts >= options.maxAttempts) return 'skip';
+  if (nowMs - existing.updatedAtMs < options.retryCooldownMs) return 'skip';
+  return 'retry';
 }
 
 export function isExpiredPushSubscriptionStatus(statusCode: number): boolean {

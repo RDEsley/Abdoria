@@ -1,9 +1,9 @@
-import webpush from "web-push";
+import webpush from 'web-push';
 
 export class ReminderPushMisconfiguredError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "ReminderPushMisconfiguredError";
+    this.name = 'ReminderPushMisconfiguredError';
   }
 }
 
@@ -26,12 +26,12 @@ export function assertReminderPushConfigured(): {
 
   if (!publicKey || !privateKey) {
     throw new ReminderPushMisconfiguredError(
-      "Web Push indisponível: configure VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY.",
+      'Web Push indisponível: configure VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY.',
     );
   }
   if (!subject) {
     throw new ReminderPushMisconfiguredError(
-      "Web Push indisponível: configure VAPID_SUBJECT (ex.: mailto:suporte@seu-dominio.com).",
+      'Web Push indisponível: configure VAPID_SUBJECT (ex.: mailto:suporte@seu-dominio.com).',
     );
   }
 
