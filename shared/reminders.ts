@@ -2,13 +2,30 @@ export const PERSONAL_NOTIFICATION_VERSION = 2 as const;
 export const PERSONAL_NOTIFICATION_MAX_REQUESTS = 64;
 
 export type PersonalNotificationIcon =
-  'neutral' | 'water' | 'leaf' | 'workout' | 'study' | 'health' | 'alarm' | 'heart' | 'star';
+  | "neutral"
+  | "water"
+  | "leaf"
+  | "workout"
+  | "study"
+  | "health"
+  | "alarm"
+  | "heart"
+  | "star";
 export type PersonalNotificationColor =
-  'neutral' | 'emerald' | 'sky' | 'indigo' | 'violet' | 'amber' | 'coral' | 'rose';
-export type PersonalNotificationSound = 'default' | 'soft' | 'nature' | 'motivational' | 'silent';
+  | "neutral"
+  | "emerald"
+  | "sky"
+  | "indigo"
+  | "violet"
+  | "amber"
+  | "coral"
+  | "rose";
+export type PersonalNotificationSound =
+  "default" | "soft" | "nature" | "motivational" | "silent";
 
 export type PersonalNotificationSchedule =
-  { kind: 'once'; at: string } | { kind: 'recurring'; times: string[]; weekdays: number[] };
+  | { kind: "once"; at: string }
+  | { kind: "recurring"; times: string[]; weekdays: number[] };
 
 export interface PersonalizedReminder {
   version: typeof PERSONAL_NOTIFICATION_VERSION;
@@ -45,15 +62,15 @@ export const PERSONAL_NOTIFICATION_ICONS: ReadonlyArray<{
   id: PersonalNotificationIcon;
   label: string;
 }> = [
-  { id: 'neutral', label: 'Geral' },
-  { id: 'water', label: 'Água' },
-  { id: 'leaf', label: 'Folha' },
-  { id: 'workout', label: 'Treino' },
-  { id: 'study', label: 'Estudo' },
-  { id: 'health', label: 'Saúde' },
-  { id: 'alarm', label: 'Alarme' },
-  { id: 'heart', label: 'Coração' },
-  { id: 'star', label: 'Estrela' },
+  { id: "neutral", label: "Geral" },
+  { id: "water", label: "Água" },
+  { id: "leaf", label: "Folha" },
+  { id: "workout", label: "Treino" },
+  { id: "study", label: "Estudo" },
+  { id: "health", label: "Saúde" },
+  { id: "alarm", label: "Alarme" },
+  { id: "heart", label: "Coração" },
+  { id: "star", label: "Estrela" },
 ] as const;
 
 export const PERSONAL_NOTIFICATION_COLORS: ReadonlyArray<{
@@ -61,14 +78,14 @@ export const PERSONAL_NOTIFICATION_COLORS: ReadonlyArray<{
   label: string;
   hex: string;
 }> = [
-  { id: 'neutral', label: 'Neutro', hex: '#64748b' },
-  { id: 'emerald', label: 'Verde', hex: '#059669' },
-  { id: 'sky', label: 'Azul', hex: '#0284c7' },
-  { id: 'indigo', label: 'Índigo', hex: '#4f46e5' },
-  { id: 'violet', label: 'Violeta', hex: '#7c3aed' },
-  { id: 'amber', label: 'Âmbar', hex: '#d97706' },
-  { id: 'coral', label: 'Coral', hex: '#e85d4a' },
-  { id: 'rose', label: 'Rosa', hex: '#e11d48' },
+  { id: "neutral", label: "Neutro", hex: "#64748b" },
+  { id: "emerald", label: "Verde", hex: "#059669" },
+  { id: "sky", label: "Azul", hex: "#0284c7" },
+  { id: "indigo", label: "Índigo", hex: "#4f46e5" },
+  { id: "violet", label: "Violeta", hex: "#7c3aed" },
+  { id: "amber", label: "Âmbar", hex: "#d97706" },
+  { id: "coral", label: "Coral", hex: "#e85d4a" },
+  { id: "rose", label: "Rosa", hex: "#e11d48" },
 ] as const;
 
 const ICONS = new Set(PERSONAL_NOTIFICATION_ICONS.map(({ id }) => id));
@@ -76,22 +93,27 @@ const COLORS = new Set(PERSONAL_NOTIFICATION_COLORS.map(({ id }) => id));
 const ALL_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function isTime(value: unknown): value is string {
-  return typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+  return typeof value === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 function validIso(value: unknown): string | null {
-  if (typeof value !== 'string' || !Number.isFinite(new Date(value).getTime())) return null;
+  if (typeof value !== "string" || !Number.isFinite(new Date(value).getTime()))
+    return null;
   return value;
 }
 
 export function normalizeReminderWeekdays(days: unknown): number[] {
   if (!Array.isArray(days)) return [];
   return [
-    ...new Set(days.filter((day) => Number.isInteger(day) && Number(day) >= 0 && Number(day) <= 6)),
+    ...new Set(
+      days.filter(
+        (day) => Number.isInteger(day) && Number(day) >= 0 && Number(day) <= 6,
+      ),
+    ),
   ]
     .map(Number)
     .sort((a, b) => a - b);
@@ -102,55 +124,64 @@ export function normalizeReminderTimes(times: unknown): string[] {
   return [...new Set(times.filter(isTime))].sort();
 }
 
-function migrateLegacyReminder(value: LegacyPersonalizedReminder): PersonalizedReminder | null {
-  const id = typeof value.id === 'string' ? value.id.trim() : '';
-  const title = typeof value.title === 'string' ? value.title.trim().slice(0, 60) : '';
+function migrateLegacyReminder(
+  value: LegacyPersonalizedReminder,
+): PersonalizedReminder | null {
+  const id = typeof value.id === "string" ? value.id.trim() : "";
+  const title =
+    typeof value.title === "string" ? value.title.trim().slice(0, 60) : "";
   const time = isTime(value.time) ? value.time : null;
   const weekdays = normalizeReminderWeekdays(value.weekdays);
   if (!id || !title || !time || weekdays.length === 0) return null;
   const createdAt = validIso(value.createdAt) ?? new Date(0).toISOString();
-  const legacySkin = typeof value.skin === 'string' ? value.skin : '';
+  const legacySkin = typeof value.skin === "string" ? value.skin : "";
   const colorBySkin: Record<string, PersonalNotificationColor> = {
-    calm: 'sky',
-    energy: 'amber',
-    focus: 'violet',
-    nature: 'emerald',
-    minimal: 'neutral',
+    calm: "sky",
+    energy: "amber",
+    focus: "violet",
+    nature: "emerald",
+    minimal: "neutral",
   };
   return {
     version: PERSONAL_NOTIFICATION_VERSION,
     id,
     title,
-    message: typeof value.message === 'string' ? value.message.trim().slice(0, 160) : '',
-    icon: 'neutral',
-    color: colorBySkin[legacySkin] ?? 'neutral',
-    sound: 'default',
-    schedule: { kind: 'recurring', times: [time], weekdays },
+    message:
+      typeof value.message === "string"
+        ? value.message.trim().slice(0, 160)
+        : "",
+    icon: "neutral",
+    color: colorBySkin[legacySkin] ?? "neutral",
+    sound: "default",
+    schedule: { kind: "recurring", times: [time], weekdays },
     enabled: value.enabled !== false,
     createdAt,
     updatedAt: createdAt,
   };
 }
 
-export function normalizePersonalizedReminder(raw: unknown): PersonalizedReminder | null {
+export function normalizePersonalizedReminder(
+  raw: unknown,
+): PersonalizedReminder | null {
   if (!isRecord(raw)) return null;
   if (raw.version !== PERSONAL_NOTIFICATION_VERSION) {
     return migrateLegacyReminder(raw as LegacyPersonalizedReminder);
   }
 
-  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
-  const title = typeof raw.title === 'string' ? raw.title.trim().slice(0, 60) : '';
+  const id = typeof raw.id === "string" ? raw.id.trim() : "";
+  const title =
+    typeof raw.title === "string" ? raw.title.trim().slice(0, 60) : "";
   if (!id || !title || !isRecord(raw.schedule)) return null;
 
   let schedule: PersonalNotificationSchedule | null = null;
-  if (raw.schedule.kind === 'once') {
+  if (raw.schedule.kind === "once") {
     const at = validIso(raw.schedule.at);
-    if (at) schedule = { kind: 'once', at };
-  } else if (raw.schedule.kind === 'recurring') {
+    if (at) schedule = { kind: "once", at };
+  } else if (raw.schedule.kind === "recurring") {
     const times = normalizeReminderTimes(raw.schedule.times);
     const weekdays = normalizeReminderWeekdays(raw.schedule.weekdays);
     if (times.length > 0 && weekdays.length > 0) {
-      schedule = { kind: 'recurring', times, weekdays };
+      schedule = { kind: "recurring", times, weekdays };
     }
   }
   if (!schedule) return null;
@@ -160,20 +191,21 @@ export function normalizePersonalizedReminder(raw: unknown): PersonalizedReminde
     version: PERSONAL_NOTIFICATION_VERSION,
     id,
     title,
-    message: typeof raw.message === 'string' ? raw.message.trim().slice(0, 160) : '',
+    message:
+      typeof raw.message === "string" ? raw.message.trim().slice(0, 160) : "",
     icon: ICONS.has(raw.icon as PersonalNotificationIcon)
       ? (raw.icon as PersonalNotificationIcon)
-      : 'neutral',
+      : "neutral",
     color: COLORS.has(raw.color as PersonalNotificationColor)
       ? (raw.color as PersonalNotificationColor)
-      : 'neutral',
+      : "neutral",
     sound:
-      raw.sound === 'soft' ||
-      raw.sound === 'nature' ||
-      raw.sound === 'motivational' ||
-      raw.sound === 'silent'
+      raw.sound === "soft" ||
+      raw.sound === "nature" ||
+      raw.sound === "motivational" ||
+      raw.sound === "silent"
         ? raw.sound
-        : 'default',
+        : "default",
     schedule,
     enabled: raw.enabled !== false,
     createdAt,
@@ -181,7 +213,9 @@ export function normalizePersonalizedReminder(raw: unknown): PersonalizedReminde
   };
 }
 
-export function normalizePersonalizedReminders(raw: unknown): PersonalizedReminder[] {
+export function normalizePersonalizedReminders(
+  raw: unknown,
+): PersonalizedReminder[] {
   if (!Array.isArray(raw)) return [];
   const ids = new Set<string>();
   const result: PersonalizedReminder[] = [];
@@ -203,8 +237,8 @@ export function buildNativeNotificationSchedules(
   reminder: PersonalizedReminder,
 ): NativeNotificationScheduleDescriptor[] {
   if (!reminder.enabled) return [];
-  if (reminder.schedule.kind === 'once') {
-    return [{ occurrenceKey: 'once', at: reminder.schedule.at }];
+  if (reminder.schedule.kind === "once") {
+    return [{ occurrenceKey: "once", at: reminder.schedule.at }];
   }
 
   const { times, weekdays } = reminder.schedule;
@@ -212,8 +246,9 @@ export function buildNativeNotificationSchedules(
     weekdays.length === ALL_WEEKDAYS.length &&
     ALL_WEEKDAYS.every((weekday) => weekdays.includes(weekday));
   return times.flatMap((time) => {
-    const [hour, minute] = time.split(':').map(Number);
-    if (everyDay) return [{ occurrenceKey: `daily-${time}`, on: { hour, minute } }];
+    const [hour, minute] = time.split(":").map(Number);
+    if (everyDay)
+      return [{ occurrenceKey: `daily-${time}`, on: { hour, minute } }];
     return weekdays.map((weekday) => ({
       occurrenceKey: `weekly-${weekday}-${time}`,
       // Capacitor usa 1=domingo ... 7=sábado; o modelo web usa 0...6.
@@ -230,22 +265,25 @@ export interface ReminderClockParts {
 }
 
 /** Partes do relógio civil em um fuso IANA (para checagem server-side de lembretes). */
-export function getReminderClockParts(date: Date, timeZone: string): ReminderClockParts {
-  const parts = new Intl.DateTimeFormat('en-US', {
+export function getReminderClockParts(
+  date: Date,
+  timeZone: string,
+): ReminderClockParts {
+  const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
-    weekday: 'short',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: 'numeric',
-    minute: 'numeric',
+    weekday: "short",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "numeric",
     hour12: false,
   }).formatToParts(date);
 
   const value = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? '';
+    parts.find((part) => part.type === type)?.value ?? "";
 
-  let hour = Number(value('hour'));
+  let hour = Number(value("hour"));
   if (hour === 24) hour = 0;
 
   const weekdayMap: Record<string, number> = {
@@ -259,15 +297,15 @@ export function getReminderClockParts(date: Date, timeZone: string): ReminderClo
   };
 
   return {
-    dateKey: `${value('year')}-${value('month')}-${value('day')}`,
-    weekday: weekdayMap[value('weekday')] ?? 0,
+    dateKey: `${value("year")}-${value("month")}-${value("day")}`,
+    weekday: weekdayMap[value("weekday")] ?? 0,
     hour,
-    minute: Number(value('minute')),
+    minute: Number(value("minute")),
   };
 }
 
 export function formatReminderMinuteKey(parts: ReminderClockParts): string {
-  return `${parts.dateKey}T${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
+  return `${parts.dateKey}T${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
 }
 
 export function isReminderDueInTimeZone(
@@ -277,35 +315,97 @@ export function isReminderDueInTimeZone(
 ): boolean {
   if (!reminder.enabled) return false;
   const now = getReminderClockParts(date, timeZone);
-  const time = `${String(now.hour).padStart(2, '0')}:${String(now.minute).padStart(2, '0')}`;
+  const time = `${String(now.hour).padStart(2, "0")}:${String(now.minute).padStart(2, "0")}`;
 
-  if (reminder.schedule.kind === 'once') {
+  if (reminder.schedule.kind === "once") {
     const at = getReminderClockParts(new Date(reminder.schedule.at), timeZone);
-    return at.dateKey === now.dateKey && at.hour === now.hour && at.minute === now.minute;
+    return (
+      at.dateKey === now.dateKey &&
+      at.hour === now.hour &&
+      at.minute === now.minute
+    );
   }
 
-  return reminder.schedule.weekdays.includes(now.weekday) && reminder.schedule.times.includes(time);
-}
-
-/** Checagem no relógio local do dispositivo/navegador (Capacitor e fallback web). */
-export function isReminderDue(reminder: PersonalizedReminder, date: Date): boolean {
-  return isReminderDueInTimeZone(
-    reminder,
-    date,
-    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+  return (
+    reminder.schedule.weekdays.includes(now.weekday) &&
+    reminder.schedule.times.includes(time)
   );
 }
 
-export function describePersonalNotificationSchedule(reminder: PersonalizedReminder): string {
-  if (reminder.schedule.kind === 'once') {
-    return new Date(reminder.schedule.at).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
+export function buildReminderOccurrenceKey(
+  reminder: PersonalizedReminder,
+  minuteKey: string,
+): string {
+  if (reminder.schedule.kind === "once")
+    return `${reminder.id}:once:${minuteKey}`;
+  const time = minuteKey.slice(11);
+  return `${reminder.id}:recurring:${time}:${minuteKey}`;
+}
+
+export interface ReminderOccurrence {
+  reminder: PersonalizedReminder;
+  occurrenceKey: string;
+  minuteKey: string;
+}
+
+export const DEFAULT_REMINDER_PUSH_LOOKBACK_MINUTES = 15;
+
+/**
+ * Lista ocorrências agendadas dentro de uma janela retroativa a partir de `now`.
+ * Permite recuperar lembretes quando o worker atrasa alguns minutos.
+ */
+export function listReminderOccurrencesInLookback(
+  reminders: PersonalizedReminder[],
+  now: Date,
+  timeZone: string,
+  lookbackMinutes: number,
+): ReminderOccurrence[] {
+  const lookback = Math.max(0, Math.floor(lookbackMinutes));
+  const byKey = new Map<string, ReminderOccurrence>();
+
+  for (let delay = 0; delay <= lookback; delay += 1) {
+    const instant = new Date(now.getTime() - delay * 60_000);
+    for (const reminder of reminders) {
+      if (!reminder.enabled) continue;
+      if (!isReminderDueInTimeZone(reminder, instant, timeZone)) continue;
+      const minuteKey = formatReminderMinuteKey(
+        getReminderClockParts(instant, timeZone),
+      );
+      const occurrenceKey = buildReminderOccurrenceKey(reminder, minuteKey);
+      if (!byKey.has(occurrenceKey)) {
+        byKey.set(occurrenceKey, { reminder, occurrenceKey, minuteKey });
+      }
+    }
+  }
+
+  return [...byKey.values()];
+}
+
+/** Checagem no relógio local do dispositivo/navegador (Capacitor e fallback web). */
+export function isReminderDue(
+  reminder: PersonalizedReminder,
+  date: Date,
+): boolean {
+  return isReminderDueInTimeZone(
+    reminder,
+    date,
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  );
+}
+
+export function describePersonalNotificationSchedule(
+  reminder: PersonalizedReminder,
+): string {
+  if (reminder.schedule.kind === "once") {
+    return new Date(reminder.schedule.at).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
-  const times = reminder.schedule.times.join(', ');
-  if (reminder.schedule.weekdays.length === 7) return `Todos os dias · ${times}`;
+  const times = reminder.schedule.times.join(", ");
+  if (reminder.schedule.weekdays.length === 7)
+    return `Todos os dias · ${times}`;
   return `${reminder.schedule.weekdays.length} dias/semana · ${times}`;
 }

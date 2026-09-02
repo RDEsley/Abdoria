@@ -44,9 +44,9 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - **Avisos locais** (`client/src/lib/local-notifications.ts`): calculados no client a partir do dashboard; não são push.
 - **Lembretes personalizados** (`preferencias.lembretes_personalizados`):
   - **Android/iOS**: Capacitor Local Notifications (`notification-scheduler.ts`).
-  - **Web/PWA**: Web Push + Service Worker (`client/public/sw.js`) com cron server (`/api/cron/reminder-push`).
+  - **Web/PWA**: Web Push + Service Worker (`client/public/sw.js`) com dispatcher server (`/api/cron/reminder-push`) acionado por **Supabase `pg_cron` + `pg_net`** (segredos no Vault: `evolyn_cron_secret`, `evolyn_reminder_cron_url`).
 - `notificacoes_opt_out` desliga entrega OS-level; lembretes continuam salvos.
-- Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` e migration `20260902120000_push_subscriptions_and_health_ping.sql`.
+- Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
 
 ## Segurança
 

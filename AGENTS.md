@@ -18,9 +18,9 @@ Stack principal:
 - Capacitor
 - Vercel
 
-Aplicação: https://evolyn-core-quest.vercel.app
+Aplicação: `https://evolyn-core-quest.vercel.app`
 
-Repositório: https://github.com/RDEsley/Evolyn-Core-Quest
+Repositório: `https://github.com/RDEsley/Evolyn-Core-Quest`
 
 ## Memória do projeto
 
@@ -168,8 +168,27 @@ git remote -v
 git log --oneline -10
 ```
 
-Depois:
+Depois, conclua autonomamente conforme a proteção da `main`:
 
-1. informe resumidamente commits, checks e destino do push.
+**Se `main` exigir Pull Request** (fluxo atual usual):
 
-Nunca envie secrets, arquivos locais, dumps, builds ou material ignorado apenas para completar o commit.
+1. validar localmente (`format:check`, `lint`, `test`, `build`; `cap:sync` se nativo);
+2. commit(s) coerentes na branch de entrega;
+3. push da branch;
+4. abrir PR para `main`;
+5. acompanhar checks (Quality gates, Vercel);
+6. merge ou auto-merge quando permitido;
+7. excluir a branch temporária;
+8. sincronizar a cópia local com `main`.
+
+Use **no máximo uma branch temporária por entrega** — não abra branch por micro-fix.
+
+**Se `main` permitir push direto do mantenedor:**
+
+1. validar localmente;
+2. commit em `main`;
+3. push para `origin/main`.
+
+Em ambos os casos: não crie Issues/Releases/Tags automáticos para tarefas rotineiras; não use force push; não envie secrets ou arquivos ignorados.
+
+Ao final, informe commits, checks e destino do push.

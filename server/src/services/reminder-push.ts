@@ -1,48 +1,37 @@
-import webpush from 'web-push';
+import webpush from "web-push";
 import {
-  formatReminderMinuteKey,
-  getReminderClockParts,
-  isReminderDueInTimeZone,
+  listReminderOccurrencesInLookback,
   normalizePersonalizedReminders,
   type PersonalizedReminder,
-} from '../../../shared/reminders.js';
-import { User } from '../domain/User.js';
+} from "../../../shared/reminders.js";
+import { User } from "../domain/User.js";
+import {
+  isExpiredPushSubscriptionStatus,
+  isTransientPushFailure,
+} from "./push-delivery-claim.js";
+import {
+  assertReminderPushConfigured,
+  getReminderPushLookbackMinutes,
+} from "./reminder-push-config.js";
 import {
   PushDeliveryLog,
   PushSubscriptions,
   type PushSubscriptionRow,
-} from '../repositories/push-subscription-repository.js';
+} from "../repositories/push-subscription-repository.js";
 
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT?.trim() || 'mailto:richardesleyso@gmail.com';
-
-let vapidConfigured = false;
-
-function ensureVapid(): boolean {
-  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
-  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
-  if (!publicKey || !privateKey) return false;
-  if (!vapidConfigured) {
-    webpush.setVapidDetails(VAPID_SUBJECT, publicKey, privateKey);
-    vapidConfigured = true;
-  }
-  return true;
-}
-
-function buildDeliveryKey(reminder: PersonalizedReminder, minuteKey: string): string {
-  if (reminder.schedule.kind === 'once') return `${reminder.id}:once:${minuteKey}`;
-  const time = minuteKey.slice(11);
-  return `${reminder.id}:recurring:${reminder.schedule.weekdays.join('-')}:${time}:${minuteKey}`;
-}
+export { ReminderPushMisconfiguredError } from "./reminder-push-config.js";
 
 async function sendPush(
   subscription: PushSubscriptionRow,
   reminder: PersonalizedReminder,
 ): Promise<void> {
+  assertReminderPushConfigured();
+
   const payload = JSON.stringify({
     title: reminder.title,
-    body: reminder.message || 'Hora do seu lembrete no Evolyn.',
+    body: reminder.message || "Hora do seu lembrete no Evolyn.",
     tag: reminder.id,
-    icon: '/brand/favicon-192.png',
+    icon: "/brand/favicon-192.png",
   });
 
   await webpush.sendNotification(
@@ -55,87 +44,114 @@ async function sendPush(
   );
 }
 
-async function handleExpiredSubscription(
-  subscription: PushSubscriptionRow,
-  statusCode: number,
-): Promise<void> {
-  if (statusCode === 404 || statusCode === 410) {
-    await PushSubscriptions.deleteByEndpoint(subscription.user_id, subscription.endpoint);
+function readPushErrorStatus(error: unknown): number {
+  if (error && typeof error === "object" && "statusCode" in error) {
+    return Number((error as { statusCode?: number }).statusCode) || 0;
   }
+  return 0;
 }
 
 export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
   scanned: number;
   sent: number;
   skipped: number;
+  occurrences: number;
 }> {
-  if (!ensureVapid()) {
-    return { scanned: 0, sent: 0, skipped: 0 };
-  }
+  assertReminderPushConfigured();
 
   const subscriptions = await PushSubscriptions.listAll();
+  const lookbackMinutes = getReminderPushLookbackMinutes();
   let sent = 0;
   let skipped = 0;
+  let occurrences = 0;
 
-  const byUser = new Map<string, PushSubscriptionRow[]>();
-  for (const row of subscriptions) {
-    const list = byUser.get(row.user_id) ?? [];
-    list.push(row);
-    byUser.set(row.user_id, list);
-  }
-
-  for (const [userId, userSubs] of byUser) {
-    const user = await User.findById(userId, { lean: true });
+  for (const subscription of subscriptions) {
+    const user = await User.findById(subscription.user_id, { lean: true });
     if (!user?.preferencias || user.preferencias.notificacoes_opt_out) {
-      skipped += userSubs.length;
+      skipped += 1;
       continue;
     }
 
-    const reminders = normalizePersonalizedReminders(user.preferencias.lembretes_personalizados);
+    const reminders = normalizePersonalizedReminders(
+      user.preferencias.lembretes_personalizados,
+    );
     if (reminders.length === 0) {
-      skipped += userSubs.length;
+      skipped += 1;
       continue;
     }
 
-    for (const subscription of userSubs) {
-      const timeZone = subscription.time_zone || 'America/Sao_Paulo';
-      const minuteKey = formatReminderMinuteKey(getReminderClockParts(now, timeZone));
-      const due = reminders.filter((reminder) => isReminderDueInTimeZone(reminder, now, timeZone));
+    const timeZone = subscription.time_zone || "America/Sao_Paulo";
+    const dueOccurrences = listReminderOccurrencesInLookback(
+      reminders,
+      now,
+      timeZone,
+      lookbackMinutes,
+    );
 
-      if (due.length === 0) {
+    if (dueOccurrences.length === 0) {
+      skipped += 1;
+      continue;
+    }
+
+    for (const occurrence of dueOccurrences) {
+      occurrences += 1;
+      const claim = await PushDeliveryLog.claim(
+        subscription.id,
+        occurrence.occurrenceKey,
+        now,
+      );
+      if (claim === "skip") {
         skipped += 1;
         continue;
       }
 
-      for (const reminder of due) {
-        const deliveryKey = buildDeliveryKey(reminder, minuteKey);
-        const recorded = await PushDeliveryLog.tryRecord(userId, deliveryKey);
-        if (!recorded) {
+      try {
+        await sendPush(subscription, occurrence.reminder);
+        await PushDeliveryLog.markSent(
+          subscription.id,
+          occurrence.occurrenceKey,
+          now,
+        );
+        sent += 1;
+      } catch (error) {
+        const statusCode = readPushErrorStatus(error);
+        if (isExpiredPushSubscriptionStatus(statusCode)) {
+          await PushSubscriptions.deleteByEndpoint(
+            subscription.user_id,
+            subscription.endpoint,
+          );
+          await PushDeliveryLog.markFailed(
+            subscription.id,
+            occurrence.occurrenceKey,
+            `subscription expired (${statusCode})`,
+            now,
+          );
           skipped += 1;
-          continue;
+          break;
         }
 
-        try {
-          await sendPush(subscription, reminder);
-          sent += 1;
-        } catch (error) {
-          const statusCode =
-            error && typeof error === 'object' && 'statusCode' in error
-              ? Number((error as { statusCode?: number }).statusCode)
-              : 0;
-          await handleExpiredSubscription(subscription, statusCode);
-          if (statusCode !== 404 && statusCode !== 410) {
-            console.error('Web push failed:', statusCode || error);
-          }
-          skipped += 1;
+        const message =
+          error instanceof Error
+            ? error.message
+            : "falha desconhecida ao enviar push";
+        await PushDeliveryLog.markFailed(
+          subscription.id,
+          occurrence.occurrenceKey,
+          message,
+          now,
+        );
+
+        if (!isTransientPushFailure(statusCode)) {
+          console.error("Web push failed:", statusCode || error);
         }
+        skipped += 1;
       }
     }
   }
 
   await PushDeliveryLog.pruneOlderThan(14).catch((error) => {
-    console.error('push_delivery_log prune failed:', error);
+    console.error("push_delivery_log prune failed:", error);
   });
 
-  return { scanned: subscriptions.length, sent, skipped };
+  return { scanned: subscriptions.length, sent, skipped, occurrences };
 }
