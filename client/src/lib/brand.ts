@@ -9,6 +9,9 @@ const BRAND_FAVICON = {
   512: '/brand/favicon-512.png',
 } as const;
 
+/** Ícone quadrado usado na instalação PWA e na abertura do app. */
+export const APP_BOOT_MARK_SRC = '/brand/app-icon-192.png';
+
 /** Assinatura completa para superfícies amplas de apresentação da marca. */
 export const BRAND_LOGO_SRC = '/brand/logo.png';
 
