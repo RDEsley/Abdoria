@@ -287,6 +287,52 @@ export function isReminderDueInTimeZone(
   return reminder.schedule.weekdays.includes(now.weekday) && reminder.schedule.times.includes(time);
 }
 
+export function buildReminderOccurrenceKey(
+  reminder: PersonalizedReminder,
+  minuteKey: string,
+): string {
+  if (reminder.schedule.kind === 'once') return `${reminder.id}:once:${minuteKey}`;
+  const time = minuteKey.slice(11);
+  return `${reminder.id}:recurring:${time}:${minuteKey}`;
+}
+
+export interface ReminderOccurrence {
+  reminder: PersonalizedReminder;
+  occurrenceKey: string;
+  minuteKey: string;
+}
+
+export const DEFAULT_REMINDER_PUSH_LOOKBACK_MINUTES = 15;
+
+/**
+ * Lista ocorrências agendadas dentro de uma janela retroativa a partir de `now`.
+ * Permite recuperar lembretes quando o worker atrasa alguns minutos.
+ */
+export function listReminderOccurrencesInLookback(
+  reminders: PersonalizedReminder[],
+  now: Date,
+  timeZone: string,
+  lookbackMinutes: number,
+): ReminderOccurrence[] {
+  const lookback = Math.max(0, Math.floor(lookbackMinutes));
+  const byKey = new Map<string, ReminderOccurrence>();
+
+  for (let delay = 0; delay <= lookback; delay += 1) {
+    const instant = new Date(now.getTime() - delay * 60_000);
+    for (const reminder of reminders) {
+      if (!reminder.enabled) continue;
+      if (!isReminderDueInTimeZone(reminder, instant, timeZone)) continue;
+      const minuteKey = formatReminderMinuteKey(getReminderClockParts(instant, timeZone));
+      const occurrenceKey = buildReminderOccurrenceKey(reminder, minuteKey);
+      if (!byKey.has(occurrenceKey)) {
+        byKey.set(occurrenceKey, { reminder, occurrenceKey, minuteKey });
+      }
+    }
+  }
+
+  return [...byKey.values()];
+}
+
 /** Checagem no relógio local do dispositivo/navegador (Capacitor e fallback web). */
 export function isReminderDue(reminder: PersonalizedReminder, date: Date): boolean {
   return isReminderDueInTimeZone(

@@ -1,5 +1,8 @@
 import { Router, type Response } from 'express';
-import { dispatchDuePersonalReminders } from '../services/reminder-push.js';
+import {
+  dispatchDuePersonalReminders,
+  ReminderPushMisconfiguredError,
+} from '../services/reminder-push.js';
 
 export const cronRouter = Router();
 
@@ -23,6 +26,10 @@ function handleReminderPush(
   void dispatchDuePersonalReminders()
     .then((result) => res.json({ ok: true, ...result }))
     .catch((error) => {
+      if (error instanceof ReminderPushMisconfiguredError) {
+        res.status(503).json({ error: error.message });
+        return;
+      }
       console.error('cron/reminder-push error:', error);
       res.status(500).json({ error: 'Falha ao despachar lembretes push.' });
     });
