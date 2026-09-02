@@ -81,11 +81,11 @@ export function derivePartesFromFoco(foco: Foco): ParteCorpo[] {
 }
 
 interface SplitDayTemplate {
-  /** Grupos-alvo do dia SEM abdômen — ele entra em todo dia (identidade do app). */
+  /** Grupos-alvo do dia, sem core: o abdômen entra em todo dia de treino do plano. */
   grupos: ParteCorpo[];
 }
 
-/** Splits por frequência semanal. Dia sem grupos = dia dedicado de abdômen. */
+/** Splits por frequência semanal. Dia sem grupos vira sessão dedicada de core. */
 export const SPLIT_TEMPLATES: Record<number, SplitDayTemplate[]> = {
   2: [{ grupos: ['peito', 'ombros', 'pernas'] }, { grupos: ['costas', 'bracos', 'gluteos'] }],
   3: [

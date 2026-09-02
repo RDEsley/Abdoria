@@ -296,7 +296,7 @@ export function WorkoutVictoryScreen({
               )}
             </div>
             {abdoriaGained > 0 && (
-              <p className="game-victory__abdoria">
+              <p className="game-victory__folhas">
                 <GameLeafIcon size={16} aria-hidden /> +{abdoriaGained} {CURRENCY_NAME}
               </p>
             )}

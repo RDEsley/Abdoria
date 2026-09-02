@@ -1012,7 +1012,7 @@ export function TrainingPage() {
               className="game-input mt-2 w-full"
               value={customWorkoutName}
               onChange={(e) => setCustomWorkoutName(e.target.value)}
-              placeholder="Ex.: Meu treino de abdômen"
+              placeholder="Ex.: Treino em casa"
               autoComplete="off"
               maxLength={64}
             />

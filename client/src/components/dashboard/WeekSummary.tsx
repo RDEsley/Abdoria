@@ -20,10 +20,7 @@ interface DayCell {
   isFuture: boolean;
 }
 
-/**
- * Snapshot da semana corrente (segunda a domingo): dias treinados, total de
- * treinos, tempo e XP. Base do resumo semanal completo planejado na Fase 7.
- */
+/** Snapshot da semana corrente (segunda a domingo): dias treinados, tempo e XP. */
 export function WeekSummary() {
   const pageReady = usePageEntranceReady();
   const reduceMotion = useReducedMotion();
