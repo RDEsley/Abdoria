@@ -8,7 +8,11 @@ const config: CapacitorConfig = {
   android: { backgroundColor: '#f4faf7', allowMixedContent: false },
   ios: { backgroundColor: '#f4faf7', contentInset: 'automatic' },
   plugins: {
-    SplashScreen: { launchAutoHide: true, backgroundColor: '#f4faf7', showSpinner: false },
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: '#f4faf7',
+      showSpinner: false,
+    },
     StatusBar: { style: 'DARK', backgroundColor: '#f4faf7', overlaysWebView: false },
     Keyboard: { resize: 'native', style: 'LIGHT' },
     LocalNotifications: { iconColor: '#0A9875' },

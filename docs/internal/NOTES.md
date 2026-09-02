@@ -35,6 +35,8 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 
 - O produto é mobile-first, mas desktop deve continuar responsivo e funcional.
 - Mudanças nativas devem considerar Capacitor, Android e iOS quando aplicável.
+- A splash nativa (`launchAutoHide: false`) permanece visível até a hidratação inicial em `AppBootGate`, que também cobre PWA/web com o mesmo fundo `#f4faf7`.
+- Ícones instaláveis vêm de `docs/internal/logos-icons/app-icon.png`, propagados por `scripts/update-brand-assets.ps1` para `client/public/brand/app-icon-*`.
 
 ## Segurança
 

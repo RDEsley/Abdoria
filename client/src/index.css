@@ -1,5 +1,6 @@
 /* Ponto de entrada do tema — a ordem dos imports é a cascata (não reordenar). */
 @import './styles/base.css';
+@import './styles/app-boot.css';
 @import './styles/auth.css';
 @import './styles/theme.css';
 @import './styles/navbar.css';
