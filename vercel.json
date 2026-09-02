@@ -11,6 +11,12 @@
       "includeFiles": "lib/server-dist/**"
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/reminder-push",
+      "schedule": "* * * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

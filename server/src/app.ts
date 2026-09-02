@@ -8,6 +8,8 @@ import { shopRouter } from './routes/shop.js';
 import { exercisesRouter } from './routes/exercises.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
 import { notificationsRouter } from './routes/notifications.js';
+import { pushRouter } from './routes/push.js';
+import { cronRouter } from './routes/cron.js';
 import { socialRouter } from './routes/social.js';
 import { presetsRouter } from './routes/presets.js';
 import { usersRouter } from './routes/users.js';
@@ -75,6 +77,8 @@ export function createApp() {
   app.use('/api/presets', presetsRouter);
   app.use('/api/leaderboard', leaderboardRouter);
   app.use('/api/notifications', notificationsRouter);
+  app.use('/api/push', pushRouter);
+  app.use('/api/cron', cronRouter);
   app.use('/api/social', socialRouter);
   app.use('/api/admin', adminRouter);
 

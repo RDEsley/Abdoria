@@ -3,6 +3,7 @@ import { Bell, Flame, Snowflake, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/lib/game-toast';
+import { ensureWebPushSubscription } from '@/lib/platform/web-push';
 import { updateMe } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -49,6 +50,7 @@ export function NotificationOptInPrompt() {
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
+        await ensureWebPushSubscription().catch(() => undefined);
         showGameToast('Notificações ativadas! Vamos te avisar na hora certa. 🔔', {
           variant: 'success',
         });

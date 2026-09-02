@@ -1,0 +1,37 @@
+# Dispara lembretes Web Push na PWA (backup quando Vercel Cron não estiver ativo).
+# Secrets: CRON_SECRET, REMINDER_CRON_URL (ex.: https://evolyn-core-quest.vercel.app/api/cron/reminder-push)
+
+name: Reminder Push Cron
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: reminder-push-cron
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Dispatch due reminders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          REMINDER_CRON_URL: ${{ secrets.REMINDER_CRON_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ] || [ -z "${REMINDER_CRON_URL:-}" ]; then
+            echo "CRON_SECRET ou REMINDER_CRON_URL não configurados — pulando."
+            exit 0
+          fi
+          status=$(curl -sS -o /tmp/reminder-cron.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${REMINDER_CRON_URL}")
+          echo "reminder-push → HTTP ${status}"
+          if [ "${status}" -lt 200 ] || [ "${status}" -ge 300 ]; then
+            echo "::error::Falha no cron de lembretes (HTTP ${status})"
+            exit 1
+          fi

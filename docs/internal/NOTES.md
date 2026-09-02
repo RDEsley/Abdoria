@@ -38,6 +38,16 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - A splash nativa (`launchAutoHide: false`) permanece visível até a hidratação inicial em `AppBootGate`, que também cobre PWA/web com o mesmo fundo `#f4faf7`.
 - Ícones instaláveis vêm de `docs/internal/logos-icons/app-icon.png`, propagados por `scripts/update-brand-assets.ps1` para `client/public/brand/app-icon-*`.
 
+## Notificações
+
+- **Inbox (sino)**: tabela `notifications` + API `/api/notifications` — eventos do app.
+- **Avisos locais** (`client/src/lib/local-notifications.ts`): calculados no client a partir do dashboard; não são push.
+- **Lembretes personalizados** (`preferencias.lembretes_personalizados`):
+  - **Android/iOS**: Capacitor Local Notifications (`notification-scheduler.ts`).
+  - **Web/PWA**: Web Push + Service Worker (`client/public/sw.js`) com cron server (`/api/cron/reminder-push`).
+- `notificacoes_opt_out` desliga entrega OS-level; lembretes continuam salvos.
+- Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` e migration `20260902120000_push_subscriptions_and_health_ping.sql`.
+
 ## Segurança
 
 - Nenhum diretório versionado é realmente privado.

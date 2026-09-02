@@ -222,21 +222,77 @@ export function buildNativeNotificationSchedules(
   });
 }
 
-export function isReminderDue(reminder: PersonalizedReminder, date: Date): boolean {
+export interface ReminderClockParts {
+  dateKey: string;
+  weekday: number;
+  hour: number;
+  minute: number;
+}
+
+/** Partes do relógio civil em um fuso IANA (para checagem server-side de lembretes). */
+export function getReminderClockParts(date: Date, timeZone: string): ReminderClockParts {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).formatToParts(date);
+
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '';
+
+  let hour = Number(value('hour'));
+  if (hour === 24) hour = 0;
+
+  const weekdayMap: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  return {
+    dateKey: `${value('year')}-${value('month')}-${value('day')}`,
+    weekday: weekdayMap[value('weekday')] ?? 0,
+    hour,
+    minute: Number(value('minute')),
+  };
+}
+
+export function formatReminderMinuteKey(parts: ReminderClockParts): string {
+  return `${parts.dateKey}T${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
+}
+
+export function isReminderDueInTimeZone(
+  reminder: PersonalizedReminder,
+  date: Date,
+  timeZone: string,
+): boolean {
   if (!reminder.enabled) return false;
+  const now = getReminderClockParts(date, timeZone);
+  const time = `${String(now.hour).padStart(2, '0')}:${String(now.minute).padStart(2, '0')}`;
+
   if (reminder.schedule.kind === 'once') {
-    const at = new Date(reminder.schedule.at);
-    return (
-      at.getFullYear() === date.getFullYear() &&
-      at.getMonth() === date.getMonth() &&
-      at.getDate() === date.getDate() &&
-      at.getHours() === date.getHours() &&
-      at.getMinutes() === date.getMinutes()
-    );
+    const at = getReminderClockParts(new Date(reminder.schedule.at), timeZone);
+    return at.dateKey === now.dateKey && at.hour === now.hour && at.minute === now.minute;
   }
-  const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  return (
-    reminder.schedule.weekdays.includes(date.getDay()) && reminder.schedule.times.includes(time)
+
+  return reminder.schedule.weekdays.includes(now.weekday) && reminder.schedule.times.includes(time);
+}
+
+/** Checagem no relógio local do dispositivo/navegador (Capacitor e fallback web). */
+export function isReminderDue(reminder: PersonalizedReminder, date: Date): boolean {
+  return isReminderDueInTimeZone(
+    reminder,
+    date,
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   );
 }
 
