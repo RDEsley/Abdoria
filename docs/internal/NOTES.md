@@ -50,6 +50,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
   - **Android/iOS**: Capacitor Local Notifications (`notification-scheduler.ts`).
   - **Web/PWA**: Web Push + Service Worker (`client/public/sw.js`) com dispatcher server (`/api/cron/reminder-push`) acionado por **Supabase `pg_cron` + `pg_net`** (segredos no Vault: `evolyn_cron_secret`, `evolyn_reminder_cron_url`).
 - `notificacoes_opt_out` desliga entrega OS-level; lembretes continuam salvos.
+- Som de notificação personalizado foi removido (Playful 2.0). O campo legado `sound` em JSONB é ignorado no parsing; entregas usam o som padrão da plataforma. Sons de UI em `client/src/lib/sounds` continuam intactos.
 - Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
 
 ## Segurança

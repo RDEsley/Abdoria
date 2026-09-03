@@ -11,18 +11,15 @@ import {
   Pencil,
   Plus,
   ShieldPlus,
-  SlidersHorizontal,
   Star,
   Trash2,
   X,
-  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
-import { stopNotificationSoundPreview } from '@/lib/notification-sound-preview';
 import {
   PERSONAL_NOTIFICATION_VERSION,
   describePersonalNotificationSchedule,
@@ -31,10 +28,8 @@ import {
   normalizeReminderWeekdays,
   type PersonalNotificationColor,
   type PersonalNotificationIcon,
-  type PersonalNotificationSound,
   type PersonalizedReminder,
 } from '@shared/reminders';
-import { getNotificationSound } from '@shared/notification-catalog';
 import { ReminderPersonalizePanel } from './ReminderPersonalizePanel';
 import type { RecurrenceDraft } from './reminder-form-types';
 
@@ -71,7 +66,6 @@ function emptyDraft(): Draft {
     weekdays: [],
     icon: 'neutral',
     color: 'neutral',
-    sound: 'system_default',
     enabled: true,
     createdAt: '',
   };
@@ -87,7 +81,6 @@ interface Draft {
   weekdays: number[];
   icon: PersonalNotificationIcon;
   color: PersonalNotificationColor;
-  sound: PersonalNotificationSound;
   enabled: boolean;
   createdAt: string;
 }
@@ -108,7 +101,6 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
       weekdays: [],
       icon: reminder.icon,
       color: reminder.color,
-      sound: reminder.sound,
       enabled: reminder.enabled,
       createdAt: reminder.createdAt,
     };
@@ -123,7 +115,6 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
     weekdays: reminder.schedule.weekdays,
     icon: reminder.icon,
     color: reminder.color,
-    sound: reminder.sound,
     enabled: reminder.enabled,
     createdAt: reminder.createdAt,
   };
@@ -145,27 +136,21 @@ export function ReminderCenter() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-
   const closeForm = () => {
-    stopNotificationSoundPreview();
     setEditing(false);
     setDraft(emptyDraft());
     setError('');
-    setAdvancedOpen(false);
   };
 
   const openCreate = () => {
     setDraft(emptyDraft());
     setError('');
-    setAdvancedOpen(false);
     setEditing(true);
   };
 
   const openEdit = (reminder: PersonalizedReminder) => {
     setDraft(reminderToDraft(reminder));
     setError('');
-    setAdvancedOpen(true);
     setEditing(true);
   };
 
@@ -213,7 +198,6 @@ export function ReminderCenter() {
       message: draft.message.trim(),
       icon: draft.icon,
       color: draft.color,
-      sound: draft.sound,
       schedule,
       enabled: draft.enabled,
       createdAt: draft.createdAt || now,
@@ -281,7 +265,7 @@ export function ReminderCenter() {
   };
 
   return (
-    <section className="personal-notifications app-surface app-surface--notifications">
+    <section className="personal-notifications">
       <header className="personal-notifications__header">
         <div>
           <h2 className="game-section-title flex items-center gap-2">
@@ -307,7 +291,6 @@ export function ReminderCenter() {
               <input
                 value={draft.title}
                 maxLength={60}
-                autoFocus
                 placeholder="Ex.: Beber água"
                 onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))}
                 aria-invalid={Boolean(error) && !draft.title.trim()}
@@ -388,25 +371,10 @@ export function ReminderCenter() {
             </fieldset>
           )}
 
-          <button
-            type="button"
-            className="personal-notification-form__advanced-toggle"
-            aria-expanded={advancedOpen}
-            onClick={() => setAdvancedOpen((current) => !current)}
-          >
-            <span>
-              <SlidersHorizontal size={16} aria-hidden /> Personalizar
-            </span>
-            <small>Mensagem, ícone, cor e sons</small>
-            <ChevronDown size={17} aria-hidden />
-          </button>
-
-          {advancedOpen && (
-            <ReminderPersonalizePanel
-              draft={draft}
-              onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-            />
-          )}
+          <ReminderPersonalizePanel
+            draft={draft}
+            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+          />
 
           {error && (
             <p
@@ -446,10 +414,7 @@ export function ReminderCenter() {
             </span>
             <div className="personal-notification-card__content">
               <strong>{reminder.title}</strong>
-              <small>
-                {describePersonalNotificationSchedule(reminder)} ·{' '}
-                {getNotificationSound(reminder.sound).label}
-              </small>
+              <small>{describePersonalNotificationSchedule(reminder)}</small>
             </div>
             <button
               type="button"

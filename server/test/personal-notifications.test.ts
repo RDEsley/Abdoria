@@ -14,7 +14,6 @@ const recurring: PersonalizedReminder = {
   message: '',
   icon: 'water',
   color: 'sky',
-  sound: 'system_default',
   schedule: { kind: 'recurring', weekdays: [1, 3, 5], times: ['08:00', '16:00'] },
   enabled: true,
   createdAt: '2026-08-29T10:00:00.000Z',
@@ -53,13 +52,14 @@ describe('notificações personalizadas V2', () => {
     expect(items[0].title).toBe('Beber água');
   });
 
-  it('preserva temas de som suportados e usa padrão para valores desconhecidos', () => {
-    expect(normalizePersonalizedReminder({ ...recurring, sound: 'nature' })?.sound).toBe(
-      'nature_leaves',
-    );
-    expect(normalizePersonalizedReminder({ ...recurring, sound: 'arcade' })?.sound).toBe(
-      'system_default',
-    );
+  it('ignora campo sound legado silenciosamente', () => {
+    const parsed = normalizePersonalizedReminder({
+      ...recurring,
+      sound: 'evolyn_leaf',
+    });
+    expect(parsed).toBeTruthy();
+    expect(parsed!.title).toBe('Beber água');
+    expect('sound' in parsed!).toBe(false);
   });
 
   it('gera recorrência semanal nativa sem janela de 14 dias', () => {

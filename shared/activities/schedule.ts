@@ -45,7 +45,6 @@ export function normalizeActivityReminder(raw: unknown): ActivityReminderConfig 
   return {
     enabled: value.enabled === true,
     offset_min: Number.isFinite(offset) ? Math.max(0, Math.min(120, Math.round(offset))) : 0,
-    sound: typeof value.sound === 'string' ? value.sound : undefined,
     follow_up: value.follow_up === true,
   };
 }

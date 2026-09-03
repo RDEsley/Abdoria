@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import {
   AlarmClock,
-  BellRing,
   BookOpen,
   Circle,
   Dumbbell,
@@ -10,16 +9,12 @@ import {
   Leaf,
   ShieldPlus,
   Star,
-  Volume2,
 } from 'lucide-react';
-import { getNotificationSound } from '@shared/notification-catalog';
 import {
   PERSONAL_NOTIFICATION_COLORS,
   type PersonalNotificationColor,
   type PersonalNotificationIcon,
-  type PersonalNotificationSound,
 } from '@shared/reminders';
-import { toggleNotificationSoundPreview } from '@/lib/notification-sound-preview';
 import type { RecurrenceDraft } from './reminder-form-types';
 
 const ICONS = {
@@ -39,7 +34,6 @@ interface ReminderNotificationPreviewProps {
   message: string;
   icon: PersonalNotificationIcon;
   color: PersonalNotificationColor;
-  sound: PersonalNotificationSound;
   recurrence: RecurrenceDraft;
   times: string[];
   onceDate: string;
@@ -60,14 +54,12 @@ export function ReminderNotificationPreview({
   message,
   icon,
   color,
-  sound,
   recurrence,
   times,
   onceDate,
 }: ReminderNotificationPreviewProps) {
   const Icon = ICONS[icon];
   const accent = PERSONAL_NOTIFICATION_COLORS.find((entry) => entry.id === color)?.hex ?? '#64748b';
-  const soundLabel = getNotificationSound(sound).label;
   const previewTitle = title.trim() || 'Seu lembrete';
   const previewBody = message.trim() || 'Uma mensagem curta aparece aqui.';
 
@@ -83,18 +75,7 @@ export function ReminderNotificationPreview({
           <p>{previewBody}</p>
           <small>{describeSchedule(recurrence, times, onceDate)}</small>
         </div>
-        <button
-          type="button"
-          className="reminder-preview__listen"
-          aria-label={`Ouvir som ${soundLabel}`}
-          onClick={() => void toggleNotificationSoundPreview(sound)}
-        >
-          <Volume2 size={16} aria-hidden />
-        </button>
       </div>
-      <p className="reminder-preview__meta">
-        <BellRing size={12} aria-hidden /> {soundLabel}
-      </p>
     </div>
   );
 }
