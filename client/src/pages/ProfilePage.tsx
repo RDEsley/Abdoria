@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useStickyTab } from '@/hooks/useStickyTab';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -14,6 +15,7 @@ import {
   Share2,
   ShieldCheck,
   Target,
+  Trophy,
   Weight,
 } from 'lucide-react';
 import { BannerPickerModal } from '@/components/profile/BannerPickerModal';
@@ -56,7 +58,8 @@ import {
   type Objetivo,
 } from '@/types';
 
-type Tab = 'evolucao' | 'corpo';
+const PROFILE_TABS = ['evolucao', 'corpo'] as const;
+type Tab = (typeof PROFILE_TABS)[number];
 
 export function ProfilePage() {
   const { user: appUser, stats, refresh, loading: appLoading } = useApp();
@@ -64,7 +67,7 @@ export function ProfilePage() {
   const copy = useCopy();
   const { install: installPwa, installed: pwaInstalled } = usePwaInstall();
   const profile = user ?? appUser;
-  const [tab, setTab] = useState<Tab>('evolucao');
+  const [tab, setTab] = useStickyTab<Tab>('evolyn:profile-tab', PROFILE_TABS, 'evolucao');
   const [saving, setSaving] = useState(false);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -511,14 +514,15 @@ export function ProfilePage() {
       {tab === 'evolucao' && stats && (
         <>
           <ProfileProgressPanel stats={stats} />
-          <details className="glass-card p-4">
-            <summary className="cursor-pointer text-sm font-extrabold text-stone-800">
+          <section className="glass-card glass-card--conquista p-4">
+            <h3 className="flex items-center gap-2 text-sm font-extrabold text-stone-800">
+              <Trophy className="text-amber-600" size={18} />
               Recordes
-            </summary>
+            </h3>
             <div className="mt-3">
               <PersonalRecordsPanel />
             </div>
-          </details>
+          </section>
         </>
       )}
 

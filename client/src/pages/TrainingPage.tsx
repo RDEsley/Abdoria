@@ -10,6 +10,7 @@ import { SimilarWorkoutModal } from '@/components/builder/SimilarWorkoutModal';
 import { SimilarExerciseModal } from '@/components/builder/SimilarExerciseModal';
 import { ExercisePicker } from '@/components/builder/ExercisePicker';
 import { BuilderTabs, type BuilderTab } from '@/components/builder/BuilderTabs';
+import { useStickyTab } from '@/hooks/useStickyTab';
 import { BuilderStickyBar } from '@/components/builder/BuilderStickyBar';
 import { BuilderSkeleton } from '@/components/builder/BuilderSkeleton';
 import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
@@ -93,7 +94,10 @@ export function TrainingPage() {
   const presetFromUrl = searchParams.get('preset');
   const modeFromUrl = searchParams.get('modo');
 
-  const [activeTab, setActiveTab] = useState<BuilderTab>(
+  const TREINO_TABS = ['train', 'customize'] as const;
+  const [activeTab, setActiveTab] = useStickyTab<BuilderTab>(
+    'evolyn:treino-tab',
+    TREINO_TABS,
     modeFromUrl === 'personalizar' ? 'customize' : 'train',
   );
   const [allPresets, setAllPresets] = useState<IWorkoutPresetDocument[]>([]);
@@ -198,7 +202,7 @@ export function TrainingPage() {
       })
       .catch(() => setAllPresets([]))
       .finally(() => setPresetsLoading(false));
-  }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo]);
+  }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo, setActiveTab]);
 
   useEffect(() => {
     if (presetFromUrl) return;
@@ -221,7 +225,7 @@ export function TrainingPage() {
     setDraftQueue(null);
     setCustomizedIndices(new Set());
     setActiveTab('train');
-  }, [suggestedPresetId, allPresets, presetFromUrl, fixedWorkoutIds.length]);
+  }, [suggestedPresetId, allPresets, presetFromUrl, fixedWorkoutIds.length, setActiveTab]);
 
   // Auto-seleção no modo plano — o preset_id do plano não existe em allPresets.
   useEffect(() => {
@@ -233,7 +237,7 @@ export function TrainingPage() {
     setDraftQueue(null);
     setCustomizedIndices(new Set());
     setActiveTab('train');
-  }, [activePlanWorkout, presetFromUrl]);
+  }, [activePlanWorkout, presetFromUrl, setActiveTab]);
 
   useEffect(() => {
     setSelectedSchemeId(resolveSelectedRepSchemeId(persistedSchemeId, schemes));
@@ -475,7 +479,7 @@ export function TrainingPage() {
       lastAppliedQueueKeyRef.current = '';
       scrollToSection('builder-queue-preview');
     },
-    [customWorkout.length, scrollToSection],
+    [customWorkout.length, scrollToSection, setActiveTab],
   );
 
   const handleSelectCiclo = useCallback(
@@ -507,7 +511,7 @@ export function TrainingPage() {
         showGameToast('Não foi possível carregar esse treino.', { variant: 'warn' });
       }
     },
-    [scrollToSection],
+    [scrollToSection, setActiveTab],
   );
 
   const swapSourceItem = swapExerciseIndex != null ? activeQueue[swapExerciseIndex] : null;
@@ -915,19 +919,6 @@ export function TrainingPage() {
             onDismissCard={setDismissedCardKey}
           />
 
-          <section id="builder-queue-preview">
-            <WorkoutQueueList
-              queue={activeQueue}
-              sortableIds={sortableIds}
-              exerciseMap={exerciseMap}
-              emptyMessage={
-                exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'
-              }
-              onDragEnd={handleDragEnd}
-              onConfigureExercise={setConfigExerciseIndex}
-            />
-          </section>
-
           <details className="builder-advanced rounded-2xl border border-stone-200 bg-white/80 p-3">
             <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-extrabold text-stone-700">
               <GraduationCap size={18} aria-hidden />
@@ -936,16 +927,12 @@ export function TrainingPage() {
                 {NIVEL_LABELS[schemeLevel]}
               </span>
             </summary>
-            <p className="builder-advanced__copy">
-              Controle o ritmo de todos os exercícios com um toque. A recomendação acompanha seu
-              nível e seus ajustes manuais continuam preservados.
-            </p>
             <Link
               to="/configuracoes#ajustar-plano"
               state={{ highlightTrainingPlan: true }}
               className="builder-plan-link"
             >
-              Ajustar intensidade, agenda, som e descanso
+              Ajustar Plano de Treino
               <ArrowRight size={16} aria-hidden />
             </Link>
             <section className="mt-3 border-t border-stone-200 pt-3">
@@ -973,6 +960,19 @@ export function TrainingPage() {
               />
             </section>
           </details>
+
+          <section id="builder-queue-preview">
+            <WorkoutQueueList
+              queue={activeQueue}
+              sortableIds={sortableIds}
+              exerciseMap={exerciseMap}
+              emptyMessage={
+                exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'
+              }
+              onDragEnd={handleDragEnd}
+              onConfigureExercise={setConfigExerciseIndex}
+            />
+          </section>
         </div>
       )}
 
