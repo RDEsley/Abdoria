@@ -1317,3 +1317,157 @@ body {
     transition: none;
   }
 }
+
+.picker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.picker-field__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #5b6d67;
+}
+
+.picker-field__trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.7rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgb(15 118 110 / 16%);
+  border-radius: 0.9rem;
+  background: #fff;
+  color: #5b6d67;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.picker-field__trigger.is-filled {
+  color: #17332c;
+}
+
+.picker-field__native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.picker-field__hint {
+  color: #6b7d78;
+  font-weight: 650;
+}
+
+.activity-day-chip {
+  flex: 1;
+  min-width: 0;
+  height: 2.4rem;
+  border: 1px solid rgb(15 118 110 / 16%);
+  border-radius: 0.8rem;
+  background: #fff;
+  font-weight: 800;
+}
+
+.activity-day-chip.is-on {
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 0 0 2px rgb(16 185 129 / 18%);
+}
+
+.activity-template__hint {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: #087c66;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.route-fallback {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+}
+
+.reminder-preview__avatar--user {
+  color: #fff;
+  background: var(--reminder-accent, #64748b);
+  border: 0;
+}
+
+.reminder-preview__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.reminder-preview__sound-btn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.7rem;
+  color: #0f766e;
+  background: rgb(16 185 129 / 10%);
+}
+
+.reminder-preview__sound-chip,
+.reminder-preview__os-note {
+  margin: 0.35rem 0 0;
+  color: #66736f;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.reminder-preview__repeat,
+.reminder-sound-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.reminder-preview__repeat > button,
+.reminder-sound-picker > button {
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgb(15 118 110 / 12%);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.reminder-preview__repeat > button[aria-pressed='true'],
+.reminder-sound-picker > button.is-selected {
+  background: #ecfdf5;
+}
+
+.reminder-sound-picker > button.is-locked {
+  opacity: 0.55;
+}
+
+@keyframes evolyn-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+.ab-plan-wizard__content.is-shake {
+  animation: evolyn-shake 0.32s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-plan-wizard__content.is-shake {
+    animation: none;
+  }
+}
+
