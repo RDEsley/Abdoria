@@ -6,6 +6,11 @@ import type {
   RoutineRecord,
 } from './activities/types.js';
 import { normalizeActivitySchedule } from './activities/schedule.js';
+import {
+  DEFAULT_REMINDER_SOUND,
+  normalizeReminderSound,
+  type ReminderSoundId,
+} from './reminder-sounds.js';
 
 export const PERSONAL_NOTIFICATION_VERSION = 2 as const;
 export const PERSONAL_NOTIFICATION_MAX_REQUESTS = 64;
@@ -24,6 +29,8 @@ export interface PersonalizedReminder {
   message: string;
   icon: PersonalNotificationIcon;
   color: PersonalNotificationColor;
+  /** Som nativo; lembretes antigos sem o campo usam o padrão do app. */
+  sound: ReminderSoundId;
   schedule: PersonalNotificationSchedule;
   enabled: boolean;
   createdAt: string;
@@ -130,6 +137,7 @@ function migrateLegacyReminder(value: LegacyPersonalizedReminder): PersonalizedR
     message: typeof value.message === 'string' ? value.message.trim().slice(0, 160) : '',
     icon: 'neutral',
     color: colorBySkin[legacySkin] ?? 'neutral',
+    sound: DEFAULT_REMINDER_SOUND,
     schedule: { kind: 'recurring', times: [time], weekdays },
     enabled: value.enabled !== false,
     createdAt,
@@ -172,6 +180,7 @@ export function normalizePersonalizedReminder(raw: unknown): PersonalizedReminde
     color: COLORS.has(raw.color as PersonalNotificationColor)
       ? (raw.color as PersonalNotificationColor)
       : 'neutral',
+    sound: normalizeReminderSound(raw.sound),
     schedule,
     enabled: raw.enabled !== false,
     createdAt,
@@ -513,6 +522,7 @@ export function deriveActivityReminders(
         source.kind === 'routine' ? 'Hora da sua rotina.' : 'Um passo da sua rotina te espera.',
       icon: mapActivityIcon(entity.icon),
       color: mapActivityColor(entity.color),
+      sound: DEFAULT_REMINDER_SOUND,
       schedule: adjusted,
       enabled: true,
       createdAt: nowIso,
@@ -527,6 +537,7 @@ export function deriveActivityReminders(
         message: 'Ainda dá tempo de registrar hoje.',
         icon: mapActivityIcon(entity.icon),
         color: mapActivityColor(entity.color),
+        sound: DEFAULT_REMINDER_SOUND,
         schedule: {
           kind: 'recurring',
           times: personalSchedule.times.map((time) => shiftTime(time, 30)),
@@ -572,6 +583,7 @@ export function deriveActivityReminders(
         message: `Hora de ${activity.name} na rotina ${routine.name}.`,
         icon: mapActivityIcon(activity.icon),
         color: mapActivityColor(activity.color),
+        sound: DEFAULT_REMINDER_SOUND,
         schedule: itemSchedule,
         enabled: true,
         createdAt: nowIso,

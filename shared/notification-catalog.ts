@@ -1,9 +1,8 @@
 /**
  * Notification appearance catalogue.
  *
- * Sound personalisation was removed in Playful 2.0 — notifications now use
- * the default platform/OS sound.  Legacy `sound` values in persisted JSONB
- * are silently ignored (see reminders.ts normalisation).
+ * Sound personalisation lives in reminder.sound for native apps (Android
+ * channels / iOS bundled WAVs). Web Push cannot choose a custom sound.
  *
  * A imagem de sistema das notificações Evolyn é o broto-assistente
  * (`evolyn-96` / `evolyn-192`). Ícones de categoria (água, treino…) ficam
