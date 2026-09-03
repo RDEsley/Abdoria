@@ -1,50 +1,69 @@
-import { lazy, Suspense } from 'react';
-import { CalendarCheck2, NotebookPen } from 'lucide-react';
-import { AtividadesCard } from '@/components/dashboard/AtividadesCard';
-import { BlocoNotasCard } from '@/components/dashboard/BlocoNotasCard';
-import { ReminderCenter } from '@/components/activities/ReminderCenter';
+import { useState } from 'react';
+import { Bell } from 'lucide-react';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { ReminderCenter } from '@/components/activities/ReminderCenter';
+import { Modal } from '@/components/ui/Modal';
+import { useActivitiesData } from '@/features/activities/useActivitiesData';
+import { TodayTab } from '@/features/activities/TodayTab';
+import { RoutinesTab } from '@/features/activities/RoutinesTab';
+import { InsightsTab } from '@/features/activities/InsightsTab';
+import { playTabSwitch } from '@/lib/sounds';
 
-const ActivityCalendar = lazy(() =>
-  import('@/components/dashboard/ActivityCalendar').then((module) => ({
-    default: module.ActivityCalendar,
-  })),
-);
+type Tab = 'hoje' | 'rotinas' | 'insights';
 
-/** Área dedicada à organização pessoal e ao histórico diário. */
 export function ActivitiesPage() {
+  const data = useActivitiesData();
+  const [tab, setTab] = useState<Tab>('hoje');
+  const [remindersOpen, setRemindersOpen] = useState(false);
+
+  if (data.loading) return <PageLoader />;
+
   return (
-    <div className="activities-page flex flex-col gap-5 pb-24">
-      <GamePageHeader eyebrow="Pequenos passos, grandes sequências" title="Sua jornada diária" />
+    <div className="activities-page flex flex-col gap-4 pb-24">
+      <header className="flex items-start justify-between gap-3">
+        <GamePageHeader eyebrow="Rotina no seu ritmo" title="Atividades" />
+        <button
+          type="button"
+          className="game-icon-btn"
+          aria-label="Lembretes livres"
+          onClick={() => setRemindersOpen(true)}
+        >
+          <Bell size={18} />
+        </button>
+      </header>
 
-      <section className="activities-page__routine" aria-label="Rotina de hoje">
-        <AtividadesCard />
-      </section>
+      <div className="flex gap-2">
+        {(
+          [
+            ['hoje', 'Hoje'],
+            ['rotinas', 'Rotinas'],
+            ['insights', 'Insights'],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className={`game-tab${tab === id ? ' game-tab--active' : ''}`}
+            onClick={() => {
+              playTabSwitch();
+              setTab(id);
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-      <section
-        className="app-surface activities-page__notes"
-        aria-labelledby="activity-notes-title"
-      >
-        <h2 id="activity-notes-title" className="game-section-title flex items-center gap-2">
-          <NotebookPen size={16} aria-hidden /> Bloco de Notas
-        </h2>
-        <p className="activities-page__section-copy">
-          Anotações rápidas, separadas dos seus alertas.
-        </p>
-        <BlocoNotasCard />
-      </section>
+      {tab === 'hoje' && <TodayTab data={data} />}
+      {tab === 'rotinas' && <RoutinesTab data={data} />}
+      {tab === 'insights' && <InsightsTab data={data} />}
 
-      <ReminderCenter />
-
-      <section className="glass-card activities-page__calendar p-4">
-        <h2 className="game-section-title flex items-center gap-2">
-          <CalendarCheck2 size={15} aria-hidden /> Mapa de atividades
-        </h2>
-        <Suspense fallback={<PageLoader />}>
-          <ActivityCalendar />
-        </Suspense>
-      </section>
+      <Modal open={remindersOpen} onClose={() => setRemindersOpen(false)} variant="wide">
+        <div className="max-h-[80vh] overflow-y-auto p-3">
+          <ReminderCenter />
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -245,7 +245,7 @@ export function PublicProfilePage() {
         <div className="public-profile-stat">
           <Flame size={16} className="text-orange-500" aria-hidden />
           <strong>{profile.streak_atual}d</strong>
-          <span>Streak</span>
+          <span>Streak Evolyn</span>
         </div>
         <div className="public-profile-stat">
           <Trophy size={16} className="text-amber-500" aria-hidden />

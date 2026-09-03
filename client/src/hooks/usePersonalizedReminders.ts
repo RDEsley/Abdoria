@@ -1,15 +1,41 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
-import { normalizePersonalizedReminders } from '@shared/reminders';
+import { deriveActivityReminders, normalizePersonalizedReminders } from '@shared/reminders';
 import { Capacitor } from '@capacitor/core';
+import { listActivities, listRoutines } from '@/lib/api/activities';
+import type { ActivityRecord, RoutineRecord } from '@shared/activities';
 
 export function usePersonalizedReminders() {
   const { user } = useAuth();
   const optOut = user?.preferencias?.notificacoes_opt_out ?? false;
-  const reminders = useMemo(
+  const personal = useMemo(
     () => normalizePersonalizedReminders(user?.preferencias?.lembretes_personalizados ?? []),
     [user?.preferencias?.lembretes_personalizados],
+  );
+  const [activities, setActivities] = useState<ActivityRecord[]>([]);
+  const [routines, setRoutines] = useState<RoutineRecord[]>([]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    let cancelled = false;
+    Promise.all([listActivities(), listRoutines()])
+      .then(([nextActivities, nextRoutines]) => {
+        if (cancelled) return;
+        setActivities(nextActivities);
+        setRoutines(nextRoutines);
+      })
+      .catch(() => {
+        /* dispatcher ainda funciona com lembretes livres */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const reminders = useMemo(
+    () => [...personal, ...deriveActivityReminders(activities, routines)],
+    [personal, activities, routines],
   );
 
   useEffect(() => {

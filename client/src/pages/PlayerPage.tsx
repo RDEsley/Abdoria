@@ -7,7 +7,6 @@ import {
   ChevronRight,
   CircleHelp,
   Hourglass,
-  ListChecks,
   Pause,
   Play,
   RotateCcw,
@@ -29,7 +28,6 @@ import { shouldPauseWorkoutForGuide } from '@shared/workout-player';
 import { GameButton } from '@/components/ui/GameButton';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/hooks/useAuth';
-import { useAtividadesFlow } from '@/hooks/useAtividadesFlow';
 import {
   playBeep,
   playCompleteSet,
@@ -62,7 +60,7 @@ import { readWorkoutOrLegacy, webWorkoutSessionStorage } from '@/lib/workout-ses
 import { keepScreenAwake } from '@/lib/platform/screen-awake';
 import { actionHaptic } from '@/lib/platform/native-runtime';
 
-type Phase = 'ready' | 'working' | 'side_transition' | 'resting' | 'done' | 'atividades-prompt';
+type Phase = 'ready' | 'working' | 'side_transition' | 'resting' | 'done';
 
 function sideInstruction(item: WorkoutQueueItem | undefined, sideIndex: 0 | 1): string | null {
   if (!item || item.laterality !== 'per_side') return null;
@@ -74,7 +72,6 @@ export function PlayerPage() {
   const location = useLocation();
   const { saveWorkout, exercises } = useApp();
   const { user: authUser } = useAuth();
-  const atividadesFlow = useAtividadesFlow();
   const [initialSnapshot] = useState(readWorkoutOrLegacy);
   const resumeRequested = Boolean(
     (location.state as { resumingWorkout?: boolean } | null)?.resumingWorkout,
@@ -173,7 +170,7 @@ export function PlayerPage() {
   }, [workout, initialSnapshot]);
 
   useEffect(() => {
-    if (!workout || phase === 'done' || phase === 'atividades-prompt') return;
+    if (!workout || phase === 'done') return;
     webWorkoutSessionStorage.write({
       version: 2,
       sessionId: sessionIdRef.current,
@@ -474,10 +471,7 @@ export function PlayerPage() {
   };
 
   const openExerciseGuide = () => {
-    const shouldPause =
-      phase !== 'atividades-prompt' &&
-      current &&
-      shouldPauseWorkoutForGuide(phase, current.modo, paused);
+    const shouldPause = current && shouldPauseWorkoutForGuide(phase, current.modo, paused);
     if (shouldPause) {
       pauseStartedRef.current = Date.now();
       setPaused(true);
@@ -579,19 +573,7 @@ export function PlayerPage() {
   }, [phase]);
 
   const continueAfterWorkout = () => {
-    const podeOferecerAtividades =
-      atividadesFlow.agenda.junto_com_treino && atividadesFlow.filaPendente.length > 0;
-    if (podeOferecerAtividades) {
-      setPhase('atividades-prompt');
-    } else {
-      navigate('/');
-    }
-  };
-
-  /** Leva pra tela de escolha das atividades — nenhuma abre sozinha, o
-      usuário escolhe da lista qual quer fazer primeiro. */
-  const startQueuedActivities = () => {
-    navigate('/atividades-player');
+    navigate('/');
   };
 
   const handleRodadaManter = () => {
@@ -639,38 +621,6 @@ export function PlayerPage() {
         onRodadaKeep={handleRodadaManter}
         onRodadaSwap={() => void handleRodadaTrocar()}
       />
-    );
-  }
-
-  if (phase === 'atividades-prompt') {
-    const n = atividadesFlow.filaPendente.length;
-    return (
-      <div className="game-app fixed inset-0 z-50 flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="game-victory relative z-10 text-center"
-        >
-          <span className="game-atividades-prompt__icon" aria-hidden>
-            <ListChecks size={30} />
-          </span>
-          <h2 className="game-victory__title !text-base">QUER FAZER AS ATIVIDADES AGORA?</h2>
-          <p className="mt-2 text-sm font-bold text-stone-600">
-            Você anexou {n} atividade{n === 1 ? '' : 's'} a este treino — dá para fazer agora, na
-            sequência, ou deixar pra mais tarde.
-          </p>
-          <GameButton
-            size="lg"
-            className="mt-5 flex w-full items-center justify-center gap-2"
-            onClick={startQueuedActivities}
-          >
-            Sim, fazer agora <ChevronRight size={18} />
-          </GameButton>
-          <button type="button" className="game-auth-guest-link" onClick={() => navigate('/')}>
-            Fazer mais tarde
-          </button>
-        </motion.div>
-      </div>
     );
   }
 

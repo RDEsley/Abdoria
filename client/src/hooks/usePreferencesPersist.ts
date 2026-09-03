@@ -1,42 +1,31 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { updateMe } from '@/lib/api';
 import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/hooks/useAuth';
+import type { IUserDocument } from '@/types';
+
+let sharedUser: IUserDocument | null = null;
+let persistChain: Promise<unknown> = Promise.resolve();
+let persistSeq = 0;
 
 /**
- * Update otimista de `preferencias`, serializado numa fila — a UI atualiza
- * NA HORA com o estado otimista; o `updateMe` roda em segundo plano numa
- * fila serializada (cliques rápidos chegam ao servidor em ordem). `seqRef`
- * garante que só a ÚLTIMA resposta do servidor reconcilia o estado
- * (respostas antigas não regridem um otimista mais novo). Falha desfaz
- * voltando pro servidor. Extraído de AtividadesCard (mesmo padrão usado
- * pelo Bloco de Notas) pra não duplicar a fila de persistência.
+ * Update otimista de `preferencias`, serializado numa fila global — a UI
+ * atualiza na hora; o `updateMe` roda em segundo plano. Uma única fila
+ * no módulo evita corrida entre Atividades, notas e lembretes.
  */
 export function usePreferencesPersist() {
   const { user, refresh, applyUser: applyAppUser } = useApp();
   const { applyUser } = useAuth();
 
-  const userRef = useRef(user);
   useEffect(() => {
-    userRef.current = user;
+    sharedUser = user;
   }, [user]);
-  const chainRef = useRef<Promise<unknown>>(Promise.resolve());
-  const seqRef = useRef(0);
 
-  /**
-   * Aplica um usuário devolvido por OUTRA rota (XP de lembrete, moedas...)
-   * preservando as `preferencias` locais — esta fila é a dona delas.
-   *
-   * Essas rotas leem o perfil no início da request e devolvem ele inteiro, o
-   * que inclui `preferencias` como estavam ANTES do `updateMe` daqui. Aplicar
-   * a resposta crua desfaz na tela a alteração recém-feita (era isso que fazia
-   * um lembrete recém-concluído voltar a aparecer como pendente).
-   */
   const applyServerUser = (next: Parameters<typeof applyUser>[0]): void => {
-    const merged = { ...next, preferencias: userRef.current?.preferencias ?? next.preferencias };
-    userRef.current = merged;
+    const merged = { ...next, preferencias: sharedUser?.preferencias ?? next.preferencias };
+    sharedUser = merged;
     applyUser(merged);
     applyAppUser(merged);
   };
@@ -46,28 +35,28 @@ export function usePreferencesPersist() {
     mensagem?: string,
     onPersisted?: () => void,
   ): Promise<void> => {
-    const base = userRef.current;
+    const base = sharedUser ?? user;
     if (!base) return Promise.resolve();
 
     const preferencias = { ...base.preferencias, ...patch };
     const otimista = { ...base, preferencias };
-    userRef.current = otimista;
+    sharedUser = otimista;
     applyUser(otimista);
     applyAppUser(otimista);
 
-    const seq = ++seqRef.current;
-    const task = chainRef.current
+    const seq = ++persistSeq;
+    const task = persistChain
       .then(() => updateMe({ preferencias }))
       .then((atualizado) => {
-        if (seq !== seqRef.current) return;
-        userRef.current = atualizado;
+        if (seq !== persistSeq) return;
+        sharedUser = atualizado;
         applyUser(atualizado);
         applyAppUser(atualizado);
         if (mensagem) showGameToast(mensagem, { variant: 'success' });
         onPersisted?.();
       })
       .catch((err) => {
-        if (seq !== seqRef.current) return;
+        if (seq !== persistSeq) return;
         showGameToast(getErrorMessage(err, 'Não foi possível salvar — desfazendo.'), {
           variant: 'error',
         });
@@ -75,7 +64,7 @@ export function usePreferencesPersist() {
       })
       .then(() => undefined);
 
-    chainRef.current = task;
+    persistChain = task;
     return task;
   };
 

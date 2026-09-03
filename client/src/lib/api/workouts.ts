@@ -34,45 +34,6 @@ export function getWorkoutHistory(): Promise<IWorkoutHistoryDocument[]> {
   return fetchJson('/workouts/history');
 }
 
-export interface CompleteAtividadeResponse {
-  user: import('@/types').IUserDocument;
-  atividade: import('@shared/atividades').AtividadeExtra;
-  xp_ganho: number;
-  abdoria_ganha: number;
-  /** true = hoje é dia de treino agendado; usado apenas para contexto visual. */
-  dia_de_treino: boolean;
-  atividades_hoje: number;
-  /** Teto de atividades que ainda pagam XP no dia (não é mínimo pra streak). */
-  atividades_minimo: number;
-  streak_celebration: { streak_atual: number; streak_anterior: number } | null;
-  level_up: { level_anterior: number; level_novo: number } | null;
-  new_achievements: { id: string; titulo: string; descricao: string; icon: string }[];
-}
-
-/**
- * Conclui uma Atividade da fila do dia com as métricas do form contextual.
- * Em qualquer dia, uma conclusão sustenta a streak. As primeiras atividades
- * do dia concedem XP; depois do limite diário, passam a conceder Folhas.
- */
-export function completeAtividade(
-  atividadeId: string,
-  payload: { metricas: Record<string, number | string>; obs?: string },
-): Promise<CompleteAtividadeResponse> {
-  return fetchJson('/workouts/atividade/complete', {
-    method: 'POST',
-    body: JSON.stringify({
-      atividade_id: atividadeId,
-      metricas: payload.metricas,
-      ...(payload.obs ? { obs: payload.obs } : {}),
-    }),
-  });
-}
-
-/**
- * Preenche/corrige os dados de uma atividade já registrada. Serve pra quem
- * concluiu sem informar nada na hora e quer completar depois — não recalcula
- * XP, Folhas ou streak; altera somente o conteúdo do registro.
- */
 export function completeWorkout(payload: CompleteWorkoutPayload): Promise<CompleteWorkoutResponse> {
   return fetchJson('/workouts/complete', { method: 'POST', body: JSON.stringify(payload) });
 }

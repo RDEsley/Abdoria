@@ -1,24 +1,13 @@
-import { Dumbbell, ListChecks, Play, Timer, X } from 'lucide-react';
+import { Dumbbell, Play, Timer } from 'lucide-react';
 
 interface Props {
   exerciseCount: number;
   estimatedMinutes: number | null;
   disabled: boolean;
   onStart: () => void;
-  /** Atividades na fila do dia — entram na sequência depois do treino. */
-  atividadesNaFila?: number;
-  /** Presente = mostra o X para tirar as atividades anexadas ao treino. */
-  onRemoverAtividades?: () => void;
 }
 
-export function BuilderStickyBar({
-  exerciseCount,
-  estimatedMinutes,
-  disabled,
-  onStart,
-  atividadesNaFila = 0,
-  onRemoverAtividades,
-}: Props) {
+export function BuilderStickyBar({ exerciseCount, estimatedMinutes, disabled, onStart }: Props) {
   const hasTime = estimatedMinutes !== null && exerciseCount > 0;
 
   return (
@@ -34,29 +23,6 @@ export function BuilderStickyBar({
               <Dumbbell size={13} aria-hidden />
               {exerciseCount} exercício{exerciseCount !== 1 ? 's' : ''}
             </span>
-            {atividadesNaFila > 0 && (
-              <span
-                className="builder-start-pill builder-start-pill--atividades"
-                title="Suas atividades entram na sequência depois do treino"
-              >
-                <ListChecks size={13} aria-hidden />+{atividadesNaFila} atividade
-                {atividadesNaFila !== 1 ? 's' : ''}
-                {onRemoverAtividades && (
-                  <button
-                    type="button"
-                    className="builder-start-pill__remove"
-                    aria-label="Tirar atividades do treino de hoje"
-                    title="Tirar atividades do treino de hoje"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoverAtividades();
-                    }}
-                  >
-                    <X size={11} aria-hidden />
-                  </button>
-                )}
-              </span>
-            )}
           </div>
           <button type="button" className="builder-start-btn" onClick={onStart} disabled={disabled}>
             <span className="builder-start-btn__icon" aria-hidden>
