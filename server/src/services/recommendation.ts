@@ -209,11 +209,11 @@ export async function markCycleCompleted(user: UserMutable, treinoTipo?: string)
   const allDone = ciclos.every((c) => rodada[c]);
   if (allDone) {
     user.preferencias.ciclos_completados_rodada = {};
-    await user.save();
+    await user.saveColumns(['preferencias']);
     return true;
   }
 
-  await user.save();
+  await user.saveColumns(['preferencias']);
   return false;
 }
 

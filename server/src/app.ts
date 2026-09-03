@@ -14,6 +14,8 @@ import { socialRouter } from './routes/social.js';
 import { presetsRouter } from './routes/presets.js';
 import { usersRouter } from './routes/users.js';
 import { workoutsRouter } from './routes/workouts.js';
+import { activitiesRouter, activityLogsRouter, routinesRouter } from './routes/activities.js';
+import { dayRouter, insightsRouter } from './routes/day.js';
 
 export function createApp() {
   const app = express();
@@ -74,6 +76,11 @@ export function createApp() {
   app.use('/api/exercises', exercisesRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/workouts', workoutsRouter);
+  app.use('/api/activities', activitiesRouter);
+  app.use('/api/activity-logs', activityLogsRouter);
+  app.use('/api/routines', routinesRouter);
+  app.use('/api/day', dayRouter);
+  app.use('/api/insights', insightsRouter);
   app.use('/api/presets', presetsRouter);
   app.use('/api/leaderboard', leaderboardRouter);
   app.use('/api/notifications', notificationsRouter);

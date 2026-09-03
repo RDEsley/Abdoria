@@ -18,10 +18,8 @@ import { ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { awardMoedaFromXpProgress, syncShopUnlocks } from '../services/shop.js';
 import {
   applyWorkoutXpBreakdown,
-  awardDailyXp,
   calculateWorkoutXpBreakdown,
   getDailyXpCapBreakdownForUser,
-  grantMoeda,
   readMoedaBalance,
 } from '../services/economy.js';
 import {
@@ -35,6 +33,8 @@ import {
   buildStreakRecordMatch,
 } from '../../../shared/streak/recovery.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
+import { addDaysSaoPaulo } from '../../../shared/utils/timezone.js';
+import { ActiveDays } from '../repositories/active-days-repository.js';
 import type { MusculoPrincipal } from '../types/index.js';
 import { xpLevelFromTotal } from '../types/index.js';
 import { readInventarioSummary } from '../services/inventory.js';
@@ -44,21 +44,7 @@ import {
   computePersonalRecords,
   diffNewPersonalRecords,
 } from '../../../shared/personal-records.js';
-import {
-  ATIVIDADE_COINS_EXTRA,
-  ATIVIDADE_DURACAO_MIN,
-  ATIVIDADE_OBS_MAX,
-  ATIVIDADE_XP_POR_UNIDADE,
-  ATIVIDADES_MIN_DESCANSO,
-  camposParaAtividade,
-  findAtividade,
-  isAtividadeHistory,
-  isDiaDeTreino,
-  nomeHistoricoAtividade,
-  type AtividadeExtra,
-  type AtividadeLog,
-} from '../../../shared/atividades.js';
-import { endOfDaySaoPaulo, getSaoPauloWeekday, startOfDaySaoPaulo } from '../utils/timezone.js';
+import { recordValidDailyAction } from '../services/active-day.js';
 
 export const workoutsRouter = Router();
 
@@ -154,6 +140,8 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       monthly,
       totalExercisesAgg,
       totalDurationAgg,
+      diasAtivos7,
+      diasAtivos30,
     ] = await Promise.all([
       hasTrainedToday(userId),
       hasStreakSecuredToday(userId),
@@ -169,13 +157,15 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
         { $sort: { _id: 1 } },
       ]),
       WorkoutHistory.aggregate([
-        { $match: { usuario_id: user.id } },
+        { $match: { usuario_id: user.id, atividade: null } },
         { $group: { _id: null, total: { $sum: { $size: '$exercicios' } } } },
       ]),
       WorkoutHistory.aggregate([
-        { $match: { usuario_id: user.id } },
+        { $match: { usuario_id: user.id, atividade: null } },
         { $group: { _id: null, total: { $sum: '$duracao_total_segundos' } } },
       ]),
+      ActiveDays.countSince(userId, addDaysSaoPaulo(getTodaySaoPaulo(), -6)),
+      ActiveDays.countSince(userId, addDaysSaoPaulo(getTodaySaoPaulo(), -29)),
     ]);
 
     const muscles = Object.entries(weeklyMuscles) as [MusculoPrincipal, number][];
@@ -235,6 +225,8 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       area_mais_treinada: sorted[0]?.[0] ?? null,
       area_menos_treinada: trained.length > 0 ? trained.sort((a, b) => a[1] - b[1])[0][0] : null,
       total_exercicios: (totalExercisesAgg[0] as { total?: number })?.total ?? 0,
+      dias_ativos_7: diasAtivos7,
+      dias_ativos_30: diasAtivos30,
     });
   } catch (error) {
     console.error('GET /api/workouts/stats error:', error);
@@ -480,6 +472,8 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
       return;
     }
 
+    await recordValidDailyAction(user.id, 'workout_completed', new Date(history.concluido_em));
+
     const rodadaCompleta =
       planoDiaIndice != null && isPlanoUser(user)
         ? await markPlanoDayCompleted(user, planoDiaIndice)
@@ -509,7 +503,7 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
     syncShopUnlocks(updatedUser);
 
     await WorkoutHistory.updateById(history.id, { xp_ganho: xpAwarded });
-    await updatedUser.save();
+    await updatedUser.saveColumns(['gamificacao', 'xp_diario', 'cosmeticos']);
 
     const streakAfter = updatedUser.gamificacao.streak_atual;
     const streakExtended = streakAfter > streakBefore;
@@ -540,194 +534,5 @@ workoutsRouter.post('/complete', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/workouts/complete error:', error);
     res.status(500).json({ error: 'Erro ao salvar treino.' });
-  }
-});
-
-/** Valida as respostas do form contextual contra os campos daquela atividade. */
-function sanitizeMetricas(
-  atividade: AtividadeExtra,
-  raw: unknown,
-): Record<string, number | string> {
-  const entrada = (raw ?? {}) as Record<string, unknown>;
-  const metricas: Record<string, number | string> = {};
-
-  for (const campo of camposParaAtividade(atividade)) {
-    const valor = entrada[campo.id];
-    if (valor === undefined || valor === null || valor === '') continue;
-
-    if (campo.formato === 'texto') {
-      const texto = String(valor).trim().slice(0, 60);
-      if (texto) metricas[campo.id] = texto;
-      continue;
-    }
-
-    const numero = Number(valor);
-    if (!Number.isFinite(numero) || numero <= 0) continue;
-    metricas[campo.id] =
-      campo.formato === 'inteiro' ? Math.round(numero) : Math.round(numero * 100) / 100;
-  }
-
-  return metricas;
-}
-
-/** Janela anti-reenvio (duplo toque, retry de rede) para a MESMA atividade.
-    Não é regra de jogo — repetir mais tarde no mesmo dia é permitido. */
-const ATIVIDADE_REENVIO_MS = 20_000;
-
-/**
- * Conclui uma Atividade da fila do dia.
- *
- * Regras de XP, Folhas e streak para atividades:
- * - XP: `ATIVIDADE_XP_POR_UNIDADE` por atividade, em qualquer dia, até
- *   `ATIVIDADES_MIN_DESCANSO` atividades no dia — da 4ª em diante vira
- *   `ATIVIDADE_COINS_EXTRA` Folhas em vez de XP. Ainda sujeito ao limite diário
- *   geral de XP (`awardDailyXp` corta se o orçamento do dia já estourou).
- * - Streak: uma única atividade concluída já sustenta a sequência, em
- *   qualquer dia, de treino ou descanso, mas nunca marca o treino
- *   do dia como concluída (`hasTrainedToday` exige treino de verdade).
- */
-workoutsRouter.post('/atividade/complete', async (req: AuthRequest, res) => {
-  try {
-    const user = await User.findById(req.userId!);
-    if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado.' });
-      return;
-    }
-
-    const body = req.body as { atividade_id?: string; metricas?: unknown; obs?: string };
-    const atividade = findAtividade(user.preferencias, String(body.atividade_id ?? ''));
-    if (!atividade) {
-      res.status(404).json({ error: 'Atividade não encontrada.' });
-      return;
-    }
-
-    const todayFilter = {
-      usuario_id: user.id,
-      concluido_em: {
-        $gte: startOfDaySaoPaulo().toISOString(),
-        $lt: endOfDaySaoPaulo().toISOString(),
-      },
-    };
-    const sessoesHoje = await WorkoutHistory.find(todayFilter);
-    const historyNome = nomeHistoricoAtividade(atividade.nome);
-
-    // Repetir a mesma atividade no mesmo dia é permitido (ex.: duas sessões de
-    // leitura) — a interface convida a isso ("toque para repetir"), e bloquear
-    // deixava o item preso numa fila impossível de concluir. O XP não infla:
-    // o teto de `ATIVIDADES_MIN_DESCANSO` por dia e o `awardDailyXp` já
-    // limitam. O que ainda barramos é reenvio acidental (duplo toque, retry de
-    // rede), com uma janela curta.
-    const ultimaIgual = sessoesHoje
-      .filter((entry) => entry.treino_nome === historyNome)
-      .reduce<number>(
-        (maisRecente, entry) => Math.max(maisRecente, new Date(entry.concluido_em).getTime()),
-        0,
-      );
-    if (ultimaIgual > 0 && Date.now() - ultimaIgual < ATIVIDADE_REENVIO_MS) {
-      res.status(400).json({ error: 'Essa atividade acabou de ser registrada.' });
-      return;
-    }
-
-    const streakBefore = user.gamificacao.streak_atual;
-    const prevAchievements = new Set(user.gamificacao.conquistas);
-
-    const metricas = sanitizeMetricas(atividade, body.metricas);
-    const obs = String(body.obs ?? '')
-      .trim()
-      .slice(0, ATIVIDADE_OBS_MAX);
-    const log: AtividadeLog = {
-      atividade_id: atividade.id,
-      nome: atividade.nome,
-      icon: atividade.icon,
-      tipo: atividade.tipo,
-      metricas,
-      ...(obs ? { obs } : {}),
-    };
-
-    const minutos =
-      Number(metricas.tempo_min) ||
-      (atividade.meta_tipo === 'tempo' ? atividade.meta_valor : ATIVIDADE_DURACAO_MIN);
-
-    const history = await WorkoutHistory.create({
-      usuario_id: user.id,
-      treino_nome: historyNome,
-      treino_tipo: 'custom',
-      exercicios: [],
-      duracao_total_segundos: Math.max(0, Math.round(minutos)) * 60,
-      musculos_estimulados: [],
-      concluido_em: new Date(),
-      xp_ganho: 0,
-      plano_dia_indice: null,
-      atividade: log as unknown as Record<string, unknown>,
-    });
-
-    await syncUserGamification(user.id.toString());
-    const updatedUser = await User.findById(user.id);
-    if (!updatedUser) {
-      res.status(500).json({ error: 'Erro ao atualizar usuário.' });
-      return;
-    }
-
-    const diaDeTreino = isDiaDeTreino(
-      updatedUser.ab_training_profile_v2?.training_days ??
-        updatedUser.perfil_treino?.dias_semana ??
-        null,
-      getSaoPauloWeekday(),
-    );
-
-    // Mesma regra em qualquer dia: as primeiras `ATIVIDADES_MIN_DESCANSO` do
-    // dia concedem XP fixo; as seguintes concedem Folhas.
-    const atividadesHojeAntes = sessoesHoje.filter((entry) =>
-      isAtividadeHistory(entry.treino_nome),
-    ).length;
-    const dentroDoTetoXp = atividadesHojeAntes < ATIVIDADES_MIN_DESCANSO;
-
-    const levelBefore = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
-    const xpAwarded = dentroDoTetoXp ? awardDailyXp(updatedUser, ATIVIDADE_XP_POR_UNIDADE) : 0;
-    const levelAfter = xpLevelFromTotal(updatedUser.gamificacao.nivel_xp);
-    let abdoriaGanha = xpAwarded > 0 ? awardMoedaFromXpProgress(updatedUser) : 0;
-    if (!dentroDoTetoXp) {
-      grantMoeda(updatedUser, ATIVIDADE_COINS_EXTRA);
-      abdoriaGanha += ATIVIDADE_COINS_EXTRA;
-    }
-    syncShopUnlocks(updatedUser);
-
-    if (xpAwarded > 0) await WorkoutHistory.updateById(history.id, { xp_ganho: xpAwarded });
-    await updatedUser.save();
-
-    const atividadesHoje = atividadesHojeAntes + 1;
-    const streakAfter = updatedUser.gamificacao.streak_atual;
-    const newAchievements = updatedUser.gamificacao.conquistas.filter(
-      (a) => !prevAchievements.has(a),
-    );
-
-    res.status(201).json({
-      history: { ...history, xp_ganho: xpAwarded },
-      user: sanitizeUser(updatedUser),
-      atividade,
-      xp_ganho: xpAwarded,
-      abdoria_ganha: abdoriaGanha,
-      dia_de_treino: diaDeTreino,
-      atividades_hoje: atividadesHoje,
-      atividades_minimo: ATIVIDADES_MIN_DESCANSO,
-      streak_celebration:
-        streakAfter > streakBefore
-          ? { streak_atual: streakAfter, streak_anterior: streakBefore }
-          : null,
-      level_up:
-        levelAfter > levelBefore ? { level_anterior: levelBefore, level_novo: levelAfter } : null,
-      new_achievements: newAchievements
-        .map((id) => ACHIEVEMENT_BY_ID[id])
-        .filter(Boolean)
-        .map((a) => ({
-          id: a!.id,
-          titulo: a!.titulo,
-          descricao: a!.descricao,
-          icon: a!.icon,
-        })),
-    });
-  } catch (error) {
-    console.error('POST /api/workouts/atividade/complete error:', error);
-    res.status(500).json({ error: 'Erro ao concluir atividade.' });
   }
 });
