@@ -37,11 +37,6 @@ import {
   type NotificationPermissionState,
 } from '@/lib/platform/notification-scheduler';
 import { ensureWebPushSubscription, removeWebPushSubscription } from '@/lib/platform/web-push';
-import {
-  ATIVIDADE_COINS_EXTRA,
-  ATIVIDADE_XP_POR_UNIDADE,
-  ATIVIDADES_MIN_DESCANSO,
-} from '@shared/atividades';
 import { AB_INTENSITY_LABELS } from '@shared/ab-training-profile';
 import {
   MOEDA_XP_STEP,
@@ -398,22 +393,15 @@ export function SettingsPage() {
                 <p className="mb-2 font-bold text-stone-700">Atividades</p>
                 <ul className="mb-3 list-disc space-y-1 pl-5">
                   <li>
-                    Até <strong>+{ATIVIDADE_XP_POR_UNIDADE} XP</strong> por atividade concluída, em
-                    qualquer dia — limitado pelo saldo restante do máximo diário unificado.
+                    A primeira conclusão de cada atividade no dia dá <strong>+15 XP</strong> (versão
+                    mínima +8 XP), até 4 atividades distintas. Repetições extras só registram o dia.
                   </li>
                   <li>
-                    Vale pras primeiras <strong>{ATIVIDADES_MIN_DESCANSO}</strong> atividades do
-                    dia. Da próxima em diante, cada atividade extra dá{' '}
-                    <strong>
-                      +{ATIVIDADE_COINS_EXTRA} {CURRENCY_NAME}
-                    </strong>{' '}
-                    em vez de XP.
+                    Rotina completa: <strong>+10 XP</strong> uma vez por dia, por rotina.
                   </li>
                   <li>
-                    Sequência (streak): uma única atividade concluída já mantém a sequência, em
-                    qualquer dia — treino ou descanso. Treino e atividades não se substituem: os
-                    dois contam para o streak, mas concluir atividades não marca o treino do dia
-                    como feito.
+                    Qualquer ação válida (treino, atividade ou rotina) garante o Dia Ativo e
+                    sustenta a sequência. Concluir atividades não marca o treino do dia como feito.
                   </li>
                 </ul>
                 <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>
@@ -425,9 +413,6 @@ export function SettingsPage() {
                   <li>
                     <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong>{' '}
                     totais ganhos (conversão automática).
-                  </li>
-                  <li>
-                    Atividades extras do dia também dão {CURRENCY_NAME} diretamente (ver acima).
                   </li>
                 </ul>
               </div>

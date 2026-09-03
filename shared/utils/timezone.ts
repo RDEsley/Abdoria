@@ -93,7 +93,7 @@ function saoPauloOffsetMs(instant: Date): number {
   return representedAsUtc - instantWithoutMs;
 }
 
-function startOfSaoPauloDayKey(dayKey: string): Date {
+export function startOfDayKeySaoPaulo(dayKey: string): Date {
   const [year, month, day] = dayKey.split('-').map(Number);
   const utcMidnight = Date.UTC(year, month - 1, day);
 
@@ -106,11 +106,11 @@ function startOfSaoPauloDayKey(dayKey: string): Date {
 }
 
 export function startOfDaySaoPaulo(date = new Date()): Date {
-  return startOfSaoPauloDayKey(getTodaySaoPaulo(date));
+  return startOfDayKeySaoPaulo(getTodaySaoPaulo(date));
 }
 
 export function endOfDaySaoPaulo(date = new Date()): Date {
-  return startOfSaoPauloDayKey(addDaysSaoPaulo(getTodaySaoPaulo(date), 1));
+  return startOfDayKeySaoPaulo(addDaysSaoPaulo(getTodaySaoPaulo(date), 1));
 }
 
 /** Segundos até a próxima meia-noite em America/Sao_Paulo. */

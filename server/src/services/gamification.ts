@@ -6,18 +6,21 @@ import {
   findStreakMissedDaysForFreeze,
   workoutDayKey,
 } from '../../../shared/streak/protection.js';
+import { computeStreakFromDayKeys, dayKeysToStreakHistories } from '../../../shared/active-day.js';
+import { ActiveDays } from '../repositories/active-days-repository.js';
 import {
   STREAK_RECOVERY_UNLOCK_LOSSES,
   buildStreakRecoveryOffer,
   applyStreakRecoveryAnchor,
   type StreakRecoveryOffer,
 } from '../../../shared/streak/recovery.js';
-import { isAtividadeHistory } from '../../../shared/atividades.js';
+import { isActivityHistoryRow, splitHistorySessions } from '../../../shared/atividades.js';
 import { consumeInventoryItem, getItemCount } from './inventory.js';
 import { Notifications } from '../repositories/notification-repository.js';
 import { User, type UserRecord } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
+import { ActivityLogs } from '../repositories/activities-repository.js';
 import { COSMETIC_BY_ID } from '../../../shared/cosmetics.js';
 import {
   getTodaySaoPaulo,
@@ -43,27 +46,10 @@ type HistorySummary = {
   treino_tipo?: string;
   duracao_total_segundos?: number;
   treino_nome?: string;
+  atividade?: unknown;
 };
 
-function computeStreakFromHistories(
-  histories: HistorySummary[],
-  frozenDates: string[] = [],
-): { atual: number; maior: number } {
-  return computeStreakWithFrozenDays(histories, frozenDates);
-}
-
-// Streak: treino real sempre sustenta o dia; uma única Atividade concluída
-// TAMBÉM sustenta, em qualquer tipo de dia (treino ou descanso) — não tem
-// mais "mínimo 3" nem "não conta em dia de treino". Toda entrada de
-// WorkoutHistory (treino ou atividade) já entra direto no cálculo da
-// streak; nenhum filtro extra é necessário.
-
-/**
- * Tenta consumir Frozen Streak para cobrir dias perdidos (1 ou mais consecutivos, até o
- * limite de itens no inventário). Retorna as datas efetivamente congeladas nesta chamada
- * (vazio se nenhum congelamento foi aplicado) — usado pelo chamador pra gerar a notificação.
- */
-function applyStreakFreezeProtection(user: UserRecord, histories: HistorySummary[]): string[] {
+function applyStreakFreezeProtection(user: UserRecord, dayKeys: string[]): string[] {
   if (!user.gamificacao.streak_congelamentos) {
     user.gamificacao.streak_congelamentos = [];
   }
@@ -73,6 +59,7 @@ function applyStreakFreezeProtection(user: UserRecord, histories: HistorySummary
   // antigas, sem o campo) conta como ativado, que é o padrão.
   if (user.preferencias.frozen_streak_auto_usar === false) return [];
 
+  const histories = dayKeysToStreakHistories(dayKeys);
   const frozenDates = user.gamificacao.streak_congelamentos;
   const maxFreezes = getItemCount(user, FROZEN_STREAK_ITEM_ID);
   const missedDays = findStreakMissedDaysForFreeze(histories, frozenDates, maxFreezes);
@@ -200,6 +187,7 @@ export function resetXpDiarioIfNeeded(user: UserRecord): boolean {
 function evaluateAchievementsFromHistories(
   user: UserRecord,
   histories: HistorySummary[],
+  atividadesTotal: number,
 ): string[] {
   const weekStart = getWeekStart(new Date());
   const resetDate = user.muscle_map_reset_at ? new Date(user.muscle_map_reset_at) : null;
@@ -208,13 +196,19 @@ function evaluateAchievementsFromHistories(
     : weekStart;
 
   const summary = histories;
-  const totalWorkouts = summary.length;
-  const totalExercises = summary.reduce((sum, h) => sum + h.exercicios.length, 0);
-  const totalMinutes = user.gamificacao.total_minutos;
-  const streak = computeStreakFromHistories(summary, user.gamificacao.streak_congelamentos ?? []);
+  const { workouts } = splitHistorySessions(summary);
+  const totalWorkouts = workouts.length;
+  const totalExercises = workouts.reduce((sum, h) => sum + h.exercicios.length, 0);
+  const totalMinutes = Math.floor(
+    workouts.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0) / 60,
+  );
+  const streak = {
+    atual: user.gamificacao.streak_atual,
+    maior: user.gamificacao.streak_maior,
+  };
   const level = xpLevelFromTotal(user.gamificacao.nivel_xp);
 
-  const weeklyHistories = summary.filter((h) => new Date(h.concluido_em) >= since);
+  const weeklyHistories = workouts.filter((h) => new Date(h.concluido_em) >= since);
   const counts: Record<MusculoPrincipal, number> = {
     superior: 0,
     inferior: 0,
@@ -229,7 +223,7 @@ function evaluateAchievementsFromHistories(
     }
   }
 
-  const ciclosSemana = weeklyTreinoTypes(summary, weekStart);
+  const ciclosSemana = weeklyTreinoTypes(workouts, weekStart);
   const unlocked = new Set(user.gamificacao.conquistas);
 
   if (totalWorkouts > 0) unlocked.add('primeiro_treino');
@@ -280,7 +274,6 @@ function evaluateAchievementsFromHistories(
   if (totalMinutes >= 1000) unlocked.add('minutos_1000');
   if (totalExercises >= 1000) unlocked.add('exercicios_1000');
 
-  const atividadesTotal = summary.filter((h) => isAtividadeHistory(h.treino_nome)).length;
   if (atividadesTotal >= 25) unlocked.add('atividades_25');
   if (atividadesTotal >= 100) unlocked.add('atividades_100');
 
@@ -339,15 +332,20 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     { sort: { concluido_em: -1 } },
   )) as HistorySummary[];
 
-  const totalSeconds = histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
+  const dayKeys = await ActiveDays.listDayKeys(userId);
 
-  const frozenDays = applyStreakFreezeProtection(user, histories);
+  const workoutSeconds = histories
+    .filter((h) => !isActivityHistoryRow(h))
+    .reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
+  const totalSeconds = workoutSeconds;
+
+  const frozenDays = applyStreakFreezeProtection(user, dayKeys);
 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
-  const streakAfterFreeze = computeStreakFromHistories(histories, frozenDates);
+  const streakAfterFreeze = computeStreakFromDayKeys(dayKeys, frozenDates);
   const recovered = applyStreakRecoveryAnchor(
     user.gamificacao.streak_recovery_anchor,
-    [...histories.map((history) => workoutDayKey(history.concluido_em)), ...frozenDates],
+    [...dayKeys, ...frozenDates],
     getTodaySaoPaulo(),
   );
   if (!recovered.active) user.gamificacao.streak_recovery_anchor = null;
@@ -364,7 +362,8 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     persistedStreak,
   );
   const conquistasAntes = new Set(user.gamificacao.conquistas);
-  user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories);
+  const atividadesTotal = await ActivityLogs.count(userId);
+  user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories, atividadesTotal);
   // Ordem de desbloqueio (mais recente por último) — só pra saber "quais são
   // as últimas 3" no preview do Início; `evaluateAchievementsFromHistories`
   // é cumulativo (nunca remove), então o que é novo aqui é o que acabou de
@@ -453,7 +452,7 @@ async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise
       user_id: userId,
       tipo: 'streak_frozen',
       titulo: 'Frozen Streak salvou sua ofensiva!',
-      corpo: `Você não treinou, mas ${dayLabel} foram protegidos e sua sequência continua.`,
+      corpo: `Nenhuma ação registrada, mas ${dayLabel} foram protegidos e sua sequência continua.`,
       payload: { frozen_days: frozenDays },
     },
   ]);
@@ -480,12 +479,6 @@ export function hasTrainedToday(userId: string): Promise<boolean> {
     dia já está pago?" — usar o primeiro pelo segundo fazia o contador
     regressivo alarmar "pra manter a sequência" com o dia já garantido por
     atividades. */
-export function hasStreakSecuredToday(userId: string): Promise<boolean> {
-  const todayStart = startOfDaySaoPaulo();
-  const tomorrow = endOfDaySaoPaulo();
-
-  return WorkoutHistory.exists({
-    usuario_id: userId,
-    concluido_em: { $gte: todayStart.toISOString(), $lt: tomorrow.toISOString() },
-  });
+export async function hasStreakSecuredToday(userId: string): Promise<boolean> {
+  return ActiveDays.has(userId, getTodaySaoPaulo());
 }

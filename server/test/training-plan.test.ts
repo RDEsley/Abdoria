@@ -179,7 +179,7 @@ describe('markPlanoDayCompleted', () => {
     const saves: unknown[] = [];
     const user = {
       plano_treino: plano,
-      save: async function save() {
+      saveColumns: async function saveColumns() {
         saves.push(structuredClone(this.plano_treino));
         return this;
       },

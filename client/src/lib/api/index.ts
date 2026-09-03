@@ -6,3 +6,5 @@ export * from './leaderboard';
 export * from './shop';
 export * from './meta';
 export * from './admin';
+export * from './activities';
+export * from './day';

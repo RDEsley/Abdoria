@@ -1,0 +1,146 @@
+import type { AchievementIcon } from '../types/index.js';
+import type { ActivityCategory, ActivityMetricKind } from './types.js';
+
+export interface ActivityTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: ActivityCategory;
+  icon: AchievementIcon;
+  color: string;
+  metric_kind: ActivityMetricKind;
+  metric_unit: string | null;
+  goal_value: number | null;
+}
+
+export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
+  {
+    id: 'tpl_leitura',
+    name: 'Leitura',
+    description: 'Ler um pouco todos os dias.',
+    category: 'mente',
+    icon: 'star',
+    color: 'emerald',
+    metric_kind: 'count',
+    metric_unit: 'páginas',
+    goal_value: 5,
+  },
+  {
+    id: 'tpl_estudo',
+    name: 'Estudo',
+    description: 'Estudar um conteúdo que você quer dominar.',
+    category: 'mente',
+    icon: 'target',
+    color: 'indigo',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 30,
+  },
+  {
+    id: 'tpl_escrita',
+    name: 'Escrita',
+    description: 'Escrever, anotar ou journaling.',
+    category: 'mente',
+    icon: 'sparkles',
+    color: 'violet',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 15,
+  },
+  {
+    id: 'tpl_meditacao',
+    name: 'Meditação',
+    description: 'Pausa em silêncio ou com áudio guiado.',
+    category: 'mente',
+    icon: 'moon',
+    color: 'sky',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 10,
+  },
+  {
+    id: 'tpl_caminhada',
+    name: 'Caminhada',
+    description: 'Caminhar em ritmo leve.',
+    category: 'corpo',
+    icon: 'sun',
+    color: 'amber',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 30,
+  },
+  {
+    id: 'tpl_corrida',
+    name: 'Corrida',
+    description: 'Correr ou trotar.',
+    category: 'corpo',
+    icon: 'zap',
+    color: 'coral',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 20,
+  },
+  {
+    id: 'tpl_alongamento',
+    name: 'Alongamento',
+    description: 'Mobilidade e alongamento suave.',
+    category: 'corpo',
+    icon: 'heart',
+    color: 'rose',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 10,
+  },
+  {
+    id: 'tpl_yoga',
+    name: 'Yoga',
+    description: 'Prática de yoga ou mobilidade.',
+    category: 'corpo',
+    icon: 'sparkles',
+    color: 'violet',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 20,
+  },
+  {
+    id: 'tpl_hidratar',
+    name: 'Beber água',
+    description: 'Lembrar de se hidratar ao longo do dia.',
+    category: 'vida',
+    icon: 'droplet',
+    color: 'sky',
+    metric_kind: 'count',
+    metric_unit: 'copos',
+    goal_value: 8,
+  },
+  {
+    id: 'tpl_organizar',
+    name: 'Organizar o dia',
+    description: 'Arrumar um espaço ou planejar o dia.',
+    category: 'vida',
+    icon: 'calendar',
+    color: 'neutral',
+    metric_kind: 'none',
+    metric_unit: null,
+    goal_value: null,
+  },
+  {
+    id: 'tpl_descanso',
+    name: 'Pausa real',
+    description: 'Descansar de verdade, sem culpa.',
+    category: 'vida',
+    icon: 'moon',
+    color: 'indigo',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 20,
+  },
+];
+
+export function templatesByCategory(category: ActivityTemplate['category']): ActivityTemplate[] {
+  return ACTIVITY_TEMPLATES.filter((template) => template.category === category);
+}
+
+export function findActivityTemplate(id: string): ActivityTemplate | null {
+  return ACTIVITY_TEMPLATES.find((template) => template.id === id) ?? null;
+}

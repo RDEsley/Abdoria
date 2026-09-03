@@ -3,8 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { resolveFila } from '@shared/atividades';
-import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
 import { MAX_REP_SCHEMES, RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
@@ -29,8 +27,9 @@ import {
 } from '@/components/builder/similar-presets';
 import { filterSimilarExercises, pickPresetForCycle } from '@/components/builder/similar-exercises';
 import { GameButton } from '@/components/ui/GameButton';
-import { showGameToast } from '@/lib/game-toast';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
+import { showGameToast } from '@/lib/game-toast';
+import { MuscleBarChart } from '@/components/dashboard/MuscleBarChart';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -93,28 +92,6 @@ export function TrainingPage() {
   const [searchParams] = useSearchParams();
   const presetFromUrl = searchParams.get('preset');
   const modeFromUrl = searchParams.get('modo');
-
-  // Atividades enfileiradas no Início entram na sequência depois do treino.
-  const atividadesNaFila = resolveFila(authUser?.preferencias, getTodaySaoPaulo()).length;
-
-  /** Tira as atividades da fila de hoje sem interromper a configuração do treino. */
-  const handleRemoverAtividadesDaFila = async () => {
-    if (!authUser) return;
-    try {
-      const atualizado = await updateMe({
-        preferencias: {
-          ...authUser.preferencias,
-          atividades_fila: { data: getTodaySaoPaulo(), ids: [] },
-        },
-      });
-      applyUser(atualizado);
-      showGameToast('Atividades tiradas do treino de hoje.', { variant: 'success' });
-    } catch (err) {
-      showGameToast(getErrorMessage(err, 'Não foi possível remover as atividades.'), {
-        variant: 'error',
-      });
-    }
-  };
 
   const [activeTab, setActiveTab] = useState<BuilderTab>(
     modeFromUrl === 'personalizar' ? 'customize' : 'train',
@@ -891,6 +868,16 @@ export function TrainingPage() {
 
       {xpCapReached && <DailyXpCapBanner />}
 
+      {stats && (
+        <section className="glass-card p-4">
+          <h3 className="game-section-title !mb-1">Equilíbrio do core</h3>
+          <p className="mb-3 text-xs font-semibold text-stone-500">
+            Como seus treinos distribuíram os estímulos nesta semana.
+          </p>
+          <MuscleBarChart muscles={stats.musculos_semana} />
+        </section>
+      )}
+
       <BuilderTabs active={activeTab} onChange={handleTabChange} />
 
       {activeTab === 'train' && (
@@ -1138,10 +1125,6 @@ export function TrainingPage() {
         estimatedMinutes={estimatedMinutes}
         disabled={activeQueue.length === 0}
         onStart={proceedToWorkout}
-        atividadesNaFila={atividadesNaFila}
-        onRemoverAtividades={
-          atividadesNaFila > 0 ? () => void handleRemoverAtividadesDaFila() : undefined
-        }
       />
     </div>
   );

@@ -1,10 +1,15 @@
 import webpush from 'web-push';
 import { buildWebPushNotificationPayload } from '../../../shared/notification-catalog.js';
 import {
+  deriveActivityReminders,
+  derivedReminderSourceId,
+  isFollowUpReminderId,
   listReminderOccurrencesInLookback,
   normalizePersonalizedReminders,
   type PersonalizedReminder,
 } from '../../../shared/reminders.js';
+import { getTodaySaoPaulo } from '../../../shared/utils/timezone.js';
+import { Activities, ActivityLogs, Routines } from '../repositories/activities-repository.js';
 import { User } from '../domain/User.js';
 import { isExpiredPushSubscriptionStatus, isTransientPushFailure } from './push-delivery-claim.js';
 import {
@@ -55,6 +60,7 @@ export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
 
   const subscriptions = await PushSubscriptions.listAll();
   const lookbackMinutes = getReminderPushLookbackMinutes();
+  const derivedCache = new Map<string, PersonalizedReminder[]>();
   let sent = 0;
   let skipped = 0;
   let occurrences = 0;
@@ -66,7 +72,22 @@ export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
       continue;
     }
 
-    const reminders = normalizePersonalizedReminders(user.preferencias.lembretes_personalizados);
+    const personal = normalizePersonalizedReminders(user.preferencias.lembretes_personalizados);
+    let derived = derivedCache.get(user.id);
+    if (!derived) {
+      try {
+        const [activities, routines] = await Promise.all([
+          Activities.list(user.id),
+          Routines.list(user.id),
+        ]);
+        derived = deriveActivityReminders(activities, routines);
+      } catch (error) {
+        console.error('Falha ao derivar lembretes de atividade:', error);
+        derived = [];
+      }
+      derivedCache.set(user.id, derived);
+    }
+    const reminders = [...personal, ...derived];
     if (reminders.length === 0) {
       skipped += 1;
       continue;
@@ -87,6 +108,24 @@ export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
 
     for (const occurrence of dueOccurrences) {
       occurrences += 1;
+      if (isFollowUpReminderId(occurrence.reminder.id)) {
+        const sourceId = derivedReminderSourceId(occurrence.reminder.id);
+        if (sourceId) {
+          try {
+            const done = await ActivityLogs.hasActivityOnDay(
+              subscription.user_id,
+              sourceId,
+              getTodaySaoPaulo(now),
+            );
+            if (done) {
+              skipped += 1;
+              continue;
+            }
+          } catch {
+            /* tabela ausente — entrega o follow-up normalmente */
+          }
+        }
+      }
       const claim = await PushDeliveryLog.claim(subscription.id, occurrence.occurrenceKey, now);
       if (claim === 'skip') {
         skipped += 1;

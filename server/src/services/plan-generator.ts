@@ -341,11 +341,11 @@ export async function markPlanoDayCompleted(
       dias_completados_rodada: [],
       semana_atual: (plano.semana_atual % PROGRESSION_WEEKS) + 1,
     };
-    await user.save();
+    await user.saveColumns(['plano_treino']);
     return true;
   }
 
   user.plano_treino = { ...plano, dias_completados_rodada: [...done].sort((a, b) => a - b) };
-  await user.save();
+  await user.saveColumns(['plano_treino']);
   return false;
 }

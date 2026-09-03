@@ -56,7 +56,7 @@ import {
   type Objetivo,
 } from '@/types';
 
-type Tab = 'dados' | 'progresso' | 'definicao';
+type Tab = 'evolucao' | 'corpo';
 
 export function ProfilePage() {
   const { user: appUser, stats, refresh, loading: appLoading } = useApp();
@@ -64,7 +64,7 @@ export function ProfilePage() {
   const copy = useCopy();
   const { install: installPwa, installed: pwaInstalled } = usePwaInstall();
   const profile = user ?? appUser;
-  const [tab, setTab] = useState<Tab>('progresso');
+  const [tab, setTab] = useState<Tab>('evolucao');
   const [saving, setSaving] = useState(false);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -203,7 +203,7 @@ export function ProfilePage() {
         altura_cm: dadosValidation.altura_cm ?? undefined,
         imc: dadosImc ?? undefined,
         nivel: nivelDraft,
-        objetivo: objetivoDraft,
+        ...(profile?.ab_training_profile_v2 ? {} : { objetivo: objetivoDraft }),
       });
       await refresh();
       showGameToast('Dados atualizados!', { variant: 'success' });
@@ -217,9 +217,8 @@ export function ProfilePage() {
   };
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'progresso', label: 'Meu Perfil' },
-    { id: 'dados', label: 'Dados' },
-    { id: 'definicao', label: 'Definição' },
+    { id: 'evolucao', label: 'Evolução' },
+    { id: 'corpo', label: 'Corpo' },
   ];
 
   return (
@@ -391,7 +390,7 @@ export function ProfilePage() {
         ))}
       </div>
 
-      {tab === 'dados' && (
+      {tab === 'corpo' && (
         <form onSubmit={handleSave} className="glass-card profile-dados-form p-4">
           <p className="profile-dados-hint">
             Preenchido no cadastro — ajuste sempre que seu corpo ou seus objetivos mudarem.
@@ -468,22 +467,32 @@ export function ProfilePage() {
             </select>
           </label>
 
-          <label className="profile-dados-select">
-            <span className="profile-dados-select__label">
-              <Target size={14} aria-hidden /> Objetivo
-            </span>
-            <select
-              value={objetivoDraft}
-              onChange={(e) => setObjetivoDraft(e.target.value as Objetivo)}
-            >
-              {(['definicao', 'resistencia', 'forca', 'manutencao'] as Objetivo[]).map((o) => (
-                <option key={o} value={o}>
-                  {OBJETIVO_LABELS[o]}
-                </option>
-              ))}
-            </select>
-            <p className="profile-dados-select__hint">{OBJETIVO_HINTS[objetivoDraft]}</p>
-          </label>
+          {profile?.ab_training_profile_v2 ? (
+            <p className="profile-dados-select__hint">
+              O objetivo do treino vive no plano em{' '}
+              <Link to="/configuracoes" className="font-extrabold text-emerald-700 underline">
+                Configurações
+              </Link>
+              .
+            </p>
+          ) : (
+            <label className="profile-dados-select">
+              <span className="profile-dados-select__label">
+                <Target size={14} aria-hidden /> Objetivo
+              </span>
+              <select
+                value={objetivoDraft}
+                onChange={(e) => setObjetivoDraft(e.target.value as Objetivo)}
+              >
+                {(['definicao', 'resistencia', 'forca', 'manutencao'] as Objetivo[]).map((o) => (
+                  <option key={o} value={o}>
+                    {OBJETIVO_LABELS[o]}
+                  </option>
+                ))}
+              </select>
+              <p className="profile-dados-select__hint">{OBJETIVO_HINTS[objetivoDraft]}</p>
+            </label>
+          )}
 
           <div className="game-profile-form__actions">
             <GameButton
@@ -499,21 +508,35 @@ export function ProfilePage() {
         </form>
       )}
 
-      {tab === 'progresso' && stats && (
+      {tab === 'evolucao' && stats && (
         <>
           <ProfileProgressPanel stats={stats} />
-          <PersonalRecordsPanel />
+          <details className="glass-card p-4">
+            <summary className="cursor-pointer text-sm font-extrabold text-stone-800">
+              Recordes
+            </summary>
+            <div className="mt-3">
+              <PersonalRecordsPanel />
+            </div>
+          </details>
         </>
       )}
 
-      {tab === 'progresso' && !stats && (
+      {tab === 'evolucao' && !stats && (
         <div className="glass-card p-4 text-center text-sm font-bold text-stone-500">
-          Não foi possível carregar seu progresso. Tente recarregar a página.
+          Não foi possível carregar sua evolução. Tente recarregar a página.
         </div>
       )}
 
-      {tab === 'definicao' && (
-        <DefinitionSimulator profile={profile} stats={stats} onSaved={handleRefresh} />
+      {tab === 'corpo' && (
+        <details className="glass-card p-4">
+          <summary className="cursor-pointer text-sm font-extrabold text-stone-800">
+            Definição
+          </summary>
+          <div className="mt-3">
+            <DefinitionSimulator profile={profile} stats={stats} onSaved={handleRefresh} />
+          </div>
+        </details>
       )}
     </div>
   );

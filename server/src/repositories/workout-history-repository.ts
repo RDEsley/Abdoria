@@ -59,6 +59,7 @@ export const WorkoutHistory = {
       usuario_id?: string;
       treino_tipo?: Record<string, unknown>;
       concluido_em?: Record<string, unknown>;
+      somenteTreino?: boolean;
     },
     options?: { sort?: Record<string, 1 | -1>; limit?: number; select?: string },
   ): Promise<WorkoutHistoryDocument[]> {
@@ -100,6 +101,7 @@ export const WorkoutHistory = {
     }
 
     if (options?.limit) query = query.limit(options.limit);
+    if (filter.somenteTreino) query = query.is('atividade', null);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -152,10 +154,9 @@ export const WorkoutHistory = {
     }
 
     if (error && data.atividade != null && isMissingAtividadeColumn(error)) {
-      const { atividade: _omitida, ...semAtividade } = row;
-      const retry = await sb.from('workout_history').insert(semAtividade).select('*').single();
-      if (retry.error) throw retry.error;
-      return rowToHistory(retry.data as Record<string, unknown>);
+      throw new Error(
+        'Coluna atividade ausente em workout_history. Aplique as migrations do Evolyn.',
+      );
     }
 
     if (error) throw error;
@@ -215,13 +216,9 @@ export const WorkoutHistory = {
     const { count, error } = await query;
     if (error) {
       if (filter.somenteTreino && isMissingAtividadeColumn(error)) {
-        // Coluna `atividade` ainda não migrada nesse ambiente — cai pro
-        // comportamento antigo (conta qualquer linha) em vez de nunca
-        // detectar treino nenhum.
-        return WorkoutHistory.exists({
-          usuario_id: filter.usuario_id,
-          concluido_em: filter.concluido_em,
-        });
+        throw new Error(
+          'Coluna atividade ausente em workout_history. Aplique as migrations do Evolyn.',
+        );
       }
       throw error;
     }
@@ -259,18 +256,18 @@ export const WorkoutHistory = {
       };
       const { data, error } = await sb.from('workout_history').select('*').eq('usuario_id', userId);
       if (error) throw error;
+      const rows = (data ?? []).filter((row) =>
+        match.atividade === null ? row.atividade == null : true,
+      );
 
       if (groupStage?.$group?.total?.$sum === '$duracao_total_segundos') {
-        const total = (data ?? []).reduce((s, r) => s + Number(r.duracao_total_segundos ?? 0), 0);
+        const total = rows.reduce((s, r) => s + Number(r.duracao_total_segundos ?? 0), 0);
         return [{ total }];
       }
 
       const sumExpr = groupStage?.$group?.total?.$sum;
       if (sumExpr && JSON.stringify(sumExpr).includes('$size')) {
-        const total = (data ?? []).reduce(
-          (s, r) => s + ((r.exercicios as unknown[])?.length ?? 0),
-          0,
-        );
+        const total = rows.reduce((s, r) => s + ((r.exercicios as unknown[])?.length ?? 0), 0);
         return [{ total }];
       }
     }

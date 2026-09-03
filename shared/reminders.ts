@@ -3,6 +3,8 @@ import {
   type PersonalNotificationIcon,
   type PersonalNotificationSound,
 } from './notification-catalog.js';
+import type { ActivityRecord, ActivitySchedule, RoutineRecord } from './activities/types.js';
+import { normalizeActivitySchedule } from './activities/schedule.js';
 
 export const PERSONAL_NOTIFICATION_VERSION = 2 as const;
 export const PERSONAL_NOTIFICATION_MAX_REQUESTS = 64;
@@ -341,6 +343,156 @@ export function isReminderDue(reminder: PersonalizedReminder, date: Date): boole
     date,
     Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   );
+}
+
+function isTimeValue(value: string): boolean {
+  return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function shiftTime(time: string, deltaMin: number): string {
+  const [hours, minutes] = time.split(':').map(Number);
+  const total = (((hours * 60 + minutes + deltaMin) % 1440) + 1440) % 1440;
+  const nextHours = Math.floor(total / 60);
+  const nextMinutes = total % 60;
+  return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
+}
+
+function mapActivityIcon(icon: string): PersonalNotificationIcon {
+  const map: Record<string, PersonalNotificationIcon> = {
+    droplet: 'water',
+    star: 'star',
+    heart: 'heart',
+    dumbbell: 'workout',
+    target: 'study',
+    flame: 'alarm',
+    sun: 'leaf',
+    moon: 'health',
+    sparkles: 'star',
+    calendar: 'alarm',
+    zap: 'workout',
+  };
+  return map[icon] ?? 'leaf';
+}
+
+function mapActivityColor(color: string): PersonalNotificationColor {
+  const allowed = new Set(PERSONAL_NOTIFICATION_COLORS.map((entry) => entry.id));
+  return allowed.has(color as PersonalNotificationColor)
+    ? (color as PersonalNotificationColor)
+    : 'emerald';
+}
+
+function reminderScheduleFromActivity(
+  schedule: ActivitySchedule,
+): PersonalNotificationSchedule | null {
+  const times = (schedule.times ?? []).filter(isTimeValue);
+  if (times.length === 0 && schedule.kind !== 'once') return null;
+  if (schedule.kind === 'once') {
+    if (!schedule.once_at) return null;
+    return { kind: 'once', at: schedule.once_at };
+  }
+  const weekdays =
+    schedule.kind === 'weekdays' && (schedule.weekdays ?? []).length > 0
+      ? [...schedule.weekdays!]
+      : [0, 1, 2, 3, 4, 5, 6];
+  return { kind: 'recurring', times, weekdays };
+}
+
+export function isDerivedActivityReminderId(id: string): boolean {
+  return id.startsWith('activity:') || id.startsWith('routine:');
+}
+
+export function derivedReminderSourceId(id: string): string | null {
+  const parts = id.split(':');
+  if (parts.length < 2) return null;
+  if (parts[0] !== 'activity' && parts[0] !== 'routine') return null;
+  return parts[1] ?? null;
+}
+
+export function isFollowUpReminderId(id: string): boolean {
+  return id.endsWith(':followup');
+}
+
+/**
+ * Lembretes derivados de activities/routines. Não materializar em
+ * `preferencias.lembretes_personalizados` — dispatcher e scheduler nativo
+ * unem `personal ∪ derivados` na hora da entrega.
+ */
+export function deriveActivityReminders(
+  activities: Array<
+    Pick<ActivityRecord, 'id' | 'name' | 'icon' | 'color' | 'archived_at' | 'schedule' | 'reminder'>
+  >,
+  routines: Array<
+    Pick<RoutineRecord, 'id' | 'name' | 'icon' | 'color' | 'archived_at' | 'schedule' | 'reminder'>
+  > = [],
+  nowIso = new Date().toISOString(),
+): PersonalizedReminder[] {
+  const derived: PersonalizedReminder[] = [];
+  const sources = [
+    ...activities.map((item) => ({ kind: 'activity' as const, item })),
+    ...routines.map((item) => ({ kind: 'routine' as const, item })),
+  ];
+
+  for (const source of sources) {
+    const entity = source.item;
+    if (entity.archived_at) continue;
+    if (!entity.reminder?.enabled) continue;
+    const reminder = entity.reminder;
+    const schedule = normalizeActivitySchedule(entity.schedule);
+    if (schedule.kind === 'unscheduled') continue;
+    const personalSchedule = reminderScheduleFromActivity(schedule);
+    if (!personalSchedule) continue;
+
+    const times =
+      personalSchedule.kind === 'recurring'
+        ? personalSchedule.times.map((time) => shiftTime(time, -(reminder.offset_min || 0)))
+        : [];
+    const adjusted: PersonalNotificationSchedule =
+      personalSchedule.kind === 'once'
+        ? personalSchedule
+        : { kind: 'recurring', times, weekdays: personalSchedule.weekdays };
+
+    const timeKey =
+      personalSchedule.kind === 'once'
+        ? personalSchedule.at.slice(0, 16)
+        : (personalSchedule.times[0] ?? 'none');
+    const baseId = `${source.kind}:${entity.id}:${timeKey}`;
+    derived.push({
+      version: PERSONAL_NOTIFICATION_VERSION,
+      id: baseId,
+      title: entity.name,
+      message:
+        source.kind === 'routine' ? 'Hora da sua rotina.' : 'Um passo da sua rotina te espera.',
+      icon: mapActivityIcon(entity.icon),
+      color: mapActivityColor(entity.color),
+      sound: normalizeNotificationSound(reminder.sound),
+      schedule: adjusted,
+      enabled: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+
+    if (reminder.follow_up && personalSchedule.kind === 'recurring') {
+      derived.push({
+        version: PERSONAL_NOTIFICATION_VERSION,
+        id: `${baseId}:followup`,
+        title: entity.name,
+        message: 'Ainda dá tempo de registrar hoje.',
+        icon: mapActivityIcon(entity.icon),
+        color: mapActivityColor(entity.color),
+        sound: normalizeNotificationSound(reminder.sound),
+        schedule: {
+          kind: 'recurring',
+          times: personalSchedule.times.map((time) => shiftTime(time, 30)),
+          weekdays: personalSchedule.weekdays,
+        },
+        enabled: true,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
+  }
+
+  return derived;
 }
 
 export function describePersonalNotificationSchedule(reminder: PersonalizedReminder): string {

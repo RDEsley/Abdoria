@@ -88,6 +88,8 @@ Não registrar código desse diretório no runtime, build, lint ou testes sem de
 - Mudanças de schema devem gerar novas migrations.
 - Prefira escritas parciais quando apenas parte do perfil mudou.
 - Tenha cuidado com escritas concorrentes em `preferencias`.
+- Dados de rotina/atividades não entram em `preferencias`.
+- Toda ação diária válida passa por `recordValidDailyAction` (`server/src/services/active-day.ts`).
 - Não renomeie campos persistidos legados sem migration e plano de compatibilidade.
 
 ## Qualidade de código

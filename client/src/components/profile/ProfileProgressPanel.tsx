@@ -76,11 +76,11 @@ export function ProfileProgressPanel({ stats }: Props) {
           icon={<Timer className="text-sky-600" size={20} />}
           title="Tempo"
           value={formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
-          hint="Soma de todos os treinos"
+          hint="Só sessões de treino"
         />
         <StatTile
           icon={<Flame className="text-orange-500" size={20} />}
-          title="Streak"
+          title="Streak Evolyn"
           value={`${stats.streak_atual}d`}
           hint={
             podeIgualarRecorde
@@ -88,6 +88,12 @@ export function ProfileProgressPanel({ stats }: Props) {
               : `Recorde: ${stats.streak_maior} dias`
           }
           onClick={podeIgualarRecorde ? () => setConfirmOpen(true) : undefined}
+        />
+        <StatTile
+          icon={<Timer className="text-emerald-700" size={20} />}
+          title="Dias ativos"
+          value={String(stats.dias_ativos_30 ?? '—')}
+          hint="Últimos 30 dias"
         />
         <StatTile
           icon={

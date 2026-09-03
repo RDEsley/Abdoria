@@ -80,19 +80,17 @@ describe('WorkoutHistory repository — propagação de erros', () => {
     );
   });
 
-  it('mantém fallback apenas quando a coluna atividade ainda não existe', async () => {
+  it('falha claro quando a coluna atividade ainda não existe', async () => {
     const missingColumn = {
       code: '42703',
       message: 'column atividade does not exist',
     };
-    dbMocks.from
-      .mockReturnValueOnce(queryReturning({ data: null, count: null, error: missingColumn }))
-      .mockReturnValueOnce(queryReturning({ data: null, count: 1, error: null }));
+    dbMocks.from.mockReturnValue(queryReturning({ data: null, count: null, error: missingColumn }));
 
     await expect(
       WorkoutHistory.exists({ usuario_id: 'user-1', somenteTreino: true }),
-    ).resolves.toBe(true);
-    expect(dbMocks.from).toHaveBeenCalledTimes(2);
+    ).rejects.toThrow(/migrations do Evolyn/i);
+    expect(dbMocks.from).toHaveBeenCalledTimes(1);
   });
 
   it('transforma colisão de completion_id em resposta idempotente', async () => {

@@ -67,7 +67,7 @@ export function buildLocalNotices(
         id: `local-frozen-uso-${today}`,
         tipo: 'streak_frozen',
         titulo: 'Frozen Streak de prontidão',
-        corpo: `Faltam ${formatCountdown(seconds)} pro dia virar. Se você não treinar, 1 Frozen Streak será usado pra congelar sua sequência de ${stats.streak_atual} dia(s).`,
+        corpo: `Faltam ${formatCountdown(seconds)} pro dia virar. Se nenhuma ação for registrada, 1 Frozen Streak será usado pra congelar sua sequência de ${stats.streak_atual} dia(s).`,
         payload: {},
         lida_em: null,
         criada_em: now,

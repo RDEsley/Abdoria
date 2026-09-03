@@ -47,8 +47,8 @@ const AchievementsPage = lazy(() =>
 const PlayerPage = lazy(() =>
   import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })),
 );
-const AtividadesPlayerPage = lazy(() =>
-  import('@/pages/AtividadesPlayerPage').then((m) => ({ default: m.AtividadesPlayerPage })),
+const RoutineRunnerPage = lazy(() =>
+  import('@/features/activities/RoutineRunner').then((m) => ({ default: m.RoutineRunnerPage })),
 );
 const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 const MyPlantPage = lazy(() =>
@@ -222,12 +222,16 @@ export default function App() {
                           }
                         />
                         <Route
-                          path="atividades-player"
+                          path="rotina/:routineId"
                           element={
                             <LazyPage>
-                              <AtividadesPlayerPage />
+                              <RoutineRunnerPage />
                             </LazyPage>
                           }
+                        />
+                        <Route
+                          path="atividades-player"
+                          element={<Navigate to="/atividades" replace />}
                         />
                       </Route>
                       <Route
