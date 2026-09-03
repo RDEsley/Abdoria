@@ -2,8 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 /**
- * Persists the active tab to both `localStorage` and the URL `?tab=` param.
- * On mount, restores from URL > localStorage > fallback, in that order.
+ * Persists the active tab to `localStorage` and mirrors it in `?tab=`.
+ * Restore order: URL (if present) > localStorage > fallback.
  */
 export function useStickyTab<T extends string>(
   storageKey: string,
@@ -33,17 +33,24 @@ export function useStickyTab<T extends string>(
       } catch {
         /* best-effort */
       }
-      setSearchParams(next === fallback ? {} : { tab: next }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          if (next === fallback) params.delete('tab');
+          else params.set('tab', next);
+          return params;
+        },
+        { replace: true },
+      );
     },
     [storageKey, fallback, setSearchParams],
   );
 
   useEffect(() => {
     const fromUrl = searchParams.get('tab');
-    if (fromUrl && validSet.has(fromUrl) && fromUrl !== tab) {
-      setTabState(fromUrl as T);
-    }
-  }, [searchParams, validSet, tab]);
+    if (!fromUrl || !validSet.has(fromUrl)) return;
+    setTabState((current) => (current === fromUrl ? current : (fromUrl as T)));
+  }, [searchParams, validSet]);
 
   return [tab, setTab];
 }

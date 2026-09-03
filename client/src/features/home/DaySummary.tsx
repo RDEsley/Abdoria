@@ -16,7 +16,7 @@ export function DaySummary({
         {diaAtivo ? 'Você já plantou o dia.' : 'Faça uma pequena coisa por você hoje.'}
       </h2>
       <p className="mt-1 text-xs font-bold text-stone-500">
-        Sequência {streak}d · {xpHoje} XP hoje
+        Sequência {streak} · {xpHoje} XP hoje
       </p>
     </section>
   );

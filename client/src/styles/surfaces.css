@@ -330,31 +330,113 @@
 /* ------------------------------------------------------------------ */
 
 .game-bottom-nav {
-  border-top: 1.5px solid rgb(13 150 121 / 16%);
-  background: linear-gradient(180deg, rgb(255 255 255 / 98%), rgb(248 252 251 / 96%));
+  border-top: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 0.55rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.game-bottom-nav__shell {
+  pointer-events: auto;
+  max-width: 28rem;
+  margin-inline: auto;
+  border: 2.5px solid #16332e;
+  border-radius: 1.55rem 1.35rem 1.7rem 1.45rem;
+  background: linear-gradient(180deg, #ffffff 0%, #eefaf6 100%);
+  box-shadow:
+    0 5px 0 #16332e,
+    0 -10px 28px rgb(15 118 110 / 10%);
+}
+
+.game-bottom-nav__inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.1rem;
+  padding: 0.35rem 0.3rem 0.4rem;
 }
 
 .game-bottom-nav__item {
   position: relative;
+  isolation: isolate;
+  overflow: visible;
+  min-height: 3.35rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  gap: 0.12rem;
 }
 
-.game-bottom-nav__indicator {
+.game-bottom-nav__item--active {
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-treino-deep);
+}
+
+.game-bottom-nav__leaf {
   position: absolute;
-  top: -1px;
-  left: 15%;
-  right: 15%;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--accent-treino);
+  top: 0.12rem;
+  left: 50%;
+  width: 2.55rem;
+  height: 2.35rem;
+  margin-left: -1.275rem;
+  border-radius: 58% 42% 55% 45% / 48% 55% 45% 52%;
+  background:
+    radial-gradient(circle at 30% 25%, rgb(167 243 208 / 95%), transparent 55%),
+    linear-gradient(165deg, #34d399 0%, #059669 58%, #047857 100%);
+  border: 2.5px solid #16332e;
+  box-shadow:
+    0 3px 0 #16332e,
+    inset 0 1px 0 rgb(255 255 255 / 35%);
+  z-index: 0;
+}
+
+.game-bottom-nav__icon-wrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.55rem;
+  height: 2.1rem;
+  color: #66736f;
 }
 
 .game-bottom-nav__item--active .game-bottom-nav__icon-wrap {
-  color: var(--accent-treino);
+  color: #ecfdf5;
+  filter: drop-shadow(0 1px 0 rgb(6 78 59 / 35%));
 }
 
-.game-bottom-nav__item--active span:last-child {
+.game-bottom-nav__label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.56rem;
   font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.game-bottom-nav__item--active .game-bottom-nav__label {
   color: var(--accent-treino-deep);
+}
+
+.game-nav-item {
+  position: relative;
+  overflow: visible;
+}
+
+.game-nav-item__blob {
+  position: absolute;
+  inset: 0.15rem 0.2rem;
+  border-radius: 1rem 1.2rem 0.9rem 1.15rem;
+  background: linear-gradient(135deg, #d1fae5, #6ee7b7);
+  border: 2.5px solid #16332e;
+  box-shadow: 0 3px 0 #16332e;
+  z-index: 0;
+}
+
+.game-nav-item--active {
+  background: transparent;
+  box-shadow: none;
 }
 
 /* ------------------------------------------------------------------ */
@@ -371,4 +453,149 @@
   .bar-shimmer {
     animation: none;
   }
+  .game-app .game-tab--active,
+  .game-tab__badge {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 10. Cartoon / desenho — bordas fortes, sombra sólida, bounce        */
+/* ------------------------------------------------------------------ */
+
+.game-app {
+  --cartoon-ink: #16332e;
+}
+
+.game-app .glass-card,
+.game-app .glass-panel,
+.game-app .app-surface {
+  border: 2.5px solid rgb(22 51 46 / 22%);
+  border-radius: 1.4rem;
+  box-shadow:
+    0 4px 0 rgb(22 51 46 / 16%),
+    0 12px 28px rgb(15 118 110 / 8%);
+}
+
+.game-app .glass-card[class*='glass-card--'] {
+  border-width: 2.5px;
+}
+
+.game-app .glass-card--treino {
+  border-color: rgb(6 95 70 / 55%);
+  box-shadow:
+    0 4px 0 rgb(6 95 70 / 28%),
+    0 12px 28px rgb(13 150 121 / 12%);
+}
+
+.game-app .glass-card--rotina {
+  border-color: rgb(76 29 149 / 42%);
+  box-shadow:
+    0 4px 0 rgb(76 29 149 / 22%),
+    0 12px 28px rgb(124 58 237 / 10%);
+}
+
+.game-app .glass-card--streak {
+  border-color: rgb(146 64 14 / 42%);
+  box-shadow:
+    0 4px 0 rgb(146 64 14 / 22%),
+    0 12px 28px rgb(245 158 11 / 12%);
+}
+
+.game-app .glass-card--xp {
+  border-color: rgb(21 94 117 / 45%);
+  box-shadow:
+    0 4px 0 rgb(21 94 117 / 22%),
+    0 12px 28px rgb(6 182 212 / 12%);
+}
+
+.game-app .glass-card--conquista {
+  border-color: rgb(120 53 15 / 42%);
+  box-shadow:
+    0 4px 0 rgb(120 53 15 / 22%),
+    0 12px 28px rgb(217 119 6 / 12%);
+}
+
+.game-app .game-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 2.5px solid var(--cartoon-ink);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--cartoon-ink);
+  font-weight: 800;
+}
+
+.activities-page .game-tab {
+  flex: 1;
+}
+
+.game-app .game-tab--active {
+  border-color: var(--cartoon-ink);
+  background: linear-gradient(180deg, #1bb894 0%, #087c66 100%);
+  box-shadow: 0 3px 0 #034d3e;
+  animation: cartoon-tab-bounce 0.45s cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.game-tab__badge {
+  display: inline-flex;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  border: 2px solid var(--cartoon-ink);
+  background: #f59e0b;
+  color: #1c1917;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  animation: cartoon-badge-pop 1.4s ease-in-out infinite;
+}
+
+.game-app .activity-quick-card {
+  border: 2.5px solid rgb(22 51 46 / 28%);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #fff, #f4fbf8);
+  box-shadow: 0 3px 0 rgb(22 51 46 / 14%);
+}
+
+.game-app .game-bottom-nav {
+  border-top: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 0.55rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+  backdrop-filter: none;
+}
+
+@keyframes cartoon-tab-bounce {
+  0% {
+    transform: scale(0.92) rotate(-1.5deg);
+  }
+  55% {
+    transform: scale(1.06) rotate(1.2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes cartoon-badge-pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.settings-page > .glass-card,
+.profile-page .glass-card:not(.game-xp-section) {
+  border-width: 1.5px;
+  box-shadow: var(--shadow-resting);
 }

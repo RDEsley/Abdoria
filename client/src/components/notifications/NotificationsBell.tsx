@@ -114,8 +114,9 @@ export function NotificationsBell() {
   const refresh = useCallback(async () => {
     try {
       const data = await getNotifications();
-      setItems(data.items);
-      setUnread(data.unread_count);
+      const items = data.items.filter((item) => item.tipo !== 'streak_frozen');
+      setItems(items);
+      setUnread(items.filter((item) => !item.lida_em).length);
     } catch {
       /* silencioso: sino não pode quebrar a navbar */
     }
@@ -130,8 +131,9 @@ export function NotificationsBell() {
     setLoading(true);
     try {
       const data = await getNotifications();
-      setItems(data.items);
-      setUnread(data.unread_count);
+      const items = data.items.filter((item) => item.tipo !== 'streak_frozen');
+      setItems(items);
+      setUnread(items.filter((item) => !item.lida_em).length);
       if (data.unread_count > 0) {
         await markAllNotificationsRead();
         const readAt = new Date().toISOString();

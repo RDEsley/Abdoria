@@ -226,7 +226,7 @@ body {
 
 .game-bottom-nav__item--active {
   color: var(--evolyn-primary);
-  background: #eaf7f3;
+  background: transparent;
 }
 
 .game-bottom-nav__item span {

@@ -38,6 +38,7 @@ import {
   setSoundSettings,
 } from '@/lib/sounds';
 import { getErrorMessage } from '@/lib/api-errors';
+import { queueStreakUpCelebration } from '@/lib/home-celebrations';
 import { showGameToast } from '@/lib/game-toast';
 import { getRecommendWorkout, updateMe } from '@/lib/api';
 import {
@@ -544,6 +545,7 @@ export function PlayerPage() {
       setXpBreakdown(result.xp_breakdown ?? null);
       if (result.streak_celebration) {
         setStreakCelebration(result.streak_celebration.streak_atual);
+        queueStreakUpCelebration(result.streak_celebration, authUser?.id);
       }
       if (result.level_up) {
         setLevelUpCelebration(result.level_up);

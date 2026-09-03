@@ -52,6 +52,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - `notificacoes_opt_out` desliga entrega OS-level; lembretes continuam salvos.
 - Som de notificação personalizado foi removido (Playful 2.0). O campo legado `sound` em JSONB é ignorado no parsing; entregas usam o som padrão da plataforma. Sons de UI em `client/src/lib/sounds` continuam intactos.
 - Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
+- Frozen Streak consumido no backend gera `streak_freeze_notice` / `streak_frozen_event` em `/stats` e celebração na Home — **não** cria mais item `streak_frozen` na Caixa de Entrada.
 
 ## Segurança
 

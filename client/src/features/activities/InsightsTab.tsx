@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { addDaysSaoPaulo, getTodaySaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { consistencyLast30Days, type ActivityLogRecord } from '@shared/activities';
 import { QuestCard } from '@/components/quests/QuestCard';
@@ -10,6 +10,9 @@ export function InsightsTab({ data }: { data: ReturnType<typeof useActivitiesDat
   const today = getTodaySaoPaulo();
   const monday = getWeekStartSaoPaulo();
   const [selected, setSelected] = useState(today);
+  useEffect(() => {
+    setSelected(today);
+  }, [today]);
   const week = useMemo(
     () => Array.from({ length: 7 }, (_, index) => addDaysSaoPaulo(monday, index)),
     [monday],
@@ -34,7 +37,7 @@ export function InsightsTab({ data }: { data: ReturnType<typeof useActivitiesDat
         </p>
       ) : (
         data.insights.map((insight) => (
-          <article key={insight.id} className="glass-card p-4">
+          <article key={insight.id} className="glass-card glass-card--rotina p-4">
             <h3 className="text-sm font-extrabold text-stone-800">{insight.title}</h3>
             <p className="mt-1 text-xs font-semibold text-stone-500">{insight.body}</p>
           </article>

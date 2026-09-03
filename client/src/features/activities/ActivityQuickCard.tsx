@@ -37,6 +37,7 @@ export function ActivityQuickCard({
     <article
       ref={containerRef}
       className={`activity-quick-card${done ? ' activity-quick-card--done' : ''}`}
+      data-no-nav-swipe
       style={{ position: 'relative', overflow: 'hidden' }}
     >
       {/* Swipe reveal trail */}

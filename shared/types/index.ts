@@ -424,6 +424,11 @@ export interface Gamificacao {
   streak_congelamentos?: string[];
   /** Aviso único para exibir toast de proteção de streak no próximo acesso. */
   streak_freeze_notice_pending?: boolean;
+  /** Payload do último Frozen consumido — consumido pelo client na Home. */
+  streak_freeze_notice?: {
+    frozen_days: string[];
+    streak_atual: number;
+  } | null;
   /** Quantas vezes o streak já quebrou de verdade (sem Frozen Streak) na vida
       da conta — libera "Recuperar Streak" ao chegar em STREAK_RECOVERY_UNLOCK_LOSSES. */
   streak_perdas_total?: number;
@@ -1039,6 +1044,7 @@ export interface DashboardStats {
   treino_sugerido: TreinoSugerido | null;
   alertas_recomendacao?: RecommendationAlert[];
   total_segundos: number;
+  segundos_semana: number;
   total_minutos: number;
   streak_atual: number;
   streak_maior: number;
@@ -1052,8 +1058,13 @@ export interface DashboardStats {
   xp_data_reset: string;
   inventario: Inventario;
   frozen_streak_count: number;
-  /** Toast único: Frozen Streak salvou a ofensiva no último sync. */
+  /** Toast/celebração única: Frozen Streak salvou a ofensiva no último sync. */
   streak_frozen_notice?: boolean;
+  /** Detalhe do Frozen recentemente consumido (só quando `streak_frozen_notice`). */
+  streak_frozen_event?: {
+    frozen_days: string[];
+    streak_atual: number;
+  } | null;
   /** Oferta ativa de "pagar pra recuperar o streak perdido" (ver shared/streak/recovery.ts). */
   streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;
   conquistas: Achievement[];

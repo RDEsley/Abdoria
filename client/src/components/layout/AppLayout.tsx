@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarCheck2, Dumbbell, Home, Settings, Sprout, User } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
@@ -12,18 +12,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { MidnightRefreshProvider, useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { markTutorialSeen, shouldShowFirstTimeTutorial } from '@/lib/tutorial';
 import { usePersonalizedReminders } from '@/hooks/usePersonalizedReminders';
+import { usePrimaryNavSwipe } from '@/hooks/usePrimaryNavSwipe';
 import { ResumeWorkoutPrompt } from '@/components/player/ResumeWorkoutPrompt';
 import { PageEntranceProvider } from '@/context/PageEntranceContext';
-
-function buildNavItems() {
-  return [
-    { to: '/', icon: Home, label: 'Início' },
-    { to: '/atividades', icon: CalendarCheck2, label: 'Atividades' },
-    { to: '/treino', icon: Dumbbell, label: 'Treino' },
-    { to: '/myplant', icon: Sprout, label: 'MyPlant' },
-    { to: '/perfil', icon: User, label: 'Perfil' },
-  ] as const;
-}
+import { PRIMARY_NAV_ITEMS } from '@/lib/primary-nav';
+import { PrimaryBottomNav } from '@/components/layout/PrimaryBottomNav';
 
 function MidnightRefreshListener() {
   const { refresh: refreshApp } = useApp();
@@ -38,10 +31,11 @@ function MidnightRefreshListener() {
 
 export function AppLayout() {
   const { user, refreshUser } = useAuth();
-  const navItems = buildNavItems();
+  const navItems = PRIMARY_NAV_ITEMS;
   const location = useLocation();
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
+  const { setSwipeNode, enterFrom } = usePrimaryNavSwipe();
   const [pageEntrance, setPageEntrance] = useState({ pathname: '', ready: false });
   const [showTutorial, setShowTutorial] = useState(() => shouldShowFirstTimeTutorial(user));
   usePersonalizedReminders();
@@ -103,8 +97,28 @@ export function AppLayout() {
                   `game-nav-item${isActive ? ' game-nav-item--active' : ''}`
                 }
               >
-                <Icon size={18} strokeWidth={2.5} />
-                {label}
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.span
+                        className="game-nav-item__blob"
+                        layoutId={reduceMotion ? undefined : 'sidebar-nav-blob'}
+                        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                        aria-hidden
+                      />
+                    )}
+                    <motion.span
+                      key={`${to}-${isActive ? location.pathname : 'idle'}`}
+                      className="relative z-[1]"
+                      initial={reduceMotion || !isActive ? false : { scale: 0.7, rotate: -12 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 16 }}
+                    >
+                      <Icon size={18} strokeWidth={2.5} />
+                    </motion.span>
+                    <span className="relative z-[1]">{label}</span>
+                  </>
+                )}
               </NavLink>
             ))}
             <NavLink to="/configuracoes" className="game-nav-item mt-3">
@@ -118,13 +132,22 @@ export function AppLayout() {
         <div className="relative flex min-h-screen flex-1 flex-col md:ml-64">
           <GameHud />
 
-          <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]">
+          <main
+            ref={setSwipeNode}
+            className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(var(--top-navbar-height)+0.75rem)] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:max-w-3xl md:pb-8 md:pt-[calc(var(--top-navbar-height)+1rem)]"
+          >
             <motion.div
               key={location.pathname}
               className="game-page-transition"
-              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+              initial={
+                reduceMotion
+                  ? false
+                  : enterFrom
+                    ? { opacity: 0.4, x: enterFrom * 56 }
+                    : { opacity: 0, y: 10 }
+              }
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
               <PageEntranceProvider
                 ready={pageEntrance.pathname === location.pathname && pageEntrance.ready}
@@ -134,40 +157,7 @@ export function AppLayout() {
             </motion.div>
           </main>
 
-          <nav className="game-bottom-nav md:hidden" aria-label="Navegação principal">
-            <div className="game-bottom-nav__inner">
-              {navItems.map(({ to, icon: Icon, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/'}
-                  className={({ isActive }) =>
-                    `game-bottom-nav__item${isActive ? ' game-bottom-nav__item--active' : ''}`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      {isActive && (
-                        <motion.span
-                          className="game-bottom-nav__indicator"
-                          layoutId="nav-indicator"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                        />
-                      )}
-                      <motion.span
-                        className="game-bottom-nav__icon-wrap"
-                        animate={isActive ? { scale: 1.12, y: -2 } : { scale: 1, y: 0 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                      >
-                        <Icon size={20} strokeWidth={2.5} />
-                      </motion.span>
-                      <span>{label}</span>
-                    </>
-                  )}
-                </NavLink>
-              ))}
-            </div>
-          </nav>
+          <PrimaryBottomNav />
         </div>
 
         <TutorialOverlay

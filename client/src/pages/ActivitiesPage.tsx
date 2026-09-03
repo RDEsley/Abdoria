@@ -7,6 +7,7 @@ import { TodayTab } from '@/features/activities/TodayTab';
 import { RoutinesTab } from '@/features/activities/RoutinesTab';
 import { InsightsTab } from '@/features/activities/InsightsTab';
 import { useStickyTab } from '@/hooks/useStickyTab';
+import { useClaimableQuestCount } from '@/hooks/useClaimableQuests';
 import { playTabSwitch } from '@/lib/sounds';
 
 const TABS = ['hoje', 'rotinas', 'insights'] as const;
@@ -15,6 +16,7 @@ type Tab = (typeof TABS)[number];
 export function ActivitiesPage() {
   const data = useActivitiesData();
   const [tab, setTab] = useStickyTab<Tab>('evolyn:activities-tab', TABS, 'hoje');
+  const claimableQuests = useClaimableQuestCount(data.logs.length);
 
   if (data.loading) return <PageLoader />;
 
@@ -22,8 +24,13 @@ export function ActivitiesPage() {
     <div className="activities-page flex flex-col gap-4 pb-24">
       <header className="flex items-start justify-between gap-3">
         <GamePageHeader eyebrow="Rotina no seu ritmo" title="Atividades" />
-        <Link to="/lembretes" className="game-icon-btn" aria-label="Lembretes livres">
-          <Bell size={18} />
+        <Link
+          to="/lembretes"
+          className="activities-reminder-cta"
+          aria-label="Criar lembrete personalizado"
+        >
+          <Bell size={16} aria-hidden />
+          <span>Criar lembrete</span>
         </Link>
       </header>
 
@@ -45,6 +52,14 @@ export function ActivitiesPage() {
             }}
           >
             {label}
+            {id === 'insights' && claimableQuests > 0 && (
+              <span
+                className="game-tab__badge"
+                aria-label={`${claimableQuests} missões para coletar`}
+              >
+                {claimableQuests}
+              </span>
+            )}
           </button>
         ))}
       </div>

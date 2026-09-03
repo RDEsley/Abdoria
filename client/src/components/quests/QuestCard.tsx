@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Gift, Sparkles } from 'lucide-react';
 import { listQuests, claimQuest, type QuestStatus } from '@/lib/api/quests';
 import { useAuth } from '@/hooks/useAuth';
+import { useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { successHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
 import { GameButton } from '@/components/ui/GameButton';
@@ -12,12 +13,21 @@ export function QuestCard({ compact }: { compact?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     listQuests()
       .then(setQuests)
       .catch(() => setQuests([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    reload();
+    const onChange = () => reload();
+    window.addEventListener('evolyn:quests-changed', onChange);
+    return () => window.removeEventListener('evolyn:quests-changed', onChange);
+  }, [reload]);
+
+  useMidnightRefresh(reload);
 
   const handleClaim = async (quest: QuestStatus) => {
     setClaiming(quest.id);
@@ -27,6 +37,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
       void successHaptic();
       showGameToast(`+${res.xp_ganho} XP pela missão "${quest.title}"!`, { variant: 'success' });
       setQuests((prev) => prev.map((q) => (q.id === quest.id ? { ...q, claimed: true } : q)));
+      window.dispatchEvent(new Event('evolyn:quests-changed'));
     } catch (err) {
       showGameToast(err instanceof Error ? err.message : 'Erro ao coletar.', { variant: 'error' });
     } finally {
