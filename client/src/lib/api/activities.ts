@@ -79,3 +79,7 @@ export function updateRoutine(id: string, body: Record<string, unknown>): Promis
 export function archiveRoutine(id: string): Promise<RoutineRecord> {
   return fetchJson(`/routines/${id}`, { method: 'DELETE' });
 }
+
+export async function reorderRoutines(orderedIds: string[]): Promise<void> {
+  await Promise.all(orderedIds.map((id, index) => updateRoutine(id, { sort_order: index })));
+}

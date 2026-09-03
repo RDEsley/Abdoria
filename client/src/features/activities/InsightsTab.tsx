@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { addDaysSaoPaulo, getTodaySaoPaulo, getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { consistencyLast30Days, type ActivityLogRecord } from '@shared/activities';
+import { QuestCard } from '@/components/quests/QuestCard';
 import type { useActivitiesData } from './useActivitiesData';
 
 const LABELS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
@@ -26,6 +27,7 @@ export function InsightsTab({ data }: { data: ReturnType<typeof useActivitiesDat
 
   return (
     <div className="flex flex-col gap-4">
+      <QuestCard />
       {data.insights.length === 0 ? (
         <p className="text-sm font-bold text-stone-500">
           Insights aparecem quando houver consistência suficiente — sem frases vazias.

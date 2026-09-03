@@ -57,6 +57,9 @@ const MyPlantPage = lazy(() =>
 const ActivitiesPage = lazy(() =>
   import('@/pages/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage })),
 );
+const RemindersPage = lazy(() =>
+  import('@/pages/RemindersPage').then((m) => ({ default: m.RemindersPage })),
+);
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
@@ -140,6 +143,14 @@ export default function App() {
                           element={
                             <LazyPage>
                               <ActivitiesPage />
+                            </LazyPage>
+                          }
+                        />
+                        <Route
+                          path="lembretes"
+                          element={
+                            <LazyPage>
+                              <RemindersPage />
                             </LazyPage>
                           }
                         />

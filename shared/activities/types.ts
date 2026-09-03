@@ -16,7 +16,6 @@ export interface ActivitySchedule {
 export interface ActivityReminderConfig {
   enabled: boolean;
   offset_min: number;
-  sound?: string;
   follow_up?: boolean;
 }
 

@@ -261,6 +261,7 @@ routinesRouter.patch('/:id', async (req: AuthRequest, res) => {
     if (req.body?.color) patch.color = req.body.color;
     if (req.body?.schedule) patch.schedule = normalizeActivitySchedule(req.body.schedule);
     if (req.body?.reminder) patch.reminder = normalizeActivityReminder(req.body.reminder);
+    if (typeof req.body?.sort_order === 'number') patch.sort_order = req.body.sort_order;
     const items = Array.isArray(req.body?.items)
       ? req.body.items.map(String).slice(0, ROUTINE_ITEMS_MAX)
       : undefined;

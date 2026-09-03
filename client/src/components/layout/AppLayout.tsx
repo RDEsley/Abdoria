@@ -145,12 +145,28 @@ export function AppLayout() {
                     `game-bottom-nav__item${isActive ? ' game-bottom-nav__item--active' : ''}`
                   }
                 >
-                  <Icon size={20} strokeWidth={2.5} />
-                  <span>{label}</span>
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.span
+                          className="game-bottom-nav__indicator"
+                          layoutId="nav-indicator"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <motion.span
+                        className="game-bottom-nav__icon-wrap"
+                        animate={isActive ? { scale: 1.12, y: -2 } : { scale: 1, y: 0 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                      >
+                        <Icon size={20} strokeWidth={2.5} />
+                      </motion.span>
+                      <span>{label}</span>
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>
-            <div className="game-bottom-nav__grass" aria-hidden />
           </nav>
         </div>
 

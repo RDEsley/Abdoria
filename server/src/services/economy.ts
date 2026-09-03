@@ -163,3 +163,14 @@ export function countNewSkillUnlocks(previous: string[], next: string[]): number
   const prev = new Set(previous);
   return next.filter((slug) => slug && !prev.has(slug)).length;
 }
+
+/**
+ * Quest XP — credits nivel_xp directly, outside the daily cap.
+ * Anti-farm comes from catalog finiteness + PK idempotency, not a dynamic cap.
+ */
+export function awardQuestXp(user: UserRecord, amount: number): number {
+  if (amount <= 0) return 0;
+  user.gamificacao.nivel_xp += amount;
+  addWeeklyXp(user, amount);
+  return amount;
+}

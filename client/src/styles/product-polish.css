@@ -934,15 +934,13 @@ body {
   background: rgb(255 255 255 / 86%);
 }
 
+/* Progress dot base — state colours now in surfaces.css modifiers */
 .game-progress-dot {
-  height: 0.28rem;
+  height: 6px;
   border: 0;
-  background: #dce7e4;
-}
-
-.game-progress-dot--active {
-  animation: none;
-  box-shadow: 0 0 0 2px rgb(245 158 11 / 14%);
+  transition:
+    flex 0.3s ease,
+    background 0.3s ease;
 }
 
 .game-player-content {

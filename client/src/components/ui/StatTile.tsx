@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 
+export type StatTileTone = 'treino' | 'rotina' | 'streak' | 'xp' | 'xp-deep' | 'conquista';
+
 interface Props {
   title: ReactNode;
   value: ReactNode;
@@ -7,6 +9,8 @@ interface Props {
   hint?: ReactNode;
   icon?: ReactNode;
   className?: string;
+  /** Colour tone — maps to `.game-stat--tone-{tone}` in surfaces.css. */
+  tone?: StatTileTone;
   /** Presente = o tile vira um botão (ex.: recorde de streak, clicável). */
   onClick?: () => void;
 }
@@ -25,8 +29,18 @@ function valueLength(value: ReactNode): number | null {
  * mais caracteres (ex.: "128h 45min" vs "5d"), menor a fonte — sem isso,
  * números longos quebravam linha dentro do tile em telas estreitas.
  */
-export function StatTile({ title, value, label, hint, icon, className = '', onClick }: Props) {
+export function StatTile({
+  title,
+  value,
+  label,
+  hint,
+  icon,
+  className = '',
+  tone,
+  onClick,
+}: Props) {
   const len = valueLength(value);
+  const toneClass = tone ? `game-stat--tone-${tone}` : '';
   const style = len != null ? ({ '--val-len': len } as CSSProperties) : undefined;
 
   const content = (
@@ -45,11 +59,15 @@ export function StatTile({ title, value, label, hint, icon, className = '', onCl
 
   if (onClick) {
     return (
-      <button type="button" className={`game-stat game-stat--clickable ${className}`.trim()} onClick={onClick}>
+      <button
+        type="button"
+        className={`game-stat game-stat--clickable ${toneClass} ${className}`.trim()}
+        onClick={onClick}
+      >
         {content}
       </button>
     );
   }
 
-  return <div className={`game-stat ${className}`.trim()}>{content}</div>;
+  return <div className={`game-stat ${toneClass} ${className}`.trim()}>{content}</div>;
 }

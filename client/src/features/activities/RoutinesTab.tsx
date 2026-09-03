@@ -1,41 +1,120 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { GripVertical, Plus } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
+import { reorderRoutines } from '@/lib/api/activities';
 import type { useActivitiesData } from './useActivitiesData';
+
+function SortableRoutineCard({
+  routine,
+  onClick,
+}: {
+  routine: { id: string; name: string; items?: unknown[] };
+  onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: routine.id,
+  });
+  const total = routine.items?.length ?? 0;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      className="activity-quick-card flex items-center gap-2"
+    >
+      <button
+        type="button"
+        className="cursor-grab touch-none text-stone-400"
+        aria-label="Reordenar"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={16} />
+      </button>
+      <button
+        type="button"
+        className="activity-quick-card__body flex-1 text-left"
+        onClick={onClick}
+      >
+        <strong>{routine.name}</strong>
+        <small>
+          {total} {total === 1 ? 'atividade' : 'atividades'}
+        </small>
+      </button>
+    </div>
+  );
+}
 
 export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesData> }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
+  const [orderedRoutines, setOrderedRoutines] = useState(data.routines);
+
+  // Sync with data when it changes
+  if (data.routines !== orderedRoutines && data.routines.length !== orderedRoutines.length) {
+    setOrderedRoutines(data.routines);
+  }
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const oldIndex = orderedRoutines.findIndex((r) => r.id === active.id);
+      const newIndex = orderedRoutines.findIndex((r) => r.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const next = arrayMove(orderedRoutines, oldIndex, newIndex);
+      setOrderedRoutines(next);
+      void reorderRoutines(next.map((r) => r.id));
+    },
+    [orderedRoutines],
+  );
 
   return (
     <div className="flex flex-col gap-3">
-      {data.routines.length === 0 && (
+      {orderedRoutines.length === 0 && (
         <p className="text-sm font-bold text-stone-600">
           Uma rotina é só um conjunto de atividades na ordem que você quiser.
         </p>
       )}
-      {data.routines.map((routine) => {
-        const total = routine.items?.length ?? 0;
-        return (
-          <button
-            key={routine.id}
-            type="button"
-            className="activity-quick-card"
-            onClick={() => navigate(`/rotina/${routine.id}`)}
-          >
-            <div className="activity-quick-card__body">
-              <strong>{routine.name}</strong>
-              <small>
-                {total} {total === 1 ? 'atividade' : 'atividades'}
-              </small>
-            </div>
-          </button>
-        );
-      })}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext
+          items={orderedRoutines.map((r) => r.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {orderedRoutines.map((routine) => (
+            <SortableRoutineCard
+              key={routine.id}
+              routine={routine}
+              onClick={() => navigate(`/rotina/${routine.id}`)}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
       <GameButton
         variant="secondary"
         className="flex items-center justify-center gap-2"
@@ -52,7 +131,7 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
           <input
             className="game-input mt-2 w-full"
             maxLength={40}
-            placeholder="Nome da rotina"
+            placeholder="Ex.: Segunda-feira, Manhã, Pós-treino"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />

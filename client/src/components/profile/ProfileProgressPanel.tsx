@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dumbbell, Flame, Timer, Trophy } from 'lucide-react';
+import { Dumbbell, Flame, Sparkles, Timer, Trophy } from 'lucide-react';
 import { STREAK_RECORD_MATCH_COST } from '@shared/streak/recovery';
 import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
@@ -67,18 +67,21 @@ export function ProfileProgressPanel({ stats }: Props) {
     <div className="game-profile-progress flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3">
         <StatTile
+          tone="treino"
           icon={<Dumbbell className="text-emerald-600" size={20} />}
           title="Exercícios"
           value={String(stats.total_exercicios)}
           hint="Total concluído na conta"
         />
         <StatTile
+          tone="xp"
           icon={<Timer className="text-sky-600" size={20} />}
           title="Tempo"
           value={formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
           hint="Só sessões de treino"
         />
         <StatTile
+          tone="streak"
           icon={<Flame className="text-orange-500" size={20} />}
           title="Streak Evolyn"
           value={`${stats.streak_atual}d`}
@@ -90,12 +93,14 @@ export function ProfileProgressPanel({ stats }: Props) {
           onClick={podeIgualarRecorde ? () => setConfirmOpen(true) : undefined}
         />
         <StatTile
+          tone="rotina"
           icon={<Timer className="text-emerald-700" size={20} />}
           title="Dias ativos"
           value={String(stats.dias_ativos_30 ?? '—')}
           hint="Últimos 30 dias"
         />
         <StatTile
+          tone="conquista"
           icon={
             <Trophy className="text-amber-600" size={20} fill="currentColor" fillOpacity={0.18} />
           }
@@ -106,6 +111,13 @@ export function ProfileProgressPanel({ stats }: Props) {
               ? `${achievementsPct}% da jornada conquistada`
               : 'Sua jornada de herói começa agora'
           }
+        />
+        <StatTile
+          tone="xp-deep"
+          icon={<Sparkles className="text-cyan-600" size={20} />}
+          title="Nível"
+          value={String(level)}
+          hint={`${xpInLevel}/${xpToNext} XP para o próximo`}
         />
       </div>
 

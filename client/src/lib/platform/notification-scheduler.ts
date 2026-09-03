@@ -9,16 +9,14 @@ import { buildWebPushNotificationPayload } from '@shared/notification-catalog';
 import { Capacitor } from '@capacitor/core';
 import { ensureWebPushSubscription } from '@/lib/platform/web-push';
 import {
-  buildAndroidChannelSpec,
   ensureAndroidNotificationChannels,
-  resolveIosNotificationSound,
+  getDefaultChannelId,
   resolveNativeLargeIconPath,
 } from '@/lib/notification-native';
 
 export type NotificationPermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
 
 export interface NotificationSyncOptions {
-  /** Quando true, cancela entregas locais/push sem apagar os lembretes salvos. */
   optOut?: boolean;
 }
 
@@ -34,10 +32,6 @@ function webPermissionState(): NotificationPermissionState {
   return Notification.permission === 'default' ? 'prompt' : Notification.permission;
 }
 
-/**
- * Fallback web quando o app está aberto: entrega imediata no minuto exato.
- * Não substitui Web Push — só cobre o caso em que o usuário já está com o app ativo.
- */
 async function deliverFocusedWebReminders(reminders: PersonalizedReminder[]): Promise<void> {
   if (webPermissionState() !== 'granted') return;
   const now = new Date();
@@ -55,7 +49,6 @@ async function deliverFocusedWebReminders(reminders: PersonalizedReminder[]): Pr
       icon: payload.icon,
       badge: payload.badge,
       tag: payload.tag,
-      silent: payload.silent,
     };
 
     if (registration) {
@@ -123,58 +116,48 @@ const nativeNotificationScheduler: NotificationScheduler = {
 
     if (options?.optOut || permission.display !== 'granted') return;
 
+    await ensureAndroidNotificationChannels();
+
     const now = Date.now();
+    const channelId = getDefaultChannelId();
     const planned = reminders
       .filter((item) => item.enabled)
       .flatMap((reminder) => {
         const color = PERSONAL_NOTIFICATION_COLORS.find(({ id }) => id === reminder.color)?.hex;
         return buildNativeNotificationSchedules(reminder)
           .filter((descriptor) => !descriptor.at || new Date(descriptor.at).getTime() > now)
-          .map((descriptor) => {
-            const channelSpec = buildAndroidChannelSpec(reminder.sound, descriptor.occurrenceKey);
-            return {
-              id: numericId(reminder.id, descriptor.occurrenceKey),
-              title: reminder.title,
-              body: reminder.message,
-              schedule: descriptor.at
-                ? { at: new Date(descriptor.at) }
-                : {
-                    on: descriptor.on as {
-                      weekday?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-                      hour: number;
-                      minute: number;
-                    },
+          .map((descriptor) => ({
+            id: numericId(reminder.id, descriptor.occurrenceKey),
+            title: reminder.title,
+            body: reminder.message,
+            schedule: descriptor.at
+              ? { at: new Date(descriptor.at) }
+              : {
+                  on: descriptor.on as {
+                    weekday?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                    hour: number;
+                    minute: number;
                   },
-              channelId: channelSpec.id,
-              sound: resolveIosNotificationSound(reminder.sound, descriptor.occurrenceKey),
-              smallIcon: Capacitor.getPlatform() === 'android' ? 'ic_stat_evolyn' : undefined,
-              largeIcon:
-                Capacitor.getPlatform() === 'android'
-                  ? resolveNativeLargeIconPath(reminder.icon)
-                  : undefined,
-              iconColor: color,
-              extra: {
-                reminderId: reminder.id,
-                icon: reminder.icon,
-                color: reminder.color,
-                sound: reminder.sound,
-              },
-              channelSpec,
-            };
-          });
+                },
+            channelId,
+            smallIcon: Capacitor.getPlatform() === 'android' ? 'ic_stat_evolyn' : undefined,
+            largeIcon:
+              Capacitor.getPlatform() === 'android'
+                ? resolveNativeLargeIconPath(reminder.icon)
+                : undefined,
+            iconColor: color,
+            extra: {
+              reminderId: reminder.id,
+              icon: reminder.icon,
+              color: reminder.color,
+            },
+          }));
       })
       .slice(0, PERSONAL_NOTIFICATION_MAX_REQUESTS);
 
-    await ensureAndroidNotificationChannels(planned.map((item) => item.channelSpec));
-
-    const notifications = planned.map(({ channelSpec, ...notification }) => {
-      void channelSpec;
-      return notification;
-    });
-
-    if (notifications.length) {
-      const result = await LocalNotifications.schedule({ notifications });
-      if (result.notifications.length !== notifications.length) {
+    if (planned.length) {
+      const result = await LocalNotifications.schedule({ notifications: planned });
+      if (result.notifications.length !== planned.length) {
         throw new Error('Nem todas as notificações nativas foram agendadas.');
       }
     }
