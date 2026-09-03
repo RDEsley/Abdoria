@@ -1,6 +1,7 @@
 import {
   QUEST_CATALOG,
   getQuestPeriodKey,
+  getQuestPeriodKeyAliases,
   type QuestContext,
   type QuestDefinition,
 } from '../../../shared/quests/catalog.js';
@@ -19,39 +20,59 @@ export interface QuestStatus {
   claimed: boolean;
 }
 
+function supabaseMessage(error: { message?: string; code?: string } | null): string {
+  if (!error) return 'Erro ao acessar missões.';
+  return error.message || error.code || 'Erro ao acessar missões.';
+}
+
 export async function listQuestsForUser(
   userId: string,
   context: QuestContext,
 ): Promise<QuestStatus[]> {
   const now = new Date();
-  const dailyKey = getQuestPeriodKey('daily', now);
-  const weeklyKey = getQuestPeriodKey('weekly', now);
+  const periodKeys = [
+    ...new Set([
+      ...getQuestPeriodKeyAliases('daily', now),
+      ...getQuestPeriodKeyAliases('weekly', now),
+    ]),
+  ];
 
-  const { data: claims } = await getSupabase()
+  const { data: claims, error } = await getSupabase()
     .from('quest_claims')
-    .select('quest_id, period_key')
+    .select('quest_id, period_key, rewarded_at')
     .eq('user_id', userId)
-    .in('period_key', [dailyKey, weeklyKey]);
+    .in('period_key', periodKeys);
+
+  if (error) {
+    console.error('listQuestsForUser quest_claims:', error);
+    throw new Error(supabaseMessage(error));
+  }
 
   const claimedSet = new Set(
     (claims ?? []).map(
-      (c: { quest_id: string; period_key: string }) => `${c.quest_id}:${c.period_key}`,
+      (row: { quest_id: string; period_key: string }) => `${row.quest_id}:${row.period_key}`,
     ),
   );
 
-  return QUEST_CATALOG.map((q: QuestDefinition) => {
-    const periodKey = getQuestPeriodKey(q.scope, now);
+  return QUEST_CATALOG.map((quest: QuestDefinition) => {
+    const aliases = getQuestPeriodKeyAliases(quest.scope, now);
+    const claimed = aliases.some((key) => claimedSet.has(`${quest.id}:${key}`));
     return {
-      id: q.id,
-      scope: q.scope,
-      title: q.title,
-      description: q.description,
-      goal: q.goal,
-      xp: q.xp,
-      progress: q.progress(context),
-      claimed: claimedSet.has(`${q.id}:${periodKey}`),
+      id: quest.id,
+      scope: quest.scope,
+      title: quest.title,
+      description: quest.description,
+      goal: quest.goal,
+      xp: quest.xp,
+      progress: quest.progress(context),
+      claimed,
     };
   });
+}
+
+interface ClaimSlot {
+  already_rewarded: boolean;
+  xp_awarded: number;
 }
 
 export async function claimQuest(
@@ -59,7 +80,7 @@ export async function claimQuest(
   questId: string,
   context: QuestContext,
 ): Promise<{ user: ReturnType<typeof sanitizeUser>; xp_ganho: number }> {
-  const quest = QUEST_CATALOG.find((q) => q.id === questId);
+  const quest = QUEST_CATALOG.find((item) => item.id === questId);
   if (!quest) throw new Error('Missão não encontrada.');
 
   const progress = quest.progress(context);
@@ -67,18 +88,51 @@ export async function claimQuest(
 
   const now = new Date();
   const periodKey = getQuestPeriodKey(quest.scope, now);
+  const aliases = getQuestPeriodKeyAliases(quest.scope, now);
 
-  // Idempotency via PK
-  const { error } = await getSupabase().from('quest_claims').insert({
-    user_id: userId,
-    quest_id: questId,
-    period_key: periodKey,
-    xp_awarded: quest.xp,
+  const existing = await getSupabase()
+    .from('quest_claims')
+    .select('period_key, rewarded_at, xp_awarded')
+    .eq('user_id', userId)
+    .eq('quest_id', questId)
+    .in('period_key', aliases);
+
+  if (existing.error) {
+    console.error('claimQuest lookup:', existing.error);
+    throw new Error(supabaseMessage(existing.error));
+  }
+
+  const rewardedAlias = (existing.data ?? []).find(
+    (row: { rewarded_at: string | null }) => row.rewarded_at,
+  );
+  if (rewardedAlias) {
+    throw new Error('Missão já coletada neste período.');
+  }
+
+  const pendingAlias = (existing.data ?? []).find(
+    (row: { rewarded_at: string | null; period_key: string }) => !row.rewarded_at,
+  );
+  const slotKey = pendingAlias?.period_key ?? periodKey;
+
+  const { data: slot, error: slotError } = await getSupabase().rpc('claim_quest_slot', {
+    p_user_id: userId,
+    p_quest_id: questId,
+    p_period_key: slotKey,
+    p_xp: quest.xp,
   });
 
-  if (error) {
-    if (error.code === '23505') throw new Error('Missão já coletada neste período.');
-    throw error;
+  if (slotError) {
+    if (slotError.code === '23505') throw new Error('Missão já coletada neste período.');
+    if (slotError.code === '23503') {
+      throw new Error('Não foi possível coletar a missão. Atualize o app e tente de novo.');
+    }
+    console.error('claimQuest slot:', slotError);
+    throw new Error(supabaseMessage(slotError));
+  }
+
+  const parsed = (slot ?? {}) as ClaimSlot;
+  if (parsed.already_rewarded) {
+    throw new Error('Missão já coletada neste período.');
   }
 
   const user = await User.findById(userId);
@@ -87,6 +141,15 @@ export async function claimQuest(
   const awarded = awardQuestXp(user, quest.xp);
   awardMoedaFromXp(user);
   await user.saveColumns(['gamificacao', 'cosmeticos']);
+
+  const { error: markError } = await getSupabase().rpc('mark_quest_rewarded', {
+    p_user_id: userId,
+    p_quest_id: questId,
+    p_period_key: slotKey,
+  });
+  if (markError) {
+    console.error('claimQuest mark rewarded:', markError);
+  }
 
   return { user: sanitizeUser(user), xp_ganho: awarded };
 }

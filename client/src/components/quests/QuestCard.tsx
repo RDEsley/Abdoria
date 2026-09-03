@@ -30,6 +30,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
   useMidnightRefresh(reload);
 
   const handleClaim = async (quest: QuestStatus) => {
+    if (claiming) return;
     setClaiming(quest.id);
     try {
       const res = await claimQuest(quest.id);
