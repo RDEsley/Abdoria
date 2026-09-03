@@ -20,10 +20,10 @@ import {
   xpProgressFromTotal,
 } from '@/types';
 import { DASHBOARD_LEVEL_XP_SECTION_ID } from '@/lib/dashboard-scroll';
+import { getWeekStartSaoPaulo } from '@shared/utils/timezone';
 import { getDaySnapshot, type DaySnapshot } from '@/lib/api/day';
 import { DaySummary } from '@/features/home/DaySummary';
 import { NextUp } from '@/features/home/NextUp';
-import { QuickActions } from '@/features/home/QuickActions';
 import { InsightCard } from '@/features/home/InsightCard';
 import { WeekStrip } from '@/features/home/WeekStrip';
 import { MomentumBar } from '@/components/dashboard/MomentumBar';
@@ -36,13 +36,10 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } 
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const WEEK_RETRO_KEY = 'evolyn:week-retro-seen';
 
+/** Chave de dismiss da retrospectiva = segunda-feira civil em SP. */
 function weekRetroPeriod(dayKey: string): string {
   const [y, m, d] = dayKey.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  return date.toISOString().slice(0, 10);
+  return getWeekStartSaoPaulo(new Date(Date.UTC(y, m - 1, d, 15, 0, 0)));
 }
 
 export function DashboardPage() {
@@ -148,10 +145,6 @@ export function DashboardPage() {
       </motion.div>
 
       <motion.div variants={item}>
-        <QuickActions />
-      </motion.div>
-
-      <motion.div variants={item}>
         <NextUp items={day?.next_up ?? []} />
       </motion.div>
 
@@ -164,6 +157,7 @@ export function DashboardPage() {
       <motion.div variants={item} className="dashboard-quick-stats grid grid-cols-2 gap-3">
         <StatTile
           tone="streak"
+          ambient="streak"
           icon={<Flame className="text-orange-500" size={22} />}
           title="Streak Evolyn"
           value={stats.streak_atual}
@@ -171,8 +165,9 @@ export function DashboardPage() {
         />
         <StatTile
           tone="xp"
+          ambient="tempo"
           icon={<Timer className="text-sky-600" size={22} />}
-          title="Tempo esta semana"
+          title="Tempo de treino essa semana"
           value={
             (stats.segundos_semana ?? 0) > 0
               ? formatTrainingDuration(stats.segundos_semana ?? 0)

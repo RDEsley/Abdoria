@@ -46,7 +46,7 @@ export function WeekRetroCard({ retro, onDismiss }: { retro: WeekRetro; onDismis
     <section className="glass-card glass-card--streak p-4">
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-extrabold text-stone-800">
-          <Trophy size={16} className="text-amber-500" /> Semana em Revisão
+          <Trophy size={16} className="text-amber-500" /> Esta semana · seg–dom
         </h3>
         <button
           type="button"

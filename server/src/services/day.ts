@@ -1,18 +1,37 @@
-import { addDaysSaoPaulo, getTodaySaoPaulo, startOfDayKeySaoPaulo } from '../utils/timezone.js';
+import {
+  addDaysSaoPaulo,
+  getHourSaoPaulo,
+  getTodaySaoPaulo,
+  getWeekStartSaoPaulo,
+  startOfDayKeySaoPaulo,
+} from '../utils/timezone.js';
 import { User } from '../domain/User.js';
 import { hasTrainedToday } from './gamification.js';
 import { getSuggestedWorkout } from './recommendation.js';
 import { ActiveDays } from '../repositories/active-days-repository.js';
 import { Activities, ActivityLogs, Routines } from '../repositories/activities-repository.js';
 import { WorkoutHistory } from '../repositories/workout-history-repository.js';
-import { plannedOccurrencesForDay } from '../../../shared/activities/index.js';
+import {
+  activityOccursOnDay,
+  buildDayGuide,
+  plannedOccurrencesForDay,
+  routineItemsDoneToday,
+  type DayGuideItem,
+  type DayGuideQuestInput,
+} from '../../../shared/activities/index.js';
 import { buildDeterministicInsights } from '../../../shared/activities/insights.js';
 import { periodFromHour } from '../../../shared/activities/schedule.js';
-import type { QuestContext } from '../../../shared/quests/catalog.js';
+import { QUEST_CATALOG, type QuestContext } from '../../../shared/quests/catalog.js';
 
 export async function getDaySnapshot(userId: string) {
   const today = getTodaySaoPaulo();
+  // Rolling 7-day window ending today — used only by the WeekStrip ("week").
   const weekStart = addDaysSaoPaulo(today, -6);
+  // Civil Monday–Sunday week (America/Sao_Paulo) — used only by "week_retro".
+  const civilWeekStart = getWeekStartSaoPaulo();
+  const civilWeekEnd = addDaysSaoPaulo(civilWeekStart, 6);
+  const prevCivilWeekStart = addDaysSaoPaulo(civilWeekStart, -7);
+  const prevCivilWeekEnd = addDaysSaoPaulo(civilWeekStart, -1);
   const twoWeeksStart = addDaysSaoPaulo(today, -13);
   const monthStart = addDaysSaoPaulo(today, -29);
 
@@ -45,15 +64,24 @@ export async function getDaySnapshot(userId: string) {
     }),
   ]);
 
-  // Split into current and previous week
+  // Rolling window split (today-6..today) — feeds the WeekStrip only.
   const weekDays = twoWeekDays.filter((d) => d.day_key >= weekStart);
-  const prevWeekDays = twoWeekDays.filter((d) => d.day_key < weekStart);
   const weekWorkouts = twoWeekWorkouts.filter(
     (w) => getTodaySaoPaulo(new Date(w.concluido_em)) >= weekStart,
   );
-  const prevWeekWorkouts = twoWeekWorkouts.filter(
-    (w) => getTodaySaoPaulo(new Date(w.concluido_em)) < weekStart,
+
+  // Civil Mon–Sun split — feeds week_retro only (independent from the WeekStrip).
+  const civilWeekDays = twoWeekDays.filter((d) => d.day_key >= civilWeekStart);
+  const prevCivilWeekDays = twoWeekDays.filter(
+    (d) => d.day_key >= prevCivilWeekStart && d.day_key <= prevCivilWeekEnd,
   );
+  const civilWeekWorkouts = twoWeekWorkouts.filter(
+    (w) => getTodaySaoPaulo(new Date(w.concluido_em)) >= civilWeekStart,
+  );
+  const prevCivilWeekWorkouts = twoWeekWorkouts.filter((w) => {
+    const dayKey = getTodaySaoPaulo(new Date(w.concluido_em));
+    return dayKey >= prevCivilWeekStart && dayKey <= prevCivilWeekEnd;
+  });
 
   if (!user) throw Object.assign(new Error('Usuário não encontrado.'), { status: 404 });
 
@@ -61,9 +89,30 @@ export async function getDaySnapshot(userId: string) {
   const occurrences = plannedOccurrencesForDay(activities, today, todayLogs);
   const doneIds = new Set(todayLogs.map((log) => log.activity_id).filter(Boolean));
 
+  // Momentum: per-period progress (also feeds the quest context below).
+  const periodBuckets = {
+    manha: { planned: 0, done: 0 },
+    tarde: { planned: 0, done: 0 },
+    noite: { planned: 0, done: 0 },
+  };
+  for (const occ of occurrences) {
+    const h = occ.time ? parseInt(occ.time.split(':')[0], 10) : null;
+    const p = h != null ? periodFromHour(h) : null;
+    if (p) {
+      periodBuckets[p].planned += 1;
+      if (occ.status === 'done') periodBuckets[p].done += 1;
+    }
+  }
+  const currentHour = getHourSaoPaulo();
+  const currentPeriod = periodFromHour(currentHour);
+
+  // items_done is isolated per routine: a log only counts toward a routine's
+  // progress when it was recorded through that exact routine_id, so the same
+  // activity shared by two routines (or completed standalone) never silently
+  // marks the other routine's item as done.
   const routineSnapshots = routines.map((routine) => {
     const items = routine.items ?? [];
-    const itemsDone = items.filter((item) => doneIds.has(item.activity_id)).length;
+    const itemsDone = routineItemsDoneToday(routine, todayLogs);
     return {
       id: routine.id,
       name: routine.name,
@@ -71,33 +120,58 @@ export async function getDaySnapshot(userId: string) {
       color: routine.color,
       items_total: items.length,
       items_done: itemsDone,
+      scheduled_today:
+        routine.schedule.kind !== 'unscheduled' && activityOccursOnDay(routine.schedule, today),
+      schedule: routine.schedule,
     };
   });
 
-  const nextUp: Array<{ kind: 'workout' | 'activity' | 'routine'; title: string; href: string }> =
-    [];
-  if (!treinoHoje) {
-    const suggested = await getSuggestedWorkout(user);
-    nextUp.push({
-      kind: 'workout',
-      title: suggested?.nome ?? 'Treino do dia',
-      href: '/treino',
-    });
-  }
-  const pending = occurrences.find((item) => item.status === 'pending');
-  if (pending) {
-    nextUp.push({ kind: 'activity', title: pending.name, href: '/atividades' });
-  }
-  const pendingRoutine = routineSnapshots.find(
-    (routine) => routine.items_done < routine.items_total,
-  );
-  if (pendingRoutine) {
-    nextUp.push({
-      kind: 'routine',
-      title: pendingRoutine.name,
-      href: `/rotina/${pendingRoutine.id}`,
-    });
-  }
+  const suggestedWorkout = treinoHoje ? null : await getSuggestedWorkout(user);
+
+  // Quest progress is derived from data already fetched above (no extra
+  // queries) so the Day Guide can consider a near-complete quest as a hint.
+  const questContextForGuide: QuestContext = {
+    activitiesCompletedToday: doneIds.size,
+    morningComplete:
+      periodBuckets.manha.planned > 0 && periodBuckets.manha.done === periodBuckets.manha.planned,
+    afternoonComplete:
+      periodBuckets.tarde.planned > 0 && periodBuckets.tarde.done === periodBuckets.tarde.planned,
+    eveningComplete:
+      periodBuckets.noite.planned > 0 && periodBuckets.noite.done === periodBuckets.noite.planned,
+    trainedToday: treinoHoje,
+    activeDaysThisWeek: weekDays.length,
+    workoutsThisWeek: weekWorkouts.length,
+    streakAtual: user.gamificacao.streak_atual,
+  };
+  const questProgressForGuide: DayGuideQuestInput[] = QUEST_CATALOG.map((quest) => ({
+    id: quest.id,
+    title: quest.title,
+    progress: quest.progress(questContextForGuide),
+    goal: quest.goal,
+  }));
+
+  const guide = buildDayGuide({
+    todayKey: today,
+    trainedToday: treinoHoje,
+    suggestedWorkoutTitle: suggestedWorkout?.nome ?? null,
+    routines: routines.map((routine) => ({
+      id: routine.id,
+      name: routine.name,
+      schedule: routine.schedule,
+      items: routine.items,
+    })),
+    todayLogs: todayLogs.map((log) => ({
+      routine_id: log.routine_id,
+      activity_id: log.activity_id,
+    })),
+    occurrences,
+    quests: questProgressForGuide,
+    weeklyReviewAvailable: prevCivilWeekDays.length > 0 || prevCivilWeekWorkouts.length > 0,
+  });
+  const stripScore = ({ score: _score, ...rest }: DayGuideItem) => rest;
+  const nextUp = guide.secondary
+    ? [stripScore(guide.primary), stripScore(guide.secondary)]
+    : [stripScore(guide.primary)];
 
   const weekKeys = Array.from({ length: 7 }, (_, index) => addDaysSaoPaulo(weekStart, index));
   const activeSet = new Set(weekDays.map((day) => day.day_key));
@@ -130,23 +204,6 @@ export async function getDaySnapshot(userId: string) {
     activeDayKeys: weekDays.map((day) => day.day_key),
   });
 
-  // Momentum: per-period progress
-  const periodBuckets = {
-    manha: { planned: 0, done: 0 },
-    tarde: { planned: 0, done: 0 },
-    noite: { planned: 0, done: 0 },
-  };
-  for (const occ of occurrences) {
-    const h = occ.time ? parseInt(occ.time.split(':')[0], 10) : null;
-    const p = h != null ? periodFromHour(h) : null;
-    if (p) {
-      periodBuckets[p].planned += 1;
-      if (occ.status === 'done') periodBuckets[p].done += 1;
-    }
-  }
-  const currentHour = new Date().getHours();
-  const currentPeriod = periodFromHour(currentHour);
-
   return {
     day_key: today,
     dia_ativo_garantido: diaAtivo,
@@ -164,13 +221,17 @@ export async function getDaySnapshot(userId: string) {
       current_period: currentPeriod,
       periods: periodBuckets,
     },
+    // Civil Mon–Sun retro, independent of the rolling WeekStrip above.
     week_retro: buildWeekRetro(
-      weekDays,
-      prevWeekDays,
-      weekWorkouts,
-      prevWeekWorkouts,
+      civilWeekDays,
+      prevCivilWeekDays,
+      civilWeekWorkouts,
+      prevCivilWeekWorkouts,
       logs,
-      weekStart,
+      civilWeekStart,
+      civilWeekEnd,
+      prevCivilWeekStart,
+      prevCivilWeekEnd,
     ),
   };
 }
@@ -182,11 +243,14 @@ function buildWeekRetro(
   prevWeekWorkouts: unknown[],
   logs: Array<{ day_key: string; activity_id?: string | null; xp_awarded: number }>,
   weekStart: string,
+  weekEnd: string,
+  prevWeekStart: string,
+  prevWeekEnd: string,
 ) {
   if (prevWeekDays.length === 0 && prevWeekWorkouts.length === 0) return null;
 
-  const weekLogs = logs.filter((l) => l.day_key >= weekStart);
-  const prevLogs = logs.filter((l) => l.day_key < weekStart);
+  const weekLogs = logs.filter((l) => l.day_key >= weekStart && l.day_key <= weekEnd);
+  const prevLogs = logs.filter((l) => l.day_key >= prevWeekStart && l.day_key <= prevWeekEnd);
   const weekXp = weekLogs.reduce((s, l) => s + l.xp_awarded, 0);
   const prevXp = prevLogs.reduce((s, l) => s + l.xp_awarded, 0);
 

@@ -422,21 +422,77 @@
 .game-nav-item {
   position: relative;
   overflow: visible;
+  border-radius: 1rem 1.2rem 0.9rem 1.15rem;
 }
 
+/* Indicador ativo — pill orgânica emerald suave em vez do frame preto
+   duplo (nav item + blob com borda/sombra cartoon idênticas). Mantém
+   personalidade playful com o formato assimétrico e o acento de folha. */
 .game-nav-item__blob {
   position: absolute;
-  inset: 0.15rem 0.2rem;
+  inset: 0.15rem 0.35rem;
+  overflow: hidden;
   border-radius: 1rem 1.2rem 0.9rem 1.15rem;
-  background: linear-gradient(135deg, #d1fae5, #6ee7b7);
-  border: 2.5px solid #16332e;
-  box-shadow: 0 3px 0 #16332e;
+  background: linear-gradient(135deg, #ecfdf5 0%, #bbf7d0 55%, #6ee7b7 100%);
+  border: 1px solid rgb(6 95 70 / 24%);
+  box-shadow:
+    0 2px 6px rgb(6 95 70 / 16%),
+    inset 0 1px 0 rgb(255 255 255 / 55%);
   z-index: 0;
 }
 
+/* Acento de folha — bem discreto, no canto oposto ao texto. */
+.game-nav-item__blob::after {
+  content: '';
+  position: absolute;
+  top: 0.28rem;
+  right: 0.55rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #059669;
+  opacity: 0.32;
+  border-radius: 0 70% 0 70%;
+  transform: rotate(-38deg);
+}
+
 .game-nav-item--active {
+  color: #065f46;
   background: transparent;
+  border-color: transparent;
   box-shadow: none;
+}
+
+/* Hover mais suave — sem borda preta cartoon, só um tapete emerald leve. */
+.game-nav-item:hover {
+  background: rgb(16 185 129 / 8%);
+  border-color: rgb(6 95 70 / 16%);
+}
+
+.game-nav-item--active:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+.game-nav-item:focus-visible {
+  outline: 2px solid rgb(6 95 70 / 45%);
+  outline-offset: 2px;
+}
+
+/* "Opções" é ação de sistema, não item de navegação principal — separado
+   por uma linha fina e com peso visual mais discreto. */
+.game-nav-item__divider {
+  height: 1px;
+  margin: 0.5rem 0.9rem 0.35rem;
+  background: rgb(22 51 46 / 10%);
+}
+
+.game-nav-item--system {
+  color: #78716c;
+  font-weight: 700;
+}
+
+.game-nav-item--system:hover {
+  color: var(--game-ink);
 }
 
 /* ------------------------------------------------------------------ */
@@ -457,10 +513,142 @@
   .game-tab__badge {
     animation: none;
   }
+  .game-stat__ambient-orb {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ------------------------------------------------------------------ */
-/* 10. Cartoon / desenho — bordas fortes, sombra sólida, bounce        */
+/* 10. StatTile ambient layer — decoração muito sutil, só               */
+/*     transform/opacity (sem canvas, sem rAF). Cada tom tem um         */
+/*     movimento diferente pra reforçar a identidade do tile.           */
+/* ------------------------------------------------------------------ */
+
+/* Especificidade extra de propósito: precisa vencer a regra genérica
+   `.game-app .game-stat[class*='game-stat--tone-'] > *` (seção 4), que
+   força `position: relative` em todo filho direto do tile — a camada
+   ambiente precisa ficar `absolute` pra preencher o card. */
+.game-app .game-stat[class*='game-stat--tone-'] > .game-stat__ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.game-stat__ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Streak — brasas âmbar subindo bem devagar. */
+.game-stat__ambient--streak .game-stat__ambient-orb {
+  bottom: -10%;
+  background: radial-gradient(circle, rgb(251 191 36 / 75%), rgb(245 158 11 / 0%) 72%);
+  animation: stat-ember-rise 8s ease-in infinite;
+}
+
+.game-stat__ambient--streak .game-stat__ambient-orb:nth-child(1) {
+  left: 16%;
+  width: 0.4rem;
+  height: 0.4rem;
+  animation-delay: 0s;
+  animation-duration: 7.5s;
+}
+
+.game-stat__ambient--streak .game-stat__ambient-orb:nth-child(2) {
+  left: 52%;
+  width: 0.55rem;
+  height: 0.55rem;
+  animation-delay: 2.4s;
+  animation-duration: 9s;
+}
+
+.game-stat__ambient--streak .game-stat__ambient-orb:nth-child(3) {
+  left: 78%;
+  width: 0.32rem;
+  height: 0.32rem;
+  animation-delay: 4.6s;
+  animation-duration: 8.3s;
+}
+
+@keyframes stat-ember-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  14% {
+    opacity: 0.5;
+  }
+  85% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0.3rem, -3.4rem);
+  }
+}
+
+/* Tempo/XP — anéis ciano flutuando, movimento diferente do streak
+   (deriva + leve escala, em vez de subir). */
+.game-stat__ambient--tempo .game-stat__ambient-orb {
+  top: 12%;
+  background: transparent;
+  border: 1.5px solid rgb(6 182 212 / 55%);
+  animation: stat-ring-drift 10s ease-in-out infinite;
+}
+
+.game-stat__ambient--tempo .game-stat__ambient-orb:nth-child(1) {
+  left: 12%;
+  width: 1.05rem;
+  height: 1.05rem;
+  animation-delay: 0s;
+  animation-duration: 9.5s;
+}
+
+.game-stat__ambient--tempo .game-stat__ambient-orb:nth-child(2) {
+  left: 60%;
+  top: 48%;
+  width: 0.7rem;
+  height: 0.7rem;
+  animation-delay: 3.2s;
+  animation-duration: 11s;
+}
+
+.game-stat__ambient--tempo .game-stat__ambient-orb:nth-child(3) {
+  left: 34%;
+  top: 64%;
+  width: 1.3rem;
+  height: 1.3rem;
+  animation-delay: 6s;
+  animation-duration: 12.5s;
+}
+
+@keyframes stat-ring-drift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.85);
+  }
+  25% {
+    opacity: 0.28;
+  }
+  50% {
+    transform: translate(-0.35rem, 0.35rem) scale(1.05);
+  }
+  80% {
+    opacity: 0.14;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0.3rem, -0.3rem) scale(0.9);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 11. Cartoon / desenho — bordas fortes, sombra sólida, bounce        */
 /* ------------------------------------------------------------------ */
 
 .game-app {

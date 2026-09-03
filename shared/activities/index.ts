@@ -43,6 +43,12 @@ export {
   todayOccurrenceKey,
 } from './occurrences.js';
 export {
+  isTimeString,
+  normalizeRoutineItems,
+  routineItemInputToRecord,
+  type RoutineItemInput,
+} from './routine-items.js';
+export {
   ACTIVITY_XP_DISTINCT_CAP,
   ACTIVITY_XP_FULL,
   ACTIVITY_XP_MINIMUM,
@@ -63,3 +69,17 @@ export {
   type ConsistencyLog,
 } from './consistency.js';
 export { buildDeterministicInsights, type EvolynInsight } from './insights.js';
+export {
+  buildDayGuide,
+  isRoutineRelevantToday,
+  routineDoneActivityIdsToday,
+  routineItemsDoneToday,
+  type BuildDayGuideInput,
+  type DayGuideItem,
+  type DayGuideKind,
+  type DayGuideLogInput,
+  type DayGuideOccurrenceInput,
+  type DayGuideQuestInput,
+  type DayGuideResult,
+  type DayGuideRoutineInput,
+} from './day-guide.js';

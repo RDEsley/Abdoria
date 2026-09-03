@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   endOfDaySaoPaulo,
+  getHourSaoPaulo,
   getTodaySaoPaulo,
+  getWeekStartSaoPaulo,
   startOfDaySaoPaulo,
 } from '../../shared/utils/timezone.js';
 
@@ -44,5 +46,18 @@ describe('limites do dia em America/Sao_Paulo', () => {
     expect(getTodaySaoPaulo(midnight)).toBe('2026-08-11');
     expect(startOfDaySaoPaulo(midnight).toISOString()).toBe('2026-08-11T03:00:00.000Z');
     expect(endOfDaySaoPaulo(midnight).toISOString()).toBe('2026-08-12T03:00:00.000Z');
+  });
+
+  it('getHourSaoPaulo não usa o fuso do processo (momentum manhã/tarde/noite)', () => {
+    const nightInSaoPaulo = new Date('2026-09-04T02:30:00.000Z'); // 23:30 em SP
+    expect(getHourSaoPaulo(nightInSaoPaulo)).toBe(23);
+    expect(nightInSaoPaulo.getHours()).toBe(2);
+  });
+
+  it('semana civil Seg–Dom ancora na segunda-feira em SP', () => {
+    // 2026-09-03 é quinta.
+    expect(getWeekStartSaoPaulo(new Date('2026-09-03T15:00:00-03:00'))).toBe('2026-08-31');
+    expect(getWeekStartSaoPaulo(new Date('2026-08-31T08:00:00-03:00'))).toBe('2026-08-31');
+    expect(getWeekStartSaoPaulo(new Date('2026-09-06T22:00:00-03:00'))).toBe('2026-08-31');
   });
 });

@@ -121,8 +121,9 @@ export function AppLayout() {
                 )}
               </NavLink>
             ))}
-            <NavLink to="/configuracoes" className="game-nav-item mt-3">
-              <Settings size={18} strokeWidth={2.5} /> Opções
+            <div className="game-nav-item__divider" role="presentation" />
+            <NavLink to="/configuracoes" className="game-nav-item game-nav-item--system">
+              <Settings size={17} strokeWidth={2.5} /> Opções
             </NavLink>
           </nav>
 
