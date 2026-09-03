@@ -1,4 +1,5 @@
 import webpush from 'web-push';
+import { buildWebPushNotificationPayload } from '../../../shared/notification-catalog.js';
 import {
   listReminderOccurrencesInLookback,
   normalizePersonalizedReminders,
@@ -21,22 +22,18 @@ export { ReminderPushMisconfiguredError } from './reminder-push-config.js';
 async function sendPush(
   subscription: PushSubscriptionRow,
   reminder: PersonalizedReminder,
+  occurrenceKey: string,
 ): Promise<void> {
   assertReminderPushConfigured();
 
-  const payload = JSON.stringify({
-    title: reminder.title,
-    body: reminder.message || 'Hora do seu lembrete no Evolyn.',
-    tag: reminder.id,
-    icon: '/brand/favicon-192.png',
-  });
+  const payload = buildWebPushNotificationPayload(reminder, occurrenceKey);
 
   await webpush.sendNotification(
     {
       endpoint: subscription.endpoint,
       keys: { p256dh: subscription.p256dh, auth: subscription.auth },
     },
-    payload,
+    JSON.stringify(payload),
     { TTL: 120 },
   );
 }
@@ -97,7 +94,7 @@ export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
       }
 
       try {
-        await sendPush(subscription, occurrence.reminder);
+        await sendPush(subscription, occurrence.reminder, occurrence.occurrenceKey);
         await PushDeliveryLog.markSent(subscription.id, occurrence.occurrenceKey, now);
         sent += 1;
       } catch (error) {

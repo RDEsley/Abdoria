@@ -22,7 +22,7 @@ const baseReminder: PersonalizedReminder = {
   message: '',
   icon: 'water',
   color: 'sky',
-  sound: 'default',
+  sound: 'system_default',
   schedule: {
     kind: 'recurring',
     weekdays: [0, 1, 2, 3, 4, 5, 6],

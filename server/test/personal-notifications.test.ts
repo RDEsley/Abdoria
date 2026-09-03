@@ -14,7 +14,7 @@ const recurring: PersonalizedReminder = {
   message: '',
   icon: 'water',
   color: 'sky',
-  sound: 'default',
+  sound: 'system_default',
   schedule: { kind: 'recurring', weekdays: [1, 3, 5], times: ['08:00', '16:00'] },
   enabled: true,
   createdAt: '2026-08-29T10:00:00.000Z',
@@ -54,8 +54,12 @@ describe('notificações personalizadas V2', () => {
   });
 
   it('preserva temas de som suportados e usa padrão para valores desconhecidos', () => {
-    expect(normalizePersonalizedReminder({ ...recurring, sound: 'nature' })?.sound).toBe('nature');
-    expect(normalizePersonalizedReminder({ ...recurring, sound: 'arcade' })?.sound).toBe('default');
+    expect(normalizePersonalizedReminder({ ...recurring, sound: 'nature' })?.sound).toBe(
+      'nature_leaves',
+    );
+    expect(normalizePersonalizedReminder({ ...recurring, sound: 'arcade' })?.sound).toBe(
+      'system_default',
+    );
   });
 
   it('gera recorrência semanal nativa sem janela de 14 dias', () => {
