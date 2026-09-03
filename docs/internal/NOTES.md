@@ -41,6 +41,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Mudanças nativas devem considerar Capacitor, Android e iOS quando aplicável.
 - A splash nativa (`launchAutoHide: false`) permanece visível até a hidratação inicial em `AppBootGate`, que também cobre PWA/web com o mesmo fundo `#f4faf7`.
 - Ícones instaláveis vêm de `docs/internal/logos-icons/app-icon.png`, propagados por `scripts/update-brand-assets.ps1` para `client/public/brand/app-icon-*`.
+- Imagem de notificação do SO: `docs/internal/logos-icons/broto-assistente.png` → `client/public/media/notifications/icons/evolyn-{96,192}.png` (mesmo script de brand).
 
 ## Notificações
 
@@ -52,7 +53,15 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - `notificacoes_opt_out` desliga entrega OS-level; lembretes continuam salvos.
 - Som de notificação personalizado foi removido (Playful 2.0). O campo legado `sound` em JSONB é ignorado no parsing; entregas usam o som padrão da plataforma. Sons de UI em `client/src/lib/sounds` continuam intactos.
 - Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
-- Frozen Streak consumido no backend gera `streak_freeze_notice` / `streak_frozen_event` em `/stats` e celebração na Home — **não** cria mais item `streak_frozen` na Caixa de Entrada.
+- Frozen Streak consumido no backend gera `streak_freeze_notice` / `streak_frozen_event` em `/stats` e celebração na Home — **não** cria mais item `streak_frozen` na Caixa de Entrada. A celebração usa `preserved_streak` (sequência protegida). Frozen nunca incrementa sozinho; ação válida posterior é que faz 10 → 11.
+
+## Home / Guia do dia
+
+- `GET /api/day.next_up` é o Guia determinístico (`shared/activities/day-guide.ts`): uma ação principal + no máximo uma secundária. Não é mais a ordem fixa treino → atividade → rotina.
+- Conclusão de item de rotina isola por `routine_id` no `activity_log`. A mesma Activity em duas rotinas não se completa cruzada. Activity avulsa não marca item de rotina.
+- `routine_items.scheduled_time` / `reminder_enabled` são opcionais (migration `20260903180000_routine_items_schedule.sql`). Agenda da rotina continua em `routines.schedule`.
+- WeekStrip da Home = últimos 7 dias. Retrospectiva `week_retro` = semana civil Seg–Dom em `America/Sao_Paulo`. Tempo de treino da Home (`segundos_semana`) também é semana civil.
+- Momentum `current_period` usa `getHourSaoPaulo()`, nunca `Date#getHours()` do processo Vercel.
 
 ## Segurança
 
