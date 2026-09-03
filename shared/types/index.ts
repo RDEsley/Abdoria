@@ -246,11 +246,11 @@ export interface UserPreferencias {
   sugestao_respondida?: boolean;
   /** true = não voltar a oferecer o opt-in de notificações. */
   notificacoes_opt_out?: boolean;
-  /** Lista ordenada de Atividades do usuário; ausente = catálogo padrão. */
+  /** Lista legado de atividades em preferencias (removida no cutover). */
   atividades?: import('../atividades.js').AtividadeExtra[];
-  /** Fila de atividades do dia corrente (ver shared/atividades). */
+  /** @deprecated Fila do dia; dados vivem em `activities` / `activity_logs`. */
   atividades_fila?: import('../atividades.js').AtividadesFila;
-  /** Quando as atividades entram na rotina (ver shared/atividades). */
+  /** @deprecated Agenda global; cada atividade tem `schedule` próprio. */
   atividades_agenda?: import('../atividades.js').AtividadesAgenda;
   /** Só admins: true = aparecer nos rankings (padrão: oculto). */
   admin_visivel_ranking?: boolean;
@@ -262,20 +262,12 @@ export interface UserPreferencias {
   /** false = não consumir Frozen Streak automaticamente ao perder um dia de
       treino (o streak quebra normalmente). Padrão: true (ativado). */
   frozen_streak_auto_usar?: boolean;
-  /** true = a seção Atividades do Início mostra o Bloco de Notas em vez da
-      lista de atividades de bem-estar. Persistente — não volta sozinho
-      pra Atividades. */
-  atividades_modo_notas?: boolean;
   /** Itens do Bloco de Notas — lista de tarefas livre (não só atividades de
       bem-estar; qualquer coisa que o jogador queira anotar). */
   bloco_notas?: import('../bloco-notas.js').NotaItem[];
   /** Histórico de itens concluídos do Bloco de Notas (30 dias, separado da
       lista ativa — sobrevive a "Limpar tudo"/exclusão individual). */
   bloco_notas_historico?: import('../bloco-notas.js').NotaHistoricoItem[];
-  /** Ordem das seções opcionais da Home. As seções fixas não entram nesta lista. */
-  home_secoes_ordem?: import('../home-layout.js').HomeOptionalSectionId[];
-  /** Seções opcionais ocultadas pelo usuário no modo de organização da Home. */
-  home_secoes_ocultas?: import('../home-layout.js').HomeOptionalSectionId[];
   /** Alertas personalizados criados na página Atividades. */
   lembretes_personalizados?: import('../reminders.js').PersonalizedReminder[];
   /** Espelho transitório do perfil V2 enquanto a migration de coluna não foi aplicada. */
@@ -1070,6 +1062,9 @@ export interface DashboardStats {
   area_mais_treinada: MusculoPrincipal | null;
   area_menos_treinada: MusculoPrincipal | null;
   total_exercicios: number;
+  /** Dias com pelo menos uma ação válida (treino, atividade ou rotina). */
+  dias_ativos_7?: number;
+  dias_ativos_30?: number;
 }
 
 export interface ExerciseFilters {

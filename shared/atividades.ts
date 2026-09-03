@@ -1,21 +1,11 @@
 import type { AchievementIcon, UserPreferencias } from './types/index.js';
 
 /**
- * Atividades: tarefas de bem-estar que o usuário organiza na rotina diária.
+ * Atividades: tarefas de bem-estar da rotina diária.
  *
- * Regra de negócio (2026-07-31, streak revista):
- * - XP: toda atividade concluída dá `ATIVIDADE_XP_POR_UNIDADE` XP, em
- *   QUALQUER dia (treino ou descanso), até `ATIVIDADES_MIN_DESCANSO` por dia
- *   (`ATIVIDADES_XP_MAX_DIARIO` no total). Atividade extra além desse limite
- *   não dá XP — concede `ATIVIDADE_COINS_EXTRA` Folhas.
- * - Streak: uma única atividade concluída já mantém a sequência, em
- *   QUALQUER dia (treino ou descanso) — não tem mais mínimo de 3 nem
- *   distinção por tipo de dia. Treino e Atividades não se substituem: os
- *   os dois contam para o streak, mas concluir Atividades nunca marca o treino
- *   de treino do dia como feita (só um treino de verdade faz isso).
- *
- * A lista é do usuário: começa como cópia do catálogo padrão e vira uma
- * lista própria e ordenável assim que ele cria/edita/exclui/reordena algo.
+ * Fonte de verdade: tabelas `activities` / `activity_logs` (`shared/activities`).
+ * Este módulo guarda tipos e o catálogo legado usados no mapeamento de cutover.
+ * Recompensas atuais: `shared/activities/rewards.ts`. Streak: `recordValidDailyAction`.
  */
 
 export type AtividadeTipo =
@@ -551,15 +541,32 @@ export function agendaCobreDia(agenda: AtividadesAgenda, weekday: number): boole
 /* Regras de XP/streak                                                  */
 /* ------------------------------------------------------------------ */
 
-/** Prefixo que identifica uma sessão de atividade no histórico de treinos. */
-export const ATIVIDADE_HISTORY_PREFIX = 'Atividade: ';
-
-export function nomeHistoricoAtividade(nome: string): string {
-  return `${ATIVIDADE_HISTORY_PREFIX}${nome}`;
+/** Sessão de atividade no histórico: coluna `atividade` preenchida. */
+export function isActivityHistoryRow(history: {
+  atividade?: unknown;
+  treino_nome?: string | null;
+}): boolean {
+  return history.atividade != null;
 }
 
-export function isAtividadeHistory(treinoNome?: string | null): boolean {
-  return typeof treinoNome === 'string' && treinoNome.startsWith(ATIVIDADE_HISTORY_PREFIX);
+/** Treino de verdade — exclui linhas com coluna `atividade`. */
+export function isWorkoutHistoryRow(history: {
+  atividade?: unknown;
+  treino_nome?: string | null;
+}): boolean {
+  return !isActivityHistoryRow(history);
+}
+
+export function splitHistorySessions<
+  T extends { atividade?: unknown; treino_nome?: string | null; duracao_total_segundos?: number },
+>(histories: T[]): { workouts: T[]; activities: T[] } {
+  const workouts: T[] = [];
+  const activities: T[] = [];
+  for (const history of histories) {
+    if (isActivityHistoryRow(history)) activities.push(history);
+    else workouts.push(history);
+  }
+  return { workouts, activities };
 }
 
 /**
