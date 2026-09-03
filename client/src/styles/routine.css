@@ -198,3 +198,22 @@
   font-weight: 800;
   color: rgb(5 150 105);
 }
+
+.routine-runner__exit {
+  display: block;
+  width: 100%;
+  padding: 0.45rem;
+  border: 0;
+  background: none;
+  color: #5b716c;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+
+.routine-runner__exit:hover {
+  color: #0f766e;
+  text-decoration: underline;
+}

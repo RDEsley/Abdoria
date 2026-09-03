@@ -8,6 +8,12 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-03
 
+### Experiência de entrada (Welcome / Login / Cadastro)
+
+- Welcome full-screen com símbolo Evolyn animado; login e cadastro em sheet sobre a mesma cena (`/welcome`, `/login`, `/register`).
+- Sessão sempre persistida; cadastro autentica com o `AuthResponse` e vai ao onboarding. Guest removido.
+- Boot overlay cobre a hidratação para não piscar Welcome quando já existe token.
+
 ### Assistente do Dia, Rotinas e UX
 
 - Guia "A seguir" (`buildDayGuide`) substitui o `next_up` de ordem fixa. Quick Actions da Home foram removidas.

@@ -14,6 +14,8 @@ interface Props {
   role?: 'dialog' | 'alertdialog';
   /** Desliga fechar por Escape/clique fora — útil durante uma ação em andamento (ex.: compra). */
   disableDismiss?: boolean;
+  /** Quando false, o diálogo recebe o foco (sem abrir teclado em um input). */
+  autoFocus?: boolean;
 }
 
 const FOCUSABLE_SELECTOR =
@@ -35,6 +37,7 @@ export function Modal({
   describedBy,
   role = 'dialog',
   disableDismiss = false,
+  autoFocus = true,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -48,9 +51,11 @@ export function Modal({
   // ler a versão mais recente sem disparar o efeito de novo.
   const onCloseRef = useRef(onClose);
   const disableDismissRef = useRef(disableDismiss);
+  const autoFocusRef = useRef(autoFocus);
   useEffect(() => {
     onCloseRef.current = onClose;
     disableDismissRef.current = disableDismiss;
+    autoFocusRef.current = autoFocus;
   });
 
   useEffect(() => {
@@ -61,8 +66,12 @@ export function Modal({
     document.body.style.overflow = 'hidden';
 
     const panel = panelRef.current;
-    const focusable = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    (focusable ?? panel)?.focus();
+    if (autoFocusRef.current) {
+      const focusable = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (focusable ?? panel)?.focus();
+    } else {
+      panel?.focus();
+    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (disableDismissRef.current) return;

@@ -65,9 +65,7 @@ export function GameHud() {
 
   const xpTotal = (stats?.nivel_xp ?? user?.gamificacao.nivel_xp ?? 0) + xpDisplayOffset;
   const { level, xpInLevel, xpToNext } = xpProgressFromTotal(xpTotal);
-  const firstName = user?.is_guest
-    ? (user?.nome ?? 'Visitante')
-    : (user?.nome?.split(' ')[0] ?? 'Atleta');
+  const firstName = user?.nome?.split(' ')[0] ?? 'Atleta';
   const cosmeticos = resolveCosmeticos(user?.cosmeticos, user?.gamificacao.nivel_xp);
   const identityBorder = resolveIdentityBorder(cosmeticos);
   const resolvedTitle = resolveEquippedTitle(cosmeticos.titulo_equipado);

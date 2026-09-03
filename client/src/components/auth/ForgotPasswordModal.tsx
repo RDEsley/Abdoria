@@ -51,9 +51,9 @@ export function ForgotPasswordModal({ open, onClose, initialEmail = '' }: Props)
   };
 
   return (
-    <Modal open onClose={onClose} labelledBy="forgot-title">
+    <Modal open onClose={onClose} labelledBy="forgot-title" autoFocus={false}>
       <h2 id="forgot-title" className="game-modal__title">
-        ESQUECI A SENHA
+        Esqueci minha senha
       </h2>
       <p className="game-modal__text">
         Informe o email da sua conta. Enviaremos as instruções se ele estiver cadastrado.

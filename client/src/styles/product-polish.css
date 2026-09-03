@@ -234,147 +234,7 @@ body {
   font-weight: 750;
 }
 
-/* Autenticação: composição limpa, confiante e alinhada ao app principal. */
-.game-login {
-  position: relative;
-  display: grid;
-  min-height: 100dvh;
-  grid-template-columns: minmax(24rem, 36rem) minmax(25rem, 30rem);
-  justify-content: center;
-  align-items: center;
-  gap: clamp(3rem, 7vw, 7rem);
-  overflow-x: hidden;
-  padding: clamp(2rem, 6vw, 5rem);
-  background:
-    radial-gradient(circle at 12% 14%, rgb(45 212 191 / 18%), transparent 25rem),
-    radial-gradient(circle at 92% 88%, rgb(251 191 36 / 10%), transparent 25rem),
-    linear-gradient(150deg, #e9f8f5, #f8fbfa 56%, #eef8f5);
-}
-
-.game-login__ambient {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.game-login__ambient span {
-  position: absolute;
-  border: 1px solid rgb(8 124 102 / 9%);
-  border-radius: 999px;
-}
-
-.game-login__ambient span:nth-child(1) {
-  width: 18rem;
-  height: 18rem;
-  top: -8rem;
-  right: -5rem;
-}
-
-.game-login__ambient span:nth-child(2) {
-  width: 10rem;
-  height: 10rem;
-  bottom: 7%;
-  left: -4rem;
-}
-
-.game-login__ambient span:nth-child(3) {
-  width: 0.55rem;
-  height: 0.55rem;
-  top: 20%;
-  left: 48%;
-  border: 0;
-  background: #f5b83b;
-  box-shadow:
-    2rem 4rem 0 rgb(20 184 166 / 30%),
-    -4rem 12rem 0 rgb(20 184 166 / 20%);
-}
-
-.game-auth-intro {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 36rem;
-}
-
-.game-auth-intro__logo {
-  width: min(12rem, 70%);
-  height: auto;
-  object-fit: contain;
-}
-
-.game-auth-intro__copy {
-  margin-top: 2rem;
-}
-
-.game-auth-intro__eyebrow {
-  color: var(--evolyn-primary);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.game-auth-intro h2 {
-  max-width: 26rem;
-  margin-top: 0.6rem;
-  color: #12332d;
-  font-size: clamp(2rem, 4.6vw, 3.6rem);
-  font-weight: 800;
-  letter-spacing: -0.06em;
-  line-height: 1.02;
-}
-
-.game-auth-intro__copy > p:last-child {
-  max-width: 27rem;
-  margin-top: 1rem;
-  color: #58706a;
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.game-auth-intro__features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 1.5rem;
-}
-
-.game-auth-intro__features span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid rgb(8 124 102 / 11%);
-  border-radius: 999px;
-  color: #315d54;
-  background: rgb(255 255 255 / 60%);
-  font-size: 0.7rem;
-  font-weight: 750;
-}
-
-.game-login .game-login__panel {
-  position: relative;
-  inset: auto;
-  z-index: 2;
-  width: min(100%, 30rem);
-  max-height: none;
-  margin: 0;
-  justify-self: end;
-  overflow: visible;
-  padding: clamp(1.35rem, 4vw, 2.25rem);
-  border: 1px solid rgb(8 124 102 / 12%);
-  border-radius: 1.65rem;
-  background: rgb(255 255 255 / 91%);
-  box-shadow: 0 28px 80px rgb(15 118 110 / 13%);
-  backdrop-filter: blur(20px);
-  transform: none;
-}
-
-.game-login .game-login__panel--register {
-  max-width: 30rem;
-}
-
+/* Autenticação: campos e botões reutilizados pelos sheets. */
 .game-loading-mark {
   display: block;
   width: 82%;
@@ -391,69 +251,6 @@ body {
   50% {
     transform: translateY(-3px) scale(1.02);
   }
-}
-
-@media (min-width: 721px) and (max-width: 1050px) {
-  .game-login {
-    grid-template-columns: minmax(18rem, 1fr) minmax(22rem, 27rem);
-    gap: clamp(1.5rem, 4vw, 3rem);
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-  }
-
-  .game-auth-intro h2 {
-    font-size: clamp(2rem, 4.5vw, 2.9rem);
-  }
-}
-
-@media (min-width: 721px) and (max-height: 800px) {
-  .game-login {
-    padding-block: 1rem;
-  }
-
-  .game-auth-intro__copy {
-    margin-top: 1rem;
-  }
-
-  .game-login .game-login__panel {
-    padding: 1.2rem 1.5rem;
-  }
-
-  .game-login__panel-heading {
-    margin-bottom: 0.85rem;
-  }
-
-  .game-login__form {
-    gap: 0.7rem;
-  }
-
-  .game-auth-field__input.game-input,
-  .game-login .game-btn {
-    min-height: 2.75rem;
-  }
-}
-
-.game-login__panel-heading {
-  margin-bottom: 1.5rem;
-}
-
-.game-login__title {
-  color: #17211f;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: clamp(1.55rem, 5vw, 2rem);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1.1;
-}
-
-.game-login__panel-heading p {
-  margin-top: 0.45rem;
-  color: var(--evolyn-muted);
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-.game-login__form {
-  gap: 1rem;
 }
 
 .game-auth-field__label {
@@ -476,33 +273,10 @@ body {
   box-shadow: 0 0 0 4px rgb(20 169 137 / 12%);
 }
 
-.game-login .game-btn {
-  width: 100%;
-  min-height: 3.1rem;
-}
-
-.game-login__link,
-.game-text-link,
-.game-auth-guest-link {
+.game-text-link {
   color: var(--evolyn-primary);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 750;
-}
-
-.game-login__legal {
-  position: absolute;
-  right: clamp(2rem, 6vw, 5rem);
-  bottom: 1rem;
-  z-index: 1;
-  color: #76827f;
-  font-size: 0.62rem;
-}
-
-.game-login .game-check {
-  color: #4d5d59;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 0.68rem;
-  font-weight: 700;
 }
 
 /* Biblioteca: foco no repertório, sem contadores ou inventário de equipamento. */
@@ -1451,61 +1225,6 @@ body {
 }
 
 @media (max-width: 720px) {
-  .game-login {
-    display: flex;
-    min-height: 100dvh;
-    flex-direction: column;
-    justify-content: center;
-    gap: 1rem;
-    overflow-y: auto;
-    padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1rem
-      calc(2.25rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .game-auth-intro {
-    width: min(100%, 29rem);
-    margin-inline: auto;
-  }
-
-  .game-auth-intro__logo {
-    width: 8.5rem;
-  }
-
-  .game-auth-intro__copy {
-    margin-top: 0.7rem;
-  }
-
-  .game-auth-intro h2 {
-    max-width: 19rem;
-    margin-top: 0.25rem;
-    font-size: clamp(1.5rem, 8vw, 2.1rem);
-  }
-
-  .game-auth-intro__copy > p:last-child,
-  .game-auth-intro__features {
-    display: none;
-  }
-
-  .game-login .game-login__panel {
-    width: min(100%, 29rem);
-    margin-inline: auto;
-    justify-self: auto;
-    padding: 1.2rem;
-    border-radius: 1.35rem;
-    backdrop-filter: blur(14px);
-  }
-
-  .game-login__panel-heading {
-    margin-bottom: 1rem;
-  }
-
-  .game-login__legal {
-    position: static;
-    width: 100%;
-    margin-top: 0.25rem;
-    text-align: center;
-  }
-
   .personal-notification-card {
     grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   }
@@ -1522,22 +1241,6 @@ body {
 }
 
 @media (max-width: 360px) {
-  .game-login {
-    justify-content: flex-start;
-  }
-
-  .game-auth-intro__logo {
-    width: 7rem;
-  }
-
-  .game-auth-intro h2 {
-    font-size: 1.45rem;
-  }
-
-  .game-login .game-login__panel {
-    padding: 1rem;
-  }
-
   .personal-notification-card {
     grid-template-columns: auto minmax(0, 1fr) auto auto;
   }
