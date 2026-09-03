@@ -10,9 +10,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { PwaInstallProvider } from '@/context/PwaInstallContext';
 
-const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })));
-const RegisterPage = lazy(() =>
-  import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
+const AuthScenePage = lazy(() =>
+  import('@/pages/AuthScenePage').then((m) => ({ default: m.AuthScenePage })),
 );
 const OnboardingPage = lazy(() =>
   import('@/pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
@@ -94,10 +93,18 @@ export default function App() {
                 <Routes>
                   <Route element={<PublicOnlyRoute />}>
                     <Route
+                      path="welcome"
+                      element={
+                        <LazyPage>
+                          <AuthScenePage />
+                        </LazyPage>
+                      }
+                    />
+                    <Route
                       path="login"
                       element={
                         <LazyPage>
-                          <LoginPage />
+                          <AuthScenePage />
                         </LazyPage>
                       }
                     />
@@ -105,7 +112,7 @@ export default function App() {
                       path="register"
                       element={
                         <LazyPage>
-                          <RegisterPage />
+                          <AuthScenePage />
                         </LazyPage>
                       }
                     />

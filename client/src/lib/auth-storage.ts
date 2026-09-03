@@ -1,16 +1,25 @@
 const TOKEN_KEY = 'abdoria_token';
-const REMEMBER_KEY = 'abdoria_remember';
 const EMAIL_KEY = 'abdoria_saved_email';
+/** Legado do checkbox "Lembrar de mim" — só limpamos, não lemos mais. */
+const LEGACY_REMEMBER_KEY = 'abdoria_remember';
 
-export function setToken(token: string, remember = true): void {
-  clearToken();
-  const storage = remember ? localStorage : sessionStorage;
-  storage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(REMEMBER_KEY, remember ? '1' : '0');
+export function setToken(token: string): void {
+  sessionStorage.removeItem(TOKEN_KEY);
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.removeItem(LEGACY_REMEMBER_KEY);
 }
 
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  const persistent = localStorage.getItem(TOKEN_KEY);
+  if (persistent) return persistent;
+  // Sessões antigas em sessionStorage (remember=false) ainda hidratam uma vez.
+  const ephemeral = sessionStorage.getItem(TOKEN_KEY);
+  if (ephemeral) {
+    localStorage.setItem(TOKEN_KEY, ephemeral);
+    sessionStorage.removeItem(TOKEN_KEY);
+    return ephemeral;
+  }
+  return null;
 }
 
 export function clearToken(): void {
@@ -18,24 +27,12 @@ export function clearToken(): void {
   sessionStorage.removeItem(TOKEN_KEY);
 }
 
-/** Último login manteve sessão persistente (localStorage). */
-export function isRememberMeEnabled(): boolean {
-  return localStorage.getItem(REMEMBER_KEY) === '1';
-}
-
-/** Preferência do checkbox na tela de login (padrão: marcado na 1ª visita). */
-export function getRememberMePreference(): boolean {
-  const stored = localStorage.getItem(REMEMBER_KEY);
-  if (stored === '0') return false;
-  return true;
-}
-
+/** Último email usado neste aparelho — independente da sessão. */
 export function getSavedEmail(): string | null {
-  if (!isRememberMeEnabled()) return null;
   return localStorage.getItem(EMAIL_KEY);
 }
 
 export function setSavedEmail(email: string | null): void {
-  if (email) localStorage.setItem(EMAIL_KEY, email);
+  if (email) localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase());
   else localStorage.removeItem(EMAIL_KEY);
 }

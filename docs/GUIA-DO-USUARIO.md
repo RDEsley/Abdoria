@@ -6,7 +6,7 @@ Este guia apresenta as principais áreas do Evolyn. Como o aplicativo está em d
 
 ## Primeiros passos
 
-1. Crie sua conta ou entre como visitante quando essa opção estiver disponível.
+1. Crie sua conta em **Começar agora** ou entre com **Já tenho uma conta**.
 2. Aceite os termos de uso e conclua a apresentação inicial.
 3. Abra **Treino** para configurar intensidade, dias, som e descanso entre séries.
 4. Ajuste o plano depois em **Opções** sempre que sua rotina mudar.

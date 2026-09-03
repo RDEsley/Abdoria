@@ -40,6 +40,17 @@ export function validateConfirmPassword(
   return undefined;
 }
 
+export function validateRegisterIdentity(nome: string, email: string): AuthFieldErrors {
+  const errors: AuthFieldErrors = {};
+  const nomeError = validateRegisterNome(nome);
+  const emailError = validateEmail(email);
+
+  if (nomeError) errors.nome = nomeError;
+  if (emailError) errors.email = emailError;
+
+  return errors;
+}
+
 export function validateRegisterForm(
   nome: string,
   email: string,

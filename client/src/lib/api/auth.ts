@@ -5,10 +5,6 @@ export function login(email: string, password: string): Promise<AuthResponse> {
   return fetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
 }
 
-export function loginAsGuest(): Promise<AuthResponse> {
-  return fetchJson('/auth/guest', { method: 'POST' });
-}
-
 export function requestPasswordReset(email: string): Promise<{ message: string }> {
   return fetchJson('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
 }

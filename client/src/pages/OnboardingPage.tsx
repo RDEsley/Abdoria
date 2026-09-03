@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Award, Flame, ListChecks, Sparkles, Sprout, Target } from 'lucide-react';
 import { AuthLogo } from '@/components/auth/AuthLogo';
+import { RegisterCelebration } from '@/components/auth/RegisterCelebration';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/lib/game-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { completeOnboarding } from '@/lib/api';
+import { consumeJustRegistered, hasJustRegistered } from '@/lib/welcome-storage';
 
 const FEATURES = [
   {
@@ -31,6 +33,11 @@ export function OnboardingPage() {
   const [termsAccepted, setTermsAccepted] = useState(Boolean(user?.terms_accepted_at));
   const [showTerms, setShowTerms] = useState(!user?.terms_accepted_at);
   const [saving, setSaving] = useState(false);
+  const [celebrate, setCelebrate] = useState(() => hasJustRegistered());
+
+  useEffect(() => {
+    consumeJustRegistered();
+  }, []);
 
   const enter = async () => {
     if (!termsAccepted) {
@@ -53,6 +60,10 @@ export function OnboardingPage() {
       setSaving(false);
     }
   };
+
+  if (celebrate) {
+    return <RegisterCelebration onDone={() => setCelebrate(false)} />;
+  }
 
   return (
     <main className="onb-v2-shell">

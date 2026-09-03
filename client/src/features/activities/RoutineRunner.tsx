@@ -120,7 +120,7 @@ export function RoutineRunnerPage() {
       <div className="relative z-10 p-4">
         <button
           type="button"
-          className="game-auth-guest-link"
+          className="routine-runner__exit"
           onClick={() => (allDone ? setCelebrate(true) : setConfirmExit(true))}
         >
           {allDone ? 'Concluir rotina' : 'Sair / continuar depois'}

@@ -147,7 +147,7 @@ export function SettingsPage() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/welcome');
   };
 
   const closeDeleteFlow = () => {
@@ -160,7 +160,7 @@ export function SettingsPage() {
     try {
       await deleteAccount();
       await logout();
-      navigate('/login');
+      navigate('/welcome');
       showGameToast('Conta apagada. Sentiremos sua falta.', { variant: 'info' });
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível apagar a conta.'), {

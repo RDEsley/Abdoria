@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
 import { User, sanitizeUser } from '../domain/User.js';
 import { signToken } from '../middleware/auth.js';
 import {
@@ -121,34 +120,6 @@ authRouter.post('/login', async (req, res) => {
 
 authRouter.post('/logout', (_req, res) => {
   res.json({ ok: true });
-});
-
-/** Conta temporária para experimentar sem cadastro. */
-authRouter.post('/guest', async (_req, res) => {
-  try {
-    const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
-    const email = `guest_${suffix}@guest.evolyn.local`;
-    const passwordHash = await bcrypt.hash(crypto.randomUUID(), 10);
-    const today = getTodaySaoPaulo();
-
-    const user = await User.create({
-      email,
-      passwordHash,
-      // "Visitante XXXX" passava do novo limite de NOME_MAX_LENGTH — nome
-      // curto o bastante pra caber dentro da regra sem precisar truncar.
-      nome: `Visit${suffix.slice(0, 4).toUpperCase()}`,
-      is_guest: true,
-      preferencias: DEFAULT_PREFERENCIAS,
-      xp_diario: { ...DEFAULT_XP_DIARIO, data_reset: today },
-      onboarding_completed: false,
-    });
-
-    const token = signToken(user.id.toString());
-    res.status(201).json({ token, user: sanitizeUser(user) });
-  } catch (error) {
-    console.error('POST /auth/guest error:', error);
-    res.status(500).json({ error: 'Erro ao criar sessão visitante.' });
-  }
 });
 
 /** Verifica email para recuperação (envio por email pendente de integração). */

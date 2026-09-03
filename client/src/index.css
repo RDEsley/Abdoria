@@ -2,6 +2,7 @@
 @import './styles/base.css';
 @import './styles/app-boot.css';
 @import './styles/auth.css';
+@import './styles/auth-welcome.css';
 @import './styles/theme.css';
 @import './styles/navbar.css';
 @import './styles/hud.css';

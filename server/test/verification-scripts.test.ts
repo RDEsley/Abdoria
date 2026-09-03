@@ -16,4 +16,12 @@ describe('scripts de verificação (scripts/dev)', () => {
   it('validate-similar-exercises: similaridade e escolha de preset por ciclo', async () => {
     await import('../../scripts/dev/validate-similar-exercises.ts');
   });
+
+  it('verify-auth-storage: sessão persistente e email salvo independente', async () => {
+    await import('../../scripts/dev/verify-auth-storage.ts');
+  });
+
+  it('verify-auth-redirect: onboarding e deep link após login', async () => {
+    await import('../../scripts/dev/verify-auth-redirect.ts');
+  });
 });

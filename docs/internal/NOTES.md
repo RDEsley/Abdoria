@@ -68,3 +68,12 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Nenhum diretório versionado é realmente privado.
 - Credenciais e dados reais devem permanecer fora do Git.
 - `.env.example` deve conter apenas placeholders.
+
+## Autenticação
+
+- Sessão autenticada persiste em `localStorage` (`abdoria_token`) até **Sair da conta**. Não existe mais checkbox "Lembrar de mim".
+- O último email fica em `abdoria_saved_email` neste aparelho e sobrevive ao logout.
+- Cadastro retorna `AuthResponse`; o cliente autentica na hora e segue para o onboarding.
+- Entrada sem sessão: `/welcome`. Rotas protegidas (exceto `/`) redirecionam para `/login` com `state.from`.
+- Conta visitante foi removida da API (`POST /auth/guest`) e da UI. `is_guest` permanece no banco para linhas antigas e filtros de ranking.
+- Animação da Welcome é local (`evolyn:welcome-animation-seen`); não vai para o perfil.
