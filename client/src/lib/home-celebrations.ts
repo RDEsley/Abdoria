@@ -5,7 +5,8 @@ export type HomeCelebration =
   | {
       kind: 'frozen';
       id: string;
-      streak_atual: number;
+      /** Sequência protegida — nunca o valor pós-ação-de-hoje. */
+      preserved_streak: number;
       frozen_days: string[];
     }
   | {
@@ -39,8 +40,42 @@ function writeJson(key: string, value: unknown) {
 
 function readPending(): HomeCelebration[] {
   migrateLegacyStreakQueue();
-  const list = readJson<HomeCelebration[]>(PENDING_KEY, []);
-  return Array.isArray(list) ? list : [];
+  const list = readJson<unknown[]>(PENDING_KEY, []);
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item): HomeCelebration | null => {
+      if (!item || typeof item !== 'object') return null;
+      const raw = item as Record<string, unknown>;
+      if (raw.kind === 'frozen') {
+        const preserved = Number(raw.preserved_streak ?? raw.streak_atual ?? 0);
+        if (!Number.isFinite(preserved) || typeof raw.id !== 'string') return null;
+        return {
+          kind: 'frozen',
+          id: raw.id,
+          preserved_streak: preserved,
+          frozen_days: Array.isArray(raw.frozen_days) ? raw.frozen_days.map(String) : [],
+        };
+      }
+      if (raw.kind === 'streak_up') {
+        const streakAtual = Number(raw.streak_atual);
+        const streakAnterior = Number(raw.streak_anterior);
+        if (
+          !Number.isFinite(streakAtual) ||
+          !Number.isFinite(streakAnterior) ||
+          typeof raw.id !== 'string'
+        ) {
+          return null;
+        }
+        return {
+          kind: 'streak_up',
+          id: raw.id,
+          streak_atual: streakAtual,
+          streak_anterior: streakAnterior,
+        };
+      }
+      return null;
+    })
+    .filter((item): item is HomeCelebration => item != null);
 }
 
 function readSeen(): Record<string, true> {
@@ -86,15 +121,18 @@ function upsertPending(event: HomeCelebration) {
 
 export function queueFrozenHomeCelebration(input: {
   userId?: string | null;
-  streak_atual: number;
+  /** Preferir `preserved_streak`; `streak_atual` permanece por compat. */
+  preserved_streak?: number;
+  streak_atual?: number;
   frozen_days: string[];
 }) {
+  const preserved = input.preserved_streak ?? input.streak_atual ?? 0;
   const days = [...input.frozen_days].sort();
   const id = `frozen:${input.userId ?? 'local'}:${days.join(',') || getTodaySaoPaulo()}`;
   upsertPending({
     kind: 'frozen',
     id,
-    streak_atual: input.streak_atual,
+    preserved_streak: preserved,
     frozen_days: days,
   });
 }

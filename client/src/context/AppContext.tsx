@@ -19,7 +19,7 @@ import {
 import { AppContext } from '@/context/app-context';
 import { useAuth } from '@/hooks/useAuth';
 import { emitXpEarned } from '@/lib/xp-orbs';
-import { queueFrozenHomeCelebration } from '@/lib/home-celebrations';
+import { queueFrozenHomeCelebration, queueStreakUpCelebration } from '@/lib/home-celebrations';
 import type {
   CompleteWorkoutPayload,
   DashboardStats,
@@ -101,11 +101,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setStats(next);
       if (next.streak_frozen_notice && !frozenNoticeShown.current) {
         frozenNoticeShown.current = true;
+        const preserved =
+          next.streak_frozen_event?.preserved_streak ??
+          next.streak_frozen_event?.streak_atual ??
+          next.streak_atual;
         queueFrozenHomeCelebration({
           userId: authenticatedUser?.id,
-          streak_atual: next.streak_frozen_event?.streak_atual ?? next.streak_atual,
+          preserved_streak: preserved,
           frozen_days: next.streak_frozen_event?.frozen_days ?? [],
         });
+        // Frozen + ação válida já no mesmo sync: 10 protegido, depois 10 → 11.
+        if (next.streak_atual > preserved) {
+          queueStreakUpCelebration(
+            { streak_anterior: preserved, streak_atual: next.streak_atual },
+            authenticatedUser?.id,
+          );
+        }
       } else if (!next.streak_frozen_notice) {
         frozenNoticeShown.current = false;
       }

@@ -227,7 +227,14 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       streak_frozen_event: streakFrozenNotice
         ? {
             frozen_days: frozenEvent?.frozen_days ?? [],
-            streak_atual: frozenEvent?.streak_atual ?? user.gamificacao.streak_atual,
+            streak_atual:
+              frozenEvent?.preserved_streak ??
+              frozenEvent?.streak_atual ??
+              user.gamificacao.streak_atual,
+            preserved_streak:
+              frozenEvent?.preserved_streak ??
+              frozenEvent?.streak_atual ??
+              user.gamificacao.streak_atual,
           }
         : null,
       conquistas,

@@ -78,11 +78,23 @@ function applyStreakFreezeProtection(user: UserRecord, dayKeys: string[]): strin
 
   if (!consumeInventoryItem(user, FROZEN_STREAK_ITEM_ID, missedDays.length)) return [];
 
+  // Semântica visual: Frozen preserva a sequência — nunca parece "ganhar" um dia.
+  // Se já houve ação válida hoje, `streakWithPendingFreeze.atual` pode ser preserved+1;
+  // a celebração deve mostrar só o valor protegido (sem o dia de hoje).
+  const today = getTodaySaoPaulo();
+  const dayKeysWithoutToday = dayKeys.filter((key) => key !== today);
+  const preservedStreak = computeStreakWithFrozenDays(
+    dayKeysToStreakHistories(dayKeysWithoutToday),
+    [...frozenDates, ...missedDays],
+  ).atual;
+
   user.gamificacao.streak_congelamentos.push(...missedDays);
   user.gamificacao.streak_freeze_notice_pending = true;
   user.gamificacao.streak_freeze_notice = {
     frozen_days: missedDays,
-    streak_atual: streakWithPendingFreeze.atual,
+    /** @deprecated use preserved_streak — mantido para clientes antigos */
+    streak_atual: preservedStreak,
+    preserved_streak: preservedStreak,
   };
   user.gamificacao.streak_atual = streakWithPendingFreeze.atual;
   user.gamificacao.streak_maior = Math.max(

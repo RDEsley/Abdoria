@@ -25,7 +25,7 @@ function startCelebration(
     playStreak();
     void successHaptic();
   } else {
-    setDisplay(next.streak_atual);
+    setDisplay(next.preserved_streak);
     setPhase('lit');
     void successHaptic();
   }
@@ -193,8 +193,8 @@ export function HomeCelebrationHost() {
                 </p>
                 <p className="streak-home-card__copy">
                   {event.frozen_days.length > 1
-                    ? `${event.frozen_days.length} dias protegidos. Sua sequência continua.`
-                    : 'Seu Streak foi protegido. A sequência continua.'}
+                    ? `${event.frozen_days.length} dias protegidos · sequência ${event.preserved_streak} mantida.`
+                    : `Sequência protegida · continua em ${event.preserved_streak}.`}
                 </p>
               </>
             )}
