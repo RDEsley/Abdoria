@@ -28,6 +28,26 @@ export interface DaySnapshot {
   }>;
   dias_ativos_30: number;
   insight: EvolynInsight | null;
+  momentum?: {
+    current_period: 'manha' | 'tarde' | 'noite';
+    periods: {
+      manha: { planned: number; done: number };
+      tarde: { planned: number; done: number };
+      noite: { planned: number; done: number };
+    };
+  };
+  week_retro?: {
+    active_days: number;
+    active_days_prev: number;
+    workouts: number;
+    workouts_prev: number;
+    activities: number;
+    activities_prev: number;
+    xp: number;
+    xp_prev: number;
+    best_day: string | null;
+    best_day_xp: number;
+  };
 }
 
 export function getDaySnapshot(): Promise<DaySnapshot> {

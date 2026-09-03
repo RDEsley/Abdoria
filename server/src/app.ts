@@ -16,6 +16,7 @@ import { usersRouter } from './routes/users.js';
 import { workoutsRouter } from './routes/workouts.js';
 import { activitiesRouter, activityLogsRouter, routinesRouter } from './routes/activities.js';
 import { dayRouter, insightsRouter } from './routes/day.js';
+import { questsRouter } from './routes/quests.js';
 
 export function createApp() {
   const app = express();
@@ -86,6 +87,7 @@ export function createApp() {
   app.use('/api/notifications', notificationsRouter);
   app.use('/api/push', pushRouter);
   app.use('/api/cron', cronRouter);
+  app.use('/api/quests', questsRouter);
   app.use('/api/social', socialRouter);
   app.use('/api/admin', adminRouter);
 

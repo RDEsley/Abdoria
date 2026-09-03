@@ -26,13 +26,27 @@ import { NextUp } from '@/features/home/NextUp';
 import { QuickActions } from '@/features/home/QuickActions';
 import { InsightCard } from '@/features/home/InsightCard';
 import { WeekStrip } from '@/features/home/WeekStrip';
+import { MomentumBar } from '@/components/dashboard/MomentumBar';
+import { QuestCard } from '@/components/quests/QuestCard';
+import { WeekRetroCard } from '@/components/dashboard/WeekRetroCard';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
+const WEEK_RETRO_KEY = 'evolyn:week-retro-seen';
+
+function weekRetroPeriod(dayKey: string): string {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  return date.toISOString().slice(0, 10);
+}
 
 export function DashboardPage() {
   const { stats, loading, refresh, loadRecommendations } = useApp();
   const [day, setDay] = useState<DaySnapshot | null>(null);
+  const [retroDismissed, setRetroDismissed] = useState(false);
 
   useEffect(() => {
     if (!loading && stats) void loadRecommendations();
@@ -61,6 +75,12 @@ export function DashboardPage() {
   const xpParaLevelUp = Math.max(0, xpToNext - xpInLevel);
   const dailyXpHint = `${XP_DAILY_PER_EXERCISE} XP por exercício · mín. ${XP_DAILY_MIN_EXERCISES} no treino · ${dailyFullExercisesForCap(stats.xp_diario_limite)} exercícios atingem o máx. diário`;
   const diaAtivo = day?.dia_ativo_garantido ?? stats.sequencia_garantida_hoje ?? stats.treino_hoje;
+  const showRetro =
+    Boolean(day?.week_retro) &&
+    !retroDismissed &&
+    (typeof localStorage === 'undefined' || !day
+      ? true
+      : localStorage.getItem(WEEK_RETRO_KEY) !== weekRetroPeriod(day.day_key));
 
   return (
     <motion.div
@@ -91,6 +111,32 @@ export function DashboardPage() {
         />
       </motion.div>
 
+      {day?.momentum && (
+        <motion.div variants={item}>
+          <MomentumBar currentPeriod={day.momentum.current_period} periods={day.momentum.periods} />
+        </motion.div>
+      )}
+
+      {showRetro && day?.week_retro && (
+        <motion.div variants={item}>
+          <WeekRetroCard
+            retro={day.week_retro}
+            onDismiss={() => {
+              try {
+                localStorage.setItem(WEEK_RETRO_KEY, weekRetroPeriod(day.day_key));
+              } catch {
+                /* ignore */
+              }
+              setRetroDismissed(true);
+            }}
+          />
+        </motion.div>
+      )}
+
+      <motion.div variants={item}>
+        <QuestCard compact />
+      </motion.div>
+
       <motion.div variants={item}>
         <QuickActions />
       </motion.div>
@@ -107,12 +153,14 @@ export function DashboardPage() {
 
       <motion.div variants={item} className="dashboard-quick-stats grid grid-cols-2 gap-3">
         <StatTile
+          tone="streak"
           icon={<Flame className="text-orange-500" size={22} />}
           title="Streak Evolyn"
           value={`${stats.streak_atual}d`}
           hint={`Recorde ${stats.streak_maior} dias`}
         />
         <StatTile
+          tone="xp"
           icon={<Timer className="text-sky-600" size={22} />}
           title="Tempo de treino"
           value={formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}

@@ -6,7 +6,16 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ---
 
-## 2026-09-02
+## 2026-09-03
+
+### Playful 2.0
+
+- Superfícies contextuais (treino/rotina/streak/XP/conquista) em `client/src/styles/surfaces.css`.
+- Lembretes viraram rota `/lembretes`; som de notificação personalizado foi removido (campo legado ignorado).
+- Missões (`quest_claims`) pagam XP fora do teto diário de ações, com orçamento fixo do catálogo.
+- `GET /api/day` ganhou `momentum` e `week_retro` (janela de 14 dias).
+
+---
 
 ### Rotina, Dia Ativo e Home 2.0
 
