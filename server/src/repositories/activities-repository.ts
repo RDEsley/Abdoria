@@ -319,6 +319,19 @@ export const ActivityLogs = {
     return (count ?? 0) > 0;
   },
 
+  /** Algum passo registrado nesta rotina no dia — usado pra silenciar follow-up. */
+  async hasRoutineLogOnDay(userId: string, routineId: string, dayKey: string): Promise<boolean> {
+    const sb = getSupabase();
+    const { count, error } = await sb
+      .from('activity_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('routine_id', routineId)
+      .eq('day_key', dayKey);
+    if (error) throwIfMissingRelation(error, 'activity_logs');
+    return (count ?? 0) > 0;
+  },
+
   async distinctXpActivitiesOnDay(userId: string, dayKey: string): Promise<number> {
     const sb = getSupabase();
     const { data, error } = await sb

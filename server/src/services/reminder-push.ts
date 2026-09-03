@@ -2,7 +2,7 @@ import webpush from 'web-push';
 import { buildWebPushNotificationPayload } from '../../../shared/notification-catalog.js';
 import {
   deriveActivityReminders,
-  derivedReminderSourceId,
+  derivedReminderSource,
   isFollowUpReminderId,
   listReminderOccurrencesInLookback,
   normalizePersonalizedReminders,
@@ -109,14 +109,14 @@ export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
     for (const occurrence of dueOccurrences) {
       occurrences += 1;
       if (isFollowUpReminderId(occurrence.reminder.id)) {
-        const sourceId = derivedReminderSourceId(occurrence.reminder.id);
-        if (sourceId) {
+        const source = derivedReminderSource(occurrence.reminder.id);
+        if (source) {
           try {
-            const done = await ActivityLogs.hasActivityOnDay(
-              subscription.user_id,
-              sourceId,
-              getTodaySaoPaulo(now),
-            );
+            const dayKey = getTodaySaoPaulo(now);
+            const done =
+              source.kind === 'routine'
+                ? await ActivityLogs.hasRoutineLogOnDay(subscription.user_id, source.id, dayKey)
+                : await ActivityLogs.hasActivityOnDay(subscription.user_id, source.id, dayKey);
             if (done) {
               skipped += 1;
               continue;
