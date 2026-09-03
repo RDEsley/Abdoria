@@ -6,6 +6,20 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ---
 
+## 2026-09-02
+
+### Rotina, Dia Ativo e Home 2.0
+
+- `active_days` é a fonte do Streak. Toda ação diária válida passa por `recordValidDailyAction`.
+- Atividades e rotinas saíram de `preferencias` para tabelas `activities`, `routines`, `routine_items`, `activity_logs`.
+- Home passou a ser dashboard do dia (`GET /api/day`). Equilíbrio do core foi para Treino.
+- Perfil: seções Evolução e Corpo; Definição em disclosure; `objetivo` não é editado quando existe `ab_training_profile_v2`.
+- Recompensa de atividade: XP na primeira conclusão do dia (até 4 distintas), sem Folhas ilimitadas.
+- Lembretes de atividade são derivados (`deriveActivityReminders`), não copiados para `lembretes_personalizados`.
+- Fuso oficial do Dia Ativo permanece `America/Sao_Paulo`.
+
+---
+
 ## 2026-09-01
 
 ### Organização e limpeza do projeto

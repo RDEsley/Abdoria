@@ -18,7 +18,7 @@ Este guia apresenta as principais áreas do Evolyn. Como o aplicativo está em d
 | Tela | Para que serve |
 | --- | --- |
 | **Início** | Resumo do dia, progresso, XP, streak e conquistas recentes |
-| **Atividades** | Atividades pessoais, tarefas, Bloco de Notas, notificações e histórico |
+| **Atividades** | Rotina do dia, check em um toque, rotinas, insights e notas rápidas |
 | **Treino** | Escolher exercícios, configurar a fila, salvar treinos e iniciar sessões |
 | **MyPlant** | Experiência de evolução em desenvolvimento |
 | **Biblioteca** | Catálogo de exercícios e desbloqueios |
@@ -77,26 +77,21 @@ As formas de obtenção e uso podem evoluir conforme novos recursos forem lança
 
 ## Atividades e organização
 
-A área **Atividades** reúne recursos para acompanhar tarefas e hábitos além dos treinos.
+A área **Atividades** é a rotina do dia: Hoje, Rotinas e Insights.
 
-Ela pode incluir:
+- Toque no check para registrar uma atividade (detalhes são opcionais).
+- Modelos de Mente, Corpo e Vida ajudam a começar; nada é imposto.
+- Rotinas agrupam atividades na ordem que você quiser.
+- Lembretes livres continuam no sino da página; lembretes de atividade saem da própria atividade.
+- A nota rápida (Bloco de Notas) fica à parte da rotina.
 
-- leitura;
-- estudo;
-- corrida;
-- meditação;
-- alongamento;
-- tarefas personalizadas;
-- agenda por dia da semana;
-- Bloco de Notas;
-- notificações e lembretes;
-- histórico de atividades concluídas.
+Qualquer ação válida — treino, atividade ou rotina — garante o **Dia Ativo** e sustenta a sequência. Concluir atividades não marca o treino do dia como feito.
 
 ---
 
 ## Perfil e personalização
 
-No Perfil você acompanha estatísticas e configura elementos visuais disponíveis para a conta, como:
+No Perfil, **Evolução** mostra nível, XP, sequência e dias ativos. **Corpo** guarda idade, peso, altura e a Definição em um detalhe. O objetivo do treino, quando existe o plano V2, é editado em Configurações.
 
 - foto;
 - bordas;
@@ -134,7 +129,7 @@ Podem existir visões semanais, globais e entre amigos. O ranking é competitivo
 ## Dicas para manter constância
 
 - Ajuste o plano de treino quando sua rotina mudar.
-- Use Atividades para registrar progresso em dias sem treino.
+- Use Atividades para registrar um passo mesmo em dia sem treino.
 - Acompanhe o histórico para visualizar sua frequência.
 - Busque conquistas gradualmente em vez de tentar completar tudo de uma vez.
 - Configure lembretes apenas nos horários em que realmente pretende agir.

@@ -52,12 +52,11 @@ O projeto combina uma interface inspirada em jogos com ferramentas práticas par
 
 ### ✅ Atividades e organização
 
-- Atividades pessoais como estudo, leitura, corrida, meditação e alongamento
-- Agenda configurável por dia da semana
-- Lista de tarefas
-- Bloco de Notas
-- Histórico visual das atividades concluídas
-- Lembretes e notificações pessoais, inclusive recorrentes
+- Atividades com check em um toque, rotinas e biblioteca de modelos (Mente, Corpo, Vida)
+- Dia Ativo: qualquer ação válida sustenta a sequência
+- Nota rápida (Bloco de Notas) separada da rotina
+- Insights de consistência quando houver dados suficientes
+- Lembretes livres e lembretes derivados da própria atividade
 
 ### 🎮 Progressão
 

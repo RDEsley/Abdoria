@@ -30,6 +30,10 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Evitar snapshots completos de perfil quando apenas campos específicos mudaram.
 - Preferir escritas parciais quando aplicável para reduzir risco de sobrescrever alterações concorrentes.
 - Ter cuidado especial com alterações concorrentes em `preferencias`.
+- Dados de rotina e atividades **não** entram em `preferencias`. A fonte é `activities`, `routines`, `activity_logs`.
+- Toda ação diária válida (treino, atividade, rotina; hidratação/MyPlant no futuro) passa por `recordValidDailyAction` em `server/src/services/active-day.ts`. O Streak lê `active_days`, não o histórico de treino.
+- Linhas de atividade em `workout_history` identificam-se pela coluna `atividade IS NOT NULL`. O prefixo `Atividade:` no nome não é mais lido.
+- Fuso oficial do Dia Ativo, XP diário e ranking: `America/Sao_Paulo`. Fuso do dispositivo só para entrega de push.
 
 ## Plataforma
 
