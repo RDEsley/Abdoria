@@ -695,7 +695,7 @@
   }
 }
 
-/* Personalização avançada de lembretes */
+/* Personalização de lembretes — a prévia É o editor principal. */
 .reminder-preview {
   display: grid;
   gap: 0.45rem;
@@ -710,9 +710,16 @@
   text-transform: uppercase;
 }
 
+.reminder-preview__label-hint {
+  color: #a8a29e;
+  font-weight: 650;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 .reminder-preview__card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   gap: 0.65rem;
   align-items: start;
   padding: 0.75rem;
@@ -722,64 +729,226 @@
   box-shadow: 0 6px 18px rgb(28 25 23 / 6%);
 }
 
-.reminder-preview__icon {
+/* Avatar Broto — sempre o ícone real da notificação (limite de plataforma:
+   o SO não troca o ícone por escolha do usuário). O emblema no canto abre o
+   seletor de ícone/cor usados só na lista dentro do app. */
+.reminder-preview__avatar {
+  position: relative;
   display: grid;
   width: 2.5rem;
   height: 2.5rem;
-  place-items: center;
+  padding: 0;
+  border: none;
   border-radius: 0.7rem;
-  background: color-mix(in srgb, var(--reminder-accent) 18%, white);
-  color: var(--reminder-accent);
+  background: #0b0b0b;
+  overflow: visible;
+  cursor: pointer;
 }
 
-.reminder-preview__copy strong {
+.reminder-preview__avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.7rem;
+  object-fit: cover;
   display: block;
-  color: #1c1917;
-  font-size: 0.82rem;
 }
 
-.reminder-preview__copy p {
-  margin: 0.2rem 0 0;
+.reminder-preview__badge {
+  position: absolute;
+  right: -0.3rem;
+  bottom: -0.3rem;
+  display: grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--reminder-accent);
+  color: #fff;
+  box-shadow: 0 1px 3px rgb(28 25 23 / 25%);
+}
+
+.reminder-preview__copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+/* Especificidade extra (`.reminder-preview` + classe) de propósito: precisa
+   vencer a regra genérica `.personal-notification-form input/textarea`
+   (product-polish.css) que dá caixa branca/borda a todo input do form —
+   aqui os campos precisam se misturar ao cartão da prévia. */
+.reminder-preview .reminder-preview__title-input,
+.reminder-preview .reminder-preview__message-input {
+  width: 100%;
+  min-height: 0;
+  padding: 0.1rem 0.2rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  box-shadow: none;
+  color: #1c1917;
+  font-family: inherit;
+  resize: none;
+}
+
+.reminder-preview .reminder-preview__title-input {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.reminder-preview .reminder-preview__message-input {
+  margin-top: 0.1rem;
   color: #57534e;
   font-size: 0.72rem;
+  font-weight: 600;
   line-height: 1.35;
 }
 
-.reminder-preview__copy small {
-  display: block;
-  margin-top: 0.25rem;
+.reminder-preview__title-input::placeholder,
+.reminder-preview__message-input::placeholder {
+  color: #a8a29e;
+  font-weight: 600;
+}
+
+.reminder-preview .reminder-preview__title-input:hover,
+.reminder-preview .reminder-preview__message-input:hover {
+  background: rgb(28 25 23 / 4%);
+}
+
+.reminder-preview .reminder-preview__title-input:focus,
+.reminder-preview .reminder-preview__message-input:focus {
+  background: rgb(28 25 23 / 5%);
+  box-shadow: 0 0 0 2px var(--reminder-accent);
+}
+
+.reminder-preview .reminder-preview__title-input[aria-invalid='true'] {
+  box-shadow: 0 0 0 2px #be123c;
+}
+
+.reminder-preview__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.reminder-preview__freq {
   color: #a8a29e;
   font-size: 0.64rem;
-  font-weight: 650;
-}
-
-.reminder-preview__listen {
-  display: grid;
-  width: 2.35rem;
-  height: 2.35rem;
-  place-items: center;
-  border: 1px solid rgb(14 116 144 / 18%);
-  border-radius: 0.65rem;
-  background: #ecfeff;
-  color: #0e7490;
-}
-
-.reminder-preview__meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0;
-  color: #78716c;
-  font-size: 0.66rem;
   font-weight: 700;
 }
 
-.reminder-personalize {
-  display: grid;
-  gap: 0.85rem;
+.reminder-preview .reminder-preview__time-input {
+  width: auto;
+  flex-shrink: 0;
+  min-height: 0;
+  padding: 0.15rem 0.4rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgb(28 25 23 / 6%);
+  box-shadow: none;
+  color: #1c1917;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
-.reminder-personalize__tabs,
+.reminder-preview .reminder-preview__time-input:hover {
+  background: rgb(28 25 23 / 9%);
+}
+
+.reminder-preview .reminder-preview__time-input:focus {
+  background: rgb(28 25 23 / 9%);
+  box-shadow: 0 0 0 2px var(--reminder-accent);
+}
+
+/* Seletor compacto de ícone + cor, aberto pelo emblema do avatar. */
+.reminder-preview__appearance {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgb(28 25 23 / 8%);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 70%);
+  animation: reminder-appearance-in 0.16s ease-out;
+}
+
+.reminder-preview__icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.reminder-preview__icon-grid button {
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  place-items: center;
+  border: 1px solid rgb(28 25 23 / 12%);
+  border-radius: 0.6rem;
+  background: #fafaf9;
+  color: #57534e;
+}
+
+.reminder-preview__icon-grid button[aria-pressed='true'] {
+  border-color: var(--reminder-accent);
+  background: color-mix(in srgb, var(--reminder-accent) 14%, white);
+  color: var(--reminder-accent);
+}
+
+.reminder-preview__color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.reminder-preview__color-row button {
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--notification-color);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgb(28 25 23 / 18%);
+}
+
+.reminder-preview__color-row button[aria-pressed='true'] {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--notification-color);
+}
+
+@keyframes reminder-appearance-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reminder-preview button:focus-visible,
+.reminder-preview input:focus-visible,
+.reminder-preview textarea:focus-visible {
+  outline: 2px solid var(--reminder-accent);
+  outline-offset: 2px;
+}
+
+.reminder-recurrence-field {
+  max-width: 12rem;
+}
+
+.reminder-extra-times {
+  display: grid;
+  gap: 0.45rem;
+}
+
 .reminder-sound-picker__tabs {
   display: flex;
   gap: 0.35rem;
@@ -788,7 +957,6 @@
   scrollbar-width: none;
 }
 
-.reminder-personalize__tabs button,
 .reminder-sound-picker__tabs button {
   flex: 0 0 auto;
   min-height: 2.35rem;
@@ -801,19 +969,12 @@
   font-weight: 800;
 }
 
-.reminder-personalize__tabs button.is-active,
 .reminder-sound-picker__tabs button.is-active {
   border-color: #0e7490;
   background: #ecfeff;
   color: #0e7490;
 }
 
-.reminder-personalize__panel {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.reminder-personalize__legend-hint,
 .reminder-sound-picker__hint,
 .reminder-sound-picker__random-note {
   margin: -0.15rem 0 0.35rem;

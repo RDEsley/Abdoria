@@ -1,20 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  AlarmClock,
-  BellRing,
-  BookOpen,
-  Circle,
-  Dumbbell,
-  Droplets,
-  HeartPulse,
-  Leaf,
-  Pencil,
-  Plus,
-  ShieldPlus,
-  Star,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { BellRing, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
@@ -30,6 +15,8 @@ import {
   type PersonalNotificationIcon,
   type PersonalizedReminder,
 } from '@shared/reminders';
+import { ReminderIcon } from './reminder-icons';
+import { ReminderNotificationPreview } from './ReminderNotificationPreview';
 import { ReminderPersonalizePanel } from './ReminderPersonalizePanel';
 import type { RecurrenceDraft } from './reminder-form-types';
 
@@ -42,18 +29,6 @@ const DAYS = [
   { value: 5, label: 'Sex' },
   { value: 6, label: 'Sáb' },
 ] as const;
-
-const ICONS = {
-  neutral: Circle,
-  water: Droplets,
-  leaf: Leaf,
-  workout: Dumbbell,
-  study: BookOpen,
-  health: ShieldPlus,
-  alarm: AlarmClock,
-  heart: HeartPulse,
-  star: Star,
-} satisfies Record<PersonalNotificationIcon, typeof Circle>;
 
 function emptyDraft(): Draft {
   return {
@@ -118,11 +93,6 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
     enabled: reminder.enabled,
     createdAt: reminder.createdAt,
   };
-}
-
-function ResourceIcon({ icon }: { icon: PersonalNotificationIcon }) {
-  const Icon = ICONS[icon];
-  return <Icon size={18} aria-hidden />;
 }
 
 export function ReminderCenter() {
@@ -297,52 +267,30 @@ export function ReminderCenter() {
               <X size={19} aria-hidden />
             </button>
           </div>
-          <div className="personal-notification-form__quick">
-            <label className="personal-notification-form__title">
-              <span>O que você quer lembrar?</span>
-              <input
-                value={draft.title}
-                maxLength={60}
-                placeholder="Ex.: Beber água"
-                onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))}
-                aria-invalid={Boolean(error) && !draft.title.trim()}
-                aria-describedby={error ? 'personal-notification-error' : undefined}
-              />
-            </label>
+          <ReminderNotificationPreview
+            draft={draft}
+            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+            titleInvalid={Boolean(error) && !draft.title.trim()}
+            errorId={error ? 'personal-notification-error' : undefined}
+          />
 
-            <div className="personal-notification-form__quick-grid">
-              <label>
-                <span>Repetição</span>
-                <select
-                  value={draft.recurrence}
-                  onChange={(event) => {
-                    void selectionHaptic();
-                    setDraft((current) => ({
-                      ...current,
-                      recurrence: event.target.value as RecurrenceDraft,
-                    }));
-                  }}
-                >
-                  <option value="daily">Todos os dias</option>
-                  <option value="weekdays">Dias específicos</option>
-                  <option value="once">Uma vez</option>
-                </select>
-              </label>
-              <label>
-                <span>Horário</span>
-                <input
-                  type="time"
-                  value={draft.times[0] ?? ''}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      times: [event.target.value, ...current.times.slice(1)],
-                    }))
-                  }
-                />
-              </label>
-            </div>
-          </div>
+          <label className="reminder-recurrence-field">
+            <span>Repetição</span>
+            <select
+              value={draft.recurrence}
+              onChange={(event) => {
+                void selectionHaptic();
+                setDraft((current) => ({
+                  ...current,
+                  recurrence: event.target.value as RecurrenceDraft,
+                }));
+              }}
+            >
+              <option value="daily">Todos os dias</option>
+              <option value="weekdays">Dias específicos</option>
+              <option value="once">Uma vez</option>
+            </select>
+          </label>
 
           {draft.recurrence === 'once' && (
             <label>
@@ -422,7 +370,7 @@ export function ReminderCenter() {
             className={`personal-notification-card personal-notification-card--${reminder.color}`}
           >
             <span className="personal-notification-card__icon">
-              <ResourceIcon icon={reminder.icon} />
+              <ReminderIcon icon={reminder.icon} />
             </span>
             <div className="personal-notification-card__content">
               <strong>{reminder.title}</strong>

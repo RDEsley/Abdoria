@@ -3,8 +3,8 @@ self.addEventListener('push', (event) => {
     title: 'Evolyn',
     body: '',
     tag: 'evolyn-reminder',
-    icon: '/brand/favicon-192.png',
-    badge: '/brand/favicon-192.png',
+    icon: '/media/notifications/icons/evolyn-192.png',
+    badge: '/media/notifications/icons/evolyn-96.png',
   };
   try {
     if (event.data) {

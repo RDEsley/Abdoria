@@ -152,4 +152,31 @@ try {
   $sourceImage.Dispose()
 }
 
+$brotoSource = Join-Path $SourceDirectory 'broto-assistente.png'
+if (Test-Path -LiteralPath $brotoSource) {
+  $notificationIcons = Join-Path $projectRoot 'client/public/media/notifications/icons'
+  New-Item -ItemType Directory -Force -Path $notificationIcons | Out-Null
+  $brotoImage = [System.Drawing.Image]::FromFile($brotoSource)
+  try {
+    foreach ($size in 96, 192) {
+      $bitmap = New-Object System.Drawing.Bitmap($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+      $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+      $graphics.Clear([System.Drawing.Color]::Transparent)
+      $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+      $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+      $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+      $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+      $graphics.DrawImage($brotoImage, 0, 0, $size, $size)
+      $bitmap.Save((Join-Path $notificationIcons "evolyn-$size.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+      $graphics.Dispose()
+      $bitmap.Dispose()
+    }
+  } finally {
+    $brotoImage.Dispose()
+  }
+  Write-Output 'Ícones de notificação (broto-assistente) atualizados.'
+} else {
+  Write-Output 'Aviso: broto-assistente.png ausente — ícones de notificação não foram regenerados.'
+}
+
 Write-Output 'Assets de marca web, Android e iOS atualizados.'
