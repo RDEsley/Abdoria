@@ -60,6 +60,8 @@ import { readWorkoutOrLegacy, webWorkoutSessionStorage } from '@/lib/workout-ses
 import { keepScreenAwake } from '@/lib/platform/screen-awake';
 import { actionHaptic } from '@/lib/platform/native-runtime';
 
+const REST_ADJUST_STEP_SEC = 5;
+
 type Phase = 'ready' | 'working' | 'side_transition' | 'resting' | 'done';
 
 function sideInstruction(item: WorkoutQueueItem | undefined, sideIndex: 0 | 1): string | null {
@@ -753,12 +755,12 @@ export function PlayerPage() {
             {workout.queue.map((item, i) => (
               <span
                 key={`${item.slug}-${i}`}
-                className={`game-progress-dot h-1.5 flex-1 rounded-full ${
+                className={`game-progress-dot flex-1 rounded-full ${
                   i < exerciseIndex
-                    ? 'bg-emerald-500'
+                    ? 'game-progress-dot--done'
                     : i === exerciseIndex
-                      ? 'bg-amber-400 game-progress-dot--active'
-                      : 'bg-stone-200/80'
+                      ? 'game-progress-dot--active'
+                      : 'game-progress-dot--todo'
                 }`}
               />
             ))}
@@ -841,26 +843,54 @@ export function PlayerPage() {
               </div>
             ) : (
               <div className="game-player-metric relative">
-                <WorkoutTimerRing
-                  phase={phase as 'ready' | 'working' | 'resting'}
-                  modo={current.modo}
-                  secondsLeft={secondsLeft}
-                  seriesIndex={seriesIndex}
-                  totalSeries={totalSeries}
-                  targetReps={targetReps}
-                  progressPct={progressPct}
-                  paused={paused}
-                  onCenterClick={
-                    phase === 'ready' ? startSeries : canTogglePause ? togglePause : undefined
+                <div
+                  className={
+                    phase === 'resting'
+                      ? 'grid grid-cols-[auto_1fr_auto] items-center gap-3'
+                      : 'contents'
                   }
-                  clickLabel={
-                    phase === 'ready'
-                      ? `Iniciar série ${seriesIndex + 1}`
-                      : paused
-                        ? 'Continuar cronômetro'
-                        : 'Pausar cronômetro'
-                  }
-                />
+                >
+                  {phase === 'resting' && (
+                    <button
+                      type="button"
+                      className="game-rest-adjust-btn"
+                      aria-label="Menos 5 segundos"
+                      onClick={() => adjustRestSeconds(-REST_ADJUST_STEP_SEC)}
+                    >
+                      −{REST_ADJUST_STEP_SEC}s
+                    </button>
+                  )}
+                  <WorkoutTimerRing
+                    phase={phase as 'ready' | 'working' | 'resting'}
+                    modo={current.modo}
+                    secondsLeft={secondsLeft}
+                    seriesIndex={seriesIndex}
+                    totalSeries={totalSeries}
+                    targetReps={targetReps}
+                    progressPct={progressPct}
+                    paused={paused}
+                    onCenterClick={
+                      phase === 'ready' ? startSeries : canTogglePause ? togglePause : undefined
+                    }
+                    clickLabel={
+                      phase === 'ready'
+                        ? `Iniciar série ${seriesIndex + 1}`
+                        : paused
+                          ? 'Continuar cronômetro'
+                          : 'Pausar cronômetro'
+                    }
+                  />
+                  {phase === 'resting' && (
+                    <button
+                      type="button"
+                      className="game-rest-adjust-btn"
+                      aria-label="Mais 5 segundos"
+                      onClick={() => adjustRestSeconds(REST_ADJUST_STEP_SEC)}
+                    >
+                      +{REST_ADJUST_STEP_SEC}s
+                    </button>
+                  )}
+                </div>
 
                 {countdownValue !== null && countdownValue > 0 && (
                   <div className="game-countdown-overlay" role="status" aria-live="assertive">
@@ -970,15 +1000,6 @@ export function PlayerPage() {
 
             {phase === 'resting' && (
               <>
-                <div className="game-player-rest-adjust" role="group" aria-label="Ajustar descanso">
-                  <button type="button" onClick={() => adjustRestSeconds(-10)}>
-                    −10s
-                  </button>
-                  <span>Próximo: {nextSeriesLabel}</span>
-                  <button type="button" onClick={() => adjustRestSeconds(10)}>
-                    +10s
-                  </button>
-                </div>
                 <div className="flex gap-2">
                   <GameButton
                     size="lg"
