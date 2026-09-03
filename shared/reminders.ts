@@ -433,11 +433,20 @@ export function isDerivedActivityReminderId(id: string): boolean {
   return id.startsWith('activity:') || id.startsWith('routine:') || id.startsWith('routine-item:');
 }
 
-export function derivedReminderSourceId(id: string): string | null {
+/** Entidade de origem de um lembrete derivado (activity/routine), se houver. */
+export function derivedReminderSource(
+  id: string,
+): { kind: 'activity' | 'routine'; id: string } | null {
   const parts = id.split(':');
   if (parts.length < 2) return null;
   if (parts[0] !== 'activity' && parts[0] !== 'routine') return null;
-  return parts[1] ?? null;
+  const sourceId = parts[1];
+  if (!sourceId) return null;
+  return { kind: parts[0], id: sourceId };
+}
+
+export function derivedReminderSourceId(id: string): string | null {
+  return derivedReminderSource(id)?.id ?? null;
 }
 
 export function isFollowUpReminderId(id: string): boolean {

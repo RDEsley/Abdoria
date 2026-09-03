@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildNativeNotificationSchedules,
   deriveActivityReminders,
+  derivedReminderSource,
   isReminderDueInTimeZone,
   normalizePersonalizedReminder,
   normalizePersonalizedReminders,
@@ -182,5 +183,19 @@ describe('deriveActivityReminders — rotina e item', () => {
       items: [{ activity_id: 'act-cafe', scheduled_time: '07:15', reminder_enabled: false }],
     };
     expect(deriveActivityReminders([cafe], [manual])).toEqual([]);
+  });
+});
+
+describe('derivedReminderSource', () => {
+  it('distingue activity vs rotina no follow-up (não trata UUID de rotina como activity_id)', () => {
+    expect(derivedReminderSource('activity:act-1:08:00:followup')).toEqual({
+      kind: 'activity',
+      id: 'act-1',
+    });
+    expect(derivedReminderSource('routine:rot-1:07:00:followup')).toEqual({
+      kind: 'routine',
+      id: 'rot-1',
+    });
+    expect(derivedReminderSource('routine-item:rot-1:act-1:07:00')).toBeNull();
   });
 });

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   consumeHomeCelebration,
+  HOME_CELEBRATION_QUEUED_EVENT,
   peekNextHomeCelebration,
   type HomeCelebration,
 } from '@/lib/home-celebrations';
@@ -16,7 +17,9 @@ function startCelebration(
   setEvent: (value: HomeCelebration | null) => void,
   setDisplay: (value: number) => void,
   setPhase: (value: 'cold' | 'lit' | 'frozen') => void,
+  showingRef: { current: boolean },
 ) {
+  showingRef.current = true;
   consumeHomeCelebration(next.id);
   setEvent(next);
   if (next.kind === 'streak_up') {
@@ -36,11 +39,18 @@ export function HomeCelebrationHost() {
   const [event, setEvent] = useState<HomeCelebration | null>(null);
   const [display, setDisplay] = useState(0);
   const [phase, setPhase] = useState<'cold' | 'lit' | 'frozen'>('cold');
+  const showingRef = useRef(false);
 
   useEffect(() => {
-    const next = peekNextHomeCelebration();
-    if (!next) return;
-    startCelebration(next, setEvent, setDisplay, setPhase);
+    const tryStart = () => {
+      if (showingRef.current) return;
+      const next = peekNextHomeCelebration();
+      if (!next) return;
+      startCelebration(next, setEvent, setDisplay, setPhase, showingRef);
+    };
+    tryStart();
+    window.addEventListener(HOME_CELEBRATION_QUEUED_EVENT, tryStart);
+    return () => window.removeEventListener(HOME_CELEBRATION_QUEUED_EVENT, tryStart);
   }, []);
 
   useEffect(() => {
@@ -59,7 +69,14 @@ export function HomeCelebrationHost() {
           reduceMotion ? 0 : 480,
         ),
       );
-      timers.push(window.setTimeout(() => setEvent(null), HOLD_STREAK_MS));
+      timers.push(
+        window.setTimeout(() => {
+          showingRef.current = false;
+          setEvent(null);
+          const leftover = peekNextHomeCelebration();
+          if (leftover) startCelebration(leftover, setEvent, setDisplay, setPhase, showingRef);
+        }, HOLD_STREAK_MS),
+      );
     } else {
       timers.push(
         window.setTimeout(
@@ -74,9 +91,12 @@ export function HomeCelebrationHost() {
         window.setTimeout(() => {
           setEvent(null);
           const followUp = peekNextHomeCelebration();
-          if (!followUp) return;
+          if (!followUp) {
+            showingRef.current = false;
+            return;
+          }
           window.setTimeout(() => {
-            startCelebration(followUp, setEvent, setDisplay, setPhase);
+            startCelebration(followUp, setEvent, setDisplay, setPhase, showingRef);
           }, 220);
         }, HOLD_FROZEN_MS),
       );
@@ -91,11 +111,17 @@ export function HomeCelebrationHost() {
     if (!event) return;
     const wasFrozen = event.kind === 'frozen';
     setEvent(null);
-    if (!wasFrozen) return;
+    if (!wasFrozen) {
+      showingRef.current = false;
+      return;
+    }
     const followUp = peekNextHomeCelebration();
-    if (!followUp) return;
+    if (!followUp) {
+      showingRef.current = false;
+      return;
+    }
     window.setTimeout(() => {
-      startCelebration(followUp, setEvent, setDisplay, setPhase);
+      startCelebration(followUp, setEvent, setDisplay, setPhase, showingRef);
     }, 160);
   };
 

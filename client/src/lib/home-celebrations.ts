@@ -19,6 +19,7 @@ export type HomeCelebration =
 const PENDING_KEY = 'evolyn:home-celebrations-pending-v1';
 const SEEN_KEY = 'evolyn:home-celebrations-seen-v1';
 const LEGACY_STREAK_KEY = 'evolyn:pending-streak-home';
+export const HOME_CELEBRATION_QUEUED_EVENT = 'evolyn:home-celebration-queued';
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -117,6 +118,9 @@ function upsertPending(event: HomeCelebration) {
   const pending = readPending().filter((item) => item.id !== event.id);
   pending.push(event);
   writeJson(PENDING_KEY, pending);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(HOME_CELEBRATION_QUEUED_EVENT));
+  }
 }
 
 export function queueFrozenHomeCelebration(input: {
