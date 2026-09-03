@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { AuthSheet } from '@/components/auth/AuthSheet';
-import { EvolynSproutMark, type SproutPlay } from '@/components/auth/EvolynSproutMark';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { LoginSheet } from '@/components/auth/LoginSheet';
 import { RegisterSheet } from '@/components/auth/RegisterSheet';
 import { TermsModal } from '@/components/legal/TermsModal';
@@ -23,12 +23,8 @@ export function AuthScene() {
   const reduceMotion = useReducedMotion();
   const mode = modeFromPath(location.pathname);
   const [legalOpen, setLegalOpen] = useState(false);
-  const [play] = useState<SproutPlay>(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return 'still';
-    return hasSeenWelcomeAnimation() ? 'short' : 'full';
-  });
-  const [ctaReady, setCtaReady] = useState(() => play !== 'full');
+  const playFull = !reduceMotion && !hasSeenWelcomeAnimation();
+  const [ctaReady, setCtaReady] = useState(() => !playFull);
 
   useEffect(() => {
     if (reduceMotion) {
@@ -36,15 +32,14 @@ export function AuthScene() {
       markWelcomeAnimationSeen();
       return;
     }
-    const appearAt = play === 'full' ? 1180 : 280;
-    const settleAt = play === 'full' ? 2100 : 700;
+    const appearAt = playFull ? 280 : 80;
     const appear = window.setTimeout(() => setCtaReady(true), appearAt);
-    const settle = window.setTimeout(() => markWelcomeAnimationSeen(), settleAt);
+    const settle = window.setTimeout(() => markWelcomeAnimationSeen(), appearAt + 400);
     return () => {
       window.clearTimeout(appear);
       window.clearTimeout(settle);
     };
-  }, [play, reduceMotion]);
+  }, [playFull, reduceMotion]);
 
   const go = (path: string) => {
     navigate(path, { state: location.state });
@@ -72,14 +67,21 @@ export function AuthScene() {
 
       <div className="auth-welcome__main" inert={mode !== 'welcome' ? true : undefined}>
         <div className="auth-welcome__stage">
-          <EvolynSproutMark play={play} className="auth-welcome__sprout" />
+          <motion.div
+            className="auth-welcome__mark"
+            initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: reduceMotion ? 0.12 : 0.55, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <BrandMark size={168} alt="Evolyn" variant="full" className="auth-welcome__logo" />
+          </motion.div>
           <motion.div
             className="auth-welcome__copy"
             initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
               duration: reduceMotion ? 0.16 : 0.45,
-              delay: reduceMotion ? 0 : play === 'full' ? 1.35 : 0.18,
+              delay: reduceMotion ? 0 : 0.12,
               ease: [0.22, 1, 0.36, 1],
             }}
           >
@@ -118,13 +120,12 @@ export function AuthScene() {
         titleId={mode === 'register' ? 'auth-register-title' : 'auth-login-title'}
         onClose={closeSheet}
       >
-        {mode === 'login' ? (
-          <LoginSheet onGoRegister={() => go('/register')} />
-        ) : mode === 'register' ? (
+        {mode === 'register' ? (
           <RegisterSheet onGoLogin={() => go('/login')} />
-        ) : null}
+        ) : (
+          <LoginSheet onGoRegister={() => go('/register')} />
+        )}
       </AuthSheet>
-
       <TermsModal open={legalOpen} onClose={() => setLegalOpen(false)} />
     </main>
   );

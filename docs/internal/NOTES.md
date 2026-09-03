@@ -51,7 +51,8 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
   - **Android/iOS**: Capacitor Local Notifications (`notification-scheduler.ts`).
   - **Web/PWA**: Web Push + Service Worker (`client/public/sw.js`) com dispatcher server (`/api/cron/reminder-push`) acionado por **Supabase `pg_cron` + `pg_net`** (segredos no Vault: `evolyn_cron_secret`, `evolyn_reminder_cron_url`).
 - `notificacoes_opt_out` desliga entrega OS-level; lembretes continuam salvos.
-- Som de notificação personalizado foi removido (Playful 2.0). O campo legado `sound` em JSONB é ignorado no parsing; entregas usam o som padrão da plataforma. Sons de UI em `client/src/lib/sounds` continuam intactos.
+- Som de notificação nativo voltou: campo `sound` em lembretes (default `app_default`). Canais Android versionados por som (`evolyn_reminder_*_v1`); WAVs gerados do catálogo SFX. Cor/ícone do lembrete são só organização in-app; large icon do SO é o Broto Assistente.
+- `quest_claims.user_id` aponta para `profiles(id)` (não `auth.users`). Claim usa RPC `claim_quest_slot` + `rewarded_at` para ser recuperável.
 - Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
 - Frozen Streak consumido no backend gera `streak_freeze_notice` / `streak_frozen_event` em `/stats` e celebração na Home — **não** cria mais item `streak_frozen` na Caixa de Entrada. A celebração usa `preserved_streak` (sequência protegida). Frozen nunca incrementa sozinho; ação válida posterior é que faz 10 → 11.
 

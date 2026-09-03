@@ -43,8 +43,8 @@ function weekRetroPeriod(dayKey: string): string {
 }
 
 export function DashboardPage() {
-  const { stats, loading, refresh, loadRecommendations } = useApp();
-  const [day, setDay] = useState<DaySnapshot | null>(null);
+  const { stats, loading, refresh, loadRecommendations, daySnapshot } = useApp();
+  const [day, setDay] = useState<DaySnapshot | null>(daySnapshot);
   const [retroDismissed, setRetroDismissed] = useState(false);
 
   useMidnightRefresh(() => {
@@ -59,10 +59,8 @@ export function DashboardPage() {
   }, [loading, stats, loadRecommendations]);
 
   useEffect(() => {
-    void getDaySnapshot()
-      .then(setDay)
-      .catch(() => setDay(null));
-  }, [stats?.sequencia_garantida_hoje, stats?.xp_hoje, stats?.treino_hoje]);
+    if (daySnapshot) setDay(daySnapshot);
+  }, [daySnapshot]);
 
   if (loading) return <PageLoader />;
 

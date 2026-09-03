@@ -147,12 +147,16 @@ html:has(.auth-welcome) body,
   text-align: center;
 }
 
-.evolyn-sprout,
-.auth-welcome__sprout {
-  display: block;
-  width: clamp(5.25rem, 22vh, 9.25rem);
-  height: clamp(5.25rem, 22vh, 9.25rem);
-  overflow: visible;
+.auth-welcome__mark {
+  display: grid;
+  place-items: center;
+}
+
+.auth-welcome__logo {
+  width: clamp(6.5rem, 24vh, 10.5rem);
+  height: auto;
+  max-height: 9rem;
+  object-fit: contain;
   filter: drop-shadow(0 12px 20px rgb(15 118 110 / 12%));
 }
 
@@ -437,9 +441,10 @@ html:has(.auth-welcome) body,
   background: linear-gradient(180deg, #f7fdf9, #eef8f3);
 }
 
-.auth-celebrate__sprout {
+.auth-celebrate__logo {
   width: 6.5rem;
-  height: 6.5rem;
+  height: auto;
+  object-fit: contain;
 }
 
 .auth-celebrate__kicker {
@@ -492,9 +497,8 @@ html:has(.auth-welcome) body,
     gap: 0.45rem;
   }
 
-  .auth-welcome__sprout {
-    width: clamp(4.4rem, 18vh, 6.5rem);
-    height: clamp(4.4rem, 18vh, 6.5rem);
+  .auth-welcome__logo {
+    width: clamp(5rem, 20vh, 7.5rem);
   }
 
   .auth-welcome__cta,

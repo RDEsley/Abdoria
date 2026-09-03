@@ -16,7 +16,9 @@ import {
   hydrateUserDadosFromAccount,
   mergeUserDadosSalvos,
 } from '@/lib/user-dados';
+import { getDaySnapshot, type DaySnapshot } from '@/lib/api/day';
 import { AppContext } from '@/context/app-context';
+import { useBootReadiness } from '@/context/boot-readiness';
 import { useAuth } from '@/hooks/useAuth';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import { queueFrozenHomeCelebration, queueStreakUpCelebration } from '@/lib/home-celebrations';
@@ -40,9 +42,11 @@ const PERSIST_DEBOUNCE_MS = 450;
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user: authenticatedUser, applyUser: applyAuthenticatedUser } = useAuth();
+  const { markDataReady } = useBootReadiness();
   const [user, setUser] = useState<IUserDocument | null>(authenticatedUser);
   const [exercises, setExercises] = useState<IExerciseDocument[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [daySnapshot, setDaySnapshot] = useState<DaySnapshot | null>(null);
   const [history, setHistory] = useState<IWorkoutHistoryDocument[]>([]);
   const [userDados, setUserDados] = useState<UserDadosSalvos>(() => resolveUserDadosSalvos());
   const [loading, setLoading] = useState(true);
@@ -249,7 +253,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     recommendationsLoaded.current = false;
     const statsVersion = ++statsRequestVersion.current;
 
-    const [userRes, statsRes] = await Promise.allSettled([getMe(), getDashboardStats()]);
+    const [userRes, statsRes, dayRes] = await Promise.allSettled([
+      getMe(),
+      getDashboardStats(),
+      getDaySnapshot(),
+    ]);
 
     if (userRes.status === 'fulfilled') {
       applyUser(userRes.value);
@@ -270,6 +278,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? statsRes.reason.message
           : 'Erro ao carregar estatísticas',
       );
+
+    if (dayRes.status === 'fulfilled') setDaySnapshot(dayRes.value);
+    else setDaySnapshot(null);
 
     setError(errors.length > 0 ? errors.join(' · ') : null);
     setLoading(false);
@@ -309,6 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!authenticatedUser) {
       setUser(null);
       setLoading(false);
+      setDaySnapshot(null);
       initialHydrationFor.current = null;
       return;
     }
@@ -317,23 +329,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // mounts. Reuse that snapshot so entering the app does not trigger a
     // second visible hydration and a redundant account request.
     setUser(authenticatedUser);
-    if (initialHydrationFor.current === authenticatedUser.id) return;
+    if (initialHydrationFor.current === authenticatedUser.id) {
+      setLoading(false);
+      markDataReady();
+      return;
+    }
     initialHydrationFor.current = authenticatedUser.id;
 
     void (async () => {
       const statsVersion = ++statsRequestVersion.current;
       try {
         await hydrateAccountData(authenticatedUser);
-        const nextStats = await getDashboardStats();
+        const [nextStats, nextDay] = await Promise.all([
+          getDashboardStats(),
+          getDaySnapshot().catch(() => null),
+        ]);
         commitStats(nextStats, statsVersion);
+        setDaySnapshot(nextDay);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar estatisticas');
       } finally {
         setLoading(false);
+        markDataReady();
       }
     })();
-  }, [authenticatedUser, commitStats, hydrateAccountData]);
+  }, [authenticatedUser, commitStats, hydrateAccountData, markDataReady]);
 
   useEffect(() => {
     if (!error) return;
@@ -586,6 +607,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       user,
       exercises,
       stats,
+      daySnapshot,
       history,
       customWorkout: userDados.treino_personalizado,
       customWorkoutName: userDados.treino_personalizado_nome,
@@ -623,6 +645,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       user,
       exercises,
       stats,
+      daySnapshot,
       history,
       userDados,
       unlockedExercises,

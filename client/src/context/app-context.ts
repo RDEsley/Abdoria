@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { DaySnapshot } from '@/lib/api/day';
 import type {
   CompleteWorkoutPayload,
   DashboardStats,
@@ -21,6 +22,7 @@ export interface AppContextValue {
   user: IUserDocument | null;
   exercises: IExerciseDocument[];
   stats: DashboardStats | null;
+  daySnapshot: DaySnapshot | null;
   history: IWorkoutHistoryDocument[];
   customWorkout: WorkoutQueueItem[];
   customWorkoutName: string;
