@@ -7,17 +7,23 @@ export function LottieView({
   loop,
   cover = false,
   speed = 1,
+  contain = false,
 }: {
   data: unknown | null;
   loop: boolean;
   cover?: boolean;
+  contain?: boolean;
   speed?: number;
 }) {
   const { View, setSpeed } = useLottie(
     {
       animationData: data ?? undefined,
       loop,
-      rendererSettings: cover ? { preserveAspectRatio: 'xMidYMin slice' } : undefined,
+      rendererSettings: cover
+        ? { preserveAspectRatio: 'xMidYMin slice' }
+        : contain
+          ? { preserveAspectRatio: 'xMidYMid meet' }
+          : undefined,
     },
     { width: '100%', height: '100%' },
   );

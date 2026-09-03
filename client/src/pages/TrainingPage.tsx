@@ -1111,7 +1111,10 @@ export function TrainingPage() {
       <AbTrainingProfileWizard
         open={!authUser?.ab_training_profile_v2 || showAbPlan}
         firstVisit={!authUser?.ab_training_profile_v2}
-        onClose={() => setShowAbPlan(false)}
+        onClose={() => {
+          if (!authUser?.ab_training_profile_v2) navigate('/');
+          else setShowAbPlan(false);
+        }}
         onReady={() => {
           lastSyncedSuggestedRef.current = null;
           lastAppliedQueueKeyRef.current = '';
