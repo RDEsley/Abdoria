@@ -73,7 +73,8 @@ export async function completeActivity(userId: string, input: CompleteActivityIn
   if (input.routineId) {
     const routine = await Routines.findById(userId, input.routineId);
     if (routine?.items?.length) {
-      const done = await ActivityLogs.activityIdsDoneOnDay(userId, dayKey);
+      // Isolamento: só contam logs desta rotina no dia — não activity_id global.
+      const done = await ActivityLogs.activityIdsDoneInRoutineOnDay(userId, routine.id, dayKey);
       done.add(activity.id);
       const allDone = routine.items.every((item) => done.has(item.activity_id));
       if (allDone) {

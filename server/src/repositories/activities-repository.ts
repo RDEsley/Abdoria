@@ -2,10 +2,13 @@ import { getSupabase } from '../db.js';
 import {
   normalizeActivityReminder,
   normalizeActivitySchedule,
+  normalizeRoutineItems,
+  routineItemInputToRecord,
   type ActivityLogKind,
   type ActivityLogRecord,
   type ActivityLogSource,
   type ActivityRecord,
+  type RoutineItemInput,
   type RoutineItemRecord,
   type RoutineRecord,
 } from '../../../shared/activities/index.js';
@@ -186,6 +189,8 @@ export const Routines = {
         routine_id: String(item.routine_id),
         activity_id: String(item.activity_id),
         position: Number(item.position ?? 0),
+        scheduled_time: item.scheduled_time ? String(item.scheduled_time) : null,
+        reminder_enabled: item.reminder_enabled === true,
       });
       byRoutine.set(String(item.routine_id), list);
     }
@@ -207,7 +212,8 @@ export const Routines = {
     color?: string;
     schedule?: RoutineRecord['schedule'];
     reminder?: RoutineRecord['reminder'];
-    items?: string[];
+    /** Aceita `string[]` legado (activity ids) ou itens ricos já normalizados. */
+    items?: Array<string | RoutineItemInput>;
   }): Promise<RoutineRecord> {
     const sb = getSupabase();
     const { data, error } = await sb
@@ -224,12 +230,11 @@ export const Routines = {
       .single();
     if (error) throwIfMissingRelation(error, 'routines');
     const routine = rowToRoutine(data as Record<string, unknown>);
-    if (input.items?.length) {
-      const rows = input.items.map((activityId, position) => ({
-        routine_id: routine.id,
-        activity_id: activityId,
-        position,
-      }));
+    const normalizedItems = normalizeRoutineItems(input.items ?? []);
+    if (normalizedItems.length > 0) {
+      const rows = normalizedItems.map((item, position) =>
+        routineItemInputToRecord(routine.id, item, position),
+      );
       const { error: itemsError } = await sb.from('routine_items').insert(rows);
       if (itemsError) throwIfMissingRelation(itemsError, 'routine_items');
       routine.items = rows;
@@ -241,7 +246,7 @@ export const Routines = {
     userId: string,
     id: string,
     patch: Record<string, unknown>,
-    items?: string[],
+    items?: Array<string | RoutineItemInput>,
   ): Promise<RoutineRecord> {
     const sb = getSupabase();
     const { data, error } = await sb
@@ -253,15 +258,14 @@ export const Routines = {
       .single();
     if (error) throwIfMissingRelation(error, 'routines');
     if (items) {
+      const normalizedItems = normalizeRoutineItems(items);
       await sb.from('routine_items').delete().eq('routine_id', id);
-      if (items.length > 0) {
-        await sb.from('routine_items').insert(
-          items.map((activityId, position) => ({
-            routine_id: id,
-            activity_id: activityId,
-            position,
-          })),
-        );
+      if (normalizedItems.length > 0) {
+        await sb
+          .from('routine_items')
+          .insert(
+            normalizedItems.map((item, position) => routineItemInputToRecord(id, item, position)),
+          );
       }
     }
     const routine = rowToRoutine(data as Record<string, unknown>);
@@ -348,6 +352,23 @@ export const ActivityLogs = {
       .from('activity_logs')
       .select('activity_id')
       .eq('user_id', userId)
+      .eq('day_key', dayKey)
+      .not('activity_id', 'is', null);
+    if (error) throwIfMissingRelation(error, 'activity_logs');
+    return new Set((data ?? []).map((row) => String(row.activity_id)));
+  },
+
+  async activityIdsDoneInRoutineOnDay(
+    userId: string,
+    routineId: string,
+    dayKey: string,
+  ): Promise<Set<string>> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('activity_logs')
+      .select('activity_id')
+      .eq('user_id', userId)
+      .eq('routine_id', routineId)
       .eq('day_key', dayKey)
       .not('activity_id', 'is', null);
     if (error) throwIfMissingRelation(error, 'activity_logs');

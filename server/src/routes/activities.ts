@@ -7,7 +7,6 @@ import {
   ACTIVITY_NAME_MAX,
   ACTIVITY_NOTE_MAX,
   ROUTINES_MAX,
-  ROUTINE_ITEMS_MAX,
   normalizeActivityReminder,
   normalizeActivitySchedule,
 } from '../../../shared/activities/index.js';
@@ -231,9 +230,7 @@ routinesRouter.post('/', async (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Nome obrigatório.' });
       return;
     }
-    const items = Array.isArray(req.body?.items)
-      ? req.body.items.map(String).slice(0, ROUTINE_ITEMS_MAX)
-      : [];
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
     const created = await Routines.create({
       user_id: req.userId!,
       name,
@@ -262,9 +259,7 @@ routinesRouter.patch('/:id', async (req: AuthRequest, res) => {
     if (req.body?.schedule) patch.schedule = normalizeActivitySchedule(req.body.schedule);
     if (req.body?.reminder) patch.reminder = normalizeActivityReminder(req.body.reminder);
     if (typeof req.body?.sort_order === 'number') patch.sort_order = req.body.sort_order;
-    const items = Array.isArray(req.body?.items)
-      ? req.body.items.map(String).slice(0, ROUTINE_ITEMS_MAX)
-      : undefined;
+    const items = Array.isArray(req.body?.items) ? req.body.items : undefined;
     res.json(await Routines.update(req.userId!, String(req.params.id), patch, items));
   } catch (error) {
     console.error('PATCH /api/routines/:id error:', error);

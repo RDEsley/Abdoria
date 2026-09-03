@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameButton } from '@/components/ui/GameButton';
+import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
 import { useActivitiesData } from '@/features/activities/useActivitiesData';
+import { routineDoneActivityIdsToday } from '@shared/activities';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { useAuth } from '@/hooks/useAuth';
 import { resolveCosmeticos } from '@/types';
@@ -17,14 +19,18 @@ export function RoutineRunnerPage() {
   const { user } = useAuth();
   const [sessionXp, setSessionXp] = useState(0);
   const [doneCount, setDoneCount] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
 
   const routine = data.routines.find((item) => item.id === routineId);
   const today = getTodaySaoPaulo();
-  const doneIds = useMemo(
-    () => new Set(data.logs.filter((log) => log.day_key === today).map((log) => log.activity_id)),
-    [data.logs, today],
-  );
+  // Isolado por rotina: só conta logs feitos *nesta* rotina hoje, não qualquer
+  // conclusão avulsa da mesma atividade feita fora dela.
+  const doneIds = useMemo(() => {
+    if (!routine) return new Set<string>();
+    const todayLogs = data.logs.filter((log) => log.day_key === today);
+    return routineDoneActivityIdsToday(routine, todayLogs);
+  }, [data.logs, today, routine]);
 
   useEffect(() => {
     if (!data.loading && !routine) navigate('/atividades', { replace: true });
@@ -38,7 +44,11 @@ export function RoutineRunnerPage() {
     .map((item) => data.activities.find((activity) => activity.id === item.activity_id))
     .filter(Boolean);
 
-  if (finished) {
+  const total = items.length;
+  const doneNow = items.filter((activity) => activity && doneIds.has(activity.id)).length;
+  const allDone = total > 0 && doneNow === total;
+
+  if (celebrate) {
     return (
       <WorkoutVictoryScreen
         workoutName={routine.name}
@@ -65,10 +75,21 @@ export function RoutineRunnerPage() {
     <div className="game-player game-app fixed inset-x-0 top-[var(--top-navbar-height)] bottom-[calc(4.85rem+env(safe-area-inset-bottom,0px))] z-40 flex flex-col overflow-hidden md:right-0 md:bottom-0 md:left-64">
       <AnimatedBackground variant="player" />
       <header className="game-player-hud relative z-10 flex items-center justify-between">
-        <button type="button" onClick={() => navigate('/atividades')} aria-label="Sair">
+        <button
+          type="button"
+          onClick={() => (allDone ? setCelebrate(true) : setConfirmExit(true))}
+          aria-label={allDone ? 'Concluir rotina' : 'Sair'}
+        >
           <X size={24} />
         </button>
-        <p className="text-sm font-extrabold">{routine.name}</p>
+        <div className="flex flex-col items-center">
+          <p className="text-sm font-extrabold">{routine.name}</p>
+          {total > 0 && (
+            <small className="text-[0.65rem] font-bold text-stone-400">
+              {doneNow}/{total}
+            </small>
+          )}
+        </div>
         <span className="w-6" />
       </header>
       <ul className="relative z-10 flex flex-1 flex-col gap-2 overflow-y-auto p-4">
@@ -86,6 +107,7 @@ export function RoutineRunnerPage() {
                     if (!result) return;
                     setSessionXp((xp) => xp + result.xp_ganho);
                     setDoneCount((count) => count + 1);
+                    if (doneNow + 1 >= total) setCelebrate(true);
                   });
                 }}
               >
@@ -96,10 +118,43 @@ export function RoutineRunnerPage() {
         })}
       </ul>
       <div className="relative z-10 p-4">
-        <button type="button" className="game-auth-guest-link" onClick={() => setFinished(true)}>
-          Encerrar rotina
+        <button
+          type="button"
+          className="game-auth-guest-link"
+          onClick={() => (allDone ? setCelebrate(true) : setConfirmExit(true))}
+        >
+          {allDone ? 'Concluir rotina' : 'Sair / continuar depois'}
         </button>
       </div>
+
+      <Modal
+        open={confirmExit}
+        onClose={() => setConfirmExit(false)}
+        labelledBy="routine-exit-title"
+      >
+        <div className="p-4">
+          <h2 id="routine-exit-title" className="game-section-title">
+            Continuar depois?
+          </h2>
+          <p className="mt-2 text-sm font-semibold text-stone-500">
+            {total > 0
+              ? `Você já fez ${doneNow} de ${total}. Seu progresso fica salvo — retome quando quiser.`
+              : 'Seu progresso fica salvo — retome quando quiser.'}
+          </p>
+          <div className="mt-4 flex gap-2">
+            <GameButton
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setConfirmExit(false)}
+            >
+              Continuar rotina
+            </GameButton>
+            <GameButton className="flex-1" onClick={() => navigate('/atividades')}>
+              Sair
+            </GameButton>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
