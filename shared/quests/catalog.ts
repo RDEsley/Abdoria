@@ -5,6 +5,8 @@
  * the DaySnapshot payload, so no extra queries are needed.
  */
 
+import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
+
 export type QuestScope = 'daily' | 'weekly';
 
 export interface QuestDefinition {
@@ -103,14 +105,24 @@ if (weeklyTotal > QUEST_WEEKLY_XP_BUDGET) {
     `Quest weekly XP total (${weeklyTotal}) exceeds budget (${QUEST_WEEKLY_XP_BUDGET})`,
   );
 }
-
+/** Chave estável do período em America/Sao_Paulo (mesmo fuso do Dia Ativo). */
 export function getQuestPeriodKey(scope: QuestScope, now = new Date()): string {
-  const iso = now.toISOString().slice(0, 10);
-  if (scope === 'daily') return iso;
-  // Week key: Monday of the current ISO week
-  const d = new Date(now);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  return `W${d.toISOString().slice(0, 10)}`;
+  if (scope === 'daily') return getTodaySaoPaulo(now);
+  return `W${getWeekStartSaoPaulo(now)}`;
+}
+
+/**
+ * Chaves antigas (UTC / getDay do processo) ainda podem existir em linhas
+ * gravadas antes da correção. A listagem aceita ambas para não reabrir missão.
+ */
+export function getQuestPeriodKeyAliases(scope: QuestScope, now = new Date()): string[] {
+  const canonical = getQuestPeriodKey(scope, now);
+  const utcDay = now.toISOString().slice(0, 10);
+  const utcWeekDate = new Date(now);
+  const utcWeekday = utcWeekDate.getUTCDay();
+  const utcDiff = utcWeekDate.getUTCDate() - utcWeekday + (utcWeekday === 0 ? -6 : 1);
+  utcWeekDate.setUTCDate(utcDiff);
+  const legacy =
+    scope === 'daily' ? utcDay : `W${utcWeekDate.toISOString().slice(0, 10)}`;
+  return legacy === canonical ? [canonical] : [canonical, legacy];
 }

@@ -1083,7 +1083,8 @@
 
 /* Plano abdominal V2 — painel estável, cards de seleção e conclusão premium. */
 .ab-plan-wizard {
-  height: min(
+  height: auto;
+  max-height: min(
     48rem,
     calc(100dvh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)))
   );
@@ -1117,7 +1118,7 @@
 
 .ab-plan-wizard__content > * {
   width: 100%;
-  margin: auto 0;
+  margin: 0;
 }
 
 .ab-plan-option {
@@ -1460,4 +1461,91 @@
   .ab-plan-celebration-layer {
     display: none;
   }
+}
+
+.ab-plan-intro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem 1.35rem;
+  text-align: center;
+}
+
+.ab-plan-intro__close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+}
+
+.ab-plan-intro h2 {
+  margin: 0.2rem 0 0;
+  color: #17332c;
+  font-size: 1.45rem;
+  font-weight: 850;
+}
+
+.ab-plan-intro__tag {
+  margin: 0;
+  color: #087c66;
+  font-weight: 800;
+}
+
+.ab-plan-intro p {
+  margin: 0;
+  max-width: 22rem;
+  color: #4b635c;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ab-plan-intro__cta {
+  width: min(100%, 16rem);
+  margin-top: 0.5rem;
+}
+
+.ab-plan-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgb(15 118 110 / 12%);
+  border-radius: 1rem;
+  background: #fbfdfc;
+}
+
+.ab-plan-custom__effort {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.ab-plan-custom__effort button.is-selected {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.ab-plan-summary__lesgo {
+  width: min(100%, 22rem);
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+  max-height: 9.5rem;
+}
+
+.ab-plan-summary__grid--six {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ab-plan-wizard__hint {
+  margin: 0.75rem 0 0;
+  color: #b45309;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.routine-schedule-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }

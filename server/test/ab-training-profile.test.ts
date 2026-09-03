@@ -31,4 +31,32 @@ describe('perfil abdominal V2', () => {
     expect(profile).not.toHaveProperty('equipment');
     expect(sanitizeAbTrainingProfileV2({ version: 1 })).toBeNull();
   });
+
+  it('respeita configuração personalizada na quantidade e na dose', () => {
+    const custom = sanitizeAbTrainingProfileV2({
+      version: 2,
+      intensity: 'leve',
+      volume: 'curto',
+      training_days: [1, 3],
+      rest_seconds: 30,
+      mode: 'custom',
+      custom: { exercise_count: 9, effort: 'intenso' },
+    });
+    expect(custom?.mode).toBe('custom');
+    expect(exerciseCountForProfile(custom!)).toBe(9);
+    expect(doseForAbProfile(custom!, 'reps', 12)).toBe(15);
+    expect(doseForAbProfile(custom!, 'tempo', 30)).toBe(35);
+  });
+
+  it('perfis V2 antigos sem mode continuam preset', () => {
+    const profile = sanitizeAbTrainingProfileV2({
+      version: 2,
+      intensity: 'moderado',
+      volume: 'equilibrado',
+      training_days: [1, 3, 5],
+    });
+    expect(profile?.mode).toBe('preset');
+    expect(profile?.custom).toBeNull();
+    expect(exerciseCountForProfile(profile!)).toBe(6);
+  });
 });

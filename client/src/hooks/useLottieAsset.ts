@@ -6,10 +6,11 @@ const cache = new Map<string, unknown>();
 const inflight = new Map<string, Promise<unknown>>();
 
 /** Carrega um JSON de animação Lottie de `public/` sob demanda, com cache. */
-export function useLottieAsset(url: string): unknown | null {
-  const [data, setData] = useState<unknown | null>(() => cache.get(url) ?? null);
+export function useLottieAsset(url: string, enabled = true): unknown | null {
+  const [data, setData] = useState<unknown | null>(() => (enabled ? cache.get(url) ?? null : null));
 
   useEffect(() => {
+    if (!enabled) return;
     if (cache.has(url)) {
       setData(cache.get(url));
       return;
@@ -41,7 +42,7 @@ export function useLottieAsset(url: string): unknown | null {
     return () => {
       cancelled = true;
     };
-  }, [url]);
+  }, [url, enabled]);
 
   return data;
 }

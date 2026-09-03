@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Bell, Clock3, Trash2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
+import { PickerField } from '@/components/ui/PickerField';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
 import type {
   ActivityRecord,
@@ -116,6 +117,26 @@ export function RoutineEditorSheet({
 
   const canSubmit = name.trim().length > 0 && items.length > 0 && !busy;
 
+  const reminderSummary = (() => {
+    if (!scheduleOpen || scheduleKind === 'unscheduled') return '';
+    const dayCount =
+      scheduleKind === 'daily' ? 7 : scheduleKind === 'once' ? 1 : weekdays.length;
+    if (dayCount === 0) return '';
+    const itemReminders = items.filter((item) => item.reminder_enabled && item.scheduled_time).length;
+    const total = (reminderEnabled && time ? 1 : 0) + itemReminders;
+    if (total === 0) return '';
+    const dayNames = WEEKDAYS.filter((day) =>
+      scheduleKind === 'daily' ? true : scheduleKind === 'weekdays' ? weekdays.includes(day.value) : true,
+    ).map((day) => day.label);
+    const when =
+      scheduleKind === 'once'
+        ? 'Na data escolhida'
+        : scheduleKind === 'daily'
+          ? 'Todos os dias'
+          : dayNames.join(', ');
+    return `${when} · ${total} lembrete${total === 1 ? '' : 's'}`;
+  })();
+
   const submit = async () => {
     setBusy(true);
     try {
@@ -192,30 +213,38 @@ export function RoutineEditorSheet({
                 </div>
                 {on && expanded && (
                   <div className="routine-item-row__details">
-                    <label className="onb-field">
-                      <input
-                        type="time"
-                        value={item?.scheduled_time ?? ''}
-                        onChange={(event) =>
-                          updateItem(activity.id, {
-                            scheduled_time: event.target.value || null,
-                            reminder_enabled: event.target.value
-                              ? (item?.reminder_enabled ?? false)
-                              : false,
-                          })
-                        }
-                      />
-                    </label>
-                    <label className="flex items-center gap-2 text-xs font-bold text-stone-600">
-                      <input
-                        type="checkbox"
-                        checked={item?.reminder_enabled ?? false}
-                        disabled={!item?.scheduled_time}
-                        onChange={(event) =>
-                          updateItem(activity.id, { reminder_enabled: event.target.checked })
-                        }
-                      />
-                      Lembrar deste item
+                    <PickerField
+                      type="time"
+                      label="Horário desta etapa"
+                      emptyLabel="Selecionar horário"
+                      icon={<Clock3 size={14} aria-hidden />}
+                      value={item?.scheduled_time ?? ''}
+                      onChange={(event) =>
+                        updateItem(activity.id, {
+                          scheduled_time: event.target.value || null,
+                          reminder_enabled: event.target.value
+                            ? (item?.reminder_enabled ?? false)
+                            : false,
+                        })
+                      }
+                    />
+                    <label className="mt-2 flex flex-col gap-1 text-xs font-bold text-stone-600">
+                      <span className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={item?.reminder_enabled ?? false}
+                          disabled={!item?.scheduled_time}
+                          onChange={(event) =>
+                            updateItem(activity.id, { reminder_enabled: event.target.checked })
+                          }
+                        />
+                        Lembrar deste item
+                      </span>
+                      {!item?.scheduled_time && (
+                        <small className="font-semibold text-stone-500">
+                          Escolha um horário para poder lembrar desta etapa.
+                        </small>
+                      )}
                     </label>
                   </div>
                 )}
@@ -241,59 +270,63 @@ export function RoutineEditorSheet({
 
         {scheduleOpen && (
           <div className="mt-2 flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2">
-              {SCHEDULE_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`activity-template${scheduleKind === option.id ? ' activity-template--on' : ''}`}
-                  onClick={() => setScheduleKind(option.id)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            {scheduleKind === 'weekdays' && (
-              <fieldset className="personal-notification-form__weekday-fieldset">
-                <legend>Em quais dias?</legend>
-                <div className="personal-notification-form__days">
-                  {WEEKDAYS.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={weekdays.includes(value)}
-                      onClick={() => {
-                        void selectionHaptic();
-                        setWeekdays((current) =>
-                          current.includes(value)
-                            ? current.filter((day) => day !== value)
-                            : [...current, value].sort((a, b) => a - b),
-                        );
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
+            {SCHEDULE_OPTIONS.map((option) => {
+              const selected = scheduleKind === option.id;
+              return (
+                <div key={option.id} className="routine-schedule-option">
+                  <button
+                    type="button"
+                    className={`activity-template${selected ? ' activity-template--on' : ''}`}
+                    onClick={() => setScheduleKind(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                  {selected && option.id === 'weekdays' && (
+                    <fieldset className="personal-notification-form__weekday-fieldset">
+                      <legend className="sr-only">Em quais dias?</legend>
+                      <div className="personal-notification-form__days">
+                        {WEEKDAYS.map(({ value, label }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            aria-pressed={weekdays.includes(value)}
+                            onClick={() => {
+                              void selectionHaptic();
+                              setWeekdays((current) =>
+                                current.includes(value)
+                                  ? current.filter((day) => day !== value)
+                                  : [...current, value].sort((a, b) => a - b),
+                              );
+                            }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
+                  {selected && option.id === 'once' && (
+                    <PickerField
+                      type="date"
+                      label="Data da rotina"
+                      emptyLabel="Selecionar data"
+                      value={onceDate}
+                      onChange={(event) => setOnceDate(event.target.value)}
+                    />
+                  )}
+                  {selected && option.id !== 'unscheduled' && (
+                    <PickerField
+                      type="time"
+                      label="Horário da rotina"
+                      emptyLabel="Selecionar horário"
+                      icon={<Clock3 size={14} aria-hidden />}
+                      value={time}
+                      onChange={(event) => setTime(event.target.value)}
+                    />
+                  )}
                 </div>
-              </fieldset>
-            )}
-
-            {scheduleKind === 'once' && (
-              <label className="onb-field">
-                <input
-                  type="date"
-                  value={onceDate}
-                  onChange={(event) => setOnceDate(event.target.value)}
-                />
-              </label>
-            )}
-
-            {scheduleKind !== 'unscheduled' && (
-              <label className="onb-field">
-                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
-              </label>
-            )}
+              );
+            })}
 
             {scheduleKind !== 'unscheduled' && time && (
               <label className="flex flex-col gap-1 text-sm font-bold text-stone-700">
@@ -310,6 +343,10 @@ export function RoutineEditorSheet({
                   próprio podem lembrar em cada etapa, se você ativar.
                 </small>
               </label>
+            )}
+
+            {reminderSummary && (
+              <p className="text-xs font-bold text-emerald-800">{reminderSummary}</p>
             )}
           </div>
         )}

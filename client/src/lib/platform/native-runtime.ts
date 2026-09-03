@@ -54,3 +54,9 @@ export async function successHaptic(): Promise<void> {
   const { Haptics, NotificationType } = await import('@capacitor/haptics');
   await Haptics.notification({ type: NotificationType.Success });
 }
+
+export async function errorHaptic(): Promise<void> {
+  if (!isNativeApp()) return;
+  const { Haptics, NotificationType } = await import('@capacitor/haptics');
+  await Haptics.notification({ type: NotificationType.Error });
+}

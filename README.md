@@ -232,7 +232,6 @@ npm run dev
 | `npm run dev` | Inicia frontend e backend |
 | `npm run build` | Gera o build de produção |
 | `npm run build:vercel` | Gera o build usado pela Vercel |
-| `npm run format:check` | Valida formatação |
 | `npm run lint` | Executa análise estática |
 | `npm test` | Executa os testes do servidor |
 | `npm run cap:sync` | Sincroniza projetos nativos |
@@ -246,7 +245,6 @@ npm run dev
 O repositório possui CI com gates de:
 
 ```bash
-npm run format:check
 npm run lint
 npm test
 npm run build

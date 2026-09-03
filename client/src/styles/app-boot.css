@@ -55,9 +55,10 @@ html.evolyn-boot-active body {
   height: 6.5rem;
 }
 
-.app-boot-screen__sprout {
+.app-boot-screen__mark {
   width: 5.5rem;
   height: 5.5rem;
+  object-fit: contain;
   animation: app-boot-grow 2.1s ease-in-out infinite;
 }
 
@@ -102,7 +103,7 @@ html.evolyn-boot-active body {
     transition-duration: 0.12s;
   }
 
-  .app-boot-screen__sprout,
+  .app-boot-screen__mark,
   .app-boot-screen__glow {
     animation: none;
   }

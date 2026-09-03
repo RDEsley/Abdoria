@@ -11,6 +11,7 @@ export interface ActivityTemplate {
   metric_kind: ActivityMetricKind;
   metric_unit: string | null;
   goal_value: number | null;
+  aliases?: string[];
 }
 
 export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
@@ -24,6 +25,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'count',
     metric_unit: 'páginas',
     goal_value: 5,
+    aliases: ['ler', 'livro', 'leitura', 'lendo', 'capítulo'],
   },
   {
     id: 'tpl_estudo',
@@ -35,6 +37,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 30,
+    aliases: ['estudar', 'estudo', 'revisar', 'aula', 'idioma', 'japonês', 'ingles'],
   },
   {
     id: 'tpl_escrita',
@@ -46,6 +49,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 15,
+    aliases: ['escrever', 'escrita', 'journal', 'diário', 'anotar'],
   },
   {
     id: 'tpl_meditacao',
@@ -57,6 +61,19 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 10,
+    aliases: ['meditar', 'meditação', 'meditacao', 'mindfulness'],
+  },
+  {
+    id: 'tpl_respiracao',
+    name: 'Respiração',
+    description: 'Foco na respiração para acalmar a mente.',
+    category: 'mente',
+    icon: 'sparkles',
+    color: 'sky',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 5,
+    aliases: ['respirar', 'respiração', 'respiracao', 'foco', 'pranayama', 'box breathing'],
   },
   {
     id: 'tpl_caminhada',
@@ -68,6 +85,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 30,
+    aliases: ['caminhar', 'caminhada', 'andar', 'passeio', 'passos'],
   },
   {
     id: 'tpl_corrida',
@@ -79,6 +97,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 20,
+    aliases: ['corre', 'correr', 'corrida', 'trote', 'trotar', 'running', 'cardio'],
   },
   {
     id: 'tpl_alongamento',
@@ -90,17 +109,31 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 10,
+    aliases: ['alongar', 'alongamento', 'stretch'],
   },
   {
     id: 'tpl_yoga',
     name: 'Yoga',
-    description: 'Prática de yoga ou mobilidade.',
+    description: 'Prática de yoga.',
     category: 'corpo',
     icon: 'sparkles',
     color: 'violet',
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 20,
+    aliases: ['yoga', 'ioga', 'asana'],
+  },
+  {
+    id: 'tpl_mobilidade',
+    name: 'Mobilidade',
+    description: 'Articulações, amplitude e aquecimento.',
+    category: 'corpo',
+    icon: 'dumbbell',
+    color: 'emerald',
+    metric_kind: 'duration',
+    metric_unit: 'min',
+    goal_value: 10,
+    aliases: ['mobilidade', 'mobilizar', 'amplitude', 'aquecimento'],
   },
   {
     id: 'tpl_hidratar',
@@ -112,6 +145,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'count',
     metric_unit: 'copos',
     goal_value: 8,
+    aliases: ['água', 'agua', 'beber', 'hidratar', 'copo', 'tomar água'],
   },
   {
     id: 'tpl_organizar',
@@ -123,6 +157,31 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'none',
     metric_unit: null,
     goal_value: null,
+    aliases: ['organizar', 'organização', 'planejar', 'planejamento'],
+  },
+  {
+    id: 'tpl_cama',
+    name: 'Arrumar a cama',
+    description: 'Começar o dia com um gesto simples.',
+    category: 'vida',
+    icon: 'sun',
+    color: 'amber',
+    metric_kind: 'none',
+    metric_unit: null,
+    goal_value: null,
+    aliases: ['cama', 'arrumar', 'quarto', 'lençol'],
+  },
+  {
+    id: 'tpl_cuidados',
+    name: 'Cuidados pessoais',
+    description: 'Higiene, skincare ou um ritual que te cuida.',
+    category: 'vida',
+    icon: 'heart',
+    color: 'rose',
+    metric_kind: 'none',
+    metric_unit: null,
+    goal_value: null,
+    aliases: ['banho', 'higiene', 'skincare', 'dente', 'cuidados', 'rosto'],
   },
   {
     id: 'tpl_descanso',
@@ -134,6 +193,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 20,
+    aliases: ['pausa', 'descansar', 'descanso', 'folga', 'nap', 'sono'],
   },
 ];
 

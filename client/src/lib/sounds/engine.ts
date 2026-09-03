@@ -14,6 +14,18 @@ export function setSfxPack(pack: string) {
   sfxPack = PACKS[pack] ? pack : 'som_classico';
 }
 
+export function getSfxPack() {
+  return sfxPack;
+}
+
+export function restoreSfxPack(pack: string) {
+  if (previewRestoreTimer) {
+    clearTimeout(previewRestoreTimer);
+    previewRestoreTimer = null;
+  }
+  setSfxPack(pack);
+}
+
 function getPack() {
   return PACKS[sfxPack] ?? PACKS.som_classico;
 }

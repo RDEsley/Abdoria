@@ -1,4 +1,4 @@
-import { EvolynSproutMark } from '@/components/auth/EvolynSproutMark';
+import { APP_BOOT_MARK_SRC } from '@/lib/brand';
 
 /** Loading inicial exclusivo da abertura do app — não substitui loaders internos. */
 export function AppBootScreen() {
@@ -11,7 +11,7 @@ export function AppBootScreen() {
     >
       <div className="app-boot-screen__glow" aria-hidden />
       <div className="app-boot-screen__mark-wrap">
-        <EvolynSproutMark play="still" className="app-boot-screen__sprout" />
+        <img src={APP_BOOT_MARK_SRC} alt="" className="app-boot-screen__mark" width={128} height={128} />
       </div>
       <p className="app-boot-screen__tagline">Plantando a sua evolução.</p>
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { deriveActivityReminders, normalizePersonalizedReminders } from '@shared/reminders';
+import { listUnlockedReminderPacks } from '@shared/reminder-sounds';
 import { Capacitor } from '@capacitor/core';
 import { listActivities, listRoutines } from '@/lib/api/activities';
 import type { ActivityRecord, RoutineRecord } from '@shared/activities';
@@ -9,6 +10,7 @@ import type { ActivityRecord, RoutineRecord } from '@shared/activities';
 export function usePersonalizedReminders() {
   const { user } = useAuth();
   const optOut = user?.preferencias?.notificacoes_opt_out ?? false;
+  const unlockedSoundPacks = listUnlockedReminderPacks(user?.cosmeticos?.desbloqueados);
   const personal = useMemo(
     () => normalizePersonalizedReminders(user?.preferencias?.lembretes_personalizados ?? []),
     [user?.preferencias?.lembretes_personalizados],
@@ -40,7 +42,7 @@ export function usePersonalizedReminders() {
 
   useEffect(() => {
     const sync = () =>
-      void notificationScheduler.sync(reminders, { optOut }).catch((error) => {
+      void notificationScheduler.sync(reminders, { optOut, unlockedSoundPacks }).catch((error) => {
         console.error('Falha ao sincronizar lembretes personalizados:', error);
       });
 
@@ -64,5 +66,5 @@ export function usePersonalizedReminders() {
       window.removeEventListener('focus', sync);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [reminders, optOut]);
+  }, [reminders, optOut, unlockedSoundPacks]);
 }

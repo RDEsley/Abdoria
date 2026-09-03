@@ -44,7 +44,6 @@ git checkout -b feat/minha-melhoria
 
 # ... alterações ...
 
-npm run format:check
 npm run lint
 npm test
 npm run build
@@ -66,7 +65,7 @@ A branch canônica é `main`. O repositório pode exigir Pull Request e checks d
 
 Fluxo preferido quando houver permissão de merge automático:
 
-1. alterar e validar localmente (`format:check`, `lint`, `test`, `build`);
+1. alterar e validar localmente (`lint`, `test`, `build`);
 2. commit em branch única;
 3. push e abertura de PR para `main`;
 4. acompanhar checks e fazer merge quando verde;

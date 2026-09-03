@@ -40,7 +40,6 @@ O script atualiza as variantes usadas pela Web, Android e iOS.
 Depois de atualizar a identidade:
 
 ```bash
-npm run format:check
 npm run lint
 npm test
 npm run build

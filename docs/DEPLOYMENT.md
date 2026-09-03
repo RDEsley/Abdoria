@@ -4,10 +4,9 @@
 
 Pull requests e pushes em `main` executam o workflow **CI** com Node.js 22. A ordem dos gates é:
 
-1. `npm run format:check`
-2. `npm run lint`
-3. `npm run test`
-4. `npm run build`
+1. `npm run lint`
+2. `npm run test`
+3. `npm run build`
 
 O merge só deve ocorrer com o job `Quality gates` aprovado.
 

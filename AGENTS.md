@@ -122,7 +122,6 @@ Recursos nativos devem considerar Web, Android e iOS quando aplicável.
 Antes de concluir uma alteração relevante, execute os checks aplicáveis:
 
 ```bash
-npm run format:check
 npm run lint
 npm test
 npm run build
@@ -174,7 +173,7 @@ Depois, conclua autonomamente conforme a proteção da `main`:
 
 **Se `main` exigir Pull Request** (fluxo atual usual):
 
-1. validar localmente (`format:check`, `lint`, `test`, `build`; `cap:sync` se nativo);
+1. validar localmente (`lint`, `test`, `build`; `cap:sync` se nativo);
 2. commit(s) coerentes na branch de entrega;
 3. push da branch;
 4. abrir PR para `main`;

@@ -1,3 +1,4 @@
+import { sanitizeAbTrainingCustom } from '../../../shared/ab-training-profile.js';
 import type { AbTrainingProfileV2 } from '../../../shared/types/index.js';
 
 const INTENSITIES: AbTrainingProfileV2['intensity'][] = ['leve', 'moderado', 'evolyn'];
@@ -14,6 +15,8 @@ export function sanitizeAbTrainingProfileV2(raw: unknown): AbTrainingProfileV2 |
   if (value.version !== 2 || !intensity || !volume || days.length < 2) return null;
   const rawRest = Number(value.rest_seconds ?? 30);
   const restSeconds = Math.min(120, Math.max(10, Math.round(rawRest / 5) * 5));
+  const custom = sanitizeAbTrainingCustom(value.custom);
+  const mode = value.mode === 'custom' && custom ? 'custom' : 'preset';
 
   const now = new Date().toISOString();
   return {
@@ -22,6 +25,8 @@ export function sanitizeAbTrainingProfileV2(raw: unknown): AbTrainingProfileV2 |
     training_days: days,
     volume,
     rest_seconds: restSeconds,
+    mode,
+    custom: mode === 'custom' ? custom : null,
     created_at: typeof value.created_at === 'string' ? value.created_at : now,
     updated_at: now,
   };

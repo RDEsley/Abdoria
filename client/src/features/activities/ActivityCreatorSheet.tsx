@@ -1,14 +1,25 @@
 import { useMemo, useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
+import { PickerField } from '@/components/ui/PickerField';
 import {
   ACTIVITY_TEMPLATES,
   ACTIVITY_CATEGORIES,
+  matchActivityTemplate,
   type ActivityCategory,
   type ActivitySchedule,
 } from '@shared/activities';
 
 const STEPS = ['Nome', 'Modelo', 'Quando', 'Lembrar'] as const;
+const WEEKDAYS = [
+  { value: 0, label: 'D' },
+  { value: 1, label: 'S' },
+  { value: 2, label: 'T' },
+  { value: 3, label: 'Q' },
+  { value: 4, label: 'Q' },
+  { value: 5, label: 'S' },
+  { value: 6, label: 'S' },
+] as const;
 
 export function ActivityCreatorSheet({
   open,
@@ -22,8 +33,10 @@ export function ActivityCreatorSheet({
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [suggestedId, setSuggestedId] = useState<string | null>(null);
   const [category, setCategory] = useState<ActivityCategory>('mente');
-  const [kind, setKind] = useState<ActivitySchedule['kind']>('daily');
+  const [days, setDays] = useState<number[]>([]);
+  const [flexible, setFlexible] = useState(false);
   const [time, setTime] = useState('');
   const [remind, setRemind] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -32,20 +45,56 @@ export function ActivityCreatorSheet({
     () => ACTIVITY_TEMPLATES.find((item) => item.id === templateId) ?? null,
     [templateId],
   );
+  const displayName = name.trim() || template?.name || 'Nova atividade';
 
   const reset = () => {
     setStep(0);
     setName('');
     setTemplateId(null);
+    setSuggestedId(null);
     setCategory('mente');
-    setKind('daily');
+    setDays([]);
+    setFlexible(false);
     setTime('');
+    setRemind(false);
+  };
+
+  const goToTemplateStep = () => {
+    const match = matchActivityTemplate(name);
+    if (match) {
+      setSuggestedId(match.id);
+      setTemplateId((current) => current ?? match.id);
+      setCategory(match.category);
+    } else {
+      setSuggestedId(null);
+    }
+    setStep(1);
+  };
+
+  const toggleDay = (value: number) => {
+    setFlexible(false);
+    setDays((current) =>
+      current.includes(value)
+        ? current.filter((day) => day !== value)
+        : [...current, value].sort((a, b) => a - b),
+    );
+  };
+
+  const chooseFlexible = () => {
+    setFlexible(true);
+    setDays([]);
     setRemind(false);
   };
 
   const submit = async () => {
     setBusy(true);
     try {
+      const scheduled = !flexible && days.length > 0;
+      const kind: ActivitySchedule['kind'] = !scheduled
+        ? 'unscheduled'
+        : days.length === 7
+          ? 'daily'
+          : 'weekdays';
       await onCreate({
         name: name.trim() || template?.name || 'Atividade',
         category: template?.category ?? category,
@@ -58,9 +107,9 @@ export function ActivityCreatorSheet({
         schedule: {
           kind,
           times: time ? [time] : [],
-          weekdays: kind === 'weekdays' ? [1, 2, 3, 4, 5] : [],
+          weekdays: kind === 'weekdays' ? days : [],
         },
-        reminder: { enabled: remind && Boolean(time), offset_min: 0, follow_up: false },
+        reminder: { enabled: remind && scheduled && Boolean(time), offset_min: 0, follow_up: false },
       });
       reset();
       onClose();
@@ -76,8 +125,9 @@ export function ActivityCreatorSheet({
           {STEPS[step]}
         </p>
         <h2 id="activity-creator-title" className="game-section-title">
-          Nova atividade
+          {step === 2 ? displayName : 'Nova atividade'}
         </h2>
+        {step === 2 && <p className="mt-1 text-sm font-semibold text-stone-500">Quando você quer fazer?</p>}
 
         {step === 0 && (
           <input
@@ -108,11 +158,11 @@ export function ActivityCreatorSheet({
                 key={item.id}
                 type="button"
                 className={`activity-template${templateId === item.id ? ' activity-template--on' : ''}`}
-                onClick={() => {
-                  setTemplateId(item.id);
-                  if (!name) setName(item.name);
-                }}
+                onClick={() => setTemplateId(item.id)}
               >
+                {suggestedId === item.id && (
+                  <small className="activity-template__hint">Sugestão Evolyn</small>
+                )}
                 <strong>{item.name}</strong>
                 <small>{item.description}</small>
               </button>
@@ -121,28 +171,39 @@ export function ActivityCreatorSheet({
         )}
 
         {step === 2 && (
-          <div className="mt-3 flex flex-col gap-2">
-            {(
-              [
-                ['daily', 'Todos os dias'],
-                ['weekdays', 'Dias úteis'],
-                ['unscheduled', 'Quando quiser'],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                className={`activity-template${kind === id ? ' activity-template--on' : ''}`}
-                onClick={() => setKind(id)}
-              >
-                {label}
-              </button>
-            ))}
-            {kind !== 'unscheduled' && (
-              <label className="onb-field mt-2">
-                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
-              </label>
-            )}
+          <div className="mt-3 flex flex-col gap-3">
+            <div className="flex justify-between gap-1" aria-label="Dias da semana">
+              {WEEKDAYS.map((day, index) => (
+                <button
+                  key={`${day.value}-${index}`}
+                  type="button"
+                  className={`activity-day-chip${days.includes(day.value) && !flexible ? ' is-on' : ''}`}
+                  aria-pressed={days.includes(day.value) && !flexible}
+                  onClick={() => toggleDay(day.value)}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={`activity-template${flexible || days.length === 0 ? ' activity-template--on' : ''}`}
+              onClick={chooseFlexible}
+            >
+              Quando quiser
+            </button>
+            <PickerField
+              type="time"
+              label="Horário opcional"
+              emptyLabel="Selecionar horário"
+              value={time}
+              hint={
+                flexible || days.length === 0
+                  ? 'Sem dias definidos este horário fica só como preferência — não gera lembrete automático.'
+                  : undefined
+              }
+              onChange={(event) => setTime(event.target.value)}
+            />
           </div>
         )}
 
@@ -152,7 +213,7 @@ export function ActivityCreatorSheet({
               type="checkbox"
               checked={remind}
               onChange={(event) => setRemind(event.target.checked)}
-              disabled={!time}
+              disabled={!time || flexible || days.length === 0}
             />
             Lembrar neste horário
           </label>
@@ -165,7 +226,10 @@ export function ActivityCreatorSheet({
             </GameButton>
           )}
           {step < STEPS.length - 1 ? (
-            <GameButton className="flex-1" onClick={() => setStep((value) => value + 1)}>
+            <GameButton
+              className="flex-1"
+              onClick={() => (step === 0 ? goToTemplateStep() : setStep((value) => value + 1))}
+            >
               Continuar
             </GameButton>
           ) : (

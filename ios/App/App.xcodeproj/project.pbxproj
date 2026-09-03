@@ -16,6 +16,24 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		E5NS01B1F11E501F11E50F11 /* evolyn_8bit.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS01F1F11E501F11E50F11 /* evolyn_8bit.wav */; };
+		E5NS02B1F11E501F11E50F11 /* evolyn_arcade.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS02F1F11E501F11E50F11 /* evolyn_arcade.wav */; };
+		E5NS03B1F11E501F11E50F11 /* evolyn_bolha.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS03F1F11E501F11E50F11 /* evolyn_bolha.wav */; };
+		E5NS04B1F11E501F11E50F11 /* evolyn_boss.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS04F1F11E501F11E50F11 /* evolyn_boss.wav */; };
+		E5NS05B1F11E501F11E50F11 /* evolyn_chime.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS05F1F11E501F11E50F11 /* evolyn_chime.wav */; };
+		E5NS06B1F11E501F11E50F11 /* evolyn_classico.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS06F1F11E501F11E50F11 /* evolyn_classico.wav */; };
+		E5NS07B1F11E501F11E50F11 /* evolyn_cristal.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS07F1F11E501F11E50F11 /* evolyn_cristal.wav */; };
+		E5NS08B1F11E501F11E50F11 /* evolyn_epico.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS08F1F11E501F11E50F11 /* evolyn_epico.wav */; };
+		E5NS09B1F11E501F11E50F11 /* evolyn_metal.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS09F1F11E501F11E50F11 /* evolyn_metal.wav */; };
+		E5NS10B1F11E501F11E50F11 /* evolyn_noturno.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS10F1F11E501F11E50F11 /* evolyn_noturno.wav */; };
+		E5NS11B1F11E501F11E50F11 /* evolyn_pixel.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS11F1F11E501F11E50F11 /* evolyn_pixel.wav */; };
+		E5NS12B1F11E501F11E50F11 /* evolyn_pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS12F1F11E501F11E50F11 /* evolyn_pop.wav */; };
+		E5NS13B1F11E501F11E50F11 /* evolyn_retro.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS13F1F11E501F11E50F11 /* evolyn_retro.wav */; };
+		E5NS14B1F11E501F11E50F11 /* evolyn_silent.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS14F1F11E501F11E50F11 /* evolyn_silent.wav */; };
+		E5NS15B1F11E501F11E50F11 /* evolyn_suave.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS15F1F11E501F11E50F11 /* evolyn_suave.wav */; };
+		E5NS16B1F11E501F11E50F11 /* evolyn_treino.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS16F1F11E501F11E50F11 /* evolyn_treino.wav */; };
+		E5NS17B1F11E501F11E50F11 /* evolyn_vitoria.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS17F1F11E501F11E50F11 /* evolyn_vitoria.wav */; };
+		E5NS18B1F11E501F11E50F11 /* evolyn_zen.wav in Resources */ = {isa = PBXBuildFile; fileRef = E5NS18F1F11E501F11E50F11 /* evolyn_zen.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +48,24 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		E5NS01F1F11E501F11E50F11 /* evolyn_8bit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_8bit.wav; path = NotificationSounds/evolyn_8bit.wav; sourceTree = "<group>"; };
+		E5NS02F1F11E501F11E50F11 /* evolyn_arcade.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_arcade.wav; path = NotificationSounds/evolyn_arcade.wav; sourceTree = "<group>"; };
+		E5NS03F1F11E501F11E50F11 /* evolyn_bolha.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_bolha.wav; path = NotificationSounds/evolyn_bolha.wav; sourceTree = "<group>"; };
+		E5NS04F1F11E501F11E50F11 /* evolyn_boss.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_boss.wav; path = NotificationSounds/evolyn_boss.wav; sourceTree = "<group>"; };
+		E5NS05F1F11E501F11E50F11 /* evolyn_chime.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_chime.wav; path = NotificationSounds/evolyn_chime.wav; sourceTree = "<group>"; };
+		E5NS06F1F11E501F11E50F11 /* evolyn_classico.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_classico.wav; path = NotificationSounds/evolyn_classico.wav; sourceTree = "<group>"; };
+		E5NS07F1F11E501F11E50F11 /* evolyn_cristal.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_cristal.wav; path = NotificationSounds/evolyn_cristal.wav; sourceTree = "<group>"; };
+		E5NS08F1F11E501F11E50F11 /* evolyn_epico.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_epico.wav; path = NotificationSounds/evolyn_epico.wav; sourceTree = "<group>"; };
+		E5NS09F1F11E501F11E50F11 /* evolyn_metal.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_metal.wav; path = NotificationSounds/evolyn_metal.wav; sourceTree = "<group>"; };
+		E5NS10F1F11E501F11E50F11 /* evolyn_noturno.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_noturno.wav; path = NotificationSounds/evolyn_noturno.wav; sourceTree = "<group>"; };
+		E5NS11F1F11E501F11E50F11 /* evolyn_pixel.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_pixel.wav; path = NotificationSounds/evolyn_pixel.wav; sourceTree = "<group>"; };
+		E5NS12F1F11E501F11E50F11 /* evolyn_pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_pop.wav; path = NotificationSounds/evolyn_pop.wav; sourceTree = "<group>"; };
+		E5NS13F1F11E501F11E50F11 /* evolyn_retro.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_retro.wav; path = NotificationSounds/evolyn_retro.wav; sourceTree = "<group>"; };
+		E5NS14F1F11E501F11E50F11 /* evolyn_silent.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_silent.wav; path = NotificationSounds/evolyn_silent.wav; sourceTree = "<group>"; };
+		E5NS15F1F11E501F11E50F11 /* evolyn_suave.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_suave.wav; path = NotificationSounds/evolyn_suave.wav; sourceTree = "<group>"; };
+		E5NS16F1F11E501F11E50F11 /* evolyn_treino.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_treino.wav; path = NotificationSounds/evolyn_treino.wav; sourceTree = "<group>"; };
+		E5NS17F1F11E501F11E50F11 /* evolyn_vitoria.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_vitoria.wav; path = NotificationSounds/evolyn_vitoria.wav; sourceTree = "<group>"; };
+		E5NS18F1F11E501F11E50F11 /* evolyn_zen.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = evolyn_zen.wav; path = NotificationSounds/evolyn_zen.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +108,24 @@
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
+				E5NS01F1F11E501F11E50F11 /* evolyn_8bit.wav */,
+				E5NS02F1F11E501F11E50F11 /* evolyn_arcade.wav */,
+				E5NS03F1F11E501F11E50F11 /* evolyn_bolha.wav */,
+				E5NS04F1F11E501F11E50F11 /* evolyn_boss.wav */,
+				E5NS05F1F11E501F11E50F11 /* evolyn_chime.wav */,
+				E5NS06F1F11E501F11E50F11 /* evolyn_classico.wav */,
+				E5NS07F1F11E501F11E50F11 /* evolyn_cristal.wav */,
+				E5NS08F1F11E501F11E50F11 /* evolyn_epico.wav */,
+				E5NS09F1F11E501F11E50F11 /* evolyn_metal.wav */,
+				E5NS10F1F11E501F11E50F11 /* evolyn_noturno.wav */,
+				E5NS11F1F11E501F11E50F11 /* evolyn_pixel.wav */,
+				E5NS12F1F11E501F11E50F11 /* evolyn_pop.wav */,
+				E5NS13F1F11E501F11E50F11 /* evolyn_retro.wav */,
+				E5NS14F1F11E501F11E50F11 /* evolyn_silent.wav */,
+				E5NS15F1F11E501F11E50F11 /* evolyn_suave.wav */,
+				E5NS16F1F11E501F11E50F11 /* evolyn_treino.wav */,
+				E5NS17F1F11E501F11E50F11 /* evolyn_vitoria.wav */,
+				E5NS18F1F11E501F11E50F11 /* evolyn_zen.wav */,
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
 			path = App;
@@ -147,6 +201,24 @@
 				504EC30F1FED79650016851F /* Assets.xcassets in Resources */,
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
+				E5NS01B1F11E501F11E50F11 /* evolyn_8bit.wav in Resources */,
+				E5NS02B1F11E501F11E50F11 /* evolyn_arcade.wav in Resources */,
+				E5NS03B1F11E501F11E50F11 /* evolyn_bolha.wav in Resources */,
+				E5NS04B1F11E501F11E50F11 /* evolyn_boss.wav in Resources */,
+				E5NS05B1F11E501F11E50F11 /* evolyn_chime.wav in Resources */,
+				E5NS06B1F11E501F11E50F11 /* evolyn_classico.wav in Resources */,
+				E5NS07B1F11E501F11E50F11 /* evolyn_cristal.wav in Resources */,
+				E5NS08B1F11E501F11E50F11 /* evolyn_epico.wav in Resources */,
+				E5NS09B1F11E501F11E50F11 /* evolyn_metal.wav in Resources */,
+				E5NS10B1F11E501F11E50F11 /* evolyn_noturno.wav in Resources */,
+				E5NS11B1F11E501F11E50F11 /* evolyn_pixel.wav in Resources */,
+				E5NS12B1F11E501F11E50F11 /* evolyn_pop.wav in Resources */,
+				E5NS13B1F11E501F11E50F11 /* evolyn_retro.wav in Resources */,
+				E5NS14B1F11E501F11E50F11 /* evolyn_silent.wav in Resources */,
+				E5NS15B1F11E501F11E50F11 /* evolyn_suave.wav in Resources */,
+				E5NS16B1F11E501F11E50F11 /* evolyn_treino.wav in Resources */,
+				E5NS17B1F11E501F11E50F11 /* evolyn_vitoria.wav in Resources */,
+				E5NS18B1F11E501F11E50F11 /* evolyn_zen.wav in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

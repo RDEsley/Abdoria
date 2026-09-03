@@ -1,4 +1,5 @@
 import type { PersonalNotificationColor, PersonalNotificationIcon } from '@shared/reminders';
+import type { ReminderSoundId } from '@shared/reminder-sounds';
 
 export type RecurrenceDraft = 'once' | 'daily' | 'weekdays';
 
@@ -12,4 +13,5 @@ export interface ReminderDraftSlice {
   weekdays: number[];
   icon: PersonalNotificationIcon;
   color: PersonalNotificationColor;
+  sound: ReminderSoundId;
 }

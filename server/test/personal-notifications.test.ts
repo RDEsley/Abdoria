@@ -17,6 +17,7 @@ const recurring: PersonalizedReminder = {
   icon: 'water',
   color: 'sky',
   schedule: { kind: 'recurring', weekdays: [1, 3, 5], times: ['08:00', '16:00'] },
+  sound: 'app_default',
   enabled: true,
   createdAt: '2026-08-29T10:00:00.000Z',
   updatedAt: '2026-08-29T10:00:00.000Z',
@@ -54,14 +55,20 @@ describe('notificações personalizadas V2', () => {
     expect(items[0].title).toBe('Beber água');
   });
 
-  it('ignora campo sound legado silenciosamente', () => {
-    const parsed = normalizePersonalizedReminder({
-      ...recurring,
-      sound: 'evolyn_leaf',
-    });
-    expect(parsed).toBeTruthy();
-    expect(parsed!.title).toBe('Beber água');
-    expect('sound' in parsed!).toBe(false);
+  it('aceita lembretes antigos sem sound e aplica o padrão do app', () => {
+    const { sound: _ignored, ...withoutSound } = recurring;
+    void _ignored;
+    const parsed = normalizePersonalizedReminder(withoutSound);
+    expect(parsed?.sound).toBe('app_default');
+  });
+
+  it('preserva som válido e ignora som desconhecido', () => {
+    expect(normalizePersonalizedReminder({ ...recurring, sound: 'som_suave' })?.sound).toBe(
+      'som_suave',
+    );
+    expect(normalizePersonalizedReminder({ ...recurring, sound: 'evolyn_leaf' })?.sound).toBe(
+      'app_default',
+    );
   });
 
   it('gera recorrência semanal nativa sem janela de 14 dias', () => {

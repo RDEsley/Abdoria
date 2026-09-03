@@ -15,6 +15,7 @@ import {
   type PersonalNotificationIcon,
   type PersonalizedReminder,
 } from '@shared/reminders';
+import { DEFAULT_REMINDER_SOUND, listUnlockedReminderPacks, type ReminderSoundId } from '@shared/reminder-sounds';
 import { ReminderIcon } from './reminder-icons';
 import { ReminderNotificationPreview } from './ReminderNotificationPreview';
 import { ReminderPersonalizePanel } from './ReminderPersonalizePanel';
@@ -41,6 +42,7 @@ function emptyDraft(): Draft {
     weekdays: [],
     icon: 'neutral',
     color: 'neutral',
+    sound: DEFAULT_REMINDER_SOUND,
     enabled: true,
     createdAt: '',
   };
@@ -56,6 +58,7 @@ interface Draft {
   weekdays: number[];
   icon: PersonalNotificationIcon;
   color: PersonalNotificationColor;
+  sound: ReminderSoundId;
   enabled: boolean;
   createdAt: string;
 }
@@ -76,6 +79,7 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
       weekdays: [],
       icon: reminder.icon,
       color: reminder.color,
+      sound: reminder.sound,
       enabled: reminder.enabled,
       createdAt: reminder.createdAt,
     };
@@ -90,6 +94,7 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
     weekdays: reminder.schedule.weekdays,
     icon: reminder.icon,
     color: reminder.color,
+    sound: reminder.sound,
     enabled: reminder.enabled,
     createdAt: reminder.createdAt,
   };
@@ -98,6 +103,11 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
 export function ReminderCenter() {
   const { user } = useAuth();
   const { patchPreferences } = useUserPreferences();
+  const unlockedPacks = listUnlockedReminderPacks(user?.cosmeticos?.desbloqueados);
+  const syncOptions = {
+    optOut: user?.preferencias?.notificacoes_opt_out ?? false,
+    unlockedSoundPacks: unlockedPacks,
+  };
   const reminders = useMemo(
     () => normalizePersonalizedReminders(user?.preferencias?.lembretes_personalizados),
     [user?.preferencias?.lembretes_personalizados],
@@ -143,7 +153,8 @@ export function ReminderCenter() {
         return null;
       }
       const at = new Date(`${draft.onceDate}T${times[0]}:00`);
-      if (!Number.isFinite(at.getTime()) || at.getTime() <= Date.now()) {
+      const nowMs = new Date().getTime();
+      if (!Number.isFinite(at.getTime()) || at.getTime() <= nowMs) {
         setError('Escolha uma data e horário futuros.');
         return null;
       }
@@ -168,6 +179,7 @@ export function ReminderCenter() {
       message: draft.message.trim(),
       icon: draft.icon,
       color: draft.color,
+      sound: draft.sound,
       schedule,
       enabled: draft.enabled,
       createdAt: draft.createdAt || now,
@@ -186,15 +198,15 @@ export function ReminderCenter() {
         : [...reminders, reminder];
       await patchPreferences({ lembretes_personalizados: next });
 
-      const optOut = user?.preferencias?.notificacoes_opt_out ?? false;
+      const optOut = syncOptions.optOut;
       let finalPermission = await notificationScheduler.permissionState();
       if (!optOut && finalPermission === 'prompt') {
         finalPermission = await notificationScheduler.requestPermission();
       }
       if (!optOut && finalPermission === 'granted') {
-        await notificationScheduler.sync(next, { optOut });
+        await notificationScheduler.sync(next, syncOptions);
       } else if (!optOut) {
-        await notificationScheduler.sync(next, { optOut: true });
+        await notificationScheduler.sync(next, { ...syncOptions, optOut: true });
       }
 
       showGameToast(draft.id ? 'Notificação atualizada.' : 'Notificação programada.', {
@@ -215,8 +227,8 @@ export function ReminderCenter() {
 
   const replace = async (next: PersonalizedReminder[]) => {
     await patchPreferences({ lembretes_personalizados: next });
-    const optOut = user?.preferencias?.notificacoes_opt_out ?? false;
-    await notificationScheduler.sync(next, { optOut });
+    const optOut = syncOptions.optOut;
+    await notificationScheduler.sync(next, { ...syncOptions, optOut });
   };
 
   const toggleEnabled = async (reminder: PersonalizedReminder) => {
@@ -269,67 +281,11 @@ export function ReminderCenter() {
           </div>
           <ReminderNotificationPreview
             draft={draft}
+            unlockedPacks={unlockedPacks}
             onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
             titleInvalid={Boolean(error) && !draft.title.trim()}
             errorId={error ? 'personal-notification-error' : undefined}
           />
-
-          <label className="reminder-recurrence-field">
-            <span>Repetição</span>
-            <select
-              value={draft.recurrence}
-              onChange={(event) => {
-                void selectionHaptic();
-                setDraft((current) => ({
-                  ...current,
-                  recurrence: event.target.value as RecurrenceDraft,
-                }));
-              }}
-            >
-              <option value="daily">Todos os dias</option>
-              <option value="weekdays">Dias específicos</option>
-              <option value="once">Uma vez</option>
-            </select>
-          </label>
-
-          {draft.recurrence === 'once' && (
-            <label>
-              <span>Data</span>
-              <input
-                type="date"
-                value={draft.onceDate}
-                onChange={(event) =>
-                  setDraft((value) => ({ ...value, onceDate: event.target.value }))
-                }
-              />
-            </label>
-          )}
-
-          {draft.recurrence === 'weekdays' && (
-            <fieldset className="personal-notification-form__weekday-fieldset">
-              <legend>Em quais dias?</legend>
-              <div className="personal-notification-form__days">
-                {DAYS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={draft.weekdays.includes(value)}
-                    onClick={() => {
-                      void selectionHaptic();
-                      setDraft((current) => ({
-                        ...current,
-                        weekdays: current.weekdays.includes(value)
-                          ? current.weekdays.filter((day) => day !== value)
-                          : [...current.weekdays, value].sort(),
-                      }));
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-          )}
 
           <ReminderPersonalizePanel
             draft={draft}

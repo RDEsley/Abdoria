@@ -29,6 +29,7 @@ export {
   templatesByCategory,
   type ActivityTemplate,
 } from './templates.js';
+export { matchActivityTemplate } from './template-match.js';
 export {
   activityOccursOnDay,
   isTodaySchedule,

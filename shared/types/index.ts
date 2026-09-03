@@ -354,6 +354,14 @@ export interface PerfilTreino {
 
 export type AbTrainingIntensity = 'leve' | 'moderado' | 'evolyn';
 export type AbTrainingVolume = 'curto' | 'equilibrado' | 'completo';
+export type AbTrainingEffort = 'leve' | 'moderado' | 'intenso';
+export type AbTrainingMode = 'preset' | 'custom';
+
+/** Ajuste fino quando o modo do plano é personalizado. */
+export interface AbTrainingCustomConfig {
+  exercise_count: number;
+  effort: AbTrainingEffort;
+}
 
 /** Perfil abdominal atual. O legado continua legível durante a transição. */
 export interface AbTrainingProfileV2 {
@@ -363,6 +371,9 @@ export interface AbTrainingProfileV2 {
   volume: AbTrainingVolume;
   /** Descanso desejado entre séries, em segundos. */
   rest_seconds: number;
+  /** Ausente nos perfis V2 antigos = preset. */
+  mode?: AbTrainingMode;
+  custom?: AbTrainingCustomConfig | null;
   created_at: string;
   updated_at: string;
 }

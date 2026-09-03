@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { AuthProvider } from '@/context/AuthContext';
+import { BootReadinessProvider } from '@/context/boot-readiness';
 import { AchievementProvider } from '@/context/AchievementContext';
 import { AppDataProvider } from '@/components/auth/AppDataProvider';
 import { AppBootGate } from '@/components/auth/AppBootGate';
@@ -61,7 +62,12 @@ const RemindersPage = lazy(() =>
 );
 
 function LazyPage({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+  const booted = typeof document !== 'undefined' && document.documentElement.classList.contains('evolyn-booted');
+  return (
+    <Suspense fallback={booted ? <div className="route-fallback" aria-hidden /> : <PageLoader />}>
+      {children}
+    </Suspense>
+  );
 }
 
 /** Cada destino começa no topo, inclusive quando o navegador restaura a posição anterior. */
@@ -87,6 +93,7 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
+          <BootReadinessProvider>
           <AppBootGate>
             <MotionPreferenceGate>
               <AchievementProvider>
@@ -268,6 +275,7 @@ export default function App() {
               </AchievementProvider>
             </MotionPreferenceGate>
           </AppBootGate>
+          </BootReadinessProvider>
         </AuthProvider>
       </BrowserRouter>
     </PwaInstallProvider>
