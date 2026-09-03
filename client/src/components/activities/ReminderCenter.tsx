@@ -1,10 +1,8 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState } from 'react';
 import {
   AlarmClock,
   BellRing,
   BookOpen,
-  Check,
-  ChevronDown,
   Circle,
   Dumbbell,
   Droplets,
@@ -17,15 +15,15 @@ import {
   Star,
   Trash2,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
+import { stopNotificationSoundPreview } from '@/lib/notification-sound-preview';
 import {
-  PERSONAL_NOTIFICATION_COLORS,
-  PERSONAL_NOTIFICATION_ICONS,
   PERSONAL_NOTIFICATION_VERSION,
   describePersonalNotificationSchedule,
   normalizePersonalizedReminders,
@@ -36,6 +34,9 @@ import {
   type PersonalNotificationSound,
   type PersonalizedReminder,
 } from '@shared/reminders';
+import { getNotificationSound } from '@shared/notification-catalog';
+import { ReminderPersonalizePanel } from './ReminderPersonalizePanel';
+import type { RecurrenceDraft } from './reminder-form-types';
 
 const DAYS = [
   { value: 0, label: 'Dom' },
@@ -59,26 +60,37 @@ const ICONS = {
   star: Star,
 } satisfies Record<PersonalNotificationIcon, typeof Circle>;
 
-type RecurrenceDraft = 'once' | 'daily' | 'weekdays';
-
-function emptyDraft() {
+function emptyDraft(): Draft {
   return {
-    id: null as string | null,
+    id: null,
     title: '',
     message: '',
-    recurrence: 'daily' as RecurrenceDraft,
+    recurrence: 'daily',
     onceDate: '',
     times: ['19:00'],
-    weekdays: [] as number[],
-    icon: 'neutral' as PersonalNotificationIcon,
-    color: 'neutral' as PersonalNotificationColor,
-    sound: 'default' as PersonalNotificationSound,
+    weekdays: [],
+    icon: 'neutral',
+    color: 'neutral',
+    sound: 'system_default',
     enabled: true,
     createdAt: '',
   };
 }
 
-type Draft = ReturnType<typeof emptyDraft>;
+interface Draft {
+  id: string | null;
+  title: string;
+  message: string;
+  recurrence: RecurrenceDraft;
+  onceDate: string;
+  times: string[];
+  weekdays: number[];
+  icon: PersonalNotificationIcon;
+  color: PersonalNotificationColor;
+  sound: PersonalNotificationSound;
+  enabled: boolean;
+  createdAt: string;
+}
 
 function reminderToDraft(reminder: PersonalizedReminder): Draft {
   if (reminder.schedule.kind === 'once') {
@@ -136,6 +148,7 @@ export function ReminderCenter() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const closeForm = () => {
+    stopNotificationSoundPreview();
     setEditing(false);
     setDraft(emptyDraft());
     setError('');
@@ -271,7 +284,6 @@ export function ReminderCenter() {
     <section className="personal-notifications app-surface app-surface--notifications">
       <header className="personal-notifications__header">
         <div>
-          <p className="app-section-eyebrow">No seu ritmo</p>
           <h2 className="game-section-title flex items-center gap-2">
             <BellRing size={17} aria-hidden /> Notificações personalizadas
           </h2>
@@ -385,146 +397,15 @@ export function ReminderCenter() {
             <span>
               <SlidersHorizontal size={16} aria-hidden /> Personalizar
             </span>
-            <small>Mensagem, horários, ícone, cor e som</small>
+            <small>Mensagem, ícone, cor e sons</small>
             <ChevronDown size={17} aria-hidden />
           </button>
 
           {advancedOpen && (
-            <div className="personal-notification-form__advanced">
-              <label>
-                <span>
-                  Mensagem <small>opcional</small>
-                </span>
-                <textarea
-                  value={draft.message}
-                  maxLength={160}
-                  rows={2}
-                  placeholder="Adicione um contexto curto"
-                  onChange={(event) =>
-                    setDraft((value) => ({ ...value, message: event.target.value }))
-                  }
-                />
-              </label>
-
-              {draft.recurrence !== 'once' && (
-                <fieldset>
-                  <legend>Outros horários</legend>
-                  <div className="personal-notification-form__times">
-                    {draft.times.slice(1).map((time, extraIndex) => {
-                      const index = extraIndex + 1;
-                      return (
-                        <div key={index}>
-                          <input
-                            type="time"
-                            value={time}
-                            aria-label={`Horário adicional ${index}`}
-                            onChange={(event) =>
-                              setDraft((current) => ({
-                                ...current,
-                                times: current.times.map((entry, itemIndex) =>
-                                  itemIndex === index ? event.target.value : entry,
-                                ),
-                              }))
-                            }
-                          />
-                          <button
-                            type="button"
-                            aria-label={`Remover horário adicional ${index}`}
-                            onClick={() =>
-                              setDraft((current) => ({
-                                ...current,
-                                times: current.times.filter((_, itemIndex) => itemIndex !== index),
-                              }))
-                            }
-                          >
-                            <X size={16} aria-hidden />
-                          </button>
-                        </div>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      className="personal-notification-form__add-time"
-                      onClick={() =>
-                        setDraft((current) => ({ ...current, times: [...current.times, ''] }))
-                      }
-                    >
-                      <Plus size={15} aria-hidden /> Adicionar horário
-                    </button>
-                  </div>
-                </fieldset>
-              )}
-
-              <fieldset>
-                <legend>Ícone no Evolyn</legend>
-                <div className="personal-notification-form__icons">
-                  {PERSONAL_NOTIFICATION_ICONS.map((option) => {
-                    const Icon = ICONS[option.id];
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        title={option.label}
-                        aria-label={option.label}
-                        aria-pressed={draft.icon === option.id}
-                        onClick={() => {
-                          void selectionHaptic();
-                          setDraft((value) => ({ ...value, icon: option.id }));
-                        }}
-                      >
-                        <Icon size={18} aria-hidden />
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend>Cor</legend>
-                <div className="personal-notification-form__colors">
-                  {PERSONAL_NOTIFICATION_COLORS.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      title={option.label}
-                      aria-label={option.label}
-                      aria-pressed={draft.color === option.id}
-                      style={{ '--notification-color': option.hex } as CSSProperties}
-                      onClick={() => {
-                        void selectionHaptic();
-                        setDraft((value) => ({ ...value, color: option.id }));
-                      }}
-                    >
-                      {draft.color === option.id && <Check size={14} aria-hidden />}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend>Som</legend>
-                <div className="personal-notification-form__segments">
-                  {(
-                    [
-                      ['default', 'Padrão'],
-                      ['soft', 'Suave'],
-                      ['nature', 'Natureza'],
-                      ['motivational', 'Motivacional'],
-                      ['silent', 'Silencioso'],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={draft.sound === value}
-                      onClick={() => setDraft((current) => ({ ...current, sound: value }))}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-            </div>
+            <ReminderPersonalizePanel
+              draft={draft}
+              onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+            />
           )}
 
           {error && (
@@ -565,7 +446,10 @@ export function ReminderCenter() {
             </span>
             <div className="personal-notification-card__content">
               <strong>{reminder.title}</strong>
-              <small>{describePersonalNotificationSchedule(reminder)}</small>
+              <small>
+                {describePersonalNotificationSchedule(reminder)} ·{' '}
+                {getNotificationSound(reminder.sound).label}
+              </small>
             </div>
             <button
               type="button"

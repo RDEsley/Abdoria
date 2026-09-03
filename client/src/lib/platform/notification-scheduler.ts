@@ -5,8 +5,15 @@ import {
   isReminderDue,
   type PersonalizedReminder,
 } from '@shared/reminders';
+import { buildWebPushNotificationPayload } from '@shared/notification-catalog';
 import { Capacitor } from '@capacitor/core';
 import { ensureWebPushSubscription } from '@/lib/platform/web-push';
+import {
+  buildAndroidChannelSpec,
+  ensureAndroidNotificationChannels,
+  resolveIosNotificationSound,
+  resolveNativeLargeIconPath,
+} from '@/lib/notification-native';
 
 export type NotificationPermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -40,19 +47,21 @@ async function deliverFocusedWebReminders(reminders: PersonalizedReminder[]): Pr
     const deliveryKey = `evolyn:notification:${reminder.id}:${minuteKey}`;
     if (localStorage.getItem(deliveryKey)) continue;
 
+    const occurrenceKey = `${reminder.id}:focused:${minuteKey}`;
+    const payload = buildWebPushNotificationPayload(reminder, occurrenceKey);
     const registration = await navigator.serviceWorker?.getRegistration('/');
+    const options: NotificationOptions = {
+      body: payload.body,
+      icon: payload.icon,
+      badge: payload.badge,
+      tag: payload.tag,
+      silent: payload.silent,
+    };
+
     if (registration) {
-      await registration.showNotification(reminder.title, {
-        body: reminder.message,
-        icon: '/brand/favicon-192.png',
-        tag: reminder.id,
-      });
+      await registration.showNotification(payload.title, options);
     } else {
-      new Notification(reminder.title, {
-        body: reminder.message,
-        icon: '/brand/favicon-192.png',
-        tag: reminder.id,
-      });
+      new Notification(payload.title, options);
     }
     localStorage.setItem(deliveryKey, '1');
   }
@@ -114,54 +123,54 @@ const nativeNotificationScheduler: NotificationScheduler = {
 
     if (options?.optOut || permission.display !== 'granted') return;
 
-    if (Capacitor.getPlatform() === 'android') {
-      await Promise.all([
-        LocalNotifications.createChannel({
-          id: 'evolyn-personal-default',
-          name: 'Notificações personalizadas',
-          description: 'Alertas pessoais programados no Evolyn',
-          importance: 3,
-          sound: 'default',
-          vibration: true,
-        }),
-        LocalNotifications.createChannel({
-          id: 'evolyn-personal-silent',
-          name: 'Notificações silenciosas',
-          description: 'Alertas pessoais sem som ou vibração',
-          importance: 2,
-          vibration: false,
-        }),
-      ]);
-    }
-
     const now = Date.now();
-    const notifications = reminders
+    const planned = reminders
       .filter((item) => item.enabled)
       .flatMap((reminder) => {
         const color = PERSONAL_NOTIFICATION_COLORS.find(({ id }) => id === reminder.color)?.hex;
         return buildNativeNotificationSchedules(reminder)
           .filter((descriptor) => !descriptor.at || new Date(descriptor.at).getTime() > now)
-          .map((descriptor) => ({
-            id: numericId(reminder.id, descriptor.occurrenceKey),
-            title: reminder.title,
-            body: reminder.message,
-            schedule: descriptor.at
-              ? { at: new Date(descriptor.at) }
-              : {
-                  on: descriptor.on as {
-                    weekday?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-                    hour: number;
-                    minute: number;
+          .map((descriptor) => {
+            const channelSpec = buildAndroidChannelSpec(reminder.sound, descriptor.occurrenceKey);
+            return {
+              id: numericId(reminder.id, descriptor.occurrenceKey),
+              title: reminder.title,
+              body: reminder.message,
+              schedule: descriptor.at
+                ? { at: new Date(descriptor.at) }
+                : {
+                    on: descriptor.on as {
+                      weekday?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                      hour: number;
+                      minute: number;
+                    },
                   },
-                },
-            sound: reminder.sound === 'default' ? 'default' : undefined,
-            channelId:
-              reminder.sound === 'silent' ? 'evolyn-personal-silent' : 'evolyn-personal-default',
-            iconColor: color,
-            extra: { reminderId: reminder.id, icon: reminder.icon, color: reminder.color },
-          }));
+              channelId: channelSpec.id,
+              sound: resolveIosNotificationSound(reminder.sound, descriptor.occurrenceKey),
+              smallIcon: Capacitor.getPlatform() === 'android' ? 'ic_stat_evolyn' : undefined,
+              largeIcon:
+                Capacitor.getPlatform() === 'android'
+                  ? resolveNativeLargeIconPath(reminder.icon)
+                  : undefined,
+              iconColor: color,
+              extra: {
+                reminderId: reminder.id,
+                icon: reminder.icon,
+                color: reminder.color,
+                sound: reminder.sound,
+              },
+              channelSpec,
+            };
+          });
       })
       .slice(0, PERSONAL_NOTIFICATION_MAX_REQUESTS);
+
+    await ensureAndroidNotificationChannels(planned.map((item) => item.channelSpec));
+
+    const notifications = planned.map(({ channelSpec, ...notification }) => {
+      void channelSpec;
+      return notification;
+    });
 
     if (notifications.length) {
       const result = await LocalNotifications.schedule({ notifications });

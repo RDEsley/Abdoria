@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-09-03T01:06:29.281Z",
+  "sounds": [
+    "evolyn_leaf",
+    "evolyn_sprout",
+    "evolyn_xp",
+    "evolyn_achievement",
+    "evolyn_evolve",
+    "evolyn_golden_leaf",
+    "minimal_ping",
+    "minimal_pop",
+    "minimal_chime",
+    "minimal_bell",
+    "minimal_soft",
+    "minimal_pulse",
+    "nature_leaves",
+    "nature_water",
+    "nature_wind",
+    "nature_drop",
+    "nature_forest",
+    "melody_calm",
+    "melody_rise",
+    "melody_spark",
+    "playful_sparkle",
+    "playful_bounce"
+  ],
+  "icons": ["neutral", "water", "leaf", "workout", "study", "health", "alarm", "heart", "star"],
+  "checksum": "5b7df0d3a037"
+}

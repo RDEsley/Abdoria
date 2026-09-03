@@ -1,11 +1,18 @@
+import {
+  normalizeNotificationSound,
+  type PersonalNotificationIcon,
+  type PersonalNotificationSound,
+} from './notification-catalog.js';
+
 export const PERSONAL_NOTIFICATION_VERSION = 2 as const;
 export const PERSONAL_NOTIFICATION_MAX_REQUESTS = 64;
 
-export type PersonalNotificationIcon =
-  'neutral' | 'water' | 'leaf' | 'workout' | 'study' | 'health' | 'alarm' | 'heart' | 'star';
+export type {
+  PersonalNotificationIcon,
+  PersonalNotificationSound,
+} from './notification-catalog.js';
 export type PersonalNotificationColor =
   'neutral' | 'emerald' | 'sky' | 'indigo' | 'violet' | 'amber' | 'coral' | 'rose';
-export type PersonalNotificationSound = 'default' | 'soft' | 'nature' | 'motivational' | 'silent';
 
 export type PersonalNotificationSchedule =
   { kind: 'once'; at: string } | { kind: 'recurring'; times: string[]; weekdays: number[] };
@@ -124,7 +131,7 @@ function migrateLegacyReminder(value: LegacyPersonalizedReminder): PersonalizedR
     message: typeof value.message === 'string' ? value.message.trim().slice(0, 160) : '',
     icon: 'neutral',
     color: colorBySkin[legacySkin] ?? 'neutral',
-    sound: 'default',
+    sound: 'system_default',
     schedule: { kind: 'recurring', times: [time], weekdays },
     enabled: value.enabled !== false,
     createdAt,
@@ -167,13 +174,7 @@ export function normalizePersonalizedReminder(raw: unknown): PersonalizedReminde
     color: COLORS.has(raw.color as PersonalNotificationColor)
       ? (raw.color as PersonalNotificationColor)
       : 'neutral',
-    sound:
-      raw.sound === 'soft' ||
-      raw.sound === 'nature' ||
-      raw.sound === 'motivational' ||
-      raw.sound === 'silent'
-        ? raw.sound
-        : 'default',
+    sound: normalizeNotificationSound(raw.sound),
     schedule,
     enabled: raw.enabled !== false,
     createdAt,

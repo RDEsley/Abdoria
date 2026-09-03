@@ -4,6 +4,8 @@ self.addEventListener('push', (event) => {
     body: '',
     tag: 'evolyn-reminder',
     icon: '/brand/favicon-192.png',
+    badge: '/brand/favicon-192.png',
+    silent: false,
   };
   try {
     if (event.data) {
@@ -18,7 +20,9 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(payload.title, {
       body: payload.body,
       icon: payload.icon,
+      badge: payload.badge,
       tag: payload.tag,
+      silent: Boolean(payload.silent),
       data: { url: '/' },
     }),
   );
