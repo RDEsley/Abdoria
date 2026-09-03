@@ -1,0 +1,374 @@
+/*
+ * Evolyn Playful 2.0 — surface tokens & contextual card modifiers.
+ *
+ * Imported AFTER product-polish.css (last cascade layer) so that modifiers
+ * can override the neutral `.glass-card` / `.game-stat` base without
+ * specificity hacks.
+ *
+ * Design direction: Evolyn green base + playful colour identity per context.
+ * Strong treatment (gradient, orb, saturated border, coloured shadow) is
+ * reserved for identity & reward surfaces.  Content/reading surfaces (forms,
+ * long lists, settings, modals) stay neutral.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Accent tokens                                                    */
+/* ------------------------------------------------------------------ */
+
+.game-app {
+  /* Treino (teal / emerald) */
+  --accent-treino: #0d9679;
+  --accent-treino-soft: #d1fae5;
+  --accent-treino-deep: #065f46;
+
+  /* Rotina (indigo / violet) */
+  --accent-rotina: #7c3aed;
+  --accent-rotina-soft: #ede9fe;
+  --accent-rotina-deep: #4c1d95;
+
+  /* Streak (amber / orange) */
+  --accent-streak: #f59e0b;
+  --accent-streak-soft: #fef3c7;
+  --accent-streak-deep: #92400e;
+
+  /* XP (cyan / teal-light) */
+  --accent-xp: #06b6d4;
+  --accent-xp-soft: #cffafe;
+  --accent-xp-deep: #155e75;
+
+  /* Conquista (gold / amber-deep) */
+  --accent-conquista: #d97706;
+  --accent-conquista-soft: #fef9c3;
+  --accent-conquista-deep: #78350f;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Shared mixin for strong surfaces (via modifier classes)          */
+/*    Pattern: gradient 145deg + ::after orb + saturated border +      */
+/*    dual shadow (diffuse coloured + solid offset).                   */
+/* ------------------------------------------------------------------ */
+
+/* Base for any coloured glass-card variant */
+.game-app .glass-card[class*='glass-card--'],
+.game-app .game-stat[class*='game-stat--tone-'] {
+  position: relative;
+  overflow: hidden;
+  border-width: 1.5px;
+  border-style: solid;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Decorative orb (top-right, like .dashboard-surface::after) */
+.game-app .glass-card[class*='glass-card--']::after,
+.game-app .game-stat[class*='game-stat--tone-']::after {
+  content: '';
+  position: absolute;
+  top: -2.5rem;
+  right: -2rem;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Content above orb */
+.game-app .glass-card[class*='glass-card--'] > *,
+.game-app .game-stat[class*='game-stat--tone-'] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. glass-card context modifiers                                     */
+/* ------------------------------------------------------------------ */
+
+/* -- Treino -------------------------------------------------------- */
+.game-app .glass-card--treino {
+  border-color: rgb(13 150 121 / 28%);
+  background: linear-gradient(145deg, rgb(255 255 255 / 96%), rgb(236 253 245 / 92%));
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(13 150 121 / 12%);
+}
+.game-app .glass-card--treino::after {
+  background: rgb(13 150 121 / 10%);
+}
+
+/* -- Rotina -------------------------------------------------------- */
+.game-app .glass-card--rotina {
+  border-color: rgb(124 58 237 / 22%);
+  background: linear-gradient(145deg, rgb(255 255 255 / 96%), rgb(245 243 255 / 92%));
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(124 58 237 / 10%);
+}
+.game-app .glass-card--rotina::after {
+  background: rgb(124 58 237 / 8%);
+}
+
+/* -- Streak -------------------------------------------------------- */
+.game-app .glass-card--streak {
+  border-color: rgb(245 158 11 / 28%);
+  background: linear-gradient(145deg, rgb(255 255 255 / 96%), rgb(254 243 199 / 88%));
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(245 158 11 / 12%);
+}
+.game-app .glass-card--streak::after {
+  background: rgb(245 158 11 / 10%);
+}
+
+/* -- XP ------------------------------------------------------------ */
+.game-app .glass-card--xp {
+  border-color: rgb(6 182 212 / 24%);
+  background: linear-gradient(145deg, rgb(255 255 255 / 96%), rgb(207 250 254 / 88%));
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(6 182 212 / 10%);
+}
+.game-app .glass-card--xp::after {
+  background: rgb(6 182 212 / 9%);
+}
+
+/* -- Conquista ----------------------------------------------------- */
+.game-app .glass-card--conquista {
+  border-color: rgb(217 119 6 / 24%);
+  background: linear-gradient(145deg, rgb(255 255 255 / 96%), rgb(254 249 195 / 88%));
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(217 119 6 / 10%);
+}
+.game-app .glass-card--conquista::after {
+  background: rgb(217 119 6 / 9%);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. game-stat tone modifiers  (via `tone` prop → className)         */
+/* ------------------------------------------------------------------ */
+
+.game-app .game-stat--tone-treino {
+  border-color: rgb(13 150 121 / 22%);
+  background: linear-gradient(145deg, #fff 0%, #ecfdf5 100%);
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(13 150 121 / 10%);
+}
+.game-app .game-stat--tone-treino::after {
+  background: rgb(13 150 121 / 8%);
+}
+.game-app .game-stat--tone-treino .game-stat__value {
+  color: var(--accent-treino-deep);
+}
+
+.game-app .game-stat--tone-rotina {
+  border-color: rgb(124 58 237 / 18%);
+  background: linear-gradient(145deg, #fff 0%, #f5f3ff 100%);
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(124 58 237 / 8%);
+}
+.game-app .game-stat--tone-rotina::after {
+  background: rgb(124 58 237 / 7%);
+}
+.game-app .game-stat--tone-rotina .game-stat__value {
+  color: var(--accent-rotina-deep);
+}
+
+.game-app .game-stat--tone-streak {
+  border-color: rgb(245 158 11 / 22%);
+  background: linear-gradient(145deg, #fff 0%, #fef3c7 100%);
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(245 158 11 / 10%);
+}
+.game-app .game-stat--tone-streak::after {
+  background: rgb(245 158 11 / 8%);
+}
+.game-app .game-stat--tone-streak .game-stat__value {
+  color: var(--accent-streak-deep);
+}
+
+.game-app .game-stat--tone-xp {
+  border-color: rgb(6 182 212 / 20%);
+  background: linear-gradient(145deg, #fff 0%, #cffafe 100%);
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(6 182 212 / 8%);
+}
+.game-app .game-stat--tone-xp::after {
+  background: rgb(6 182 212 / 7%);
+}
+.game-app .game-stat--tone-xp .game-stat__value {
+  color: var(--accent-xp-deep);
+}
+
+.game-app .game-stat--tone-conquista {
+  border-color: rgb(217 119 6 / 20%);
+  background: linear-gradient(145deg, #fff 0%, #fef9c3 100%);
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(217 119 6 / 8%);
+}
+.game-app .game-stat--tone-conquista::after {
+  background: rgb(217 119 6 / 7%);
+}
+.game-app .game-stat--tone-conquista .game-stat__value {
+  color: var(--accent-conquista-deep);
+}
+
+/* xp-deep: darker variant for Level tile */
+.game-app .game-stat--tone-xp-deep {
+  border-color: rgb(6 182 212 / 26%);
+  background: linear-gradient(145deg, rgb(240 253 255) 0%, rgb(207 250 254 / 94%) 100%);
+  box-shadow:
+    var(--shadow-resting),
+    0 3px 0 rgb(6 182 212 / 12%);
+}
+.game-app .game-stat--tone-xp-deep::after {
+  background: rgb(6 182 212 / 11%);
+}
+.game-app .game-stat--tone-xp-deep .game-stat__value {
+  color: #0e7490;
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Player progress dots (state-based, replaces inline Tailwind)    */
+/* ------------------------------------------------------------------ */
+
+.game-progress-dot--done {
+  background: var(--accent-treino) !important;
+}
+
+.game-progress-dot--active {
+  background: var(--accent-streak) !important;
+  flex: 1.6 !important;
+  box-shadow: 0 0 6px rgb(245 158 11 / 38%);
+  animation: progress-dot-pulse 1.6s ease-in-out infinite;
+}
+
+.game-progress-dot--todo {
+  background: #d1ddd9 !important;
+}
+
+@keyframes progress-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. Micro-animations                                                 */
+/* ------------------------------------------------------------------ */
+
+@keyframes stat-value-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.stat-value-pop {
+  animation: stat-value-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bar-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.bar-shimmer {
+  background-size: 200% 100%;
+  animation: bar-shimmer 2s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Rest adjust buttons                                              */
+/* ------------------------------------------------------------------ */
+
+.game-rest-adjust-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--evolyn-line);
+  background: var(--evolyn-surface);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--evolyn-text);
+  box-shadow: var(--shadow-resting);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.game-rest-adjust-btn:active {
+  transform: scale(0.92);
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 8. Bottom nav redesign                                              */
+/* ------------------------------------------------------------------ */
+
+.game-bottom-nav {
+  border-top: 1.5px solid rgb(13 150 121 / 16%);
+  background: linear-gradient(180deg, rgb(255 255 255 / 98%), rgb(248 252 251 / 96%));
+}
+
+.game-bottom-nav__item {
+  position: relative;
+}
+
+.game-bottom-nav__indicator {
+  position: absolute;
+  top: -1px;
+  left: 15%;
+  right: 15%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--accent-treino);
+}
+
+.game-bottom-nav__item--active .game-bottom-nav__icon-wrap {
+  color: var(--accent-treino);
+}
+
+.game-bottom-nav__item--active span:last-child {
+  font-weight: 800;
+  color: var(--accent-treino-deep);
+}
+
+/* ------------------------------------------------------------------ */
+/* 9. Reduced motion — neutralise everything above                     */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .game-progress-dot--active {
+    animation: none;
+  }
+  .stat-value-pop {
+    animation: none;
+  }
+  .bar-shimmer {
+    animation: none;
+  }
+}
