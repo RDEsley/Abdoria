@@ -17,7 +17,6 @@
 
 ## Checklist técnico
 
-- [ ] `npm run format:check` passou
 - [ ] `npm run lint` passou
 - [ ] `npm test` passou
 - [ ] `npm run build` passou (client + server)

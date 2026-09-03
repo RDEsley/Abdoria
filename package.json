@@ -16,8 +16,6 @@
     "setup": "node scripts/setup.mjs",
     "postinstall": "npm install --prefix client && npm install --prefix server",
     "lint": "npm run lint --prefix client && npm run lint --prefix server",
-    "format": "prettier --write .",
-    "format:check": "node scripts/check-format.mjs",
     "test": "npm test --prefix server",
     "cap:sync": "npm run build --prefix client && cap sync",
     "cap:android": "npm run cap:sync && cap open android",
@@ -47,7 +45,6 @@
     "@capacitor/ios": "8.5.1",
     "@types/node": "^26.2.0",
     "concurrently": "^10.0.5",
-    "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   }
 }

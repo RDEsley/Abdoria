@@ -9,6 +9,7 @@ server/node_modules/
 !.env.example
 .env.local
 .env.*.local
+.env.vercel
 .env.vercel.*
 server/.env
 client/.env
@@ -20,7 +21,6 @@ client/.env
 *.keystore
 *.mobileprovision
 **/key.properties
-
 *.local
 
 # Bundle da API (gerado no deploy / build:vercel)
@@ -33,12 +33,15 @@ build/
 client/dist/
 server/dist/
 
-# Native build output
+# Native build output (detalhes em android/.gitignore e ios/.gitignore)
 android/.gradle/
 android/local.properties
 android/**/build/
+android/capacitor-cordova-android-plugins/
 ios/DerivedData/
 ios/**/xcuserdata/
+ios/App/Pods/
+ios/capacitor-cordova-ios-plugins/
 *.apk
 *.aab
 *.ipa
@@ -55,6 +58,8 @@ lerna-debug.log*
 coverage/
 .nyc_output/
 test-results/
+playwright-report/
+blob-report/
 
 # Caches
 .cache/
@@ -115,7 +120,7 @@ supabase/.temp/
 /entregas.md
 /.private/
 
-# Local brand source drops antigos
+# Drops locais de marca (fonte versionada: docs/internal/logos-icons/)
 /logos-icons/
 /favicons-atualizar/
 /resources/
