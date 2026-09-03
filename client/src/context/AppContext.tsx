@@ -19,6 +19,7 @@ import {
 import { AppContext } from '@/context/app-context';
 import { useAuth } from '@/hooks/useAuth';
 import { emitXpEarned } from '@/lib/xp-orbs';
+import { queueFrozenHomeCelebration } from '@/lib/home-celebrations';
 import type {
   CompleteWorkoutPayload,
   DashboardStats,
@@ -93,22 +94,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   /** Ignora respostas de /stats ultrapassadas e evita repetir o mesmo aviso. */
-  const commitStats = useCallback((next: DashboardStats, requestVersion: number) => {
-    if (requestVersion !== statsRequestVersion.current) return false;
+  const commitStats = useCallback(
+    (next: DashboardStats, requestVersion: number) => {
+      if (requestVersion !== statsRequestVersion.current) return false;
 
-    setStats(next);
-    if (next.streak_frozen_notice) {
-      if (!frozenNoticeShown.current) {
-        showGameToast('Um Frozen Streak protegeu um dia anterior da sua sequência.', {
-          variant: 'info',
+      setStats(next);
+      if (next.streak_frozen_notice && !frozenNoticeShown.current) {
+        frozenNoticeShown.current = true;
+        queueFrozenHomeCelebration({
+          userId: authenticatedUser?.id,
+          streak_atual: next.streak_frozen_event?.streak_atual ?? next.streak_atual,
+          frozen_days: next.streak_frozen_event?.frozen_days ?? [],
         });
+      } else if (!next.streak_frozen_notice) {
+        frozenNoticeShown.current = false;
       }
-      frozenNoticeShown.current = true;
-    } else {
-      frozenNoticeShown.current = false;
-    }
-    return true;
-  }, []);
+      return true;
+    },
+    [authenticatedUser?.id],
+  );
 
   const markStreakSecuredToday = useCallback(
     (nextUser: IUserDocument) => {
@@ -508,6 +512,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           new CustomEvent('abdoria:coins-earned', { detail: { amount: abdoriaGanha } }),
         );
       }
+      window.dispatchEvent(new Event('evolyn:quests-changed'));
       emitXpEarned(result.xp_ganho ?? 0);
       if (result.level_up) {
         window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: result.level_up }));

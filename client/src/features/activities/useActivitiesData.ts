@@ -18,7 +18,9 @@ import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { deriveActivityReminders } from '@shared/reminders';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/hooks/useAuth';
+import { useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { showGameToast } from '@/lib/game-toast';
+import { queueStreakUpCelebration } from '@/lib/home-celebrations';
 import { getErrorMessage } from '@/lib/api-errors';
 import type { ActivityLogRecord, ActivityRecord, RoutineRecord } from '@shared/activities';
 import type { EvolynInsight } from '@shared/activities';
@@ -26,7 +28,7 @@ import { addDaysSaoPaulo, getTodaySaoPaulo } from '@shared/utils/timezone';
 
 export function useActivitiesData() {
   const { refresh, markStreakSecuredToday } = useApp();
-  const { applyUser } = useAuth();
+  const { applyUser, user } = useAuth();
   const [activities, setActivities] = useState<ActivityRecord[]>([]);
   const [routines, setRoutines] = useState<RoutineRecord[]>([]);
   const [logs, setLogs] = useState<ActivityLogRecord[]>([]);
@@ -60,6 +62,10 @@ export function useActivitiesData() {
       .finally(() => setLoading(false));
   }, [reload]);
 
+  useMidnightRefresh(() => {
+    void reload();
+  });
+
   const complete = useCallback(
     async (
       activity: ActivityRecord,
@@ -92,6 +98,10 @@ export function useActivitiesData() {
         showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
         await reload();
         void refresh();
+        window.dispatchEvent(new Event('evolyn:quests-changed'));
+        if (result.streak_celebration) {
+          queueStreakUpCelebration(result.streak_celebration, user?.id);
+        }
         return result;
       } catch (error) {
         showGameToast(getErrorMessage(error, 'Não foi possível registrar.'), { variant: 'error' });
@@ -100,7 +110,7 @@ export function useActivitiesData() {
         setBusyId(null);
       }
     },
-    [applyUser, markStreakSecuredToday, refresh, reload],
+    [applyUser, markStreakSecuredToday, refresh, reload, user],
   );
 
   return {

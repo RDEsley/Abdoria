@@ -41,6 +41,7 @@ function SortableRoutineCard({
         transition,
         opacity: isDragging ? 0.5 : 1,
       }}
+      data-no-nav-swipe
       className="activity-quick-card flex items-center gap-2"
     >
       <button
@@ -102,18 +103,20 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
         </p>
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={orderedRoutines.map((r) => r.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {orderedRoutines.map((routine) => (
-            <SortableRoutineCard
-              key={routine.id}
-              routine={routine}
-              onClick={() => navigate(`/rotina/${routine.id}`)}
-            />
-          ))}
-        </SortableContext>
+        <div className="flex flex-col gap-3" data-no-nav-swipe>
+          <SortableContext
+            items={orderedRoutines.map((r) => r.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {orderedRoutines.map((routine) => (
+              <SortableRoutineCard
+                key={routine.id}
+                routine={routine}
+                onClick={() => navigate(`/rotina/${routine.id}`)}
+              />
+            ))}
+          </SortableContext>
+        </div>
       </DndContext>
       <GameButton
         variant="secondary"

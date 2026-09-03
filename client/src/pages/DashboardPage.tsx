@@ -28,7 +28,9 @@ import { InsightCard } from '@/features/home/InsightCard';
 import { WeekStrip } from '@/features/home/WeekStrip';
 import { MomentumBar } from '@/components/dashboard/MomentumBar';
 import { QuestCard } from '@/components/quests/QuestCard';
+import { HomeCelebrationHost } from '@/components/dashboard/HomeCelebrationHost';
 import { WeekRetroCard } from '@/components/dashboard/WeekRetroCard';
+import { useMidnightRefresh } from '@/context/MidnightRefreshContext';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -47,6 +49,13 @@ export function DashboardPage() {
   const { stats, loading, refresh, loadRecommendations } = useApp();
   const [day, setDay] = useState<DaySnapshot | null>(null);
   const [retroDismissed, setRetroDismissed] = useState(false);
+
+  useMidnightRefresh(() => {
+    void refresh();
+    void getDaySnapshot()
+      .then(setDay)
+      .catch(() => setDay(null));
+  });
 
   useEffect(() => {
     if (!loading && stats) void loadRecommendations();
@@ -89,6 +98,7 @@ export function DashboardPage() {
       animate="show"
       className="relative flex flex-col gap-5"
     >
+      <HomeCelebrationHost />
       <StreakRecoveryPrompt />
       <RatingPrompt />
       <SuggestionPrompt />
@@ -156,15 +166,19 @@ export function DashboardPage() {
           tone="streak"
           icon={<Flame className="text-orange-500" size={22} />}
           title="Streak Evolyn"
-          value={`${stats.streak_atual}d`}
-          hint={`Recorde ${stats.streak_maior} dias`}
+          value={stats.streak_atual}
+          hint={`Recorde ${stats.streak_maior}`}
         />
         <StatTile
           tone="xp"
           icon={<Timer className="text-sky-600" size={22} />}
-          title="Tempo de treino"
-          value={formatTrainingDuration(stats.total_segundos ?? stats.total_minutos * 60)}
-          hint="Só sessões de treino"
+          title="Tempo esta semana"
+          value={
+            (stats.segundos_semana ?? 0) > 0
+              ? formatTrainingDuration(stats.segundos_semana ?? 0)
+              : '—'
+          }
+          hint={(stats.segundos_semana ?? 0) > 0 ? 'Só sessões de treino' : 'Nenhum treino ainda'}
         />
       </motion.div>
 

@@ -269,22 +269,34 @@ export function ReminderCenter() {
       <header className="personal-notifications__header">
         <div>
           <h2 className="game-section-title flex items-center gap-2">
-            <BellRing size={17} aria-hidden /> Notificações personalizadas
+            <BellRing size={17} aria-hidden /> Lembretes personalizados
           </h2>
-          <p>Alertas locais para qualquer parte da sua rotina.</p>
+          <p>Crie alertas locais para água, treino, estudo ou o que fizer sentido pra você.</p>
         </div>
-        <button
-          type="button"
-          onClick={editing ? closeForm : openCreate}
-          className="personal-notifications__add"
-          aria-label={editing ? 'Fechar formulário' : 'Criar notificação personalizada'}
-        >
-          {editing ? <X size={19} aria-hidden /> : <Plus size={19} aria-hidden />}
-        </button>
       </header>
+
+      {!editing && (
+        <button type="button" onClick={openCreate} className="personal-notifications__create">
+          <Plus size={18} aria-hidden />
+          Novo lembrete
+        </button>
+      )}
 
       {editing && (
         <div className="personal-notification-form" aria-label="Configurar notificação">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-extrabold text-stone-800">
+              {draft.id ? 'Editar lembrete' : 'Novo lembrete'}
+            </p>
+            <button
+              type="button"
+              onClick={closeForm}
+              className="personal-notifications__add"
+              aria-label="Fechar formulário"
+            >
+              <X size={19} aria-hidden />
+            </button>
+          </div>
           <div className="personal-notification-form__quick">
             <label className="personal-notification-form__title">
               <span>O que você quer lembrar?</span>

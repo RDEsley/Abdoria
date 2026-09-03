@@ -145,6 +145,10 @@ export function playUnlock() {
   playSequence(getPack().unlock, 'square');
 }
 
+export function playStreak() {
+  playSequence(getPack().streak, 'triangle');
+}
+
 /** Som de conquista — pack épico por padrão; usa o som equipado nas configurações. */
 export function playAchievementUnlock(customSoundUrl?: string) {
   if (!enabled) return;

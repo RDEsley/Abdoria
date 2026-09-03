@@ -9,6 +9,7 @@ import {
   ACHIEVEMENTS,
   getAchievementUnlockPercentages,
   getWeeklyMuscles,
+  getWeeklyTrainingSeconds,
   hasStreakSecuredToday,
   hasTrainedToday,
   resetXpDiarioIfNeeded,
@@ -137,6 +138,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       treinoHoje,
       sequenciaGarantidaHoje,
       weeklyMuscles,
+      weeklyTrainingSeconds,
       monthly,
       totalExercisesAgg,
       totalDurationAgg,
@@ -146,6 +148,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       hasTrainedToday(userId),
       hasStreakSecuredToday(userId),
       getWeeklyMuscles(userId, user.muscle_map_reset_at ?? null),
+      getWeeklyTrainingSeconds(userId),
       WorkoutHistory.aggregate([
         { $match: { usuario_id: user.id, concluido_em: { $gte: sixMonthsAgo } } },
         {
@@ -186,9 +189,13 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
 
     const totalSegundos = Math.round((totalDurationAgg[0] as { total?: number })?.total ?? 0);
     const inventario = readInventarioSummary(user);
-    const streakFrozenNotice = Boolean(user.gamificacao.streak_freeze_notice_pending);
+    const frozenEvent = user.gamificacao.streak_freeze_notice ?? null;
+    const streakFrozenNotice = Boolean(
+      user.gamificacao.streak_freeze_notice_pending || frozenEvent,
+    );
     if (streakFrozenNotice) {
       user.gamificacao.streak_freeze_notice_pending = false;
+      user.gamificacao.streak_freeze_notice = null;
       await user.saveColumns(['gamificacao']);
     }
 
@@ -201,6 +208,7 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       treino_sugerido: null,
       alertas_recomendacao: [],
       total_segundos: totalSegundos,
+      segundos_semana: weeklyTrainingSeconds,
       total_minutos: Math.floor(totalSegundos / 60),
       streak_atual: user.gamificacao.streak_atual,
       streak_maior: user.gamificacao.streak_maior,
@@ -216,6 +224,12 @@ workoutsRouter.get('/stats', async (req: AuthRequest, res) => {
       inventario,
       frozen_streak_count: inventario.frozen_streak,
       streak_frozen_notice: streakFrozenNotice,
+      streak_frozen_event: streakFrozenNotice
+        ? {
+            frozen_days: frozenEvent?.frozen_days ?? [],
+            streak_atual: frozenEvent?.streak_atual ?? user.gamificacao.streak_atual,
+          }
+        : null,
       conquistas,
       musculos_semana: weeklyMuscles,
       evolucao_mensal: (monthly as { _id: string; minutos: number }[]).map((m) => ({

@@ -27,6 +27,7 @@ import {
   getHourSaoPaulo,
   getSaoPauloWeekday,
   getWeekStartSaoPaulo,
+  startOfDayKeySaoPaulo,
   startOfDaySaoPaulo,
   endOfDaySaoPaulo,
 } from '../utils/timezone.js';
@@ -79,6 +80,10 @@ function applyStreakFreezeProtection(user: UserRecord, dayKeys: string[]): strin
 
   user.gamificacao.streak_congelamentos.push(...missedDays);
   user.gamificacao.streak_freeze_notice_pending = true;
+  user.gamificacao.streak_freeze_notice = {
+    frozen_days: missedDays,
+    streak_atual: streakWithPendingFreeze.atual,
+  };
   user.gamificacao.streak_atual = streakWithPendingFreeze.atual;
   user.gamificacao.streak_maior = Math.max(
     user.gamificacao.streak_maior,
@@ -167,6 +172,16 @@ export async function getWeeklyMuscles(
   }
 
   return counts;
+}
+
+export async function getWeeklyTrainingSeconds(userId: string): Promise<number> {
+  const since = startOfDayKeySaoPaulo(getWeekStartSaoPaulo());
+  const histories = await WorkoutHistory.find({
+    usuario_id: userId,
+    somenteTreino: true,
+    concluido_em: { $gte: since.toISOString() },
+  });
+  return Math.round(histories.reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0));
 }
 
 export function resetXpDiarioIfNeeded(user: UserRecord): boolean {
@@ -339,7 +354,7 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     .reduce((sum, h) => sum + (h.duracao_total_segundos ?? 0), 0);
   const totalSeconds = workoutSeconds;
 
-  const frozenDays = applyStreakFreezeProtection(user, dayKeys);
+  applyStreakFreezeProtection(user, dayKeys);
 
   const frozenDates = user.gamificacao.streak_congelamentos ?? [];
   const streakAfterFreeze = computeStreakFromDayKeys(dayKeys, frozenDates);
@@ -384,9 +399,7 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
   // cliente. `preferencias` aqui é apenas LIDA (frozen_streak_auto_usar).
   await user.saveColumns(['gamificacao', 'inventario', 'xp_diario']);
 
-  if (frozenDays.length > 0) {
-    await notifyStreakFrozen(userId, frozenDays);
-  }
+  // Frozen Streak: feedback visual na Home (não cria mais item na Caixa de Entrada).
   if (newRecoveryOffer) {
     await notifyStreakRecoveryAvailable(userId, newRecoveryOffer);
   }
@@ -441,19 +454,6 @@ async function notifyStreakRecoveryAvailable(
       titulo: 'Recupere sua sequência!',
       corpo: `Você perdeu uma sequência de ${offer.dias_perdidos} dia(s) — recupere por ${offer.custo_coins} Folhas antes que expire.`,
       payload: { dias_perdidos: offer.dias_perdidos, custo_coins: offer.custo_coins },
-    },
-  ]);
-}
-
-async function notifyStreakFrozen(userId: string, frozenDays: string[]): Promise<void> {
-  const dayLabel = frozenDays.length === 1 ? 'dia perdido' : `${frozenDays.length} dias perdidos`;
-  await Notifications.createMany([
-    {
-      user_id: userId,
-      tipo: 'streak_frozen',
-      titulo: 'Frozen Streak salvou sua ofensiva!',
-      corpo: `Nenhuma ação registrada, mas ${dayLabel} foram protegidos e sua sequência continua.`,
-      payload: { frozen_days: frozenDays },
     },
   ]);
 }

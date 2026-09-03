@@ -65,6 +65,8 @@ import {
   toSavedPresetId,
 } from '@/types';
 
+const TREINO_TABS = ['train', 'customize'] as const;
+
 export function TrainingPage() {
   const {
     exercises,
@@ -94,7 +96,6 @@ export function TrainingPage() {
   const presetFromUrl = searchParams.get('preset');
   const modeFromUrl = searchParams.get('modo');
 
-  const TREINO_TABS = ['train', 'customize'] as const;
   const [activeTab, setActiveTab] = useStickyTab<BuilderTab>(
     'evolyn:treino-tab',
     TREINO_TABS,
@@ -872,16 +873,6 @@ export function TrainingPage() {
 
       {xpCapReached && <DailyXpCapBanner />}
 
-      {stats && (
-        <section className="glass-card p-4">
-          <h3 className="game-section-title !mb-1">Equilíbrio do core</h3>
-          <p className="mb-3 text-xs font-semibold text-stone-500">
-            Como seus treinos distribuíram os estímulos nesta semana.
-          </p>
-          <MuscleBarChart muscles={stats.musculos_semana} />
-        </section>
-      )}
-
       <BuilderTabs active={activeTab} onChange={handleTabChange} />
 
       {activeTab === 'train' && (
@@ -1032,6 +1023,16 @@ export function TrainingPage() {
             </GameButton>
           )}
         </div>
+      )}
+
+      {stats && (
+        <section className="glass-card glass-card--treino p-4">
+          <h3 className="game-section-title !mb-1">Equilíbrio do core</h3>
+          <p className="mb-3 text-xs font-semibold text-stone-500">
+            Como seus treinos distribuíram os estímulos nesta semana.
+          </p>
+          <MuscleBarChart muscles={stats.musculos_semana} />
+        </section>
       )}
 
       <CreateSchemeModal

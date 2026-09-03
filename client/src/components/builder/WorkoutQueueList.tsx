@@ -46,7 +46,7 @@ export function WorkoutQueueList({
   }
 
   return (
-    <div className="workout-queue">
+    <div className="workout-queue" data-no-nav-swipe>
       <div className="workout-queue__header">
         <span className="workout-queue__header-icon">
           <ListChecks size={18} aria-hidden />

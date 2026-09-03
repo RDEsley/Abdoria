@@ -8,7 +8,7 @@ export function RemindersPage() {
     <div className="flex flex-col gap-4 pb-24">
       <GamePageHeader
         eyebrow="Alertas do seu jeito"
-        title="Notificações"
+        title="Lembretes"
         onBack={() => navigate('/atividades')}
         backIcon="x"
         backAlign="right"

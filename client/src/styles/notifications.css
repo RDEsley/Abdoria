@@ -243,6 +243,53 @@
     background 160ms ease;
 }
 
+.personal-notifications__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 2.85rem;
+  margin-top: 0.85rem;
+  padding: 0.65rem 1rem;
+  border: 2.5px solid #16332e;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #67e8f9 0%, #06b6d4 100%);
+  color: #083344;
+  font-size: 0.82rem;
+  font-weight: 900;
+  box-shadow: 0 3px 0 #16332e;
+}
+
+.personal-notifications__create:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #16332e;
+}
+
+.activities-reminder-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  max-width: 42%;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 2.5px solid #16332e;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ecfeff 0%, #cffafe 100%);
+  color: #0e7490;
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.1;
+  text-decoration: none;
+  box-shadow: 0 2px 0 #16332e;
+}
+
+.activities-reminder-cta:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #16332e;
+}
+
 .personal-notifications__add:active,
 .personal-notification-card__action:active {
   transform: scale(0.95);
