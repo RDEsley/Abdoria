@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 
 export type StatTileTone = 'treino' | 'rotina' | 'streak' | 'xp' | 'xp-deep' | 'conquista';
+export type StatTileAmbient = 'streak' | 'tempo';
 
 interface Props {
   title: ReactNode;
@@ -11,6 +12,13 @@ interface Props {
   className?: string;
   /** Colour tone — maps to `.game-stat--tone-{tone}` in surfaces.css. */
   tone?: StatTileTone;
+  /**
+   * Camada decorativa ambiente (opcional) — orbes muito sutis em CSS puro
+   * (transform/opacity, sem canvas nem rAF). `streak` sobe brasas âmbar
+   * devagar; `tempo` flutua anéis ciano com um movimento diferente. Some
+   * sozinha com `prefers-reduced-motion`.
+   */
+  ambient?: StatTileAmbient;
   /** Presente = o tile vira um botão (ex.: recorde de streak, clicável). */
   onClick?: () => void;
 }
@@ -37,6 +45,7 @@ export function StatTile({
   icon,
   className = '',
   tone,
+  ambient,
   onClick,
 }: Props) {
   const len = valueLength(value);
@@ -45,6 +54,13 @@ export function StatTile({
 
   const content = (
     <>
+      {ambient && (
+        <span className={`game-stat__ambient game-stat__ambient--${ambient}`} aria-hidden="true">
+          <span className="game-stat__ambient-orb" />
+          <span className="game-stat__ambient-orb" />
+          <span className="game-stat__ambient-orb" />
+        </span>
+      )}
       <div className="game-stat__head">
         {icon}
         <span className="game-stat__title">{title}</span>

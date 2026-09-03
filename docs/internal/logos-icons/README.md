@@ -4,7 +4,9 @@ Esta pasta é a fonte de verdade da marca e não é importada pelo runtime.
 
 - `logo-oficial/`: símbolo transparente para favicon, splash e superfícies pequenas;
 - `logo-completa-transparente/`: assinatura completa com o texto “Plantando a sua evolução.”;
-- `app-icon.png`: composição quadrada para PWA, Android e iOS.
+- `app-icon.png`: composição quadrada para PWA, Android e iOS;
+- `broto-assistente.png`: mascote usado como imagem das notificações do sistema
+  (`client/public/media/notifications/icons/evolyn-96.png` e `evolyn-192.png`).
 
 Para gerar as cópias consumidas pelas plataformas:
 

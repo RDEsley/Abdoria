@@ -1,5 +1,7 @@
 import { fetchJson } from './client';
-import type { EvolynInsight } from '@shared/activities';
+import type { ActivitySchedule, DayGuideItem, EvolynInsight } from '@shared/activities';
+
+export type DayGuideEntry = Omit<DayGuideItem, 'score'>;
 
 export interface DaySnapshot {
   day_key: string;
@@ -16,8 +18,11 @@ export interface DaySnapshot {
     color: string;
     items_total: number;
     items_done: number;
+    scheduled_today: boolean;
+    schedule: ActivitySchedule;
   }>;
-  next_up: Array<{ kind: 'workout' | 'activity' | 'routine'; title: string; href: string }>;
+  /** "A seguir" — primary suggestion, plus an optional secondary preview. */
+  next_up: DayGuideEntry[];
   week: Array<{
     day_key: string;
     active: boolean;

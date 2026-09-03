@@ -24,11 +24,11 @@ export function getDefaultChannelId(): string {
   return DEFAULT_CHANNEL_ID;
 }
 
-export function resolveNativeLargeIconPath(icon: string): string {
+export function resolveNativeLargeIconPath(): string {
   if (Capacitor.getPlatform() === 'android') {
-    return `file:///android_asset/public/media/notifications/icons/${icon}-192.png`;
+    return 'file:///android_asset/public/media/notifications/icons/evolyn-192.png';
   }
-  return `/media/notifications/icons/${icon}-192.png`;
+  return '/media/notifications/icons/evolyn-192.png';
 }
 
 export async function ensureAndroidNotificationChannels(): Promise<void> {

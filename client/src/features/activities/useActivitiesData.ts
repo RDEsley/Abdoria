@@ -8,6 +8,7 @@ import {
   listActivityLogs,
   listRoutines,
   updateActivity,
+  updateRoutine,
   archiveRoutine,
 } from '@/lib/api/activities';
 import { getInsights } from '@/lib/api/day';
@@ -94,6 +95,15 @@ export function useActivitiesData() {
         for (const reminder of derived) {
           void notificationScheduler.cancel(reminder.id);
         }
+        if (options?.routineId) {
+          const routine = routines.find((entry) => entry.id === options.routineId);
+          const item = routine?.items?.find((entry) => entry.activity_id === activity.id);
+          if (item?.reminder_enabled && item.scheduled_time) {
+            void notificationScheduler.cancel(
+              `routine-item:${routine!.id}:${activity.id}:${item.scheduled_time}`,
+            );
+          }
+        }
         const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
         showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
         await reload();
@@ -110,7 +120,7 @@ export function useActivitiesData() {
         setBusyId(null);
       }
     },
-    [applyUser, markStreakSecuredToday, refresh, reload, user],
+    [applyUser, markStreakSecuredToday, refresh, reload, routines, user],
   );
 
   return {
@@ -126,6 +136,7 @@ export function useActivitiesData() {
     updateActivity,
     archiveActivity,
     createRoutine,
+    updateRoutine,
     archiveRoutine,
   };
 }

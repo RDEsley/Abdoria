@@ -8,6 +8,15 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-03
 
+### Assistente do Dia, Rotinas e UX
+
+- Guia "A seguir" (`buildDayGuide`) substitui o `next_up` de ordem fixa. Quick Actions da Home foram removidas.
+- Frozen: celebração mostra `preserved_streak`; ação válida no mesmo fluxo pode seguir com 10 → 11.
+- Rotinas: agenda opcional, horário/lembrete por item, isolamento de execução por `routine_id`, vitória só na conclusão real.
+- Lembretes: prévia no topo é o editor; sem autofocus. Derivados de rotina/item reutilizam Web Push/cron/native com IDs `routine:` / `routine-item:`.
+- Cards Streak/Tempo centralizados com ambient CSS leve. Sidebar desktop com pill emerald (sem moldura preta dupla).
+- Momentum usa hora de SP. WeekStrip = 7 dias; retrospectiva = Seg–Dom.
+
 ### Playful 2.0
 
 - Superfícies contextuais (treino/rotina/streak/XP/conquista) em `client/src/styles/surfaces.css`.

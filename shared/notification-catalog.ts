@@ -5,27 +5,37 @@
  * the default platform/OS sound.  Legacy `sound` values in persisted JSONB
  * are silently ignored (see reminders.ts normalisation).
  *
- * Only icon / badge helpers and the web-push payload builder remain.
+ * A imagem de sistema das notificações Evolyn é o broto-assistente
+ * (`evolyn-96` / `evolyn-192`). Ícones de categoria (água, treino…) ficam
+ * só na personalização in-app.
  */
 
 export type PersonalNotificationIcon =
   'neutral' | 'water' | 'leaf' | 'workout' | 'study' | 'health' | 'alarm' | 'heart' | 'star';
 
+/** Ícone colorido (tray / large icon) — broto-assistente. */
+export const EVOLYN_NOTIFICATION_ICON = '/media/notifications/icons/evolyn-192.png';
+
+/** Badge monochrome-friendly menor — mesma arte em 96px. */
+export const EVOLYN_NOTIFICATION_BADGE = '/media/notifications/icons/evolyn-96.png';
+
+export const NOTIFICATION_ICON_FALLBACK = EVOLYN_NOTIFICATION_ICON;
+
+/** @deprecated Prefer EVOLYN_NOTIFICATION_* — categorias não vão mais pro SO. */
 export function getNotificationIconUrl(
   icon: PersonalNotificationIcon,
   size: 96 | 192 = 192,
 ): string {
-  return `/media/notifications/icons/${icon}-${size}.png`;
+  void icon;
+  return size === 96 ? EVOLYN_NOTIFICATION_BADGE : EVOLYN_NOTIFICATION_ICON;
 }
 
-export const NOTIFICATION_ICON_FALLBACK = '/brand/favicon-192.png';
-
-export function resolveNotificationIconUrl(icon: PersonalNotificationIcon): string {
-  return getNotificationIconUrl(icon, 192);
+export function resolveNotificationIconUrl(_icon?: PersonalNotificationIcon): string {
+  return EVOLYN_NOTIFICATION_ICON;
 }
 
-export function resolveNotificationBadgeUrl(icon: PersonalNotificationIcon): string {
-  return getNotificationIconUrl(icon, 96);
+export function resolveNotificationBadgeUrl(_icon?: PersonalNotificationIcon): string {
+  return EVOLYN_NOTIFICATION_BADGE;
 }
 
 export interface WebPushNotificationPayload {
@@ -49,7 +59,7 @@ export function buildWebPushNotificationPayload(
     title: reminder.title,
     body: reminder.message || 'Hora do seu lembrete no Evolyn.',
     tag: reminder.id,
-    icon: resolveNotificationIconUrl(reminder.icon),
-    badge: resolveNotificationBadgeUrl(reminder.icon),
+    icon: EVOLYN_NOTIFICATION_ICON,
+    badge: EVOLYN_NOTIFICATION_BADGE,
   };
 }

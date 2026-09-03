@@ -73,6 +73,8 @@ export interface RoutineItemRecord {
   routine_id: string;
   activity_id: string;
   position: number;
+  scheduled_time?: string | null;
+  reminder_enabled?: boolean;
 }
 
 export interface ActivityLogRecord {

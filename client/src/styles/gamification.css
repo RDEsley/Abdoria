@@ -1,7 +1,16 @@
 /* Stat tiles */
 .game-stat {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* Composição centralizada: cabeçalho (ícone+título) no topo, valor em
+     destaque no meio, hint no rodapé — `space-between` divide o espaço
+     sobrando entre eles sem precisar de margin auto manual. */
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.2rem;
+  text-align: center;
   /* Os tiles de uma mesma grade (grid stretch) ficam com a mesma altura, mas
      o valor muda de font-size conforme `--val-len` — sem isso, o hint de
      cada card ficava numa altura diferente (não alinhados entre si). */
@@ -15,7 +24,7 @@
 
 .game-stat--clickable {
   width: 100%;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   transition:
     transform 0.1s ease,
@@ -34,6 +43,7 @@
 .game-stat__head {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
@@ -75,10 +85,10 @@
 }
 
 .game-stat__hint {
-  /* `auto` no topo empurra o hint pro fim do card (mesma altura em toda a
-     grade); o padding garante uma folga mínima mesmo quando não sobra
-     espaço extra pra empurrar. */
-  margin: auto 0 0;
+  /* O `justify-content: space-between` do `.game-stat` já distribui o
+     espaço sobrando entre cabeçalho, valor e hint — mantém a mesma altura
+     em toda a grade sem precisar de margin auto manual aqui. */
+  margin: 0;
   padding-top: 0.45rem;
   font-size: 0.62rem;
   font-weight: 700;

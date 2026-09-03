@@ -142,9 +142,7 @@ const nativeNotificationScheduler: NotificationScheduler = {
             channelId,
             smallIcon: Capacitor.getPlatform() === 'android' ? 'ic_stat_evolyn' : undefined,
             largeIcon:
-              Capacitor.getPlatform() === 'android'
-                ? resolveNativeLargeIconPath(reminder.icon)
-                : undefined,
+              Capacitor.getPlatform() === 'android' ? resolveNativeLargeIconPath() : undefined,
             iconColor: color,
             extra: {
               reminderId: reminder.id,

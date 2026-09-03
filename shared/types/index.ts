@@ -427,7 +427,13 @@ export interface Gamificacao {
   /** Payload do último Frozen consumido — consumido pelo client na Home. */
   streak_freeze_notice?: {
     frozen_days: string[];
+    /**
+     * Sequência preservada pelo Frozen (sem contar ação válida de hoje).
+     * @deprecated prefer `preserved_streak`
+     */
     streak_atual: number;
+    /** Sequência protegida — Frozen nunca incrementa sozinho. */
+    preserved_streak: number;
   } | null;
   /** Quantas vezes o streak já quebrou de verdade (sem Frozen Streak) na vida
       da conta — libera "Recuperar Streak" ao chegar em STREAK_RECOVERY_UNLOCK_LOSSES. */
@@ -1063,7 +1069,9 @@ export interface DashboardStats {
   /** Detalhe do Frozen recentemente consumido (só quando `streak_frozen_notice`). */
   streak_frozen_event?: {
     frozen_days: string[];
+    /** @deprecated prefer `preserved_streak` */
     streak_atual: number;
+    preserved_streak: number;
   } | null;
   /** Oferta ativa de "pagar pra recuperar o streak perdido" (ver shared/streak/recovery.ts). */
   streak_recovery_offer?: import('../streak/recovery.js').StreakRecoveryOffer | null;

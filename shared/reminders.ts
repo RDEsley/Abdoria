@@ -1,5 +1,10 @@
 import { type PersonalNotificationIcon } from './notification-catalog.js';
-import type { ActivityRecord, ActivitySchedule, RoutineRecord } from './activities/types.js';
+import type {
+  ActivityRecord,
+  ActivitySchedule,
+  RoutineItemRecord,
+  RoutineRecord,
+} from './activities/types.js';
 import { normalizeActivitySchedule } from './activities/schedule.js';
 
 export const PERSONAL_NOTIFICATION_VERSION = 2 as const;
@@ -387,8 +392,45 @@ function reminderScheduleFromActivity(
   return { kind: 'recurring', times, weekdays };
 }
 
+/**
+ * Agenda de lembrete para um item de rotina: usa os dias da agenda da
+ * rotina (semanal/diária/data única), mas o horário específico do item.
+ */
+function reminderScheduleForRoutineItem(
+  routineSchedule: ActivitySchedule,
+  time: string,
+): PersonalNotificationSchedule | null {
+  if (!isTimeValue(time)) return null;
+  if (routineSchedule.kind === 'once') {
+    if (!routineSchedule.once_at) return null;
+    const datePart = routineSchedule.once_at.slice(0, 10);
+    return { kind: 'once', at: `${datePart}T${time}:00` };
+  }
+  const weekdays =
+    routineSchedule.kind === 'weekdays' && (routineSchedule.weekdays ?? []).length > 0
+      ? [...routineSchedule.weekdays!]
+      : [0, 1, 2, 3, 4, 5, 6];
+  return { kind: 'recurring', times: [time], weekdays };
+}
+
+function personalNotificationSchedulesEqual(
+  a: PersonalNotificationSchedule,
+  b: PersonalNotificationSchedule,
+): boolean {
+  if (a.kind === 'once' && b.kind === 'once') return a.at === b.at;
+  if (a.kind === 'recurring' && b.kind === 'recurring') {
+    return (
+      a.times.length === b.times.length &&
+      a.times.every((time) => b.times.includes(time)) &&
+      a.weekdays.length === b.weekdays.length &&
+      a.weekdays.every((day) => b.weekdays.includes(day))
+    );
+  }
+  return false;
+}
+
 export function isDerivedActivityReminderId(id: string): boolean {
-  return id.startsWith('activity:') || id.startsWith('routine:');
+  return id.startsWith('activity:') || id.startsWith('routine:') || id.startsWith('routine-item:');
 }
 
 export function derivedReminderSourceId(id: string): string | null {
@@ -407,12 +449,20 @@ export function isFollowUpReminderId(id: string): boolean {
  * `preferencias.lembretes_personalizados` — dispatcher e scheduler nativo
  * unem `personal ∪ derivados` na hora da entrega.
  */
+type ReminderRoutineItem = Pick<
+  RoutineItemRecord,
+  'activity_id' | 'scheduled_time' | 'reminder_enabled'
+>;
+
 export function deriveActivityReminders(
   activities: Array<
     Pick<ActivityRecord, 'id' | 'name' | 'icon' | 'color' | 'archived_at' | 'schedule' | 'reminder'>
   >,
   routines: Array<
-    Pick<RoutineRecord, 'id' | 'name' | 'icon' | 'color' | 'archived_at' | 'schedule' | 'reminder'>
+    Pick<
+      RoutineRecord,
+      'id' | 'name' | 'icon' | 'color' | 'archived_at' | 'schedule' | 'reminder'
+    > & { items?: ReminderRoutineItem[] }
   > = [],
   nowIso = new Date().toISOString(),
 ): PersonalizedReminder[] {
@@ -473,6 +523,47 @@ export function deriveActivityReminders(
           times: personalSchedule.times.map((time) => shiftTime(time, 30)),
           weekdays: personalSchedule.weekdays,
         },
+        enabled: true,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
+  }
+
+  // Lembretes por item de rotina: opt-in independente do lembrete geral da
+  // rotina, reaproveitando os dias da agenda da rotina + horário do item.
+  for (const routine of routines) {
+    if (routine.archived_at) continue;
+    const items = routine.items ?? [];
+    if (items.length === 0) continue;
+    const routineSchedule = normalizeActivitySchedule(routine.schedule);
+    if (routineSchedule.kind === 'unscheduled') continue;
+
+    for (const item of items) {
+      if (!item.reminder_enabled || !item.scheduled_time) continue;
+      const activity = activities.find((entry) => entry.id === item.activity_id);
+      if (!activity || activity.archived_at) continue;
+
+      const itemSchedule = reminderScheduleForRoutineItem(routineSchedule, item.scheduled_time);
+      if (!itemSchedule) continue;
+
+      // Dedupe: se a própria atividade já dispara um lembrete idêntico
+      // (mesmos dias/horário), não duplica a notificação.
+      const duplicatesExisting = derived.some(
+        (existing) =>
+          existing.id.startsWith(`activity:${activity.id}:`) &&
+          personalNotificationSchedulesEqual(existing.schedule, itemSchedule),
+      );
+      if (duplicatesExisting) continue;
+
+      derived.push({
+        version: PERSONAL_NOTIFICATION_VERSION,
+        id: `routine-item:${routine.id}:${item.activity_id}:${item.scheduled_time}`,
+        title: activity.name,
+        message: `Hora de ${activity.name} na rotina ${routine.name}.`,
+        icon: mapActivityIcon(activity.icon),
+        color: mapActivityColor(activity.color),
+        schedule: itemSchedule,
         enabled: true,
         createdAt: nowIso,
         updatedAt: nowIso,

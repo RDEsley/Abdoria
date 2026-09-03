@@ -108,4 +108,145 @@ describe('deriveActivityReminders', () => {
     );
     expect(derived).toHaveLength(0);
   });
+
+  it('deriva lembrete por item de rotina, usando os dias da rotina + horário do item', () => {
+    const activity = {
+      id: 'act-item',
+      name: 'Alongamento',
+      icon: 'heart',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'unscheduled', times: [], weekdays: [] },
+      reminder: { enabled: false, offset_min: 0 },
+    };
+    const routine = {
+      id: 'routine-1',
+      name: 'Manhã',
+      icon: 'calendar',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'weekdays', weekdays: [1, 2, 3], times: [], period: null, once_at: null },
+      reminder: { enabled: false, offset_min: 0 },
+      items: [{ activity_id: activity.id, scheduled_time: '07:00', reminder_enabled: true }],
+    };
+
+    const derived = deriveActivityReminders([activity], [routine]);
+    expect(derived).toHaveLength(1);
+    expect(derived[0].id).toBe(`routine-item:${routine.id}:${activity.id}:07:00`);
+    expect(isDerivedActivityReminderId(derived[0].id)).toBe(true);
+    expect(derived[0].schedule).toEqual({
+      kind: 'recurring',
+      times: ['07:00'],
+      weekdays: [1, 2, 3],
+    });
+  });
+
+  it('não deriva lembrete de item sem opt-in (reminder_enabled false)', () => {
+    const activity = {
+      id: 'act-item',
+      name: 'Alongamento',
+      icon: 'heart',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'unscheduled', times: [], weekdays: [] },
+      reminder: { enabled: false, offset_min: 0 },
+    };
+    const routine = {
+      id: 'routine-1',
+      name: 'Manhã',
+      icon: 'calendar',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'daily', times: [], weekdays: [], period: null, once_at: null },
+      reminder: { enabled: false, offset_min: 0 },
+      items: [{ activity_id: activity.id, scheduled_time: '07:00', reminder_enabled: false }],
+    };
+    expect(deriveActivityReminders([activity], [routine])).toHaveLength(0);
+  });
+
+  it('não deriva lembrete de item quando a rotina não tem agenda ("quando quiser")', () => {
+    const activity = {
+      id: 'act-item',
+      name: 'Alongamento',
+      icon: 'heart',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'unscheduled', times: [], weekdays: [] },
+      reminder: { enabled: false, offset_min: 0 },
+    };
+    const routine = {
+      id: 'routine-1',
+      name: 'Manhã',
+      icon: 'calendar',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'unscheduled', times: [], weekdays: [], period: null, once_at: null },
+      reminder: { enabled: false, offset_min: 0 },
+      items: [{ activity_id: activity.id, scheduled_time: '07:00', reminder_enabled: true }],
+    };
+    expect(deriveActivityReminders([activity], [routine])).toHaveLength(0);
+  });
+
+  it('não duplica quando a própria atividade já dispara lembrete idêntico', () => {
+    const activity = {
+      id: 'act-item',
+      name: 'Alongamento',
+      icon: 'heart',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'daily', times: ['07:00'], weekdays: [] },
+      reminder: { enabled: true, offset_min: 0 },
+    };
+    const routine = {
+      id: 'routine-1',
+      name: 'Manhã',
+      icon: 'calendar',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'daily', times: [], weekdays: [], period: null, once_at: null },
+      reminder: { enabled: false, offset_min: 0 },
+      items: [{ activity_id: activity.id, scheduled_time: '07:00', reminder_enabled: true }],
+    };
+    const derived = deriveActivityReminders([activity], [routine]);
+    // Só o lembrete "activity:" — o "routine-item:" idêntico é deduplicado.
+    expect(derived).toHaveLength(1);
+    expect(derived[0].id).toBe(`activity:${activity.id}:07:00`);
+  });
+
+  it('mesma atividade em duas rotinas pode ter lembretes de horários diferentes', () => {
+    const activity = {
+      id: 'act-shared',
+      name: 'Leitura',
+      icon: 'star',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'unscheduled', times: [], weekdays: [] },
+      reminder: { enabled: false, offset_min: 0 },
+    };
+    const routineA = {
+      id: 'routine-a',
+      name: 'Manhã',
+      icon: 'calendar',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'daily', times: [], weekdays: [], period: null, once_at: null },
+      reminder: { enabled: false, offset_min: 0 },
+      items: [{ activity_id: activity.id, scheduled_time: '07:00', reminder_enabled: true }],
+    };
+    const routineB = {
+      id: 'routine-b',
+      name: 'Noite',
+      icon: 'calendar',
+      color: 'emerald',
+      archived_at: null,
+      schedule: { kind: 'daily', times: [], weekdays: [], period: null, once_at: null },
+      reminder: { enabled: false, offset_min: 0 },
+      items: [{ activity_id: activity.id, scheduled_time: '20:00', reminder_enabled: true }],
+    };
+    const derived = deriveActivityReminders([activity], [routineA, routineB]);
+    expect(derived.map((item) => item.id).sort()).toEqual([
+      `routine-item:${routineA.id}:${activity.id}:07:00`,
+      `routine-item:${routineB.id}:${activity.id}:20:00`,
+    ]);
+  });
 });

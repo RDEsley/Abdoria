@@ -643,17 +643,6 @@ body {
   background: #fbfdfc;
 }
 
-.personal-notification-form__quick {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.personal-notification-form__quick-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(7.5rem, 0.65fr);
-  gap: 0.6rem;
-}
-
 .personal-notification-form input,
 .personal-notification-form textarea,
 .personal-notification-form select {
@@ -1517,10 +1506,6 @@ body {
     text-align: center;
   }
 
-  .personal-notification-form__quick-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.65fr);
-  }
-
   .personal-notification-card {
     grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   }
@@ -1551,10 +1536,6 @@ body {
 
   .game-login .game-login__panel {
     padding: 1rem;
-  }
-
-  .personal-notification-form__quick-grid {
-    grid-template-columns: 1fr;
   }
 
   .personal-notification-card {

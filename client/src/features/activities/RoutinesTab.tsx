@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GripVertical, Plus } from 'lucide-react';
+import { GripVertical, Pencil, Plus } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -17,21 +17,43 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GameButton } from '@/components/ui/GameButton';
-import { Modal } from '@/components/ui/Modal';
 import { reorderRoutines } from '@/lib/api/activities';
+import { activityOccursOnDay, routineItemsDoneToday } from '@shared/activities';
+import { getMinutesOfDaySaoPaulo, getTodaySaoPaulo } from '@shared/utils/timezone';
+import type { ActivityLogRecord, RoutineRecord } from '@shared/activities';
+import { RoutineEditorSheet, type RoutineEditorPayload } from './RoutineEditorSheet';
 import type { useActivitiesData } from './useActivitiesData';
 
 function SortableRoutineCard({
   routine,
+  logs,
+  today,
   onClick,
+  onEdit,
 }: {
-  routine: { id: string; name: string; items?: unknown[] };
+  routine: RoutineRecord;
+  logs: ActivityLogRecord[];
+  today: string;
   onClick: () => void;
+  onEdit: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: routine.id,
   });
   const total = routine.items?.length ?? 0;
+  const isScheduled = routine.schedule.kind !== 'unscheduled';
+  const scheduledToday = isScheduled && activityOccursOnDay(routine.schedule, today);
+  const time = routine.schedule.times?.[0] ?? null;
+  const isNow = useMemo(() => {
+    if (!scheduledToday || !time) return false;
+    const [hh, mm] = time.split(':').map(Number);
+    return hh * 60 + mm <= getMinutesOfDaySaoPaulo() + 30;
+  }, [scheduledToday, time]);
+  const doneToday = useMemo(() => {
+    const todayLogs = logs.filter((log) => log.day_key === today);
+    return routineItemsDoneToday(routine, todayLogs);
+  }, [routine, logs, today]);
+  const secondary = isScheduled && !scheduledToday;
 
   return (
     <div
@@ -42,7 +64,7 @@ function SortableRoutineCard({
         opacity: isDragging ? 0.5 : 1,
       }}
       data-no-nav-swipe
-      className="activity-quick-card flex items-center gap-2"
+      className={`activity-quick-card flex items-center gap-2${secondary ? ' routine-card--secondary' : ''}`}
     >
       <button
         type="button"
@@ -58,10 +80,27 @@ function SortableRoutineCard({
         className="activity-quick-card__body flex-1 text-left"
         onClick={onClick}
       >
-        <strong>{routine.name}</strong>
+        <span className="flex items-center gap-2">
+          <strong>{routine.name}</strong>
+          {scheduledToday && (
+            <span className={`routine-badge${isNow ? ' routine-badge--now' : ''}`}>
+              {isNow ? 'Agora' : 'Hoje'}
+            </span>
+          )}
+        </span>
         <small>
-          {total} {total === 1 ? 'atividade' : 'atividades'}
+          {total > 0
+            ? `${doneToday}/${total}${scheduledToday && time ? ` · ${time}` : ''}`
+            : 'Sem atividades'}
         </small>
+      </button>
+      <button
+        type="button"
+        className="routine-card__edit"
+        aria-label={`Editar ${routine.name}`}
+        onClick={onEdit}
+      >
+        <Pencil size={15} />
       </button>
     </div>
   );
@@ -69,15 +108,39 @@ function SortableRoutineCard({
 
 export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesData> }) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [selected, setSelected] = useState<string[]>([]);
-  const [orderedRoutines, setOrderedRoutines] = useState(data.routines);
+  const [editing, setEditing] = useState<
+    { mode: 'create' } | { mode: 'edit'; routine: RoutineRecord } | null
+  >(null);
+  const today = getTodaySaoPaulo();
 
-  // Sync with data when it changes
-  if (data.routines !== orderedRoutines && data.routines.length !== orderedRoutines.length) {
-    setOrderedRoutines(data.routines);
-  }
+  // Só a ORDEM local de arrasto é mantida em estado próprio. Nome, agenda,
+  // progresso, arquivamento e criação sempre vêm direto de `data.routines`
+  // (fonte da verdade), reconciliados aqui — nunca mutados durante o render.
+  const [orderedIds, setOrderedIds] = useState<string[]>(() => data.routines.map((r) => r.id));
+
+  useEffect(() => {
+    setOrderedIds((current) => {
+      const incomingIds = data.routines.map((r) => r.id);
+      const incomingSet = new Set(incomingIds);
+      const currentSet = new Set(current);
+      const kept = current.filter((id) => incomingSet.has(id));
+      const appended = incomingIds.filter((id) => !currentSet.has(id));
+      const next = [...kept, ...appended];
+      // Evita re-render/loop quando nada realmente mudou de ordem/conjunto.
+      if (next.length === current.length && next.every((id, index) => id === current[index])) {
+        return current;
+      }
+      return next;
+    });
+  }, [data.routines]);
+
+  const routineById = useMemo(
+    () => new Map(data.routines.map((routine) => [routine.id, routine])),
+    [data.routines],
+  );
+  const orderedRoutines = orderedIds
+    .map((id) => routineById.get(id))
+    .filter((routine): routine is RoutineRecord => Boolean(routine));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -85,14 +148,14 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
     (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
-      const oldIndex = orderedRoutines.findIndex((r) => r.id === active.id);
-      const newIndex = orderedRoutines.findIndex((r) => r.id === over.id);
+      const oldIndex = orderedIds.findIndex((id) => id === active.id);
+      const newIndex = orderedIds.findIndex((id) => id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
-      const next = arrayMove(orderedRoutines, oldIndex, newIndex);
-      setOrderedRoutines(next);
-      void reorderRoutines(next.map((r) => r.id));
+      const next = arrayMove(orderedIds, oldIndex, newIndex);
+      setOrderedIds(next);
+      void reorderRoutines(next).then(() => data.reload());
     },
-    [orderedRoutines],
+    [orderedIds, data],
   );
 
   return (
@@ -112,7 +175,10 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
               <SortableRoutineCard
                 key={routine.id}
                 routine={routine}
+                logs={data.logs}
+                today={today}
                 onClick={() => navigate(`/rotina/${routine.id}`)}
+                onEdit={() => setEditing({ mode: 'edit', routine })}
               />
             ))}
           </SortableContext>
@@ -121,61 +187,34 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
       <GameButton
         variant="secondary"
         className="flex items-center justify-center gap-2"
-        onClick={() => setOpen(true)}
+        onClick={() => setEditing({ mode: 'create' })}
       >
         <Plus size={16} /> Nova rotina
       </GameButton>
 
-      <Modal open={open} onClose={() => setOpen(false)} labelledBy="routine-create-title">
-        <div className="p-4">
-          <h2 id="routine-create-title" className="game-section-title">
-            Nova rotina
-          </h2>
-          <input
-            className="game-input mt-2 w-full"
-            maxLength={40}
-            placeholder="Ex.: Segunda-feira, Manhã, Pós-treino"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-          <ul className="mt-3 flex max-h-56 flex-col gap-2 overflow-y-auto">
-            {data.activities.map((activity) => {
-              const on = selected.includes(activity.id);
-              return (
-                <li key={activity.id}>
-                  <button
-                    type="button"
-                    className={`activity-template${on ? ' activity-template--on' : ''}`}
-                    onClick={() =>
-                      setSelected((current) =>
-                        on ? current.filter((id) => id !== activity.id) : [...current, activity.id],
-                      )
-                    }
-                  >
-                    {activity.name}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          <GameButton
-            className="mt-4 w-full"
-            disabled={!name.trim() || selected.length === 0}
-            onClick={() => {
-              void data
-                .createRoutine({ name: name.trim(), items: selected })
-                .then(() => data.reload())
-                .then(() => {
-                  setOpen(false);
-                  setName('');
-                  setSelected([]);
-                });
-            }}
-          >
-            Criar rotina
-          </GameButton>
-        </div>
-      </Modal>
+      <RoutineEditorSheet
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        activities={data.activities}
+        routine={editing?.mode === 'edit' ? editing.routine : null}
+        onSubmit={async (payload: RoutineEditorPayload) => {
+          if (editing?.mode === 'edit') {
+            await data.updateRoutine(editing.routine.id, { ...payload });
+          } else {
+            await data.createRoutine({ ...payload });
+          }
+          await data.reload();
+        }}
+        onArchive={
+          editing?.mode === 'edit'
+            ? async () => {
+                if (editing.mode !== 'edit') return;
+                await data.archiveRoutine(editing.routine.id);
+                await data.reload();
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

@@ -19,16 +19,23 @@ export function addDaysSaoPaulo(dayKey: string, delta: number): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-/** Hora local (0–23) em America/Sao_Paulo — usada na conquista Madrugador. */
-export function getHourSaoPaulo(date = new Date()): number {
+/** Minutos desde meia-noite civil em America/Sao_Paulo (0–1439). */
+export function getMinutesOfDaySaoPaulo(date = new Date()): number {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Sao_Paulo',
     hour: 'numeric',
+    minute: 'numeric',
     hour12: false,
   }).formatToParts(date);
   let hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
   if (hour === 24) hour = 0;
-  return hour;
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  return hour * 60 + minute;
+}
+
+/** Hora local (0–23) em America/Sao_Paulo — usada na conquista Madrugador. */
+export function getHourSaoPaulo(date = new Date()): number {
+  return Math.floor(getMinutesOfDaySaoPaulo(date) / 60);
 }
 
 /** Dia da semana (0=Dom … 6=Sáb) em America/Sao_Paulo. */

@@ -12,7 +12,7 @@ function weekdayLabel(dayKey: string): string {
 export function WeekStrip({ week }: { week: DaySnapshot['week'] }) {
   return (
     <section className="glass-card p-4">
-      <h3 className="game-section-title">Sua semana</h3>
+      <h3 className="game-section-title">Últimos 7 dias</h3>
       <div className="mt-3 flex justify-between gap-1">
         {week.map((day) => (
           <div

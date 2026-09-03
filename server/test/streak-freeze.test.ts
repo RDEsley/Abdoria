@@ -83,4 +83,51 @@ describe('streak frozen-day protection', () => {
 
     expect(result).toEqual({ atual: 0, maior: 4 });
   });
+
+  it('streak 10 + dia perdido + Frozen = 10 (sem ação hoje)', () => {
+    const keys = Array.from({ length: 10 }, (_, i) => addDaysSaoPaulo(today, -(i + 2)));
+    const hist = keys.map(workout);
+    const missed = addDaysSaoPaulo(today, -1);
+    const result = computeStreakWithFrozenDays(hist, [missed]);
+    expect(result.atual).toBe(10);
+  });
+
+  it('Frozen nunca incrementa sozinho — ação real depois leva 10 → 11', () => {
+    const keys = Array.from({ length: 10 }, (_, i) => addDaysSaoPaulo(today, -(i + 2)));
+    const histBefore = keys.map(workout);
+    const missed = addDaysSaoPaulo(today, -1);
+    const preserved = computeStreakWithFrozenDays(histBefore, [missed]);
+    expect(preserved.atual).toBe(10);
+
+    const afterAction = computeStreakWithFrozenDays([...histBefore, workout(today)], [missed]);
+    expect(afterAction.atual).toBe(11);
+  });
+
+  it('preserved_streak ignora ação de hoje (Frozen não parece conceder o 11º)', () => {
+    const keys = Array.from({ length: 10 }, (_, i) => addDaysSaoPaulo(today, -(i + 2)));
+    const histWithToday = [...keys.map(workout), workout(today)];
+    const missed = addDaysSaoPaulo(today, -1);
+    const full = computeStreakWithFrozenDays(histWithToday, [missed]);
+    expect(full.atual).toBe(11);
+
+    const withoutToday = computeStreakWithFrozenDays(keys.map(workout), [missed]);
+    expect(withoutToday.atual).toBe(10);
+  });
+
+  it('vários Frozen consecutivos preservam continuidade sem contar como dias reais', () => {
+    const base = Array.from({ length: 8 }, (_, i) => addDaysSaoPaulo(today, -(i + 4)));
+    const freeze1 = addDaysSaoPaulo(today, -3);
+    const freeze2 = addDaysSaoPaulo(today, -2);
+    const freeze3 = addDaysSaoPaulo(today, -1);
+    const result = computeStreakWithFrozenDays(base.map(workout), [freeze1, freeze2, freeze3]);
+    expect(result.atual).toBe(8);
+  });
+
+  it('sem Frozen suficiente, sequência quebra normalmente', () => {
+    const hist = [workout(addDaysSaoPaulo(today, -3))];
+    const missed = findStreakMissedDaysForFreeze(hist, [], 1);
+    expect(missed).toEqual([]);
+    const broken = computeStreakWithFrozenDays(hist, []);
+    expect(broken.atual).toBe(0);
+  });
 });
