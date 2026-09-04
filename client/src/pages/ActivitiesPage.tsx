@@ -12,13 +12,12 @@ import { playTabSwitch } from '@/lib/sounds';
 
 const TABS = ['hoje', 'rotinas', 'missoes'] as const;
 type Tab = (typeof TABS)[number];
+const TAB_ALIASES = { insights: 'missoes' } as const;
 
 export function ActivitiesPage() {
   const data = useActivitiesData();
-  const [tab, setTab] = usePageTab<Tab>(TABS, 'hoje', { insights: 'missoes' });
+  const [tab, setTab] = usePageTab<Tab>(TABS, 'hoje', TAB_ALIASES);
   const claimableQuests = useClaimableQuestCount(data.logs.length);
-
-  if (data.loading) return <PageLoader />;
 
   return (
     <div className="activities-page flex flex-col gap-4 pb-24">
@@ -64,9 +63,15 @@ export function ActivitiesPage() {
         ))}
       </div>
 
-      {tab === 'hoje' && <TodayTab data={data} />}
-      {tab === 'rotinas' && <RoutinesTab data={data} />}
-      {tab === 'missoes' && <MissionsTab data={data} />}
+      {data.loading ? (
+        <PageLoader />
+      ) : (
+        <>
+          {tab === 'hoje' && <TodayTab data={data} />}
+          {tab === 'rotinas' && <RoutinesTab data={data} />}
+          {tab === 'missoes' && <MissionsTab data={data} />}
+        </>
+      )}
     </div>
   );
 }

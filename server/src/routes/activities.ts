@@ -140,6 +140,18 @@ activitiesRouter.delete('/:id', async (req: AuthRequest, res) => {
   }
 });
 
+activitiesRouter.post('/:id/restore', async (req: AuthRequest, res) => {
+  try {
+    const restored = await Activities.restore(req.userId!, String(req.params.id));
+    res.json(restored);
+  } catch (error) {
+    console.error('POST /api/activities/:id/restore error:', error);
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : 'Erro ao restaurar atividade.' });
+  }
+});
+
 activitiesRouter.post('/:id/complete', async (req: AuthRequest, res) => {
   try {
     const clientCompletionId = String(req.body?.client_completion_id ?? '').trim();

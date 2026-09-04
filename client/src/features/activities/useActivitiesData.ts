@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  archiveActivity,
+  archiveActivity as archiveActivityApi,
   completeActivity,
-  createActivity,
+  createActivity as createActivityApi,
   createRoutine,
   listActivities,
   listActivityLogs,
   listRoutines,
-  updateActivity,
+  restoreActivity as restoreActivityApi,
+  updateActivity as updateActivityApi,
   updateRoutine,
   archiveRoutine,
 } from '@/lib/api/activities';
@@ -76,13 +77,53 @@ export function useActivitiesData() {
         note?: string;
         metrics?: Record<string, unknown>;
         routineId?: string;
-        /** Quando true, o caller cuida do feedback imediato (haptic/UI). */
         silentFeedback?: boolean;
+        /** Quando true, o caller já aplicou UI otimista (ex.: swipe). */
+        optimisticUi?: boolean;
       },
     ) => {
       if (inFlightRef.current.has(activity.id)) return null;
       inFlightRef.current.add(activity.id);
       setBusyIds((prev) => new Set(prev).add(activity.id));
+
+      const today = getTodaySaoPaulo();
+      const optimisticKey = `optimistic:${activity.id}:${today}`;
+      if (options?.optimisticUi) {
+        setLogs((prev) => {
+          if (
+            prev.some(
+              (entry) =>
+                entry.activity_id === activity.id &&
+                entry.day_key === today &&
+                !entry.routine_id,
+            )
+          ) {
+            return prev;
+          }
+          const optimistic: ActivityLogRecord = {
+            id: optimisticKey,
+            user_id: user?.id ?? '',
+            activity_id: activity.id,
+            activity_name_snapshot: activity.name,
+            routine_id: null,
+            day_key: today,
+            completed_at: new Date().toISOString(),
+            kind: options.kind ?? 'full',
+            occurrence_key: today,
+            client_completion_id: optimisticKey,
+            metrics: options.metrics ?? {},
+            note: options.note ?? null,
+            duration_min: null,
+            value: null,
+            xp_awarded: 0,
+            leaves_awarded: 0,
+            source: 'quick',
+            legacy_history_id: null,
+          };
+          return [optimistic, ...prev];
+        });
+      }
+
       try {
         const result = await completeActivity(activity.id, {
           client_completion_id: crypto.randomUUID(),
@@ -94,11 +135,13 @@ export function useActivitiesData() {
         applyUser(result.user);
         markStreakSecuredToday(result.user);
 
-        // Aplica log autoritativo imediatamente (não espera refetch completo).
         if (result.log) {
           setLogs((prev) => {
-            if (prev.some((entry) => entry.id === result.log.id)) return prev;
-            return [result.log, ...prev];
+            const withoutOptimistic = prev.filter((entry) => entry.id !== optimisticKey);
+            if (withoutOptimistic.some((entry) => entry.id === result.log.id)) {
+              return withoutOptimistic;
+            }
+            return [result.log, ...withoutOptimistic];
           });
         }
 
@@ -132,13 +175,14 @@ export function useActivitiesData() {
         }
 
         window.dispatchEvent(new Event('evolyn:quests-changed'));
-
-        // Reconcilia listas/stats em background — não bloqueia o caller.
         void reload().catch(() => undefined);
         void refresh();
 
         return result;
       } catch (error) {
+        if (options?.optimisticUi) {
+          setLogs((prev) => prev.filter((entry) => entry.id !== optimisticKey));
+        }
         showGameToast(getErrorMessage(error, 'Não foi possível registrar.'), { variant: 'error' });
         return null;
       } finally {
@@ -152,6 +196,39 @@ export function useActivitiesData() {
     },
     [applyUser, markStreakSecuredToday, refresh, reload, routines, user],
   );
+
+  const createActivity = useCallback(
+    async (body: Record<string, unknown>) => {
+      const created = await createActivityApi(body);
+      setActivities((prev) => [created, ...prev.filter((item) => item.id !== created.id)]);
+      void reload().catch(() => undefined);
+      return created;
+    },
+    [reload],
+  );
+
+  const updateActivity = useCallback(async (id: string, body: Record<string, unknown>) => {
+    const updated = await updateActivityApi(id, body);
+    setActivities((prev) => prev.map((item) => (item.id === id ? updated : item)));
+    return updated;
+  }, []);
+
+  const archiveActivity = useCallback(async (id: string) => {
+    const archived = await archiveActivityApi(id);
+    setActivities((prev) => prev.filter((item) => item.id !== id));
+    return archived;
+  }, []);
+
+  const restoreActivity = useCallback(async (id: string) => {
+    const restored = await restoreActivityApi(id);
+    setActivities((prev) => {
+      if (prev.some((item) => item.id === id)) {
+        return prev.map((item) => (item.id === id ? restored : item));
+      }
+      return [restored, ...prev];
+    });
+    return restored;
+  }, []);
 
   return {
     activities,
@@ -167,9 +244,9 @@ export function useActivitiesData() {
     createActivity,
     updateActivity,
     archiveActivity,
+    restoreActivity,
     createRoutine,
     updateRoutine,
     archiveRoutine,
   };
 }
-

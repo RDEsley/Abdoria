@@ -82,6 +82,18 @@ export function GameToastHost() {
     >
       <Icon className="game-toast__icon" size={17} strokeWidth={2.4} aria-hidden />
       <p className="game-toast__message">{toast.message}</p>
+      {toast.actionLabel && toast.onAction ? (
+        <button
+          type="button"
+          className="game-toast__action"
+          onClick={() => {
+            toast.onAction?.();
+            setToast(null);
+          }}
+        >
+          {toast.actionLabel}
+        </button>
+      ) : null}
     </div>,
     document.body,
   );

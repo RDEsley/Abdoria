@@ -1137,7 +1137,7 @@
   left: 50%;
   z-index: 120;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   width: max-content;
   max-width: min(22rem, calc(100vw - 1.5rem));
@@ -1148,7 +1148,7 @@
   line-height: 1.35;
   color: #fff;
   text-align: left;
-  pointer-events: none;
+  pointer-events: auto;
   background: rgba(28, 25, 23, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
@@ -1164,6 +1164,18 @@
 
 .game-toast__message {
   margin: 0;
+}
+
+.game-toast__action {
+  margin-left: 0.65rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .game-toast--success {

@@ -8,6 +8,13 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Atividades 3.0 — interação mobile
+
+- Catálogo de criação: oculta Respiração/Yoga/Cuidados (`offerInCreate: false`); legado continua via `findActivityTemplate`.
+- Matching: `suggestActivityTemplates` (máx. 3) + aliases/frases; Modal `autoFocus={false}` em criar/detalhes.
+- Swipe: direita concluir / esquerda arquivar + Desfazer (`POST /activities/:id/restore`); hint one-shot; optimistic complete.
+- Notas rápidas recolhíveis (badge = pendentes); abas: estado local + skip sync URL (fim do flicker).
+
 ### Core hardening (quests, claim, progression)
 
 - Missões: `quest_assignments` persiste 3/2/1 por período SP; claim só do conjunto atribuído; `claim_quest_reward` atômico (XP+mark).
