@@ -84,8 +84,8 @@ Não registrar código desse diretório no runtime, build, lint ou testes sem de
 
 ## Banco de dados
 
-- Migrations aplicadas são histórico imutável e ficam em `supabase/migrations/applied/`.
-- Mudanças de schema devem gerar novas migrations na raiz de `supabase/migrations/`.
+- Migrations aplicadas são histórico imutável.
+- Mudanças de schema devem gerar novas migrations.
 - Prefira escritas parciais quando apenas parte do perfil mudou.
 - Tenha cuidado com escritas concorrentes em `preferencias`.
 - Dados de rotina/atividades não entram em `preferencias`.

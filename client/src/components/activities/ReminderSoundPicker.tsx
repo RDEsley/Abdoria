@@ -28,46 +28,71 @@ export function ReminderSoundPicker({
   const unlocked = packs.filter((item) => unlockedPacks.includes(item.id));
   const locked = packs.filter((item) => !unlockedPacks.includes(item.id));
 
+  const pick = (id: ReminderSoundId, preview?: string) => {
+    void selectionHaptic();
+    onChange(id);
+    if (preview) previewSfxPack(preview);
+    onClose();
+  };
+
   return (
-    <div className="reminder-sound-picker" role="dialog" aria-label="Som do lembrete">
+    <div className="reminder-sound-picker" role="listbox" aria-label="Som do lembrete">
       {SPECIAL.map((option) => (
         <button
           key={option.id}
           type="button"
-          className={value === option.id ? 'is-selected' : ''}
-          onClick={() => {
-            void selectionHaptic();
-            onChange(option.id);
-            onClose();
-          }}
+          role="option"
+          aria-selected={value === option.id}
+          className={`reminder-sound-picker__row${value === option.id ? ' is-selected' : ''}`}
+          onClick={() => pick(option.id)}
         >
-          <strong>
-            {option.id === 'silent' ? <VolumeX size={14} /> : option.id === 'random' ? <Shuffle size={14} /> : <Volume2 size={14} />}{' '}
-            {reminderSoundLabel(option.id)}
-          </strong>
-          <small>{option.hint}</small>
+          <span className="reminder-sound-picker__icon" aria-hidden>
+            {option.id === 'silent' ? (
+              <VolumeX size={14} />
+            ) : option.id === 'random' ? (
+              <Shuffle size={14} />
+            ) : (
+              <Volume2 size={14} />
+            )}
+          </span>
+          <span className="reminder-sound-picker__copy">
+            <strong>{reminderSoundLabel(option.id)}</strong>
+            <small>{option.hint}</small>
+          </span>
         </button>
       ))}
       {unlocked.map((item) => (
         <button
           key={item.id}
           type="button"
-          className={value === item.id ? 'is-selected' : ''}
-          onClick={() => {
-            void selectionHaptic();
-            onChange(item.id as ReminderSoundId);
-            previewSfxPack(item.id);
-            onClose();
-          }}
+          role="option"
+          aria-selected={value === item.id}
+          className={`reminder-sound-picker__row${value === item.id ? ' is-selected' : ''}`}
+          onClick={() => pick(item.id as ReminderSoundId, item.id)}
         >
-          <strong>{item.nome}</strong>
-          <small>{item.descricao}</small>
+          <span className="reminder-sound-picker__icon" aria-hidden>
+            <Volume2 size={14} />
+          </span>
+          <span className="reminder-sound-picker__copy">
+            <strong>{item.nome}</strong>
+            <small>{item.descricao}</small>
+          </span>
         </button>
       ))}
       {locked.map((item) => (
-        <button key={item.id} type="button" className="is-locked" disabled>
-          <strong>{item.nome}</strong>
-          <small>Disponível na loja Evolyn</small>
+        <button
+          key={item.id}
+          type="button"
+          className="reminder-sound-picker__row is-locked"
+          disabled
+        >
+          <span className="reminder-sound-picker__icon" aria-hidden>
+            <Volume2 size={14} />
+          </span>
+          <span className="reminder-sound-picker__copy">
+            <strong>{item.nome}</strong>
+            <small>Disponível na loja Evolyn</small>
+          </span>
         </button>
       ))}
     </div>

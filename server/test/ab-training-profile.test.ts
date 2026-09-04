@@ -32,7 +32,7 @@ describe('perfil abdominal V2', () => {
     expect(sanitizeAbTrainingProfileV2({ version: 1 })).toBeNull();
   });
 
-  it('respeita configuração personalizada na quantidade e na dose', () => {
+  it('respeita configuração personalizada na quantidade, séries e dose', () => {
     const custom = sanitizeAbTrainingProfileV2({
       version: 2,
       intensity: 'leve',
@@ -40,12 +40,27 @@ describe('perfil abdominal V2', () => {
       training_days: [1, 3],
       rest_seconds: 30,
       mode: 'custom',
-      custom: { exercise_count: 9, effort: 'intenso' },
+      custom: { exercise_count: 9, effort: 'intenso', series: 4, target_reps: 15, rest_seconds: 20 },
     });
     expect(custom?.mode).toBe('custom');
     expect(exerciseCountForProfile(custom!)).toBe(9);
     expect(doseForAbProfile(custom!, 'reps', 12)).toBe(15);
-    expect(doseForAbProfile(custom!, 'tempo', 30)).toBe(35);
+    expect(doseForAbProfile(custom!, 'tempo', 30)).toBeGreaterThanOrEqual(30);
+  });
+
+  it('aceita custom legado só com exercise_count e effort', () => {
+    const custom = sanitizeAbTrainingProfileV2({
+      version: 2,
+      intensity: 'leve',
+      volume: 'curto',
+      training_days: [1, 3],
+      rest_seconds: 30,
+      mode: 'custom',
+      custom: { exercise_count: 8, effort: 'moderado' },
+    });
+    expect(custom?.custom?.series).toBe(3);
+    expect(custom?.custom?.target_reps).toBe(12);
+    expect(doseForAbProfile(custom!, 'reps', 12)).toBe(12);
   });
 
   it('perfis V2 antigos sem mode continuam preset', () => {

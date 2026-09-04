@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const migrationPath = join(
   dirname(fileURLToPath(import.meta.url)),
-  '../../supabase/migrations/applied/20260902183000_push_hardening_and_supabase_cron.sql',
+  '../../supabase/migrations/20260902183000_push_hardening_and_supabase_cron.sql',
 );
 
 describe('migration push hardening', () => {

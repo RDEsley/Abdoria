@@ -265,7 +265,7 @@ export function ReminderCenter() {
       )}
 
       {editing && (
-        <div className="personal-notification-form" aria-label="Configurar notificação">
+        <div className="personal-notification-form personal-notification-form--flat" aria-label="Configurar notificação">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-extrabold text-stone-800">
               {draft.id ? 'Editar lembrete' : 'Novo lembrete'}

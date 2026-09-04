@@ -15,7 +15,6 @@ import {
   Share2,
   ShieldCheck,
   Target,
-  Trophy,
   Weight,
 } from 'lucide-react';
 import { BannerPickerModal } from '@/components/profile/BannerPickerModal';
@@ -514,14 +513,8 @@ export function ProfilePage() {
       {tab === 'evolucao' && stats && (
         <>
           <ProfileProgressPanel stats={stats} />
-          <section className="glass-card glass-card--conquista p-4">
-            <h3 className="flex items-center gap-2 text-sm font-extrabold text-stone-800">
-              <Trophy className="text-amber-600" size={18} />
-              Recordes
-            </h3>
-            <div className="mt-3">
-              <PersonalRecordsPanel />
-            </div>
+          <section className="mt-1">
+            <PersonalRecordsPanel />
           </section>
         </>
       )}
