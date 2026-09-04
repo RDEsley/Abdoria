@@ -95,10 +95,10 @@
   gap: 0.75rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   scroll-padding-inline: 0;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
   padding-bottom: 0.15rem;
   scrollbar-width: none;
 }
@@ -360,12 +360,78 @@
 @media (prefers-reduced-motion: reduce) {
   .missions-board__tab,
   .missions-board__dot,
-  .quest-card__bar-fill {
+  .quest-card__bar-fill,
+  .missions-board__skeleton-line {
     transition: none;
+    animation: none;
   }
 
   .missions-board__track {
     scroll-behavior: auto;
+  }
+}
+
+.missions-board__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid rgb(28 25 23 / 8%);
+  border-radius: 1.15rem;
+  background: linear-gradient(165deg, #fff 0%, #f8fafc 100%);
+}
+
+.missions-board__error p {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: rgb(87 83 78);
+}
+
+.missions-board__skeleton-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 9.5rem;
+  padding: 0.85rem;
+  border: 1px solid rgb(28 25 23 / 8%);
+  border-radius: 1.15rem;
+  background: linear-gradient(165deg, #fff 0%, #f8fafc 100%);
+}
+
+.missions-board__skeleton-line {
+  height: 0.72rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgb(231 229 228 / 0.7) 0%,
+    rgb(245 245 244 / 0.95) 45%,
+    rgb(231 229 228 / 0.7) 100%
+  );
+  background-size: 200% 100%;
+  animation: missions-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.missions-board__skeleton-line--title {
+  width: 42%;
+  height: 0.9rem;
+}
+
+.missions-board__skeleton-line--wide {
+  width: 88%;
+}
+
+.missions-board__skeleton-line--mid {
+  width: 64%;
+}
+
+@keyframes missions-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
   }
 }
 

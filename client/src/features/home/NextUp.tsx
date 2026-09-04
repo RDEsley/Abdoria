@@ -25,27 +25,23 @@ function GuideCard({ item, compact }: { item: DayGuideEntry; compact?: boolean }
   return (
     <Link
       to={item.href}
-      className={`activity-quick-card${compact ? ' activity-quick-card--done' : ''}`}
+      className={`next-up-card${compact ? ' next-up-card--compact' : ''}`}
     >
-      <span className="activity-quick-card__check">
+      <span className="next-up-card__icon" aria-hidden>
         <Icon size={18} />
       </span>
-      <div className="activity-quick-card__body">
-        {item.eyebrow && (
-          <small className="uppercase tracking-wide text-stone-400">{item.eyebrow}</small>
-        )}
-        <strong>{item.title}</strong>
-        {item.subtitle && (
-          <span className="text-xs font-semibold text-stone-500">{item.subtitle}</span>
-        )}
+      <div className="next-up-card__body">
+        {item.eyebrow ? <small className="next-up-card__eyebrow">{item.eyebrow}</small> : null}
+        <strong className="next-up-card__title">{item.title}</strong>
+        {item.subtitle ? <span className="next-up-card__subtitle">{item.subtitle}</span> : null}
       </div>
       {!compact && item.cta ? (
-        <span className="flex shrink-0 items-center gap-1 text-xs font-extrabold text-emerald-700">
+        <span className="next-up-card__cta">
           {item.cta}
-          <ChevronRight size={14} />
+          <ChevronRight size={14} aria-hidden />
         </span>
       ) : (
-        <ChevronRight size={16} className="shrink-0 text-stone-400" />
+        <ChevronRight size={16} className="next-up-card__chevron" aria-hidden />
       )}
     </Link>
   );

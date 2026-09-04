@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { PickerField } from '@/components/ui/PickerField';
@@ -105,9 +105,19 @@ export function ActivityDetailsSheet({
   return (
     <Modal open={open} onClose={onClose} labelledBy="activity-details-title" autoFocus={false}>
       <div className="p-4">
-        <h2 id="activity-details-title" className="game-section-title">
-          {mode === 'edit' ? 'Editar atividade' : occurrence.name}
-        </h2>
+        <div className="activity-details-header">
+          <h2 id="activity-details-title" className="game-section-title activity-details-header__title">
+            {mode === 'edit' ? 'Editar atividade' : occurrence.name}
+          </h2>
+          <button
+            type="button"
+            className="activity-details-header__close"
+            aria-label="Fechar detalhes"
+            onClick={onClose}
+          >
+            <X size={18} aria-hidden />
+          </button>
+        </div>
 
         {mode === 'view' ? (
           <>

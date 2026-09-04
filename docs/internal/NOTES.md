@@ -31,6 +31,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Preferir escritas parciais quando aplicável para reduzir risco de sobrescrever alterações concorrentes.
 - Ter cuidado especial com alterações concorrentes em `preferencias`.
 - Autosave de áudio (Settings) envia **somente** `som_habilitado` + `sfx_volume` via `mergePreferencias`; persistência coalescida (last-write-wins). Não espalhar `user.preferencias` no client.
+- `activity-quick-card*` é estrutura de swipe da Activity. Rotinas usam `routine-card*`; Home “A seguir” usa `next-up-card*`. Não reutilizar classes estruturais de swipe como tokens visuais.
 - Dados de rotina e atividades **não** entram em `preferencias`. A fonte é `activities`, `routines`, `activity_logs`.
 - Toda ação diária válida (treino, atividade, rotina; hidratação/MyPlant no futuro) passa por `recordValidDailyAction` em `server/src/services/active-day.ts`. O Streak lê `active_days`, não o histórico de treino.
 - Linhas de atividade em `workout_history` identificam-se pela coluna `atividade IS NOT NULL`. O prefixo `Atividade:` no nome não é mais lido.

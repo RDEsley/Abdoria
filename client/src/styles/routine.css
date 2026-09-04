@@ -166,9 +166,16 @@
 }
 
 .quick-notes-shell {
-  border: 2px solid rgb(231 229 228 / 0.9);
+  border: 2px solid rgb(214 186 140 / 0.55);
   border-radius: 1.1rem;
-  background: rgb(255 255 255 / 0.82);
+  background-color: #fffdf4;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1.55rem,
+    rgb(120 140 160 / 0.07) 1.55rem,
+    rgb(120 140 160 / 0.07) calc(1.55rem + 1px)
+  );
   overflow: hidden;
 }
 
@@ -189,7 +196,11 @@
   gap: 0.45rem;
   font-size: 0.88rem;
   font-weight: 800;
-  color: rgb(41 37 36);
+  color: rgb(68 54 36);
+}
+
+.quick-notes-toggle__lead svg {
+  color: rgb(146 118 58);
 }
 
 .quick-notes-toggle__badge {
@@ -206,7 +217,7 @@
 }
 
 .quick-notes-toggle__chevron {
-  color: rgb(168 162 158);
+  color: rgb(168 152 128);
   transition: transform 0.2s ease;
 }
 
@@ -220,6 +231,21 @@
 
 .quick-notes-panel__inner {
   padding: 0 0.9rem 0.9rem;
+}
+
+/* Dentro do bloco de notas rápidas: integrar BlocoNotas sem “card em card”. */
+.quick-notes-shell .bloco-notas__item {
+  background: rgb(255 253 246 / 0.72);
+  border-color: rgb(214 186 140 / 0.4);
+}
+
+.quick-notes-shell .bloco-notas__item--feita {
+  background: rgb(250 245 255 / 0.55);
+}
+
+.quick-notes-shell .bloco-notas__input {
+  background: rgb(255 253 246 / 0.85);
+  border-color: rgb(214 186 140 / 0.45);
 }
 
 .activity-template {
@@ -302,14 +328,89 @@
   }
 }
 
-/* Rotinas: indicadores de "hoje", edição inline e agenda progressiva. */
+/* Rotinas: card próprio (não reutilizar activity-quick-card estrutural). */
+
+.routine-card {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 3.5rem;
+  max-height: 4.75rem;
+  padding: 0.45rem 0.45rem 0.45rem 0.2rem;
+  border: 2px solid rgb(231 229 228 / 0.9);
+  border-radius: 1.1rem;
+  background: rgb(255 255 255 / 0.92);
+  touch-action: pan-y;
+}
+
+.game-app .routine-card {
+  border: 2.5px solid rgb(22 51 46 / 28%);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #fff, #f4fbf8);
+  box-shadow: 0 3px 0 rgb(22 51 46 / 14%);
+}
 
 .routine-card--secondary {
   opacity: 0.6;
 }
 
+.routine-card--dragging {
+  box-shadow: 0 8px 20px rgb(28 25 23 / 12%);
+}
+
+.routine-card__handle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  color: rgb(168 162 158);
+  cursor: grab;
+  touch-action: none;
+}
+
+.routine-card__handle:active {
+  cursor: grabbing;
+}
+
+.routine-card__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.15rem 0.25rem;
+  text-align: left;
+}
+
+.routine-card__title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.routine-card__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: rgb(41 37 36);
+}
+
+.routine-card__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgb(120 113 108);
+}
+
 .routine-badge {
   display: inline-flex;
+  flex: none;
   align-items: center;
   border-radius: 999px;
   padding: 0.1rem 0.5rem;
@@ -329,10 +430,135 @@
 .routine-card__edit {
   display: grid;
   place-items: center;
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
+  flex: none;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
   border-radius: 0.75rem;
   color: rgb(120 113 108);
+}
+
+/* Home — A seguir: card próprio (não reutilizar activity-quick-card). */
+
+.next-up-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.7rem 0.85rem;
+  border: 2px solid rgb(231 229 228 / 0.9);
+  border-radius: 1.1rem;
+  background: rgb(255 255 255 / 0.92);
+  text-decoration: none;
+  color: inherit;
+}
+
+.game-app .next-up-card {
+  border: 2.5px solid rgb(22 51 46 / 28%);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #fff, #f4fbf8);
+  box-shadow: 0 3px 0 rgb(22 51 46 / 14%);
+}
+
+.next-up-card--compact {
+  opacity: 0.86;
+  min-height: 3.15rem;
+  padding-block: 0.55rem;
+}
+
+.next-up-card__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 0.85rem;
+  background: rgb(236 253 245);
+  color: rgb(6 95 70);
+}
+
+.next-up-card__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.05rem;
+  text-align: left;
+}
+
+.next-up-card__eyebrow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(168 162 158);
+}
+
+.next-up-card__title {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: rgb(41 37 36);
+}
+
+.next-up-card__subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: rgb(120 113 108);
+}
+
+.next-up-card__cta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.15rem;
+  max-width: 7.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: rgb(4 120 87);
+}
+
+.next-up-card__chevron {
+  flex: none;
+  color: rgb(168 162 158);
+}
+
+.activity-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.activity-details-header__title {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+}
+
+.activity-details-header__close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  margin: -0.35rem -0.35rem 0 0;
+  border-radius: 0.85rem;
+  color: rgb(120 113 108);
+}
+
+.activity-details-header__close:active {
+  background: rgb(245 245 244);
 }
 
 .routine-item-row {

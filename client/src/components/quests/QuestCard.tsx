@@ -101,6 +101,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
   const { applyUser } = useAuth();
   const [quests, setQuests] = useState<QuestStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [activeScope, setActiveScope] = useState<QuestScope>('daily');
   const trackRef = useRef<HTMLDivElement>(null);
@@ -108,9 +109,17 @@ export function QuestCard({ compact }: { compact?: boolean }) {
   const scrollingRef = useRef(false);
 
   const reload = useCallback(() => {
+    setLoading(true);
+    setLoadError(false);
     listQuests()
-      .then(setQuests)
-      .catch(() => setQuests([]))
+      .then((next) => {
+        setQuests(next);
+        setLoadError(false);
+      })
+      .catch(() => {
+        setLoadError(true);
+        setQuests([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -205,9 +214,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
 
     for (const pane of panes) observer.observe(pane);
     return () => observer.disconnect();
-  }, [quests.length, loading]);
-
-  if (loading || quests.length === 0) return null;
+  }, [quests.length, loading, loadError]);
 
   const claimable = quests.filter((q) => !q.claimed && q.progress >= q.goal);
   const unclaimed = quests.filter((q) => !q.claimed);
@@ -216,6 +223,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
     .sort((a, b) => b.progress / b.goal - a.progress / a.goal)[0];
 
   if (compact) {
+    if (loading || loadError) return null;
     const highlight = claimable[0] ?? closestToComplete;
     if (!highlight) return null;
     const ready = highlight.progress >= highlight.goal && !highlight.claimed;
@@ -247,7 +255,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
   }
 
   return (
-    <section className="missions-board" aria-label="Missões">
+    <section className="missions-board" aria-label="Missões" aria-busy={loading || undefined}>
       <header className="missions-board__header">
         <h3 className="game-section-title flex items-center gap-2">
           <Gift size={16} aria-hidden /> Missões
@@ -267,12 +275,13 @@ export function QuestCard({ compact }: { compact?: boolean }) {
               type="button"
               role="tab"
               aria-selected={selected}
+              disabled={loading || loadError}
               className={`missions-board__tab missions-board__tab--${scope}${selected ? ' is-active' : ''}`}
               onClick={() => scrollToScope(scope)}
             >
               <Icon size={14} aria-hidden />
               <span>{meta.short}</span>
-              {readyCount > 0 ? (
+              {!loading && !loadError && readyCount > 0 ? (
                 <span className="missions-board__tab-badge" aria-label={`${readyCount} prontas`}>
                   {readyCount}
                 </span>
@@ -282,9 +291,26 @@ export function QuestCard({ compact }: { compact?: boolean }) {
         })}
       </div>
 
+      {loadError ? (
+        <div className="missions-board__error" role="alert">
+          <p>Não foi possível carregar suas missões.</p>
+          <GameButton size="sm" onClick={() => reload()}>
+            Tentar novamente
+          </GameButton>
+        </div>
+      ) : loading ? (
+        <div className="missions-board__skeleton-pane" aria-hidden>
+          <div className="missions-board__skeleton-line missions-board__skeleton-line--title" />
+          <div className="missions-board__skeleton-line missions-board__skeleton-line--wide" />
+          <div className="missions-board__skeleton-line missions-board__skeleton-line--mid" />
+          <div className="missions-board__skeleton-line missions-board__skeleton-line--wide" />
+        </div>
+      ) : (
+        <>
       <div
         ref={trackRef}
         className="missions-board__track"
+        data-no-nav-swipe
         aria-roledescription="carrossel"
       >
         {SCOPES.map((scope) => {
@@ -348,6 +374,8 @@ export function QuestCard({ compact }: { compact?: boolean }) {
           />
         ))}
       </div>
+        </>
+      )}
     </section>
   );
 }

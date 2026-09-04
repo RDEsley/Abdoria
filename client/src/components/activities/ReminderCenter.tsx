@@ -6,6 +6,8 @@ import { useEnsureReminderPermission } from '@/hooks/useEnsureReminderPermission
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
+import { Modal } from '@/components/ui/Modal';
+import { GameButton } from '@/components/ui/GameButton';
 import {
   PERSONAL_NOTIFICATION_VERSION,
   summarizePersonalNotificationSchedule,
@@ -21,6 +23,24 @@ import { ReminderIcon } from './reminder-icons';
 import { ReminderNotificationPreview } from './ReminderNotificationPreview';
 import { ReminderPersonalizePanel } from './ReminderPersonalizePanel';
 import type { RecurrenceDraft } from './reminder-form-types';
+
+const REMINDER_DELETE_SKIP_KEY = 'evolyn:reminder-delete-skip-confirm';
+
+function readSkipDeleteConfirm(): boolean {
+  try {
+    return localStorage.getItem(REMINDER_DELETE_SKIP_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeSkipDeleteConfirm(): void {
+  try {
+    localStorage.setItem(REMINDER_DELETE_SKIP_KEY, '1');
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
 
 const DAYS = [
   { value: 0, label: 'Dom' },
@@ -118,6 +138,9 @@ export function ReminderCenter() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PersonalizedReminder | null>(null);
+  const [skipConfirmChecked, setSkipConfirmChecked] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const closeForm = () => {
     setEditing(false);
     setDraft(emptyDraft());
@@ -255,9 +278,51 @@ export function ReminderCenter() {
     await replace(next);
   };
 
-  const remove = async (reminder: PersonalizedReminder) => {
-    await replace(reminders.filter((item) => item.id !== reminder.id));
-    await notificationScheduler.cancel(reminder.id);
+  const remove = async (
+    reminder: PersonalizedReminder,
+    options?: { rememberSkip?: boolean },
+  ) => {
+    if (deletingId) return;
+    setDeletingId(reminder.id);
+    const index = reminders.findIndex((item) => item.id === reminder.id);
+    const next = reminders.filter((item) => item.id !== reminder.id);
+    try {
+      await replace(next);
+      await notificationScheduler.cancel(reminder.id);
+      if (options?.rememberSkip) writeSkipDeleteConfirm();
+      showGameToast('Lembrete excluído', {
+        variant: 'info',
+        duration: 5000,
+        actionLabel: 'Desfazer',
+        onAction: () => {
+          void (async () => {
+            try {
+              const restored = [...next];
+              const insertAt = index >= 0 ? index : restored.length;
+              restored.splice(insertAt, 0, reminder);
+              await replace(restored);
+            } catch {
+              showGameToast('Não foi possível restaurar o lembrete.', { variant: 'error' });
+            }
+          })();
+        },
+      });
+      setPendingDelete(null);
+      setSkipConfirmChecked(false);
+    } catch {
+      showGameToast('Não foi possível excluir o lembrete.', { variant: 'error' });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const requestRemove = (reminder: PersonalizedReminder) => {
+    if (readSkipDeleteConfirm()) {
+      void remove(reminder);
+      return;
+    }
+    setSkipConfirmChecked(false);
+    setPendingDelete(reminder);
   };
 
   return (
@@ -392,7 +457,8 @@ export function ReminderCenter() {
             </button>
             <button
               type="button"
-              onClick={() => void remove(reminder)}
+              onClick={() => requestRemove(reminder)}
+              disabled={deletingId === reminder.id}
               className="personal-notification-card__action personal-notification-card__action--danger"
               aria-label={`Excluir ${reminder.title}`}
             >
@@ -401,6 +467,69 @@ export function ReminderCenter() {
           </article>
         ))}
       </div>
+
+      <Modal
+        open={Boolean(pendingDelete)}
+        onClose={() => {
+          if (deletingId) return;
+          setPendingDelete(null);
+          setSkipConfirmChecked(false);
+        }}
+        labelledBy="reminder-delete-title"
+        describedBy="reminder-delete-desc"
+        role="alertdialog"
+        autoFocus={false}
+        disableDismiss={Boolean(deletingId)}
+      >
+        <div className="reminder-delete-confirm p-4">
+          <h2 id="reminder-delete-title" className="text-base font-extrabold text-stone-800">
+            Excluir lembrete?
+          </h2>
+          <p id="reminder-delete-desc" className="mt-1 text-sm font-semibold text-stone-600">
+            Você deixará de receber este aviso.
+            {pendingDelete?.title ? (
+              <>
+                {' '}
+                <span className="font-extrabold text-stone-800">“{pendingDelete.title}”</span>
+              </>
+            ) : null}
+          </p>
+          <label className="reminder-delete-confirm__skip mt-3 flex items-start gap-2 text-sm font-semibold text-stone-700">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={skipConfirmChecked}
+              onChange={(event) => setSkipConfirmChecked(event.target.checked)}
+              disabled={Boolean(deletingId)}
+            />
+            <span>Não perguntar novamente neste dispositivo</span>
+          </label>
+          <div className="mt-4 flex justify-end gap-2">
+            <GameButton
+              variant="ghost"
+              size="sm"
+              disabled={Boolean(deletingId)}
+              onClick={() => {
+                setPendingDelete(null);
+                setSkipConfirmChecked(false);
+              }}
+            >
+              Cancelar
+            </GameButton>
+            <GameButton
+              variant="danger"
+              size="sm"
+              disabled={!pendingDelete || Boolean(deletingId)}
+              onClick={() => {
+                if (!pendingDelete) return;
+                void remove(pendingDelete, { rememberSkip: skipConfirmChecked });
+              }}
+            >
+              Excluir
+            </GameButton>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }
