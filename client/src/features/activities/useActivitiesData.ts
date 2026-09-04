@@ -81,9 +81,9 @@ export function useActivitiesData() {
         note?: string;
         metrics?: Record<string, unknown>;
         routineId?: string;
-        /** Caller (ex.: RoutineRunner) emite XP/som/toast/haptic — não duplicar aqui. */
+        /** Caller (ex.: RoutineRunner) emite XP/som/toast — não duplicar aqui. */
         silentFeedback?: boolean;
-        /** UI já deu haptic imediato (swipe/check); ainda emite XP/som/toast. */
+        /** UI já deu haptic imediato (swipe/check/rotina); ainda emite XP/som/toast. */
         suppressHaptic?: boolean;
         /** Quando true, o caller já aplicou UI otimista (ex.: swipe). */
         optimisticUi?: boolean;

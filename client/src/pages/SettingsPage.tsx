@@ -39,6 +39,10 @@ import { ensureWebPushSubscription, removeWebPushSubscription } from '@/lib/plat
 import { Capacitor } from '@capacitor/core';
 import { AB_INTENSITY_LABELS } from '@shared/ab-training-profile';
 import {
+  buildAudioPreferenciasPatch,
+  createCoalescingAudioPersister,
+} from '@shared/settings/audio-persist';
+import {
   AUDIO_VOLUME_DEBOUNCE_MS,
   notificationDeniedGuidance,
   notificationStatusLabel,
@@ -99,10 +103,41 @@ export function SettingsPage() {
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
   const [hydratedUserId, setHydratedUserId] = useState<string | null>(user?.id ?? null);
-  const audioSaveGen = useRef(0);
   const volumeTimer = useRef<number | null>(null);
   const somRef = useRef(som);
   const volumeRef = useRef(volume);
+  const userPresentRef = useRef(Boolean(user));
+  const applyUserRef = useRef(applyUser);
+  const lastOkAudioRef = useRef({
+    som: user?.preferencias?.som_habilitado ?? true,
+    volume: user?.preferencias?.sfx_volume ?? 0.7,
+  });
+  const persisterRef = useRef<ReturnType<typeof createCoalescingAudioPersister> | null>(null);
+
+  const getAudioPersister = () => {
+    if (!persisterRef.current) {
+      persisterRef.current = createCoalescingAudioPersister(async (nextSom, nextVolume) => {
+        if (!userPresentRef.current) return;
+        try {
+          const updated = await updateMe({
+            preferencias: buildAudioPreferenciasPatch(nextSom, nextVolume),
+          });
+          lastOkAudioRef.current = { som: nextSom, volume: nextVolume };
+          applyUserRef.current(updated);
+          setSoundSettings(nextSom, nextVolume);
+        } catch (error) {
+          showGameToast(getErrorMessage(error, 'Não foi possível salvar o áudio.'), {
+            variant: 'error',
+          });
+          const ok = lastOkAudioRef.current;
+          setSom(ok.som);
+          setVolume(ok.volume);
+          throw error;
+        }
+      });
+    }
+    return persisterRef.current;
+  };
 
   useEffect(() => {
     somRef.current = som;
@@ -110,40 +145,30 @@ export function SettingsPage() {
   }, [som, volume]);
 
   useEffect(() => {
+    userPresentRef.current = Boolean(user);
+  }, [user]);
+
+  useEffect(() => {
+    applyUserRef.current = applyUser;
+  }, [applyUser]);
+
+  useEffect(() => {
     setSoundSettings(som, volume);
   }, [som, volume]);
 
   useEffect(() => {
     if (!user || hydratedUserId === user.id) return;
-    setSom(user.preferencias?.som_habilitado ?? true);
-    setVolume(user.preferencias?.sfx_volume ?? 0.7);
+    const nextSom = user.preferencias?.som_habilitado ?? true;
+    const nextVolume = user.preferencias?.sfx_volume ?? 0.7;
+    setSom(nextSom);
+    setVolume(nextVolume);
+    lastOkAudioRef.current = { som: nextSom, volume: nextVolume };
     setHydratedUserId(user.id);
   }, [hydratedUserId, user]);
 
-  const persistAudio = async (nextSom: boolean, nextVolume: number) => {
-    if (!user) return;
-    const gen = ++audioSaveGen.current;
-    try {
-      const updated = await updateMe({
-        preferencias: {
-          ...user.preferencias,
-          som_habilitado: nextSom,
-          sfx_volume: nextVolume,
-          tom_texto: 'normal',
-        },
-      });
-      if (gen !== audioSaveGen.current) return;
-      applyUser(updated);
-      setSoundSettings(nextSom, nextVolume);
-    } catch (error) {
-      if (gen !== audioSaveGen.current) return;
-      showGameToast(getErrorMessage(error, 'Não foi possível salvar o áudio.'), {
-        variant: 'error',
-      });
-      const prefs = user.preferencias;
-      setSom(prefs?.som_habilitado ?? true);
-      setVolume(prefs?.sfx_volume ?? 0.7);
-    }
+  const persistAudio = (nextSom: boolean, nextVolume: number) => {
+    if (!userPresentRef.current) return;
+    void getAudioPersister().persist(nextSom, nextVolume);
   };
 
   const onSomChange = (next: boolean) => {
@@ -152,7 +177,7 @@ export function SettingsPage() {
       window.clearTimeout(volumeTimer.current);
       volumeTimer.current = null;
     }
-    void persistAudio(next, volumeRef.current);
+    persistAudio(next, volumeRef.current);
   };
 
   const onVolumeChange = (next: number) => {
@@ -160,7 +185,7 @@ export function SettingsPage() {
     if (volumeTimer.current != null) window.clearTimeout(volumeTimer.current);
     volumeTimer.current = window.setTimeout(() => {
       volumeTimer.current = null;
-      void persistAudio(somRef.current, next);
+      persistAudio(somRef.current, next);
     }, AUDIO_VOLUME_DEBOUNCE_MS);
   };
 
@@ -168,11 +193,12 @@ export function SettingsPage() {
     return () => {
       if (volumeTimer.current != null) {
         window.clearTimeout(volumeTimer.current);
-        void persistAudio(somRef.current, volumeRef.current);
+        volumeTimer.current = null;
+        if (userPresentRef.current) {
+          void getAudioPersister().persist(somRef.current, volumeRef.current);
+        }
       }
     };
-    // flush pending volume on leave
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount only
   }, []);
 
   const handleLogout = async () => {

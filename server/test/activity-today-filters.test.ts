@@ -254,19 +254,26 @@ describe('groupOccurrences timezone SP', () => {
 });
 
 describe('completion feedback ownership', () => {
-  it('Activity comum — hook emite feedback uma vez', () => {
+  it('Activity Today/swipe — suppressHaptic: XP/som/toast no hook, haptic só na UI', () => {
     const feedback = resolveActivityCompletionFeedback({ suppressHaptic: true });
     expect(feedback.emitXpSoundToast).toBe(true);
     expect(feedback.emitHaptic).toBe(false);
-    // Caller não emite de novo: total = 1 XP/som/toast + 1 haptic (UI).
   });
 
-  it('Activity em rotina — silentFeedback: hook silencioso, caller emite uma vez', () => {
+  it('Activity sem suppress — hook emite haptic + XP/som/toast (um haptic)', () => {
+    const feedback = resolveActivityCompletionFeedback();
+    expect(feedback.emitXpSoundToast).toBe(true);
+    expect(feedback.emitHaptic).toBe(true);
+  });
+
+  it('Activity em rotina — silentFeedback: hook silencioso; haptic imediato no caller, sem segundo após API', () => {
     const fromHook = resolveActivityCompletionFeedback({ silentFeedback: true });
     expect(fromHook.emitXpSoundToast).toBe(false);
     expect(fromHook.emitHaptic).toBe(false);
-    const fromCaller = { emitXpSoundToast: true, emitHaptic: true };
+    // Caller: selectionHaptic na interação; XP/som/toast após API; sem successHaptic.
+    const fromCaller = { emitXpSoundToast: true, emitHapticAfterApi: false };
     expect(fromCaller.emitXpSoundToast).toBe(true);
+    expect(fromCaller.emitHapticAfterApi).toBe(false);
   });
 });
 
