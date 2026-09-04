@@ -1,0 +1,7 @@
+{
+  "extends": ["development"],
+  "ignoredUrls": ["**/dist/**", "**/client/dist/**"],
+  "hints": {
+    "meta-theme-color": "off"
+  }
+}

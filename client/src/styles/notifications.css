@@ -954,7 +954,13 @@
   gap: 0.35rem;
   overflow-x: auto;
   padding-bottom: 0.15rem;
-  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.reminder-sound-picker__tabs::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .reminder-sound-picker__tabs button {

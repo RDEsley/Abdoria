@@ -577,8 +577,8 @@
     border: 1px solid rgba(231, 229, 228, 0.9);
     border-radius: 1rem;
     box-shadow: 0 10px 30px rgba(28, 25, 23, 0.12);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 }
 /* Entrada V2: uma tela curta, confortável em aparelhos pequenos e com safe-area. */
@@ -1113,7 +1113,15 @@
   display: flex;
   flex-direction: column;
   padding: 1rem 1.25rem;
-  scrollbar-width: thin;
+}
+
+.ab-plan-wizard__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ab-plan-wizard__content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(15 118 110 / 22%);
 }
 
 .ab-plan-wizard__content > * {
