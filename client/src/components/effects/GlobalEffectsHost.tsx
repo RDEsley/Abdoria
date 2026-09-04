@@ -2,6 +2,11 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { GameToastHost } from '@/components/ui/GameToast';
 import type { LevelUpCelebration as LevelUpData } from '@/types';
+import {
+  acquireFullscreenCelebration,
+  releaseFullscreenCelebration,
+} from '@/lib/fullscreen-celebration';
+import { peekNextHomeCelebration } from '@/lib/home-celebrations';
 
 const XpOrbLayer = lazy(() =>
   import('@/components/effects/XpOrbLayer').then((module) => ({ default: module.XpOrbLayer })),
@@ -23,29 +28,56 @@ const CosmeticUnlockCelebration = lazy(() =>
 );
 
 /**
- * Camadas globais de efeito (bolinhas de XP, level up, desbloqueio de
- * cosmético, toasts) — vivem em AppDataProvider (não em AppLayout) porque
- * `player`, `atividades-player` e `myplant` são rotas irmãs de
- * AppLayout, sem a chrome (TopNavbar/sidebar). Antes disso, ganhar XP/level
- * up durante um treino ou atividade (as fontes principais de XP do app)
- * disparava o evento pro vazio: nenhum listener estava montado pra reagir. */
+ * Camadas globais de efeito — level up espera XP orbs (~1.25s) e depois
+ * o slot full-screen (streak/frozen tem prioridade se já estiver na Home).
+ */
 export function GlobalEffectsHost() {
   const [levelUp, setLevelUp] = useState<LevelUpData | null>(null);
 
   useEffect(() => {
-    // Espera as bolinhas de XP (ver XpOrbLayer) terminarem de convergir na
-    // barra do topo antes de tomar a tela inteira — sem isso a celebração
-    // cobria a animação de preenchimento e o jogador nunca via a barra subir.
     const LEVEL_UP_DELAY_MS = 1250;
     let timer: number | null = null;
+    let cancelled = false;
+
     const onLevelUp = (event: Event) => {
       const detail = (event as CustomEvent<LevelUpData>).detail;
       if (!detail?.level_novo) return;
       if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(() => setLevelUp(detail), LEVEL_UP_DELAY_MS);
+      timer = window.setTimeout(() => {
+        void (async () => {
+          // Se houver streak/frozen pendente na Home, deixa a Home consumir primeiro.
+          if (peekNextHomeCelebration()) {
+            await new Promise<void>((resolve) => {
+              const tick = () => {
+                if (!peekNextHomeCelebration()) {
+                  window.removeEventListener('evolyn:home-celebration-queued', tick);
+                  window.removeEventListener('evolyn:fullscreen-celebration-idle', tick);
+                  resolve();
+                  return;
+                }
+              };
+              window.addEventListener('evolyn:fullscreen-celebration-idle', tick);
+              // Timeout de segurança — não segurar level up para sempre.
+              window.setTimeout(() => {
+                window.removeEventListener('evolyn:fullscreen-celebration-idle', tick);
+                resolve();
+              }, 3500);
+            });
+          }
+          if (cancelled) return;
+          await acquireFullscreenCelebration('level_up');
+          if (cancelled) {
+            releaseFullscreenCelebration('level_up');
+            return;
+          }
+          setLevelUp(detail);
+        })();
+      }, LEVEL_UP_DELAY_MS);
     };
+
     window.addEventListener('abdoria:level-up', onLevelUp);
     return () => {
+      cancelled = true;
       window.removeEventListener('abdoria:level-up', onLevelUp);
       if (timer) window.clearTimeout(timer);
     };
@@ -60,7 +92,10 @@ export function GlobalEffectsHost() {
               key={levelUp.level_novo}
               level={levelUp.level_novo}
               previousLevel={levelUp.level_anterior}
-              onDone={() => setLevelUp(null)}
+              onDone={() => {
+                setLevelUp(null);
+                releaseFullscreenCelebration('level_up');
+              }}
             />
           )}
         </AnimatePresence>

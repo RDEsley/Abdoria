@@ -1,4 +1,3 @@
-import { Capacitor } from '@capacitor/core';
 import { useCallback } from 'react';
 import { useNotificationPermissionOptional } from '@/context/NotificationPermissionContext';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
@@ -34,10 +33,9 @@ export function useEnsureReminderPermission() {
     }
 
     if (current === 'denied') {
-      showGameToast('Ative as notificações para receber este aviso.', { variant: 'info' });
-      if (Capacitor.isNativePlatform() && notif) {
-        await notif.openSettings();
-      }
+      showGameToast('Ative as notificações nas configurações do dispositivo.', {
+        variant: 'info',
+      });
       return false;
     }
 

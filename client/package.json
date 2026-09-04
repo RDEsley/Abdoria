@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node ../scripts/generate-app-version.mjs && vite",
     "build": "node ../scripts/generate-app-version.mjs && tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "node ../scripts/ensure-app-release.mjs && eslint .",
     "preview": "vite preview"
   },
   "dependencies": {

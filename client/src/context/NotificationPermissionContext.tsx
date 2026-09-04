@@ -18,7 +18,8 @@ import { ensureWebPushSubscription } from '@/lib/platform/web-push';
 import { updateMe } from '@/lib/api';
 import { showGameToast } from '@/lib/game-toast';
 
-const ONBOARDING_SKIP_KEY = 'evolyn:notif-onboarding-skipped';
+const ONBOARDING_SKIP_KEY = 'evolyn:notif-onboarding-skipped-at';
+const ONBOARDING_SKIP_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 const SESSION_PROMPT_KEY = 'abdoria_notif_prompt_seen';
 
 export type NotificationCapability = NotificationPermissionState | 'opt_out';
@@ -107,7 +108,7 @@ export function NotificationPermissionProvider({ children }: { children: ReactNo
 
   const markOnboardingSkipped = useCallback(() => {
     try {
-      localStorage.setItem(ONBOARDING_SKIP_KEY, '1');
+      localStorage.setItem(ONBOARDING_SKIP_KEY, String(Date.now()));
       sessionStorage.setItem(SESSION_PROMPT_KEY, '1');
     } catch {
       /* ignore */
@@ -116,7 +117,16 @@ export function NotificationPermissionProvider({ children }: { children: ReactNo
 
   const wasOnboardingSkipped = useCallback(() => {
     try {
-      return localStorage.getItem(ONBOARDING_SKIP_KEY) === '1';
+      const raw = localStorage.getItem(ONBOARDING_SKIP_KEY);
+      if (!raw) return false;
+      // Legado: flag permanente "1" — trata como cooldown a partir de agora.
+      if (raw === '1') {
+        localStorage.setItem(ONBOARDING_SKIP_KEY, String(Date.now()));
+        return true;
+      }
+      const at = Number(raw);
+      if (!Number.isFinite(at)) return false;
+      return Date.now() - at < ONBOARDING_SKIP_COOLDOWN_MS;
     } catch {
       return false;
     }

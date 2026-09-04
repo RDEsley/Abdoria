@@ -11,6 +11,11 @@ import {
   type PodiumCounts,
 } from '../repositories/leaderboard-podium-repository.js';
 import type { MolduraId } from '../types/index.js';
+import {
+  LEADERBOARD_BASE_FILTER,
+  computeRankAmongPopulation,
+  filterRankingPopulation,
+} from '../services/leaderboard-filter.js';
 
 export const leaderboardRouter = Router();
 
@@ -46,6 +51,8 @@ type EntryUser = {
   id: string;
   nome: string;
   avatar_url?: string | null;
+  role?: string | null;
+  preferencias?: { admin_visivel_ranking?: boolean } | null;
   gamificacao: { nivel_xp: number; streak_atual: number; streak_maior: number };
   cosmeticos?: {
     moedas?: number | null;
@@ -91,19 +98,6 @@ function toEntry(
   };
 }
 
-const leaderboardFilter = {
-  onboarding_completed: true,
-  is_guest: false,
-  is_demo_npc: false,
-};
-
-function isHiddenAdmin(user: {
-  role?: string | null;
-  preferencias?: { admin_visivel_ranking?: boolean } | null;
-}): boolean {
-  return user.role === 'admin' && user.preferencias?.admin_visivel_ranking !== true;
-}
-
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
@@ -116,11 +110,11 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       await syncMoedaBalancesForLeaderboard();
     }
 
-    const fetched = await User.find(leaderboardFilter, {
+    const fetched = await User.find(LEADERBOARD_BASE_FILTER, {
       sort: metricSort(metric),
       limit: limit + 10,
     });
-    const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
+    const users = filterRankingPopulation(fetched).slice(0, limit);
     const podiums = await LeaderboardPodiumHistory.countsForUsers(
       users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
     );
@@ -169,31 +163,25 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
       ? (await LeaderboardPodiumHistory.countsForUsers([user.id])).get(user.id)
       : undefined;
 
-    if (metric === 'streak') {
-      const [rank, total] = await Promise.all([
-        User.countLeaderboardRank(user, metric, 'global'),
-        User.countDocuments(leaderboardFilter),
-      ]);
+    const all = await User.find(LEADERBOARD_BASE_FILTER);
+    const myValue = globalMetricValue(user, metric);
+    const { rank, total, hidden_from_ranking } = computeRankAmongPopulation(
+      all,
+      user,
+      (entry) => globalMetricValue(entry, metric),
+    );
+
+    if (hidden_from_ranking || rank == null) {
       res.json({
-        ...toEntry(user, rank, true, globalMetricValue(user, metric), myPodium),
+        ...toEntry(user, 0, true, myValue, myPodium),
+        rank: null,
         total,
+        hidden_from_ranking: true,
       });
       return;
     }
 
-    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
-    const myValue = globalMetricValue(user, metric);
-    const rank =
-      all.filter((other) => {
-        if (other.id === user.id) return false;
-        const otherValue = globalMetricValue(other, metric);
-        return (
-          otherValue > myValue ||
-          (otherValue === myValue && other.nome.localeCompare(user.nome, 'pt-BR') < 0)
-        );
-      }).length + 1;
-
-    res.json({ ...toEntry(user, rank, true, myValue, myPodium), total: all.length });
+    res.json({ ...toEntry(user, rank, true, myValue, myPodium), total });
   } catch (error) {
     console.error('GET /api/leaderboard/me error:', error);
     res.status(500).json({ error: 'Erro ao buscar posição.' });

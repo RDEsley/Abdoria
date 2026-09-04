@@ -24,7 +24,18 @@ questsRouter.post('/:id/claim', async (req: AuthRequest, res) => {
     res.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro ao coletar missão.';
-    const status = message.includes('já coletada') || message.includes('não concluída') ? 400 : 500;
+    const statusCode =
+      error && typeof error === 'object' && 'status' in error
+        ? Number((error as { status?: number }).status)
+        : undefined;
+    const status =
+      statusCode === 404
+        ? 404
+        : message.includes('já coletada') || message.includes('não concluída')
+          ? 400
+          : message.includes('não encontrada')
+            ? 404
+            : 500;
     res.status(status).json({ error: message });
   }
 });

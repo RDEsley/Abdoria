@@ -10,6 +10,11 @@ import {
 } from '@/lib/home-celebrations';
 import { playStreak } from '@/lib/sounds';
 import { successHaptic } from '@/lib/platform/native-runtime';
+import {
+  acquireFullscreenCelebration,
+  releaseFullscreenCelebration,
+} from '@/lib/fullscreen-celebration';
+import { prewarmLottieAsset } from '@/hooks/useLottieAsset';
 
 const FIRE_STREAK_URL = '/assets/fire-streak.json';
 
@@ -20,12 +25,15 @@ const STREAK_HOLD_AFTER_MS = 900;
 const STREAK_TOTAL_MS = STREAK_IMPACT_MS + STREAK_HOLD_AFTER_MS + 200;
 const HOLD_FROZEN_MS = 3400;
 
-function startCelebration(
+async function startCelebration(
   next: HomeCelebration,
   setEvent: (value: HomeCelebration | null) => void,
   showingRef: { current: boolean },
 ) {
   showingRef.current = true;
+  const slot = next.kind === 'frozen' ? 'frozen' : 'streak';
+  await acquireFullscreenCelebration(slot);
+  if (next.kind === 'streak_up') void prewarmLottieAsset(FIRE_STREAK_URL);
   consumeHomeCelebration(next.id);
   setEvent(next);
 }
@@ -49,7 +57,16 @@ export function HomeCelebrationHost() {
     };
     tryStart();
     window.addEventListener(HOME_CELEBRATION_QUEUED_EVENT, tryStart);
-    return () => window.removeEventListener(HOME_CELEBRATION_QUEUED_EVENT, tryStart);
+
+    // Idle Home: prewarm fire-streak sem colocar no bundle inicial.
+    const idleTimer = window.setTimeout(() => {
+      void prewarmLottieAsset(FIRE_STREAK_URL);
+    }, 2500);
+
+    return () => {
+      window.removeEventListener(HOME_CELEBRATION_QUEUED_EVENT, tryStart);
+      window.clearTimeout(idleTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -59,10 +76,12 @@ export function HomeCelebrationHost() {
     const finish = (holdMs: number) => {
       timers.push(
         window.setTimeout(() => {
+          const slot = event.kind === 'frozen' ? 'frozen' : 'streak';
+          releaseFullscreenCelebration(slot);
           showingRef.current = false;
           setEvent(null);
           const leftover = peekNextHomeCelebration();
-          if (leftover) startCelebration(leftover, setEvent, showingRef);
+          if (leftover) void startCelebration(leftover, setEvent, showingRef);
         }, holdMs),
       );
     };
@@ -80,6 +99,7 @@ export function HomeCelebrationHost() {
 
   const dismissFrozen = () => {
     if (!event || event.kind !== 'frozen') return;
+    releaseFullscreenCelebration('frozen');
     showingRef.current = false;
     setEvent(null);
   };

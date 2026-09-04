@@ -399,6 +399,7 @@ export const User = {
       .ilike('nome', `%${sanitized}%`)
       .eq('onboarding_completed', true)
       .eq('is_guest', false)
+      .eq('is_demo_npc', false)
       .neq('id', excludeId)
       .limit(limit);
     if (error || !data) return [];

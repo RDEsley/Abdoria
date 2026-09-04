@@ -25,7 +25,12 @@ export interface CompleteActivityResponse {
   abdoria_ganha: number;
   streak_celebration: { streak_atual: number; streak_anterior: number } | null;
   level_up: { level_anterior: number; level_novo: number } | null;
-  new_achievements: string[];
+  new_achievements: Array<{
+    id: string;
+    titulo: string;
+    descricao: string;
+    icon?: string;
+  }>;
   routine_bonus_xp: number;
   first_of_day?: boolean;
 }

@@ -28,6 +28,10 @@ export interface QuestContext {
   routinesCompletedToday: number;
   routinesCompletedThisWeek: number;
   routinesCompletedThisMonth: number;
+  /** Atividades com horário planejado para hoje que foram concluídas. */
+  scheduledActivityCompletedToday: number;
+  /** Rotinas programadas para hoje que foram concluídas. */
+  scheduledRoutineCompletedToday: number;
   morningComplete: boolean;
   afternoonComplete: boolean;
   eveningComplete: boolean;
@@ -102,7 +106,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
     goal: 1,
     xp: 10,
     eligible: (ctx) => ctx.hasScheduledActivityToday,
-    progress: (ctx) => Math.min(ctx.activitiesCompletedToday, 1),
+    progress: (ctx) => Math.min(ctx.scheduledActivityCompletedToday, 1),
   },
   {
     id: 'daily_routine',
@@ -122,7 +126,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
     goal: 1,
     xp: 10,
     eligible: (ctx) => ctx.hasRoutineScheduledToday,
-    progress: (ctx) => Math.min(ctx.routinesCompletedToday, 1),
+    progress: (ctx) => Math.min(ctx.scheduledRoutineCompletedToday, 1),
   },
   {
     id: 'daily_train',
@@ -362,8 +366,11 @@ function stablePick<T extends { id: string }>(
 }
 
 function resolveMonthlyWorkoutGoal(ctx: QuestContext): number {
+  // Congela meta alcançável no momento da materialização (dias restantes do mês).
+  const remainingCapacity = Math.max(0, ctx.daysRemainingInMonth) + ctx.workoutsThisMonth;
   const weeksApprox = Math.max(1, Math.ceil((ctx.dayOfMonth + ctx.daysRemainingInMonth) / 7));
-  return Math.min(16, Math.max(4, ctx.weeklyTrainingDays * Math.min(4, weeksApprox)));
+  const planned = Math.min(16, Math.max(4, ctx.weeklyTrainingDays * Math.min(4, weeksApprox)));
+  return Math.max(1, Math.min(planned, Math.max(ctx.workoutsThisMonth, remainingCapacity)));
 }
 
 /** Materializa goal/description dinâmicos (ex.: treinos do plano). */
@@ -432,6 +439,7 @@ function fallbackMonthly(ctx: QuestContext): QuestDefinition {
 /**
  * Escolhe missões estáveis para o usuário neste instante (período SP).
  * Sempre retorna 3 diárias + 2 semanais + 1 mensal quando há fallbacks.
+ * Preferir `ensureQuestAssignments` no servidor para persistir o conjunto.
  */
 export function selectQuestsForUser(
   userId: string,
@@ -442,7 +450,12 @@ export function selectQuestsForUser(
   const weeklyKey = getQuestPeriodKey('weekly', now);
   const monthlyKey = getQuestPeriodKey('monthly', now);
 
-  const pickScope = (scope: QuestScope, count: number, periodKey: string, fallback: () => QuestDefinition[]) => {
+  const pickScope = (
+    scope: QuestScope,
+    count: number,
+    periodKey: string,
+    fallback: () => QuestDefinition[],
+  ) => {
     const eligible = QUEST_TEMPLATE_POOL.filter(
       (q) => q.scope === scope && (q.eligible?.(ctx) ?? true),
     );
@@ -497,21 +510,90 @@ export function selectQuestsForUser(
   );
   if (monthly.length === 0) monthly = [fallbackMonthly(ctx)];
 
-  // Orçamento: diárias/semanal/mensal já usam XP fixo por slot; garantir soma ≤ budget
   return [...daily, ...weekly, ...monthly];
 }
 
+/** Resolve defs a partir de ids persistidos (sem fallback para o pool inteiro). */
+export function resolveAssignedQuests(
+  questIds: readonly string[],
+  ctx: QuestContext,
+  goalOverrides: Record<string, number> = {},
+): QuestDefinition[] {
+  const byId = new Map<string, QuestDefinition>();
+  for (const template of QUEST_TEMPLATE_POOL) byId.set(template.id, template);
+  // Fallbacks dinâmicos usados na seleção
+  byId.set('daily_any_action', {
+    id: 'daily_any_action',
+    scope: 'daily',
+    title: 'Dia ativo',
+    description: 'Faça qualquer ação válida hoje',
+    goal: 1,
+    xp: 10,
+    progress: (c) =>
+      c.activitiesCompletedToday > 0 || c.trainedToday || c.routinesCompletedToday > 0 ? 1 : 0,
+  });
+  byId.set('daily_open_evolyn', {
+    id: 'daily_open_evolyn',
+    scope: 'daily',
+    title: 'Volte amanhã',
+    description: 'Mantenha o ritmo — qualquer passo conta',
+    goal: 1,
+    xp: 10,
+    progress: (c) =>
+      c.activitiesCompletedToday > 0 || c.trainedToday || c.routinesCompletedToday > 0 ? 1 : 0,
+  });
+  byId.set('weekly_soft_active', {
+    id: 'weekly_soft_active',
+    scope: 'weekly',
+    title: 'Semana leve',
+    description: 'Tenha 2 dias ativos esta semana',
+    goal: 2,
+    xp: 30,
+    progress: (c) => Math.min(c.activeDaysThisWeek, 2),
+  });
+
+  const resolved: QuestDefinition[] = [];
+  for (const id of questIds) {
+    const template = byId.get(id) ?? (id === 'monthly_soft_active' ? fallbackMonthly(ctx) : undefined);
+    if (!template) continue;
+    let quest = materializeQuest(template, ctx);
+    const override = goalOverrides[id];
+    if (typeof override === 'number' && override > 0 && override !== quest.goal) {
+      const goal = override;
+      quest = {
+        ...quest,
+        goal,
+        description:
+          quest.id === 'monthly_soft_active'
+            ? `Tenha ${goal} dias ativos neste mês`
+            : quest.id === 'monthly_workouts_plan'
+              ? `Complete ${goal} treinos neste mês`
+              : quest.id === 'weekly_plan_workouts'
+                ? `Treine ${goal} ${goal === 1 ? 'vez' : 'vezes'} esta semana`
+                : quest.description,
+        progress: (c) => {
+          if (quest.id === 'monthly_soft_active' || quest.id.includes('active_days')) {
+            return Math.min(c.activeDaysThisMonth, goal);
+          }
+          if (quest.id === 'monthly_workouts_plan') return Math.min(c.workoutsThisMonth, goal);
+          if (quest.id === 'weekly_plan_workouts') return Math.min(c.workoutsThisWeek, goal);
+          return Math.min(quest.progress(c), goal);
+        },
+      };
+    }
+    resolved.push(quest);
+  }
+  return resolved;
+}
+
+/**
+ * Só aceita missão do conjunto atribuído. Sem fallback para o pool completo.
+ */
 export function findQuestDefinition(
   questId: string,
-  userId: string,
-  ctx: QuestContext,
-  now = new Date(),
+  assigned: readonly QuestDefinition[],
 ): QuestDefinition | undefined {
-  const selected = selectQuestsForUser(userId, ctx, now);
-  const fromSelected = selected.find((q) => q.id === questId);
-  if (fromSelected) return fromSelected;
-  const template = QUEST_TEMPLATE_POOL.find((q) => q.id === questId);
-  return template ? materializeQuest(template, ctx) : undefined;
+  return assigned.find((q) => q.id === questId);
 }
 
 /** Chave estável do período em America/Sao_Paulo. */

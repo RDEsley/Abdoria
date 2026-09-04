@@ -8,6 +8,16 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Core hardening (quests, claim, progression)
+
+- Missões: `quest_assignments` persiste 3/2/1 por período SP; claim só do conjunto atribuído; `claim_quest_reward` atômico (XP+mark).
+- Progresso: `scheduledActivityCompletedToday` / `scheduledRoutineCompletedToday`; metas mensais alcançáveis.
+- Activities: complete devolve feedback imediato + Level Up/conquistas/streak via `emitProgressionFeedback`; refetch em background.
+- Celebrações full-screen: fila única (streak → level → cosmetic). Lottie fire-streak/rotina-check com prewarm; `treino-check.json` removido (asset morto).
+- Ranking: filtro único (guest/NPC/admin oculto); `/me` com `rank: null` se admin oculto.
+- Notif skip: cooldown 14d; denied não abre settings sozinho.
+- Release artifacts: `version.json` e `app-release.ts` gerados no build (gitignore); stub + `ensure-app-release.mjs`.
+
 ### Celebrações, Streak cinema, PWA Welcome e Perfil
 
 - Rotina: `RoutineCompleteScreen` com `rotina-check.json` (lazy); sem `WorkoutVictoryScreen`; celebração só na transição incompleta→completa da sessão.

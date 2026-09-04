@@ -1,3 +1,4 @@
+import { ACHIEVEMENT_BY_ID } from '../../data/achievements.js';
 import { getTodaySaoPaulo } from '../../utils/timezone.js';
 import { User, sanitizeUser } from '../../domain/User.js';
 import { awardDailyXp } from '../economy.js';
@@ -113,9 +114,18 @@ export async function completeActivity(userId: string, input: CompleteActivityIn
 
   const updated = await syncUserGamification(userId);
   const streakAfter = updated?.gamificacao.streak_atual ?? user.gamificacao.streak_atual;
-  const newAchievements = (updated?.gamificacao.conquistas ?? []).filter(
+  const newAchievementIds = (updated?.gamificacao.conquistas ?? []).filter(
     (id) => !prevAchievements.has(id),
   );
+  const newAchievements = newAchievementIds
+    .map((id) => ACHIEVEMENT_BY_ID[id])
+    .filter(Boolean)
+    .map((a) => ({
+      id: a!.id,
+      titulo: a!.titulo,
+      descricao: a!.descricao,
+      icon: a!.icon,
+    }));
 
   return {
     duplicate: false,
