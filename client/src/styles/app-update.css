@@ -1,0 +1,164 @@
+/* Banner de nova release (PWA / web) — acima da bottom nav, sem modal. */
+.app-update-banner {
+  position: fixed;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(var(--bottom-nav-height, 4.75rem) + env(safe-area-inset-bottom, 0px) + 0.65rem);
+  z-index: 70;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 0.45rem 0.65rem;
+  padding: 0.8rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-leaf, #3d8b6e) 28%, transparent);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, #ecfdf5 92%, white),
+      color-mix(in srgb, #f0fdf4 88%, #dcfce7)
+    );
+  box-shadow:
+    0 10px 28px color-mix(in srgb, #14532d 12%, transparent),
+    0 1px 0 color-mix(in srgb, white 70%, transparent) inset;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: app-update-in 0.28s ease-out;
+}
+
+.app-update-banner.is-static {
+  animation: none;
+}
+
+.app-update-banner--standalone {
+  border-color: color-mix(in srgb, var(--color-leaf, #3d8b6e) 42%, transparent);
+  padding-bottom: 0.9rem;
+}
+
+.app-update-banner__icon {
+  grid-row: 1 / span 2;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  margin-top: 0.1rem;
+  border-radius: 999px;
+  color: #166534;
+  background: color-mix(in srgb, #bbf7d0 70%, white);
+}
+
+.app-update-banner__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  padding-right: 1.5rem;
+}
+
+.app-update-banner__copy strong {
+  font-size: 0.88rem;
+  line-height: 1.25;
+  color: #14532d;
+}
+
+.app-update-banner__copy small {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #3f6212;
+}
+
+.app-update-banner__actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+}
+
+.app-update-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.app-update-banner__later {
+  border: 0;
+  background: transparent;
+  color: #3f6212;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.4rem;
+  cursor: pointer;
+}
+
+.app-update-banner__later:disabled,
+.app-update-banner__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app-update-banner__close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, white 55%, transparent);
+  color: #3f6212;
+  cursor: pointer;
+}
+
+@keyframes app-update-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-update-banner {
+    animation: none;
+  }
+}
+
+.app-about-release {
+  border-top: 1px solid color-mix(in srgb, #a8a29e 35%, transparent);
+  padding-top: 0.85rem;
+}
+
+.app-about-release__title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #44403c;
+}
+
+.app-about-release__meta {
+  margin: 0.15rem 0 0.65rem;
+  font-size: 0.72rem;
+  color: #78716c;
+}
+
+.app-about-release__actions .game-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@media (min-width: 720px) {
+  .app-update-banner {
+    left: auto;
+    right: 1.25rem;
+    width: min(24rem, calc(100vw - 2rem));
+    bottom: 1.25rem;
+  }
+}

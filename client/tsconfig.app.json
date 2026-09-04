@@ -26,5 +26,5 @@
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src", "../shared/types"]
+  "include": ["src", "../shared/types", "../shared/app-release.ts"]
 }

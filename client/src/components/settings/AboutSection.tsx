@@ -1,4 +1,5 @@
-import { ExternalLink, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { ExternalLink, RefreshCw, Sparkles } from 'lucide-react';
 import {
   DiscordIcon,
   FacebookIcon,
@@ -6,6 +7,10 @@ import {
   InstagramIcon,
   YoutubeIcon,
 } from '@/components/icons/BrandIcons';
+import { GameButton } from '@/components/ui/GameButton';
+import { useAppUpdate } from '@/context/AppUpdateContext';
+import { shortBuildId } from '@shared/app-release';
+import { showGameToast } from '@/lib/game-toast';
 
 const FATEEIGHT_LINKS = [
   {
@@ -36,6 +41,32 @@ const FATEEIGHT_LINKS = [
 
 /** Créditos + redes sociais da empresa responsável pelo Evolyn + comunidade do projeto. */
 export function AboutSection() {
+  const { running, checkForUpdates } = useAppUpdate();
+  const [checking, setChecking] = useState(false);
+
+  const onCheck = async () => {
+    if (checking) return;
+    setChecking(true);
+    try {
+      const result = await checkForUpdates();
+      if (result.status === 'latest') {
+        showGameToast('Você já está na versão mais recente.', { variant: 'success' });
+        return;
+      }
+      if (result.status === 'available') {
+        showGameToast(`Nova versão ${result.latest.version} disponível.`, { variant: 'info' });
+        return;
+      }
+      if (result.status === 'offline') {
+        showGameToast('Não foi possível verificar agora.', { variant: 'warn' });
+        return;
+      }
+      showGameToast('Não foi possível verificar agora.', { variant: 'warn' });
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <section className="glass-card p-4">
       <h3 className="game-section-title mb-1 flex items-center gap-2">
@@ -97,6 +128,27 @@ export function AboutSection() {
             </small>
           </span>
         </a>
+      </div>
+
+      <div className="app-about-release mt-4">
+        <p className="app-about-release__title">Evolyn</p>
+        <p className="app-about-release__meta">
+          Versão {running.version}
+          <span aria-hidden> · </span>
+          Build {shortBuildId(running.build)}
+        </p>
+        <div className="app-about-release__actions">
+          <GameButton
+            size="sm"
+            variant="secondary"
+            disabled={checking}
+            onClick={() => void onCheck()}
+            className="!w-auto"
+          >
+            <RefreshCw size={14} aria-hidden className={checking ? 'animate-spin' : undefined} />
+            {checking ? 'Verificando…' : 'Verificar atualizações'}
+          </GameButton>
+        </div>
       </div>
     </section>
   );
