@@ -1,3 +1,4 @@
+import { foldText } from '../utils/text-fold.js';
 import {
   activityCreateTemplates,
   type ActivityTemplate,
@@ -21,15 +22,7 @@ export interface TemplateSuggestion {
   confidence: 'strong' | 'similar';
 }
 
-function fold(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+const fold = foldText;
 
 function tokens(value: string): string[] {
   return fold(value)

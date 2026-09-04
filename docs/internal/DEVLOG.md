@@ -8,6 +8,13 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Settings 2.0 + feedback pós-#57
+
+- `silentFeedback` volta a silenciar XP/som/toast/haptic (RoutineRunner é dono); Today usa `suppressHaptic`.
+- `groupOccurrences` classifica Agora/Mais tarde com minutos SP (`getMinutesOfDaySaoPaulo`).
+- Restore/Undo reinsere por `sort_order`; busca Hoje usa `foldText` (sem acento).
+- Settings: superfície única + rows; áudio autosave (toggle imediato, volume debounce ~650ms); denied Web/Native com copy correta; About com “Verificar atualizações”.
+
 ### Atividades 3.0 — interação mobile
 
 - Catálogo de criação: oculta Respiração/Yoga/Cuidados (`offerInCreate: false`); legado continua via `findActivityTemplate`.

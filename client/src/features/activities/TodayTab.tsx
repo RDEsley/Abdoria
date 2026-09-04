@@ -81,7 +81,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
     const activity = activityById.get(activityId);
     if (!activity) return;
     markActivitySwipeHintDone();
-    void data.complete(activity, { optimisticUi: true, silentFeedback: true });
+    void data.complete(activity, { optimisticUi: true, suppressHaptic: true });
   };
 
   const archiveWithUndo = (activityId: string) => {
@@ -228,7 +228,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
             note: payload.note,
             metrics: payload.value != null ? { valor: payload.value } : undefined,
             optimisticUi: true,
-            silentFeedback: true,
+            suppressHaptic: true,
           });
           setDetails(null);
         }}

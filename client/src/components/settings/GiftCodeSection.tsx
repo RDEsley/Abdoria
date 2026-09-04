@@ -83,34 +83,32 @@ export function GiftCodeSection() {
 
   return (
     <>
-      <section className="settings-section">
-        <div className="settings-gift">
-          <label className="sr-only" htmlFor="settings-gift-code">
-            Código presente
-          </label>
-          <input
-            id="settings-gift-code"
-            className="settings-gift__input"
-            value={giftCode}
-            onChange={(e) => setGiftCode(e.target.value)}
-            placeholder="Digite o código"
-            autoComplete="off"
-            autoCapitalize="off"
-            spellCheck={false}
-            maxLength={GIFT_CODE_MAX_LENGTH}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && giftCode.trim()) void handleRedeem();
-            }}
-          />
-          <GameButton
-            className="settings-gift__action"
-            disabled={!giftCode.trim() || busy}
-            onClick={() => void handleRedeem()}
-          >
-            {busy ? 'Resgatando…' : 'Resgatar'}
-          </GameButton>
-        </div>
-      </section>
+      <div className="settings-gift">
+        <label className="sr-only" htmlFor="settings-gift-code">
+          Código presente
+        </label>
+        <input
+          id="settings-gift-code"
+          className="settings-gift__input"
+          value={giftCode}
+          onChange={(e) => setGiftCode(e.target.value)}
+          placeholder="Digite o código"
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          maxLength={GIFT_CODE_MAX_LENGTH}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && giftCode.trim()) void handleRedeem();
+          }}
+        />
+        <GameButton
+          className="settings-gift__action"
+          disabled={!giftCode.trim() || busy}
+          onClick={() => void handleRedeem()}
+        >
+          {busy ? 'Resgatando…' : 'Resgatar'}
+        </GameButton>
+      </div>
 
       {rewardReveal && (
         <GiftCodeRewardReveal

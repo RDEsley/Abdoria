@@ -1,4 +1,4 @@
-import { getTodaySaoPaulo } from '../utils/timezone.js';
+import { getMinutesOfDaySaoPaulo, getTodaySaoPaulo } from '../utils/timezone.js';
 import { activityOccursOnDay } from './schedule.js';
 import type {
   ActivityLogKind,
@@ -55,14 +55,16 @@ export function plannedOccurrencesForDay(
 
 export function groupOccurrences(
   occurrences: ActivityOccurrence[],
-  now = new Date(),
+  now: Date | number = new Date(),
 ): {
   now: ActivityOccurrence[];
   later: ActivityOccurrence[];
   anytime: ActivityOccurrence[];
   done: ActivityOccurrence[];
 } {
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  // Aceita Date (default SP) ou minutos do dia injetados nos testes.
+  const nowMinutes =
+    typeof now === 'number' ? now : getMinutesOfDaySaoPaulo(now);
   const result = {
     now: [] as ActivityOccurrence[],
     later: [] as ActivityOccurrence[],

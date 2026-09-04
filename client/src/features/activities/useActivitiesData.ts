@@ -25,7 +25,11 @@ import { showGameToast } from '@/lib/game-toast';
 import { emitProgressionFeedback } from '@/lib/progression-feedback';
 import { getErrorMessage } from '@/lib/api-errors';
 import type { ActivityLogRecord, ActivityRecord, RoutineRecord } from '@shared/activities';
-import type { EvolynInsight } from '@shared/activities';
+import {
+  insertActivityBySortOrder,
+  resolveActivityCompletionFeedback,
+  type EvolynInsight,
+} from '@shared/activities';
 import { addDaysSaoPaulo, getTodaySaoPaulo } from '@shared/utils/timezone';
 
 export function useActivitiesData() {
@@ -77,7 +81,10 @@ export function useActivitiesData() {
         note?: string;
         metrics?: Record<string, unknown>;
         routineId?: string;
+        /** Caller (ex.: RoutineRunner) emite XP/som/toast/haptic — não duplicar aqui. */
         silentFeedback?: boolean;
+        /** UI já deu haptic imediato (swipe/check); ainda emite XP/som/toast. */
+        suppressHaptic?: boolean;
         /** Quando true, o caller já aplicou UI otimista (ex.: swipe). */
         optimisticUi?: boolean;
       },
@@ -145,14 +152,16 @@ export function useActivitiesData() {
           });
         }
 
-        if (!options?.silentFeedback) {
+        const feedback = resolveActivityCompletionFeedback(options);
+        if (feedback.emitHaptic) {
           void successHaptic();
         }
-        // XP/toast/som uma vez na resposta — haptic pode ter sido antecipado na UI.
-        emitXpEarned(result.xp_ganho);
-        playCompleteSet();
-        const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
-        showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
+        if (feedback.emitXpSoundToast) {
+          emitXpEarned(result.xp_ganho);
+          playCompleteSet();
+          const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
+          showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
+        }
 
         emitProgressionFeedback({
           level_up: result.level_up,
@@ -225,10 +234,7 @@ export function useActivitiesData() {
     } catch (error) {
       if (snapshot) {
         const restored = snapshot;
-        setActivities((prev) => {
-          if (prev.some((item) => item.id === id)) return prev;
-          return [restored, ...prev];
-        });
+        setActivities((prev) => insertActivityBySortOrder(prev, restored));
       }
       throw error;
     }
@@ -236,21 +242,11 @@ export function useActivitiesData() {
 
   const restoreActivity = useCallback(async (id: string, optimistic?: ActivityRecord) => {
     if (optimistic) {
-      setActivities((prev) => {
-        if (prev.some((item) => item.id === id)) {
-          return prev.map((item) => (item.id === id ? { ...optimistic, archived_at: null } : item));
-        }
-        return [{ ...optimistic, archived_at: null }, ...prev];
-      });
+      setActivities((prev) => insertActivityBySortOrder(prev, { ...optimistic, archived_at: null }));
     }
     try {
       const restored = await restoreActivityApi(id);
-      setActivities((prev) => {
-        if (prev.some((item) => item.id === id)) {
-          return prev.map((item) => (item.id === id ? restored : item));
-        }
-        return [restored, ...prev];
-      });
+      setActivities((prev) => insertActivityBySortOrder(prev, restored));
       return restored;
     } catch (error) {
       if (optimistic) {

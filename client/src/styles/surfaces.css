@@ -850,6 +850,7 @@
 }
 
 .settings-page .settings-section,
+.settings-page .settings-surface,
 .profile-page .glass-card:not(.game-xp-section) {
   border-width: 1.5px;
   box-shadow: var(--shadow-resting);

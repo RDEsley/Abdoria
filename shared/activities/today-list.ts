@@ -1,3 +1,4 @@
+import { foldText } from '../utils/text-fold.js';
 import { activityOccursOnDay } from './schedule.js';
 import type {
   ActivityCategory,
@@ -62,8 +63,8 @@ export function filterTodayTabOccurrences(input: {
   filter: ActivityListFilter;
   query: string;
 }): { planned: ActivityOccurrence[]; backlog: ActivityOccurrence[] } {
-  const needle = input.query.trim().toLowerCase();
-  const matchesQuery = (name: string) => !needle || name.toLowerCase().includes(needle);
+  const needle = foldText(input.query);
+  const matchesQuery = (name: string) => !needle || foldText(name).includes(needle);
 
   const planned = input.plannedToday.filter((item) => {
     if (!matchesQuery(item.name)) return false;
