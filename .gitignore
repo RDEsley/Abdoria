@@ -108,6 +108,10 @@ temp/
 *.bak
 *.orig
 
+# App release artifacts (gerados por scripts/generate-app-version.mjs)
+client/public/version.json
+client/src/generated/app-release.ts
+
 # Optional local database dumps
 *.dump
 dump/

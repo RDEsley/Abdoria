@@ -19,6 +19,8 @@ function ctx(partial: Partial<QuestContext> = {}): QuestContext {
     routinesCompletedToday: 0,
     routinesCompletedThisWeek: 0,
     routinesCompletedThisMonth: 0,
+    scheduledActivityCompletedToday: 0,
+    scheduledRoutineCompletedToday: 0,
     morningComplete: false,
     afternoonComplete: false,
     eveningComplete: false,

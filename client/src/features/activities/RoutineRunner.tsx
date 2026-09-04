@@ -68,6 +68,21 @@ export function RoutineRunnerPage() {
     });
   }, [doneIds, optimisticDone.size, pendingIds]);
 
+  // Prewarm Lottie perto do fim da rotina (lazy; não no bundle inicial).
+  useEffect(() => {
+    if (total === 0) return;
+    let effective = 0;
+    for (const activity of items) {
+      if (!activity) continue;
+      if (doneIds.has(activity.id) || optimisticDone.has(activity.id)) effective += 1;
+    }
+    if (effective >= Math.max(0, total - 1)) {
+      void import('@/hooks/useLottieAsset').then((m) =>
+        m.prewarmLottieAsset('/assets/rotina-check.json'),
+      );
+    }
+  }, [doneIds, items, optimisticDone, total]);
+
   if (data.loading || !routine) return <PageLoader />;
 
   const doneNow = items.filter(

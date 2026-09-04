@@ -36,6 +36,8 @@ function baseQuestContext(partial: Partial<QuestContext>): QuestContext {
     routinesCompletedToday: 0,
     routinesCompletedThisWeek: 0,
     routinesCompletedThisMonth: 0,
+    scheduledActivityCompletedToday: 0,
+    scheduledRoutineCompletedToday: 0,
     morningComplete: false,
     afternoonComplete: false,
     eveningComplete: false,
@@ -177,6 +179,15 @@ export async function getDaySnapshot(userId: string) {
   );
   const questContextForGuide = baseQuestContext({
     activitiesCompletedToday: doneIds.size,
+    scheduledActivityCompletedToday: occurrences.filter(
+      (occ) => Boolean(occ.time) && occ.status === 'done',
+    ).length,
+    scheduledRoutineCompletedToday: routineSnapshots.filter(
+      (routine) =>
+        routine.scheduled_today &&
+        routine.items_total > 0 &&
+        routine.items_done >= routine.items_total,
+    ).length,
     morningComplete:
       periodBuckets.manha.planned > 0 && periodBuckets.manha.done === periodBuckets.manha.planned,
     afternoonComplete:
@@ -459,6 +470,26 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
   const trainingDays = user?.ab_training_profile_v2?.training_days ?? [];
   const weekday = getSaoPauloWeekday();
 
+  const scheduledActivityIds = new Set(
+    occurrences.filter((occ) => Boolean(occ.time)).map((occ) => occ.activity_id),
+  );
+  const scheduledActivityCompletedToday = doneLogs.filter(
+    (log) => log.activity_id && scheduledActivityIds.has(log.activity_id),
+  ).length;
+
+  const scheduledRoutinesToday = routines.filter(
+    (routine) =>
+      routine.schedule.kind !== 'unscheduled' && activityOccursOnDay(routine.schedule, today),
+  );
+  let scheduledRoutineCompletedToday = 0;
+  for (const routine of scheduledRoutinesToday) {
+    const items = routine.items ?? [];
+    if (items.length === 0) continue;
+    if (routineItemsDoneToday(routine, todayLogs) >= items.length) {
+      scheduledRoutineCompletedToday += 1;
+    }
+  }
+
   return baseQuestContext({
     activitiesCompletedToday: doneLogs.length,
     activitiesCompletedThisWeek: weekLogs.filter((log) => log.activity_id).length,
@@ -466,6 +497,8 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
     routinesCompletedToday,
     routinesCompletedThisWeek,
     routinesCompletedThisMonth,
+    scheduledActivityCompletedToday,
+    scheduledRoutineCompletedToday,
     morningComplete,
     afternoonComplete,
     eveningComplete,
@@ -477,12 +510,9 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
     workoutsThisWeek: weekWorkouts.length,
     workoutsThisMonth: monthWorkouts.length,
     hasRoutines: routines.length > 0,
-    hasRoutineScheduledToday: routines.some(
-      (routine) =>
-        routine.schedule.kind !== 'unscheduled' && activityOccursOnDay(routine.schedule, today),
-    ),
+    hasRoutineScheduledToday: scheduledRoutinesToday.length > 0,
     hasActivities: activities.length > 0,
-    hasScheduledActivityToday: occurrences.some((occ) => Boolean(occ.time)),
+    hasScheduledActivityToday: scheduledActivityIds.size > 0,
     categoriesUsed,
     menteCompletedToday,
     corpoCompletedToday,

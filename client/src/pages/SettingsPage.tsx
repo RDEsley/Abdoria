@@ -208,12 +208,9 @@ export function SettingsPage() {
     }
 
     if (notifPermission === 'denied') {
-      showGameToast('Notificações bloqueadas — ative nas configurações do dispositivo.', {
+      showGameToast('Notificações bloqueadas — use “Abrir configurações” abaixo.', {
         variant: 'info',
       });
-      if (Capacitor.isNativePlatform()) {
-        await notifCtx?.openSettings();
-      }
       return;
     }
 

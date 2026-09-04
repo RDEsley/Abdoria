@@ -50,9 +50,10 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 
 - **Fonte da release**: `package.json` (root) → campo `version`.
 - **Build id**: `scripts/generate-app-version.mjs` usa `VERCEL_GIT_COMMIT_SHA` (ou `GITHUB_SHA` / git HEAD / fallback `local-*`). Roda antes do build do client.
-- **Artefatos**:
+- **Artefatos** (gerados em `dev`/`build` por `scripts/generate-app-version.mjs`; **não versionar**):
   - `client/public/version.json` — publicado e consultado em runtime (`Cache-Control: no-store` no `vercel.json`);
   - `client/src/generated/app-release.ts` — embutido no bundle (`getRunningRelease()`).
+  - Stub: `client/src/generated/app-release.stub.ts` + `scripts/ensure-app-release.mjs` para clone limpo / lint.
 - **Comparação**: bundle sabe “eu sou version A / build X”; `/version.json` informa latest. UI se `compareSemver(latest.version, running.version) > 0`.
 - **Checagens**: pós-boot (`evolyn-booted`), `visibilitychange` → visible, intervalo ~45 min. Sem polling por navegação.
 - **Dismiss**: `localStorage` `evolyn:update-dismissed` `{ version, at }` com TTL ~12h; nova release volta a lembrar.
@@ -63,9 +64,18 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - **Nativos (política)**: release `0.x.y` alinhada ao produto; Android `versionName` / iOS `CFBundleShortVersionString` = mesma release; `versionCode` / `CFBundleVersion` só crescem. Sem automação perigosa nesta entrega.
 - **Teste local**: alterar temporariamente `version` embutida vs `version.json`, ou subir release nova e reabrir PWA antiga; confirmar que mesmo `0.1.0` com builds diferentes não notifica.
 
+## Missões (quests)
+
+- Conjunto atribuído é persistido em `quest_assignments` (PK `user_id, period_key`; chaves SP: daily `YYYY-MM-DD`, weekly `W…`, monthly `MYYYY-MM`).
+- Mudanças de perfil no meio do período **não** regeneram o assignment já criado.
+- Claim só aceita ids do assignment; recompensa via RPC atômico `claim_quest_reward` (service_role).
+- Progresso de “programada” usa `scheduledActivityCompletedToday` / `scheduledRoutineCompletedToday` no `QuestContext`.
+
 ## Ranking
 
 - Ranking é **somente global** (XP / Folhas / Streak recorde). Semanal removido da UI e da API de listagem.
+- População única: `LEADERBOARD_BASE_FILTER` + excluir admin oculto (`admin_visivel_ranking !== true`) em listagem, `/me`, total e rank (`server/src/services/leaderboard-filter.ts`).
+- Admin oculto em `/me`: `rank: null` + `hidden_from_ranking: true` (não inventar `#1 de 1`).
 - NPCs/demo seed removidos do produto; `npm run seed` não recria `.npc@abdoria.local`.
 - Percentuais de conquistas usam apenas perfis reais (`is_guest=false`, `is_demo_npc=false`, onboarded).
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
@@ -10,6 +10,10 @@ import { ackCosmeticCelebration, getShop } from '@/lib/api';
 import { playEquip } from '@/lib/sounds';
 import { successHaptic } from '@/lib/platform/native-runtime';
 import { COSMETIC_RARITY_LABELS, type ShopCatalogItem, type ShopResponse } from '@/types';
+import {
+  acquireFullscreenCelebration,
+  releaseFullscreenCelebration,
+} from '@/lib/fullscreen-celebration';
 
 const KIND_LABELS: Record<string, string> = {
   moldura_loja: 'Moldura',
@@ -52,40 +56,59 @@ export function CosmeticUnlockCelebration() {
   const [items, setItems] = useState<ShopCatalogItem[] | null>(null);
   const [index, setIndex] = useState(0);
   const [closing, setClosing] = useState(false);
+  const [slotReady, setSlotReady] = useState(false);
+  const heldSlotRef = useRef(false);
 
   useEffect(() => {
     if (pendingIds.length === 0) {
       setItems(null);
       setIndex(0);
+      setSlotReady(false);
       return;
     }
     let cancelled = false;
-    getShop()
-      .then((catalog) => {
+    void (async () => {
+      await acquireFullscreenCelebration('cosmetic');
+      if (cancelled) {
+        releaseFullscreenCelebration('cosmetic');
+        return;
+      }
+      heldSlotRef.current = true;
+      setSlotReady(true);
+      try {
+        const catalog = await getShop();
         if (cancelled) return;
         const resolved = pendingIds
           .map((id) => findCatalogItem(catalog, id))
           .filter((item): item is ShopCatalogItem => Boolean(item));
         if (resolved.length === 0) {
-          // Ids sem item no catálogo (removidos): só limpa a fila em silêncio.
           void ackCosmeticCelebration().then((res) => applyUser(res.user));
+          heldSlotRef.current = false;
+          releaseFullscreenCelebration('cosmetic');
+          setSlotReady(false);
           return;
         }
         setIndex(0);
         setItems(resolved);
         playEquip();
         void successHaptic();
-      })
-      .catch(() => {
-        /* sem catálogo, tenta de novo no próximo refresh */
-      });
+      } catch {
+        heldSlotRef.current = false;
+        releaseFullscreenCelebration('cosmetic');
+        setSlotReady(false);
+      }
+    })();
     return () => {
       cancelled = true;
+      if (heldSlotRef.current) {
+        heldSlotRef.current = false;
+        releaseFullscreenCelebration('cosmetic');
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingIds.join('|')]);
 
-  if (!items || items.length === 0) return null;
+  if (!slotReady || !items || items.length === 0) return null;
 
   const item = items[Math.min(index, items.length - 1)];
   const isLast = index >= items.length - 1;
@@ -108,6 +131,9 @@ export function CosmeticUnlockCelebration() {
       setItems(null);
       setIndex(0);
       setClosing(false);
+      setSlotReady(false);
+      heldSlotRef.current = false;
+      releaseFullscreenCelebration('cosmetic');
     }
   };
 

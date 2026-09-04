@@ -150,6 +150,7 @@ export function queueStreakUpCelebration(celebration: StreakCelebration, userId?
     streak_anterior: celebration.streak_anterior,
     streak_atual: celebration.streak_atual,
   });
+  void import('@/hooks/useLottieAsset').then((m) => m.prewarmLottieAsset('/assets/fire-streak.json'));
 }
 
 /** Compat: chamadas antigas do Player/Activities. */

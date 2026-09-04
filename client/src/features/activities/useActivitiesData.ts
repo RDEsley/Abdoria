@@ -21,7 +21,7 @@ import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/hooks/useAuth';
 import { useMidnightRefresh } from '@/context/MidnightRefreshContext';
 import { showGameToast } from '@/lib/game-toast';
-import { queueStreakUpCelebration } from '@/lib/home-celebrations';
+import { emitProgressionFeedback } from '@/lib/progression-feedback';
 import { getErrorMessage } from '@/lib/api-errors';
 import type { ActivityLogRecord, ActivityRecord, RoutineRecord } from '@shared/activities';
 import type { EvolynInsight } from '@shared/activities';
@@ -93,6 +93,15 @@ export function useActivitiesData() {
         });
         applyUser(result.user);
         markStreakSecuredToday(result.user);
+
+        // Aplica log autoritativo imediatamente (não espera refetch completo).
+        if (result.log) {
+          setLogs((prev) => {
+            if (prev.some((entry) => entry.id === result.log.id)) return prev;
+            return [result.log, ...prev];
+          });
+        }
+
         if (!options?.silentFeedback) {
           emitXpEarned(result.xp_ganho);
           void successHaptic();
@@ -100,6 +109,14 @@ export function useActivitiesData() {
           const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
           showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
         }
+
+        emitProgressionFeedback({
+          level_up: result.level_up,
+          new_achievements: result.new_achievements,
+          streak_celebration: result.streak_celebration,
+          userId: user?.id,
+        });
+
         const derived = deriveActivityReminders([activity], []);
         for (const reminder of derived) {
           void notificationScheduler.cancel(reminder.id);
@@ -113,12 +130,13 @@ export function useActivitiesData() {
             );
           }
         }
-        await reload();
-        void refresh();
+
         window.dispatchEvent(new Event('evolyn:quests-changed'));
-        if (result.streak_celebration) {
-          queueStreakUpCelebration(result.streak_celebration, user?.id);
-        }
+
+        // Reconcilia listas/stats em background — não bloqueia o caller.
+        void reload().catch(() => undefined);
+        void refresh();
+
         return result;
       } catch (error) {
         showGameToast(getErrorMessage(error, 'Não foi possível registrar.'), { variant: 'error' });
@@ -154,3 +172,4 @@ export function useActivitiesData() {
     archiveRoutine,
   };
 }
+

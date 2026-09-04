@@ -22,6 +22,7 @@ import { useBootReadiness } from '@/context/boot-readiness';
 import { useAuth } from '@/hooks/useAuth';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import { queueFrozenHomeCelebration, queueStreakUpCelebration } from '@/lib/home-celebrations';
+import { emitProgressionFeedback } from '@/lib/progression-feedback';
 import type {
   CompleteWorkoutPayload,
   DashboardStats,
@@ -546,14 +547,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       window.dispatchEvent(new Event('evolyn:quests-changed'));
       emitXpEarned(result.xp_ganho ?? 0);
-      if (result.level_up) {
-        window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: result.level_up }));
-      }
-      if (result.new_achievements?.length) {
-        window.dispatchEvent(
-          new CustomEvent('abdoria:achievements-unlocked', { detail: result.new_achievements }),
-        );
-      }
+      emitProgressionFeedback({
+        level_up: result.level_up,
+        new_achievements: result.new_achievements,
+        streak_celebration: result.streak_celebration,
+        userId: user?.id,
+      });
       if (result.new_personal_records?.length) {
         window.dispatchEvent(
           new CustomEvent('abdoria:personal-records-unlocked', {

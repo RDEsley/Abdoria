@@ -5,6 +5,33 @@ import { useEffect, useState } from 'react';
 const cache = new Map<string, unknown>();
 const inflight = new Map<string, Promise<unknown>>();
 
+function loadLottie(url: string): Promise<unknown> {
+  if (cache.has(url)) return Promise.resolve(cache.get(url));
+  let request = inflight.get(url);
+  if (!request) {
+    request = fetch(url)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((json) => {
+        cache.set(url, json);
+        return json;
+      })
+      .catch((error: unknown) => {
+        console.error(`useLottieAsset: falha ao carregar ${url}`, error);
+        return null;
+      })
+      .finally(() => {
+        inflight.delete(url);
+      });
+    inflight.set(url, request);
+  }
+  return request;
+}
+
+/** Preaquece um Lottie sem montar o player (idle / fila de celebração). */
+export function prewarmLottieAsset(url: string): Promise<unknown> {
+  return loadLottie(url);
+}
+
 /** Carrega um JSON de animação Lottie de `public/` sob demanda, com cache. */
 export function useLottieAsset(url: string, enabled = true): unknown | null {
   const [data, setData] = useState<unknown | null>(() => (enabled ? cache.get(url) ?? null : null));
@@ -17,25 +44,7 @@ export function useLottieAsset(url: string, enabled = true): unknown | null {
     }
 
     let cancelled = false;
-    let request = inflight.get(url);
-    if (!request) {
-      request = fetch(url)
-        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
-        .then((json) => {
-          cache.set(url, json);
-          return json;
-        })
-        .catch((error: unknown) => {
-          console.error(`useLottieAsset: falha ao carregar ${url}`, error);
-          return null;
-        })
-        .finally(() => {
-          inflight.delete(url);
-        });
-      inflight.set(url, request);
-    }
-
-    void request.then((json) => {
+    void loadLottie(url).then((json) => {
       if (!cancelled) setData(json);
     });
 
