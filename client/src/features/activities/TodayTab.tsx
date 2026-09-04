@@ -2,14 +2,17 @@ import { useMemo, useState } from 'react';
 import { Filter, Plus, Search } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import {
+  filterTodayTabOccurrences,
   groupOccurrences,
+  occurrenceListKey,
   plannedOccurrencesForDay,
-  type ActivityCategory,
+  type ActivityListFilter,
   type ActivityOccurrence,
 } from '@shared/activities';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
+import { actionHaptic } from '@/lib/platform/native-runtime';
 import { ActivityQuickCard } from './ActivityQuickCard';
 import { markActivitySwipeHintDone } from '@/lib/activity-swipe-hint';
 import { ActivityDetailsSheet } from './ActivityDetailsSheet';
@@ -17,9 +20,7 @@ import { ActivityCreatorSheet } from './ActivityCreatorSheet';
 import { QuickNote } from './QuickNote';
 import type { useActivitiesData } from './useActivitiesData';
 
-type ActivityFilter = 'todas' | 'hoje' | 'mente' | 'corpo' | 'vida' | 'outros';
-
-const FILTERS: { id: ActivityFilter; label: string }[] = [
+const FILTERS: { id: ActivityListFilter; label: string }[] = [
   { id: 'todas', label: 'Todas' },
   { id: 'hoje', label: 'Hoje' },
   { id: 'mente', label: 'Mente' },
@@ -28,44 +29,42 @@ const FILTERS: { id: ActivityFilter; label: string }[] = [
   { id: 'outros', label: 'Outros' },
 ];
 
-function matchesCategory(category: ActivityCategory | string | undefined, filter: ActivityFilter) {
-  if (filter === 'todas' || filter === 'hoje') return true;
-  if (filter === 'outros') return category === 'outro' || !category;
-  return category === filter;
-}
-
 export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> }) {
   const today = getTodaySaoPaulo();
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [details, setDetails] = useState<ActivityOccurrence | null>(null);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<ActivityFilter>('todas');
+  const [filter, setFilter] = useState<ActivityListFilter>('todas');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [hintSlotUsed, setHintSlotUsed] = useState(false);
 
-  const occurrences = useMemo(
-    () =>
-      plannedOccurrencesForDay(
-        data.activities,
-        today,
-        data.logs.filter((log) => log.day_key === today),
-      ),
-    [data.activities, data.logs, today],
+  const todayLogs = useMemo(
+    () => data.logs.filter((log) => log.day_key === today),
+    [data.logs, today],
   );
 
-  const filteredOccurrences = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    const todayIds = new Set(occurrences.map((item) => item.activity_id));
-    return occurrences.filter((item) => {
-      if (needle && !item.name.toLowerCase().includes(needle)) return false;
-      if (filter === 'hoje') return todayIds.has(item.activity_id);
-      return matchesCategory(item.category, filter);
-    });
-  }, [filter, occurrences, query]);
+  const plannedToday = useMemo(
+    () => plannedOccurrencesForDay(data.activities, today, todayLogs),
+    [data.activities, today, todayLogs],
+  );
 
-  const groups = groupOccurrences(filteredOccurrences);
-  const doneCount = groups.done.length;
-  const total = filteredOccurrences.length;
+  const { planned, backlog } = useMemo(
+    () =>
+      filterTodayTabOccurrences({
+        plannedToday,
+        activities: data.activities,
+        dayKey: today,
+        logs: todayLogs,
+        filter,
+        query,
+      }),
+    [plannedToday, data.activities, today, todayLogs, filter, query],
+  );
+
+  const groups = groupOccurrences(planned);
+  const visibleCount = planned.length + backlog.length;
+  const doneCount =
+    groups.done.length + backlog.filter((item) => item.status === 'done').length;
   const activityById = useMemo(
     () => new Map(data.activities.map((activity) => [activity.id, activity])),
     [data.activities],
@@ -75,8 +74,15 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
     const pending = [...groups.now, ...groups.anytime, ...groups.later].find(
       (item) => item.status !== 'done',
     );
-    return pending ? pending.occurrence_key + pending.activity_id : null;
+    return pending ? occurrenceListKey(pending) : null;
   }, [groups.anytime, groups.later, groups.now]);
+
+  const completeOptimistic = (activityId: string) => {
+    const activity = activityById.get(activityId);
+    if (!activity) return;
+    markActivitySwipeHintDone();
+    void data.complete(activity, { optimisticUi: true, silentFeedback: true });
+  };
 
   const archiveWithUndo = (activityId: string) => {
     const activity = activityById.get(activityId);
@@ -90,7 +96,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
           duration: 5000,
           actionLabel: 'Desfazer',
           onAction: () => {
-            void data.restoreActivity(activityId).catch((error) => {
+            void data.restoreActivity(activityId, activity).catch((error) => {
               showGameToast(getErrorMessage(error, 'Não foi possível restaurar.'), {
                 variant: 'error',
               });
@@ -99,7 +105,6 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
         });
       } catch (error) {
         showGameToast(getErrorMessage(error, 'Não foi possível remover.'), { variant: 'error' });
-        void data.reload();
       }
     })();
   };
@@ -111,7 +116,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
           {title}
         </h3>
         {items.map((item) => {
-          const cardKey = item.occurrence_key + item.activity_id;
+          const cardKey = occurrenceListKey(item);
           return (
             <ActivityQuickCard
               key={cardKey}
@@ -119,12 +124,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
               busy={data.isBusy(item.activity_id)}
               playHint={!hintSlotUsed && firstHintKey === cardKey}
               onHintConsumed={() => setHintSlotUsed(true)}
-              onComplete={() => {
-                const activity = activityById.get(item.activity_id);
-                if (!activity) return;
-                markActivitySwipeHintDone();
-                void data.complete(activity, { optimisticUi: true });
-              }}
+              onComplete={() => completeOptimistic(item.activity_id)}
               onArchive={() => archiveWithUndo(item.activity_id)}
               onDetails={() => setDetails(item)}
             />
@@ -138,9 +138,11 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
       <QuickNote />
 
       <p className="text-sm font-bold text-stone-600">
-        {occurrences.length === 0
+        {data.activities.length === 0
           ? 'Comece com um modelo — nada é imposto.'
-          : `${doneCount} de ${total} filtradas · ${occurrences.length} no dia.`}
+          : filter === 'hoje'
+            ? `${groups.done.length} de ${planned.length} hoje`
+            : `${doneCount} de ${visibleCount} · ${plannedToday.length} no dia`}
       </p>
 
       <div className="flex items-center gap-2">
@@ -186,8 +188,9 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
       {renderList('Quando eu quiser', groups.anytime)}
       {renderList('Mais tarde', groups.later)}
       {renderList('Concluídas', groups.done)}
+      {renderList('Outras atividades', backlog)}
 
-      {total === 0 && occurrences.length > 0 && (
+      {visibleCount === 0 && data.activities.length > 0 && (
         <p className="text-sm font-bold text-stone-500">Nenhuma atividade com esse filtro.</p>
       )}
 
@@ -219,11 +222,13 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
         onConfirm={(payload) => {
           const activity = details ? activityById.get(details.activity_id) : null;
           if (!activity) return;
+          void actionHaptic();
           void data.complete(activity, {
             kind: payload.kind,
             note: payload.note,
             metrics: payload.value != null ? { valor: payload.value } : undefined,
             optimisticUi: true,
+            silentFeedback: true,
           });
           setDetails(null);
         }}

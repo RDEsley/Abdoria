@@ -172,6 +172,7 @@ export function ActivityQuickCard({
           disabled={busy || done || Boolean(exiting)}
           onClick={() => {
             markActivitySwipeHintDone();
+            void actionHaptic();
             onComplete();
           }}
         >
@@ -184,7 +185,11 @@ export function ActivityQuickCard({
           aria-label={`Detalhes de ${occurrence.name}`}
         >
           <strong>{occurrence.name}</strong>
-          <small>{occurrence.time ?? 'Quando eu quiser'}</small>
+          <small>
+            {occurrence.not_planned_today
+              ? 'Fora de hoje'
+              : (occurrence.time ?? 'Quando eu quiser')}
+          </small>
         </button>
         {!done && (
           <button

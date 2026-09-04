@@ -146,12 +146,13 @@ export function useActivitiesData() {
         }
 
         if (!options?.silentFeedback) {
-          emitXpEarned(result.xp_ganho);
           void successHaptic();
-          playCompleteSet();
-          const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
-          showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
         }
+        // XP/toast/som uma vez na resposta — haptic pode ter sido antecipado na UI.
+        emitXpEarned(result.xp_ganho);
+        playCompleteSet();
+        const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
+        showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
 
         emitProgressionFeedback({
           level_up: result.level_up,
@@ -214,20 +215,49 @@ export function useActivitiesData() {
   }, []);
 
   const archiveActivity = useCallback(async (id: string) => {
-    const archived = await archiveActivityApi(id);
-    setActivities((prev) => prev.filter((item) => item.id !== id));
-    return archived;
+    let snapshot: ActivityRecord | undefined;
+    setActivities((prev) => {
+      snapshot = prev.find((item) => item.id === id);
+      return prev.filter((item) => item.id !== id);
+    });
+    try {
+      return await archiveActivityApi(id);
+    } catch (error) {
+      if (snapshot) {
+        const restored = snapshot;
+        setActivities((prev) => {
+          if (prev.some((item) => item.id === id)) return prev;
+          return [restored, ...prev];
+        });
+      }
+      throw error;
+    }
   }, []);
 
-  const restoreActivity = useCallback(async (id: string) => {
-    const restored = await restoreActivityApi(id);
-    setActivities((prev) => {
-      if (prev.some((item) => item.id === id)) {
-        return prev.map((item) => (item.id === id ? restored : item));
+  const restoreActivity = useCallback(async (id: string, optimistic?: ActivityRecord) => {
+    if (optimistic) {
+      setActivities((prev) => {
+        if (prev.some((item) => item.id === id)) {
+          return prev.map((item) => (item.id === id ? { ...optimistic, archived_at: null } : item));
+        }
+        return [{ ...optimistic, archived_at: null }, ...prev];
+      });
+    }
+    try {
+      const restored = await restoreActivityApi(id);
+      setActivities((prev) => {
+        if (prev.some((item) => item.id === id)) {
+          return prev.map((item) => (item.id === id ? restored : item));
+        }
+        return [restored, ...prev];
+      });
+      return restored;
+    } catch (error) {
+      if (optimistic) {
+        setActivities((prev) => prev.filter((item) => item.id !== id));
       }
-      return [restored, ...prev];
-    });
-    return restored;
+      throw error;
+    }
   }, []);
 
   return {

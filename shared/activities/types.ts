@@ -110,6 +110,8 @@ export interface ActivityOccurrence {
   status: 'pending' | 'done';
   log_id?: string;
   kind?: ActivityLogKind;
+  /** Listada em "Todas"/categoria sem ocorrer no dia atual. */
+  not_planned_today?: boolean;
 }
 
 export const ACTIVITY_CATEGORIES: ReadonlyArray<{ id: ActivityCategory; label: string }> = [
