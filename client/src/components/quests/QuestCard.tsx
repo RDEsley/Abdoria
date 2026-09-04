@@ -15,6 +15,10 @@ import { successHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import { GameButton } from '@/components/ui/GameButton';
+import {
+  resolveQuestBoardPhase,
+  shouldWipeQuestsOnLoadFailure,
+} from '@shared/quests/load-state';
 
 type QuestScope = QuestStatus['scope'];
 
@@ -100,27 +104,52 @@ function QuestRow({
 export function QuestCard({ compact }: { compact?: boolean }) {
   const { applyUser } = useAuth();
   const [quests, setQuests] = useState<QuestStatus[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [activeScope, setActiveScope] = useState<QuestScope>('daily');
   const trackRef = useRef<HTMLDivElement>(null);
   const paneRefs = useRef<Partial<Record<QuestScope, HTMLElement | null>>>({});
   const scrollingRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
+  const hasQuestsRef = useRef(false);
+
+  useEffect(() => {
+    hasQuestsRef.current = quests.length > 0;
+  }, [quests.length]);
 
   const reload = useCallback(() => {
-    setLoading(true);
-    setLoadError(false);
+    const isInitial = !hasLoadedOnceRef.current;
+    if (isInitial) {
+      setInitialLoading(true);
+      setLoadError(false);
+    } else {
+      setRefreshing(true);
+    }
+
     listQuests()
       .then((next) => {
         setQuests(next);
         setLoadError(false);
+        hasLoadedOnceRef.current = true;
       })
       .catch(() => {
-        setLoadError(true);
-        setQuests([]);
+        const wipe = shouldWipeQuestsOnLoadFailure({
+          hasLoadedOnce: hasLoadedOnceRef.current,
+          hasQuests: hasQuestsRef.current,
+        });
+        if (wipe) {
+          setLoadError(true);
+          if (!hasLoadedOnceRef.current) setQuests([]);
+        } else {
+          showGameToast('Não foi possível atualizar as missões.', { variant: 'info' });
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setInitialLoading(false);
+        setRefreshing(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -214,7 +243,14 @@ export function QuestCard({ compact }: { compact?: boolean }) {
 
     for (const pane of panes) observer.observe(pane);
     return () => observer.disconnect();
-  }, [quests.length, loading, loadError]);
+  }, [quests.length, initialLoading, loadError]);
+
+  const boardPhase = resolveQuestBoardPhase({
+    initialLoading,
+    loadError,
+    hasQuests: quests.length > 0,
+  });
+  const boardBlocked = boardPhase === 'skeleton' || boardPhase === 'error';
 
   const claimable = quests.filter((q) => !q.claimed && q.progress >= q.goal);
   const unclaimed = quests.filter((q) => !q.claimed);
@@ -223,7 +259,7 @@ export function QuestCard({ compact }: { compact?: boolean }) {
     .sort((a, b) => b.progress / b.goal - a.progress / a.goal)[0];
 
   if (compact) {
-    if (loading || loadError) return null;
+    if (boardPhase !== 'content') return null;
     const highlight = claimable[0] ?? closestToComplete;
     if (!highlight) return null;
     const ready = highlight.progress >= highlight.goal && !highlight.claimed;
@@ -255,7 +291,11 @@ export function QuestCard({ compact }: { compact?: boolean }) {
   }
 
   return (
-    <section className="missions-board" aria-label="Missões" aria-busy={loading || undefined}>
+    <section
+      className="missions-board"
+      aria-label="Missões"
+      aria-busy={initialLoading || refreshing || undefined}
+    >
       <header className="missions-board__header">
         <h3 className="game-section-title flex items-center gap-2">
           <Gift size={16} aria-hidden /> Missões
@@ -275,13 +315,13 @@ export function QuestCard({ compact }: { compact?: boolean }) {
               type="button"
               role="tab"
               aria-selected={selected}
-              disabled={loading || loadError}
+              disabled={boardBlocked}
               className={`missions-board__tab missions-board__tab--${scope}${selected ? ' is-active' : ''}`}
               onClick={() => scrollToScope(scope)}
             >
               <Icon size={14} aria-hidden />
               <span>{meta.short}</span>
-              {!loading && !loadError && readyCount > 0 ? (
+              {boardPhase === 'content' && readyCount > 0 ? (
                 <span className="missions-board__tab-badge" aria-label={`${readyCount} prontas`}>
                   {readyCount}
                 </span>
@@ -291,14 +331,14 @@ export function QuestCard({ compact }: { compact?: boolean }) {
         })}
       </div>
 
-      {loadError ? (
+      {boardPhase === 'error' ? (
         <div className="missions-board__error" role="alert">
           <p>Não foi possível carregar suas missões.</p>
           <GameButton size="sm" onClick={() => reload()}>
             Tentar novamente
           </GameButton>
         </div>
-      ) : loading ? (
+      ) : boardPhase === 'skeleton' ? (
         <div className="missions-board__skeleton-pane" aria-hidden>
           <div className="missions-board__skeleton-line missions-board__skeleton-line--title" />
           <div className="missions-board__skeleton-line missions-board__skeleton-line--wide" />

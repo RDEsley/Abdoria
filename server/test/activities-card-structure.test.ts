@@ -43,6 +43,9 @@ describe('card structural namespaces', () => {
     expect(tsx).toContain('data-no-nav-swipe');
     expect(tsx).toContain('Não foi possível carregar suas missões');
     expect(tsx).toContain('missions-board__skeleton-pane');
+    expect(tsx).toContain('initialLoading');
+    expect(tsx).toContain('refreshing');
+    expect(tsx).not.toMatch(/setLoading\(true\)/);
   });
 
   it('Activity details expose explicit close control', () => {
