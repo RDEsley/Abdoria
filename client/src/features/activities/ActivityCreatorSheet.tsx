@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { PickerField } from '@/components/ui/PickerField';
@@ -87,7 +87,13 @@ export function ActivityCreatorSheet({
     setFlexible(false);
     setTime('');
     setRemind(false);
+    setBusy(false);
   };
+
+  // Fecha sem criar → próximo open começa limpo (não sobe ao trocar step).
+  useEffect(() => {
+    if (!open) reset();
+  }, [open]);
 
   const goToTemplateStep = () => {
     const suggestions = suggestActivityTemplates(name, 3);

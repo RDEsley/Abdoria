@@ -93,3 +93,10 @@ export {
   type DayGuideResult,
   type DayGuideRoutineInput,
 } from './day-guide.js';
+export {
+  backlogOccurrenceForActivity,
+  filterTodayTabOccurrences,
+  matchesActivityCategoryFilter,
+  occurrenceListKey,
+  type ActivityListFilter,
+} from './today-list.js';

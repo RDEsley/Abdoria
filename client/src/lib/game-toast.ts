@@ -1,3 +1,5 @@
+import { nextStickyUntil, shouldAcceptToast } from '@shared/ui/toast-sticky';
+
 export type GameToastVariant = 'success' | 'error' | 'warn' | 'info';
 
 export interface GameToastOptions {
@@ -27,6 +29,7 @@ const DEFAULT_DURATION: Record<GameToastVariant, number> = {
 
 let listener: Listener | null = null;
 let toastSequence = 0;
+let stickyUntil = 0;
 
 export function setGameToastListener(nextListener: Listener | null): void {
   listener = nextListener;
@@ -34,11 +37,21 @@ export function setGameToastListener(nextListener: Listener | null): void {
 
 export function showGameToast(message: string, options?: GameToastOptions): void {
   const variant = options?.variant ?? 'success';
+  const hasAction = Boolean(options?.actionLabel && options?.onAction);
+  const duration = options?.duration ?? DEFAULT_DURATION[variant];
+  const now = Date.now();
+
+  if (!shouldAcceptToast({ hasAction, variant, now, stickyUntil })) {
+    return;
+  }
+
+  stickyUntil = nextStickyUntil({ hasAction, now, duration });
+
   listener?.({
     id: ++toastSequence,
     message,
     variant,
-    duration: options?.duration ?? DEFAULT_DURATION[variant],
+    duration,
     actionLabel: options?.actionLabel,
     onAction: options?.onAction,
   });
