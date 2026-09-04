@@ -243,6 +243,19 @@
     background 160ms ease;
 }
 
+.personal-notifications__composer {
+  margin-top: 0.85rem;
+}
+
+.personal-notifications__composer .personal-notification-form--flat {
+  margin-top: 0;
+  padding: 0.95rem 0.9rem;
+  border: 1px solid rgb(14 116 144 / 14%);
+  border-radius: 1rem;
+  background: rgb(248 250 252 / 85%);
+  box-shadow: 0 1px 0 rgb(14 116 144 / 6%);
+}
+
 .personal-notifications__create {
   display: inline-flex;
   align-items: center;
@@ -250,20 +263,20 @@
   gap: 0.45rem;
   width: 100%;
   min-height: 2.85rem;
-  margin-top: 0.85rem;
   padding: 0.65rem 1rem;
-  border: 2.5px solid #16332e;
+  border: 1.5px solid rgb(14 116 144 / 22%);
   border-radius: 999px;
-  background: linear-gradient(180deg, #67e8f9 0%, #06b6d4 100%);
-  color: #083344;
+  background: linear-gradient(180deg, #f0fdff 0%, #e0f7fa 100%);
+  color: #0e7490;
   font-size: 0.82rem;
-  font-weight: 900;
-  box-shadow: 0 3px 0 #16332e;
+  font-weight: 850;
+  box-shadow: 0 1px 0 rgb(14 116 144 / 12%);
 }
 
 .personal-notifications__create:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #16332e;
+  transform: translateY(1px);
+  box-shadow: none;
+  background: linear-gradient(180deg, #e0f7fa 0%, #cffafe 100%);
 }
 
 .activities-reminder-cta {
@@ -508,6 +521,21 @@
   display: grid;
   gap: 0.55rem;
   margin-top: 0.85rem;
+}
+
+.personal-notifications__list--separated {
+  margin-top: 1.15rem;
+  padding-top: 1.05rem;
+  border-top: 1px solid rgb(14 116 144 / 14%);
+}
+
+.personal-notifications__list-label {
+  margin: 0;
+  color: #78716c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .personal-notifications__empty {
@@ -795,8 +823,25 @@
   border-radius: 0.8rem;
   place-items: center;
   background: #0b0b0b;
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgb(28 25 23 / 18%);
+}
+
+.reminder-preview__avatar-edit {
+  position: absolute;
+  right: -0.28rem;
+  bottom: -0.28rem;
+  display: grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  place-items: center;
+  border: 1.5px solid #fff;
+  border-radius: 999px;
+  background: #0f766e;
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(15 118 110 / 35%);
+  pointer-events: none;
 }
 
 .reminder-preview__avatar img {

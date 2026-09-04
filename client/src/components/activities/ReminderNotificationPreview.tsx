@@ -1,5 +1,5 @@
 import { useId, useState, type CSSProperties } from 'react';
-import { Check, ChevronLeft, Volume2 } from 'lucide-react';
+import { Check, ChevronLeft, Pencil, Volume2 } from 'lucide-react';
 import { PERSONAL_NOTIFICATION_COLORS, PERSONAL_NOTIFICATION_ICONS } from '@shared/reminders';
 import { Capacitor } from '@capacitor/core';
 import { reminderSoundLabel, type ReminderSoundId } from '@shared/reminder-sounds';
@@ -263,6 +263,9 @@ export function ReminderNotificationPreview({
           onClick={() => openView('appearance')}
         >
           <BadgeIcon size={18} aria-hidden />
+          <span className="reminder-preview__avatar-edit" aria-hidden>
+            <Pencil size={9} strokeWidth={2.5} />
+          </span>
         </button>
 
         <div className="reminder-preview__copy">

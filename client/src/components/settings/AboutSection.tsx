@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, RefreshCw, Sparkles } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 import {
   DiscordIcon,
   FacebookIcon,
@@ -39,7 +39,19 @@ const FATEEIGHT_LINKS = [
   },
 ] as const;
 
-/** Créditos + redes sociais da empresa responsável pelo Evolyn + comunidade do projeto. */
+const COMMUNITY_LINKS = [
+  {
+    label: 'Discord',
+    href: 'https://discord.gg/jPFMb3tp3W',
+    Icon: DiscordIcon,
+  },
+  {
+    label: 'GitHub do app',
+    href: 'https://github.com/RDEsley/Evolyn-Core-Quest',
+    Icon: GithubIcon,
+  },
+] as const;
+
 export function AboutSection() {
   const { running, checkForUpdates } = useAppUpdate();
   const [checking, setChecking] = useState(false);
@@ -68,87 +80,48 @@ export function AboutSection() {
   };
 
   return (
-    <section className="glass-card p-4">
-      <h3 className="game-section-title mb-1 flex items-center gap-2">
-        <Sparkles size={14} /> Sobre o Evolyn
-      </h3>
-      <p className="mb-3 text-xs font-medium text-stone-500">
-        Desenvolvido pela <strong>Fateeight</strong>. Siga a empresa nas redes:
+    <section className="settings-block">
+      <h3 className="game-section-title mb-1">Sobre o Evolyn</h3>
+      <p className="settings-block__hint">
+        Aplicativo de evolução pessoal gamificada. Desenvolvido pela Fate Eight.
       </p>
 
-      <div className="settings-social-links">
-        {FATEEIGHT_LINKS.map(({ label, handle, href, Icon }) => (
-          <a
-            key={label}
-            className="settings-social-link"
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="settings-social-link__icon" aria-hidden>
-              <Icon size={15} />
-            </span>
-            <span className="settings-social-link__text">
-              <strong>{label}</strong>
-              <small>{handle}</small>
-            </span>
+      <div className="about-version">
+        <div>
+          <strong>Versão {running.version}</strong>
+          <span>Build {shortBuildId(running.build)}</span>
+        </div>
+        <GameButton
+          variant="secondary"
+          disabled={checking}
+          onClick={() => void onCheck()}
+          className="shrink-0"
+        >
+          <RefreshCw size={14} aria-hidden className={checking ? 'animate-spin' : undefined} />
+          {checking ? 'Verificando…' : 'Verificar atualização'}
+        </GameButton>
+      </div>
+
+      <p className="mt-4 text-xs font-bold uppercase tracking-wide text-stone-400">Redes</p>
+      <div className="about-links">
+        {FATEEIGHT_LINKS.map(({ label, href, Icon }) => (
+          <a key={href} href={href} target="_blank" rel="noreferrer" className="about-links__item">
+            <Icon size={16} aria-hidden />
+            <span>{label}</span>
+            <ExternalLink size={12} aria-hidden />
           </a>
         ))}
       </div>
 
-      <p className="mt-4 mb-2 text-xs font-bold text-stone-600">Comunidade do projeto</p>
-      <div className="settings-social-links">
-        <a
-          className="settings-social-link"
-          href="https://github.com/rdesley"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className="settings-social-link__icon" aria-hidden>
-            <GithubIcon size={15} />
-          </span>
-          <span className="settings-social-link__text">
-            <strong>GitHub do projeto</strong>
-            <small>rdesley</small>
-          </span>
-        </a>
-        <a
-          className="settings-social-link"
-          href="https://discord.gg/jPFMb3tp3W"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className="settings-social-link__icon" aria-hidden>
-            <DiscordIcon size={15} />
-          </span>
-          <span className="settings-social-link__text">
-            <strong>Discord do Evolyn</strong>
-            <small>
-              Comunidade oficial <ExternalLink size={10} aria-hidden />
-            </small>
-          </span>
-        </a>
-      </div>
-
-      <div className="app-about-release mt-4">
-        <p className="app-about-release__title">Evolyn</p>
-        <p className="app-about-release__meta">
-          Versão {running.version}
-          <span aria-hidden> · </span>
-          Build {shortBuildId(running.build)}
-        </p>
-        <div className="app-about-release__actions">
-          <GameButton
-            size="sm"
-            variant="secondary"
-            disabled={checking}
-            onClick={() => void onCheck()}
-            className="!w-auto"
-          >
-            <RefreshCw size={14} aria-hidden className={checking ? 'animate-spin' : undefined} />
-            {checking ? 'Verificando…' : 'Verificar atualizações'}
-          </GameButton>
-        </div>
+      <p className="mt-3 text-xs font-bold uppercase tracking-wide text-stone-400">Comunidade</p>
+      <div className="about-links">
+        {COMMUNITY_LINKS.map(({ label, href, Icon }) => (
+          <a key={href} href={href} target="_blank" rel="noreferrer" className="about-links__item">
+            <Icon size={16} aria-hidden />
+            <span>{label}</span>
+            <ExternalLink size={12} aria-hidden />
+          </a>
+        ))}
       </div>
     </section>
   );

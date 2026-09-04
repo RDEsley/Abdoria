@@ -429,6 +429,39 @@ async function redeemLevelUpCode(user: UserDoc) {
     titulo: undefined as string | undefined,
     mensagem: `Level up! Você subiu para o nível ${nivelNovo} (+${faltando} XP).`,
     recompensas: [{ tipo: 'xp' as const, valor: faltando }],
+    streak_celebration: null,
+  };
+}
+
+/**
+ * Código de teste restrito a admins (`role === 'admin'`): simula a
+ * celebração de "streak subiu" na Home sem tocar em `active_days` nem em
+ * `gamificacao.streak_atual`/`streak_maior`. Não persiste nada (sem
+ * `user.save()`) e não entra em `codigos_resgatados` — por isso é
+ * reutilizável. Para contas não-admin, o código não existe: cai no mesmo
+ * "Código inválido ou expirado." dos códigos desconhecidos, então nunca
+ * aparece nem é distinguível publicamente.
+ */
+const STREAK_TEST_CODE = 'streak0';
+
+function redeemStreakTestCode(user: UserDoc) {
+  if (user.role !== 'admin') {
+    return { error: 'Código inválido ou expirado.', status: 404 as const };
+  }
+
+  const streakAnterior = Math.max(0, user.gamificacao.streak_atual ?? 0);
+  const streakSimulado = streakAnterior + 1;
+
+  return {
+    user,
+    codigo: STREAK_TEST_CODE,
+    xp_ganho: 0,
+    abdoria_ganha: 0,
+    itens_desbloqueados: [] as string[],
+    titulo: undefined as string | undefined,
+    mensagem: 'Modo de teste (admin): celebração de streak simulada — sua sequência real não muda.',
+    recompensas: [] as ReturnType<typeof buildGiftCodeRewardLines>,
+    streak_celebration: { streak_anterior: streakAnterior, streak_atual: streakSimulado },
   };
 }
 
@@ -453,6 +486,7 @@ async function redeemMasterUnlockCode(user: UserDoc) {
     titulo: undefined as string | undefined,
     mensagem: `Tudo desbloqueado: ${cosmeticCount} cosméticos e ${exerciseCount} exercícios.`,
     recompensas: [{ tipo: 'cosmetico' as const, nome: 'Absolutamente tudo' }],
+    streak_celebration: null,
   };
 }
 
@@ -493,6 +527,10 @@ async function redeemGiftCodeForUser(user: UserDoc, code: string) {
 
   if (code === LEVEL_UP_CODE) {
     return redeemLevelUpCode(user);
+  }
+
+  if (code === STREAK_TEST_CODE) {
+    return redeemStreakTestCode(user);
   }
 
   const definition = GIFT_CODE_BY_KEY[code];
@@ -555,6 +593,7 @@ async function redeemGiftCodeForUser(user: UserDoc, code: string) {
     titulo: tituloItem?.nome,
     mensagem: definition.mensagem,
     recompensas,
+    streak_celebration: null,
   };
 }
 

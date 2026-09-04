@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   archiveActivity,
   completeActivity,
@@ -35,7 +35,8 @@ export function useActivitiesData() {
   const [logs, setLogs] = useState<ActivityLogRecord[]>([]);
   const [insights, setInsights] = useState<EvolynInsight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+  const inFlightRef = useRef<Set<string>>(new Set());
 
   const reload = useCallback(async () => {
     const today = getTodaySaoPaulo();
@@ -75,9 +76,13 @@ export function useActivitiesData() {
         note?: string;
         metrics?: Record<string, unknown>;
         routineId?: string;
+        /** Quando true, o caller cuida do feedback imediato (haptic/UI). */
+        silentFeedback?: boolean;
       },
     ) => {
-      setBusyId(activity.id);
+      if (inFlightRef.current.has(activity.id)) return null;
+      inFlightRef.current.add(activity.id);
+      setBusyIds((prev) => new Set(prev).add(activity.id));
       try {
         const result = await completeActivity(activity.id, {
           client_completion_id: crypto.randomUUID(),
@@ -88,9 +93,13 @@ export function useActivitiesData() {
         });
         applyUser(result.user);
         markStreakSecuredToday(result.user);
-        emitXpEarned(result.xp_ganho);
-        void successHaptic();
-        playCompleteSet();
+        if (!options?.silentFeedback) {
+          emitXpEarned(result.xp_ganho);
+          void successHaptic();
+          playCompleteSet();
+          const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
+          showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
+        }
         const derived = deriveActivityReminders([activity], []);
         for (const reminder of derived) {
           void notificationScheduler.cancel(reminder.id);
@@ -104,8 +113,6 @@ export function useActivitiesData() {
             );
           }
         }
-        const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
-        showGameToast(`${activity.name}: ${ganho}`, { variant: 'success' });
         await reload();
         void refresh();
         window.dispatchEvent(new Event('evolyn:quests-changed'));
@@ -117,7 +124,12 @@ export function useActivitiesData() {
         showGameToast(getErrorMessage(error, 'Não foi possível registrar.'), { variant: 'error' });
         return null;
       } finally {
-        setBusyId(null);
+        inFlightRef.current.delete(activity.id);
+        setBusyIds((prev) => {
+          const next = new Set(prev);
+          next.delete(activity.id);
+          return next;
+        });
       }
     },
     [applyUser, markStreakSecuredToday, refresh, reload, routines, user],
@@ -129,7 +141,9 @@ export function useActivitiesData() {
     logs,
     insights,
     loading,
-    busyId,
+    busyId: busyIds.values().next().value ?? null,
+    busyIds,
+    isBusy: (id: string) => busyIds.has(id) || inFlightRef.current.has(id),
     reload,
     complete,
     createActivity,

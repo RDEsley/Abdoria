@@ -62,6 +62,12 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - **Nativos (política)**: release `0.x.y` alinhada ao produto; Android `versionName` / iOS `CFBundleShortVersionString` = mesma release; `versionCode` / `CFBundleVersion` só crescem. Sem automação perigosa nesta entrega.
 - **Teste local**: alterar temporariamente `version` embutida vs `version.json`, ou subir release nova e reabrir PWA antiga; confirmar que mesmo `0.1.0` com builds diferentes não notifica.
 
+## Ranking
+
+- Ranking é **somente global** (XP / Folhas / Streak recorde). Semanal removido da UI e da API de listagem.
+- NPCs/demo seed removidos do produto; `npm run seed` não recria `.npc@abdoria.local`.
+- Percentuais de conquistas usam apenas perfis reais (`is_guest=false`, `is_demo_npc=false`, onboarded).
+
 ## Notificações
 
 - **Inbox (sino)**: tabela `notifications` + API `/api/notifications` — eventos do app.
@@ -76,6 +82,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - `quest_claims.user_id` aponta para `profiles(id)` (não `auth.users`). Claim usa RPC `claim_quest_slot` + `rewarded_at` para ser recuperável.
 - Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
 - Frozen Streak consumido no backend gera `streak_freeze_notice` / `streak_frozen_event` em `/stats` e celebração na Home — **não** cria mais item `streak_frozen` na Caixa de Entrada. A celebração usa `preserved_streak` (sequência protegida). Frozen nunca incrementa sozinho; ação válida posterior é que faz 10 → 11.
+- Código presente `streak0` (`server/src/services/shop.ts`, `redeemStreakTestCode`) é teste **admin-only** (`user.role === 'admin'`) para repetir a celebração de "streak subiu" sem risco: não grava `active_days`, não altera `gamificacao.streak_atual`/`streak_maior`, não faz `user.save()` e não entra em `codigos_resgatados` — por isso é reutilizável. Retorna `streak_celebration: { streak_anterior, streak_atual }` simulado (`streak_atual atual + 1`) só para a UI da Home. Para não-admin, cai no erro genérico "Código inválido ou expirado." (indistinguível de código inexistente) — nunca aparece em catálogo público.
 
 ## Missões
 

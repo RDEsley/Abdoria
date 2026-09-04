@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Ticket } from 'lucide-react';
 import { GiftCodeRewardReveal } from '@/components/settings/GiftCodeRewardReveal';
 import { GameButton } from '@/components/ui/GameButton';
 import { redeemGiftCode } from '@/lib/api';
@@ -10,6 +9,7 @@ import { useApp } from '@/hooks/useApp';
 import { type RedeemCodeResponse, resolveCosmeticos } from '@/types';
 import { setSfxPack } from '@/lib/sounds';
 import { emitXpEarned } from '@/lib/xp-orbs';
+import { queueStreakUpCelebration } from '@/lib/home-celebrations';
 
 const GIFT_CODE_PATTERN = /^[a-z0-9_-]+$/;
 const GIFT_CODE_MIN_LENGTH = 3;
@@ -68,10 +68,6 @@ export function GiftCodeSection() {
     }
   };
 
-  // XP/level up só disparam ao fechar a tela de revelação — na hora do
-  // resgate, as bolinhas de XP e a celebração de level up ficariam por
-  // baixo desse mesmo modal, escondidas (mesmo ajuste feito no claim da
-  // outras fontes de recompensa).
   const handleCloseReveal = () => {
     const reveal = rewardReveal;
     setRewardReveal(null);
@@ -80,27 +76,27 @@ export function GiftCodeSection() {
     if (reveal.level_up) {
       window.dispatchEvent(new CustomEvent('abdoria:level-up', { detail: reveal.level_up }));
     }
+    if (reveal.streak_celebration) {
+      queueStreakUpCelebration(reveal.streak_celebration, user?.id);
+    }
   };
 
   return (
     <>
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-4 flex items-center gap-2">
-          <Ticket size={14} /> Código presente
-        </h3>
-
+      <section className="settings-block">
+        <p className="settings-block__hint">
+          Resgate códigos de campanhas e da comunidade Evolyn.
+        </p>
         <div className="game-gift-code">
-          <label className="game-gift-code__label" htmlFor="settings-gift-code">
-            Siga-nos nas Redes Sociais para Resgatar Códigos Limitados!
+          <label className="sr-only" htmlFor="settings-gift-code">
+            Código presente
           </label>
           <input
             id="settings-gift-code"
-            className="game-input mt-2 w-full font-mono tracking-wider"
+            className="game-input w-full font-mono tracking-wider"
             value={giftCode}
-            onChange={(e) => {
-              setGiftCode(e.target.value);
-            }}
-            placeholder="Seu código presente"
+            onChange={(e) => setGiftCode(e.target.value)}
+            placeholder="Seu código"
             autoComplete="off"
             autoCapitalize="off"
             spellCheck={false}
@@ -111,7 +107,7 @@ export function GiftCodeSection() {
           />
           <div className="game-gift-code__actions">
             <GameButton disabled={!giftCode.trim() || busy} onClick={() => void handleRedeem()}>
-              Resgatar código
+              Resgatar
             </GameButton>
           </div>
         </div>

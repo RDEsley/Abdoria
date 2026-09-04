@@ -267,7 +267,11 @@ export function ReminderCenter() {
           <h2 className="game-section-title flex items-center gap-2">
             <BellRing size={17} aria-hidden /> Lembretes personalizados
           </h2>
-          <p>Crie alertas locais para água, treino, estudo ou o que fizer sentido pra você.</p>
+          {!editing ? (
+            <p>
+              Crie alertas locais para beber água, treino, estudo ou o que fizer sentido pra você.
+            </p>
+          ) : null}
           {!canDeliverReminders ? (
             <p className="mt-1 text-xs font-semibold text-amber-700">
               Ative as notificações para receber estes avisos.
@@ -276,62 +280,72 @@ export function ReminderCenter() {
         </div>
       </header>
 
-      {!editing && (
-        <button type="button" onClick={openCreate} className="personal-notifications__create">
-          <Plus size={18} aria-hidden />
-          Novo lembrete
-        </button>
-      )}
+      <div className="personal-notifications__composer">
+        {!editing && (
+          <button type="button" onClick={openCreate} className="personal-notifications__create">
+            <Plus size={18} aria-hidden />
+            Novo lembrete
+          </button>
+        )}
 
-      {editing && (
-        <div className="personal-notification-form personal-notification-form--flat" aria-label="Configurar notificação">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-extrabold text-stone-800">
-              {draft.id ? 'Editar lembrete' : 'Novo lembrete'}
-            </p>
-            <button
-              type="button"
-              onClick={closeForm}
-              className="personal-notifications__add"
-              aria-label="Fechar formulário"
-            >
-              <X size={19} aria-hidden />
-            </button>
+        {editing && (
+          <div
+            className="personal-notification-form personal-notification-form--flat"
+            aria-label="Configurar notificação"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-extrabold text-stone-800">
+                {draft.id ? 'Editar lembrete' : 'Novo lembrete'}
+              </p>
+              <button
+                type="button"
+                onClick={closeForm}
+                className="personal-notifications__add"
+                aria-label="Fechar formulário"
+              >
+                <X size={19} aria-hidden />
+              </button>
+            </div>
+            <ReminderNotificationPreview
+              draft={draft}
+              unlockedPacks={unlockedPacks}
+              onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+              titleInvalid={Boolean(error) && !draft.title.trim()}
+              errorId={error ? 'personal-notification-error' : undefined}
+            />
+
+            <ReminderPersonalizePanel
+              draft={draft}
+              onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+            />
+
+            {error && (
+              <p
+                id="personal-notification-error"
+                role="alert"
+                className="personal-notification-form__error"
+              >
+                {error}
+              </p>
+            )}
+            <div className="personal-notification-form__actions">
+              <button type="button" onClick={closeForm}>
+                Cancelar
+              </button>
+              <button type="button" disabled={saving} onClick={() => void save()}>
+                {saving ? 'Salvando…' : draft.id ? 'Salvar alterações' : 'Programar'}
+              </button>
+            </div>
           </div>
-          <ReminderNotificationPreview
-            draft={draft}
-            unlockedPacks={unlockedPacks}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-            titleInvalid={Boolean(error) && !draft.title.trim()}
-            errorId={error ? 'personal-notification-error' : undefined}
-          />
+        )}
+      </div>
 
-          <ReminderPersonalizePanel
-            draft={draft}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-          />
-
-          {error && (
-            <p
-              id="personal-notification-error"
-              role="alert"
-              className="personal-notification-form__error"
-            >
-              {error}
-            </p>
-          )}
-          <div className="personal-notification-form__actions">
-            <button type="button" onClick={closeForm}>
-              Cancelar
-            </button>
-            <button type="button" disabled={saving} onClick={() => void save()}>
-              {saving ? 'Salvando…' : draft.id ? 'Salvar alterações' : 'Programar'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="personal-notifications__list">
+      <div
+        className={`personal-notifications__list${editing && reminders.length > 0 ? ' personal-notifications__list--separated' : ''}`}
+      >
+        {editing && reminders.length > 0 ? (
+          <p className="personal-notifications__list-label">Seus lembretes</p>
+        ) : null}
         {reminders.length === 0 && !editing && (
           <div className="personal-notifications__empty">
             <BellRing size={24} aria-hidden />

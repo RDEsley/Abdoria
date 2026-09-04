@@ -129,6 +129,8 @@ shopRouter.post('/redeem-code', async (req: AuthRequest, res) => {
       // não acontecia ao resgatar um código (inclusive o `levelup`, cujo
       // propósito é justamente subir de nível).
       level_up: result.level_up ?? null,
+      // Só o código de teste `streak0` (admin) preenche isso — ver services/shop.ts.
+      streak_celebration: result.streak_celebration ?? null,
     });
   } catch (error) {
     console.error('POST /api/shop/redeem-code error:', error);

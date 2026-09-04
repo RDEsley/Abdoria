@@ -53,8 +53,8 @@ export function ShareCard({ data, user }: Props) {
             <Flame size={26} />
           </div>
           <div>
-            <h2 className="share-card__title">Ofensiva em chamas</h2>
-            <p className="share-card__name">Treinos sem falhar</p>
+            <h2 className="share-card__title">Sequência ativa</h2>
+            <p className="share-card__name">Dias ativos seguidos</p>
           </div>
           <div className="share-card__value-row">
             <span className="share-card__value">{data.streakAtual} dias</span>

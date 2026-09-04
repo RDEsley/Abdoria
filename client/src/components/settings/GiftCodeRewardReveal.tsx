@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
-import { Crown, Gift, Snowflake, Sparkles, Ticket, Zap } from 'lucide-react';
-import { CelebrationBurst } from '@/components/effects/CelebrationBurst';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Crown, Snowflake, Zap } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
 import type { GiftCodeRewardLine, RedeemCodeResponse } from '@/types';
 import { CURRENCY_NAME } from '@/types';
@@ -10,7 +9,7 @@ import { GameLeafIcon, GoldenLeafIcon } from '@/components/ui/CurrencyIcon';
 
 interface Props {
   result: RedeemCodeResponse;
-  effectId: string;
+  effectId?: string;
   onClose: () => void;
 }
 
@@ -19,30 +18,34 @@ function formatRewardAmount(value: number): string {
 }
 
 function rewardIcon(line: GiftCodeRewardLine) {
-  if (line.tipo === 'xp') return <Zap size={22} aria-hidden />;
-  if (line.tipo === 'abdoria') return <GameLeafIcon size={24} aria-hidden />;
-  if (line.tipo === 'frozen_streak') return <Snowflake size={22} aria-hidden />;
-  if (line.tipo === 'gems') return <GoldenLeafIcon size={24} aria-hidden />;
-  return <Crown size={22} aria-hidden />;
+  if (line.tipo === 'xp') return <Zap size={20} aria-hidden />;
+  if (line.tipo === 'abdoria') return <GameLeafIcon size={22} aria-hidden />;
+  if (line.tipo === 'frozen_streak') return <Snowflake size={20} aria-hidden />;
+  if (line.tipo === 'gems') return <GoldenLeafIcon size={22} aria-hidden />;
+  return <Crown size={20} aria-hidden />;
 }
 
 function rewardLabel(line: GiftCodeRewardLine): string {
   if (line.tipo === 'xp') return `+${formatRewardAmount(line.valor ?? 0)} XP`;
   if (line.tipo === 'abdoria') return `+${formatRewardAmount(line.valor ?? 0)} ${CURRENCY_NAME}`;
-  if (line.tipo === 'frozen_streak') return `+${formatRewardAmount(line.valor ?? 0)} Frozen Streak`;
+  if (line.tipo === 'frozen_streak') return `+${formatRewardAmount(line.valor ?? 0)} Frozen`;
   if (line.tipo === 'gems') return `+${formatRewardAmount(line.valor ?? 0)} Folhas douradas`;
   return line.nome ?? 'Item exclusivo';
 }
 
-function rewardHint(line: GiftCodeRewardLine): string {
-  if (line.tipo === 'xp') return 'Experiência extra na sua conta';
-  if (line.tipo === 'abdoria') return 'Folhas para a loja';
-  if (line.tipo === 'frozen_streak') return 'Protege sua sequência se faltar um dia';
-  if (line.tipo === 'gems') return 'Moeda premium do MyPlant';
-  return 'Cosmético desbloqueado';
+function buildFallbackRewards(result: RedeemCodeResponse): GiftCodeRewardLine[] {
+  const lines: GiftCodeRewardLine[] = [];
+  if (result.xp_ganho > 0) lines.push({ tipo: 'xp', valor: result.xp_ganho });
+  if (result.abdoria_ganha > 0) lines.push({ tipo: 'abdoria', valor: result.abdoria_ganha });
+  for (const item of result.itens_desbloqueados ?? []) {
+    lines.push({ tipo: 'cosmetico', nome: item, item_id: item });
+  }
+  return lines;
 }
 
-export function GiftCodeRewardReveal({ result, effectId, onClose }: Props) {
+export function GiftCodeRewardReveal({ result, onClose }: Props) {
+  const reduceMotion = Boolean(useReducedMotion());
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -55,66 +58,41 @@ export function GiftCodeRewardReveal({ result, effectId, onClose }: Props) {
 
   return createPortal(
     <div
-      className="game-daily-reward-overlay game-gift-reward-overlay"
+      className="gift-reveal"
       role="dialog"
       aria-modal="true"
       aria-labelledby="gift-reward-title"
       onClick={onClose}
     >
-      <CelebrationBurst effectId={effectId} fullscreen />
-
       <motion.div
-        className="game-gift-reward-card"
-        initial={{ scale: 0.82, opacity: 0, y: 24 }}
+        className="gift-reveal__card"
+        initial={reduceMotion ? false : { scale: 0.94, opacity: 0, y: 18 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 340, damping: 22 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 26 }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="game-gift-reward-card__banner">
-          <Sparkles size={14} aria-hidden />
-          <span>Código presente</span>
-        </div>
-
-        <p className="game-gift-reward-card__eyebrow">
-          <Ticket size={13} aria-hidden /> {result.codigo}
-        </p>
-        <h2 id="gift-reward-title" className="game-gift-reward-card__title">
-          Recompensas resgatadas!
+        <p className="gift-reveal__code">{result.codigo}</p>
+        <h2 id="gift-reward-title" className="gift-reveal__title">
+          {result.titulo ?? 'Recompensa recebida'}
         </h2>
-        {result.mensagem && <p className="game-gift-reward-card__message">{result.mensagem}</p>}
+        {result.mensagem ? <p className="gift-reveal__message">{result.mensagem}</p> : null}
 
-        <ul className="game-gift-reward-list" aria-label="Recompensas recebidas">
-          {rewards.map((line, index) => (
-            <motion.li
-              key={`${line.tipo}-${line.item_id ?? line.valor ?? index}`}
-              className={`game-gift-reward-list__item game-gift-reward-list__item--${line.tipo}`}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12 + index * 0.08 }}
-            >
-              <div className="game-gift-reward-list__icon">{rewardIcon(line)}</div>
-              <div className="game-gift-reward-list__copy">
-                <p className="game-gift-reward-list__value">{rewardLabel(line)}</p>
-                <p className="game-gift-reward-list__hint">{rewardHint(line)}</p>
-              </div>
-              <Gift size={14} className="game-gift-reward-list__mark" aria-hidden />
-            </motion.li>
-          ))}
-        </ul>
+        {rewards.length > 0 && (
+          <ul className="gift-reveal__list" aria-label="Itens recebidos">
+            {rewards.map((line, index) => (
+              <li key={`${line.tipo}-${line.item_id ?? line.valor ?? index}`}>
+                <span className="gift-reveal__icon">{rewardIcon(line)}</span>
+                <strong>{rewardLabel(line)}</strong>
+              </li>
+            ))}
+          </ul>
+        )}
 
-        <GameButton className="game-gift-reward-card__cta" onClick={onClose}>
-          Incrível!
+        <GameButton className="mt-4 w-full" onClick={onClose}>
+          Continuar
         </GameButton>
       </motion.div>
     </div>,
     document.body,
   );
-}
-
-function buildFallbackRewards(result: RedeemCodeResponse): GiftCodeRewardLine[] {
-  const lines: GiftCodeRewardLine[] = [];
-  if (result.xp_ganho > 0) lines.push({ tipo: 'xp', valor: result.xp_ganho });
-  if (result.abdoria_ganha > 0) lines.push({ tipo: 'abdoria', valor: result.abdoria_ganha });
-  if (result.titulo) lines.push({ tipo: 'cosmetico', nome: result.titulo });
-  return lines;
 }

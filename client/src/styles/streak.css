@@ -166,155 +166,6 @@
   }
 }
 
-/* Streak fire celebration (estilo Duolingo) */
-.streak-fire-celebration {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  min-height: 9.5rem;
-}
-
-.streak-fire-celebration__burst {
-  position: absolute;
-  top: 2.5rem;
-  left: 50%;
-  width: 7rem;
-  height: 7rem;
-  margin-left: -3.5rem;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(251, 191, 36, 0.75) 0%,
-    rgba(249, 115, 22, 0.35) 45%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
-.streak-fire-celebration__flame-wrap {
-  position: relative;
-  width: 5.5rem;
-  height: 6.5rem;
-}
-
-.streak-fire-celebration__flame {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.streak-fire-celebration__flame--cold .streak-fire-celebration__flame-outer,
-.streak-fire-celebration__flame--cold .streak-fire-celebration__flame-mid,
-.streak-fire-celebration__flame--cold .streak-fire-celebration__flame-core {
-  background: linear-gradient(to top, #a8a29e 0%, #d6d3d1 55%, #e7e5e4 100%);
-  box-shadow: 2px 2px 0 var(--game-ink);
-  filter: none;
-}
-
-.streak-fire-celebration__flame--lit {
-  filter: drop-shadow(0 0 14px rgba(249, 115, 22, 0.65));
-  animation: streak-fire-flicker 0.22s ease-in-out infinite alternate;
-}
-
-.streak-fire-celebration__flame-outer,
-.streak-fire-celebration__flame-mid,
-.streak-fire-celebration__flame-core {
-  position: absolute;
-  bottom: 0;
-  border: 2px solid var(--game-ink);
-  transform-origin: bottom center;
-}
-
-.streak-fire-celebration__flame-outer {
-  width: 4.5rem;
-  height: 5.5rem;
-  border-radius: 50% 50% 45% 45% / 58% 58% 42% 42%;
-  background: linear-gradient(to top, #dc2626 0%, #f97316 45%, #fbbf24 100%);
-}
-
-.streak-fire-celebration__flame-mid {
-  width: 3rem;
-  height: 3.75rem;
-  border-radius: 50% 50% 40% 40% / 55% 55% 45% 45%;
-  background: linear-gradient(to top, #f97316 0%, #fbbf24 55%, #fef3c7 100%);
-  animation: streak-fire-sway 0.35s ease-in-out infinite alternate;
-}
-
-.streak-fire-celebration__flame-core {
-  width: 1.35rem;
-  height: 2rem;
-  border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
-  background: linear-gradient(to top, #fde68a 0%, #fff7ed 100%);
-  animation: streak-fire-sway 0.28s ease-in-out infinite alternate-reverse;
-}
-
-.streak-fire-celebration__ember {
-  position: absolute;
-  bottom: 3.5rem;
-  border-radius: 1px;
-  background: #fbbf24;
-  box-shadow: 0 0 4px rgba(251, 191, 36, 0.9);
-  pointer-events: none;
-}
-
-.streak-fire-celebration__count {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 0.15rem;
-  margin-top: 0.35rem;
-  padding: 0.25rem 0.55rem;
-  border: 2px solid var(--game-ink);
-  background: #ffedd5;
-  box-shadow: 2px 2px 0 var(--game-ink);
-}
-
-.streak-fire-celebration__count-value {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 1rem;
-  line-height: 1;
-  color: #c2410c;
-}
-
-.streak-fire-celebration__count-unit {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.45rem;
-  color: #ea580c;
-  padding-bottom: 0.15rem;
-}
-
-.streak-fire-celebration__label {
-  margin-top: 0.55rem;
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  color: #9a3412;
-  text-transform: uppercase;
-}
-
-@keyframes streak-fire-flicker {
-  0% {
-    transform: scale(1) translateY(0);
-    filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.55));
-  }
-  100% {
-    transform: scale(1.04, 1.07) translateY(-2px);
-    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.85));
-  }
-}
-
-@keyframes streak-fire-sway {
-  0% {
-    transform: rotate(-2deg) scaleX(1);
-  }
-  100% {
-    transform: rotate(2deg) scaleX(0.96);
-  }
-}
-
 /* Contador das últimas 5h antes do reset da streak */
 .streak-countdown {
   display: inline-flex;
@@ -386,11 +237,11 @@
 }
 
 .streak-home-card {
-  width: min(100%, 20rem);
-  padding: 1.35rem 1.2rem 1.1rem;
+  width: min(100%, 19rem);
+  padding: 1.5rem 1.3rem 1.15rem;
   border: 3px solid #16332e;
   border-radius: 1.75rem 1.45rem 1.85rem 1.55rem;
-  background: linear-gradient(165deg, #fff7ed 0%, #ffedd5 48%, #fff 100%);
+  background: linear-gradient(165deg, #fff7ed 0%, #ffedd5 55%, #fff 100%);
   box-shadow:
     0 6px 0 #16332e,
     0 22px 40px rgb(15 23 42 / 28%);
@@ -398,9 +249,95 @@
   cursor: pointer;
 }
 
-.streak-fire-celebration--home {
-  margin-bottom: 0.15rem;
-  min-height: 7.4rem;
+/* Fogo — uma chama só com um glow morno atrás, foco no número abaixo. */
+.streak-home-flame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 5.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.streak-home-flame__glow {
+  position: absolute;
+  width: 6.2rem;
+  height: 6.2rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(251 191 36 / 45%) 0%,
+    rgb(249 115 22 / 18%) 45%,
+    transparent 72%
+  );
+  animation: streak-home-glow-pulse 2.6s ease-in-out infinite;
+}
+
+.streak-home-flame__body {
+  position: relative;
+  width: 3.3rem;
+  height: 4.3rem;
+}
+
+.streak-home-flame__outer,
+.streak-home-flame__core {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  border: 2px solid var(--game-ink);
+  transform: translateX(-50%);
+}
+
+.streak-home-flame__outer {
+  width: 3.3rem;
+  height: 4.3rem;
+  border-radius: 50% 50% 45% 45% / 58% 58% 42% 42%;
+  background: linear-gradient(to top, #a8a29e 0%, #d6d3d1 55%, #e7e5e4 100%);
+  box-shadow: 2px 2px 0 var(--game-ink);
+  transition:
+    background 0.25s ease,
+    filter 0.25s ease;
+}
+
+.streak-home-flame__core {
+  width: 1.4rem;
+  height: 2rem;
+  border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
+  border-color: transparent;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.streak-home-flame__body--lit .streak-home-flame__outer {
+  background: linear-gradient(to top, #dc2626 0%, #f97316 45%, #fbbf24 100%);
+  filter: drop-shadow(0 0 12px rgb(249 115 22 / 55%));
+  animation: streak-home-flame-flicker 0.5s ease-in-out infinite alternate;
+}
+
+.streak-home-flame__body--lit .streak-home-flame__core {
+  background: linear-gradient(to top, #fde68a 0%, #fff7ed 100%);
+  opacity: 1;
+}
+
+@keyframes streak-home-flame-flicker {
+  0% {
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
+  100% {
+    transform: translateX(-50%) scale(1.03, 1.05) translateY(-1px);
+  }
+}
+
+@keyframes streak-home-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
 }
 
 .streak-home-card__kicker {
@@ -415,7 +352,7 @@
 .streak-home-card__count {
   margin: 0.15rem 0 0;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 3.4rem;
+  font-size: 3.2rem;
   font-weight: 900;
   letter-spacing: -0.08em;
   line-height: 0.9;
@@ -423,7 +360,7 @@
 }
 
 .streak-home-card__copy {
-  margin: 0.45rem 0 0;
+  margin: 0.5rem 0 0;
   font-size: 0.82rem;
   font-weight: 750;
   line-height: 1.35;
@@ -432,7 +369,7 @@
 
 .streak-home-card__hint {
   display: block;
-  margin-top: 0.7rem;
+  margin-top: 0.75rem;
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -440,16 +377,50 @@
   color: rgb(124 45 18 / 55%);
 }
 
+/* Frozen Streak — visual próprio, sem nenhuma classe compartilhada com o fogo. */
 .streak-home-overlay--frozen {
   background: rgb(8 47 73 / 48%);
 }
 
 .streak-home-card--frozen {
-  background: linear-gradient(165deg, #ecfeff 0%, #e0f2fe 48%, #fff 100%);
+  background: linear-gradient(165deg, #ecfeff 0%, #e0f2fe 55%, #fff 100%);
   box-shadow:
     0 6px 0 #0c4a6e,
     0 22px 40px rgb(15 23 42 / 28%);
   border-color: #0c4a6e;
+}
+
+.streak-home-ice {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 5.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.streak-home-ice__glow {
+  position: absolute;
+  width: 6.2rem;
+  height: 6.2rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(125 211 252 / 55%) 0%,
+    rgb(14 165 233 / 20%) 45%,
+    transparent 72%
+  );
+  animation: streak-home-glow-pulse 2.6s ease-in-out infinite;
+}
+
+.streak-home-ice__crystal {
+  position: relative;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 2px solid #0c4a6e;
+  border-radius: 0.6rem;
+  transform: rotate(45deg);
+  background: linear-gradient(160deg, #f0f9ff 0%, #bae6fd 55%, #7dd3fc 100%);
+  box-shadow: 2px 2px 0 #0c4a6e;
 }
 
 .streak-home-card__kicker--ice {
@@ -468,82 +439,10 @@
   color: rgb(7 89 133 / 55%);
 }
 
-.streak-fire-celebration__flame--iced .streak-fire-celebration__flame-outer,
-.streak-fire-celebration__flame--iced .streak-fire-celebration__flame-mid,
-.streak-fire-celebration__flame--iced .streak-fire-celebration__flame-core {
-  background: linear-gradient(to top, #0284c7 0%, #7dd3fc 55%, #f0f9ff 100%);
-  box-shadow: 2px 2px 0 #0c4a6e;
-  filter: drop-shadow(0 0 12px rgb(56 189 248 / 55%));
-  animation: none;
-}
-
-.streak-fire-celebration__ice-burst {
-  position: absolute;
-  top: 2.5rem;
-  left: 50%;
-  width: 7rem;
-  height: 7rem;
-  margin-left: -3.5rem;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgb(125 211 252 / 75%) 0%,
-    rgb(14 165 233 / 28%) 45%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
-.streak-home-flake {
-  position: absolute;
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 2px;
-  background: #e0f2fe;
-  border: 1px solid #0ea5e9;
-  box-shadow: 0 0 6px rgb(14 165 233 / 55%);
-  animation: streak-home-flake-fall 1.6s ease-in-out infinite;
-}
-
-.streak-home-flake--1 {
-  left: 28%;
-  top: 1.2rem;
-  animation-delay: 0s;
-}
-
-.streak-home-flake--2 {
-  left: 58%;
-  top: 0.8rem;
-  width: 0.35rem;
-  height: 0.35rem;
-  animation-delay: 0.25s;
-}
-
-.streak-home-flake--3 {
-  left: 72%;
-  top: 1.8rem;
-  animation-delay: 0.45s;
-}
-
-@keyframes streak-home-flake-fall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(2.4rem) rotate(40deg);
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .streak-fire-celebration__flame--lit,
-  .streak-fire-celebration__flame-mid,
-  .streak-fire-celebration__flame-core,
-  .streak-home-flake {
+  .streak-home-flame__glow,
+  .streak-home-ice__glow,
+  .streak-home-flame__body--lit .streak-home-flame__outer {
     animation: none;
   }
 }

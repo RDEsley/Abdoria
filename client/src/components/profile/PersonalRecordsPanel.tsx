@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Crown, Flame, Medal, Sparkles, Trophy } from 'lucide-react';
 import { computePersonalRecords } from '@shared/personal-records';
 import { useApp } from '@/hooks/useApp';
 
 const NOVO_RECORDE_DIAS = 7;
 const RECORDE_QUENTE_HORAS = 24;
+const PREVIEW_LIMIT = 5;
 
 function formatRecordDate(iso: string): string {
   const date = new Date(iso);
@@ -19,7 +20,7 @@ const RANK_MEDALS = [
   { icon: Medal, className: 'text-orange-600' },
 ] as const;
 
-/** Melhor volume (série × repetições ou série × tempo) já registrado por exercício. */
+/** Preview dos 5 recordes mais recentes — lista completa em /recordes. */
 export function PersonalRecordsPanel() {
   const { history, ensureHistory, historyLoading } = useApp();
   const [openedAt] = useState(() => Date.now());
@@ -35,9 +36,9 @@ export function PersonalRecordsPanel() {
     );
   }, [history]);
 
+  const preview = records.slice(0, PREVIEW_LIMIT);
   const novoLimite = openedAt - NOVO_RECORDE_DIAS * 24 * 60 * 60 * 1000;
   const quenteLimite = openedAt - RECORDE_QUENTE_HORAS * 60 * 60 * 1000;
-
   const novosCount = records.filter((r) => new Date(r.concluido_em).getTime() >= novoLimite).length;
 
   return (
@@ -55,7 +56,7 @@ export function PersonalRecordsPanel() {
         )}
       </div>
       <p className="mb-3 text-xs font-bold leading-relaxed text-stone-500">
-        Melhor volume por exercício — série × repetições ou série × tempo segurado.
+        Melhor volume por exercício.
         {novosCount > 0 && (
           <span className="ml-1 text-emerald-600">
             {novosCount} {novosCount === 1 ? 'novo' : 'novos'} essa semana!
@@ -66,21 +67,18 @@ export function PersonalRecordsPanel() {
       {!historyLoading && records.length === 0 && (
         <p className="text-sm text-stone-500">Complete treinos para começar a bater recordes.</p>
       )}
-      {!historyLoading && records.length > 0 && (
+      {!historyLoading && preview.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {records.map((r, i) => {
+          {preview.map((r, i) => {
             const dataRecorde = new Date(r.concluido_em).getTime();
             const recente = !Number.isNaN(dataRecorde) && dataRecorde >= novoLimite;
             const quente = !Number.isNaN(dataRecorde) && dataRecorde >= quenteLimite;
             const medal = RANK_MEDALS[i];
             const MedalIcon = medal?.icon ?? Medal;
             return (
-              <motion.li
+              <li
                 key={r.slug}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i, 6) * 0.04, duration: 0.22 }}
-                className={`flex items-center justify-between gap-2 rounded-xl border-2 px-3 py-2 ${
+                className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 ${
                   quente
                     ? 'personal-record-row--hot border-orange-200 bg-orange-50'
                     : 'border-stone-100 bg-stone-50'
@@ -115,10 +113,20 @@ export function PersonalRecordsPanel() {
                   {r.melhor_valor}
                   {r.unidade === 'segundos' ? 's' : ' reps'}
                 </span>
-              </motion.li>
+              </li>
             );
           })}
         </ul>
+      )}
+      {records.length > PREVIEW_LIMIT && (
+        <Link to="/recordes" className="mt-3 inline-flex text-sm font-extrabold text-emerald-700">
+          Ver todos os recordes
+        </Link>
+      )}
+      {records.length > 0 && records.length <= PREVIEW_LIMIT && (
+        <Link to="/recordes" className="mt-3 inline-flex text-sm font-bold text-stone-500">
+          Ver recordes
+        </Link>
       )}
     </section>
   );
