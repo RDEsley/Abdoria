@@ -3,8 +3,8 @@ import type { AppReleaseMeta } from '@shared/app-release';
 
 export const EMBEDDED_APP_RELEASE: AppReleaseMeta = {
   "version": "0.1.0",
-  "build": "3fcf757b460ac7aef3961a23822749b71e86785d",
-  "released_at": "2026-09-04T16:10:33.826Z",
+  "build": "a4679b354c03d58570095f54a915e0d6af0d3381",
+  "released_at": "2026-09-04T16:56:26.456Z",
   "channel": "web",
   "update_policy": "optional",
   "minimum_supported_version": null

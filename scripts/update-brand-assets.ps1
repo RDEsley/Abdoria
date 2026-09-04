@@ -55,7 +55,11 @@ function New-BrandImage {
   $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
 
-  $background = [System.Drawing.ColorTranslator]::FromHtml('#F4FAF7')
+  $background = if ($Kind -eq 'background') {
+    [System.Drawing.ColorTranslator]::FromHtml('#1A8A4A')
+  } else {
+    [System.Drawing.ColorTranslator]::FromHtml('#F4FAF7')
+  }
   if ($Kind -in @('app', 'square', 'background', 'splash')) {
     $graphics.Clear($background)
   } else {
@@ -118,7 +122,8 @@ try {
     $adaptiveSize = $androidDensities[$density].adaptive
     New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher.png') $legacySize $legacySize 'app' -Opaque
     New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_round.png') $legacySize $legacySize 'app' -Opaque
-    New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_foreground.png') $adaptiveSize $adaptiveSize 'foreground'
+    # Adaptive: app-icon já é composição full-bleed — preenche a máscara sem inset.
+    New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_foreground.png') $adaptiveSize $adaptiveSize 'app'
     New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_background.png') $adaptiveSize $adaptiveSize 'background'
   }
 
@@ -126,6 +131,7 @@ try {
     (Join-Path $projectRoot 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png') `
     1024 1024 'app' -Opaque
 
+  # Splash: símbolo transparente (logo-oficial), não a composição quadrada do launcher.
   Get-ChildItem (Join-Path $projectRoot 'android/app/src/main/res') -Filter 'splash.png' -File -Recurse | ForEach-Object {
     $existing = [System.Drawing.Image]::FromFile($_.FullName)
     try {
@@ -134,7 +140,7 @@ try {
     } finally {
       $existing.Dispose()
     }
-    New-BrandImage $appIconImage $_.FullName $width $height 'splash'
+    New-BrandImage $sourceImage $_.FullName $width $height 'splash'
   }
 
   Get-ChildItem (Join-Path $projectRoot 'ios/App/App/Assets.xcassets/Splash.imageset') -Filter '*.png' -File | ForEach-Object {
@@ -145,7 +151,7 @@ try {
     } finally {
       $existing.Dispose()
     }
-    New-BrandImage $appIconImage $_.FullName $width $height 'splash'
+    New-BrandImage $sourceImage $_.FullName $width $height 'splash'
   }
 } finally {
   $appIconImage.Dispose()

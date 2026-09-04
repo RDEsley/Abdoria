@@ -155,8 +155,14 @@ export function DashboardPage() {
       <motion.div variants={item} className="dashboard-quick-stats grid grid-cols-2 gap-3">
         <StatTile
           tone="streak"
-          ambient="streak"
-          icon={<Flame className="text-orange-500" size={22} />}
+          ambient={diaAtivo ? 'streak' : undefined}
+          className={diaAtivo ? 'game-stat--streak-lit' : 'game-stat--streak-dormant'}
+          icon={
+            <Flame
+              className={diaAtivo ? 'text-orange-500 game-stat__flame--lit' : 'game-stat__flame--dormant'}
+              size={22}
+            />
+          }
           title="Streak Evolyn"
           value={stats.streak_atual}
           hint={`Recorde ${stats.streak_maior}`}
@@ -165,13 +171,13 @@ export function DashboardPage() {
           tone="xp"
           ambient="tempo"
           icon={<Timer className="text-sky-600" size={22} />}
-          title="Tempo de treino essa semana"
+          title="Essa semana"
           value={
             (stats.segundos_semana ?? 0) > 0
               ? formatTrainingDuration(stats.segundos_semana ?? 0)
               : '—'
           }
-          hint={(stats.segundos_semana ?? 0) > 0 ? 'Só sessões de treino' : 'Nenhum treino ainda'}
+          hint={(stats.segundos_semana ?? 0) > 0 ? 'Tempo de treino' : 'Nenhum treino ainda'}
         />
       </motion.div>
 

@@ -8,6 +8,7 @@ import { RegisterSheet } from '@/components/auth/RegisterSheet';
 import { TermsModal } from '@/components/legal/TermsModal';
 import { hasSeenWelcomeAnimation, markWelcomeAnimationSeen } from '@/lib/welcome-storage';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
+import { WelcomeInstallPrompt } from '@/components/auth/WelcomeInstallPrompt';
 
 type AuthMode = 'welcome' | 'login' | 'register';
 
@@ -97,6 +98,7 @@ export function AuthScene() {
           animate={ctaReady ? { opacity: 1, y: 0 } : { opacity: 0, y: reduceMotion ? 0 : 16 }}
           transition={{ duration: reduceMotion ? 0.14 : 0.4, ease: [0.22, 1, 0.36, 1] }}
         >
+          <WelcomeInstallPrompt visible={mode === 'welcome' && ctaReady} />
           <button type="button" className="auth-welcome__cta" onClick={openRegister}>
             Começar agora
           </button>

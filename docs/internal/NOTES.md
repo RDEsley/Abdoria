@@ -41,6 +41,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Mudanças nativas devem considerar Capacitor, Android e iOS quando aplicável.
 - A splash nativa (`launchAutoHide: false`) permanece visível até a hidratação inicial em `AppBootGate`, que também cobre PWA/web com o mesmo fundo `#f4faf7`.
 - Ícones instaláveis vêm de `docs/internal/logos-icons/app-icon.png`, propagados por `scripts/update-brand-assets.ps1` para `client/public/brand/app-icon-*`.
+- Adaptive Android usa o `app-icon` full-bleed no foreground; cor de fundo do launcher `#1A8A4A`. Splash Android/iOS continua com o símbolo transparente de `logo-oficial/`.
 - Imagem de notificação do SO: `docs/internal/logos-icons/broto-assistente.png` → `client/public/media/notifications/icons/evolyn-{96,192}.png` (mesmo script de brand).
 
 ## Atualização do app (PWA)

@@ -83,20 +83,17 @@ export function GiftCodeSection() {
 
   return (
     <>
-      <section className="settings-block">
-        <p className="settings-block__hint">
-          Resgate códigos de campanhas e da comunidade Evolyn.
-        </p>
-        <div className="game-gift-code">
+      <section className="settings-section">
+        <div className="settings-gift">
           <label className="sr-only" htmlFor="settings-gift-code">
             Código presente
           </label>
           <input
             id="settings-gift-code"
-            className="game-input w-full font-mono tracking-wider"
+            className="settings-gift__input"
             value={giftCode}
             onChange={(e) => setGiftCode(e.target.value)}
-            placeholder="Seu código"
+            placeholder="Digite o código"
             autoComplete="off"
             autoCapitalize="off"
             spellCheck={false}
@@ -105,11 +102,13 @@ export function GiftCodeSection() {
               if (e.key === 'Enter' && giftCode.trim()) void handleRedeem();
             }}
           />
-          <div className="game-gift-code__actions">
-            <GameButton disabled={!giftCode.trim() || busy} onClick={() => void handleRedeem()}>
-              Resgatar
-            </GameButton>
-          </div>
+          <GameButton
+            className="settings-gift__action"
+            disabled={!giftCode.trim() || busy}
+            onClick={() => void handleRedeem()}
+          >
+            {busy ? 'Resgatando…' : 'Resgatar'}
+          </GameButton>
         </div>
       </section>
 

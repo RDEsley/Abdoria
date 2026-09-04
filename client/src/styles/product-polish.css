@@ -1041,7 +1041,7 @@ body {
    coleção de retângulos idênticos. */
 .profile-page
   :is(.game-profile-header, .game-xp-section, .profile-about-card, .profile-social-card),
-.settings-page > .glass-card,
+.settings-page .settings-section,
 .activities-page__notes,
 .activities-page__calendar {
   border-color: var(--evolyn-line);

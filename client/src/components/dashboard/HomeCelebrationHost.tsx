@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { LottieView } from '@/components/ui/LottieView';
+import { useLottieAsset } from '@/hooks/useLottieAsset';
 import {
   consumeHomeCelebration,
   HOME_CELEBRATION_QUEUED_EVENT,
@@ -9,42 +11,33 @@ import {
 import { playStreak } from '@/lib/sounds';
 import { successHaptic } from '@/lib/platform/native-runtime';
 
-const HOLD_STREAK_MS = 2600;
+const FIRE_STREAK_URL = '/assets/fire-streak.json';
+
+/** Timeline streak_up (~2.1s total). Sem dismiss por toque. */
+const STREAK_SPIN_MS = 320;
+const STREAK_IMPACT_MS = 520;
+const STREAK_HOLD_AFTER_MS = 900;
+const STREAK_TOTAL_MS = STREAK_IMPACT_MS + STREAK_HOLD_AFTER_MS + 200;
 const HOLD_FROZEN_MS = 3400;
-const IGNITE_DELAY_MS = 420;
 
 function startCelebration(
   next: HomeCelebration,
   setEvent: (value: HomeCelebration | null) => void,
-  setDisplay: (value: number) => void,
-  setLit: (value: boolean) => void,
   showingRef: { current: boolean },
 ) {
   showingRef.current = true;
   consumeHomeCelebration(next.id);
   setEvent(next);
-  if (next.kind === 'streak_up') {
-    setDisplay(next.streak_anterior);
-    setLit(false);
-    playStreak();
-    void successHaptic();
-  } else {
-    setDisplay(next.preserved_streak);
-    void successHaptic();
-  }
 }
 
 /**
- * Celebração de "Dia Ativo" na Home. Duas variantes totalmente separadas —
- * streak subiu (fogo) e Frozen Streak consumido (gelo) — para não misturar
- * a linguagem visual de uma na outra (regra de produto: Frozen nunca deve
- * parecer parte da celebração normal de streak).
+ * Celebração de Dia Ativo na Home.
+ * streak_up: número + fire-streak (não dismissível).
+ * frozen: overlay próprio (toque para fechar).
  */
 export function HomeCelebrationHost() {
   const reduceMotion = Boolean(useReducedMotion());
   const [event, setEvent] = useState<HomeCelebration | null>(null);
-  const [display, setDisplay] = useState(0);
-  const [lit, setLit] = useState(false);
   const showingRef = useRef(false);
 
   useEffect(() => {
@@ -52,7 +45,7 @@ export function HomeCelebrationHost() {
       if (showingRef.current) return;
       const next = peekNextHomeCelebration();
       if (!next) return;
-      startCelebration(next, setEvent, setDisplay, setLit, showingRef);
+      startCelebration(next, setEvent, showingRef);
     };
     tryStart();
     window.addEventListener(HOME_CELEBRATION_QUEUED_EVENT, tryStart);
@@ -63,31 +56,21 @@ export function HomeCelebrationHost() {
     if (!event) return;
 
     const timers: number[] = [];
-    const advance = (holdMs: number) => {
+    const finish = (holdMs: number) => {
       timers.push(
         window.setTimeout(() => {
           showingRef.current = false;
           setEvent(null);
           const leftover = peekNextHomeCelebration();
-          if (leftover) startCelebration(leftover, setEvent, setDisplay, setLit, showingRef);
+          if (leftover) startCelebration(leftover, setEvent, showingRef);
         }, holdMs),
       );
     };
 
     if (event.kind === 'streak_up') {
-      timers.push(
-        window.setTimeout(
-          () => {
-            setDisplay(event.streak_atual);
-            setLit(true);
-            void successHaptic();
-          },
-          reduceMotion ? 0 : IGNITE_DELAY_MS,
-        ),
-      );
-      advance(HOLD_STREAK_MS);
+      finish(reduceMotion ? 900 : STREAK_TOTAL_MS);
     } else {
-      advance(HOLD_FROZEN_MS);
+      finish(HOLD_FROZEN_MS);
     }
 
     return () => {
@@ -95,8 +78,8 @@ export function HomeCelebrationHost() {
     };
   }, [event, reduceMotion]);
 
-  const dismiss = () => {
-    if (!event) return;
+  const dismissFrozen = () => {
+    if (!event || event.kind !== 'frozen') return;
     showingRef.current = false;
     setEvent(null);
   };
@@ -104,21 +87,14 @@ export function HomeCelebrationHost() {
   return (
     <AnimatePresence mode="wait">
       {event?.kind === 'streak_up' && (
-        <StreakUpOverlay
-          key={event.id}
-          event={event}
-          display={display}
-          lit={lit}
-          reduceMotion={reduceMotion}
-          onDismiss={dismiss}
-        />
+        <StreakUpOverlay key={event.id} event={event} reduceMotion={reduceMotion} />
       )}
       {event?.kind === 'frozen' && (
         <FrozenOverlay
           key={event.id}
           event={event}
           reduceMotion={reduceMotion}
-          onDismiss={dismiss}
+          onDismiss={dismissFrozen}
         />
       )}
     </AnimatePresence>
@@ -127,65 +103,92 @@ export function HomeCelebrationHost() {
 
 interface StreakUpOverlayProps {
   event: Extract<HomeCelebration, { kind: 'streak_up' }>;
-  display: number;
-  lit: boolean;
   reduceMotion: boolean;
-  onDismiss: () => void;
 }
 
-/** Uma fogueira só, número anterior → número novo em foco, glow morno e sutil. */
-function StreakUpOverlay({ event, display, lit, reduceMotion, onDismiss }: StreakUpOverlayProps) {
-  const firstDay = event.streak_anterior === 0;
+function StreakUpOverlay({ event, reduceMotion }: StreakUpOverlayProps) {
+  const fireData = useLottieAsset(FIRE_STREAK_URL, !reduceMotion);
+  const [phase, setPhase] = useState<'from' | 'spin' | 'impact' | 'to'>('from');
+  const hapticDone = useRef(false);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setPhase('to');
+      playStreak();
+      if (!hapticDone.current) {
+        hapticDone.current = true;
+        void successHaptic();
+      }
+      return;
+    }
+
+    setPhase('from');
+    const spin = window.setTimeout(() => setPhase('spin'), 80);
+    const impact = window.setTimeout(() => {
+      setPhase('impact');
+      playStreak();
+      if (!hapticDone.current) {
+        hapticDone.current = true;
+        void successHaptic();
+      }
+    }, STREAK_IMPACT_MS);
+    const to = window.setTimeout(() => setPhase('to'), STREAK_IMPACT_MS + 40);
+
+    return () => {
+      window.clearTimeout(spin);
+      window.clearTimeout(impact);
+      window.clearTimeout(to);
+    };
+  }, [event.id, reduceMotion]);
+
+  const showFire = !reduceMotion && (phase === 'impact' || phase === 'to') && fireData;
+  const display =
+    phase === 'to' || phase === 'impact' ? event.streak_atual : event.streak_anterior;
 
   return (
-    <motion.button
-      type="button"
-      className="streak-home-overlay"
-      aria-live="polite"
-      onClick={onDismiss}
-      initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+    <motion.div
+      className="streak-cinema"
+      role="status"
+      aria-live="assertive"
+      aria-label={`Sequência ${event.streak_atual}`}
+      initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.18 }}
+      transition={{ duration: reduceMotion ? 0.12 : 0.2 }}
     >
-      <motion.div
-        className="streak-home-card"
-        initial={reduceMotion ? false : { scale: 0.88, y: 16, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={reduceMotion ? { opacity: 0 } : { scale: 0.94, y: 8, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 26, mass: 0.8 }}
-      >
-        <div className="streak-home-flame" aria-hidden>
-          <span className="streak-home-flame__glow" />
-          <span className={`streak-home-flame__body${lit ? ' streak-home-flame__body--lit' : ''}`}>
-            <span className="streak-home-flame__outer" />
-            <span className="streak-home-flame__core" />
-          </span>
+      <div className="streak-cinema__veil" aria-hidden />
+      {showFire ? (
+        <div
+          className={`streak-cinema__fire${phase === 'to' ? ' streak-cinema__fire--rise' : ''}`}
+          aria-hidden
+        >
+          <LottieView data={fireData} loop={false} contain />
         </div>
-
-        <p className="streak-home-card__kicker">
-          {firstDay ? 'Sequência acesa' : 'Sequência em chamas'}
-        </p>
-
-        <p className="streak-home-card__count">
-          <motion.span
-            key={display}
-            initial={reduceMotion ? false : { scale: 0.6, opacity: 0.4 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-          >
-            {display}
-          </motion.span>
-        </p>
-
-        <p className="streak-home-card__copy">
-          {firstDay
-            ? 'Você plantou o primeiro dia.'
-            : `${event.streak_anterior} → ${event.streak_atual} dias seguidos.`}
-        </p>
-        <span className="streak-home-card__hint">Toque para continuar</span>
-      </motion.div>
-    </motion.button>
+      ) : null}
+      <motion.p
+        key={`${phase}-${display}`}
+        className={`streak-cinema__number${phase === 'spin' ? ' streak-cinema__number--spin' : ''}${phase === 'impact' || phase === 'to' ? ' streak-cinema__number--burst' : ''}`}
+        initial={
+          reduceMotion
+            ? false
+            : phase === 'spin'
+              ? { scale: 1.08, rotate: -8 }
+              : phase === 'impact' || phase === 'to'
+                ? { scale: 1.35, opacity: 0.85 }
+                : { scale: 0.92, opacity: 0.9 }
+        }
+        animate={{ scale: phase === 'spin' ? 1.12 : 1, opacity: 1, rotate: 0 }}
+        transition={
+          reduceMotion
+            ? { duration: 0.2 }
+            : phase === 'spin'
+              ? { duration: STREAK_SPIN_MS / 1000, ease: 'easeInOut' }
+              : { type: 'spring', stiffness: 420, damping: 18 }
+        }
+      >
+        {display}
+      </motion.p>
+    </motion.div>
   );
 }
 
@@ -195,8 +198,11 @@ interface FrozenOverlayProps {
   onDismiss: () => void;
 }
 
-/** Frozen Streak — visual próprio (gelo), nunca reaproveita a fogueira do streak normal. */
 function FrozenOverlay({ event, reduceMotion, onDismiss }: FrozenOverlayProps) {
+  useEffect(() => {
+    void successHaptic();
+  }, [event.id]);
+
   return (
     <motion.button
       type="button"

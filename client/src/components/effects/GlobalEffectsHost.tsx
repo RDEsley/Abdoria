@@ -30,7 +30,7 @@ const CosmeticUnlockCelebration = lazy(() =>
  * up durante um treino ou atividade (as fontes principais de XP do app)
  * disparava o evento pro vazio: nenhum listener estava montado pra reagir. */
 export function GlobalEffectsHost() {
-  const [levelUpLevel, setLevelUpLevel] = useState<number | null>(null);
+  const [levelUp, setLevelUp] = useState<LevelUpData | null>(null);
 
   useEffect(() => {
     // Espera as bolinhas de XP (ver XpOrbLayer) terminarem de convergir na
@@ -40,10 +40,9 @@ export function GlobalEffectsHost() {
     let timer: number | null = null;
     const onLevelUp = (event: Event) => {
       const detail = (event as CustomEvent<LevelUpData>).detail;
-      const levelNovo = detail?.level_novo;
-      if (!levelNovo) return;
+      if (!detail?.level_novo) return;
       if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(() => setLevelUpLevel(levelNovo), LEVEL_UP_DELAY_MS);
+      timer = window.setTimeout(() => setLevelUp(detail), LEVEL_UP_DELAY_MS);
     };
     window.addEventListener('abdoria:level-up', onLevelUp);
     return () => {
@@ -56,11 +55,12 @@ export function GlobalEffectsHost() {
     <>
       <Suspense fallback={null}>
         <AnimatePresence>
-          {levelUpLevel !== null && (
+          {levelUp !== null && (
             <LevelUpOverlay
-              key={levelUpLevel}
-              level={levelUpLevel}
-              onDone={() => setLevelUpLevel(null)}
+              key={levelUp.level_novo}
+              level={levelUp.level_novo}
+              previousLevel={levelUp.level_anterior}
+              onDone={() => setLevelUp(null)}
             />
           )}
         </AnimatePresence>
