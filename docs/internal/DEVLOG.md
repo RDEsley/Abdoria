@@ -8,6 +8,12 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Limpeza comunidade + progresso
+
+- Ranking só global; seed NPC removido; limpeza one-off do banco (preservada 1 conta).
+- Rotinas com feedback otimista; /recordes; busca/filtros em Hoje; streak0 admin; DaySummary por horário SP.
+- Settings/About/Gift polish; boot phrases; gráfico Evolução; missões board swipe.
+
 ### Rotinas 2.0, Missões, notificações e Treino
 
 - Criar rotina: wizard 3 etapas (montar → agenda opcional → revisão + frase de sucesso). Editar: abas Rotina/Agenda sem celebração.

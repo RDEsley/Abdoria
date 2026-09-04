@@ -61,11 +61,11 @@ describe('weekly-stats', () => {
     expect(weeklyMetricValue(user, 'moedas', '2026-07-05')).toBe(0);
   });
 
-  it('NPCs demo ficam zerados no ranking semanal', () => {
-    const npc = { id: 'npc-9', is_demo_npc: true, gamificacao: {} } as unknown as UserRecord;
-    const a = weeklyMetricValue(npc, 'xp', '2026-07-05');
-    const b = weeklyMetricValue(npc, 'xp', '2026-07-05');
-    const otherWeek = weeklyMetricValue(npc, 'xp', '2026-07-12');
+  it('retorna zero quando não há acumulador', () => {
+    const empty = { id: 'u-empty', gamificacao: {} } as unknown as UserRecord;
+    const a = weeklyMetricValue(empty, 'xp', '2026-07-05');
+    const b = weeklyMetricValue(empty, 'xp', '2026-07-05');
+    const otherWeek = weeklyMetricValue(empty, 'xp', '2026-07-12');
     expect(a).toBe(b);
     expect(a).toBe(0);
     expect(otherWeek).toBe(0);

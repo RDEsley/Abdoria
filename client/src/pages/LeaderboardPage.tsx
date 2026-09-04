@@ -1,9 +1,8 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, Eye, EyeOff, Flame, Globe, Trophy, Zap } from 'lucide-react';
+import { Eye, EyeOff, Flame, Trophy, Zap } from 'lucide-react';
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium';
-import { LeaderboardResetCountdown } from '@/components/leaderboard/LeaderboardResetCountdown';
 import { LeaderboardUserAvatar } from '@/components/leaderboard/LeaderboardUserAvatar';
 import { getLeaderboard, getMyLeaderboardRank, updateMe } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,7 +15,6 @@ import {
   CURRENCY_NAME,
   type LeaderboardEntry,
   type LeaderboardMetric,
-  type LeaderboardPeriod,
 } from '@/types';
 
 const METRICS: {
@@ -29,13 +27,7 @@ const METRICS: {
   { id: 'streak', label: 'Dias seguidos', icon: Flame },
 ];
 
-const PERIODS: { id: LeaderboardPeriod; label: string; icon: typeof Globe }[] = [
-  { id: 'semanal', label: 'Semanal', icon: CalendarDays },
-  { id: 'global', label: 'Global', icon: Globe },
-];
-
-// Faixa aproximada pra quem está fora do top 25 — só entra em jogo se o total de
-// participantes realmente justificar (senão "Top 250" com 40 usuários é ruído, não sinal).
+// Faixa aproximada só quando a população real justifica.
 const RANK_BANDS = [250, 500, 1000] as const;
 
 function formatRankBand(rank: number, total: number | null | undefined): string | undefined {
@@ -107,7 +99,6 @@ export function LeaderboardPage() {
   const navigate = useNavigate();
   const { user, applyUser } = useAuth();
   const [metric, setMetric] = useState<LeaderboardMetric>('xp');
-  const [period, setPeriod] = useState<LeaderboardPeriod>('semanal');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [me, setMe] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,13 +110,9 @@ export function LeaderboardPage() {
   const isAdmin = user?.role === 'admin';
   const adminVisivel = user?.preferencias?.admin_visivel_ranking === true;
 
-  // Dias seguidos também tem Global x Semanal: Semanal = sequência em
-  // andamento e Global = recorde (streak_maior). O ranking é competitivo,
-  // sem pagamento automático de recompensas.
-
   useEffect(() => {
     setLoading(true);
-    void Promise.all([getLeaderboard(metric, period), getMyLeaderboardRank(metric, period)])
+    void Promise.all([getLeaderboard(metric), getMyLeaderboardRank(metric)])
       .then(([list, myRank]) => {
         setEntries(list);
         setMe(myRank);
@@ -138,7 +125,7 @@ export function LeaderboardPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [metric, period, reloadTick]);
+  }, [metric, reloadTick]);
 
   useEffect(() => {
     const updateScrollState = () => {
@@ -150,7 +137,6 @@ export function LeaderboardPage() {
     return () => window.removeEventListener('scroll', updateScrollState);
   }, []);
 
-  /** Só admins: alterna a própria visibilidade nos rankings (padrão: oculto). */
   const toggleAdminVisibilidade = async () => {
     if (!user || visBusy) return;
     setVisBusy(true);
@@ -177,7 +163,6 @@ export function LeaderboardPage() {
   const meInList = entries.slice(3).some((entry) => entry.is_me);
   const isMeInTop = me != null && (meInPodium || meInList);
 
-  // A linha fixa embaixo só aparece enquanto a posição real do usuário está fora da tela.
   useEffect(() => {
     if (loading || !me) {
       setMyRowVisible(false);
@@ -217,7 +202,7 @@ export function LeaderboardPage() {
     <div className="leaderboard-page flex flex-col gap-5">
       <GamePageHeader
         eyebrow="Comunidade Evolyn"
-        title={period === 'global' ? 'Classificação Global' : 'Classificação Semanal'}
+        title="Classificação Global"
         onBack={() => navigate('/treino')}
         backIcon="x"
         backAlign="right"
@@ -242,28 +227,6 @@ export function LeaderboardPage() {
           </button>
         )}
       </GamePageHeader>
-
-      <div
-        className="game-rank-period game-rank-period--split"
-        role="radiogroup"
-        aria-label="Período da classificação"
-      >
-        {PERIODS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            role="radio"
-            aria-checked={period === id}
-            onClick={() => setPeriod(id)}
-            className={`game-rank-period__btn${period === id ? ' game-rank-period__btn--active' : ''}`}
-          >
-            <Icon size={14} aria-hidden />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {metric !== 'streak' && period === 'semanal' && <LeaderboardResetCountdown />}
 
       <div className="game-rank-tabs" role="tablist" aria-label="Critério de classificação">
         {METRICS.map(({ id, label, icon: Icon }) => (
@@ -316,7 +279,7 @@ export function LeaderboardPage() {
           {entries.length === 0 && !me && (
             <p className="text-center text-sm font-bold text-stone-500">
               <Trophy size={16} className="mr-1 inline" />
-              Nenhum guerreiro no ranking ainda.
+              Ninguém no ranking ainda. Seja o primeiro.
             </p>
           )}
         </div>

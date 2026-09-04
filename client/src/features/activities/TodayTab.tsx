@@ -1,19 +1,43 @@
 import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Filter, Plus, Search } from 'lucide-react';
 import { GameButton } from '@/components/ui/GameButton';
-import { groupOccurrences, plannedOccurrencesForDay } from '@shared/activities';
+import {
+  groupOccurrences,
+  plannedOccurrencesForDay,
+  type ActivityCategory,
+  type ActivityOccurrence,
+} from '@shared/activities';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { ActivityQuickCard } from './ActivityQuickCard';
 import { ActivityDetailsSheet } from './ActivityDetailsSheet';
 import { ActivityCreatorSheet } from './ActivityCreatorSheet';
 import { QuickNote } from './QuickNote';
 import type { useActivitiesData } from './useActivitiesData';
-import type { ActivityOccurrence } from '@shared/activities';
+
+type ActivityFilter = 'todas' | 'hoje' | 'mente' | 'corpo' | 'vida' | 'outros';
+
+const FILTERS: { id: ActivityFilter; label: string }[] = [
+  { id: 'todas', label: 'Todas' },
+  { id: 'hoje', label: 'Hoje' },
+  { id: 'mente', label: 'Mente' },
+  { id: 'corpo', label: 'Corpo' },
+  { id: 'vida', label: 'Vida' },
+  { id: 'outros', label: 'Outros' },
+];
+
+function matchesCategory(category: ActivityCategory | string | undefined, filter: ActivityFilter) {
+  if (filter === 'todas' || filter === 'hoje') return true;
+  if (filter === 'outros') return category === 'outro' || !category;
+  return category === filter;
+}
 
 export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> }) {
   const today = getTodaySaoPaulo();
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [details, setDetails] = useState<ActivityOccurrence | null>(null);
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<ActivityFilter>('todas');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const occurrences = useMemo(
     () =>
@@ -24,9 +48,20 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
       ),
     [data.activities, data.logs, today],
   );
-  const groups = groupOccurrences(occurrences);
+
+  const filteredOccurrences = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const todayIds = new Set(occurrences.map((item) => item.activity_id));
+    return occurrences.filter((item) => {
+      if (needle && !item.name.toLowerCase().includes(needle)) return false;
+      if (filter === 'hoje') return todayIds.has(item.activity_id);
+      return matchesCategory(item.category, filter);
+    });
+  }, [filter, occurrences, query]);
+
+  const groups = groupOccurrences(filteredOccurrences);
   const doneCount = groups.done.length;
-  const total = occurrences.length;
+  const total = filteredOccurrences.length;
   const activityById = useMemo(
     () => new Map(data.activities.map((activity) => [activity.id, activity])),
     [data.activities],
@@ -42,7 +77,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
           <ActivityQuickCard
             key={item.occurrence_key + item.activity_id}
             occurrence={item}
-            busy={data.busyId === item.activity_id}
+            busy={data.isBusy(item.activity_id)}
             onComplete={() => {
               const activity = activityById.get(item.activity_id);
               if (activity) void data.complete(activity);
@@ -55,15 +90,61 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
 
   return (
     <div className="flex flex-col gap-4">
+      <QuickNote />
+
       <p className="text-sm font-bold text-stone-600">
-        {total === 0
+        {occurrences.length === 0
           ? 'Comece com um modelo — nada é imposto.'
-          : `${doneCount} de ${total} registradas hoje.`}
+          : `${doneCount} de ${total} filtradas · ${occurrences.length} no dia.`}
       </p>
+
+      <div className="flex items-center gap-2">
+        <label className="activities-search flex-1">
+          <Search size={15} aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar atividade"
+            aria-label="Buscar atividades por nome"
+          />
+        </label>
+        <button
+          type="button"
+          className={`activities-filter-toggle${filtersOpen || filter !== 'todas' ? ' is-on' : ''}`}
+          aria-expanded={filtersOpen}
+          onClick={() => setFiltersOpen((value) => !value)}
+        >
+          <Filter size={15} aria-hidden />
+          Filtros
+        </button>
+      </div>
+
+      {filtersOpen && (
+        <div className="activities-filter-chips" role="listbox" aria-label="Filtros de atividades">
+          {FILTERS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="option"
+              aria-selected={filter === entry.id}
+              className={filter === entry.id ? 'is-on' : undefined}
+              onClick={() => setFilter(entry.id)}
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {renderList('Agora', groups.now)}
       {renderList('Quando eu quiser', groups.anytime)}
       {renderList('Mais tarde', groups.later)}
       {renderList('Concluídas', groups.done)}
+
+      {total === 0 && occurrences.length > 0 && (
+        <p className="text-sm font-bold text-stone-500">Nenhuma atividade com esse filtro.</p>
+      )}
 
       <GameButton
         variant="secondary"
@@ -72,7 +153,6 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
       >
         <Plus size={16} /> Nova atividade
       </GameButton>
-      <QuickNote />
 
       <ActivityCreatorSheet
         open={creatorOpen}

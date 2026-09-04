@@ -415,7 +415,7 @@ export const User = {
       cosmeticos?: { moedas?: number | null } | null;
     },
     metric: 'xp' | 'streak' | 'moedas',
-    period: 'semanal' | 'global' = 'semanal',
+    _period: 'global' | 'semanal' = 'global',
   ): Promise<number> {
     const sb = getSupabase();
     const base = () =>
@@ -423,7 +423,8 @@ export const User = {
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .eq('onboarding_completed', true)
-        .eq('is_guest', false);
+        .eq('is_guest', false)
+        .eq('is_demo_npc', false);
 
     if (metric === 'xp') {
       const value = user.gamificacao.nivel_xp;
@@ -435,13 +436,11 @@ export const User = {
     }
 
     if (metric === 'streak') {
-      // Semanal = sequência em andamento; Global = recorde (streak_maior).
-      const field = period === 'global' ? 'streak_maior' : 'streak_atual';
-      const value =
-        period === 'global' ? user.gamificacao.streak_maior : user.gamificacao.streak_atual;
+      // Ranking global usa o recorde (streak_maior).
+      const value = user.gamificacao.streak_maior;
       const [{ count: higher }, { count: tiedName }] = await Promise.all([
-        base().gt(`gamificacao->${field}`, value),
-        base().eq(`gamificacao->${field}`, value).lt('nome', user.nome),
+        base().gt('gamificacao->streak_maior', value),
+        base().eq('gamificacao->streak_maior', value).lt('nome', user.nome),
       ]);
       return (higher ?? 0) + (tiedName ?? 0) + 1;
     }

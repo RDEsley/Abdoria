@@ -47,6 +47,9 @@ const SettingsPage = lazy(() =>
 const AchievementsPage = lazy(() =>
   import('@/pages/AchievementsPage').then((m) => ({ default: m.AchievementsPage })),
 );
+const RecordsPage = lazy(() =>
+  import('@/pages/RecordsPage').then((m) => ({ default: m.RecordsPage })),
+);
 const PlayerPage = lazy(() =>
   import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })),
 );
@@ -241,6 +244,14 @@ export default function App() {
                           element={
                             <LazyPage>
                               <AchievementsPage />
+                            </LazyPage>
+                          }
+                        />
+                        <Route
+                          path="recordes"
+                          element={
+                            <LazyPage>
+                              <RecordsPage />
                             </LazyPage>
                           }
                         />

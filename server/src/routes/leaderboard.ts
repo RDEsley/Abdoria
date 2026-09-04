@@ -6,7 +6,6 @@ import type { LeaderboardMetric } from '../types/index.js';
 import { LEADERBOARD_DISPLAY_LIMIT, xpLevelFromTotal } from '../types/index.js';
 import { readLifetimeMoedas, readMoedaBalance } from '../services/economy.js';
 import { syncMoedaBalancesForLeaderboard } from '../services/moeda-leaderboard.js';
-import { weeklyMetricValue } from '../services/weekly-stats.js';
 import {
   LeaderboardPodiumHistory,
   type PodiumCounts,
@@ -27,39 +26,20 @@ function parseMetric(raw: string | undefined): LeaderboardMetric {
   return 'xp';
 }
 
-type LeaderboardPeriod = 'semanal' | 'global';
-
-function parsePeriod(raw: string | undefined): LeaderboardPeriod {
-  return raw === 'global' ? 'global' : 'semanal';
-}
-
-/** Valor vitalício da métrica: XP ou Folhas recebidas, sem descontar gastos. */
-function globalMetricValue(user: EntryUser, metric: Exclude<LeaderboardMetric, 'streak'>): number {
+/** Valor vitalício da métrica: XP, Folhas recebidas ou recorde de streak. */
+function globalMetricValue(
+  user: EntryUser,
+  metric: LeaderboardMetric,
+): number {
   if (metric === 'xp') return user.gamificacao.nivel_xp;
+  if (metric === 'streak') return user.gamificacao.streak_maior;
   return readLifetimeMoedas(user);
 }
 
-function metricSort(metric: LeaderboardMetric, period: LeaderboardPeriod): Record<string, 1 | -1> {
-  if (metric === 'streak') {
-    // Semanal = sequência em andamento; Global = recorde (streak_maior) —
-    // streak não tem acumulador que reseta toda semana, então "semanal" aqui
-    // é só a sequência atual, sem relação com o ciclo semanal de recompensa.
-    return period === 'global'
-      ? { 'gamificacao.streak_maior': -1 }
-      : { 'gamificacao.streak_atual': -1 };
-  }
-  if (metric === 'moedas') {
-    return { 'cosmeticos.moedas': -1 };
-  }
+function metricSort(metric: LeaderboardMetric): Record<string, 1 | -1> {
+  if (metric === 'streak') return { 'gamificacao.streak_maior': -1 };
+  if (metric === 'moedas') return { 'cosmeticos.moedas_total_ganhas': -1 };
   return { 'gamificacao.nivel_xp': -1 };
-}
-
-/** Sequência exibida conforme o período: atual (semanal) ou recorde (global). */
-function streakMetricValue(
-  user: { gamificacao: { streak_atual: number; streak_maior: number } },
-  period: LeaderboardPeriod,
-): number {
-  return period === 'global' ? user.gamificacao.streak_maior : user.gamificacao.streak_atual;
 }
 
 type EntryUser = {
@@ -106,23 +86,17 @@ function toEntry(
     moldura_equipada: moldura,
     borda_perfil_fonte: user.cosmeticos?.borda_perfil_fonte ?? undefined,
     banner_equipado: user.cosmeticos?.banner_equipado ?? 'fundo_padrao',
-    // A moldura especial mostra a contagem de itens secretos — não vem do pódio;
-    // no ranking exibimos só o contador de pódio (especial fica sem número).
     moldura_count: moldura && moldura !== 'especial' ? molduraCountFor(podium, moldura) : null,
     is_me: isMe,
   };
 }
 
-// `find`/`countDocuments` só reconhecem comparação estrita (`is_guest === false`);
-// `{ $ne: true }` não batia com nenhum dos dois e nunca filtrou nada de fato — os
-// Contas de demonstração não devem entrar nos rankings semanais de XP/Folhas.
 const leaderboardFilter = {
   onboarding_completed: true,
   is_guest: false,
+  is_demo_npc: false,
 };
 
-/** Admins ficam fora dos rankings por padrão; o toggle na página de Ranking
-    (`preferencias.admin_visivel_ranking`) reativa. Moderadores aparecem normal. */
 function isHiddenAdmin(user: {
   role?: string | null;
   preferencias?: { admin_visivel_ranking?: boolean } | null;
@@ -133,7 +107,6 @@ function isHiddenAdmin(user: {
 leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
-    const period = parsePeriod(req.query.period as string | undefined);
     const limit = Math.min(
       Number(req.query.limit) || LEADERBOARD_DISPLAY_LIMIT,
       LEADERBOARD_DISPLAY_LIMIT,
@@ -143,74 +116,23 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
       await syncMoedaBalancesForLeaderboard();
     }
 
-    if (metric === 'streak') {
-      // Busca com folga porque admins ocultos são removidos depois da query.
-      const fetched = await User.find(leaderboardFilter, {
-        sort: metricSort(metric, period),
-        limit: limit + 10,
-      });
-      const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
-      const podiums = await LeaderboardPodiumHistory.countsForUsers(
-        users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
-      );
-      res.json(
-        users.map((user, index) =>
-          toEntry(
-            user,
-            index + 1,
-            user.id === req.userId,
-            streakMetricValue(user, period),
-            podiums.get(user.id),
-          ),
-        ),
-      );
-      return;
-    }
-
-    if (period === 'global') {
-      // Global usa totais vitalícios, que já são colunas simples (nivel_xp /
-      // moedas_total_ganhas) — mesma estratégia do streak: sort+limit no
-      // banco, sem puxar a tabela inteira pra ordenar em JS.
-      const sortField: Record<string, 1 | -1> =
-        metric === 'xp' ? { 'gamificacao.nivel_xp': -1 } : { 'cosmeticos.moedas_total_ganhas': -1 };
-      const fetched = await User.find(leaderboardFilter, {
-        sort: sortField,
-        limit: limit + 10,
-      });
-      const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
-      const podiums = await LeaderboardPodiumHistory.countsForUsers(
-        users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
-      );
-      res.json(
-        users.map((user, index) =>
-          toEntry(
-            user,
-            index + 1,
-            user.id === req.userId,
-            globalMetricValue(user, metric),
-            podiums.get(user.id),
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Semanal ordena pelos acumuladores da semana em JS porque o valor pode
-    // vir do acumulador corrente ou do `week_stats_prev` ainda preservado no
-    // domingo até o payout fechar.
-    const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
-    const ranked = all
-      .map((user) => ({ user, value: weeklyMetricValue(user, metric) }))
-      .sort((a, b) => b.value - a.value || a.user.nome.localeCompare(b.user.nome, 'pt-BR'))
-      .slice(0, limit);
-
+    const fetched = await User.find(leaderboardFilter, {
+      sort: metricSort(metric),
+      limit: limit + 10,
+    });
+    const users = fetched.filter((u) => !isHiddenAdmin(u)).slice(0, limit);
     const podiums = await LeaderboardPodiumHistory.countsForUsers(
-      ranked.filter(({ user }) => user.cosmeticos?.moldura_equipada).map(({ user }) => user.id),
+      users.filter((u) => u.cosmeticos?.moldura_equipada).map((u) => u.id),
     );
-
     res.json(
-      ranked.map(({ user, value }, index) =>
-        toEntry(user, index + 1, user.id === req.userId, value, podiums.get(user.id)),
+      users.map((user, index) =>
+        toEntry(
+          user,
+          index + 1,
+          user.id === req.userId,
+          globalMetricValue(user, metric),
+          podiums.get(user.id),
+        ),
       ),
     );
   } catch (error) {
@@ -219,7 +141,6 @@ leaderboardRouter.get('/', async (req: AuthRequest, res) => {
   }
 });
 
-/** Quantas vezes o usuário fechou a semana em 1º/2º/3º (base das molduras de perfil). */
 leaderboardRouter.get('/podium/me', async (req: AuthRequest, res) => {
   try {
     const counts = await LeaderboardPodiumHistory.countsForUser(req.userId!);
@@ -233,7 +154,6 @@ leaderboardRouter.get('/podium/me', async (req: AuthRequest, res) => {
 leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
   try {
     const metric = parseMetric(req.query.metric as string | undefined);
-    const period = parsePeriod(req.query.period as string | undefined);
 
     if (metric === 'moedas') {
       await syncMoedaBalancesForLeaderboard();
@@ -251,24 +171,22 @@ leaderboardRouter.get('/me', async (req: AuthRequest, res) => {
 
     if (metric === 'streak') {
       const [rank, total] = await Promise.all([
-        User.countLeaderboardRank(user, metric, period),
+        User.countLeaderboardRank(user, metric, 'global'),
         User.countDocuments(leaderboardFilter),
       ]);
       res.json({
-        ...toEntry(user, rank, true, streakMetricValue(user, period), myPodium),
+        ...toEntry(user, rank, true, globalMetricValue(user, metric), myPodium),
         total,
       });
       return;
     }
 
     const all = (await User.find(leaderboardFilter)).filter((u) => !isHiddenAdmin(u));
-    const valueOf = (target: (typeof all)[number]) =>
-      period === 'global' ? globalMetricValue(target, metric) : weeklyMetricValue(target, metric);
-    const myValue = valueOf(user);
+    const myValue = globalMetricValue(user, metric);
     const rank =
       all.filter((other) => {
         if (other.id === user.id) return false;
-        const otherValue = valueOf(other);
+        const otherValue = globalMetricValue(other, metric);
         return (
           otherValue > myValue ||
           (otherValue === myValue && other.nome.localeCompare(user.nome, 'pt-BR') < 0)

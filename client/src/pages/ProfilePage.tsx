@@ -23,6 +23,7 @@ import { UserAvatar } from '@/components/profile/UserAvatar';
 import { DefinitionSimulator } from '@/components/profile/DefinitionSimulator';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { PersonalRecordsPanel } from '@/components/profile/PersonalRecordsPanel';
+import { EvolutionSparkline } from '@/components/profile/EvolutionSparkline';
 import { ProfileProgressPanel } from '@/components/profile/ProfileProgressPanel';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -513,6 +514,9 @@ export function ProfilePage() {
       {tab === 'evolucao' && stats && (
         <>
           <ProfileProgressPanel stats={stats} />
+          <section className="mt-1">
+            <EvolutionSparkline />
+          </section>
           <section className="mt-1">
             <PersonalRecordsPanel />
           </section>

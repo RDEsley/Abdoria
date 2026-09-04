@@ -7,7 +7,6 @@ import { WorkoutPreset } from '../domain/WorkoutPreset.js';
 import { allExercises } from '../db/seeds/all-exercises.js';
 import { EXERCISE_NOME_PT } from '../../../shared/types/exercise-display.js';
 import { workoutPresets } from '../db/seeds/workout-presets.js';
-import { seedDemoUsers } from './seed-demo-users.js';
 import { buildAdminUserPayload } from './admin-user-payload.js';
 import {
   LEGACY_PUSH_UP_BOARD_EXERCISE_SLUGS,
@@ -94,8 +93,7 @@ async function seed() {
     );
   }
 
-  await seedDemoUsers();
-  console.log('Seed concluído.');
+  console.log('Seed concluído (sem usuários NPC/demo).');
 }
 
 seed().catch((error) => {

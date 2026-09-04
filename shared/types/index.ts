@@ -654,6 +654,8 @@ export interface RedeemCodeResponse {
   mensagem?: string;
   recompensas: GiftCodeRewardLine[];
   level_up?: LevelUpCelebration | null;
+  /** Só o código de teste `streak0` (admin) preenche isso — simulação visual, sem gravar streak real. */
+  streak_celebration?: StreakCelebration | null;
 }
 
 export interface PurchaseCosmeticResponse {
@@ -1326,7 +1328,8 @@ export interface LeaderboardEntry {
 export type LeaderboardMetric = 'xp' | 'streak' | 'moedas';
 
 /** Semanal = acumuladores que resetam no domingo; Global = totais vitalícios. */
-export type LeaderboardPeriod = 'semanal' | 'global';
+/** Ranking é somente global; o tipo permanece por compatibilidade de imports legados. */
+export type LeaderboardPeriod = 'global';
 
 export const LEADERBOARD_DISPLAY_LIMIT = 25;
 
