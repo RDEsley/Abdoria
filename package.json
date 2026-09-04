@@ -2,7 +2,7 @@
   "name": "evolyn",
   "description": "Aplicativo mobile-first de evolução pessoal gamificada com treinos, atividades, organização, XP, streaks, conquistas e progressão.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "UNLICENSED",
   "type": "module",
   "engines": {
