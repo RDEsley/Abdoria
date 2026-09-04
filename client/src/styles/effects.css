@@ -781,7 +781,7 @@
   fill: #ef4444;
 }
 
-/* Level-up overlay global — cinemático: pedaços do número convergindo de todas as direções */
+/* Level-up overlay global — número protagonista, glow âmbar, burst leve */
 .level-up-overlay {
   position: fixed;
   inset: 0;
@@ -819,8 +819,26 @@
 .level-up-overlay__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 8, 20, 0.72);
-  backdrop-filter: blur(10px);
+  background: rgb(15 23 42 / 48%);
+  backdrop-filter: blur(6px);
+}
+
+.level-up-overlay__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(18rem, 70vw);
+  height: min(18rem, 70vw);
+  margin-top: calc(min(18rem, 70vw) / -2);
+  margin-left: calc(min(18rem, 70vw) / -2);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(251 191 36 / 38%) 0%,
+    rgb(245 158 11 / 16%) 42%,
+    transparent 72%
+  );
+  pointer-events: none;
 }
 
 .level-up-overlay__stage {
@@ -830,76 +848,63 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  overflow: hidden;
+  gap: 0.45rem;
+  width: min(100%, 20rem);
+  padding: 1rem;
+  text-align: center;
 }
 
 .level-up-overlay__burst {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 26rem;
-  height: 26rem;
-  margin-top: -13rem;
-  margin-left: -13rem;
+  width: 16rem;
+  height: 16rem;
+  margin-top: -8rem;
+  margin-left: -8rem;
   pointer-events: none;
+  opacity: 0.92;
 }
 
-.level-up-overlay__digits {
+.level-up-overlay__level {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.level-up-overlay__digit {
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(3.5rem, 22vw, 5.5rem);
+  margin: 0;
+  font-size: clamp(3.4rem, 18vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
   line-height: 1;
-  background: linear-gradient(180deg, #fff9db, #fde047 45%, #f59e0b 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 22px rgba(251, 191, 36, 0.75)) drop-shadow(0 4px 0 rgba(120, 53, 15, 0.6));
-}
-
-.level-up-overlay__shard {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0.4rem;
-  height: 0.4rem;
-  margin-top: -0.2rem;
-  margin-left: -0.2rem;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #fef08a, #f59e0b);
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
-  pointer-events: none;
+  color: #fff7ed;
+  text-shadow:
+    0 0 18px rgb(251 191 36 / 55%),
+    0 2px 0 rgb(120 53 15 / 35%);
 }
 
 .level-up-overlay__banner {
   position: relative;
   z-index: 1;
-  margin-top: 0.5rem;
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1rem, 5vw, 1.35rem);
-  letter-spacing: 0.06em;
-  color: #fff7ed;
-  text-shadow:
-    0 0 16px rgba(251, 191, 36, 0.8),
-    0 2px 0 rgba(120, 53, 15, 0.6);
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #fde68a;
 }
 
-.level-up-overlay__hint {
+.level-up-overlay__copy {
   position: relative;
   z-index: 1;
-  margin-top: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  max-width: 16rem;
+  font-size: 0.84rem;
+  font-weight: 550;
+  line-height: 1.35;
+  color: rgb(255 247 237 / 78%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-up-overlay__glow {
+    opacity: 0.7;
+  }
 }
 
 /* Título Dono do Jogo */

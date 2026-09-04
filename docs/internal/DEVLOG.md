@@ -8,6 +8,15 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Celebrações, Streak cinema, PWA Welcome e Perfil
+
+- Rotina: `RoutineCompleteScreen` com `rotina-check.json` (lazy); sem `WorkoutVictoryScreen`; celebração só na transição incompleta→completa da sessão.
+- Streak Home: overlay cinemático com `fire-streak.json` (~2s, sem dismiss); Frozen permanece separado.
+- Card Streak Home: dormido vs aceso via `diaAtivo`; card tempo → “Essa semana”.
+- Perfil: remove `AchievementsPreview`; streak sem sufixo `d`.
+- Welcome: CTA instalar via `PwaInstallContext` + cooldown local.
+- Level up: overlay mais curto (~3s), número protagonista, glow âmbar.
+
 ### Limpeza comunidade + progresso
 
 - Ranking só global; seed NPC removido; limpeza one-off do banco (preservada 1 conta).

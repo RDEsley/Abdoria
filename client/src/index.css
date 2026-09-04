@@ -58,10 +58,11 @@
   color: rgb(68 64 60);
 }
 
-.settings-page > .glass-card {
-  border-radius: 1.35rem;
+.settings-page > .settings-section,
+.settings-page .settings-group > .settings-section {
+  border-radius: 1.15rem;
   border-color: rgb(231 229 228 / 0.85);
-  box-shadow: 0 8px 28px rgb(28 25 23 / 0.055);
+  box-shadow: 0 6px 20px rgb(28 25 23 / 0.035);
 }
 
 .settings-page input[type='range'] {

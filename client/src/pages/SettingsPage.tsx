@@ -3,16 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
-  Bell,
   ChevronDown,
-  ClipboardList,
   Copy,
-  HelpCircle,
   LogOut,
   PlayCircle,
   ScrollText,
   Trash2,
-  UserRound,
   Volume2,
   Zap,
 } from 'lucide-react';
@@ -252,260 +248,279 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="settings-page flex flex-col gap-4 pb-20">
-      <GamePageHeader eyebrow="Sistema" title="Opções" />
+    <div className="settings-page flex flex-col gap-5 pb-20">
+      <GamePageHeader title="Configurações" />
 
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <UserRound size={14} /> Conta
-        </h3>
-        <div className="flex items-center gap-2">
-          <span className="min-w-0 truncate text-sm font-extrabold text-stone-800">
-            {user?.nome}
-          </span>
-          <span className="settings-user-tag tabular-nums">#{user?.tag ?? '----'}</span>
+      <div className="settings-group">
+        <p className="settings-group__label">Conta</p>
+        <section className="settings-section">
+          <div className="flex items-center gap-2">
+            <span className="min-w-0 truncate text-[0.95rem] font-semibold text-stone-800">
+              {user?.nome}
+            </span>
+            <span className="settings-user-tag tabular-nums">#{user?.tag ?? '----'}</span>
+            <button
+              type="button"
+              className="settings-tag-copy"
+              aria-label="Copiar sua tag"
+              title="Copiar tag"
+              onClick={() => {
+                void navigator.clipboard.writeText(`${user?.nome ?? ''} #${user?.tag ?? ''}`.trim());
+                showGameToast('Tag copiada!', { variant: 'success' });
+              }}
+            >
+              <Copy size={13} aria-hidden />
+            </button>
+          </div>
+          <p className="settings-section__copy mt-2">
+            Sua tag identifica você mesmo com nomes iguais.
+          </p>
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <p className="settings-group__label">Notificações</p>
+        <section className="settings-section">
+          <p className="settings-section__copy">
+            Status:{' '}
+            <strong className="font-semibold text-stone-700">
+              {notifOptOut
+                ? 'Desativadas no Evolyn'
+                : notifPermission === 'granted'
+                  ? 'Ativas'
+                  : notifPermission === 'denied'
+                    ? 'Bloqueadas no dispositivo'
+                    : notifPermission === 'unsupported'
+                      ? 'Indisponíveis neste dispositivo'
+                      : 'Aguardando permissão'}
+            </strong>
+          </p>
+          <GameButton
+            variant="secondary"
+            className="mt-3 w-full"
+            aria-pressed={notifAtivas}
+            onClick={() => void toggleNotifications()}
+          >
+            {notifAtivas ? 'Desativar notificações' : 'Ativar notificações'}
+          </GameButton>
+          {notifPermission === 'denied' && Capacitor.isNativePlatform() ? (
+            <GameButton
+              variant="ghost"
+              className="mt-2 w-full"
+              onClick={() => void notifCtx?.openSettings()}
+            >
+              Abrir configurações do sistema
+            </GameButton>
+          ) : null}
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <p className="settings-group__label">Treino</p>
+        <section
+          id="ajustar-plano"
+          className={`settings-section settings-plan-card${location.hash === '#ajustar-plano' ? ' is-highlighted' : ''}`}
+        >
+          <h3 className="settings-section__title">Plano de Core</h3>
+          <p className="settings-section__copy">
+            {user?.ab_training_profile_v2
+              ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso`
+              : 'Configure intensidade, agenda e descanso dos seus treinos.'}
+          </p>
+          <GameButton
+            variant="secondary"
+            className="mt-3 w-full"
+            onClick={() => setShowTrainingProfile(true)}
+          >
+            {user?.ab_training_profile_v2 ? 'Ajustar plano' : 'Montar meu plano'}
+          </GameButton>
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <p className="settings-group__label">Áudio</p>
+        <section className="settings-section settings-audio-card">
+          <header className="settings-audio-card__header">
+            <span className="settings-audio-card__icon" aria-hidden>
+              <Volume2 size={19} />
+            </span>
+            <div>
+              <h3 className="settings-section__title !mb-0">Sons</h3>
+              <p className="settings-section__copy !mt-0.5">
+                O mesmo pacote acompanha ações, descanso e Player.
+              </p>
+            </div>
+          </header>
+          <label className="settings-audio-toggle">
+            <span>
+              <strong>Sons do Evolyn</strong>
+              <small>
+                {som ? 'Ativos em todo o aplicativo' : 'Silenciados em todo o aplicativo'}
+              </small>
+            </span>
+            <input type="checkbox" checked={som} onChange={(e) => setSom(e.target.checked)} />
+            <i aria-hidden />
+          </label>
+          <label className={`settings-audio-volume${som ? '' : ' is-disabled'}`}>
+            <span>
+              <strong>Volume</strong>
+              <output>{Math.round(volume * 100)}%</output>
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={volume}
+              disabled={!som}
+              onChange={(e) => setVolume(Number(e.target.value))}
+            />
+          </label>
+          <SoundPackSection />
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <p className="settings-group__label">Recompensas</p>
+        <GiftCodeSection />
+      </div>
+
+      <div className="settings-group">
+        <p className="settings-group__label">Experiência</p>
+        <section className="settings-section overflow-hidden !p-0">
           <button
             type="button"
-            className="settings-tag-copy"
-            aria-label="Copiar sua tag"
-            title="Copiar tag"
-            onClick={() => {
-              void navigator.clipboard.writeText(`${user?.nome ?? ''} #${user?.tag ?? ''}`.trim());
-              showGameToast('Tag copiada!', { variant: 'success' });
-            }}
+            className="settings-collapse__toggle"
+            aria-expanded={showXpRules}
+            onClick={() => setShowXpRules((v) => !v)}
           >
-            <Copy size={13} aria-hidden />
+            <h3 className="settings-section__title mb-0 flex items-center gap-2">
+              <Zap size={14} /> Regras de XP
+            </h3>
+            <ChevronDown
+              size={18}
+              className={`settings-collapse__chevron${showXpRules ? ' settings-collapse__chevron--open' : ''}`}
+              aria-hidden
+            />
           </button>
-        </div>
-        <p className="mt-2 text-xs font-medium text-stone-500">
-          Sua tag identifica você mesmo que existam outros jogadores com o mesmo nome.
-        </p>
-      </section>
+          <AnimatePresence initial={false}>
+            {showXpRules && (
+              <motion.div
+                id="regras-xp"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="game-xp-rules px-4 pb-4 text-sm font-medium leading-relaxed text-stone-600">
+                  <p className="mb-2 font-semibold text-stone-700">Treino diário</p>
+                  <ul className="mb-3 list-disc space-y-1 pl-5">
+                    <li>
+                      <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com
+                      mínimo de <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
+                    </li>
+                    <li>
+                      Máx. diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
+                      <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
+                      <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
+                    </li>
+                    <li>
+                      Exercícios, streak, conquistas do treino, Atividades e desbloqueios da
+                      Biblioteca compartilham esse mesmo limite. Códigos presente creditam suas
+                      recompensas diretamente.
+                    </li>
+                    <li>Após atingir o máx., o restante do dia não rende mais XP de treino.</li>
+                  </ul>
+                  <p className="mb-2 font-semibold text-stone-700">Bônus de treino</p>
+                  <ul className="mb-3 list-disc space-y-1 pl-5">
+                    <li>
+                      Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+
+                      {XP_STREAK_BONUS_PER_DAY} por dia de sequência).
+                    </li>
+                    <li>
+                      Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
+                    </li>
+                  </ul>
+                  <p className="mb-2 font-semibold text-stone-700">Atividades</p>
+                  <ul className="mb-3 list-disc space-y-1 pl-5">
+                    <li>
+                      A primeira conclusão de cada atividade no dia dá <strong>+15 XP</strong>{' '}
+                      (versão mínima +8 XP), até 4 atividades distintas. Repetições extras só
+                      registram o dia.
+                    </li>
+                    <li>
+                      Rotina completa: <strong>+10 XP</strong> uma vez por dia, por rotina.
+                    </li>
+                    <li>
+                      Qualquer ação válida (treino, atividade ou rotina) garante o Dia Ativo e
+                      sustenta a sequência.
+                    </li>
+                  </ul>
+                  <p className="mb-2 font-semibold text-stone-700">{FROZEN_STREAK_LABEL}</p>
+                  <ul className="mb-3 list-disc space-y-1 pl-5">
+                    <li>{formatFrozenStreakDescription()}</li>
+                  </ul>
+                  <p className="mb-2 font-semibold text-stone-700">{CURRENCY_NAME}</p>
+                  <ul className="list-disc space-y-1 pl-5">
+                    <li>
+                      <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong>{' '}
+                      totais ganhos (conversão automática).
+                    </li>
+                  </ul>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+      </div>
 
-      <section
-        id="ajustar-plano"
-        className={`glass-card settings-plan-card p-4${location.hash === '#ajustar-plano' ? ' is-highlighted' : ''}`}
-      >
-        <h3 className="game-section-title mb-2 flex items-center gap-2">
-          <ClipboardList size={14} /> Meu plano de treino
-        </h3>
-        <p className="text-xs font-medium text-stone-500">
-          {user?.ab_training_profile_v2
-            ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso · som personalizado`
-            : 'Configure intensidade, agenda, som e descanso dos seus treinos.'}
-        </p>
-        <GameButton
-          variant="secondary"
-          className="mt-3 w-full"
-          onClick={() => setShowTrainingProfile(true)}
-        >
-          {user?.ab_training_profile_v2 ? 'Ajustar plano de treino' : 'Montar meu plano'}
-        </GameButton>
-      </section>
-
-      <section className="glass-card settings-audio-card p-4">
-        <header className="settings-audio-card__header">
-          <span className="settings-audio-card__icon" aria-hidden>
-            <Volume2 size={19} />
-          </span>
-          <div>
-            <h3 className="game-section-title !mb-0">Áudio</h3>
-            <p>O mesmo pacote acompanha ações, descanso e Player.</p>
-          </div>
-        </header>
-        <label className="settings-audio-toggle">
-          <span>
-            <strong>Sons do Evolyn</strong>
-            <small>
-              {som ? 'Ativos em todo o aplicativo' : 'Silenciados em todo o aplicativo'}
-            </small>
-          </span>
-          <input type="checkbox" checked={som} onChange={(e) => setSom(e.target.checked)} />
-          <i aria-hidden />
-        </label>
-        <label className={`settings-audio-volume${som ? '' : ' is-disabled'}`}>
-          <span>
-            <strong>Volume</strong>
-            <output>{Math.round(volume * 100)}%</output>
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.1}
-            value={volume}
-            disabled={!som}
-            onChange={(e) => setVolume(Number(e.target.value))}
-          />
-        </label>
-        <SoundPackSection />
-      </section>
-
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <Bell size={14} /> Notificações
-        </h3>
-        <p className="mb-3 text-xs font-medium text-stone-500">
-          Avisos de atividades, rotinas e lembretes na hora certa.
-        </p>
-        <p className="mb-3 text-xs font-semibold text-stone-600">
-          Status:{' '}
-          {notifOptOut
-            ? 'Desativadas no Evolyn'
-            : notifPermission === 'granted'
-              ? 'Ativas'
-              : notifPermission === 'denied'
-                ? 'Bloqueadas no dispositivo'
-                : notifPermission === 'unsupported'
-                  ? 'Indisponíveis neste dispositivo'
-                  : 'Aguardando permissão'}
-        </p>
-        <GameButton
-          variant="secondary"
-          className="w-full"
-          aria-pressed={notifAtivas}
-          onClick={() => void toggleNotifications()}
-        >
-          {notifAtivas ? 'Desativar notificações' : 'Ativar notificações'}
-        </GameButton>
-        {notifPermission === 'denied' && Capacitor.isNativePlatform() ? (
-          <GameButton
-            variant="ghost"
-            className="mt-2 w-full"
-            onClick={() => void notifCtx?.openSettings()}
-          >
-            Abrir configurações
-          </GameButton>
-        ) : null}
-      </section>
-
-      <section className="glass-card overflow-hidden">
-        <button
-          type="button"
-          className="settings-collapse__toggle"
-          aria-expanded={showXpRules}
-          onClick={() => setShowXpRules((v) => !v)}
-        >
-          <h3 className="game-section-title mb-0 flex items-center gap-2">
-            <Zap size={14} /> Regras de XP
-          </h3>
-          <ChevronDown
-            size={18}
-            className={`settings-collapse__chevron${showXpRules ? ' settings-collapse__chevron--open' : ''}`}
-            aria-hidden
-          />
-        </button>
-        <AnimatePresence initial={false}>
-          {showXpRules && (
-            <motion.div
-              id="regras-xp"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="overflow-hidden"
+      <div className="settings-group">
+        <p className="settings-group__label">Ajuda</p>
+        <section className="settings-section">
+          <div className="flex flex-col gap-2">
+            <GameButton
+              variant="secondary"
+              className="flex w-full items-center justify-center gap-2"
+              onClick={() => setShowTutorial(true)}
             >
-              <div className="game-xp-rules px-4 pb-4 text-sm font-medium leading-relaxed text-stone-600">
-                <p className="mb-2 font-bold text-stone-700">Treino diário</p>
-                <ul className="mb-3 list-disc space-y-1 pl-5">
-                  <li>
-                    <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com
-                    mínimo de <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
-                  </li>
-                  <li>
-                    Máx. diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
-                    <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
-                    <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
-                  </li>
-                  <li>
-                    Exercícios, streak, conquistas do treino, Atividades e desbloqueios da
-                    Biblioteca compartilham esse mesmo limite. Códigos presente creditam suas
-                    recompensas diretamente.
-                  </li>
-                  <li>Após atingir o máx., o restante do dia não rende mais XP de treino.</li>
-                </ul>
-                <p className="mb-2 font-bold text-stone-700">Bônus de treino</p>
-                <ul className="mb-3 list-disc space-y-1 pl-5">
-                  <li>
-                    Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+
-                    {XP_STREAK_BONUS_PER_DAY} por dia de sequência).
-                  </li>
-                  <li>
-                    Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
-                  </li>
-                </ul>
-                <p className="mb-2 font-bold text-stone-700">Atividades</p>
-                <ul className="mb-3 list-disc space-y-1 pl-5">
-                  <li>
-                    A primeira conclusão de cada atividade no dia dá <strong>+15 XP</strong> (versão
-                    mínima +8 XP), até 4 atividades distintas. Repetições extras só registram o dia.
-                  </li>
-                  <li>
-                    Rotina completa: <strong>+10 XP</strong> uma vez por dia, por rotina.
-                  </li>
-                  <li>
-                    Qualquer ação válida (treino, atividade ou rotina) garante o Dia Ativo e
-                    sustenta a sequência. Concluir atividades não marca o treino do dia como feito.
-                  </li>
-                </ul>
-                <p className="mb-2 font-bold text-stone-700">{FROZEN_STREAK_LABEL}</p>
-                <ul className="mb-3 list-disc space-y-1 pl-5">
-                  <li>{formatFrozenStreakDescription()}</li>
-                </ul>
-                <p className="mb-2 font-bold text-stone-700">{CURRENCY_NAME}</p>
-                <ul className="list-disc space-y-1 pl-5">
-                  <li>
-                    <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong>{' '}
-                    totais ganhos (conversão automática).
-                  </li>
-                </ul>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </section>
+              <PlayCircle size={16} aria-hidden /> Ver o tutorial novamente
+            </GameButton>
+            <GameButton
+              variant="ghost"
+              className="flex w-full items-center justify-center gap-2"
+              onClick={() => setShowTerms(true)}
+            >
+              <ScrollText size={16} aria-hidden /> Termos e privacidade
+            </GameButton>
+          </div>
+        </section>
+      </div>
 
-      <GiftCodeSection />
+      <div className="settings-group">
+        <p className="settings-group__label">Sobre</p>
+        <AboutSection />
+      </div>
 
-      <section className="glass-card p-4">
-        <h3 className="game-section-title mb-3 flex items-center gap-2">
-          <HelpCircle size={14} /> Ajuda
-        </h3>
+      <div className="settings-group">
+        <p className="settings-group__label">Sessão</p>
         <div className="flex flex-col gap-2">
           <GameButton
             variant="secondary"
-            className="flex w-full items-center justify-center gap-2"
-            onClick={() => setShowTutorial(true)}
+            onClick={() => setConfirmLogout(true)}
+            className="flex items-center justify-center gap-2 text-red-600"
           >
-            <PlayCircle size={16} aria-hidden /> Ver o tutorial novamente
+            <LogOut size={18} /> Sair da conta
           </GameButton>
           <GameButton
             variant="ghost"
-            className="flex w-full items-center justify-center gap-2"
-            onClick={() => setShowTerms(true)}
+            onClick={() => setDeleteStep('confirm-phrase')}
+            className="flex items-center justify-center gap-2 text-red-600"
           >
-            <ScrollText size={16} aria-hidden /> Termos e condições
+            <Trash2 size={18} /> Deletar minha conta
           </GameButton>
         </div>
-      </section>
-
-      <AboutSection />
-
-      <GameButton
-        variant="secondary"
-        onClick={() => setConfirmLogout(true)}
-        className="flex items-center justify-center gap-2 text-red-600"
-      >
-        <LogOut size={18} /> Sair da conta
-      </GameButton>
-
-      <GameButton
-        variant="ghost"
-        onClick={() => setDeleteStep('confirm-phrase')}
-        className="flex items-center justify-center gap-2 text-red-600"
-      >
-        <Trash2 size={18} /> Deletar minha conta
-      </GameButton>
+      </div>
 
       <Modal
         open={confirmLogout}

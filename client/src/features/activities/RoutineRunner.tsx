@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Check, Loader2, X } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { GameButton } from '@/components/ui/GameButton';
 import { Modal } from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/PageLoader';
-import { WorkoutVictoryScreen } from '@/components/player/WorkoutVictoryScreen';
+import { RoutineCompleteScreen } from '@/features/activities/RoutineCompleteScreen';
 import { useActivitiesData } from '@/features/activities/useActivitiesData';
 import { routineDoneActivityIdsToday } from '@shared/activities';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
-import { useAuth } from '@/hooks/useAuth';
-import { resolveCosmeticos } from '@/types';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import { playCompleteSet } from '@/lib/sounds';
 import { selectionHaptic, successHaptic } from '@/lib/platform/native-runtime';
@@ -20,13 +18,12 @@ export function RoutineRunnerPage() {
   const { routineId } = useParams();
   const navigate = useNavigate();
   const data = useActivitiesData();
-  const { user } = useAuth();
-  const [sessionXp, setSessionXp] = useState(0);
-  const [doneCount, setDoneCount] = useState(0);
   const [celebrate, setCelebrate] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [optimisticDone, setOptimisticDone] = useState<Set<string>>(() => new Set());
   const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+  /** Snapshot: rotina já estava 100% ao abrir o Runner — não celebra de novo. */
+  const openedCompleteRef = useRef<boolean | null>(null);
 
   const routine = data.routines.find((item) => item.id === routineId);
   const today = getTodaySaoPaulo();
@@ -36,11 +33,26 @@ export function RoutineRunnerPage() {
     return routineDoneActivityIdsToday(routine, todayLogs);
   }, [data.logs, today, routine]);
 
+  const items = useMemo(() => {
+    if (!routine) return [];
+    return (routine.items ?? [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((item) => data.activities.find((activity) => activity.id === item.activity_id))
+      .filter(Boolean);
+  }, [routine, data.activities]);
+
+  const total = items.length;
+
   useEffect(() => {
     if (!data.loading && !routine) navigate('/atividades', { replace: true });
   }, [data.loading, routine, navigate]);
 
-  // Consolida otimismo quando o log real chega.
+  useEffect(() => {
+    if (openedCompleteRef.current !== null || data.loading || !routine || total === 0) return;
+    openedCompleteRef.current = doneIds.size >= total;
+  }, [data.loading, routine, total, doneIds]);
+
   useEffect(() => {
     if (optimisticDone.size === 0) return;
     setOptimisticDone((prev) => {
@@ -58,18 +70,13 @@ export function RoutineRunnerPage() {
 
   if (data.loading || !routine) return <PageLoader />;
 
-  const items = (routine.items ?? [])
-    .slice()
-    .sort((a, b) => a.position - b.position)
-    .map((item) => data.activities.find((activity) => activity.id === item.activity_id))
-    .filter(Boolean);
-
-  const total = items.length;
   const doneNow = items.filter(
     (activity) =>
       activity && (doneIds.has(activity.id) || optimisticDone.has(activity.id)),
   ).length;
   const allDone = total > 0 && doneNow === total;
+
+  const leaveRunner = () => navigate('/atividades');
 
   const handleComplete = async (activityId: string, activityName: string) => {
     if (
@@ -83,6 +90,9 @@ export function RoutineRunnerPage() {
 
     const activity = data.activities.find((item) => item.id === activityId);
     if (!activity) return;
+
+    const completingLast =
+      openedCompleteRef.current !== true && doneNow + 1 >= total && total > 0;
 
     setOptimisticDone((prev) => new Set(prev).add(activityId));
     setPendingIds((prev) => new Set(prev).add(activityId));
@@ -113,31 +123,13 @@ export function RoutineRunnerPage() {
     playCompleteSet();
     const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
     showGameToast(`${activityName}: ${ganho}`, { variant: 'success' });
-    setSessionXp((xp) => xp + result.xp_ganho);
-    setDoneCount((count) => count + 1);
-    if (doneNow + 1 >= total) setCelebrate(true);
+
+    if (completingLast) setCelebrate(true);
   };
 
   if (celebrate) {
     return (
-      <WorkoutVictoryScreen
-        workoutName={routine.name}
-        xpGained={sessionXp}
-        abdoriaGained={0}
-        atividadesConcluidas={doneCount}
-        xpBreakdown={null}
-        streakCelebration={null}
-        levelUpCelebration={null}
-        equippedEffectId={resolveCosmeticos(user?.cosmeticos).efeito_equipado}
-        saving={false}
-        saved
-        onFinish={() => {}}
-        onContinue={() => navigate('/atividades')}
-        showRodadaModal={false}
-        rodadaBusy={false}
-        onRodadaKeep={() => {}}
-        onRodadaSwap={() => {}}
-      />
+      <RoutineCompleteScreen routineName={routine.name} onContinue={leaveRunner} />
     );
   }
 
@@ -147,8 +139,8 @@ export function RoutineRunnerPage() {
       <header className="game-player-hud relative z-10 flex items-center justify-between">
         <button
           type="button"
-          onClick={() => (allDone ? setCelebrate(true) : setConfirmExit(true))}
-          aria-label={allDone ? 'Concluir rotina' : 'Sair'}
+          onClick={() => (allDone ? leaveRunner() : setConfirmExit(true))}
+          aria-label={allDone ? 'Fechar rotina' : 'Sair'}
         >
           <X size={24} />
         </button>
@@ -198,9 +190,9 @@ export function RoutineRunnerPage() {
         <button
           type="button"
           className="routine-runner__exit"
-          onClick={() => (allDone ? setCelebrate(true) : setConfirmExit(true))}
+          onClick={() => (allDone ? leaveRunner() : setConfirmExit(true))}
         >
-          {allDone ? 'Concluir rotina' : 'Sair / continuar depois'}
+          {allDone ? 'Voltar' : 'Sair / continuar depois'}
         </button>
       </div>
 
@@ -226,7 +218,7 @@ export function RoutineRunnerPage() {
             >
               Continuar rotina
             </GameButton>
-            <GameButton className="flex-1" onClick={() => navigate('/atividades')}>
+            <GameButton className="flex-1" onClick={leaveRunner}>
               Sair
             </GameButton>
           </div>

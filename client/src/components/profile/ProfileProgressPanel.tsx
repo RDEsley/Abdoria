@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Dumbbell, Flame, Sparkles, Timer, Trophy } from 'lucide-react';
 import { STREAK_RECORD_MATCH_COST } from '@shared/streak/recovery';
-import { AchievementsPreview } from '@/components/gamification/AchievementCard';
 import { LevelXpSection } from '@/components/gamification/LevelXpSection';
 import { StatTile } from '@/components/ui/StatTile';
 import { PurchaseConfirmDialog } from '@/components/shop/PurchaseConfirmDialog';
@@ -84,7 +83,7 @@ export function ProfileProgressPanel({ stats }: Props) {
           tone="streak"
           icon={<Flame className="text-orange-500" size={20} />}
           title="Streak Evolyn"
-          value={`${stats.streak_atual}d`}
+          value={stats.streak_atual}
           hint={
             podeIgualarRecorde
               ? `Recorde: ${stats.streak_maior} dias · toque para igualar`
@@ -129,12 +128,6 @@ export function ProfileProgressPanel({ stats }: Props) {
         xpParaLevelUp={xpParaLevelUp}
         dailyXpHint={dailyXpHint}
         showRulesLink
-      />
-
-      <AchievementsPreview
-        conquistas={stats.conquistas}
-        unlockedCount={unlockedAchievements}
-        total={stats.conquistas.length}
       />
 
       <PurchaseConfirmDialog

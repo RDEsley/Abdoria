@@ -15,25 +15,21 @@ import { showGameToast } from '@/lib/game-toast';
 const FATEEIGHT_LINKS = [
   {
     label: 'Instagram',
-    handle: '@fateeighttech',
     href: 'https://instagram.com/fateeighttech',
     Icon: InstagramIcon,
   },
   {
     label: 'YouTube',
-    handle: '@FateEightTech',
     href: 'https://www.youtube.com/@FateEightTech',
     Icon: YoutubeIcon,
   },
   {
     label: 'Facebook',
-    handle: 'Fate Eight Tech',
     href: 'https://www.facebook.com/profile.php?id=61582108484785',
     Icon: FacebookIcon,
   },
   {
     label: 'GitHub',
-    handle: 'fateeighttech',
     href: 'https://github.com/fateeighttech',
     Icon: GithubIcon,
   },
@@ -46,7 +42,7 @@ const COMMUNITY_LINKS = [
     Icon: DiscordIcon,
   },
   {
-    label: 'GitHub do app',
+    label: 'Repositório',
     href: 'https://github.com/RDEsley/Evolyn-Core-Quest',
     Icon: GithubIcon,
   },
@@ -80,11 +76,8 @@ export function AboutSection() {
   };
 
   return (
-    <section className="settings-block">
-      <h3 className="game-section-title mb-1">Sobre o Evolyn</h3>
-      <p className="settings-block__hint">
-        Aplicativo de evolução pessoal gamificada. Desenvolvido pela Fate Eight.
-      </p>
+    <section className="settings-section">
+      <p className="settings-section__copy">Desenvolvido pela Fate Eight.</p>
 
       <div className="about-version">
         <div>
@@ -98,11 +91,11 @@ export function AboutSection() {
           className="shrink-0"
         >
           <RefreshCw size={14} aria-hidden className={checking ? 'animate-spin' : undefined} />
-          {checking ? 'Verificando…' : 'Verificar atualização'}
+          {checking ? 'Verificando…' : 'Atualizar'}
         </GameButton>
       </div>
 
-      <p className="mt-4 text-xs font-bold uppercase tracking-wide text-stone-400">Redes</p>
+      <p className="settings-section__label">Redes</p>
       <div className="about-links">
         {FATEEIGHT_LINKS.map(({ label, href, Icon }) => (
           <a key={href} href={href} target="_blank" rel="noreferrer" className="about-links__item">
@@ -113,7 +106,7 @@ export function AboutSection() {
         ))}
       </div>
 
-      <p className="mt-3 text-xs font-bold uppercase tracking-wide text-stone-400">Comunidade</p>
+      <p className="settings-section__label">Comunidade</p>
       <div className="about-links">
         {COMMUNITY_LINKS.map(({ label, href, Icon }) => (
           <a key={href} href={href} target="_blank" rel="noreferrer" className="about-links__item">
