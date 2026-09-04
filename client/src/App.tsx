@@ -63,6 +63,9 @@ const MyPlantPage = lazy(() =>
 const ActivitiesPage = lazy(() =>
   import('@/pages/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage })),
 );
+const NutritionPage = lazy(() =>
+  import('@/pages/NutritionPage').then((m) => ({ default: m.NutritionPage })),
+);
 const RemindersPage = lazy(() =>
   import('@/pages/RemindersPage').then((m) => ({ default: m.RemindersPage })),
 );
@@ -182,6 +185,14 @@ export default function App() {
                           element={
                             <LazyPage>
                               <MyPlantPage />
+                            </LazyPage>
+                          }
+                        />
+                        <Route
+                          path="alimentacao"
+                          element={
+                            <LazyPage>
+                              <NutritionPage />
                             </LazyPage>
                           }
                         />

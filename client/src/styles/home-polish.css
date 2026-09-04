@@ -703,3 +703,152 @@
 .about-links__item:hover {
   background: #f5f5f4;
 }
+
+/* Alimentação */
+.nutrition-tabs,
+.nutrition-day-nav {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.nutrition-tabs button,
+.nutrition-day-nav button {
+  min-height: 2.2rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgb(28 25 23 / 0.1);
+  border-radius: 999px;
+  background: #fff;
+  color: #57534e;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+.nutrition-tabs button.is-on,
+.nutrition-day-nav button.is-on {
+  background: #ecfdf5;
+  border-color: rgb(16 185 129 / 0.35);
+  color: #047857;
+}
+.nutrition-summary,
+.nutrition-meal,
+.nutrition-tips,
+.nutrition-progress,
+.nutrition-empty {
+  padding: 0.95rem;
+  border: 1px solid rgb(231 229 228 / 0.92);
+  border-radius: 1.1rem;
+  background: #fff;
+}
+.nutrition-summary__calories strong {
+  display: block;
+  font-size: 1.55rem;
+  color: #1c1917;
+}
+.nutrition-summary__calories span,
+.nutrition-macros small,
+.nutrition-meal small {
+  color: #78716c;
+  font-size: 0.72rem;
+}
+.nutrition-bar {
+  margin-top: 0.55rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #f5f5f4;
+  overflow: hidden;
+}
+.nutrition-bar i {
+  display: block;
+  height: 100%;
+  background: #0a9875;
+}
+.nutrition-macros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+.nutrition-macros strong {
+  display: block;
+  font-size: 0.82rem;
+}
+.nutrition-meal header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+.nutrition-meal h3,
+.nutrition-tips h3 {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.nutrition-meal ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nutrition-meal li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid rgb(231 229 228 / 0.8);
+}
+.nutrition-meal li strong,
+.nutrition-food-row strong {
+  display: block;
+  font-size: 0.86rem;
+}
+.nutrition-actions {
+  display: grid;
+  gap: 0.55rem;
+}
+.nutrition-search {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(214 211 209);
+  border-radius: 0.85rem;
+  background: #fafaf9;
+}
+.nutrition-search input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+.nutrition-food-list {
+  max-height: 16rem;
+  margin-top: 0.75rem;
+  overflow: auto;
+}
+.nutrition-food-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.2rem;
+  border: 0;
+  border-bottom: 1px solid rgb(231 229 228 / 0.85);
+  background: transparent;
+  text-align: left;
+}
+.nutrition-food-row small {
+  color: #78716c;
+  font-size: 0.7rem;
+}
+.nutrition-spark svg {
+  width: 100%;
+  height: auto;
+}
+.nutrition-empty {
+  color: #78716c;
+  font-size: 0.86rem;
+}
+.nutrition-tips p {
+  margin: 0.35rem 0 0;
+  color: #57534e;
+  font-size: 0.78rem;
+}

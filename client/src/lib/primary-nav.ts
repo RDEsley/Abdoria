@@ -1,4 +1,4 @@
-import { CalendarCheck2, Dumbbell, Home, Sprout, User, type LucideIcon } from 'lucide-react';
+import { CalendarCheck2, Dumbbell, Home, Sprout, Utensils, type LucideIcon } from 'lucide-react';
 
 export interface PrimaryNavItem {
   to: string;
@@ -12,7 +12,7 @@ export const PRIMARY_NAV_ITEMS: readonly PrimaryNavItem[] = [
   { to: '/atividades', icon: CalendarCheck2, label: 'Atividades' },
   { to: '/treino', icon: Dumbbell, label: 'Treino' },
   { to: '/myplant', icon: Sprout, label: 'MyPlant' },
-  { to: '/perfil', icon: User, label: 'Perfil' },
+  { to: '/alimentacao', icon: Utensils, label: 'Alimentação' },
 ];
 
 export function primaryNavIndex(pathname: string): number {
