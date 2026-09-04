@@ -34,6 +34,9 @@ export function ActivityCreatorSheet({
   const [name, setName] = useState('');
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [suggestedId, setSuggestedId] = useState<string | null>(null);
+  const [suggestionConfidence, setSuggestionConfidence] = useState<'strong' | 'similar' | null>(
+    null,
+  );
   const [category, setCategory] = useState<ActivityCategory>('mente');
   const [days, setDays] = useState<number[]>([]);
   const [flexible, setFlexible] = useState(false);
@@ -52,6 +55,7 @@ export function ActivityCreatorSheet({
     setName('');
     setTemplateId(null);
     setSuggestedId(null);
+    setSuggestionConfidence(null);
     setCategory('mente');
     setDays([]);
     setFlexible(false);
@@ -61,12 +65,21 @@ export function ActivityCreatorSheet({
 
   const goToTemplateStep = () => {
     const match = matchActivityTemplate(name);
-    if (match) {
-      setSuggestedId(match.id);
-      setTemplateId((current) => current ?? match.id);
-      setCategory(match.category);
+    if (match.confidence === 'strong' && match.template) {
+      setSuggestedId(match.template.id);
+      setSuggestionConfidence('strong');
+      setTemplateId(match.template.id);
+      setCategory(match.template.category);
+    } else if (match.confidence === 'similar' && match.template) {
+      setSuggestedId(match.template.id);
+      setSuggestionConfidence('similar');
+      setTemplateId((current) => current ?? match.template!.id);
+      setCategory(match.template.category);
     } else {
       setSuggestedId(null);
+      setSuggestionConfidence(null);
+      setTemplateId(null);
+      setCategory('outro');
     }
     setStep(1);
   };
@@ -125,9 +138,14 @@ export function ActivityCreatorSheet({
           {STEPS[step]}
         </p>
         <h2 id="activity-creator-title" className="game-section-title">
-          {step === 2 ? displayName : 'Nova atividade'}
+          {step >= 1 && name.trim() ? displayName : 'Nova atividade'}
         </h2>
         {step === 2 && <p className="mt-1 text-sm font-semibold text-stone-500">Quando você quer fazer?</p>}
+        {step === 1 && suggestionConfidence === 'similar' && suggestedId && (
+          <p className="mt-1 text-sm font-semibold text-emerald-700">
+            Modelo recomendado pelo Evolyn — você pode trocar.
+          </p>
+        )}
 
         {step === 0 && (
           <input
@@ -157,16 +175,28 @@ export function ActivityCreatorSheet({
               <button
                 key={item.id}
                 type="button"
-                className={`activity-template${templateId === item.id ? ' activity-template--on' : ''}`}
+                className={`activity-template${templateId === item.id ? ' activity-template--on' : ''}${suggestedId === item.id ? ' activity-template--suggested' : ''}`}
                 onClick={() => setTemplateId(item.id)}
               >
                 {suggestedId === item.id && (
-                  <small className="activity-template__hint">Sugestão Evolyn</small>
+                  <small className="activity-template__hint">
+                    {suggestionConfidence === 'strong' ? 'Selecionado pelo Evolyn' : 'Sugestão Evolyn'}
+                  </small>
                 )}
                 <strong>{item.name}</strong>
                 <small>{item.description}</small>
               </button>
             ))}
+            {category === 'outro' && (
+              <button
+                type="button"
+                className={`activity-template${!templateId ? ' activity-template--on' : ''}`}
+                onClick={() => setTemplateId(null)}
+              >
+                <strong>Livre</strong>
+                <small>Mantém o nome digitado e escolhe ícone/cor depois.</small>
+              </button>
+            )}
           </div>
         )}
 

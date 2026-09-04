@@ -26,7 +26,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 
 ## Banco de dados
 
-- Migrations aplicadas são imutáveis e ficam em `supabase/migrations/applied/`. Novas mudanças de schema entram em `supabase/migrations/` (raiz) e, depois de aplicadas no live, movem-se para `applied/`.
+- Migrations aplicadas são imutáveis; mudanças de schema devem criar novas migrations.
 - Evitar snapshots completos de perfil quando apenas campos específicos mudaram.
 - Preferir escritas parciais quando aplicável para reduzir risco de sobrescrever alterações concorrentes.
 - Ter cuidado especial com alterações concorrentes em `preferencias`.

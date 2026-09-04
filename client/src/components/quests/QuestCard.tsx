@@ -77,8 +77,8 @@ export function QuestCard({ compact }: { compact?: boolean }) {
           </GameButton>
         )}
         {!ready && (
-          <span className="text-xs font-bold text-stone-400">
-            {unclaimed.length} missão{unclaimed.length !== 1 ? 'ões' : ''}
+          <span className="text-[0.62rem] font-extrabold uppercase tracking-wide text-stone-400">
+            Diária
           </span>
         )}
       </div>

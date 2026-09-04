@@ -1,6 +1,15 @@
 import { ACTIVITY_TEMPLATES, type ActivityTemplate } from './templates.js';
 
-const MIN_SCORE = 4;
+const STRONG_SCORE = 9;
+const SIMILAR_SCORE = 4;
+
+export type TemplateMatchConfidence = 'strong' | 'similar' | 'none';
+
+export interface TemplateMatchResult {
+  template: ActivityTemplate | null;
+  score: number;
+  confidence: TemplateMatchConfidence;
+}
 
 function fold(value: string): string {
   return value
@@ -35,9 +44,9 @@ function scoreTemplate(query: string, queryTokens: string[], template: ActivityT
   return best;
 }
 
-export function matchActivityTemplate(name: string): ActivityTemplate | null {
+export function matchActivityTemplate(name: string): TemplateMatchResult {
   const query = fold(name);
-  if (query.length < 3) return null;
+  if (query.length < 3) return { template: null, score: 0, confidence: 'none' };
   const queryTokens = tokens(query);
   let winner: ActivityTemplate | null = null;
   let best = 0;
@@ -48,5 +57,11 @@ export function matchActivityTemplate(name: string): ActivityTemplate | null {
       winner = template;
     }
   }
-  return best >= MIN_SCORE ? winner : null;
+  if (best >= STRONG_SCORE && winner) {
+    return { template: winner, score: best, confidence: 'strong' };
+  }
+  if (best >= SIMILAR_SCORE && winner) {
+    return { template: winner, score: best, confidence: 'similar' };
+  }
+  return { template: null, score: best, confidence: 'none' };
 }

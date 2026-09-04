@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, Clock3, Trash2 } from 'lucide-react';
+import { Bell, Clock3, Trash2, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { PickerField } from '@/components/ui/PickerField';
@@ -163,9 +163,14 @@ export function RoutineEditorSheet({
   return (
     <Modal open={open} onClose={onClose} labelledBy="routine-editor-title">
       <div className="p-4">
-        <h2 id="routine-editor-title" className="game-section-title">
-          {isEdit ? 'Editar rotina' : 'Nova rotina'}
-        </h2>
+        <div className="flex items-start justify-between gap-2">
+          <h2 id="routine-editor-title" className="game-section-title">
+            {isEdit ? 'Editar rotina' : 'Nova rotina'}
+          </h2>
+          <button type="button" className="game-icon-btn" aria-label="Fechar" onClick={onClose}>
+            <X size={18} aria-hidden />
+          </button>
+        </div>
 
         <input
           className="game-input mt-2 w-full"

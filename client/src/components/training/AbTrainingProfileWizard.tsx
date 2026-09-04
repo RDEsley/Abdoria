@@ -22,15 +22,24 @@ import {
 import {
   AB_CUSTOM_EXERCISE_MAX,
   AB_CUSTOM_EXERCISE_MIN,
-  AB_EFFORT_LABELS,
+  AB_CUSTOM_REPS_MAX,
+  AB_CUSTOM_REPS_MIN,
+  AB_CUSTOM_REST_MAX,
+  AB_CUSTOM_REST_MIN,
+  AB_CUSTOM_SERIES_MAX,
+  AB_CUSTOM_SERIES_MIN,
   AB_INTENSITY_LABELS,
   clampCustomExerciseCount,
+  clampCustomReps,
+  clampCustomRest,
+  clampCustomSeries,
   createDefaultAbTrainingProfile,
+  effortFromTargetReps,
   estimateSessionMinutesForProfile,
   exerciseCountForProfile,
+  normalizeAbTrainingCustom,
 } from '@shared/ab-training-profile';
 import type {
-  AbTrainingEffort,
   AbTrainingIntensity,
   AbTrainingProfileV2,
   IUserDocument,
@@ -60,7 +69,9 @@ interface WizardDraft {
   mode: 'preset' | 'custom' | null;
   intensity: AbTrainingIntensity | null;
   customCount: number;
-  customEffort: AbTrainingEffort | null;
+  customSeries: number;
+  customReps: number;
+  customRest: number;
   training_days: number[];
   rest_seconds: number | null;
 }
@@ -90,7 +101,9 @@ function emptyDraft(): WizardDraft {
     mode: null,
     intensity: null,
     customCount: 6,
-    customEffort: null,
+    customSeries: 3,
+    customReps: 12,
+    customRest: 30,
     training_days: [],
     rest_seconds: null,
   };
@@ -99,11 +112,14 @@ function emptyDraft(): WizardDraft {
 function draftFromProfile(user: IUserDocument | null): WizardDraft {
   const profile = user?.ab_training_profile_v2;
   if (!profile) return emptyDraft();
+  const custom = profile.custom ? normalizeAbTrainingCustom(profile.custom) : null;
   return {
     mode: profile.mode === 'custom' ? 'custom' : 'preset',
     intensity: profile.intensity,
-    customCount: profile.custom?.exercise_count ?? exerciseCountForProfile(profile),
-    customEffort: profile.custom?.effort ?? 'moderado',
+    customCount: custom?.exercise_count ?? exerciseCountForProfile(profile),
+    customSeries: custom?.series ?? 3,
+    customReps: custom?.target_reps ?? 12,
+    customRest: custom?.rest_seconds ?? profile.rest_seconds ?? 30,
     training_days: profile.training_days,
     rest_seconds: profile.rest_seconds ?? user?.preferencias?.descanso_padrao_seg ?? 30,
   };
@@ -114,9 +130,6 @@ function validationMessage(step: NumberedStep, draft: WizardDraft, soundId: stri
   if (step === 0 && draft.mode === 'preset' && !draft.intensity) {
     return 'Escolha uma intensidade para continuar.';
   }
-  if (step === 0 && draft.mode === 'custom' && !draft.customEffort) {
-    return 'Escolha o ritmo da sessão personalizada.';
-  }
   if (step === 1 && draft.training_days.length < 2) return 'Escolha pelo menos dois dias.';
   if (step === 2 && !soundId) return 'Escolha um som para continuar.';
   if (step === 3 && draft.rest_seconds == null) return 'Escolha o descanso entre séries.';
@@ -126,18 +139,22 @@ function validationMessage(step: NumberedStep, draft: WizardDraft, soundId: stri
 function toProfile(draft: WizardDraft, existing: AbTrainingProfileV2 | null): AbTrainingProfileV2 {
   const base = existing ?? createDefaultAbTrainingProfile();
   const intensity = draft.mode === 'custom' ? 'moderado' : (draft.intensity ?? 'moderado');
+  const customRest = clampCustomRest(draft.customRest);
   return {
     ...base,
     intensity,
     training_days: draft.training_days,
     volume: base.volume ?? 'equilibrado',
-    rest_seconds: draft.rest_seconds ?? 30,
+    rest_seconds: draft.mode === 'custom' ? customRest : (draft.rest_seconds ?? 30),
     mode: draft.mode === 'custom' ? 'custom' : 'preset',
     custom:
       draft.mode === 'custom'
         ? {
             exercise_count: clampCustomExerciseCount(draft.customCount),
-            effort: draft.customEffort ?? 'moderado',
+            series: clampCustomSeries(draft.customSeries),
+            target_reps: clampCustomReps(draft.customReps),
+            rest_seconds: customRest,
+            effort: effortFromTargetReps(draft.customReps),
           }
         : null,
   };
@@ -163,6 +180,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
   const finalStep = step === TOTAL_STEPS - 1;
   const confetti = useLottieAsset('/assets/Confetti.json', open && finalStep);
   const lesgo = useLottieAsset('/assets/lesgo.json', open && finalStep);
+  const customScreen = draft.mode === 'custom' && step === 0;
 
   useEffect(() => {
     if (!open) return;
@@ -220,6 +238,9 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
       setShakeNonce((value) => value + 1);
       void errorHaptic();
       return;
+    }
+    if (step === 0 && draft.mode === 'custom') {
+      choose({ rest_seconds: clampCustomRest(draft.customRest) });
     }
     if (!reduceMotion) setLeafBurst((value) => value + 1);
     setHint(null);
@@ -286,7 +307,16 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
 
   return (
     <>
-      <Modal open={open} onClose={close} labelledBy="ab-plan-title" panelClassName="ab-plan-wizard">
+      <Modal
+        open={open}
+        onClose={close}
+        labelledBy="ab-plan-title"
+        overlayClassName="ab-plan-wizard-overlay"
+        panelClassName="ab-plan-wizard"
+        lockScroll={false}
+        trapFocus={false}
+        autoFocus={false}
+      >
         {phase === 'intro' ? (
           <div className="ab-plan-intro">
             <button type="button" className="game-icon-btn ab-plan-intro__close" onClick={close} aria-label="Fechar">
@@ -317,7 +347,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                 <small>
                   Plano de core · {step + 1} de {TOTAL_STEPS}
                 </small>
-                <h2 id="ab-plan-title">{TITLES[step]}</h2>
+                <h2 id="ab-plan-title">{customScreen ? 'Personalizada' : TITLES[step]}</h2>
               </div>
               <button type="button" className="game-icon-btn" onClick={close} aria-label="Fechar">
                 <X size={18} aria-hidden />
@@ -335,7 +365,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
             </div>
 
             <div className={`ab-plan-wizard__content${shakeNonce ? ' is-shake' : ''}`} key={shakeNonce || 'steady'}>
-              {step === 0 && (
+              {step === 0 && !customScreen && (
                 <div className="ab-plan-options" role="radiogroup" aria-label="Intensidade">
                   {(['leve', 'moderado', 'evolyn'] as AbTrainingIntensity[]).map((intensity) => {
                     const Icon = INTENSITY_ICONS[intensity];
@@ -368,8 +398,8 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                   <motion.button
                     type="button"
                     role="radio"
-                    aria-checked={draft.mode === 'custom'}
-                    className={`ab-plan-option ${draft.mode === 'custom' ? 'is-selected' : ''}`}
+                    aria-checked={false}
+                    className="ab-plan-option"
                     whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                     onClick={() => choose({ mode: 'custom', intensity: null })}
                   >
@@ -377,39 +407,70 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                       <SlidersHorizontal size={22} aria-hidden />
                     </span>
                     <strong>Personalizada</strong>
-                    <small>Você escolhe a quantidade de exercícios e o ritmo da sessão.</small>
-                    {draft.mode === 'custom' && <Check className="ab-plan-option__check" size={17} aria-hidden />}
+                    <small>Defina exercícios, séries, alvo e descanso.</small>
                   </motion.button>
-                  {draft.mode === 'custom' && (
-                    <div className="ab-plan-custom">
-                      <label>
-                        Exercícios por sessão
-                        <input
-                          type="range"
-                          min={AB_CUSTOM_EXERCISE_MIN}
-                          max={AB_CUSTOM_EXERCISE_MAX}
-                          value={draft.customCount}
-                          onChange={(event) =>
-                            choose({ customCount: Number(event.target.value) })
-                          }
-                        />
-                        <strong>{draft.customCount} exercícios</strong>
-                      </label>
-                      <div className="ab-plan-custom__effort" role="radiogroup" aria-label="Ritmo">
-                        {(['leve', 'moderado', 'intenso'] as AbTrainingEffort[]).map((effort) => (
-                          <button
-                            key={effort}
-                            type="button"
-                            aria-pressed={draft.customEffort === effort}
-                            className={draft.customEffort === effort ? 'is-selected' : ''}
-                            onClick={() => choose({ customEffort: effort })}
-                          >
-                            {AB_EFFORT_LABELS[effort]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                </div>
+              )}
+
+              {customScreen && (
+                <div className="ab-plan-custom-screen">
+                  <button
+                    type="button"
+                    className="ab-plan-custom-screen__back"
+                    onClick={() => choose({ mode: null, intensity: null })}
+                  >
+                    <ChevronLeft size={16} aria-hidden /> Voltar para opções prontas
+                  </button>
+                  <p className="ab-plan-helper">
+                    Ajuste o ritmo da sessão. Exercícios de tempo usam o alvo como referência de
+                    intensidade.
+                  </p>
+                  <label className="ab-plan-custom-control">
+                    <span>Exercícios por treino</span>
+                    <strong>{draft.customCount}</strong>
+                    <input
+                      type="range"
+                      min={AB_CUSTOM_EXERCISE_MIN}
+                      max={AB_CUSTOM_EXERCISE_MAX}
+                      value={draft.customCount}
+                      onChange={(event) => choose({ customCount: Number(event.target.value) })}
+                    />
+                  </label>
+                  <label className="ab-plan-custom-control">
+                    <span>Séries por exercício</span>
+                    <strong>{draft.customSeries}</strong>
+                    <input
+                      type="range"
+                      min={AB_CUSTOM_SERIES_MIN}
+                      max={AB_CUSTOM_SERIES_MAX}
+                      value={draft.customSeries}
+                      onChange={(event) => choose({ customSeries: Number(event.target.value) })}
+                    />
+                  </label>
+                  <label className="ab-plan-custom-control">
+                    <span>Repetições alvo</span>
+                    <strong>{draft.customReps}</strong>
+                    <input
+                      type="range"
+                      min={AB_CUSTOM_REPS_MIN}
+                      max={AB_CUSTOM_REPS_MAX}
+                      value={draft.customReps}
+                      onChange={(event) => choose({ customReps: Number(event.target.value) })}
+                    />
+                    <small>Em exercícios cronometrados, o Evolyn adapta o tempo com base nesse alvo.</small>
+                  </label>
+                  <label className="ab-plan-custom-control">
+                    <span>Descanso entre séries</span>
+                    <strong>{draft.customRest}s</strong>
+                    <input
+                      type="range"
+                      min={AB_CUSTOM_REST_MIN}
+                      max={AB_CUSTOM_REST_MAX}
+                      step={5}
+                      value={draft.customRest}
+                      onChange={(event) => choose({ customRest: Number(event.target.value) })}
+                    />
+                  </label>
                 </div>
               )}
 
@@ -447,8 +508,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
               {step === 2 && (
                 <div className="ab-plan-sound-step" role="radiogroup" aria-label="Som do sistema">
                   <p className="ab-plan-helper">
-                    O pacote escolhido será usado nas ações do app, no timer e no Player. Um toque
-                    seleciona e toca a prévia.
+                    Um toque seleciona e toca a prévia. O pacote fica ativo em todo o app.
                   </p>
                   {soundOptions === null ? (
                     <div className="ab-plan-sound-loading" role="status">
@@ -478,14 +538,14 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                             }}
                           >
                             <span className="ab-plan-sound-option__icon">
-                              {item.desbloqueada ? <Music2 size={20} aria-hidden /> : <Lock size={18} aria-hidden />}
+                              {item.desbloqueada ? <Music2 size={16} aria-hidden /> : <Lock size={14} aria-hidden />}
                             </span>
                             <span className="ab-plan-sound-option__copy">
                               <strong>{item.nome}</strong>
-                              <small>{item.descricao}</small>
+                              <small>{item.desbloqueada ? item.descricao : item.unlock_label}</small>
                             </span>
                             <span className="ab-plan-sound-option__status">
-                              {selected ? <Check size={16} aria-hidden /> : <Volume2 size={16} aria-hidden />}
+                              {selected ? <Check size={14} aria-hidden /> : <Volume2 size={14} aria-hidden />}
                             </span>
                           </motion.button>
                         );
@@ -498,7 +558,9 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
               {step === 3 && (
                 <div className="ab-plan-rest-step" role="radiogroup" aria-label="Descanso entre séries">
                   <p className="ab-plan-helper">
-                    Esse tempo será respeitado pelo Player e poderá ser ajustado durante o treino.
+                    {draft.mode === 'custom'
+                      ? 'Você já definiu um descanso na personalizada. Pode confirmar ou ajustar aqui.'
+                      : 'Esse tempo será respeitado pelo Player e poderá ser ajustado durante o treino.'}
                   </p>
                   <div className="ab-plan-rest-options">
                     {REST_OPTIONS.map((seconds) => {
@@ -511,7 +573,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                           key={seconds}
                           className={selected ? 'is-selected' : ''}
                           whileTap={reduceMotion ? undefined : { scale: 0.94, rotate: -1 }}
-                          onClick={() => choose({ rest_seconds: seconds })}
+                          onClick={() => choose({ rest_seconds: seconds, customRest: seconds })}
                         >
                           <TimerReset size={20} aria-hidden />
                           <strong>{seconds}s</strong>
@@ -580,7 +642,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                     <span>
                       <TimerReset size={16} />
                       <small>Descanso</small>
-                      <strong>{draft.rest_seconds}s entre séries</strong>
+                      <strong>{profilePreview.rest_seconds}s entre séries</strong>
                     </span>
                     <span>
                       <Gauge size={16} />
@@ -600,14 +662,18 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
               <GameButton
                 variant="secondary"
                 className={
-                  step === 0 && !firstVisit
+                  step === 0 && !firstVisit && !customScreen
                     ? 'ab-plan-wizard__back is-placeholder'
                     : 'ab-plan-wizard__back'
                 }
-                disabled={(step === 0 && !firstVisit) || saving}
-                aria-hidden={step === 0 && !firstVisit}
-                tabIndex={step === 0 && !firstVisit ? -1 : undefined}
+                disabled={(step === 0 && !firstVisit && !customScreen) || saving}
+                aria-hidden={step === 0 && !firstVisit && !customScreen}
+                tabIndex={step === 0 && !firstVisit && !customScreen ? -1 : undefined}
                 onClick={() => {
+                  if (customScreen) {
+                    choose({ mode: null, intensity: null });
+                    return;
+                  }
                   if (step === 0 && firstVisit) {
                     setPhase('intro');
                     return;

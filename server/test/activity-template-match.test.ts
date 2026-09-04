@@ -15,11 +15,21 @@ describe('matchActivityTemplate', () => {
     ['beber água', 'Beber água'],
     ['alongar', 'Alongamento'],
   ])('%s → %s', (input, expected) => {
-    expect(matchActivityTemplate(input)?.name).toBe(expected);
+    const match = matchActivityTemplate(input);
+    expect(match.template?.name).toBe(expected);
+    expect(match.confidence === 'strong' || match.confidence === 'similar').toBe(true);
   });
 
   it('não força seleção em nome desconhecido', () => {
-    expect(matchActivityTemplate('xyzzy')).toBeNull();
-    expect(matchActivityTemplate('ab')).toBeNull();
+    expect(matchActivityTemplate('xyzzy')).toEqual({
+      template: null,
+      score: expect.any(Number),
+      confidence: 'none',
+    });
+    expect(matchActivityTemplate('ab').confidence).toBe('none');
+  });
+
+  it('marca correspondência exata como strong', () => {
+    expect(matchActivityTemplate('Corrida').confidence).toBe('strong');
   });
 });

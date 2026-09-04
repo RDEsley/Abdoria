@@ -16,6 +16,10 @@ interface Props {
   disableDismiss?: boolean;
   /** Quando false, o diálogo recebe o foco (sem abrir teclado em um input). */
   autoFocus?: boolean;
+  /** Quando false, não trava o scroll do body (útil para superfícies de página). */
+  lockScroll?: boolean;
+  /** Quando false, não faz focus trap — a navegação principal continua usável. */
+  trapFocus?: boolean;
 }
 
 const FOCUSABLE_SELECTOR =
@@ -38,6 +42,8 @@ export function Modal({
   role = 'dialog',
   disableDismiss = false,
   autoFocus = true,
+  lockScroll = true,
+  trapFocus = true,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -52,10 +58,14 @@ export function Modal({
   const onCloseRef = useRef(onClose);
   const disableDismissRef = useRef(disableDismiss);
   const autoFocusRef = useRef(autoFocus);
+  const lockScrollRef = useRef(lockScroll);
+  const trapFocusRef = useRef(trapFocus);
   useEffect(() => {
     onCloseRef.current = onClose;
     disableDismissRef.current = disableDismiss;
     autoFocusRef.current = autoFocus;
+    lockScrollRef.current = lockScroll;
+    trapFocusRef.current = trapFocus;
   });
 
   useEffect(() => {
@@ -63,7 +73,9 @@ export function Modal({
 
     previouslyFocused.current = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (lockScrollRef.current) {
+      document.body.style.overflow = 'hidden';
+    }
 
     const panel = panelRef.current;
     if (autoFocusRef.current) {
@@ -79,7 +91,7 @@ export function Modal({
         onCloseRef.current();
         return;
       }
-      if (event.key !== 'Tab' || !panel) return;
+      if (!trapFocusRef.current || event.key !== 'Tab' || !panel) return;
 
       const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
       if (items.length === 0) return;
@@ -98,7 +110,9 @@ export function Modal({
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = prevOverflow;
+      if (lockScrollRef.current) {
+        document.body.style.overflow = prevOverflow;
+      }
       previouslyFocused.current?.focus();
     };
   }, [open]);

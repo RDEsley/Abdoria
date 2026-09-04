@@ -41,9 +41,12 @@ export function PersonalRecordsPanel() {
   const novosCount = records.filter((r) => new Date(r.concluido_em).getTime() >= novoLimite).length;
 
   return (
-    <section className="glass-card personal-records-panel p-4">
+    <section className="glass-card glass-card--conquista personal-records-panel p-4">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <h3 className="game-section-title">Recordes pessoais</h3>
+        <h3 className="game-section-title flex items-center gap-2">
+          <Trophy className="text-amber-600" size={18} aria-hidden />
+          Recordes
+        </h3>
         {records.length > 0 && (
           <span className="personal-records-count">
             <Trophy size={12} aria-hidden />

@@ -118,8 +118,8 @@ try {
     $adaptiveSize = $androidDensities[$density].adaptive
     New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher.png') $legacySize $legacySize 'app' -Opaque
     New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_round.png') $legacySize $legacySize 'app' -Opaque
-    New-BrandImage $sourceImage (Join-Path $directory 'ic_launcher_foreground.png') $adaptiveSize $adaptiveSize 'foreground'
-    New-BrandImage $sourceImage (Join-Path $directory 'ic_launcher_background.png') $adaptiveSize $adaptiveSize 'background'
+    New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_foreground.png') $adaptiveSize $adaptiveSize 'foreground'
+    New-BrandImage $appIconImage (Join-Path $directory 'ic_launcher_background.png') $adaptiveSize $adaptiveSize 'background'
   }
 
   New-BrandImage $appIconImage `

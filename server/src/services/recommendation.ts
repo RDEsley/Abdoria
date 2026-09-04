@@ -9,7 +9,12 @@ import type {
   TreinoSugerido,
 } from '../types/index.js';
 import { normalizeCicloTreinos } from '../../../shared/types/index.js';
-import { doseForAbProfile, exerciseCountForProfile } from '../../../shared/ab-training-profile.js';
+import {
+  doseForAbProfile,
+  exerciseCountForProfile,
+  restSecondsForProfile,
+  seriesForProfile,
+} from '../../../shared/ab-training-profile.js';
 import { formatExerciseName } from '../../../shared/types/exercise-display.js';
 import { getTodaySaoPaulo } from '../utils/timezone.js';
 import { getWeeklyMuscles } from './gamification.js';
@@ -323,8 +328,8 @@ export async function getSuggestedWorkout(
         !pinned.has(exercise.slug) && !seen.has(exercise.slug) && seen.add(exercise.slug),
     )
     .slice(0, target);
-  const series = { leve: 2, moderado: 3, evolyn: 4 }[profile.intensity];
-  const rest = { leve: 45, moderado: 30, evolyn: 20 }[profile.intensity];
+  const series = seriesForProfile(profile);
+  const rest = restSecondsForProfile(profile);
   const exercicios = [...pinnedExercises, ...baseExercises].map((exercise) => ({
     ...exercise,
     series,

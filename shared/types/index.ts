@@ -360,7 +360,14 @@ export type AbTrainingMode = 'preset' | 'custom';
 /** Ajuste fino quando o modo do plano é personalizado. */
 export interface AbTrainingCustomConfig {
   exercise_count: number;
-  effort: AbTrainingEffort;
+  /** Legado / derivado — perfis antigos só tinham isto + exercise_count. */
+  effort?: AbTrainingEffort;
+  /** Séries por exercício (2–5). */
+  series?: number;
+  /** Alvo de repetições; exercícios de tempo usam dose derivada desse alvo. */
+  target_reps?: number;
+  /** Descanso entre séries em segundos. */
+  rest_seconds?: number;
 }
 
 /** Perfil abdominal atual. O legado continua legível durante a transição. */

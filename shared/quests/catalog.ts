@@ -42,7 +42,7 @@ export const QUEST_CATALOG: readonly QuestDefinition[] = [
   {
     id: 'daily_3_activities',
     scope: 'daily',
-    title: 'Tríplice',
+    title: 'Três passos',
     description: 'Conclua 3 atividades hoje',
     goal: 3,
     xp: 10,
