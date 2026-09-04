@@ -757,6 +757,7 @@
   background: transparent;
   box-shadow: none;
   padding: 0 0.55rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 

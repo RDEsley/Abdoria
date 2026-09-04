@@ -118,10 +118,10 @@
   overflow: hidden;
   font-size: 0.72rem;
   font-weight: 800;
-  border: 1px solid color-mix(in srgb, var(--achievement-accent) 23%, white);
+  border: 1px solid var(--achievement-soft);
   border-radius: 1rem;
   box-shadow:
-    0 6px 16px color-mix(in srgb, var(--achievement-accent) 9%, transparent),
+    0 6px 16px rgb(15 23 42 / 6%),
     inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transition:
     border-color 180ms ease,
@@ -154,9 +154,9 @@
 }
 
 .game-achievement:hover {
-  border-color: color-mix(in srgb, var(--achievement-accent) 48%, white);
+  border-color: var(--achievement-accent);
   box-shadow:
-    0 10px 24px color-mix(in srgb, var(--achievement-accent) 15%, transparent),
+    0 10px 24px rgb(15 23 42 / 10%),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
