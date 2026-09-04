@@ -192,6 +192,21 @@ describe('deriveActivityReminders — rotina e item', () => {
     };
     expect(deriveActivityReminders([cafe], [manual])).toEqual([]);
   });
+
+  it('não deriva reminder de item cuja Activity está arquivada ou ausente', () => {
+    const archivedCafe = { ...cafe, archived_at: '2026-09-04T12:00:00.000Z' };
+    const derivedArchived = deriveActivityReminders(
+      [archivedCafe],
+      [{ ...routine, reminder: { enabled: false, offset_min: 0, follow_up: false } }],
+    );
+    expect(derivedArchived.some((item) => item.id.includes('routine-item:'))).toBe(false);
+
+    const derivedMissing = deriveActivityReminders(
+      [],
+      [{ ...routine, reminder: { enabled: false, offset_min: 0, follow_up: false } }],
+    );
+    expect(derivedMissing.some((item) => item.id.includes('routine-item:'))).toBe(false);
+  });
 });
 
 describe('derivedReminderSource', () => {

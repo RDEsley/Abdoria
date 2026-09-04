@@ -434,9 +434,3 @@
     background-position: -100% 0;
   }
 }
-
-.builder-level-switch.is-active {
-  border-color: #10b981;
-  background: #ecfdf5;
-  color: #047857;
-}

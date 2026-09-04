@@ -102,3 +102,11 @@ export {
 } from './today-list.js';
 export { insertActivityBySortOrder } from './list-order.js';
 export { resolveActivityCompletionFeedback } from './completion-feedback.js';
+export {
+  filterAvailableRoutineItems,
+  isRoutineFullyRunnable,
+  resolveRoutineHealth,
+  routineHasAvailableItems,
+  type RoutineHealth,
+  type RoutineHealthState,
+} from './routine-health.js';

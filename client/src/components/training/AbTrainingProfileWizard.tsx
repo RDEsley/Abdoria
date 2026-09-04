@@ -12,7 +12,6 @@ import {
   LoaderCircle,
   Lock,
   Music2,
-  PersonStanding,
   SlidersHorizontal,
   Sparkles,
   TimerReset,
@@ -60,6 +59,8 @@ interface Props {
   open: boolean;
   onClose?: () => void;
   firstVisit?: boolean;
+  /** Abre direto na tela custom (valores salvos ou defaults). */
+  entryScreen?: 'default' | 'custom';
   onReady?: () => void;
 }
 
@@ -160,7 +161,13 @@ function toProfile(draft: WizardDraft, existing: AbTrainingProfileV2 | null): Ab
   };
 }
 
-export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: Props) {
+export function AbTrainingProfileWizard({
+  open,
+  onClose,
+  firstVisit,
+  entryScreen = 'default',
+  onReady,
+}: Props) {
   const { user, applyUser } = useAuth();
   const reduceMotion = useReducedMotion();
   const originalPack = useRef(getSfxPack());
@@ -180,15 +187,31 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
   const finalStep = step === TOTAL_STEPS - 1;
   const confetti = useLottieAsset('/assets/Confetti.json', open && finalStep);
   const lesgo = useLottieAsset('/assets/lesgo.json', open && finalStep);
+  const weekPlan = useLottieAsset('/assets/monte-sua-semana.json', open && step === 1);
   const customScreen = draft.mode === 'custom' && step === 0;
 
   useEffect(() => {
     if (!open) return;
     originalPack.current = user?.cosmeticos?.som_equipado ?? 'som_classico';
-    setDraft(firstVisit ? emptyDraft() : draftFromProfile(user));
+    const base = firstVisit ? emptyDraft() : draftFromProfile(user);
+    if (entryScreen === 'custom') {
+      setDraft({
+        ...base,
+        mode: 'custom',
+        intensity: null,
+        customCount: base.customCount || 6,
+        customSeries: base.customSeries || 3,
+        customReps: base.customReps || 12,
+        customRest: base.customRest || 30,
+      });
+      setPhase('steps');
+      setStep(0);
+    } else {
+      setDraft(base);
+      setPhase(firstVisit ? 'intro' : 'steps');
+      setStep(0);
+    }
     setSelectedSoundId(firstVisit ? null : (user?.cosmeticos?.som_equipado ?? 'som_classico'));
-    setPhase(firstVisit ? 'intro' : 'steps');
-    setStep(0);
     setHint(null);
     setLeafBurst(0);
     let cancelled = false;
@@ -204,7 +227,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
       restoreSfxPack(originalPack.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, entryScreen]);
 
   const profilePreview = toProfile(draft, user?.ab_training_profile_v2 ?? null);
   const choose = (update: Partial<WizardDraft>) => {
@@ -476,6 +499,11 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
 
               {step === 1 && (
                 <div className="ab-plan-days-step">
+                  {weekPlan ? (
+                    <div className="ab-plan-days-step__lottie" aria-hidden>
+                      <LottieView data={weekPlan} loop={!reduceMotion} contain />
+                    </div>
+                  ) : null}
                   <p className="ab-plan-helper">
                     Escolha pelo menos dois dias. Fora da agenda, você ainda pode treinar quando quiser.
                   </p>
@@ -614,7 +642,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                     <Sparkles size={13} /> Tudo preparado
                   </p>
                   <h3>Seu plano está pronto.</h3>
-                  <div className="ab-plan-summary__grid ab-plan-summary__grid--six">
+                  <div className="ab-plan-summary__grid ab-plan-summary__grid--five">
                     <span>
                       <Flame size={16} />
                       <small>Intensidade</small>
@@ -633,11 +661,6 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                       <Activity size={16} />
                       <small>Agenda</small>
                       <strong>{draft.training_days.length} dias/semana</strong>
-                    </span>
-                    <span>
-                      <PersonStanding size={16} />
-                      <small>Modalidade</small>
-                      <strong>Peso corporal</strong>
                     </span>
                     <span>
                       <TimerReset size={16} />

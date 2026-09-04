@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { Bell } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { useActivitiesData } from '@/features/activities/useActivitiesData';
@@ -16,8 +17,15 @@ const TAB_ALIASES = { insights: 'missoes' } as const;
 
 export function ActivitiesPage() {
   const data = useActivitiesData();
+  const location = useLocation();
   const [tab, setTab] = usePageTab<Tab>(TABS, 'hoje', TAB_ALIASES);
   const claimableQuests = useClaimableQuestCount(data.logs.length);
+
+  useEffect(() => {
+    const editId = (location.state as { editRoutineId?: string } | null)?.editRoutineId;
+    if (!editId) return;
+    setTab('rotinas');
+  }, [location.state, setTab]);
 
   return (
     <div className="activities-page flex flex-col gap-4 pb-24">

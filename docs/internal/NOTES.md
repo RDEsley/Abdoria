@@ -60,6 +60,7 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - **Checagens**: pós-boot (`evolyn-booted`), `visibilitychange` → visible, intervalo ~45 min. Sem polling por navegação.
 - **Dismiss**: `localStorage` `evolyn:update-dismissed` `{ version, at }` com TTL ~12h; nova release volta a lembrar.
 - **Atualizar agora**: `registration.update()` + `SKIP_WAITING` no SW (se waiting) → `controllerchange` → um `reload`. Preserva sessão/localStorage. Não auto-reload em Player/rotina/modais/formulários.
+- **Chunk / lazy recovery**: falha conhecida de dynamic import após deploy (build A aberto → chunk de build B 404) → **um** `location.reload` com guard em `sessionStorage` por módulo (`shared/lazy/chunk-recovery.ts` + `lazyWithRecovery`). Segunda falha → `RouteErrorBoundary` (sem loop). **Isto não é banner de versão** e não muda a política Build ≠ Release.
 - **SW**: Web Push (`push` / `notificationclick`) intacto; `message` só ativa `skipWaiting` sob pedido do usuário.
 - **Sobre**: mostra versão + build curto + “Verificar atualizações”. Mesma release com build diferente → “versão mais recente” (não expor commit ao usuário comum). Offline no check manual → “Não foi possível verificar agora.”
 - **Futuro**: `minimum_supported_version` / `update_policy: mandatory` e strategy `store` (Play/App Store) estão modelados; hoje tudo é `optional` + `web_reload`. Não inventar URLs de loja.
@@ -88,6 +89,12 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Mudanças de perfil no meio do período **não** regeneram o assignment já criado.
 - Claim só aceita ids do assignment; recompensa via RPC atômico `claim_quest_reward` (service_role).
 - Progresso de “programada” usa `scheduledActivityCompletedToday` / `scheduledRoutineCompletedToday` no `QuestContext`.
+- **Rotina runnable (derivado)**: `resolveRoutineHealth` em `shared/activities/routine-health.ts` compara `routine.items` × Activities ativas (`healthy` | `degraded` | `empty`). Não persiste.
+  - Day Guide / NextUp: só rotinas **healthy** (items vivos filtrados).
+  - `hasRoutines` / `hasRoutineScheduledToday`: exige ≥1 Activity disponível.
+  - Contagem histórica de rotinas concluídas usa items persistidos (não apaga crédito só porque Activity foi arquivada depois).
+  - Reminders derivados (`routine-item:`) já ignoram Activity ausente/arquivada.
+  - Archive de Activity/rotina é soft; sem hard delete automático de rotinas arquivadas.
 
 ## Ranking
 

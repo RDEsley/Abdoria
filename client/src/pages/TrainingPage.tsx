@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
+import { Bookmark, GraduationCap, LibraryBig, Podium } from 'lucide-react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
@@ -17,6 +17,7 @@ import { DailyXpCapBanner } from '@/components/builder/DailyXpCapBanner';
 import { ExerciseConfigModal } from '@/components/builder/ExerciseConfigModal';
 import { TrainPresetSection } from '@/components/builder/TrainPresetSection';
 import { WorkoutQueueList } from '@/components/builder/WorkoutQueueList';
+import { MuscleTagGroup } from '@/components/builder/MuscleTag';
 import { AbTrainingProfileWizard } from '@/components/training/AbTrainingProfileWizard';
 import { presetToQueue, sugeridoToQueue } from '@/components/builder/queue-utils';
 import {
@@ -49,6 +50,7 @@ import type {
   ActiveWorkout,
   ModoExercicio,
   IWorkoutPresetDocument,
+  MusculoPrincipal,
   NivelUsuario,
   Objetivo,
   RepSchemeRecommendation,
@@ -63,11 +65,44 @@ import {
   fromSavedPresetId,
   getExerciseParamsForNivel,
   isSavedPresetId,
+  MUSCULO_TAG_LABELS,
   normalizeCicloTreinos,
   toSavedPresetId,
 } from '@/types';
 
 const TREINO_TABS = ['train', 'customize'] as const;
+
+const PLAN_INTENSITY_OPTIONS: {
+  id: AbTrainingIntensity | 'custom';
+  title: string;
+  subcopy: string;
+  variant: 'leve' | 'moderado' | 'evolyn' | 'custom';
+}[] = [
+  {
+    id: 'leve',
+    title: 'Leve',
+    subcopy: 'Menor volume para começar no seu ritmo.',
+    variant: 'leve',
+  },
+  {
+    id: 'moderado',
+    title: 'Moderado',
+    subcopy: 'Equilíbrio entre esforço e recuperação.',
+    variant: 'moderado',
+  },
+  {
+    id: 'evolyn',
+    title: 'Evolyn',
+    subcopy: 'Mais desafio para quem quer intensidade.',
+    variant: 'evolyn',
+  },
+  {
+    id: 'custom',
+    title: 'Personalizado',
+    subcopy: 'Exercícios, séries e descanso do seu jeito.',
+    variant: 'custom',
+  },
+];
 
 export function TrainingPage() {
   const {
@@ -102,7 +137,6 @@ export function TrainingPage() {
     modeFromUrl === 'personalizar' ? 'customize' : 'train',
   );
   const [allPresets, setAllPresets] = useState<IWorkoutPresetDocument[]>([]);
-  const [presetsLoading, setPresetsLoading] = useState(true);
   const [selectedPresetId, setSelectedPresetId] = useState<string | 'custom'>('custom');
   const [draftQueue, setDraftQueue] = useState<WorkoutQueueItem[] | null>(null);
   const [configExerciseIndex, setConfigExerciseIndex] = useState<number | null>(null);
@@ -115,11 +149,16 @@ export function TrainingPage() {
   const [showCreateScheme, setShowCreateScheme] = useState(false);
   const [showSaveWorkout, setShowSaveWorkout] = useState(false);
   const [showAbPlan, setShowAbPlan] = useState(false);
+  const [abPlanEntryScreen, setAbPlanEntryScreen] = useState<'default' | 'custom'>('default');
   const [customizedIndices, setCustomizedIndices] = useState<Set<number>>(new Set());
   const [dismissedCardKey, setDismissedCardKey] = useState<string | null>(null);
+  const [presetsSettled, setPresetsSettled] = useState(false);
+  const [exercisesSettled, setExercisesSettled] = useState(false);
+  const [recommendSettled, setRecommendSettled] = useState(false);
   const lastAppliedQueueKeyRef = useRef('');
   const lastSyncedSuggestedRef = useRef<string | null>(null);
   const lastRestPreferenceRef = useRef(authUser?.preferencias?.descanso_padrao_seg ?? 30);
+  const hasCoreProfile = Boolean(authUser?.ab_training_profile_v2);
 
   useEffect(() => {
     const savedRest = authUser?.preferencias?.descanso_padrao_seg ?? 30;
@@ -131,6 +170,22 @@ export function TrainingPage() {
   const refreshRecommendations = useCallback(() => {
     void loadRecommendations({ force: true });
   }, [loadRecommendations]);
+
+  const runRecommendLoad = useCallback(
+    async (mode: 'initial' | 'background' = 'background') => {
+      try {
+        await loadRecommendations({ force: true });
+      } finally {
+        if (mode === 'initial') setRecommendSettled(true);
+      }
+    },
+    [loadRecommendations],
+  );
+
+  const openAbPlan = useCallback((entry: 'default' | 'custom' = 'default') => {
+    setAbPlanEntryScreen(entry);
+    setShowAbPlan(true);
+  }, []);
 
   const {
     fixedExerciseSlugs,
@@ -173,7 +228,13 @@ export function TrainingPage() {
   }, [stats]);
 
   useEffect(() => {
-    void ensureExercises();
+    let cancelled = false;
+    void ensureExercises().finally(() => {
+      if (!cancelled) setExercisesSettled(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [ensureExercises]);
 
   useEffect(() => {
@@ -182,8 +243,14 @@ export function TrainingPage() {
   }, [modeFromUrl]);
 
   useEffect(() => {
-    void loadRecommendations({ force: true });
-  }, [loadRecommendations]);
+    // Usuário sem plano: wizard abre imediatamente — não esperar recomendação.
+    if (!hasCoreProfile) {
+      setRecommendSettled(true);
+      void loadRecommendations({ force: true });
+      return;
+    }
+    void runRecommendLoad('initial');
+  }, [hasCoreProfile, loadRecommendations, runRecommendLoad]);
 
   useEffect(() => {
     return () => {
@@ -192,7 +259,6 @@ export function TrainingPage() {
   }, [flushPendingUserDados]);
 
   useEffect(() => {
-    setPresetsLoading(true);
     void getPresets()
       .then((list) => {
         setAllPresets(list);
@@ -202,7 +268,9 @@ export function TrainingPage() {
         }
       })
       .catch(() => setAllPresets([]))
-      .finally(() => setPresetsLoading(false));
+      .finally(() => {
+        setPresetsSettled(true);
+      });
   }, [presetFromUrl, cicloTreinosKey, nivel, user?.objetivo, setActiveTab]);
 
   useEffect(() => {
@@ -395,7 +463,7 @@ export function TrainingPage() {
       applyUser(updated);
       showGameToast(`Intensidade: ${AB_INTENSITY_LABELS[intensity]}`, { variant: 'success' });
       lastSyncedSuggestedRef.current = null;
-      void loadRecommendations({ force: true });
+      void runRecommendLoad('background');
     } catch (error) {
       showGameToast(getErrorMessage(error, 'Não foi possível atualizar a intensidade.'), {
         variant: 'error',
@@ -697,7 +765,7 @@ export function TrainingPage() {
   const muscleReferenceProfile = useMemo(() => {
     if (selectedPreset) return getMuscleProfileFromPreset(selectedPreset, exerciseMap);
     if (activeQueue.length > 0) return getMuscleProfileFromQueue(activeQueue);
-    return new Map();
+    return new Map<MusculoPrincipal, number>();
   }, [selectedPreset, activeQueue, exerciseMap]);
 
   const similarPresets = useMemo(
@@ -729,7 +797,7 @@ export function TrainingPage() {
       selectPreset(toSavedPresetId(choice.id));
     }
     setShowSimilarWorkout(false);
-    void loadRecommendations({ force: true });
+    void runRecommendLoad('background');
   };
 
   const handleSelectSimilarPreset = (presetId: string) => {
@@ -780,7 +848,7 @@ export function TrainingPage() {
     try {
       const treino = await getRecommendWorkout({ shuffle: true, excludePresetId });
       selectPreset(treino.preset_id);
-      void loadRecommendations({ force: true });
+      void runRecommendLoad('background');
       showGameToast('Treino alternativo selecionado.', { variant: 'success' });
     } catch {
       showGameToast('Nenhum treino similar disponível.', { variant: 'warn' });
@@ -803,7 +871,25 @@ export function TrainingPage() {
     return Math.max(1, Math.round(estimateWorkoutDurationSeconds(payload) / 60));
   }, [activeQueue, globalDescanso]);
 
-  if (loading || (presetsLoading && allPresets.length === 0)) return <BuilderSkeleton />;
+  const sessionFocusMuscles = useMemo(() => {
+    if (activeQueue.length === 0) return [] as MusculoPrincipal[];
+    const ranked = [...muscleReferenceProfile.entries()]
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1]);
+    if (ranked.length === 0) return [] as MusculoPrincipal[];
+    const topCount = ranked[0]![1];
+    return ranked
+      .filter(([, count]) => count === topCount)
+      .slice(0, 2)
+      .map(([muscle]) => muscle);
+  }, [activeQueue.length, muscleReferenceProfile]);
+
+  // Com plano: skeleton até primeira leva (base + presets + exercícios + recomendação).
+  // Sem plano: wizard abre já — não esperar recomendação.
+  const holdInitialSkeleton =
+    hasCoreProfile && (loading || !presetsSettled || !exercisesSettled || !recommendSettled);
+
+  if (holdInitialSkeleton) return <BuilderSkeleton />;
 
   return (
     <div className="builder-page flex flex-col gap-5 pb-44 md:pb-8">
@@ -886,70 +972,76 @@ export function TrainingPage() {
             <p className="mt-2 text-xs font-semibold text-stone-500">
               Controla o Plano de Core — não altera o nível geral da conta.
             </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {(['leve', 'moderado', 'evolyn'] as const).map((intensity) => {
+            <div className="builder-level-options mt-3" role="listbox" aria-label="Intensidade do plano">
+              {PLAN_INTENSITY_OPTIONS.map((option) => {
+                const profile = authUser?.ab_training_profile_v2;
+                const isCustomActive = Boolean(profile && isCustomAbTrainingProfile(profile));
                 const active =
-                  authUser?.ab_training_profile_v2?.mode !== 'custom' &&
-                  authUser?.ab_training_profile_v2?.intensity === intensity;
+                  option.id === 'custom'
+                    ? isCustomActive
+                    : Boolean(
+                        profile && profile.mode !== 'custom' && profile.intensity === option.id,
+                      );
                 return (
                   <button
-                    key={intensity}
+                    key={option.id}
                     type="button"
-                    className={`builder-level-switch justify-center${active ? ' is-active' : ''}`}
-                    disabled={!authUser?.ab_training_profile_v2 || schemeLevelBusy}
-                    onClick={() => void applyPlanIntensity(intensity)}
+                    role="option"
+                    aria-selected={active}
+                    className={`builder-level-switch builder-level-switch--${option.variant}${
+                      active ? ' is-active' : ''
+                    }`}
+                    disabled={
+                      option.id === 'custom' ? schemeLevelBusy : !profile || schemeLevelBusy
+                    }
+                    onClick={() => {
+                      if (option.id === 'custom') {
+                        openAbPlan('custom');
+                        return;
+                      }
+                      void applyPlanIntensity(option.id);
+                    }}
                   >
-                    {AB_INTENSITY_LABELS[intensity]}
+                    <span className="builder-level-switch__title">{option.title}</span>
+                    <span className="builder-level-switch__sub">{option.subcopy}</span>
                   </button>
                 );
               })}
-              <button
-                type="button"
-                className={`builder-level-switch justify-center${
-                  authUser?.ab_training_profile_v2 &&
-                  isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
-                    ? ' is-active'
-                    : ''
-                }`}
-                disabled={schemeLevelBusy}
-                onClick={() => {
-                  if (
-                    authUser?.ab_training_profile_v2 &&
-                    isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
-                  ) {
-                    return;
-                  }
-                  setShowAbPlan(true);
-                }}
-              >
-                {authUser?.ab_training_profile_v2 &&
-                isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
-                  ? 'Personalizado'
-                  : 'Personalizado · configure no Plano'}
-              </button>
             </div>
-            <Link
-              to="/configuracoes#ajustar-plano"
-              state={{ highlightTrainingPlan: true }}
-              className="builder-plan-link mt-3"
-              onClick={() => setShowAbPlan(true)}
-            >
-              Ajustar Plano de Core
-              <ArrowRight size={16} aria-hidden />
-            </Link>
           </details>
 
           <section id="builder-queue-preview">
-            <WorkoutQueueList
-              queue={activeQueue}
-              sortableIds={sortableIds}
-              exerciseMap={exerciseMap}
-              emptyMessage={
-                exercisesLoading ? 'Carregando...' : 'Aguardando recomendação de treino...'
-              }
-              onDragEnd={handleDragEnd}
-              onConfigureExercise={setConfigExerciseIndex}
-            />
+            {activeQueue.length === 0 ? (
+              <div className="builder-recommend-empty" role="status">
+                <p className="builder-recommend-empty__title">
+                  Não conseguimos montar seu treino agora.
+                </p>
+                <p className="builder-recommend-empty__copy">
+                  Tente de novo ou monte a fila do seu jeito.
+                </p>
+                <div className="builder-recommend-empty__actions">
+                  <GameButton
+                    onClick={() => {
+                      void runRecommendLoad('background');
+                    }}
+                  >
+                    Tentar novamente
+                  </GameButton>
+                  <GameButton variant="secondary" onClick={() => handleTabChange('customize')}>
+                    Montar meu treino
+                  </GameButton>
+                </div>
+              </div>
+            ) : (
+              <WorkoutQueueList
+                queue={activeQueue}
+                sortableIds={sortableIds}
+                exerciseMap={exerciseMap}
+                emptyMessage="Adicione exercícios para começar."
+                onDragEnd={handleDragEnd}
+                onConfigureExercise={setConfigExerciseIndex}
+              />
+            )}
           </section>
         </div>
       )}
@@ -1010,6 +1102,30 @@ export function TrainingPage() {
             </GameButton>
           )}
         </div>
+      )}
+
+      {activeQueue.length > 0 && (
+        <section className="builder-session-focus glass-card p-4">
+          <h3 className="game-section-title !mb-1">Foco da sessão</h3>
+          <p className="mb-3 text-xs font-semibold text-stone-500">
+            O que este treino trabalha agora.
+          </p>
+          {sessionFocusMuscles.length > 0 && (
+            <p className="builder-session-focus__primary">
+              {sessionFocusMuscles.map((muscle) => MUSCULO_TAG_LABELS[muscle]).join(' · ')}
+            </p>
+          )}
+          <div className="builder-session-focus__meta mt-2">
+            <span>
+              {activeQueue.length} {activeQueue.length === 1 ? 'exercício' : 'exercícios'}
+            </span>
+            {estimatedMinutes != null && <span>~{estimatedMinutes} min</span>}
+            <span>{globalDescanso}s descanso</span>
+          </div>
+          {sessionFocusMuscles.length > 0 && (
+            <MuscleTagGroup muscles={sessionFocusMuscles} className="mt-3" compact />
+          )}
+        </section>
       )}
 
       {stats && (
@@ -1098,16 +1214,20 @@ export function TrainingPage() {
       <AbTrainingProfileWizard
         open={!authUser?.ab_training_profile_v2 || showAbPlan}
         firstVisit={!authUser?.ab_training_profile_v2}
+        entryScreen={showAbPlan ? abPlanEntryScreen : 'default'}
         onClose={() => {
           if (!authUser?.ab_training_profile_v2) navigate('/');
-          else setShowAbPlan(false);
+          else {
+            setShowAbPlan(false);
+            setAbPlanEntryScreen('default');
+          }
         }}
         onReady={() => {
           lastSyncedSuggestedRef.current = null;
           lastAppliedQueueKeyRef.current = '';
           setDraftQueue(null);
           setCustomizedIndices(new Set());
-          void loadRecommendations({ force: true });
+          void runRecommendLoad('background');
         }}
       />
 
