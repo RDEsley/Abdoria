@@ -64,6 +64,13 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - **Nativos (política)**: release `0.x.y` alinhada ao produto; Android `versionName` / iOS `CFBundleShortVersionString` = mesma release; `versionCode` / `CFBundleVersion` só crescem. Sem automação perigosa nesta entrega.
 - **Teste local**: alterar temporariamente `version` embutida vs `version.json`, ou subir release nova e reabrir PWA antiga; confirmar que mesmo `0.1.0` com builds diferentes não notifica.
 
+## Tags e GitHub Releases
+
+- Tags históricas `v*` (Abdoria/legado, ex. `v0.2.0` … `v6.3.0`) são **histórico imutável** — não apagar, mover ou reutilizar.
+- Releases oficiais Evolyn usam annotated tags **`evolyn-v*`** (ex. `evolyn-v0.2.1`); `package.json` continua com a versão sem prefixo (`0.2.1`).
+- Tag/GitHub Release estão vinculadas a **Release**, não a Build. Deploy rotineiro não cria tag.
+- Fluxo e SemVer: ver `AGENTS.md` → Versionamento e releases / Higiene Git.
+
 ## Missões (quests)
 
 - Conjunto atribuído é persistido em `quest_assignments` (PK `user_id, period_key`; chaves SP: daily `YYYY-MM-DD`, weekly `W…`, monthly `MYYYY-MM`).
