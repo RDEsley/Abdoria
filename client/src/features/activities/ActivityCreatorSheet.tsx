@@ -7,9 +7,10 @@ import {
   useEnsureReminderPermission,
 } from '@/hooks/useEnsureReminderPermission';
 import {
-  ACTIVITY_TEMPLATES,
   ACTIVITY_CATEGORIES,
-  matchActivityTemplate,
+  activityCreateTemplates,
+  suggestActivityTemplates,
+  templatesByCategoryForCreate,
   type ActivityCategory,
   type ActivitySchedule,
 } from '@shared/activities';
@@ -38,7 +39,7 @@ export function ActivityCreatorSheet({
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [templateId, setTemplateId] = useState<string | null>(null);
-  const [suggestedId, setSuggestedId] = useState<string | null>(null);
+  const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
   const [suggestionConfidence, setSuggestionConfidence] = useState<'strong' | 'similar' | null>(
     null,
   );
@@ -55,11 +56,17 @@ export function ActivityCreatorSheet({
     canDeliverReminders,
   );
 
+  const liveSuggestions = useMemo(
+    () => (step === 0 || step === 1 ? suggestActivityTemplates(name, 3) : []),
+    [name, step],
+  );
+
   const template = useMemo(
-    () => ACTIVITY_TEMPLATES.find((item) => item.id === templateId) ?? null,
+    () => activityCreateTemplates().find((item) => item.id === templateId) ?? null,
     [templateId],
   );
   const displayName = name.trim() || template?.name || 'Nova atividade';
+  const catalogForCategory = templatesByCategoryForCreate(category);
 
   const scheduleSummary = (() => {
     if (flexible || days.length === 0) return 'Quando eu quiser';
@@ -73,7 +80,7 @@ export function ActivityCreatorSheet({
     setStep(0);
     setName('');
     setTemplateId(null);
-    setSuggestedId(null);
+    setSuggestedIds([]);
     setSuggestionConfidence(null);
     setCategory('mente');
     setDays([]);
@@ -83,19 +90,15 @@ export function ActivityCreatorSheet({
   };
 
   const goToTemplateStep = () => {
-    const match = matchActivityTemplate(name);
-    if (match.confidence === 'strong' && match.template) {
-      setSuggestedId(match.template.id);
-      setSuggestionConfidence('strong');
-      setTemplateId(match.template.id);
-      setCategory(match.template.category);
-    } else if (match.confidence === 'similar' && match.template) {
-      setSuggestedId(match.template.id);
-      setSuggestionConfidence('similar');
-      setTemplateId((current) => current ?? match.template!.id);
-      setCategory(match.template.category);
+    const suggestions = suggestActivityTemplates(name, 3);
+    setSuggestedIds(suggestions.map((entry) => entry.template.id));
+    const top = suggestions[0];
+    if (top) {
+      setSuggestionConfidence(top.confidence);
+      // Pré-seleciona só como sugestão — o usuário confirma no passo Modelo.
+      setTemplateId(top.template.id);
+      setCategory(top.template.category);
     } else {
-      setSuggestedId(null);
       setSuggestionConfidence(null);
       setTemplateId(null);
       setCategory('outro');
@@ -150,34 +153,81 @@ export function ActivityCreatorSheet({
     }
   };
 
+  const renderTemplateButton = (
+    item: { id: string; name: string; description: string },
+    opts?: { suggested?: boolean },
+  ) => (
+    <button
+      key={item.id}
+      type="button"
+      className={`activity-template${templateId === item.id ? ' activity-template--on' : ''}${opts?.suggested ? ' activity-template--suggested' : ''}`}
+      onClick={() => {
+        setTemplateId(item.id);
+        const found = activityCreateTemplates().find((entry) => entry.id === item.id);
+        if (found) setCategory(found.category);
+      }}
+    >
+      {opts?.suggested && (
+        <small className="activity-template__hint">
+          {suggestionConfidence === 'strong' ? 'Sugestão forte' : 'Sugestão Evolyn'}
+        </small>
+      )}
+      <strong>{item.name}</strong>
+      <small>{item.description}</small>
+    </button>
+  );
+
   return (
-    <Modal open={open} onClose={onClose} labelledBy="activity-creator-title">
-      <div className="p-4">
+    <Modal open={open} onClose={onClose} labelledBy="activity-creator-title" autoFocus={false}>
+      <div className="p-4 activity-creator-sheet">
         <p className="text-[0.65rem] font-extrabold uppercase tracking-wide text-stone-400">
           {STEPS[step]}
         </p>
         <h2 id="activity-creator-title" className="game-section-title">
           {step >= 1 && name.trim() ? displayName : 'Nova atividade'}
         </h2>
-        {step === 2 && <p className="mt-1 text-sm font-semibold text-stone-500">Quando você quer fazer?</p>}
-        {step === 1 && suggestionConfidence === 'similar' && suggestedId && (
+        {step === 2 && (
+          <p className="mt-1 text-sm font-semibold text-stone-500">Quando você quer fazer?</p>
+        )}
+        {step === 1 && suggestionConfidence && suggestedIds.length > 0 && (
           <p className="mt-1 text-sm font-semibold text-emerald-700">
-            Modelo recomendado pelo Evolyn — você pode trocar.
+            Até 3 sugestões pelo que você escreveu — toque para confirmar.
           </p>
         )}
 
         {step === 0 && (
-          <input
-            className="game-input mt-2 w-full"
-            maxLength={40}
-            placeholder="Ex.: Leitura da noite"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
+          <>
+            <input
+              className="game-input mt-2 w-full"
+              maxLength={40}
+              placeholder="Ex.: estudar japonês"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+            {liveSuggestions.length > 0 && (
+              <div className="activity-creator-suggestions mt-3">
+                <p className="activity-creator-suggestions__label">Sugestões</p>
+                {liveSuggestions.map((entry) =>
+                  renderTemplateButton(entry.template, { suggested: true }),
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {step === 1 && (
           <div className="mt-2 flex flex-col gap-2">
+            {suggestedIds.length > 0 && (
+              <div className="activity-creator-suggestions">
+                {activityCreateTemplates()
+                  .filter((item) => suggestedIds.includes(item.id))
+                  .sort(
+                    (a, b) => suggestedIds.indexOf(a.id) - suggestedIds.indexOf(b.id),
+                  )
+                  .slice(0, 3)
+                  .map((item) => renderTemplateButton(item, { suggested: true }))}
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
               {ACTIVITY_CATEGORIES.map((entry) => (
                 <button
@@ -190,22 +240,9 @@ export function ActivityCreatorSheet({
                 </button>
               ))}
             </div>
-            {ACTIVITY_TEMPLATES.filter((item) => item.category === category).map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`activity-template${templateId === item.id ? ' activity-template--on' : ''}${suggestedId === item.id ? ' activity-template--suggested' : ''}`}
-                onClick={() => setTemplateId(item.id)}
-              >
-                {suggestedId === item.id && (
-                  <small className="activity-template__hint">
-                    {suggestionConfidence === 'strong' ? 'Selecionado pelo Evolyn' : 'Sugestão Evolyn'}
-                  </small>
-                )}
-                <strong>{item.name}</strong>
-                <small>{item.description}</small>
-              </button>
-            ))}
+            {catalogForCategory.map((item) =>
+              suggestedIds.includes(item.id) ? null : renderTemplateButton(item),
+            )}
             {category === 'outro' && (
               <button
                 type="button"
@@ -213,7 +250,7 @@ export function ActivityCreatorSheet({
                 onClick={() => setTemplateId(null)}
               >
                 <strong>Livre</strong>
-                <small>Mantém o nome digitado e escolhe ícone/cor depois.</small>
+                <small>Mantém o nome digitado — ideal para práticas personalizadas.</small>
               </button>
             )}
           </div>

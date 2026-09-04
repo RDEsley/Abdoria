@@ -25,11 +25,20 @@ export {
 } from './types.js';
 export {
   ACTIVITY_TEMPLATES,
+  HIDDEN_CREATE_TEMPLATE_IDS,
+  activityCreateTemplates,
   findActivityTemplate,
+  isOfferedInCreateCatalog,
   templatesByCategory,
+  templatesByCategoryForCreate,
   type ActivityTemplate,
 } from './templates.js';
-export { matchActivityTemplate } from './template-match.js';
+export {
+  matchActivityTemplate,
+  suggestActivityTemplates,
+  type TemplateMatchResult,
+  type TemplateSuggestion,
+} from './template-match.js';
 export {
   activityOccursOnDay,
   isTodaySchedule,

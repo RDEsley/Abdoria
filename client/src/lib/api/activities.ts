@@ -17,6 +17,10 @@ export function archiveActivity(id: string): Promise<ActivityRecord> {
   return fetchJson(`/activities/${id}`, { method: 'DELETE' });
 }
 
+export function restoreActivity(id: string): Promise<ActivityRecord> {
+  return fetchJson(`/activities/${id}/restore`, { method: 'POST', body: '{}' });
+}
+
 export interface CompleteActivityResponse {
   duplicate: boolean;
   log: ActivityLogRecord;

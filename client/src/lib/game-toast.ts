@@ -3,6 +3,8 @@ export type GameToastVariant = 'success' | 'error' | 'warn' | 'info';
 export interface GameToastOptions {
   variant?: GameToastVariant;
   duration?: number;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 export interface GameToastPayload {
@@ -10,6 +12,8 @@ export interface GameToastPayload {
   message: string;
   variant: GameToastVariant;
   duration: number;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 type Listener = (payload: GameToastPayload) => void;
@@ -35,6 +39,8 @@ export function showGameToast(message: string, options?: GameToastOptions): void
     message,
     variant,
     duration: options?.duration ?? DEFAULT_DURATION[variant],
+    actionLabel: options?.actionLabel,
+    onAction: options?.onAction,
   });
 }
 

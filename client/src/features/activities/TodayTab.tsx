@@ -8,7 +8,10 @@ import {
   type ActivityOccurrence,
 } from '@shared/activities';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
+import { showGameToast } from '@/lib/game-toast';
+import { getErrorMessage } from '@/lib/api-errors';
 import { ActivityQuickCard } from './ActivityQuickCard';
+import { markActivitySwipeHintDone } from '@/lib/activity-swipe-hint';
 import { ActivityDetailsSheet } from './ActivityDetailsSheet';
 import { ActivityCreatorSheet } from './ActivityCreatorSheet';
 import { QuickNote } from './QuickNote';
@@ -38,6 +41,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<ActivityFilter>('todas');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [hintSlotUsed, setHintSlotUsed] = useState(false);
 
   const occurrences = useMemo(
     () =>
@@ -67,24 +71,65 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
     [data.activities],
   );
 
+  const firstHintKey = useMemo(() => {
+    const pending = [...groups.now, ...groups.anytime, ...groups.later].find(
+      (item) => item.status !== 'done',
+    );
+    return pending ? pending.occurrence_key + pending.activity_id : null;
+  }, [groups.anytime, groups.later, groups.now]);
+
+  const archiveWithUndo = (activityId: string) => {
+    const activity = activityById.get(activityId);
+    if (!activity) return;
+    setDetails(null);
+    void (async () => {
+      try {
+        await data.archiveActivity(activityId);
+        showGameToast('Atividade removida', {
+          variant: 'info',
+          duration: 5000,
+          actionLabel: 'Desfazer',
+          onAction: () => {
+            void data.restoreActivity(activityId).catch((error) => {
+              showGameToast(getErrorMessage(error, 'Não foi possível restaurar.'), {
+                variant: 'error',
+              });
+            });
+          },
+        });
+      } catch (error) {
+        showGameToast(getErrorMessage(error, 'Não foi possível remover.'), { variant: 'error' });
+        void data.reload();
+      }
+    })();
+  };
+
   const renderList = (title: string, items: ActivityOccurrence[]) =>
     items.length === 0 ? null : (
       <section className="flex flex-col gap-2">
         <h3 className="text-[0.7rem] font-extrabold uppercase tracking-wide text-stone-400">
           {title}
         </h3>
-        {items.map((item) => (
-          <ActivityQuickCard
-            key={item.occurrence_key + item.activity_id}
-            occurrence={item}
-            busy={data.isBusy(item.activity_id)}
-            onComplete={() => {
-              const activity = activityById.get(item.activity_id);
-              if (activity) void data.complete(activity);
-            }}
-            onDetails={() => setDetails(item)}
-          />
-        ))}
+        {items.map((item) => {
+          const cardKey = item.occurrence_key + item.activity_id;
+          return (
+            <ActivityQuickCard
+              key={cardKey}
+              occurrence={item}
+              busy={data.isBusy(item.activity_id)}
+              playHint={!hintSlotUsed && firstHintKey === cardKey}
+              onHintConsumed={() => setHintSlotUsed(true)}
+              onComplete={() => {
+                const activity = activityById.get(item.activity_id);
+                if (!activity) return;
+                markActivitySwipeHintDone();
+                void data.complete(activity, { optimisticUi: true });
+              }}
+              onArchive={() => archiveWithUndo(item.activity_id)}
+              onDetails={() => setDetails(item)}
+            />
+          );
+        })}
       </section>
     );
 
@@ -159,7 +204,6 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
         onClose={() => setCreatorOpen(false)}
         onCreate={async (body) => {
           await data.createActivity(body);
-          await data.reload();
         }}
       />
       <ActivityDetailsSheet
@@ -167,6 +211,11 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
         occurrence={details}
         activity={details ? (activityById.get(details.activity_id) ?? null) : null}
         onClose={() => setDetails(null)}
+        onSave={async (id, body) => {
+          await data.updateActivity(id, body);
+          showGameToast('Atividade atualizada', { variant: 'success' });
+        }}
+        onArchive={(id) => archiveWithUndo(id)}
         onConfirm={(payload) => {
           const activity = details ? activityById.get(details.activity_id) : null;
           if (!activity) return;
@@ -174,6 +223,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
             kind: payload.kind,
             note: payload.note,
             metrics: payload.value != null ? { valor: payload.value } : undefined,
+            optimisticUi: true,
           });
           setDetails(null);
         }}

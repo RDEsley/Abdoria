@@ -1,17 +1,58 @@
 .activity-quick-card {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  position: relative;
+  display: block;
   min-height: 3.25rem;
-  padding: 0.7rem 0.85rem;
+  overflow: hidden;
   border: 2px solid rgb(231 229 228 / 0.9);
   border-radius: 1.1rem;
   background: rgb(255 255 255 / 0.82);
   text-align: left;
+  touch-action: pan-y;
 }
 
 .activity-quick-card--done {
   opacity: 0.72;
+}
+
+.activity-quick-card__surface {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.7rem 0.85rem;
+  background: rgb(255 255 255 / 0.96);
+}
+
+.activity-quick-card__reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  padding-inline: 1rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.activity-quick-card__reveal--complete {
+  justify-content: flex-start;
+  color: rgb(6 95 70);
+  background: linear-gradient(90deg, rgb(209 250 229), rgb(236 253 245 / 0.65));
+}
+
+.activity-quick-card__reveal--archive {
+  justify-content: flex-end;
+  color: rgb(120 80 50);
+  background: linear-gradient(270deg, rgb(254 243 226), rgb(255 251 235 / 0.7));
+}
+
+.activity-quick-card__reveal-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .activity-quick-card__check {
@@ -19,6 +60,7 @@
   place-items: center;
   inline-size: 2.5rem;
   block-size: 2.5rem;
+  flex: none;
   border-radius: 0.85rem;
   background: rgb(236 253 245);
   color: rgb(6 95 70);
@@ -29,6 +71,7 @@
   min-width: 0;
   flex: 1;
   flex-direction: column;
+  text-align: left;
 }
 
 .activity-quick-card__body strong {
@@ -44,9 +87,139 @@
 }
 
 .activity-quick-card__details {
+  flex: none;
   font-size: 0.7rem;
   font-weight: 800;
   color: rgb(5 150 105);
+}
+
+.activity-details-meta {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.85rem 0 1rem;
+}
+
+.activity-details-meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.activity-details-meta dt {
+  font-weight: 700;
+  color: rgb(168 162 158);
+}
+
+.activity-details-meta dd {
+  margin: 0;
+  font-weight: 800;
+  color: rgb(68 64 60);
+  text-align: right;
+}
+
+.activity-details-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.75rem;
+  border: 2px solid rgb(209 250 229);
+  background: rgb(236 253 245);
+  color: rgb(6 95 70);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.activity-details-remove {
+  width: 100%;
+  min-height: 2.4rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: rgb(146 64 14);
+}
+
+.activity-creator-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.activity-creator-suggestions__label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(168 162 158);
+}
+
+.activity-template--suggested {
+  border-color: rgb(110 231 183);
+  box-shadow: 0 0 0 1px rgb(167 243 208 / 0.5);
+}
+
+.activity-template__hint {
+  color: rgb(5 150 105) !important;
+  font-weight: 800 !important;
+}
+
+.quick-notes-shell {
+  border: 2px solid rgb(231 229 228 / 0.9);
+  border-radius: 1.1rem;
+  background: rgb(255 255 255 / 0.82);
+  overflow: hidden;
+}
+
+.quick-notes-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.85rem;
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+}
+
+.quick-notes-toggle__lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: rgb(41 37 36);
+}
+
+.quick-notes-toggle__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgb(5 150 105);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.quick-notes-toggle__chevron {
+  color: rgb(168 162 158);
+  transition: transform 0.2s ease;
+}
+
+.quick-notes-toggle__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.quick-notes-panel {
+  overflow: hidden;
+}
+
+.quick-notes-panel__inner {
+  padding: 0 0.9rem 0.9rem;
 }
 
 .activity-template {
@@ -123,7 +296,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .activity-quick-card {
+  .activity-quick-card,
+  .quick-notes-toggle__chevron {
     transition: none;
   }
 }

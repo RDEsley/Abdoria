@@ -12,7 +12,19 @@ export interface ActivityTemplate {
   metric_unit: string | null;
   goal_value: number | null;
   aliases?: string[];
+  /**
+   * Se false, não aparece no catálogo de criação nem nas sugestões novas.
+   * Activities legadas com este template_id continuam carregando via findActivityTemplate.
+   */
+  offerInCreate?: boolean;
 }
+
+/** IDs ocultos do catálogo de criação (UI). Dados legados permanecem válidos. */
+export const HIDDEN_CREATE_TEMPLATE_IDS = [
+  'tpl_respiracao',
+  'tpl_yoga',
+  'tpl_cuidados',
+] as const;
 
 export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
   {
@@ -25,7 +37,20 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'count',
     metric_unit: 'páginas',
     goal_value: 5,
-    aliases: ['ler', 'livro', 'leitura', 'lendo', 'capítulo'],
+    aliases: [
+      'ler',
+      'livro',
+      'leitura',
+      'lendo',
+      'capítulo',
+      'manga',
+      'mangá',
+      'hq',
+      'quadrinho',
+      'romance',
+      'página',
+      'paginas',
+    ],
   },
   {
     id: 'tpl_estudo',
@@ -37,7 +62,25 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 30,
-    aliases: ['estudar', 'estudo', 'revisar', 'aula', 'idioma', 'japonês', 'ingles'],
+    aliases: [
+      'estudar',
+      'estudo',
+      'revisar',
+      'aula',
+      'idioma',
+      'japonês',
+      'japones',
+      'ingles',
+      'inglês',
+      'espanhol',
+      'francês',
+      'frances',
+      'curso',
+      'aprender',
+      'faculdade',
+      'prova',
+      'vestibular',
+    ],
   },
   {
     id: 'tpl_escrita',
@@ -49,7 +92,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 15,
-    aliases: ['escrever', 'escrita', 'journal', 'diário', 'anotar'],
+    aliases: ['escrever', 'escrita', 'journal', 'diário', 'diario', 'anotar', 'redação', 'redacao'],
   },
   {
     id: 'tpl_meditacao',
@@ -73,6 +116,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 5,
+    offerInCreate: false,
     aliases: ['respirar', 'respiração', 'respiracao', 'foco', 'pranayama', 'box breathing'],
   },
   {
@@ -85,7 +129,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 30,
-    aliases: ['caminhar', 'caminhada', 'andar', 'passeio', 'passos'],
+    aliases: ['caminhar', 'caminhada', 'andar', 'passeio', 'passos', 'caminhada no parque'],
   },
   {
     id: 'tpl_corrida',
@@ -97,7 +141,17 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 20,
-    aliases: ['corre', 'correr', 'corrida', 'trote', 'trotar', 'running', 'cardio'],
+    aliases: [
+      'corre',
+      'correr',
+      'corrida',
+      'trote',
+      'trotar',
+      'running',
+      'cardio',
+      'parque',
+      'corrida no parque',
+    ],
   },
   {
     id: 'tpl_alongamento',
@@ -121,6 +175,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'duration',
     metric_unit: 'min',
     goal_value: 20,
+    offerInCreate: false,
     aliases: ['yoga', 'ioga', 'asana'],
   },
   {
@@ -145,7 +200,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'count',
     metric_unit: 'copos',
     goal_value: 8,
-    aliases: ['água', 'agua', 'beber', 'hidratar', 'copo', 'tomar água'],
+    aliases: ['água', 'agua', 'beber', 'hidratar', 'copo', 'tomar água', 'tomar agua'],
   },
   {
     id: 'tpl_organizar',
@@ -157,7 +212,23 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'none',
     metric_unit: null,
     goal_value: null,
-    aliases: ['organizar', 'organização', 'planejar', 'planejamento'],
+    aliases: [
+      'organizar',
+      'organização',
+      'organizacao',
+      'planejar',
+      'planejamento',
+      'arrumar',
+      'arrumação',
+      'arrumacao',
+      'quarto',
+      'casa',
+      'limpar',
+      'limpeza',
+      'desembaçar',
+      'bagunça',
+      'bagunca',
+    ],
   },
   {
     id: 'tpl_cama',
@@ -169,7 +240,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'none',
     metric_unit: null,
     goal_value: null,
-    aliases: ['cama', 'arrumar', 'quarto', 'lençol'],
+    aliases: ['cama', 'arrumar a cama', 'lençol', 'lencol'],
   },
   {
     id: 'tpl_cuidados',
@@ -181,6 +252,7 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
     metric_kind: 'none',
     metric_unit: null,
     goal_value: null,
+    offerInCreate: false,
     aliases: ['banho', 'higiene', 'skincare', 'dente', 'cuidados', 'rosto'],
   },
   {
@@ -197,8 +269,23 @@ export const ACTIVITY_TEMPLATES: ActivityTemplate[] = [
   },
 ];
 
+export function isOfferedInCreateCatalog(template: ActivityTemplate): boolean {
+  return template.offerInCreate !== false;
+}
+
+/** Templates oferecidos ao criar Activity (sem os ocultos da UI). */
+export function activityCreateTemplates(): ActivityTemplate[] {
+  return ACTIVITY_TEMPLATES.filter(isOfferedInCreateCatalog);
+}
+
 export function templatesByCategory(category: ActivityTemplate['category']): ActivityTemplate[] {
   return ACTIVITY_TEMPLATES.filter((template) => template.category === category);
+}
+
+export function templatesByCategoryForCreate(
+  category: ActivityTemplate['category'],
+): ActivityTemplate[] {
+  return activityCreateTemplates().filter((template) => template.category === category);
 }
 
 export function findActivityTemplate(id: string): ActivityTemplate | null {

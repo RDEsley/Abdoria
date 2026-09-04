@@ -162,6 +162,10 @@ export const Activities = {
   async archive(userId: string, id: string): Promise<ActivityRecord> {
     return this.update(userId, id, { archived_at: new Date().toISOString() });
   },
+
+  async restore(userId: string, id: string): Promise<ActivityRecord> {
+    return this.update(userId, id, { archived_at: null });
+  },
 };
 
 export const Routines = {
