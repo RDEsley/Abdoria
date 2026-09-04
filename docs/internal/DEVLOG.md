@@ -8,6 +8,11 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Settings áudio + haptic de Activity
+
+- Áudio: PATCH parcial (`som_habilitado`/`sfx_volume` only) + coalesce serial; flush de volume no unmount via refs.
+- RoutineRunner: um haptic (imediato); após API só XP/som/toast.
+
 ### Alimentação (nutrição)
 
 - Domínio novo: `/alimentacao` no primary nav (Perfil só via avatar).

@@ -11,7 +11,7 @@ import { routineDoneActivityIdsToday } from '@shared/activities';
 import { getTodaySaoPaulo } from '@shared/utils/timezone';
 import { emitXpEarned } from '@/lib/xp-orbs';
 import { playCompleteSet } from '@/lib/sounds';
-import { selectionHaptic, successHaptic } from '@/lib/platform/native-runtime';
+import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
 
 export function RoutineRunnerPage() {
@@ -133,8 +133,8 @@ export function RoutineRunnerPage() {
       return;
     }
 
+    // Haptic já foi imediato na interação; após API: só XP/som/toast.
     if (result.xp_ganho > 0) emitXpEarned(result.xp_ganho);
-    void successHaptic();
     playCompleteSet();
     const ganho = result.xp_ganho > 0 ? `+${result.xp_ganho} XP` : 'Registrado';
     showGameToast(`${activityName}: ${ganho}`, { variant: 'success' });

@@ -26,7 +26,11 @@ export function getPublicProfile(userId: string): Promise<PublicProfile> {
   return fetchJson(`/users/${userId}/public`);
 }
 
-export function updateMe(data: Partial<IUserDocument>): Promise<IUserDocument> {
+export function updateMe(
+  data: Partial<Omit<IUserDocument, 'preferencias'>> & {
+    preferencias?: Partial<IUserDocument['preferencias']>;
+  },
+): Promise<IUserDocument> {
   return fetchJson('/users/me', { method: 'PATCH', body: JSON.stringify(data) });
 }
 
