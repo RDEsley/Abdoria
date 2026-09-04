@@ -287,33 +287,43 @@ export function ReminderCenter() {
     const index = reminders.findIndex((item) => item.id === reminder.id);
     const next = reminders.filter((item) => item.id !== reminder.id);
     try {
+      // replace → patchPreferences + sync(next). No nativo, sync já cancela
+      // todos os personalizados pendentes e reagenda só os restantes.
       await replace(next);
-      await notificationScheduler.cancel(reminder.id);
-      if (options?.rememberSkip) writeSkipDeleteConfirm();
-      showGameToast('Lembrete excluído', {
-        variant: 'info',
-        duration: 5000,
-        actionLabel: 'Desfazer',
-        onAction: () => {
-          void (async () => {
-            try {
-              const restored = [...next];
-              const insertAt = index >= 0 ? index : restored.length;
-              restored.splice(insertAt, 0, reminder);
-              await replace(restored);
-            } catch {
-              showGameToast('Não foi possível restaurar o lembrete.', { variant: 'error' });
-            }
-          })();
-        },
-      });
-      setPendingDelete(null);
-      setSkipConfirmChecked(false);
     } catch {
       showGameToast('Não foi possível excluir o lembrete.', { variant: 'error' });
-    } finally {
       setDeletingId(null);
+      return;
     }
+
+    // Limpeza residual (ex.: chaves web). Falha aqui ≠ falha da exclusão.
+    try {
+      await notificationScheduler.cancel(reminder.id);
+    } catch {
+      /* sync já refletiu a lista; cancel é best-effort */
+    }
+
+    if (options?.rememberSkip) writeSkipDeleteConfirm();
+    showGameToast('Lembrete excluído', {
+      variant: 'info',
+      duration: 5000,
+      actionLabel: 'Desfazer',
+      onAction: () => {
+        void (async () => {
+          try {
+            const restored = [...next];
+            const insertAt = index >= 0 ? index : restored.length;
+            restored.splice(insertAt, 0, reminder);
+            await replace(restored);
+          } catch {
+            showGameToast('Não foi possível restaurar o lembrete.', { variant: 'error' });
+          }
+        })();
+      },
+    });
+    setPendingDelete(null);
+    setSkipConfirmChecked(false);
+    setDeletingId(null);
   };
 
   const requestRemove = (reminder: PersonalizedReminder) => {
