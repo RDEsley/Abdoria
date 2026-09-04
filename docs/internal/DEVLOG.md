@@ -8,6 +8,12 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### UX hotfix atividades / missões / lembretes
+
+- Rotina e NextUp: namespaces `routine-card*` / `next-up-card*` (não reutilizar `activity-quick-card` estrutural).
+- Missões: `touch-action: pan-x pan-y` + `data-no-nav-swipe`; skeleton/error; snap `proximity`.
+- Details X; Quick Notes papel; delete lembrete com confirmação + skip local.
+
 ### Settings áudio + haptic de Activity
 
 - Áudio: PATCH parcial (`som_habilitado`/`sfx_volume` only) + coalesce serial; flush de volume no unmount via refs.

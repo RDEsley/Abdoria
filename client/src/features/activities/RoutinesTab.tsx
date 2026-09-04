@@ -110,31 +110,27 @@ function SortableRoutineCard({
         opacity: isDragging ? 0.5 : 1,
       }}
       data-no-nav-swipe
-      className={`activity-quick-card flex items-center gap-2${secondary ? ' routine-card--secondary' : ''}`}
+      className={`routine-card${secondary ? ' routine-card--secondary' : ''}${isDragging ? ' routine-card--dragging' : ''}`}
     >
       <button
         type="button"
-        className="cursor-grab touch-none text-stone-400"
+        className="routine-card__handle"
         aria-label="Reordenar"
         {...attributes}
         {...listeners}
       >
-        <GripVertical size={16} />
+        <GripVertical size={16} aria-hidden />
       </button>
-      <button
-        type="button"
-        className="activity-quick-card__body flex-1 text-left"
-        onClick={onClick}
-      >
-        <span className="flex items-center gap-2">
-          <strong>{routine.name}</strong>
+      <button type="button" className="routine-card__body" onClick={onClick}>
+        <span className="routine-card__title-row">
+          <strong className="routine-card__name">{routine.name}</strong>
           {scheduledToday && (
             <span className={`routine-badge${isNow ? ' routine-badge--now' : ''}`}>
               {isNow ? 'Agora' : 'Hoje'}
             </span>
           )}
         </span>
-        <small>
+        <small className="routine-card__meta">
           {total > 0
             ? `${doneToday}/${total}${scheduledToday && time ? ` · ${time}` : ''}`
             : 'Sem atividades'}
@@ -146,7 +142,7 @@ function SortableRoutineCard({
         aria-label={`Editar ${routine.name}`}
         onClick={onEdit}
       >
-        <Pencil size={15} />
+        <Pencil size={15} aria-hidden />
       </button>
     </div>
   );
