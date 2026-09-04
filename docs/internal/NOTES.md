@@ -71,6 +71,15 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Tag/GitHub Release estão vinculadas a **Release**, não a Build. Deploy rotineiro não cria tag.
 - Fluxo e SemVer: ver `AGENTS.md` → Versionamento e releases / Higiene Git.
 
+## Alimentação / Nutrição
+
+- Domínio próprio: tabelas `nutrition_profiles`, `foods`, `food_favorites`, `food_logs`, `weight_logs` (não em `preferencias`).
+- Fonte de verdade: Express + service_role; macros do log são snapshot no registro.
+- Metas: `none` | `manual` | `estimated` (Mifflin–St Jeor conservador). Wellness — não é orientação clínica.
+- Rota `/alimentacao` no primary nav; Perfil via avatar TopNavbar.
+- Busca usa `name_fold` + `foldText`. Catálogo global enxuto BR; alimentos do usuário privados.
+- Sem XP por alimento nesta entrega (evitar farm). Hidratação continua no MyPlant.
+
 ## Missões (quests)
 
 - Conjunto atribuído é persistido em `quest_assignments` (PK `user_id, period_key`; chaves SP: daily `YYYY-MM-DD`, weekly `W…`, monthly `MYYYY-MM`).

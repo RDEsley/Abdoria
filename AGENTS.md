@@ -46,6 +46,7 @@ Conceitos atuais incluem:
 - Treino
 - Atividades
 - MyPlant
+- Alimentação
 - XP
 - Streak
 - Conquistas
@@ -63,6 +64,14 @@ A rota pública principal da área de treino é:
 ```text
 /treino
 ```
+
+A rota pública da Alimentação é:
+
+```text
+/alimentacao
+```
+
+Perfil permanece acessível pelo avatar/nome da TopNavbar (`/perfil`), não pelo bottom nav.
 
 ## Branding
 

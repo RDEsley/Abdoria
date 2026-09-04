@@ -8,6 +8,12 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Alimentação (nutrição)
+
+- Domínio novo: `/alimentacao` no primary nav (Perfil só via avatar).
+- Tabelas `nutrition_*` / `foods` / `food_logs` / `weight_logs`; API `/api/nutrition/*`.
+- Meta manual/estimada; catálogo BR; alimentos do usuário; peso + sparkline; sem XP por alimento.
+
 ### Settings 2.0 + feedback pós-#57
 
 - `silentFeedback` volta a silenciar XP/som/toast/haptic (RoutineRunner é dono); Today usa `suppressHaptic`.
