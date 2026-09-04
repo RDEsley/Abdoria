@@ -68,6 +68,14 @@ export function listRoutines(): Promise<RoutineRecord[]> {
   return fetchJson('/routines');
 }
 
+export function listArchivedRoutines(): Promise<RoutineRecord[]> {
+  return fetchJson('/routines?archived=1');
+}
+
+export function restoreRoutine(id: string): Promise<RoutineRecord> {
+  return fetchJson(`/routines/${id}/restore`, { method: 'POST' });
+}
+
 export function createRoutine(body: Record<string, unknown>): Promise<RoutineRecord> {
   return fetchJson('/routines', { method: 'POST', body: JSON.stringify(body) });
 }

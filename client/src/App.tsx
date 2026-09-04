@@ -12,6 +12,7 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { PwaInstallProvider } from '@/context/PwaInstallContext';
 import { AppUpdateProvider } from '@/context/AppUpdateContext';
 import { AppUpdateBanner } from '@/components/updates/AppUpdateBanner';
+import { NotificationPermissionProvider } from '@/context/NotificationPermissionContext';
 
 const AuthScenePage = lazy(() =>
   import('@/pages/AuthScenePage').then((m) => ({ default: m.AuthScenePage })),
@@ -96,6 +97,7 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
+          <NotificationPermissionProvider>
           <BootReadinessProvider>
           <AppBootGate>
             <MotionPreferenceGate>
@@ -280,6 +282,7 @@ export default function App() {
             </MotionPreferenceGate>
           </AppBootGate>
           </BootReadinessProvider>
+          </NotificationPermissionProvider>
         </AuthProvider>
       </BrowserRouter>
       </AppUpdateProvider>

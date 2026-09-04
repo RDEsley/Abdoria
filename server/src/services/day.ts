@@ -1,6 +1,7 @@
 import {
   addDaysSaoPaulo,
   getHourSaoPaulo,
+  getSaoPauloWeekday,
   getTodaySaoPaulo,
   getWeekStartSaoPaulo,
   startOfDayKeySaoPaulo,
@@ -21,7 +22,46 @@ import {
 } from '../../../shared/activities/index.js';
 import { buildDeterministicInsights } from '../../../shared/activities/insights.js';
 import { periodFromHour } from '../../../shared/activities/schedule.js';
-import { QUEST_CATALOG, type QuestContext } from '../../../shared/quests/catalog.js';
+import { selectQuestsForUser, type QuestContext } from '../../../shared/quests/catalog.js';
+
+function emptyCategories(): Set<string> {
+  return new Set();
+}
+
+function baseQuestContext(partial: Partial<QuestContext>): QuestContext {
+  return {
+    activitiesCompletedToday: 0,
+    activitiesCompletedThisWeek: 0,
+    activitiesCompletedThisMonth: 0,
+    routinesCompletedToday: 0,
+    routinesCompletedThisWeek: 0,
+    routinesCompletedThisMonth: 0,
+    morningComplete: false,
+    afternoonComplete: false,
+    eveningComplete: false,
+    trainedToday: false,
+    trainingDayToday: false,
+    weeklyTrainingDays: 0,
+    activeDaysThisWeek: 0,
+    activeDaysThisMonth: 0,
+    workoutsThisWeek: 0,
+    workoutsThisMonth: 0,
+    hasRoutines: false,
+    hasRoutineScheduledToday: false,
+    hasActivities: false,
+    hasScheduledActivityToday: false,
+    categoriesToday: emptyCategories(),
+    categoriesUsed: emptyCategories(),
+    menteCompletedToday: 0,
+    corpoCompletedToday: 0,
+    vidaCompletedToday: 0,
+    distinctCategoriesThisWeek: 0,
+    daysRemainingInMonth: 30,
+    dayOfMonth: 1,
+    streakAtual: 0,
+    ...partial,
+  };
+}
 
 export async function getDaySnapshot(userId: string) {
   const today = getTodaySaoPaulo();
@@ -130,7 +170,12 @@ export async function getDaySnapshot(userId: string) {
 
   // Quest progress is derived from data already fetched above (no extra
   // queries) so the Day Guide can consider a near-complete quest as a hint.
-  const questContextForGuide: QuestContext = {
+  const trainingDays = user.ab_training_profile_v2?.training_days ?? [];
+  const weekday = getSaoPauloWeekday();
+  const categoriesUsed = new Set(
+    activities.map((activity) => activity.category).filter(Boolean) as string[],
+  );
+  const questContextForGuide = baseQuestContext({
     activitiesCompletedToday: doneIds.size,
     morningComplete:
       periodBuckets.manha.planned > 0 && periodBuckets.manha.done === periodBuckets.manha.planned,
@@ -139,11 +184,27 @@ export async function getDaySnapshot(userId: string) {
     eveningComplete:
       periodBuckets.noite.planned > 0 && periodBuckets.noite.done === periodBuckets.noite.planned,
     trainedToday: treinoHoje,
+    trainingDayToday: trainingDays.includes(weekday),
+    weeklyTrainingDays: trainingDays.length,
     activeDaysThisWeek: weekDays.length,
     workoutsThisWeek: weekWorkouts.length,
+    hasRoutines: routines.length > 0,
+    hasRoutineScheduledToday: routineSnapshots.some((routine) => routine.scheduled_today),
+    hasActivities: activities.length > 0,
+    hasScheduledActivityToday: occurrences.some((occ) => Boolean(occ.time)),
+    categoriesUsed,
     streakAtual: user.gamificacao.streak_atual,
-  };
-  const questProgressForGuide: DayGuideQuestInput[] = QUEST_CATALOG.map((quest) => ({
+    dayOfMonth: Number(today.slice(8)),
+    daysRemainingInMonth: (() => {
+      const [y, m] = today.split('-').map(Number);
+      const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+      return Math.max(0, last - Number(today.slice(8)));
+    })(),
+  });
+  const questProgressForGuide: DayGuideQuestInput[] = selectQuestsForUser(
+    userId,
+    questContextForGuide,
+  ).map((quest) => ({
     id: quest.id,
     title: quest.title,
     progress: quest.progress(questContextForGuide),
@@ -300,25 +361,42 @@ export async function getInsightsForUser(userId: string) {
 
 export async function buildQuestContext(userId: string): Promise<QuestContext> {
   const today = getTodaySaoPaulo();
-  const weekStart = addDaysSaoPaulo(today, -6);
+  const weekStart = getWeekStartSaoPaulo();
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const [y, m] = today.split('-').map(Number);
+  const lastDayOfMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const dayOfMonth = Number(today.slice(8));
+  const daysRemainingInMonth = Math.max(0, lastDayOfMonth - dayOfMonth);
+
   const weekFromIso = startOfDayKeySaoPaulo(weekStart).toISOString();
-  const weekToIso = startOfDayKeySaoPaulo(addDaysSaoPaulo(today, 1)).toISOString();
+  const monthFromIso = startOfDayKeySaoPaulo(monthStart).toISOString();
+  const tomorrowIso = startOfDayKeySaoPaulo(addDaysSaoPaulo(today, 1)).toISOString();
 
-  const [activities, logs, treinoHoje, weekDays, weekWorkouts] = await Promise.all([
-    Activities.list(userId),
-    ActivityLogs.list(userId, { from: today, to: today }),
-    hasTrainedToday(userId),
-    ActiveDays.listSince(userId, weekStart),
-    WorkoutHistory.find({
-      usuario_id: userId,
-      concluido_em: { $gte: weekFromIso, $lt: weekToIso },
-      somenteTreino: true,
-    }),
-  ]);
+  const [user, activities, routines, logs, treinoHoje, weekDays, monthDays, weekWorkouts, monthWorkouts] =
+    await Promise.all([
+      User.findById(userId),
+      Activities.list(userId),
+      Routines.list(userId),
+      ActivityLogs.list(userId, { from: monthStart, to: today }),
+      hasTrainedToday(userId),
+      ActiveDays.listSince(userId, weekStart),
+      ActiveDays.listSince(userId, monthStart),
+      WorkoutHistory.find({
+        usuario_id: userId,
+        concluido_em: { $gte: weekFromIso, $lt: tomorrowIso },
+        somenteTreino: true,
+      }),
+      WorkoutHistory.find({
+        usuario_id: userId,
+        concluido_em: { $gte: monthFromIso, $lt: tomorrowIso },
+        somenteTreino: true,
+      }),
+    ]);
 
-  const todayLogs = logs.filter((l) => l.day_key === today);
+  const todayLogs = logs.filter((log) => log.day_key === today);
+  const weekLogs = logs.filter((log) => log.day_key >= weekStart);
   const occurrences = plannedOccurrencesForDay(activities, today, todayLogs);
-  const doneLogs = todayLogs.filter((l) => l.activity_id);
+  const doneLogs = todayLogs.filter((log) => log.activity_id);
 
   const periodOccurrences = {
     manha: [] as typeof occurrences,
@@ -338,14 +416,80 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
   const eveningComplete =
     periodOccurrences.noite.length > 0 && periodOccurrences.noite.every((o) => o.status === 'done');
 
-  return {
+  const countRoutineCompletions = (dayLogs: typeof logs) => {
+    let count = 0;
+    for (const routine of routines) {
+      const items = routine.items ?? [];
+      if (items.length === 0) continue;
+      if (routineItemsDoneToday(routine, dayLogs) >= items.length) count += 1;
+    }
+    return count;
+  };
+
+  const routinesCompletedToday = countRoutineCompletions(todayLogs);
+  let routinesCompletedThisWeek = 0;
+  let routinesCompletedThisMonth = 0;
+  const dayKeys = [...new Set(logs.map((log) => log.day_key))];
+  for (const dayKey of dayKeys) {
+    const dayLogs = logs.filter((log) => log.day_key === dayKey);
+    const completed = countRoutineCompletions(dayLogs);
+    if (dayKey >= weekStart) routinesCompletedThisWeek += completed;
+    routinesCompletedThisMonth += completed;
+  }
+
+  const categoriesUsed = new Set(
+    activities.map((activity) => activity.category).filter(Boolean) as string[],
+  );
+  const activityById = new Map(activities.map((activity) => [activity.id, activity]));
+  let menteCompletedToday = 0;
+  let corpoCompletedToday = 0;
+  let vidaCompletedToday = 0;
+  const categoriesThisWeek = new Set<string>();
+  for (const log of doneLogs) {
+    const category = log.activity_id ? activityById.get(log.activity_id)?.category : null;
+    if (category === 'mente') menteCompletedToday += 1;
+    if (category === 'corpo') corpoCompletedToday += 1;
+    if (category === 'vida') vidaCompletedToday += 1;
+  }
+  for (const log of weekLogs) {
+    const category = log.activity_id ? activityById.get(log.activity_id)?.category : null;
+    if (category) categoriesThisWeek.add(category);
+  }
+
+  const trainingDays = user?.ab_training_profile_v2?.training_days ?? [];
+  const weekday = getSaoPauloWeekday();
+
+  return baseQuestContext({
     activitiesCompletedToday: doneLogs.length,
+    activitiesCompletedThisWeek: weekLogs.filter((log) => log.activity_id).length,
+    activitiesCompletedThisMonth: logs.filter((log) => log.activity_id).length,
+    routinesCompletedToday,
+    routinesCompletedThisWeek,
+    routinesCompletedThisMonth,
     morningComplete,
     afternoonComplete,
     eveningComplete,
     trainedToday: treinoHoje,
+    trainingDayToday: trainingDays.includes(weekday),
+    weeklyTrainingDays: trainingDays.length,
     activeDaysThisWeek: weekDays.length,
+    activeDaysThisMonth: monthDays.length,
     workoutsThisWeek: weekWorkouts.length,
-    streakAtual: 0, // Will be filled from user if needed
-  };
+    workoutsThisMonth: monthWorkouts.length,
+    hasRoutines: routines.length > 0,
+    hasRoutineScheduledToday: routines.some(
+      (routine) =>
+        routine.schedule.kind !== 'unscheduled' && activityOccursOnDay(routine.schedule, today),
+    ),
+    hasActivities: activities.length > 0,
+    hasScheduledActivityToday: occurrences.some((occ) => Boolean(occ.time)),
+    categoriesUsed,
+    menteCompletedToday,
+    corpoCompletedToday,
+    vidaCompletedToday,
+    distinctCategoriesThisWeek: categoriesThisWeek.size,
+    daysRemainingInMonth,
+    dayOfMonth,
+    streakAtual: user?.gamificacao?.streak_atual ?? 0,
+  });
 }

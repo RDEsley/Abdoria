@@ -603,7 +603,7 @@ export function AbTrainingProfileWizard({ open, onClose, firstVisit, onReady }: 
                 >
                   {lesgo ? (
                     <div className="ab-plan-summary__lesgo">
-                      <LottieView data={lesgo} loop={false} contain />
+                      <LottieView data={lesgo} loop={!reduceMotion} contain />
                     </div>
                   ) : (
                     <span className="ab-plan-summary__success">

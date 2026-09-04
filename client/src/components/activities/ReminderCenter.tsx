@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { BellRing, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useEnsureReminderPermission } from '@/hooks/useEnsureReminderPermission';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
@@ -103,6 +104,7 @@ function reminderToDraft(reminder: PersonalizedReminder): Draft {
 export function ReminderCenter() {
   const { user } = useAuth();
   const { patchPreferences } = useUserPreferences();
+  const { ensureCanEnableReminder, canDeliverReminders } = useEnsureReminderPermission();
   const unlockedPacks = listUnlockedReminderPacks(user?.cosmeticos?.desbloqueados);
   const syncOptions = {
     optOut: user?.preferencias?.notificacoes_opt_out ?? false,
@@ -190,6 +192,13 @@ export function ReminderCenter() {
   const save = async () => {
     const reminder = buildReminder();
     if (!reminder) return;
+    if (reminder.enabled) {
+      const ok = await ensureCanEnableReminder();
+      if (!ok) {
+        setError('Ative as notificações para receber este aviso.');
+        return;
+      }
+    }
     setSaving(true);
     setError('');
     try {
@@ -232,6 +241,11 @@ export function ReminderCenter() {
   };
 
   const toggleEnabled = async (reminder: PersonalizedReminder) => {
+    const turningOn = !reminder.enabled;
+    if (turningOn) {
+      const ok = await ensureCanEnableReminder();
+      if (!ok) return;
+    }
     const next = reminders.map((item) =>
       item.id === reminder.id
         ? { ...item, enabled: !item.enabled, updatedAt: new Date().toISOString() }
@@ -254,6 +268,11 @@ export function ReminderCenter() {
             <BellRing size={17} aria-hidden /> Lembretes personalizados
           </h2>
           <p>Crie alertas locais para água, treino, estudo ou o que fizer sentido pra você.</p>
+          {!canDeliverReminders ? (
+            <p className="mt-1 text-xs font-semibold text-amber-700">
+              Ative as notificações para receber estes avisos.
+            </p>
+          ) : null}
         </div>
       </header>
 

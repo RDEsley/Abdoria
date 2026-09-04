@@ -17,12 +17,58 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GameButton } from '@/components/ui/GameButton';
-import { reorderRoutines } from '@/lib/api/activities';
+import { Modal } from '@/components/ui/Modal';
+import { listArchivedRoutines, reorderRoutines, restoreRoutine } from '@/lib/api/activities';
+import { getErrorMessage } from '@/lib/api-errors';
+import { showGameToast } from '@/lib/game-toast';
+import { successHaptic } from '@/lib/platform/native-runtime';
 import { activityOccursOnDay, routineItemsDoneToday } from '@shared/activities';
 import { getMinutesOfDaySaoPaulo, getTodaySaoPaulo } from '@shared/utils/timezone';
 import type { ActivityLogRecord, RoutineRecord } from '@shared/activities';
 import { RoutineEditorSheet, type RoutineEditorPayload } from './RoutineEditorSheet';
 import type { useActivitiesData } from './useActivitiesData';
+
+const CREATE_SUCCESS_PHRASES = [
+  'Rotina plantada. Agora é só seguir o ritmo.',
+  'Nova rotina pronta. Um passo de cada vez.',
+  'Montada! Sua evolução ganhou um caminho.',
+  'Rotina criada. Plantando consistência.',
+  'Pronto. Essa rotina já faz parte do seu dia.',
+  'Criada com cuidado. Agora é cultivar o hábito.',
+  'Mais uma rotina no jardim. Vamos crescer.',
+  'Feito. Sua rotina está no Evolyn.',
+] as const;
+
+const PHRASE_STORAGE_KEY = 'evolyn:routine-create-phrase';
+
+function pickCreateSuccessPhrase(): string {
+  let last = '';
+  try {
+    last = sessionStorage.getItem(PHRASE_STORAGE_KEY) ?? '';
+  } catch {
+    last = '';
+  }
+  const pool = CREATE_SUCCESS_PHRASES.filter((phrase) => phrase !== last);
+  const choices = pool.length > 0 ? pool : [...CREATE_SUCCESS_PHRASES];
+  const next = choices[Math.floor(Math.random() * choices.length)] ?? CREATE_SUCCESS_PHRASES[0];
+  try {
+    sessionStorage.setItem(PHRASE_STORAGE_KEY, next);
+  } catch {
+    /* ignore quota / private mode */
+  }
+  return next;
+}
+
+function formatArchivedApprox(iso: string | null): string {
+  if (!iso) return 'Arquivada recentemente';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'Arquivada recentemente';
+  return `Arquivada em ${date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })}`;
+}
 
 function SortableRoutineCard({
   routine,
@@ -111,6 +157,10 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
   const [editing, setEditing] = useState<
     { mode: 'create' } | { mode: 'edit'; routine: RoutineRecord } | null
   >(null);
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const [archived, setArchived] = useState<RoutineRecord[]>([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const today = getTodaySaoPaulo();
 
   // Só a ORDEM local de arrasto é mantida em estado próprio. Nome, agenda,
@@ -158,6 +208,38 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
     [orderedIds, data],
   );
 
+  const openArchived = useCallback(() => {
+    setArchivedOpen(true);
+    setArchivedLoading(true);
+    void listArchivedRoutines()
+      .then((list) => setArchived(list))
+      .catch((error) => {
+        showGameToast(getErrorMessage(error, 'Não foi possível carregar rotinas arquivadas.'), {
+          variant: 'error',
+        });
+        setArchivedOpen(false);
+      })
+      .finally(() => setArchivedLoading(false));
+  }, []);
+
+  const handleRestore = useCallback(
+    async (id: string) => {
+      setRestoringId(id);
+      try {
+        await restoreRoutine(id);
+        await data.reload();
+        setArchived((current) => current.filter((routine) => routine.id !== id));
+        showGameToast('Rotina restaurada.', { variant: 'success' });
+        void successHaptic();
+      } catch (error) {
+        showGameToast(getErrorMessage(error, 'Não foi possível restaurar.'), { variant: 'error' });
+      } finally {
+        setRestoringId(null);
+      }
+    },
+    [data],
+  );
+
   return (
     <div className="flex flex-col gap-3">
       {orderedRoutines.length === 0 && (
@@ -192,6 +274,10 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
         <Plus size={16} /> Nova rotina
       </GameButton>
 
+      <button type="button" className="routine-archived-trigger" onClick={openArchived}>
+        Rotinas arquivadas
+      </button>
+
       <RoutineEditorSheet
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
@@ -202,6 +288,8 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
             await data.updateRoutine(editing.routine.id, { ...payload });
           } else {
             await data.createRoutine({ ...payload });
+            showGameToast(pickCreateSuccessPhrase(), { variant: 'success' });
+            void successHaptic();
           }
           await data.reload();
         }}
@@ -215,6 +303,49 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
             : undefined
         }
       />
+
+      <Modal
+        open={archivedOpen}
+        onClose={() => setArchivedOpen(false)}
+        labelledBy="archived-routines-title"
+      >
+        <div className="p-4">
+          <h2 id="archived-routines-title" className="game-section-title">
+            Rotinas arquivadas
+          </h2>
+          {archivedLoading ? (
+            <p className="mt-3 text-sm font-semibold text-stone-500">Carregando…</p>
+          ) : archived.length === 0 ? (
+            <p className="mt-3 text-sm font-semibold text-stone-500">
+              Nenhuma rotina arquivada no momento.
+            </p>
+          ) : (
+            <ul className="mt-3 flex max-h-72 flex-col gap-2 overflow-y-auto">
+              {archived.map((routine) => (
+                <li key={routine.id} className="routine-archived-row">
+                  <div className="min-w-0 flex-1">
+                    <strong>{routine.name}</strong>
+                    <small>{formatArchivedApprox(routine.archived_at)}</small>
+                  </div>
+                  <GameButton
+                    variant="secondary"
+                    size="sm"
+                    disabled={restoringId === routine.id}
+                    onClick={() => void handleRestore(routine.id)}
+                  >
+                    {restoringId === routine.id ? 'Restaurando…' : 'Restaurar'}
+                  </GameButton>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-4">
+            <GameButton variant="secondary" className="w-full" onClick={() => setArchivedOpen(false)}>
+              Fechar
+            </GameButton>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

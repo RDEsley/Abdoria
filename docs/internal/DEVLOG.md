@@ -6,6 +6,19 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ---
 
+## 2026-09-04
+
+### Rotinas 2.0, Missões, notificações e Treino
+
+- Criar rotina: wizard 3 etapas (montar → agenda opcional → revisão + frase de sucesso). Editar: abas Rotina/Agenda sem celebração.
+- Rotinas arquivadas: listagem sob demanda + restore (`GET /routines?archived=1`, `POST /routines/:id/restore`). Sem hard delete.
+- `/atividades`: aba volta para `Hoje` ao sair da página (`usePageTab`); `?tab=insights` alias de Missões.
+- Missões personalizadas determinísticas (`userId + periodKey`, SP): 3 diárias / 2 semanais / 1 mensal (`MYYYY-MM`). Pool em `shared/quests/catalog.ts`. XP fora do teto preservado. Claim chama `emitXpEarned`.
+- Notificações: `NotificationPermissionContext` + gate em lembretes; etapa no onboarding; Settings revalida no foreground.
+- Treino: “Intensidade do plano” (leve/moderado/evolyn/custom) via `ab_training_profile_v2`; UI global de esquemas de reps da Personalização avançada ocultada. Plano de Core: scroll do passo final + lesgo em loop.
+
+---
+
 ## 2026-09-03
 
 ### Atualização PWA (release vs build)
