@@ -25,7 +25,7 @@ const SCHEDULE_OPTIONS: ReadonlyArray<{ id: ActivityScheduleKind; label: string 
   { id: 'daily', label: 'Todos os dias' },
   { id: 'weekdays', label: 'Dias da semana' },
   { id: 'once', label: 'Data específica' },
-  { id: 'unscheduled', label: 'Quando quiser' },
+  { id: 'unscheduled', label: 'Quando eu quiser' },
 ];
 
 export interface RoutineEditorPayload {

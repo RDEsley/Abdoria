@@ -538,21 +538,34 @@
 .personal-notification-card {
   display: grid;
   min-width: 0;
-  grid-template-columns: 2.75rem minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.65rem;
+  gap: 0.35rem;
+  padding: 0.55rem 0.6rem;
   border: 1px solid rgb(28 25 23 / 10%);
   border-radius: 0.9rem;
   background: #fff;
 }
 
+.personal-notification-card__hit {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
 .personal-notification-card__icon {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   place-items: center;
-  border-radius: 0.8rem;
+  border-radius: 0.75rem;
   background: #f5f5f4;
   color: #57534e;
 }
@@ -602,9 +615,16 @@
 }
 
 .personal-notification-card__content small {
+  display: -webkit-box;
+  overflow: hidden;
   color: #78716c;
   font-size: 0.61rem;
   font-weight: 650;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  word-break: break-word;
 }
 
 .personal-notification-card__switch {
@@ -669,11 +689,11 @@
 
 @media (max-width: 359px) {
   .personal-notification-card {
-    grid-template-columns: 2.5rem minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
   .personal-notification-card__switch {
-    grid-column: 3 / 5;
+    grid-column: 2 / 4;
     grid-row: 2;
     justify-self: end;
   }
@@ -710,6 +730,37 @@
   text-transform: uppercase;
 }
 
+.reminder-preview__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.reminder-preview__sound-meta {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.28rem;
+  max-width: 45%;
+  min-height: 1.5rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid rgb(15 118 110 / 14%);
+  border-radius: 999px;
+  background: rgb(236 253 245 / 70%);
+  color: #0f766e;
+  font-size: 0.62rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.reminder-preview__sound-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .reminder-preview__label-hint {
   color: #a8a29e;
   font-weight: 650;
@@ -732,16 +783,19 @@
 /* Avatar Broto — sempre o ícone real da notificação (limite de plataforma:
    o SO não troca o ícone por escolha do usuário). O emblema no canto abre o
    seletor de ícone/cor usados só na lista dentro do app. */
+/* Avatar de organização — ícone centralizado na cor escolhida. */
 .reminder-preview__avatar {
   position: relative;
   display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
   padding: 0;
   border: none;
-  border-radius: 0.7rem;
+  border-radius: 0.8rem;
+  place-items: center;
   background: #0b0b0b;
-  overflow: visible;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -778,18 +832,23 @@
    vencer a regra genérica `.personal-notification-form input/textarea`
    (product-polish.css) que dá caixa branca/borda a todo input do form —
    aqui os campos precisam se misturar ao cartão da prévia. */
+/* Inputs identificáveis sem parecer texto solto. */
 .reminder-preview .reminder-preview__title-input,
 .reminder-preview .reminder-preview__message-input {
   width: 100%;
   min-height: 0;
-  padding: 0.1rem 0.2rem;
-  border: none;
-  border-radius: 0.4rem;
-  background: transparent;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgb(28 25 23 / 10%);
+  border-radius: 0.5rem;
+  background: rgb(28 25 23 / 3.5%);
   box-shadow: none;
   color: #1c1917;
   font-family: inherit;
   resize: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .reminder-preview .reminder-preview__title-input {
@@ -798,7 +857,7 @@
 }
 
 .reminder-preview .reminder-preview__message-input {
-  margin-top: 0.1rem;
+  margin-top: 0.35rem;
   color: #57534e;
   font-size: 0.72rem;
   font-weight: 600;
@@ -813,25 +872,83 @@
 
 .reminder-preview .reminder-preview__title-input:hover,
 .reminder-preview .reminder-preview__message-input:hover {
-  background: rgb(28 25 23 / 4%);
+  border-color: rgb(28 25 23 / 16%);
+  background: rgb(28 25 23 / 5%);
 }
 
 .reminder-preview .reminder-preview__title-input:focus,
 .reminder-preview .reminder-preview__message-input:focus {
-  background: rgb(28 25 23 / 5%);
-  box-shadow: 0 0 0 2px var(--reminder-accent);
+  border-color: color-mix(in srgb, var(--reminder-accent, #0f766e) 55%, transparent);
+  background: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--reminder-accent, #0f766e) 22%, transparent);
+  outline: none;
 }
 
 .reminder-preview .reminder-preview__title-input[aria-invalid='true'] {
-  box-shadow: 0 0 0 2px #be123c;
+  border-color: #be123c;
+  box-shadow: 0 0 0 2px rgb(190 18 60 / 18%);
+}
+
+.reminder-schedule-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.reminder-schedule-ctrl {
+  position: relative;
+  display: grid;
+  gap: 0.18rem;
+  min-height: 3.15rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgb(15 118 110 / 14%);
+  border-radius: 0.8rem;
+  background: #f8faf9;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reminder-schedule-ctrl__label {
+  color: #78716c;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.reminder-schedule-ctrl__value {
+  overflow: hidden;
+  color: #1c1917;
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reminder-schedule-ctrl--time {
+  cursor: pointer;
+}
+
+.reminder-schedule-ctrl__native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+}
+
+@media (max-width: 359px) {
+  .reminder-schedule-pair {
+    grid-template-columns: 1fr;
+  }
 }
 
 .reminder-preview__meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.3rem;
+  display: none;
 }
 
 .reminder-preview__freq {

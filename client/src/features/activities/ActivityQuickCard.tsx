@@ -86,7 +86,7 @@ export function ActivityQuickCard({
         </button>
         <div className="activity-quick-card__body">
           <strong>{occurrence.name}</strong>
-          <small>{occurrence.time ?? 'Quando quiser'}</small>
+          <small>{occurrence.time ?? 'Quando eu quiser'}</small>
         </div>
         {!done && (
           <button type="button" className="activity-quick-card__details" onClick={onDetails}>

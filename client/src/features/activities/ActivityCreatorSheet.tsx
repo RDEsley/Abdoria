@@ -10,7 +10,8 @@ import {
   type ActivitySchedule,
 } from '@shared/activities';
 
-const STEPS = ['Nome', 'Modelo', 'Quando', 'Lembrar'] as const;
+const STEPS = ['Nome', 'Modelo', 'Quando', 'Confirmar'] as const;
+const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const;
 const WEEKDAYS = [
   { value: 0, label: 'D' },
   { value: 1, label: 'S' },
@@ -49,6 +50,14 @@ export function ActivityCreatorSheet({
     [templateId],
   );
   const displayName = name.trim() || template?.name || 'Nova atividade';
+
+  const scheduleSummary = (() => {
+    if (flexible || days.length === 0) return 'Quando eu quiser';
+    if (days.length === 7) return 'Todos os dias';
+    return days.map((day) => WEEKDAY_LABELS[day] ?? '?').join(', ');
+  })();
+
+  const canNotify = Boolean(time) && !flexible && days.length > 0;
 
   const reset = () => {
     setStep(0);
@@ -220,7 +229,7 @@ export function ActivityCreatorSheet({
               className={`activity-template${flexible || days.length === 0 ? ' activity-template--on' : ''}`}
               onClick={chooseFlexible}
             >
-              Quando quiser
+              Quando eu quiser
             </button>
             <PickerField
               type="time"
@@ -238,15 +247,39 @@ export function ActivityCreatorSheet({
         )}
 
         {step === 3 && (
-          <label className="mt-3 flex items-center gap-2 text-sm font-bold text-stone-700">
-            <input
-              type="checkbox"
-              checked={remind}
-              onChange={(event) => setRemind(event.target.checked)}
-              disabled={!time || flexible || days.length === 0}
-            />
-            Lembrar neste horário
-          </label>
+          <div className="activity-creator-summary mt-3">
+            <p className="activity-creator-summary__title">{displayName}</p>
+            <ul className="activity-creator-summary__list">
+              <li>
+                <span>Quando</span>
+                <strong>{scheduleSummary}</strong>
+              </li>
+              <li>
+                <span>Horário</span>
+                <strong>{time || 'Sem horário fixo'}</strong>
+              </li>
+              {template ? (
+                <li>
+                  <span>Modelo</span>
+                  <strong>{template.name}</strong>
+                </li>
+              ) : null}
+            </ul>
+            <label className="mt-3 flex items-center gap-2 text-sm font-bold text-stone-700">
+              <input
+                type="checkbox"
+                checked={remind}
+                onChange={(event) => setRemind(event.target.checked)}
+                disabled={!canNotify}
+              />
+              Notificar neste horário
+            </label>
+            {!canNotify && (
+              <p className="mt-1 text-xs font-semibold text-stone-500">
+                Defina dias e horário na etapa anterior para ativar a notificação.
+              </p>
+            )}
+          </div>
         )}
 
         <div className="mt-4 flex gap-2">
