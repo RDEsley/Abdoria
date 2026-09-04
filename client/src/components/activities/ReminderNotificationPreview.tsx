@@ -2,6 +2,7 @@ import { useId, useState, type CSSProperties } from 'react';
 import { Check, ChevronLeft, Volume2 } from 'lucide-react';
 import { PERSONAL_NOTIFICATION_COLORS, PERSONAL_NOTIFICATION_ICONS } from '@shared/reminders';
 import { Capacitor } from '@capacitor/core';
+import { reminderSoundLabel, type ReminderSoundId } from '@shared/reminder-sounds';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { PickerField } from '@/components/ui/PickerField';
 import { REMINDER_ICON_COMPONENTS } from './reminder-icon-map';
@@ -33,9 +34,16 @@ const DAYS = [
   { value: 6, label: 'S' },
 ] as const;
 
+function compactSoundLabel(sound: ReminderSoundId): string {
+  if (sound === 'app_default') return 'Padrão';
+  if (sound === 'silent') return 'Silencioso';
+  if (sound === 'random') return 'Aleatório';
+  return reminderSoundLabel(sound);
+}
+
 /**
  * Prévia editável — superfície principal do editor.
- * Ícone/cor = organização interna; Broto = identidade do SO.
+ * Subtelas (ícone/cor, repetição, som) substituem a mesma área.
  */
 export function ReminderNotificationPreview({
   draft,
@@ -50,66 +58,78 @@ export function ReminderNotificationPreview({
   const accent = PERSONAL_NOTIFICATION_COLORS.find((entry) => entry.id === color)?.hex ?? '#64748b';
   const BadgeIcon = REMINDER_ICON_COMPONENTS[icon];
   const native = Capacitor.isNativePlatform();
+  const soundLabel = compactSoundLabel(sound);
 
   const frequencyLabel =
     recurrence === 'once'
       ? 'Uma vez'
       : recurrence === 'daily'
         ? 'Todos os dias'
-        : 'Dias específicos';
+        : weekdays.length > 0
+          ? `${weekdays.length} dias`
+          : 'Dias específicos';
 
   const openView = (next: EditorView) => {
     void selectionHaptic();
     setView(next);
   };
 
+  const shellStyle = { '--reminder-accent': accent } as CSSProperties;
+
   if (view === 'appearance') {
     return (
-      <div className="reminder-editor-view" style={{ '--reminder-accent': accent } as CSSProperties}>
-        <header className="reminder-editor-view__header">
-          <button type="button" className="game-icon-btn" aria-label="Voltar" onClick={() => setView('main')}>
-            <ChevronLeft size={18} aria-hidden />
-          </button>
-          <h3>Ícone e cor</h3>
-        </header>
-        <p className="reminder-editor-view__hint">Só para organizar dentro do Evolyn.</p>
-        <div className="reminder-preview__icon-grid" role="group" aria-label="Ícone" id={appearanceId}>
-          {PERSONAL_NOTIFICATION_ICONS.map((option) => {
-            const Icon = REMINDER_ICON_COMPONENTS[option.id];
-            return (
+      <div className="reminder-preview reminder-preview--surface" style={shellStyle}>
+        <div className="reminder-editor-view">
+          <header className="reminder-editor-view__header">
+            <button
+              type="button"
+              className="game-icon-btn"
+              aria-label="Voltar"
+              onClick={() => setView('main')}
+            >
+              <ChevronLeft size={18} aria-hidden />
+            </button>
+            <h3>Ícone e cor</h3>
+          </header>
+          <p className="reminder-editor-view__hint">Só para organizar dentro do Evolyn.</p>
+          <div className="reminder-preview__icon-grid" role="group" aria-label="Ícone" id={appearanceId}>
+            {PERSONAL_NOTIFICATION_ICONS.map((option) => {
+              const Icon = REMINDER_ICON_COMPONENTS[option.id];
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  title={option.label}
+                  aria-label={option.label}
+                  aria-pressed={icon === option.id}
+                  onClick={() => {
+                    void selectionHaptic();
+                    onChange({ icon: option.id });
+                  }}
+                >
+                  <Icon size={16} aria-hidden />
+                </button>
+              );
+            })}
+          </div>
+          <div className="reminder-preview__color-row" role="group" aria-label="Cor de organização">
+            {PERSONAL_NOTIFICATION_COLORS.map((option) => (
               <button
                 key={option.id}
                 type="button"
                 title={option.label}
                 aria-label={option.label}
-                aria-pressed={icon === option.id}
+                aria-pressed={color === option.id}
+                style={{ '--notification-color': option.hex } as CSSProperties}
                 onClick={() => {
                   void selectionHaptic();
-                  onChange({ icon: option.id });
+                  onChange({ color: option.id });
                 }}
               >
-                <Icon size={16} aria-hidden />
+                {color === option.id && <Check size={11} aria-hidden />}
               </button>
-            );
-          })}
-        </div>
-        <div className="reminder-preview__color-row" role="group" aria-label="Cor de organização">
-          {PERSONAL_NOTIFICATION_COLORS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              title={option.label}
-              aria-label={option.label}
-              aria-pressed={color === option.id}
-              style={{ '--notification-color': option.hex } as CSSProperties}
-              onClick={() => {
-                void selectionHaptic();
-                onChange({ color: option.id });
-              }}
-            >
-              {color === option.id && <Check size={11} aria-hidden />}
-            </button>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -117,98 +137,123 @@ export function ReminderNotificationPreview({
 
   if (view === 'repeat') {
     return (
-      <div className="reminder-editor-view">
-        <header className="reminder-editor-view__header">
-          <button type="button" className="game-icon-btn" aria-label="Voltar" onClick={() => setView('main')}>
-            <ChevronLeft size={18} aria-hidden />
-          </button>
-          <h3>Repetição</h3>
-        </header>
-        <div className="reminder-preview__repeat reminder-preview__repeat--panel">
-          {(
-            [
-              ['daily', 'Todos os dias'],
-              ['weekdays', 'Dias específicos'],
-              ['once', 'Uma vez'],
-            ] as const
-          ).map(([id, label]) => (
+      <div className="reminder-preview reminder-preview--surface" style={shellStyle}>
+        <div className="reminder-editor-view">
+          <header className="reminder-editor-view__header">
             <button
-              key={id}
               type="button"
-              aria-pressed={recurrence === id}
-              onClick={() => {
-                void selectionHaptic();
-                onChange({ recurrence: id as RecurrenceDraft });
-              }}
+              className="game-icon-btn"
+              aria-label="Voltar"
+              onClick={() => setView('main')}
             >
-              {label}
+              <ChevronLeft size={18} aria-hidden />
             </button>
-          ))}
-        </div>
-        {recurrence === 'weekdays' && (
-          <div className="personal-notification-form__days">
-            {DAYS.map(({ value, label }) => (
+            <h3>Repetição</h3>
+          </header>
+          <div className="reminder-preview__repeat reminder-preview__repeat--panel">
+            {(
+              [
+                ['daily', 'Todos os dias'],
+                ['weekdays', 'Dias específicos'],
+                ['once', 'Uma vez'],
+              ] as const
+            ).map(([id, label]) => (
               <button
-                key={value}
+                key={id}
                 type="button"
-                aria-pressed={weekdays.includes(value)}
+                aria-pressed={recurrence === id}
                 onClick={() => {
                   void selectionHaptic();
-                  onChange({
-                    weekdays: weekdays.includes(value)
-                      ? weekdays.filter((day) => day !== value)
-                      : [...weekdays, value].sort(),
-                  });
+                  onChange({ recurrence: id as RecurrenceDraft });
                 }}
               >
                 {label}
               </button>
             ))}
           </div>
-        )}
-        {recurrence === 'once' && (
-          <PickerField
-            type="date"
-            label="Data"
-            emptyLabel="Selecionar data"
-            value={onceDate}
-            onChange={(event) => onChange({ onceDate: event.target.value })}
-          />
-        )}
+          {recurrence === 'weekdays' && (
+            <div className="personal-notification-form__days">
+              {DAYS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={weekdays.includes(value)}
+                  onClick={() => {
+                    void selectionHaptic();
+                    onChange({
+                      weekdays: weekdays.includes(value)
+                        ? weekdays.filter((day) => day !== value)
+                        : [...weekdays, value].sort(),
+                    });
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {recurrence === 'once' && (
+            <PickerField
+              type="date"
+              label="Data"
+              emptyLabel="Selecionar data"
+              value={onceDate}
+              onChange={(event) => onChange({ onceDate: event.target.value })}
+            />
+          )}
+        </div>
       </div>
     );
   }
 
   if (view === 'sound') {
     return (
-      <div className="reminder-editor-view">
-        <header className="reminder-editor-view__header">
-          <button type="button" className="game-icon-btn" aria-label="Voltar" onClick={() => setView('main')}>
-            <ChevronLeft size={18} aria-hidden />
-          </button>
-          <h3>Som</h3>
-        </header>
-        {!native && (
-          <p className="reminder-editor-view__hint">
-            No navegador, o som da notificação pode ser controlado pelo sistema. Sons personalizados
-            ficam disponíveis no app instalado.
-          </p>
-        )}
-        <ReminderSoundPicker
-          value={sound}
-          unlockedPacks={unlockedPacks}
-          onChange={(next) => onChange({ sound: next })}
-          onClose={() => setView('main')}
-        />
+      <div className="reminder-preview reminder-preview--surface" style={shellStyle}>
+        <div className="reminder-editor-view reminder-editor-view--sound">
+          <header className="reminder-editor-view__header">
+            <button
+              type="button"
+              className="game-icon-btn"
+              aria-label="Voltar sem alterar o som"
+              onClick={() => setView('main')}
+            >
+              <ChevronLeft size={18} aria-hidden />
+            </button>
+            <h3>Som</h3>
+          </header>
+          {!native && (
+            <p className="reminder-editor-view__hint">
+              No navegador, o som da notificação pode ser controlado pelo sistema. Sons
+              personalizados ficam disponíveis no app instalado.
+            </p>
+          )}
+          <ReminderSoundPicker
+            value={sound}
+            unlockedPacks={unlockedPacks}
+            onChange={(next) => onChange({ sound: next })}
+            onClose={() => setView('main')}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="reminder-preview reminder-preview--surface" style={{ '--reminder-accent': accent } as CSSProperties}>
-      <p className="reminder-preview__label">
-        Prévia <span className="reminder-preview__label-hint">· toque para editar</span>
-      </p>
+    <div className="reminder-preview reminder-preview--surface" style={shellStyle}>
+      <div className="reminder-preview__label-row">
+        <p className="reminder-preview__label">
+          Prévia <span className="reminder-preview__label-hint">· toque para editar</span>
+        </p>
+        <button
+          type="button"
+          className="reminder-preview__sound-meta"
+          onClick={() => openView('sound')}
+          aria-label={`Som: ${soundLabel}. Alterar som`}
+        >
+          <Volume2 size={12} aria-hidden />
+          <span>{soundLabel}</span>
+        </button>
+      </div>
 
       <div className="reminder-preview__body">
         <button
@@ -217,7 +262,7 @@ export function ReminderNotificationPreview({
           aria-label="Escolher ícone e cor de organização"
           onClick={() => openView('appearance')}
         >
-          <BadgeIcon size={20} aria-hidden />
+          <BadgeIcon size={18} aria-hidden />
         </button>
 
         <div className="reminder-preview__copy">
@@ -227,7 +272,7 @@ export function ReminderNotificationPreview({
               className="reminder-preview__title-input"
               value={title}
               maxLength={60}
-              placeholder="Seu lembrete"
+              placeholder="Título do lembrete"
               aria-label="Título do lembrete"
               aria-invalid={titleInvalid || undefined}
               aria-describedby={errorId}
@@ -236,10 +281,10 @@ export function ReminderNotificationPreview({
             <button
               type="button"
               className={`reminder-preview__sound-btn${sound !== 'app_default' ? ' is-custom' : ''}`}
-              aria-label="Som do lembrete"
+              aria-label={`Som atual: ${soundLabel}. Escolher som`}
               onClick={() => openView('sound')}
             >
-              <Volume2 size={16} aria-hidden />
+              <Volume2 size={15} aria-hidden />
             </button>
           </div>
           <textarea
@@ -247,23 +292,33 @@ export function ReminderNotificationPreview({
             value={message}
             maxLength={160}
             rows={2}
-            placeholder="Uma mensagem curta aparece aqui."
+            placeholder="Mensagem (opcional)"
             aria-label="Mensagem do lembrete (opcional)"
             onChange={(event) => onChange({ message: event.target.value })}
           />
-          <div className="reminder-preview__meta-row">
-            <button type="button" className="reminder-preview__freq" onClick={() => openView('repeat')}>
-              {frequencyLabel}
-            </button>
-            <PickerField
-              type="time"
-              label=""
-              emptyLabel="Horário"
-              value={times[0] ?? ''}
-              onChange={(event) => onChange({ times: [event.target.value, ...times.slice(1)] })}
-            />
-          </div>
         </div>
+      </div>
+
+      <div className="reminder-schedule-pair" role="group" aria-label="Repetição e horário">
+        <button
+          type="button"
+          className="reminder-schedule-ctrl"
+          onClick={() => openView('repeat')}
+        >
+          <span className="reminder-schedule-ctrl__label">Repetição</span>
+          <strong className="reminder-schedule-ctrl__value">{frequencyLabel}</strong>
+        </button>
+        <label className="reminder-schedule-ctrl reminder-schedule-ctrl--time">
+          <span className="reminder-schedule-ctrl__label">Horário</span>
+          <strong className="reminder-schedule-ctrl__value">{times[0] || '—'}</strong>
+          <input
+            type="time"
+            className="reminder-schedule-ctrl__native"
+            value={times[0] ?? ''}
+            aria-label="Horário principal"
+            onChange={(event) => onChange({ times: [event.target.value, ...times.slice(1)] })}
+          />
+        </label>
       </div>
     </div>
   );

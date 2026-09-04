@@ -6,6 +6,7 @@ import {
   isReminderDueInTimeZone,
   normalizePersonalizedReminder,
   normalizePersonalizedReminders,
+  summarizePersonalNotificationSchedule,
   type PersonalizedReminder,
 } from '../../shared/reminders.js';
 
@@ -204,5 +205,23 @@ describe('derivedReminderSource', () => {
       id: 'rot-1',
     });
     expect(derivedReminderSource('routine-item:rot-1:act-1:07:00')).toBeNull();
+  });
+});
+
+describe('resumo compacto de agenda na lista', () => {
+  it('limita horários a 2 e mostra +N', () => {
+    const many: PersonalizedReminder = {
+      ...recurring,
+      schedule: {
+        kind: 'recurring',
+        weekdays: [0, 1, 2, 3, 4, 5, 6],
+        times: ['03:00', '07:00', '12:00', '18:00', '22:00'],
+      },
+    };
+    expect(summarizePersonalNotificationSchedule(many)).toBe('Todos os dias · 03:00, 07:00 +3');
+  });
+
+  it('mostra dias curtos sem listar todos os horários', () => {
+    expect(summarizePersonalNotificationSchedule(recurring)).toBe('Seg, Qua, Sex · 08:00, 16:00');
   });
 });

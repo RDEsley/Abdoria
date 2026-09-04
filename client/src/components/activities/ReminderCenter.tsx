@@ -7,7 +7,7 @@ import { selectionHaptic } from '@/lib/platform/native-runtime';
 import { showGameToast } from '@/lib/game-toast';
 import {
   PERSONAL_NOTIFICATION_VERSION,
-  describePersonalNotificationSchedule,
+  summarizePersonalNotificationSchedule,
   normalizePersonalizedReminders,
   normalizeReminderTimes,
   normalizeReminderWeekdays,
@@ -325,13 +325,20 @@ export function ReminderCenter() {
             key={reminder.id}
             className={`personal-notification-card personal-notification-card--${reminder.color}`}
           >
-            <span className="personal-notification-card__icon">
-              <ReminderIcon icon={reminder.icon} />
-            </span>
-            <div className="personal-notification-card__content">
-              <strong>{reminder.title}</strong>
-              <small>{describePersonalNotificationSchedule(reminder)}</small>
-            </div>
+            <button
+              type="button"
+              className="personal-notification-card__hit"
+              onClick={() => openEdit(reminder)}
+              aria-label={`Abrir ${reminder.title}`}
+            >
+              <span className="personal-notification-card__icon" aria-hidden>
+                <ReminderIcon icon={reminder.icon} />
+              </span>
+              <span className="personal-notification-card__content">
+                <strong>{reminder.title}</strong>
+                <small>{summarizePersonalNotificationSchedule(reminder)}</small>
+              </span>
+            </button>
             <button
               type="button"
               role="switch"

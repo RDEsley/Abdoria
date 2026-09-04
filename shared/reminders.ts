@@ -595,6 +595,16 @@ export function deriveActivityReminders(
   return derived;
 }
 
+const WEEKDAY_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const;
+
+function formatTimesCompact(times: string[]): string {
+  if (times.length === 0) return '—';
+  const shown = times.slice(0, 2).join(', ');
+  if (times.length <= 2) return shown;
+  return `${shown} +${times.length - 2}`;
+}
+
+/** Descrição completa (diagnóstico / usos que aceitam texto longo). */
 export function describePersonalNotificationSchedule(reminder: PersonalizedReminder): string {
   if (reminder.schedule.kind === 'once') {
     return new Date(reminder.schedule.at).toLocaleString('pt-BR', {
@@ -607,4 +617,24 @@ export function describePersonalNotificationSchedule(reminder: PersonalizedRemin
   const times = reminder.schedule.times.join(', ');
   if (reminder.schedule.weekdays.length === 7) return `Todos os dias · ${times}`;
   return `${reminder.schedule.weekdays.length} dias/semana · ${times}`;
+}
+
+/**
+ * Resumo estável para cards da lista: no máximo 2 horários + `+N`.
+ * Não altera dados — só apresentação.
+ */
+export function summarizePersonalNotificationSchedule(reminder: PersonalizedReminder): string {
+  if (reminder.schedule.kind === 'once') {
+    return new Date(reminder.schedule.at).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  const dayPart =
+    reminder.schedule.weekdays.length === 7
+      ? 'Todos os dias'
+      : reminder.schedule.weekdays.map((day) => WEEKDAY_SHORT[day] ?? '?').join(', ');
+  return `${dayPart} · ${formatTimesCompact(reminder.schedule.times)}`;
 }

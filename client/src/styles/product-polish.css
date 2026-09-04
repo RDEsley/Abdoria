@@ -1230,7 +1230,7 @@ body {
 
 @media (max-width: 720px) {
   .personal-notification-card {
-    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
   }
 
   .game-player-hud > .flex {
@@ -1246,11 +1246,11 @@ body {
 
 @media (max-width: 360px) {
   .personal-notification-card {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 
   .personal-notification-card__switch {
-    grid-column: 3 / span 2;
+    grid-column: 2 / span 2;
     justify-self: end;
   }
 
@@ -1399,6 +1399,54 @@ body {
   box-shadow: 0 0 0 2px rgb(16 185 129 / 14%);
 }
 
+.activity-creator-summary {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgb(15 118 110 / 12%);
+  border-radius: 0.9rem;
+  background: #f8faf9;
+}
+
+.activity-creator-summary__title {
+  margin: 0;
+  color: #17332c;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.activity-creator-summary__list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-creator-summary__list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.activity-creator-summary__list span {
+  color: #78716c;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.activity-creator-summary__list strong {
+  overflow: hidden;
+  color: #1c1917;
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .route-fallback {
   height: 3px;
   background: linear-gradient(90deg, transparent, #10b981, transparent);
@@ -1421,24 +1469,32 @@ body {
 .reminder-preview--surface .reminder-preview__body {
   display: grid;
   grid-template-columns: 2.75rem minmax(0, 1fr);
-  gap: 0.7rem;
+  gap: 0.65rem;
   align-items: start;
 }
 
 .reminder-preview__title-row {
   display: flex;
-  align-items: flex-start;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reminder-preview__title-row .reminder-preview__title-input {
+  flex: 1;
+  min-width: 0;
 }
 
 .reminder-preview__sound-btn {
   display: grid;
+  flex-shrink: 0;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgb(15 118 110 / 16%);
   border-radius: 0.7rem;
   color: #0f766e;
-  background: rgb(16 185 129 / 10%);
+  background: #ecfdf5;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 70%) inset;
 }
 
 .reminder-preview__sound-btn.is-custom {
@@ -1454,8 +1510,12 @@ body {
 .reminder-editor-view {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
   min-height: 11rem;
+}
+
+.reminder-editor-view--sound {
+  min-height: 14rem;
 }
 
 .reminder-editor-view__header {
@@ -1479,13 +1539,12 @@ body {
   line-height: 1.4;
 }
 
-.reminder-preview__repeat,
-.reminder-sound-picker {
+.reminder-preview__repeat {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   margin-top: 0.15rem;
-  max-height: min(46dvh, 22rem);
+  max-height: min(42dvh, 18rem);
   overflow-y: auto;
 }
 
@@ -1504,6 +1563,24 @@ body {
   background: #ecfdf5;
 }
 
+.reminder-sound-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.reminder-sound-picker__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: min(38dvh, 16rem);
+  overflow-y: auto;
+  padding-right: 0.1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
 .reminder-sound-picker__row {
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
@@ -1519,6 +1596,22 @@ body {
 
 .reminder-sound-picker__row.is-locked {
   opacity: 0.45;
+}
+
+.reminder-sound-picker__confirm {
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: #059669;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.reminder-sound-picker__confirm:active {
+  background: #047857;
 }
 
 .reminder-sound-picker__icon {

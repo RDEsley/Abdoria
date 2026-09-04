@@ -61,7 +61,7 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
           : `${doneCount} de ${total} registradas hoje.`}
       </p>
       {renderList('Agora', groups.now)}
-      {renderList('Quando quiser', groups.anytime)}
+      {renderList('Quando eu quiser', groups.anytime)}
       {renderList('Mais tarde', groups.later)}
       {renderList('Concluídas', groups.done)}
 
