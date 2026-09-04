@@ -107,8 +107,49 @@ Não deixe logs de debug, código comentado ou TODOs já resolvidos.
 - **Build ≠ Release**: `build` muda a cada deploy/commit (diagnóstico/cache); `version` (release) muda só quando a versão é disponibilizada aos usuários.
 - Diferença só de `build` **não** mostra aviso de atualização; só `version` remota mais nova gera “Nova versão disponível”.
 - Não incrementar `package.json` version automaticamente em todo commit.
+- Commits/deploys rotineiros **não** criam tag nem GitHub Release.
+- Uma entrega grande pode **recomendar** bump de versão; não publicar release silenciosamente.
+- Quando o usuário pedir explicitamente para publicar/enviar uma nova versão aos usuários, ou quando a tarefa já incluir bump intencional de `package.json`, concluir também o ciclo formal de release.
+- Release só após merge em `main` e checks verdes (Quality gates / Vercel / Supabase quando aplicável).
+- Nunca criar tag apontando para branch temporária; nunca mover/reutilizar tag publicada.
+- `package.json` (root) permanece a fonte da versão pública do app (`0.x.y`).
+- Tags oficiais Evolyn usam o namespace **`evolyn-v<version>`** (ex.: `evolyn-v0.2.1`). Tags históricas `v*` (Abdoria/legado) são imutáveis — não apagar, mover ou reutilizar.
+- Prerelease futura: `evolyn-v0.4.0-rc.1` + marcar como prerelease no GitHub.
 - PWA atualiza via reload controlado (`AppUpdateProvider`); lojas nativas no futuro usam strategy `store`.
 - Nativos: mesma release version em `versionName` / `CFBundleShortVersionString`; `versionCode` / build number só cresce.
+
+### SemVer
+
+- **PATCH**: bug fixes, polish e ajustes compatíveis.
+- **MINOR**: feature relevante nova compatível.
+- **MAJOR**: mudança pública/arquitetural incompatível ou marco estável **decidido explicitamente** pelo mantenedor — nunca decidir MAJOR automaticamente.
+
+### Fluxo oficial de release
+
+1. Decidir/bump SemVer em `package.json`.
+2. Implementar e validar (`lint` / `test` / `build`; `cap:sync` se nativo).
+3. Merge em `main`.
+4. Confirmar Quality gates / Vercel / Supabase quando aplicável.
+5. Annotated tag `evolyn-v<package-version>` no commit final da `main`.
+6. Push da tag.
+7. GitHub Release na mesma tag; título `Evolyn <version>`; notes curtas desde o último release Evolyn.
+
+## Higiene Git
+
+Após uma entrega mergeada:
+
+- sincronizar `main`;
+- remover branch temporária local;
+- remover branch remota temporária se ainda existir;
+- remover worktrees temporários de revisão/verificação;
+- `git worktree prune` quando necessário;
+- `git fetch --prune`.
+
+Branches `agent/*`, `verify/*`, `feat/*`, `fix/*`, `chore/*`, `release/*` criadas por agentes são **temporárias por padrão**.
+
+Não remover branch não mergeada ou worktree com mudanças sem verificar. Não deixar `verify/pr-*` acumulando após PR encerrada.
+
+Fora de uma entrega ativa, o estado local esperado é apenas `main`.
 
 ## Mobile-first
 
@@ -162,6 +203,7 @@ Não adicionar trailers ou autoria automática de ferramentas/IA.
 - Commits pequenos, Conventional Commits, staging explícito.
 - Contribuições externas: branch + PR (ver `CONTRIBUTING.md`).
 - Mantenedor/agentes: preferir uma branch temporária por entrega quando `main` exigir PR; validar antes de merge.
+- Após merge: higiene Git (ver seção Higiene Git).
 
 ## Gatilho: "Manda pro github"
 
