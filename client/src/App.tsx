@@ -10,6 +10,8 @@ import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/ProtectedRout
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { PwaInstallProvider } from '@/context/PwaInstallContext';
+import { AppUpdateProvider } from '@/context/AppUpdateContext';
+import { AppUpdateBanner } from '@/components/updates/AppUpdateBanner';
 
 const AuthScenePage = lazy(() =>
   import('@/pages/AuthScenePage').then((m) => ({ default: m.AuthScenePage })),
@@ -90,6 +92,7 @@ function MotionPreferenceGate({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <PwaInstallProvider>
+      <AppUpdateProvider>
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
@@ -97,6 +100,7 @@ export default function App() {
           <AppBootGate>
             <MotionPreferenceGate>
               <AchievementProvider>
+                <AppUpdateBanner />
                 <Routes>
                   <Route element={<PublicOnlyRoute />}>
                     <Route
@@ -278,6 +282,7 @@ export default function App() {
           </BootReadinessProvider>
         </AuthProvider>
       </BrowserRouter>
+      </AppUpdateProvider>
     </PwaInstallProvider>
   );
 }

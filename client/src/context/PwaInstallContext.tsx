@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { PwaInstallContext, type PwaInstallResult } from '@/context/pwa-install-context';
+import { isStandaloneDisplay } from '@/lib/platform/display-mode';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
-function isStandalone() {
-  if (typeof window === 'undefined') return false;
-  const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    navigatorWithStandalone.standalone === true
-  );
-}
-
 export function PwaInstallProvider({ children }: { children: ReactNode }) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(isStandalone);
+  const [installed, setInstalled] = useState(isStandaloneDisplay);
 
   useEffect(() => {
     const handlePrompt = (event: Event) => {
@@ -37,7 +29,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const install = useCallback(async (): Promise<PwaInstallResult> => {
-    if (installed || isStandalone()) return 'already-installed';
+    if (installed || isStandaloneDisplay()) return 'already-installed';
     if (installPrompt) {
       await installPrompt.prompt();
       const choice = await installPrompt.userChoice;

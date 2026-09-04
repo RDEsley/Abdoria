@@ -102,6 +102,14 @@ Não faça grandes refatorações apenas por preferência estética. Remova cód
 
 Não deixe logs de debug, código comentado ou TODOs já resolvidos.
 
+## Versionamento e releases
+
+- **Build ≠ Release**: `build` muda a cada deploy/commit (diagnóstico/cache); `version` (release) muda só quando a versão é disponibilizada aos usuários.
+- Diferença só de `build` **não** mostra aviso de atualização; só `version` remota mais nova gera “Nova versão disponível”.
+- Não incrementar `package.json` version automaticamente em todo commit.
+- PWA atualiza via reload controlado (`AppUpdateProvider`); lojas nativas no futuro usam strategy `store`.
+- Nativos: mesma release version em `versionName` / `CFBundleShortVersionString`; `versionCode` / build number só cresce.
+
 ## Mobile-first
 
 A experiência principal do Evolyn é mobile.

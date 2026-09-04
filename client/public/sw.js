@@ -1,3 +1,10 @@
+/** Ativação sob demanda — só quando o app pede SKIP_WAITING (Atualizar agora). */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('push', (event) => {
   let payload = {
     title: 'Evolyn',

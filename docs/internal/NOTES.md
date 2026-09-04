@@ -43,6 +43,25 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Ícones instaláveis vêm de `docs/internal/logos-icons/app-icon.png`, propagados por `scripts/update-brand-assets.ps1` para `client/public/brand/app-icon-*`.
 - Imagem de notificação do SO: `docs/internal/logos-icons/broto-assistente.png` → `client/public/media/notifications/icons/evolyn-{96,192}.png` (mesmo script de brand).
 
+## Atualização do app (PWA)
+
+**Build ≠ Release.** Só uma `version` semântica mais nova gera UI de “nova versão”. Mudança apenas de `build_id` nunca deve mostrar atualização ao usuário.
+
+- **Fonte da release**: `package.json` (root) → campo `version`.
+- **Build id**: `scripts/generate-app-version.mjs` usa `VERCEL_GIT_COMMIT_SHA` (ou `GITHUB_SHA` / git HEAD / fallback `local-*`). Roda antes do build do client.
+- **Artefatos**:
+  - `client/public/version.json` — publicado e consultado em runtime (`Cache-Control: no-store` no `vercel.json`);
+  - `client/src/generated/app-release.ts` — embutido no bundle (`getRunningRelease()`).
+- **Comparação**: bundle sabe “eu sou version A / build X”; `/version.json` informa latest. UI se `compareSemver(latest.version, running.version) > 0`.
+- **Checagens**: pós-boot (`evolyn-booted`), `visibilitychange` → visible, intervalo ~45 min. Sem polling por navegação.
+- **Dismiss**: `localStorage` `evolyn:update-dismissed` `{ version, at }` com TTL ~12h; nova release volta a lembrar.
+- **Atualizar agora**: `registration.update()` + `SKIP_WAITING` no SW (se waiting) → `controllerchange` → um `reload`. Preserva sessão/localStorage. Não auto-reload em Player/rotina/modais/formulários.
+- **SW**: Web Push (`push` / `notificationclick`) intacto; `message` só ativa `skipWaiting` sob pedido do usuário.
+- **Sobre**: mostra versão + build curto + “Verificar atualizações”. Mesma release com build diferente → “versão mais recente” (não expor commit ao usuário comum). Offline no check manual → “Não foi possível verificar agora.”
+- **Futuro**: `minimum_supported_version` / `update_policy: mandatory` e strategy `store` (Play/App Store) estão modelados; hoje tudo é `optional` + `web_reload`. Não inventar URLs de loja.
+- **Nativos (política)**: release `0.x.y` alinhada ao produto; Android `versionName` / iOS `CFBundleShortVersionString` = mesma release; `versionCode` / `CFBundleVersion` só crescem. Sem automação perigosa nesta entrega.
+- **Teste local**: alterar temporariamente `version` embutida vs `version.json`, ou subir release nova e reabrir PWA antiga; confirmar que mesmo `0.1.0` com builds diferentes não notifica.
+
 ## Notificações
 
 - **Inbox (sino)**: tabela `notifications` + API `/api/notifications` — eventos do app.

@@ -8,6 +8,11 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-03
 
+### Atualização PWA (release vs build)
+
+- `AppUpdateProvider` + `version.json` + build embutido. UI de update só quando `version` remota > local. Build id só diagnóstico.
+- Detalhes em `NOTES.md` → “Atualização do app (PWA)”.
+
 ### Experiência de entrada (Welcome / Login / Cadastro)
 
 - Welcome full-screen com símbolo Evolyn animado; login e cadastro em sheet sobre a mesma cena (`/welcome`, `/login`, `/register`).
