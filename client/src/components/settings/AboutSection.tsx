@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import {
   DiscordIcon,
   FacebookIcon,
@@ -7,9 +7,10 @@ import {
   InstagramIcon,
   YoutubeIcon,
 } from '@/components/icons/BrandIcons';
-import { GameButton } from '@/components/ui/GameButton';
+import { SettingsRow } from '@/components/settings/SettingsRow';
 import { useAppUpdate } from '@/context/AppUpdateContext';
 import { shortBuildId } from '@shared/app-release';
+import { updateCheckButtonLabel } from '@shared/settings/copy';
 import { showGameToast } from '@/lib/game-toast';
 
 const FATEEIGHT_LINKS = [
@@ -31,19 +32,6 @@ const FATEEIGHT_LINKS = [
   {
     label: 'GitHub',
     href: 'https://github.com/fateeighttech',
-    Icon: GithubIcon,
-  },
-] as const;
-
-const COMMUNITY_LINKS = [
-  {
-    label: 'Discord',
-    href: 'https://discord.gg/jPFMb3tp3W',
-    Icon: DiscordIcon,
-  },
-  {
-    label: 'Repositório',
-    href: 'https://github.com/RDEsley/Evolyn-Core-Quest',
     Icon: GithubIcon,
   },
 ] as const;
@@ -76,46 +64,56 @@ export function AboutSection() {
   };
 
   return (
-    <section className="settings-section">
-      <p className="settings-section__copy">Desenvolvido pela Fate Eight.</p>
-
-      <div className="about-version">
+    <div className="settings-about">
+      <div className="settings-about__hero">
         <div>
-          <strong>Versão {running.version}</strong>
-          <span>Build {shortBuildId(running.build)}</span>
+          <strong className="settings-about__name">Evolyn</strong>
+          <p className="settings-about__meta">
+            Versão {running.version}
+            <span aria-hidden>·</span>
+            Build {shortBuildId(running.build)}
+          </p>
         </div>
-        <GameButton
-          variant="secondary"
+        <button
+          type="button"
+          className="settings-about__check"
           disabled={checking}
           onClick={() => void onCheck()}
-          className="shrink-0"
         >
           <RefreshCw size={14} aria-hidden className={checking ? 'animate-spin' : undefined} />
-          {checking ? 'Verificando…' : 'Atualizar'}
-        </GameButton>
+          {updateCheckButtonLabel(checking)}
+        </button>
       </div>
 
-      <p className="settings-section__label">Redes</p>
-      <div className="about-links">
+      <SettingsRow
+        icon={<DiscordIcon size={16} />}
+        title="Discord"
+        chevron
+        href="https://discord.gg/jPFMb3tp3W"
+      />
+      <SettingsRow
+        icon={<GithubIcon size={16} />}
+        title="Repositório GitHub"
+        chevron
+        href="https://github.com/RDEsley/Evolyn-Core-Quest"
+      />
+
+      <p className="settings-about__credit">Desenvolvido pela Fate Eight</p>
+      <div className="settings-about__socials" role="list">
         {FATEEIGHT_LINKS.map(({ label, href, Icon }) => (
-          <a key={href} href={href} target="_blank" rel="noreferrer" className="about-links__item">
+          <a
+            key={href}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="settings-about__social"
+            aria-label={label}
+            role="listitem"
+          >
             <Icon size={16} aria-hidden />
-            <span>{label}</span>
-            <ExternalLink size={12} aria-hidden />
           </a>
         ))}
       </div>
-
-      <p className="settings-section__label">Comunidade</p>
-      <div className="about-links">
-        {COMMUNITY_LINKS.map(({ label, href, Icon }) => (
-          <a key={href} href={href} target="_blank" rel="noreferrer" className="about-links__item">
-            <Icon size={16} aria-hidden />
-            <span>{label}</span>
-            <ExternalLink size={12} aria-hidden />
-          </a>
-        ))}
-      </div>
-    </section>
+    </div>
   );
 }

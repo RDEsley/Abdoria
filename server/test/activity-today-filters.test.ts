@@ -2,10 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   backlogOccurrenceForActivity,
   filterTodayTabOccurrences,
+  groupOccurrences,
+  insertActivityBySortOrder,
   matchesActivityCategoryFilter,
-} from '../../shared/activities/today-list.js';
-import { plannedOccurrencesForDay } from '../../shared/activities/occurrences.js';
-import type { ActivityRecord } from '../../shared/activities/types.js';
+  plannedOccurrencesForDay,
+  resolveActivityCompletionFeedback,
+  type ActivityOccurrence,
+  type ActivityRecord,
+} from '../../shared/activities/index.js';
+import { foldText } from '../../shared/utils/text-fold.js';
 import { nextStickyUntil, shouldAcceptToast } from '../../shared/ui/toast-sticky.js';
 
 function activity(partial: Partial<ActivityRecord> & Pick<ActivityRecord, 'id' | 'name'>): ActivityRecord {
@@ -26,6 +31,21 @@ function activity(partial: Partial<ActivityRecord> & Pick<ActivityRecord, 'id' |
     legacy_id: null,
     created_at: '2026-09-01T00:00:00.000Z',
     updated_at: '2026-09-01T00:00:00.000Z',
+    ...partial,
+  };
+}
+
+function occ(
+  partial: Partial<ActivityOccurrence> & Pick<ActivityOccurrence, 'activity_id' | 'name'>,
+): ActivityOccurrence {
+  return {
+    icon: 'star',
+    color: 'emerald',
+    category: 'mente',
+    time: null,
+    period: null,
+    occurrence_key: 'k',
+    status: 'pending',
     ...partial,
   };
 }
@@ -162,6 +182,103 @@ describe('TodayTab filters', () => {
     expect(todas.planned).toHaveLength(1);
     expect(todas.backlog).toHaveLength(0);
   });
+
+  it('busca ignora acentos', () => {
+    const items = [
+      activity({
+        id: '1',
+        name: 'Meditação',
+        schedule: { kind: 'daily', weekdays: [], times: [], period: null, once_at: null },
+      }),
+      activity({
+        id: '2',
+        name: 'Organização',
+        schedule: { kind: 'daily', weekdays: [], times: [], period: null, once_at: null },
+      }),
+      activity({
+        id: '3',
+        name: 'Japonês',
+        schedule: { kind: 'daily', weekdays: [], times: [], period: null, once_at: null },
+      }),
+    ];
+    const planned = plannedOccurrencesForDay(items, today, []);
+    for (const [query, id] of [
+      ['meditacao', '1'],
+      ['organizacao', '2'],
+      ['japones', '3'],
+    ] as const) {
+      const result = filterTodayTabOccurrences({
+        plannedToday: planned,
+        activities: items,
+        dayKey: today,
+        logs: [],
+        filter: 'todas',
+        query,
+      });
+      expect(result.planned.map((i) => i.activity_id)).toEqual([id]);
+    }
+    expect(foldText('Meditação')).toContain('meditacao');
+  });
+});
+
+describe('groupOccurrences timezone SP', () => {
+  const morning = occ({ activity_id: 'a', name: 'A', time: '08:00' });
+  const evening = occ({ activity_id: 'b', name: 'B', time: '18:30' });
+  const late = occ({ activity_id: 'c', name: 'C', time: '23:30' });
+
+  it('08:00 — 08:00 está em Agora; 18:30 e 23:30 em Mais tarde', () => {
+    const groups = groupOccurrences([morning, evening, late], 8 * 60);
+    expect(groups.now.map((i) => i.activity_id)).toEqual(['a']);
+    expect(groups.later.map((i) => i.activity_id)).toEqual(['b', 'c']);
+  });
+
+  it('18:30 — 08:00 e 18:30 em Agora; 23:30 em Mais tarde', () => {
+    const groups = groupOccurrences([morning, evening, late], 18 * 60 + 30);
+    expect(groups.now.map((i) => i.activity_id)).toEqual(['a', 'b']);
+    expect(groups.later.map((i) => i.activity_id)).toEqual(['c']);
+  });
+
+  it('23:30 — todas agendadas em Agora', () => {
+    const groups = groupOccurrences([morning, evening, late], 23 * 60 + 30);
+    expect(groups.now.map((i) => i.activity_id)).toEqual(['a', 'b', 'c']);
+    expect(groups.later).toHaveLength(0);
+  });
+
+  it('Date explícito usa minutos de America/Sao_Paulo (não do dispositivo)', () => {
+    // 2026-09-04 21:30 UTC = 18:30 em São Paulo (UTC-3).
+    const at1830Sp = new Date('2026-09-04T21:30:00.000Z');
+    const groups = groupOccurrences([morning, evening, late], at1830Sp);
+    expect(groups.now.map((i) => i.activity_id)).toEqual(['a', 'b']);
+    expect(groups.later.map((i) => i.activity_id)).toEqual(['c']);
+  });
+});
+
+describe('completion feedback ownership', () => {
+  it('Activity comum — hook emite feedback uma vez', () => {
+    const feedback = resolveActivityCompletionFeedback({ suppressHaptic: true });
+    expect(feedback.emitXpSoundToast).toBe(true);
+    expect(feedback.emitHaptic).toBe(false);
+    // Caller não emite de novo: total = 1 XP/som/toast + 1 haptic (UI).
+  });
+
+  it('Activity em rotina — silentFeedback: hook silencioso, caller emite uma vez', () => {
+    const fromHook = resolveActivityCompletionFeedback({ silentFeedback: true });
+    expect(fromHook.emitXpSoundToast).toBe(false);
+    expect(fromHook.emitHaptic).toBe(false);
+    const fromCaller = { emitXpSoundToast: true, emitHaptic: true };
+    expect(fromCaller.emitXpSoundToast).toBe(true);
+  });
+});
+
+describe('restore / undo order', () => {
+  it('reinsere por sort_order em vez do início da lista', () => {
+    const a = activity({ id: 'a', name: 'A', sort_order: 0 });
+    const b = activity({ id: 'b', name: 'B', sort_order: 1 });
+    const c = activity({ id: 'c', name: 'C', sort_order: 2 });
+    const afterArchive = [a, c];
+    const restored = insertActivityBySortOrder(afterArchive, b);
+    expect(restored.map((i) => i.id)).toEqual(['a', 'b', 'c']);
+  });
 });
 
 describe('toast sticky action policy', () => {
@@ -174,48 +291,5 @@ describe('toast sticky action policy', () => {
     expect(
       shouldAcceptToast({ hasAction: false, variant: 'error', now: 2000, stickyUntil }),
     ).toBe(true);
-  });
-});
-
-describe('archive optimistic contract', () => {
-  it('falha restaura snapshot na lista', () => {
-    const snapshot = activity({ id: 'a1', name: 'X' });
-    let list: ActivityRecord[] = [snapshot];
-    list = list.filter((item) => item.id !== 'a1');
-    expect(list).toHaveLength(0);
-    list = [snapshot, ...list];
-    expect(list.map((i) => i.id)).toEqual(['a1']);
-  });
-
-  it('undo reinsere imediatamente', () => {
-    const snapshot = activity({ id: 'a1', name: 'X', archived_at: null });
-    let list: ActivityRecord[] = [];
-    list = [{ ...snapshot, archived_at: null }, ...list];
-    expect(list).toHaveLength(1);
-  });
-});
-
-describe('creator reset policy', () => {
-  it('estado inicial do wizard é step 0 limpo', () => {
-    const initial = {
-      step: 0,
-      name: '',
-      templateId: null,
-      category: 'mente',
-      days: [] as number[],
-      time: '',
-      remind: false,
-    };
-    const afterCancelFromStep2 = { ...initial };
-    expect(afterCancelFromStep2.step).toBe(0);
-    expect(afterCancelFromStep2.name).toBe('');
-  });
-});
-
-describe('completion feedback', () => {
-  it('silentFeedback implica haptic só na UI (servidor não re-haptic)', () => {
-    const uiHaptic = true;
-    const serverHaptic = false; // silentFeedback path
-    expect(uiHaptic && !serverHaptic).toBe(true);
   });
 });

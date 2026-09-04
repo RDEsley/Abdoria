@@ -100,3 +100,5 @@ export {
   occurrenceListKey,
   type ActivityListFilter,
 } from './today-list.js';
+export { insertActivityBySortOrder } from './list-order.js';
+export { resolveActivityCompletionFeedback } from './completion-feedback.js';

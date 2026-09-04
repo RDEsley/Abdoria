@@ -3,12 +3,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
+  Bell,
   ChevronDown,
   Copy,
+  Dumbbell,
   LogOut,
   PlayCircle,
   ScrollText,
   Trash2,
+  UserRound,
   Volume2,
   Zap,
 } from 'lucide-react';
@@ -19,6 +22,8 @@ import { AbTrainingProfileWizard } from '@/components/training/AbTrainingProfile
 import { AboutSection } from '@/components/settings/AboutSection';
 import { GiftCodeSection } from '@/components/settings/GiftCodeSection';
 import { SoundPackSection } from '@/components/settings/SoundPackSection';
+import { SettingsRow, SettingsSwitch } from '@/components/settings/SettingsRow';
+import { SettingsSection } from '@/components/settings/SettingsSection';
 import { ONBOARDING_TUTORIAL_SLIDES } from '@/components/tutorial/onboarding-tutorial-slides';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
@@ -33,6 +38,11 @@ import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { ensureWebPushSubscription, removeWebPushSubscription } from '@/lib/platform/web-push';
 import { Capacitor } from '@capacitor/core';
 import { AB_INTENSITY_LABELS } from '@shared/ab-training-profile';
+import {
+  AUDIO_VOLUME_DEBOUNCE_MS,
+  notificationDeniedGuidance,
+  notificationStatusLabel,
+} from '@shared/settings/copy';
 import {
   MOEDA_XP_STEP,
   CURRENCY_NAME,
@@ -55,7 +65,6 @@ export function SettingsPage() {
   const [showTerms, setShowTerms] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
-  /** 1ª confirmação: digitar a frase. 2ª: tela final, separada, de "tem certeza mesmo". */
   const [deleteStep, setDeleteStep] = useState<'closed' | 'confirm-phrase' | 'final'>('closed');
   const [deletePhrase, setDeletePhrase] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -63,7 +72,6 @@ export function SettingsPage() {
   const [showXpRules, setShowXpRules] = useState(() => location.hash === '#regras-xp');
   const planHighlightHandled = useRef(false);
 
-  // Deep link "Ver regras de XP": expande o dropdown e rola até ele.
   useEffect(() => {
     if (location.hash !== '#regras-xp') return;
     setShowXpRules(true);
@@ -72,6 +80,7 @@ export function SettingsPage() {
     }, 260);
     return () => window.clearTimeout(timer);
   }, [location.hash]);
+
   useEffect(() => {
     if (location.hash !== '#ajustar-plano' || planHighlightHandled.current) return;
     planHighlightHandled.current = true;
@@ -80,24 +89,30 @@ export function SettingsPage() {
         behavior: 'smooth',
         block: 'center',
       });
-      showGameToast('Você chegou ao plano. Toque em Ajustar plano de treino.', {
+      showGameToast('Você chegou ao plano. Toque para ajustar.', {
         variant: 'info',
       });
     }, 280);
     return () => window.clearTimeout(timer);
   }, [location.hash]);
+
   const [som, setSom] = useState(user?.preferencias?.som_habilitado ?? true);
   const [volume, setVolume] = useState(user?.preferencias?.sfx_volume ?? 0.7);
-  const [saving, setSaving] = useState(false);
   const [hydratedUserId, setHydratedUserId] = useState<string | null>(user?.id ?? null);
+  const audioSaveGen = useRef(0);
+  const volumeTimer = useRef<number | null>(null);
+  const somRef = useRef(som);
+  const volumeRef = useRef(volume);
 
-  // Prévia instantânea: os mesmos valores globais já usados pelo Player.
+  useEffect(() => {
+    somRef.current = som;
+    volumeRef.current = volume;
+  }, [som, volume]);
+
   useEffect(() => {
     setSoundSettings(som, volume);
   }, [som, volume]);
 
-  // O provider pode terminar de carregar depois do primeiro render. Hidratamos
-  // uma vez por conta antes de comparar o formulário, evitando um falso "alterado".
   useEffect(() => {
     if (!user || hydratedUserId === user.id) return;
     setSom(user.preferencias?.som_habilitado ?? true);
@@ -105,40 +120,60 @@ export function SettingsPage() {
     setHydratedUserId(user.id);
   }, [hydratedUserId, user]);
 
-  // Barra de salvar só aparece quando algo realmente mudou em relação ao salvo.
-  const dirty = useMemo(() => {
-    if (!user || hydratedUserId !== user.id) return false;
-    const prefs = user.preferencias;
-    return som !== (prefs?.som_habilitado ?? true) || volume !== (prefs?.sfx_volume ?? 0.7);
-  }, [user, hydratedUserId, som, volume]);
-
-  const discard = () => {
-    setSom(user?.preferencias?.som_habilitado ?? true);
-    setVolume(user?.preferencias?.sfx_volume ?? 0.7);
-  };
-
-  const save = async () => {
-    setSaving(true);
+  const persistAudio = async (nextSom: boolean, nextVolume: number) => {
+    if (!user) return;
+    const gen = ++audioSaveGen.current;
     try {
       const updated = await updateMe({
         preferencias: {
-          ...user!.preferencias,
-          som_habilitado: som,
-          sfx_volume: volume,
+          ...user.preferencias,
+          som_habilitado: nextSom,
+          sfx_volume: nextVolume,
           tom_texto: 'normal',
         },
       });
+      if (gen !== audioSaveGen.current) return;
       applyUser(updated);
-      setSoundSettings(som, volume);
-      showGameToast('Configurações salvas.', { variant: 'success' });
+      setSoundSettings(nextSom, nextVolume);
     } catch (error) {
-      showGameToast(getErrorMessage(error, 'Não foi possível salvar as configurações.'), {
+      if (gen !== audioSaveGen.current) return;
+      showGameToast(getErrorMessage(error, 'Não foi possível salvar o áudio.'), {
         variant: 'error',
       });
-    } finally {
-      setSaving(false);
+      const prefs = user.preferencias;
+      setSom(prefs?.som_habilitado ?? true);
+      setVolume(prefs?.sfx_volume ?? 0.7);
     }
   };
+
+  const onSomChange = (next: boolean) => {
+    setSom(next);
+    if (volumeTimer.current != null) {
+      window.clearTimeout(volumeTimer.current);
+      volumeTimer.current = null;
+    }
+    void persistAudio(next, volumeRef.current);
+  };
+
+  const onVolumeChange = (next: number) => {
+    setVolume(next);
+    if (volumeTimer.current != null) window.clearTimeout(volumeTimer.current);
+    volumeTimer.current = window.setTimeout(() => {
+      volumeTimer.current = null;
+      void persistAudio(somRef.current, next);
+    }, AUDIO_VOLUME_DEBOUNCE_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (volumeTimer.current != null) {
+        window.clearTimeout(volumeTimer.current);
+        void persistAudio(somRef.current, volumeRef.current);
+      }
+    };
+    // flush pending volume on leave
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount only
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -169,6 +204,7 @@ export function SettingsPage() {
   const [notifPermission, setNotifPermission] = useState(
     () => (notifCtx?.permission ?? 'prompt') as 'prompt' | 'granted' | 'denied' | 'unsupported',
   );
+  const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
     if (notifCtx) {
@@ -188,8 +224,14 @@ export function SettingsPage() {
       window.removeEventListener('focus', onVisible);
     };
   }, [notifCtx, notifCtx?.permission]);
+
   const notifOptOut = user?.preferencias?.notificacoes_opt_out ?? false;
   const notifAtivas = notifPermission === 'granted' && !notifOptOut;
+  const notifStatus = notificationStatusLabel({
+    permission: notifPermission,
+    optOut: notifOptOut,
+  });
+  const deniedGuidance = notificationDeniedGuidance(isNative ? 'native' : 'web');
 
   const toggleNotifications = async () => {
     if (notifAtivas) {
@@ -208,9 +250,7 @@ export function SettingsPage() {
     }
 
     if (notifPermission === 'denied') {
-      showGameToast('Notificações bloqueadas — use “Abrir configurações” abaixo.', {
-        variant: 'info',
-      });
+      showGameToast(deniedGuidance.hint, { variant: 'info' });
       return;
     }
 
@@ -244,102 +284,104 @@ export function SettingsPage() {
     }
   };
 
+  const copyTag = async () => {
+    const text = `${user?.nome ?? ''} #${user?.tag ?? ''}`.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+      showGameToast('Tag copiada!', { variant: 'success' });
+    } catch {
+      showGameToast('Não foi possível copiar a tag.', { variant: 'error' });
+    }
+  };
+
+  const planSummary = useMemo(() => {
+    if (!user?.ab_training_profile_v2) return 'Configure intensidade, agenda e descanso.';
+    const profile = user.ab_training_profile_v2;
+    const rest = profile.rest_seconds ?? user.preferencias.descanso_padrao_seg;
+    return `${AB_INTENSITY_LABELS[profile.intensity]} · ${profile.training_days.length} dias/semana · ${rest}s`;
+  }, [user]);
+
+  const switchEnabled =
+    notifPermission === 'granted' || notifPermission === 'prompt' || notifAtivas;
+
   return (
-    <div className="settings-page flex flex-col gap-5 pb-20">
+    <div className="settings-page flex flex-col gap-4 pb-20">
       <GamePageHeader title="Configurações" />
 
-      <div className="settings-group">
-        <p className="settings-group__label">Conta</p>
-        <section className="settings-section">
-          <div className="flex items-center gap-2">
-            <span className="min-w-0 truncate text-[0.95rem] font-semibold text-stone-800">
-              {user?.nome}
-            </span>
-            <span className="settings-user-tag tabular-nums">#{user?.tag ?? '----'}</span>
+      <SettingsSection label="Conta">
+        <SettingsRow
+          icon={<UserRound size={16} />}
+          title={user?.nome ?? 'Conta'}
+          description={`#${user?.tag ?? '----'}`}
+          onClick={() => navigate('/perfil')}
+          chevron
+          trailing={
             <button
               type="button"
-              className="settings-tag-copy"
+              className="settings-inline-icon"
               aria-label="Copiar sua tag"
               title="Copiar tag"
-              onClick={() => {
-                void navigator.clipboard.writeText(`${user?.nome ?? ''} #${user?.tag ?? ''}`.trim());
-                showGameToast('Tag copiada!', { variant: 'success' });
-              }}
+              onClick={() => void copyTag()}
             >
-              <Copy size={13} aria-hidden />
+              <Copy size={14} aria-hidden />
             </button>
-          </div>
-          <p className="settings-section__copy mt-2">
-            Sua tag identifica você mesmo com nomes iguais.
-          </p>
-        </section>
-      </div>
+          }
+        />
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Notificações</p>
-        <section className="settings-section">
-          <p className="settings-section__copy">
-            Status:{' '}
-            <strong className="font-semibold text-stone-700">
-              {notifOptOut
-                ? 'Desativadas no Evolyn'
-                : notifPermission === 'granted'
-                  ? 'Ativas'
-                  : notifPermission === 'denied'
-                    ? 'Bloqueadas no dispositivo'
-                    : notifPermission === 'unsupported'
-                      ? 'Indisponíveis neste dispositivo'
-                      : 'Aguardando permissão'}
-            </strong>
-          </p>
-          <GameButton
-            variant="secondary"
-            className="mt-3 w-full"
-            aria-pressed={notifAtivas}
-            onClick={() => void toggleNotifications()}
-          >
-            {notifAtivas ? 'Desativar notificações' : 'Ativar notificações'}
-          </GameButton>
-          {notifPermission === 'denied' && Capacitor.isNativePlatform() ? (
-            <GameButton
-              variant="ghost"
-              className="mt-2 w-full"
+      <SettingsSection label="Notificações">
+        <SettingsRow
+          icon={<Bell size={16} />}
+          title="Notificações"
+          description={notifStatus}
+          trailing={
+            switchEnabled ? (
+              <SettingsSwitch
+                checked={notifAtivas}
+                aria-label={notifAtivas ? 'Desativar notificações' : 'Ativar notificações'}
+                onChange={() => void toggleNotifications()}
+              />
+            ) : null
+          }
+        />
+        {notifPermission === 'denied' ? (
+          deniedGuidance.actionLabel ? (
+            <SettingsRow
+              title={deniedGuidance.actionLabel}
+              description={deniedGuidance.hint}
               onClick={() => void notifCtx?.openSettings()}
-            >
-              Abrir configurações do sistema
-            </GameButton>
-          ) : null}
-        </section>
-      </div>
+              chevron
+            />
+          ) : (
+            <SettingsRow title="Como ativar" description={deniedGuidance.hint} />
+          )
+        ) : null}
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Treino</p>
-        <section
-          id="ajustar-plano"
-          className={`settings-section settings-plan-card${location.hash === '#ajustar-plano' ? ' is-highlighted' : ''}`}
-        >
-          <h3 className="settings-section__title">Plano de Core</h3>
-          <p className="settings-section__copy">
-            {user?.ab_training_profile_v2
-              ? `${AB_INTENSITY_LABELS[user.ab_training_profile_v2.intensity]} · ${user.ab_training_profile_v2.training_days.length} dias/semana · ${user.ab_training_profile_v2.rest_seconds ?? user.preferencias.descanso_padrao_seg}s de descanso`
-              : 'Configure intensidade, agenda e descanso dos seus treinos.'}
-          </p>
-          <GameButton
-            variant="secondary"
-            className="mt-3 w-full"
-            onClick={() => setShowTrainingProfile(true)}
-          >
-            {user?.ab_training_profile_v2 ? 'Ajustar plano' : 'Montar meu plano'}
-          </GameButton>
-        </section>
-      </div>
+      <SettingsSection
+        label="Treino"
+        id="ajustar-plano"
+        className={location.hash === '#ajustar-plano' ? 'is-plan-highlight' : undefined}
+      >
+        <SettingsRow
+          icon={<Dumbbell size={16} />}
+          title="Plano de Core"
+          description={planSummary}
+          onClick={() => setShowTrainingProfile(true)}
+          chevron
+          trailing={
+            <span className="settings-row__action-label">
+              {user?.ab_training_profile_v2 ? 'Ajustar' : 'Montar'}
+            </span>
+          }
+        />
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Áudio</p>
-        <section className="settings-section settings-audio-card">
+      <SettingsSection label="Áudio">
+        <div className="settings-audio-block">
           <header className="settings-audio-card__header">
             <span className="settings-audio-card__icon" aria-hidden>
-              <Volume2 size={19} />
+              <Volume2 size={18} />
             </span>
             <div>
               <h3 className="settings-section__title !mb-0">Sons</h3>
@@ -355,7 +397,11 @@ export function SettingsPage() {
                 {som ? 'Ativos em todo o aplicativo' : 'Silenciados em todo o aplicativo'}
               </small>
             </span>
-            <input type="checkbox" checked={som} onChange={(e) => setSom(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={som}
+              onChange={(e) => onSomChange(e.target.checked)}
+            />
             <i aria-hidden />
           </label>
           <label className={`settings-audio-volume${som ? '' : ' is-disabled'}`}>
@@ -370,154 +416,134 @@ export function SettingsPage() {
               step={0.1}
               value={volume}
               disabled={!som}
-              onChange={(e) => setVolume(Number(e.target.value))}
+              onChange={(e) => onVolumeChange(Number(e.target.value))}
             />
           </label>
           <SoundPackSection />
-        </section>
-      </div>
+        </div>
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Recompensas</p>
+      <SettingsSection label="Recompensas">
         <GiftCodeSection />
-      </div>
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Experiência</p>
-        <section className="settings-section overflow-hidden !p-0">
-          <button
-            type="button"
-            className="settings-collapse__toggle"
-            aria-expanded={showXpRules}
-            onClick={() => setShowXpRules((v) => !v)}
-          >
-            <h3 className="settings-section__title mb-0 flex items-center gap-2">
-              <Zap size={14} /> Regras de XP
-            </h3>
+      <SettingsSection label="Experiência">
+        <SettingsRow
+          icon={<Zap size={16} />}
+          title="Regras de XP"
+          onClick={() => setShowXpRules((value) => !value)}
+          aria-expanded={showXpRules}
+          trailing={
             <ChevronDown
-              size={18}
+              size={16}
               className={`settings-collapse__chevron${showXpRules ? ' settings-collapse__chevron--open' : ''}`}
               aria-hidden
             />
-          </button>
-          <AnimatePresence initial={false}>
-            {showXpRules && (
-              <motion.div
-                id="regras-xp"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-                className="overflow-hidden"
-              >
-                <div className="game-xp-rules px-4 pb-4 text-sm font-medium leading-relaxed text-stone-600">
-                  <p className="mb-2 font-semibold text-stone-700">Treino diário</p>
-                  <ul className="mb-3 list-disc space-y-1 pl-5">
-                    <li>
-                      <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com
-                      mínimo de <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
-                    </li>
-                    <li>
-                      Máx. diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
-                      <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
-                      <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
-                    </li>
-                    <li>
-                      Exercícios, streak, conquistas do treino, Atividades e desbloqueios da
-                      Biblioteca compartilham esse mesmo limite. Códigos presente creditam suas
-                      recompensas diretamente.
-                    </li>
-                    <li>Após atingir o máx., o restante do dia não rende mais XP de treino.</li>
-                  </ul>
-                  <p className="mb-2 font-semibold text-stone-700">Bônus de treino</p>
-                  <ul className="mb-3 list-disc space-y-1 pl-5">
-                    <li>
-                      Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+
-                      {XP_STREAK_BONUS_PER_DAY} por dia de sequência).
-                    </li>
-                    <li>
-                      Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
-                    </li>
-                  </ul>
-                  <p className="mb-2 font-semibold text-stone-700">Atividades</p>
-                  <ul className="mb-3 list-disc space-y-1 pl-5">
-                    <li>
-                      A primeira conclusão de cada atividade no dia dá <strong>+15 XP</strong>{' '}
-                      (versão mínima +8 XP), até 4 atividades distintas. Repetições extras só
-                      registram o dia.
-                    </li>
-                    <li>
-                      Rotina completa: <strong>+10 XP</strong> uma vez por dia, por rotina.
-                    </li>
-                    <li>
-                      Qualquer ação válida (treino, atividade ou rotina) garante o Dia Ativo e
-                      sustenta a sequência.
-                    </li>
-                  </ul>
-                  <p className="mb-2 font-semibold text-stone-700">{FROZEN_STREAK_LABEL}</p>
-                  <ul className="mb-3 list-disc space-y-1 pl-5">
-                    <li>{formatFrozenStreakDescription()}</li>
-                  </ul>
-                  <p className="mb-2 font-semibold text-stone-700">{CURRENCY_NAME}</p>
-                  <ul className="list-disc space-y-1 pl-5">
-                    <li>
-                      <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong>{' '}
-                      totais ganhos (conversão automática).
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
-      </div>
-
-      <div className="settings-group">
-        <p className="settings-group__label">Ajuda</p>
-        <section className="settings-section">
-          <div className="flex flex-col gap-2">
-            <GameButton
-              variant="secondary"
-              className="flex w-full items-center justify-center gap-2"
-              onClick={() => setShowTutorial(true)}
+          }
+        />
+        <AnimatePresence initial={false}>
+          {showXpRules && (
+            <motion.div
+              id="regras-xp"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="overflow-hidden"
             >
-              <PlayCircle size={16} aria-hidden /> Ver o tutorial novamente
-            </GameButton>
-            <GameButton
-              variant="ghost"
-              className="flex w-full items-center justify-center gap-2"
-              onClick={() => setShowTerms(true)}
-            >
-              <ScrollText size={16} aria-hidden /> Termos e privacidade
-            </GameButton>
-          </div>
-        </section>
-      </div>
+              <div className="game-xp-rules settings-xp-rules text-sm font-medium leading-relaxed text-stone-600">
+                <p className="mb-2 font-semibold text-stone-700">Treino diário</p>
+                <ul className="mb-3 list-disc space-y-1 pl-5">
+                  <li>
+                    <strong>{XP_DAILY_PER_EXERCISE} XP</strong> por exercício concluído (treino com
+                    mínimo de <strong>{XP_DAILY_MIN_EXERCISES}</strong> exercícios).
+                  </li>
+                  <li>
+                    Máx. diário unificado: <strong>{XP_DAILY_CAP_BASE}</strong> base +{' '}
+                    <strong>{XP_DAILY_CAP_PER_LEVEL}</strong> por nível +{' '}
+                    <strong>{XP_DAILY_CAP_PER_ACHIEVEMENT}</strong> por conquista desbloqueada.
+                  </li>
+                  <li>
+                    Exercícios, streak, conquistas do treino, Atividades e desbloqueios da Biblioteca
+                    compartilham esse mesmo limite. Códigos presente creditam suas recompensas
+                    diretamente.
+                  </li>
+                  <li>
+                    Após atingir o máx., o restante do dia não rende mais XP desse teto diário
+                    compartilhado.
+                  </li>
+                </ul>
+                <p className="mb-2 font-semibold text-stone-700">Bônus de treino</p>
+                <ul className="mb-3 list-disc space-y-1 pl-5">
+                  <li>
+                    Streak: até <strong>+{XP_STREAK_BONUS_MAX} XP</strong> (+
+                    {XP_STREAK_BONUS_PER_DAY} por dia de sequência).
+                  </li>
+                  <li>
+                    Conquistas novas: <strong>+{XP_ACHIEVEMENT_BONUS} XP</strong> cada.
+                  </li>
+                </ul>
+                <p className="mb-2 font-semibold text-stone-700">Atividades</p>
+                <ul className="mb-3 list-disc space-y-1 pl-5">
+                  <li>
+                    A primeira conclusão de cada atividade no dia dá <strong>+15 XP</strong> (versão
+                    mínima +8 XP), até 4 atividades distintas. Repetições extras só registram o dia.
+                  </li>
+                  <li>
+                    Rotina completa: <strong>+10 XP</strong> uma vez por dia, por rotina.
+                  </li>
+                  <li>
+                    Qualquer ação válida (treino, atividade ou rotina) garante o Dia Ativo e sustenta
+                    a sequência.
+                  </li>
+                </ul>
+                <p className="mb-2 font-semibold text-stone-700">{FROZEN_STREAK_LABEL}</p>
+                <ul className="mb-3 list-disc space-y-1 pl-5">
+                  <li>{formatFrozenStreakDescription()}</li>
+                </ul>
+                <p className="mb-2 font-semibold text-stone-700">{CURRENCY_NAME}</p>
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>
+                    <strong>1 {CURRENCY_NAME}</strong> a cada <strong>{MOEDA_XP_STEP} XP</strong>{' '}
+                    totais ganhos (conversão automática).
+                  </li>
+                </ul>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <SettingsRow
+          icon={<PlayCircle size={16} />}
+          title="Ver tutorial novamente"
+          onClick={() => setShowTutorial(true)}
+          chevron
+        />
+        <SettingsRow
+          icon={<ScrollText size={16} />}
+          title="Termos e privacidade"
+          onClick={() => setShowTerms(true)}
+          chevron
+        />
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Sobre</p>
+      <SettingsSection label="Sobre">
         <AboutSection />
-      </div>
+      </SettingsSection>
 
-      <div className="settings-group">
-        <p className="settings-group__label">Sessão</p>
-        <div className="flex flex-col gap-2">
-          <GameButton
-            variant="secondary"
-            onClick={() => setConfirmLogout(true)}
-            className="flex items-center justify-center gap-2 text-red-600"
-          >
-            <LogOut size={18} /> Sair da conta
-          </GameButton>
-          <GameButton
-            variant="ghost"
-            onClick={() => setDeleteStep('confirm-phrase')}
-            className="flex items-center justify-center gap-2 text-red-600"
-          >
-            <Trash2 size={18} /> Deletar minha conta
-          </GameButton>
-        </div>
-      </div>
+      <SettingsSection label="Sessão">
+        <SettingsRow
+          icon={<LogOut size={16} />}
+          title="Sair da conta"
+          softDestructive
+          onClick={() => setConfirmLogout(true)}
+        />
+        <SettingsRow
+          icon={<Trash2 size={16} />}
+          title="Deletar minha conta"
+          destructive
+          onClick={() => setDeleteStep('confirm-phrase')}
+        />
+      </SettingsSection>
 
       <Modal
         open={confirmLogout}
@@ -544,7 +570,6 @@ export function SettingsPage() {
         </div>
       </Modal>
 
-      {/* 1ª confirmação: digitar a frase exata. */}
       <Modal
         open={deleteStep === 'confirm-phrase'}
         onClose={closeDeleteFlow}
@@ -585,7 +610,6 @@ export function SettingsPage() {
         </div>
       </Modal>
 
-      {/* 2ª confirmação: última chance, separada da digitação da frase. */}
       <Modal
         open={deleteStep === 'final'}
         onClose={closeDeleteFlow}
@@ -619,30 +643,6 @@ export function SettingsPage() {
           </GameButton>
         </div>
       </Modal>
-
-      <AnimatePresence>
-        {dirty && (
-          <div className="settings-savebar-wrap">
-            <motion.div
-              className="settings-savebar"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 24 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            >
-              <span className="settings-savebar__label">Alterações não salvas</span>
-              <div className="settings-savebar__actions">
-                <GameButton variant="ghost" className="!w-auto px-3" onClick={discard}>
-                  Descartar
-                </GameButton>
-                <GameButton className="!w-auto px-5" disabled={saving} onClick={() => void save()}>
-                  {saving ? 'Salvando...' : 'Salvar'}
-                </GameButton>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
       <TutorialOverlay
