@@ -15,7 +15,11 @@ import { WorkoutHistory } from '../repositories/workout-history-repository.js';
 import {
   activityOccursOnDay,
   buildDayGuide,
+  filterAvailableRoutineItems,
+  isRoutineFullyRunnable,
   plannedOccurrencesForDay,
+  resolveRoutineHealth,
+  routineHasAvailableItems,
   routineItemsDoneToday,
   type DayGuideItem,
   type DayGuideQuestInput,
@@ -148,25 +152,40 @@ export async function getDaySnapshot(userId: string) {
   const currentHour = getHourSaoPaulo();
   const currentPeriod = periodFromHour(currentHour);
 
+  const liveActivityIds = new Set(activities.map((activity) => activity.id));
+
   // items_done is isolated per routine: a log only counts toward a routine's
   // progress when it was recorded through that exact routine_id, so the same
   // activity shared by two routines (or completed standalone) never silently
   // marks the other routine's item as done.
+  // Contagem usa só Activities ainda disponíveis (arquivadas não incham o total).
   const routineSnapshots = routines.map((routine) => {
-    const items = routine.items ?? [];
-    const itemsDone = routineItemsDoneToday(routine, todayLogs);
+    const health = resolveRoutineHealth(routine, liveActivityIds);
+    const aliveItems = filterAvailableRoutineItems(routine.items, liveActivityIds);
+    const itemsDone = routineItemsDoneToday(
+      { id: routine.id, items: aliveItems },
+      todayLogs,
+    );
     return {
       id: routine.id,
       name: routine.name,
       icon: routine.icon,
       color: routine.color,
-      items_total: items.length,
+      items_total: health.availableItems,
       items_done: itemsDone,
+      health: health.state,
       scheduled_today:
         routine.schedule.kind !== 'unscheduled' && activityOccursOnDay(routine.schedule, today),
       schedule: routine.schedule,
     };
   });
+
+  const runnableRoutines = routines.filter((routine) =>
+    isRoutineFullyRunnable(resolveRoutineHealth(routine, liveActivityIds)),
+  );
+  const routinesWithLife = routines.filter((routine) =>
+    routineHasAvailableItems(resolveRoutineHealth(routine, liveActivityIds)),
+  );
 
   const suggestedWorkout = treinoHoje ? null : await getSuggestedWorkout(user);
 
@@ -199,8 +218,10 @@ export async function getDaySnapshot(userId: string) {
     weeklyTrainingDays: trainingDays.length,
     activeDaysThisWeek: weekDays.length,
     workoutsThisWeek: weekWorkouts.length,
-    hasRoutines: routines.length > 0,
-    hasRoutineScheduledToday: routineSnapshots.some((routine) => routine.scheduled_today),
+    hasRoutines: routinesWithLife.length > 0,
+    hasRoutineScheduledToday: routineSnapshots.some(
+      (routine) => routine.scheduled_today && routine.items_total > 0,
+    ),
     hasActivities: activities.length > 0,
     hasScheduledActivityToday: occurrences.some((occ) => Boolean(occ.time)),
     categoriesUsed,
@@ -226,11 +247,11 @@ export async function getDaySnapshot(userId: string) {
     todayKey: today,
     trainedToday: treinoHoje,
     suggestedWorkoutTitle: suggestedWorkout?.nome ?? null,
-    routines: routines.map((routine) => ({
+    routines: runnableRoutines.map((routine) => ({
       id: routine.id,
       name: routine.name,
       schedule: routine.schedule,
-      items: routine.items,
+      items: filterAvailableRoutineItems(routine.items, liveActivityIds),
     })),
     todayLogs: todayLogs.map((log) => ({
       routine_id: log.routine_id,
@@ -427,12 +448,18 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
   const eveningComplete =
     periodOccurrences.noite.length > 0 && periodOccurrences.noite.every((o) => o.status === 'done');
 
+  const liveActivityIds = new Set(activities.map((activity) => activity.id));
+
   const countRoutineCompletions = (dayLogs: typeof logs) => {
     let count = 0;
     for (const routine of routines) {
       const items = routine.items ?? [];
+      // Histórico: conta contra items persistidos (não reescreve progresso só porque
+      // uma Activity foi arquivada depois). Rotinas vazias não contam.
       if (items.length === 0) continue;
-      if (routineItemsDoneToday(routine, dayLogs) >= items.length) count += 1;
+      if (routineItemsDoneToday({ id: routine.id, items }, dayLogs) >= items.length) {
+        count += 1;
+      }
     }
     return count;
   };
@@ -479,13 +506,17 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
 
   const scheduledRoutinesToday = routines.filter(
     (routine) =>
-      routine.schedule.kind !== 'unscheduled' && activityOccursOnDay(routine.schedule, today),
+      routine.schedule.kind !== 'unscheduled' &&
+      activityOccursOnDay(routine.schedule, today) &&
+      routineHasAvailableItems(resolveRoutineHealth(routine, liveActivityIds)),
   );
   let scheduledRoutineCompletedToday = 0;
   for (const routine of scheduledRoutinesToday) {
-    const items = routine.items ?? [];
-    if (items.length === 0) continue;
-    if (routineItemsDoneToday(routine, todayLogs) >= items.length) {
+    const aliveItems = filterAvailableRoutineItems(routine.items, liveActivityIds);
+    if (aliveItems.length === 0) continue;
+    if (
+      routineItemsDoneToday({ id: routine.id, items: aliveItems }, todayLogs) >= aliveItems.length
+    ) {
       scheduledRoutineCompletedToday += 1;
     }
   }
@@ -509,7 +540,9 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
     activeDaysThisMonth: monthDays.length,
     workoutsThisWeek: weekWorkouts.length,
     workoutsThisMonth: monthWorkouts.length,
-    hasRoutines: routines.length > 0,
+    hasRoutines: routines.some((routine) =>
+      routineHasAvailableItems(resolveRoutineHealth(routine, liveActivityIds)),
+    ),
     hasRoutineScheduledToday: scheduledRoutinesToday.length > 0,
     hasActivities: activities.length > 0,
     hasScheduledActivityToday: scheduledActivityIds.size > 0,

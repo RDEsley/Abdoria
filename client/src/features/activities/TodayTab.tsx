@@ -91,18 +91,26 @@ export function TodayTab({ data }: { data: ReturnType<typeof useActivitiesData> 
     void (async () => {
       try {
         await data.archiveActivity(activityId);
-        showGameToast('Atividade removida', {
-          variant: 'info',
-          duration: 5000,
-          actionLabel: 'Desfazer',
-          onAction: () => {
-            void data.restoreActivity(activityId, activity).catch((error) => {
-              showGameToast(getErrorMessage(error, 'Não foi possível restaurar.'), {
-                variant: 'error',
+        const usedIn = data.routines.filter((routine) =>
+          (routine.items ?? []).some((item) => item.activity_id === activityId),
+        ).length;
+        showGameToast(
+          usedIn > 0
+            ? `Atividade removida. ${usedIn} rotina${usedIn === 1 ? '' : 's'} precisa${usedIn === 1 ? '' : 'm'} de ajuste.`
+            : 'Atividade removida',
+          {
+            variant: 'info',
+            duration: 5000,
+            actionLabel: 'Desfazer',
+            onAction: () => {
+              void data.restoreActivity(activityId, activity).catch((error) => {
+                showGameToast(getErrorMessage(error, 'Não foi possível restaurar.'), {
+                  variant: 'error',
+                });
               });
-            });
+            },
           },
-        });
+        );
       } catch (error) {
         showGameToast(getErrorMessage(error, 'Não foi possível remover.'), { variant: 'error' });
       }

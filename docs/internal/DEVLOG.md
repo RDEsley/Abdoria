@@ -8,6 +8,12 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Rotinas + Treino 3.0 + tela branca
+
+- Health derivado Activity↔Routine (`resolveRoutineHealth`); Runner/editor/arquivadas; archive sem `confirm` + Desfazer; Day Guide só healthy; reminders ignoram item arquivado.
+- Lazy: `lazyWithRecovery` + `RouteErrorBoundary` + fallback de rota visível (chunk mismatch ≠ banner de versão).
+- Treino: initial vs background load; intensidade vertical; Personalizado → wizard custom; Lottie `monte-sua-semana`; Foco da sessão; hover glass só com pointer fino.
+
 ### UX hotfix atividades / missões / lembretes
 
 - Rotina e NextUp: namespaces `routine-card*` / `next-up-card*` (não reutilizar `activity-quick-card` estrutural).

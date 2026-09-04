@@ -8,11 +8,12 @@ import {
   useEnsureReminderPermission,
 } from '@/hooks/useEnsureReminderPermission';
 import { selectionHaptic } from '@/lib/platform/native-runtime';
-import type {
-  ActivityRecord,
-  ActivityScheduleKind,
-  RoutineItemInput,
-  RoutineRecord,
+import {
+  resolveRoutineHealth,
+  type ActivityRecord,
+  type ActivityScheduleKind,
+  type RoutineItemInput,
+  type RoutineRecord,
 } from '@shared/activities';
 
 const WEEKDAYS = [
@@ -97,15 +98,20 @@ export function RoutineEditorSheet({
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [staleRemovedCount, setStaleRemovedCount] = useState(0);
 
   useEffect(() => {
     if (!open) return;
+    const liveIds = new Set(activities.map((activity) => activity.id));
     if (routine) {
       setName(routine.name);
+      const health = resolveRoutineHealth(routine, liveIds);
+      setStaleRemovedCount(health.unavailableItems);
       setItems(
         (routine.items ?? [])
           .slice()
           .sort((a, b) => a.position - b.position)
+          .filter((item) => liveIds.has(item.activity_id))
           .map((item) => ({
             activity_id: item.activity_id,
             scheduled_time: item.scheduled_time ?? null,
@@ -122,6 +128,7 @@ export function RoutineEditorSheet({
     } else {
       setName('');
       setItems([]);
+      setStaleRemovedCount(0);
       setScheduleKind('daily');
       setWeekdays([]);
       setOnceDate('');
@@ -132,7 +139,7 @@ export function RoutineEditorSheet({
     setExpandedItemId(null);
     setBusy(false);
     setArchiving(false);
-  }, [open, routine]);
+  }, [open, routine, activities]);
 
   const activityById = useMemo(
     () => new Map(activities.map((activity) => [activity.id, activity])),
@@ -147,8 +154,8 @@ export function RoutineEditorSheet({
     [items, activityById],
   );
 
-  const canAdvanceStep0 = name.trim().length > 0 && items.length > 0 && !busy;
-  const canSubmit = name.trim().length > 0 && items.length > 0 && !busy;
+  const canAdvanceStep0 = name.trim().length > 0 && selectedActivities.length > 0 && !busy;
+  const canSubmit = name.trim().length > 0 && selectedActivities.length > 0 && !busy;
   const scheduled = scheduleKind !== 'unscheduled';
 
   const reminderCount = (() => {
@@ -203,7 +210,12 @@ export function RoutineEditorSheet({
       offset_min: 0,
       follow_up: false,
     };
-    return { name: name.trim(), items, schedule, reminder };
+    return {
+      name: name.trim(),
+      items: items.filter((item) => activityById.has(item.activity_id)),
+      schedule,
+      reminder,
+    };
   };
 
   const submit = async () => {
@@ -231,7 +243,6 @@ export function RoutineEditorSheet({
 
   const handleArchive = () => {
     if (!onArchive) return;
-    if (!window.confirm('Arquivar esta rotina?')) return;
     setArchiving(true);
     void onArchive()
       .then(onClose)
@@ -501,6 +512,15 @@ export function RoutineEditorSheet({
           </div>
         )}
 
+        {isEdit && staleRemovedCount > 0 ? (
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+            {staleRemovedCount} atividade{staleRemovedCount === 1 ? '' : 's'} removida
+            {staleRemovedCount === 1 ? '' : 's'} precisa
+            {staleRemovedCount === 1 ? '' : 'm'} ser substituída
+            {staleRemovedCount === 1 ? '' : 's'}.
+          </p>
+        ) : null}
+
         {((!isEdit && createStep === 0) || (isEdit && editTab === 'rotina')) && (
           <div className="mt-3">
             <input
@@ -540,7 +560,8 @@ export function RoutineEditorSheet({
               <li>
                 <span>Atividades</span>
                 <strong>
-                  {items.length} · {reviewActivityLine}
+                  {items.filter((item) => activityById.has(item.activity_id)).length} ·{' '}
+                  {reviewActivityLine}
                 </strong>
               </li>
               <li>

@@ -1273,6 +1273,13 @@
   padding-block: 0.75rem;
 }
 
+.ab-plan-days-step__lottie {
+  width: min(100%, 11.5rem);
+  max-height: 6.75rem;
+  margin: 0 auto 0.65rem;
+  aspect-ratio: 1;
+}
+
 .ab-plan-days {
   gap: 0.35rem;
 }
@@ -1634,6 +1641,33 @@
   margin: 0 auto;
   aspect-ratio: 16 / 9;
   max-height: 9.5rem;
+}
+
+.ab-plan-summary__grid--five {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ab-plan-summary__grid--five > span:last-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 641px) {
+  .ab-plan-summary__grid--five {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .ab-plan-summary__grid--five > span {
+    grid-column: span 2;
+  }
+
+  .ab-plan-summary__grid--five > span:nth-child(4),
+  .ab-plan-summary__grid--five > span:nth-child(5) {
+    grid-column: span 3;
+  }
+
+  .ab-plan-summary__grid--five > span:last-child {
+    grid-column: span 3;
+  }
 }
 
 .ab-plan-summary__grid--six {

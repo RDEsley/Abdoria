@@ -427,6 +427,11 @@
   color: rgb(180 83 9);
 }
 
+.routine-badge--attention {
+  background: rgb(255 247 237);
+  color: rgb(154 52 18);
+}
+
 .routine-card__edit {
   display: grid;
   place-items: center;

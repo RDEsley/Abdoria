@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { GripVertical, Pencil, Plus } from 'lucide-react';
 import {
   DndContext,
@@ -22,9 +22,9 @@ import { listArchivedRoutines, reorderRoutines, restoreRoutine } from '@/lib/api
 import { getErrorMessage } from '@/lib/api-errors';
 import { showGameToast } from '@/lib/game-toast';
 import { successHaptic } from '@/lib/platform/native-runtime';
-import { activityOccursOnDay, routineItemsDoneToday } from '@shared/activities';
+import { activityOccursOnDay, resolveRoutineHealth, routineItemsDoneToday } from '@shared/activities';
 import { getMinutesOfDaySaoPaulo, getTodaySaoPaulo } from '@shared/utils/timezone';
-import type { ActivityLogRecord, RoutineRecord } from '@shared/activities';
+import type { ActivityLogRecord, ActivityRecord, RoutineRecord } from '@shared/activities';
 import { RoutineEditorSheet, type RoutineEditorPayload } from './RoutineEditorSheet';
 import type { useActivitiesData } from './useActivitiesData';
 
@@ -74,19 +74,27 @@ function SortableRoutineCard({
   routine,
   logs,
   today,
+  activities,
   onClick,
   onEdit,
 }: {
   routine: RoutineRecord;
   logs: ActivityLogRecord[];
   today: string;
+  activities: ActivityRecord[];
   onClick: () => void;
   onEdit: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: routine.id,
   });
-  const total = routine.items?.length ?? 0;
+  const liveIds = useMemo(() => new Set(activities.map((activity) => activity.id)), [activities]);
+  const health = useMemo(() => resolveRoutineHealth(routine, liveIds), [routine, liveIds]);
+  const aliveItems = useMemo(
+    () => (routine.items ?? []).filter((item) => liveIds.has(item.activity_id)),
+    [routine.items, liveIds],
+  );
+  const total = health.availableItems;
   const isScheduled = routine.schedule.kind !== 'unscheduled';
   const scheduledToday = isScheduled && activityOccursOnDay(routine.schedule, today);
   const time = routine.schedule.times?.[0] ?? null;
@@ -97,9 +105,10 @@ function SortableRoutineCard({
   }, [scheduledToday, time]);
   const doneToday = useMemo(() => {
     const todayLogs = logs.filter((log) => log.day_key === today);
-    return routineItemsDoneToday(routine, todayLogs);
-  }, [routine, logs, today]);
+    return routineItemsDoneToday({ id: routine.id, items: aliveItems }, todayLogs);
+  }, [routine.id, aliveItems, logs, today]);
   const secondary = isScheduled && !scheduledToday;
+  const attention = health.state !== 'healthy';
 
   return (
     <div
@@ -124,16 +133,22 @@ function SortableRoutineCard({
       <button type="button" className="routine-card__body" onClick={onClick}>
         <span className="routine-card__title-row">
           <strong className="routine-card__name">{routine.name}</strong>
-          {scheduledToday && (
+          {attention ? (
+            <span className="routine-badge routine-badge--attention">Atenção</span>
+          ) : scheduledToday ? (
             <span className={`routine-badge${isNow ? ' routine-badge--now' : ''}`}>
               {isNow ? 'Agora' : 'Hoje'}
             </span>
-          )}
+          ) : null}
         </span>
         <small className="routine-card__meta">
-          {total > 0
-            ? `${doneToday}/${total}${scheduledToday && time ? ` · ${time}` : ''}`
-            : 'Sem atividades'}
+          {attention
+            ? health.state === 'empty'
+              ? 'Precisa de atividades'
+              : `${health.unavailableItems} indisponível${health.unavailableItems === 1 ? '' : 'eis'}`
+            : total > 0
+              ? `${doneToday}/${total}${scheduledToday && time ? ` · ${time}` : ''}`
+              : 'Sem atividades'}
         </small>
       </button>
       <button
@@ -150,14 +165,22 @@ function SortableRoutineCard({
 
 export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesData> }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [editing, setEditing] = useState<
-    { mode: 'create' } | { mode: 'edit'; routine: RoutineRecord } | null
+    | { mode: 'create' }
+    | { mode: 'edit'; routine: RoutineRecord }
+    | { mode: 'repair-restore'; routine: RoutineRecord }
+    | null
   >(null);
   const [archivedOpen, setArchivedOpen] = useState(false);
   const [archived, setArchived] = useState<RoutineRecord[]>([]);
   const [archivedLoading, setArchivedLoading] = useState(false);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const today = getTodaySaoPaulo();
+  const liveIds = useMemo(
+    () => new Set(data.activities.map((activity) => activity.id)),
+    [data.activities],
+  );
 
   // Só a ORDEM local de arrasto é mantida em estado próprio. Nome, agenda,
   // progresso, arquivamento e criação sempre vêm direto de `data.routines`
@@ -219,12 +242,18 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
   }, []);
 
   const handleRestore = useCallback(
-    async (id: string) => {
-      setRestoringId(id);
+    async (routine: RoutineRecord) => {
+      const health = resolveRoutineHealth(routine, liveIds);
+      if (health.state !== 'healthy') {
+        setArchivedOpen(false);
+        setEditing({ mode: 'repair-restore', routine });
+        return;
+      }
+      setRestoringId(routine.id);
       try {
-        await restoreRoutine(id);
+        await restoreRoutine(routine.id);
         await data.reload();
-        setArchived((current) => current.filter((routine) => routine.id !== id));
+        setArchived((current) => current.filter((item) => item.id !== routine.id));
         showGameToast('Rotina restaurada.', { variant: 'success' });
         void successHaptic();
       } catch (error) {
@@ -233,8 +262,16 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
         setRestoringId(null);
       }
     },
-    [data],
+    [data, liveIds],
   );
+
+  useEffect(() => {
+    const editId = (location.state as { editRoutineId?: string } | null)?.editRoutineId;
+    if (!editId) return;
+    const routine = data.routines.find((item) => item.id === editId);
+    if (routine) setEditing({ mode: 'edit', routine });
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, data.routines, navigate]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -255,6 +292,7 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
                 routine={routine}
                 logs={data.logs}
                 today={today}
+                activities={data.activities}
                 onClick={() => navigate(`/rotina/${routine.id}`)}
                 onEdit={() => setEditing({ mode: 'edit', routine })}
               />
@@ -278,10 +316,18 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
         activities={data.activities}
-        routine={editing?.mode === 'edit' ? editing.routine : null}
+        routine={
+          editing?.mode === 'edit' || editing?.mode === 'repair-restore' ? editing.routine : null
+        }
         onSubmit={async (payload: RoutineEditorPayload) => {
           if (editing?.mode === 'edit') {
             await data.updateRoutine(editing.routine.id, { ...payload });
+          } else if (editing?.mode === 'repair-restore') {
+            await data.updateRoutine(editing.routine.id, { ...payload });
+            await restoreRoutine(editing.routine.id);
+            await data.reload();
+            showGameToast('Rotina restaurada.', { variant: 'success' });
+            void successHaptic();
           } else {
             await data.createRoutine({ ...payload });
             showGameToast(pickCreateSuccessPhrase(), { variant: 'success' });
@@ -293,8 +339,23 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
           editing?.mode === 'edit'
             ? async () => {
                 if (editing.mode !== 'edit') return;
-                await data.archiveRoutine(editing.routine.id);
+                const archivedRoutine = editing.routine;
+                await data.archiveRoutine(archivedRoutine.id);
                 await data.reload();
+                showGameToast('Rotina arquivada', {
+                  variant: 'info',
+                  duration: 5000,
+                  actionLabel: 'Desfazer',
+                  onAction: () => {
+                    void restoreRoutine(archivedRoutine.id)
+                      .then(() => data.reload())
+                      .catch((error) => {
+                        showGameToast(getErrorMessage(error, 'Não foi possível restaurar.'), {
+                          variant: 'error',
+                        });
+                      });
+                  },
+                });
               }
             : undefined
         }
@@ -317,22 +378,34 @@ export function RoutinesTab({ data }: { data: ReturnType<typeof useActivitiesDat
             </p>
           ) : (
             <ul className="mt-3 flex max-h-72 flex-col gap-2 overflow-y-auto">
-              {archived.map((routine) => (
-                <li key={routine.id} className="routine-archived-row">
-                  <div className="min-w-0 flex-1">
-                    <strong>{routine.name}</strong>
-                    <small>{formatArchivedApprox(routine.archived_at)}</small>
-                  </div>
-                  <GameButton
-                    variant="secondary"
-                    size="sm"
-                    disabled={restoringId === routine.id}
-                    onClick={() => void handleRestore(routine.id)}
-                  >
-                    {restoringId === routine.id ? 'Restaurando…' : 'Restaurar'}
-                  </GameButton>
-                </li>
-              ))}
+              {archived.map((routine) => {
+                const health = resolveRoutineHealth(routine, liveIds);
+                const needsReview = health.state !== 'healthy';
+                return (
+                  <li key={routine.id} className="routine-archived-row">
+                    <div className="min-w-0 flex-1">
+                      <strong>{routine.name}</strong>
+                      <small>
+                        {needsReview
+                          ? 'Precisa de atenção'
+                          : formatArchivedApprox(routine.archived_at)}
+                      </small>
+                    </div>
+                    <GameButton
+                      variant="secondary"
+                      size="sm"
+                      disabled={restoringId === routine.id}
+                      onClick={() => void handleRestore(routine)}
+                    >
+                      {restoringId === routine.id
+                        ? 'Restaurando…'
+                        : needsReview
+                          ? 'Revisar e restaurar'
+                          : 'Restaurar'}
+                    </GameButton>
+                  </li>
+                );
+              })}
             </ul>
           )}
           <div className="mt-4">
