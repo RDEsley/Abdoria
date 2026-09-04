@@ -1,0 +1,10 @@
+.quest-card--monthly {
+  border-color: color-mix(in srgb, #10b981 28%, transparent);
+  background: linear-gradient(145deg, #fff, #ecfdf5);
+}
+
+.builder-level-switch.is-active {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #047857;
+}

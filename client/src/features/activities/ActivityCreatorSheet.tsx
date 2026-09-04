@@ -3,6 +3,10 @@ import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { PickerField } from '@/components/ui/PickerField';
 import {
+  reminderPermissionHint,
+  useEnsureReminderPermission,
+} from '@/hooks/useEnsureReminderPermission';
+import {
   ACTIVITY_TEMPLATES,
   ACTIVITY_CATEGORIES,
   matchActivityTemplate,
@@ -44,6 +48,12 @@ export function ActivityCreatorSheet({
   const [time, setTime] = useState('');
   const [remind, setRemind] = useState(false);
   const [busy, setBusy] = useState(false);
+  const { permission, capability, canDeliverReminders, ensureCanEnableReminder } =
+    useEnsureReminderPermission();
+  const reminderHint = reminderPermissionHint(
+    capability === 'opt_out' ? 'opt_out' : permission,
+    canDeliverReminders,
+  );
 
   const template = useMemo(
     () => ACTIVITY_TEMPLATES.find((item) => item.id === templateId) ?? null,
@@ -269,16 +279,27 @@ export function ActivityCreatorSheet({
               <input
                 type="checkbox"
                 checked={remind}
-                onChange={(event) => setRemind(event.target.checked)}
+                onChange={(event) => {
+                  const next = event.target.checked;
+                  if (!next) {
+                    setRemind(false);
+                    return;
+                  }
+                  void ensureCanEnableReminder().then((ok) => {
+                    if (ok) setRemind(true);
+                  });
+                }}
                 disabled={!canNotify}
               />
               Notificar neste horário
             </label>
-            {!canNotify && (
+            {!canNotify ? (
               <p className="mt-1 text-xs font-semibold text-stone-500">
                 Defina dias e horário na etapa anterior para ativar a notificação.
               </p>
-            )}
+            ) : reminderHint ? (
+              <p className="mt-1 text-xs font-semibold text-amber-700">{reminderHint}</p>
+            ) : null}
           </div>
         )}
 

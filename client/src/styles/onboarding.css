@@ -714,11 +714,22 @@
 }
 .ab-plan-wizard__content {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
-  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 20px 22px;
+  padding-bottom: 2.5rem;
+  scrollbar-width: none;
+}
+
+.ab-plan-wizard__content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .ab-plan-rest-step {
@@ -1196,17 +1207,16 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 1rem 1.25rem;
-  padding-bottom: 1.25rem;
+  padding-bottom: 2.5rem;
+  scrollbar-width: none;
 }
 
 .ab-plan-wizard__content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ab-plan-wizard__content::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgb(15 118 110 / 22%);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .ab-plan-wizard__content > * {

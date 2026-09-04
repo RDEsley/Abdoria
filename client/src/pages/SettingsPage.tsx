@@ -28,15 +28,14 @@ import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { GameButton } from '@/components/ui/GameButton';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotificationPermissionOptional } from '@/context/NotificationPermissionContext';
 import { deleteAccount, updateMe } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api-errors';
 import { setSoundSettings } from '@/lib/sounds';
 import { markTutorialSeen } from '@/lib/tutorial';
-import {
-  notificationScheduler,
-  type NotificationPermissionState,
-} from '@/lib/platform/notification-scheduler';
+import { notificationScheduler } from '@/lib/platform/notification-scheduler';
 import { ensureWebPushSubscription, removeWebPushSubscription } from '@/lib/platform/web-push';
+import { Capacitor } from '@capacitor/core';
 import { AB_INTENSITY_LABELS } from '@shared/ab-training-profile';
 import {
   MOEDA_XP_STEP,
@@ -170,10 +169,29 @@ export function SettingsPage() {
     }
   };
 
-  const [notifPermission, setNotifPermission] = useState<NotificationPermissionState>('prompt');
+  const notifCtx = useNotificationPermissionOptional();
+  const [notifPermission, setNotifPermission] = useState(
+    () => (notifCtx?.permission ?? 'prompt') as 'prompt' | 'granted' | 'denied' | 'unsupported',
+  );
+
   useEffect(() => {
+    if (notifCtx) {
+      setNotifPermission(notifCtx.permission);
+      return undefined;
+    }
     void notificationScheduler.permissionState().then(setNotifPermission);
-  }, []);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void notificationScheduler.permissionState().then(setNotifPermission);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, [notifCtx, notifCtx?.permission]);
   const notifOptOut = user?.preferencias?.notificacoes_opt_out ?? false;
   const notifAtivas = notifPermission === 'granted' && !notifOptOut;
 
@@ -197,6 +215,9 @@ export function SettingsPage() {
       showGameToast('Notificações bloqueadas — ative nas configurações do dispositivo.', {
         variant: 'info',
       });
+      if (Capacitor.isNativePlatform()) {
+        await notifCtx?.openSettings();
+      }
       return;
     }
 
@@ -205,7 +226,9 @@ export function SettingsPage() {
       return;
     }
 
-    const permission = await notificationScheduler.requestPermission();
+    const permission = notifCtx
+      ? await notifCtx.requestPermission()
+      : await notificationScheduler.requestPermission();
     setNotifPermission(permission);
     if (permission !== 'granted') return;
 
@@ -323,7 +346,19 @@ export function SettingsPage() {
           <Bell size={14} /> Notificações
         </h3>
         <p className="mb-3 text-xs font-medium text-stone-500">
-          Avisos de treino e do jogo, direto no navegador.
+          Avisos de atividades, rotinas e lembretes na hora certa.
+        </p>
+        <p className="mb-3 text-xs font-semibold text-stone-600">
+          Status:{' '}
+          {notifOptOut
+            ? 'Desativadas no Evolyn'
+            : notifPermission === 'granted'
+              ? 'Ativas'
+              : notifPermission === 'denied'
+                ? 'Bloqueadas no dispositivo'
+                : notifPermission === 'unsupported'
+                  ? 'Indisponíveis neste dispositivo'
+                  : 'Aguardando permissão'}
         </p>
         <GameButton
           variant="secondary"
@@ -333,6 +368,15 @@ export function SettingsPage() {
         >
           {notifAtivas ? 'Desativar notificações' : 'Ativar notificações'}
         </GameButton>
+        {notifPermission === 'denied' && Capacitor.isNativePlatform() ? (
+          <GameButton
+            variant="ghost"
+            className="mt-2 w-full"
+            onClick={() => void notifCtx?.openSettings()}
+          >
+            Abrir configurações
+          </GameButton>
+        ) : null}
       </section>
 
       <section className="glass-card overflow-hidden">

@@ -207,7 +207,8 @@ routinesRouter.use(requireAuth);
 
 routinesRouter.get('/', async (req: AuthRequest, res) => {
   try {
-    res.json(await Routines.list(req.userId!));
+    const archived = req.query.archived === '1' || req.query.archived === 'true';
+    res.json(await Routines.list(req.userId!, archived));
   } catch (error) {
     console.error('GET /api/routines error:', error);
     res
@@ -266,6 +267,17 @@ routinesRouter.patch('/:id', async (req: AuthRequest, res) => {
     res
       .status(500)
       .json({ error: error instanceof Error ? error.message : 'Erro ao atualizar rotina.' });
+  }
+});
+
+routinesRouter.post('/:id/restore', async (req: AuthRequest, res) => {
+  try {
+    res.json(await Routines.restore(req.userId!, String(req.params.id)));
+  } catch (error) {
+    console.error('POST /api/routines/:id/restore error:', error);
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : 'Erro ao restaurar rotina.' });
   }
 });
 

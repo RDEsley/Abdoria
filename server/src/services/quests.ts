@@ -1,9 +1,11 @@
 import {
-  QUEST_CATALOG,
+  findQuestDefinition,
   getQuestPeriodKey,
   getQuestPeriodKeyAliases,
+  selectQuestsForUser,
   type QuestContext,
   type QuestDefinition,
+  type QuestScope,
 } from '../../../shared/quests/catalog.js';
 import { getSupabase } from '../db.js';
 import { User, sanitizeUser } from '../domain/User.js';
@@ -11,7 +13,7 @@ import { awardMoedaFromXp, awardQuestXp } from './economy.js';
 
 export interface QuestStatus {
   id: string;
-  scope: 'daily' | 'weekly';
+  scope: QuestScope;
   title: string;
   description: string;
   goal: number;
@@ -30,10 +32,12 @@ export async function listQuestsForUser(
   context: QuestContext,
 ): Promise<QuestStatus[]> {
   const now = new Date();
+  const selected = selectQuestsForUser(userId, context, now);
   const periodKeys = [
     ...new Set([
       ...getQuestPeriodKeyAliases('daily', now),
       ...getQuestPeriodKeyAliases('weekly', now),
+      ...getQuestPeriodKeyAliases('monthly', now),
     ]),
   ];
 
@@ -54,7 +58,7 @@ export async function listQuestsForUser(
     ),
   );
 
-  return QUEST_CATALOG.map((quest: QuestDefinition) => {
+  return selected.map((quest: QuestDefinition) => {
     const aliases = getQuestPeriodKeyAliases(quest.scope, now);
     const claimed = aliases.some((key) => claimedSet.has(`${quest.id}:${key}`));
     return {
@@ -80,7 +84,7 @@ export async function claimQuest(
   questId: string,
   context: QuestContext,
 ): Promise<{ user: ReturnType<typeof sanitizeUser>; xp_ganho: number }> {
-  const quest = QUEST_CATALOG.find((item) => item.id === questId);
+  const quest = findQuestDefinition(questId, userId, context);
   if (!quest) throw new Error('Missão não encontrada.');
 
   const progress = quest.progress(context);

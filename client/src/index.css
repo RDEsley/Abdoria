@@ -30,6 +30,7 @@
 @import './styles/product-polish.css';
 @import './styles/surfaces.css';
 @import './styles/app-update.css';
+@import './styles/quests.css';
 .reminder-card--calm {
   border-color: rgb(186 230 253);
   background: linear-gradient(135deg, rgb(240 249 255), rgb(224 242 254));

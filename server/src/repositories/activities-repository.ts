@@ -165,14 +165,15 @@ export const Activities = {
 };
 
 export const Routines = {
-  async list(userId: string): Promise<RoutineRecord[]> {
+  async list(userId: string, includeArchived = false): Promise<RoutineRecord[]> {
     const sb = getSupabase();
-    const { data, error } = await sb
-      .from('routines')
-      .select('*')
-      .eq('user_id', userId)
-      .is('archived_at', null)
-      .order('sort_order');
+    let query = sb.from('routines').select('*').eq('user_id', userId);
+    if (includeArchived) {
+      query = query.not('archived_at', 'is', null).order('archived_at', { ascending: false });
+    } else {
+      query = query.is('archived_at', null).order('sort_order');
+    }
+    const { data, error } = await query;
     if (error) throwIfMissingRelation(error, 'routines');
     const routines = (data ?? []).map((row) => rowToRoutine(row as Record<string, unknown>));
     if (routines.length === 0) return [];
@@ -201,8 +202,31 @@ export const Routines = {
   },
 
   async findById(userId: string, id: string): Promise<RoutineRecord | null> {
-    const all = await this.list(userId);
-    return all.find((routine) => routine.id === id) ?? null;
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('routines')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throwIfMissingRelation(error, 'routines');
+    if (!data) return null;
+    const routine = rowToRoutine(data as Record<string, unknown>);
+    const { data: items, error: itemsError } = await sb
+      .from('routine_items')
+      .select('*')
+      .eq('routine_id', id);
+    if (itemsError) throwIfMissingRelation(itemsError, 'routine_items');
+    routine.items = (items ?? [])
+      .map((item) => ({
+        routine_id: String(item.routine_id),
+        activity_id: String(item.activity_id),
+        position: Number(item.position ?? 0),
+        scheduled_time: item.scheduled_time ? String(item.scheduled_time) : null,
+        reminder_enabled: item.reminder_enabled === true,
+      }))
+      .sort((a, b) => a.position - b.position);
+    return routine;
   },
 
   async create(input: {
@@ -274,6 +298,10 @@ export const Routines = {
 
   async archive(userId: string, id: string): Promise<RoutineRecord> {
     return this.update(userId, id, { archived_at: new Date().toISOString() });
+  },
+
+  async restore(userId: string, id: string): Promise<RoutineRecord> {
+    return this.update(userId, id, { archived_at: null });
   },
 };
 

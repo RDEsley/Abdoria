@@ -29,6 +29,7 @@ export interface NotificationScheduler {
   requestPermission(): Promise<NotificationPermissionState>;
   sync(reminders: PersonalizedReminder[], options?: NotificationSyncOptions): Promise<void>;
   cancel(id: string): Promise<void>;
+  openSystemSettings?: () => Promise<void>;
 }
 
 function webPermissionState(): NotificationPermissionState {
@@ -178,6 +179,9 @@ const nativeNotificationScheduler: NotificationScheduler = {
     const pending = await LocalNotifications.getPending();
     const notifications = pending.notifications.filter((item) => item.extra?.reminderId === id);
     if (notifications.length) await LocalNotifications.cancel({ notifications });
+  },
+  async openSystemSettings() {
+    /* Sem plugin de settings — o caller mostra orientação ao usuário. */
   },
 };
 

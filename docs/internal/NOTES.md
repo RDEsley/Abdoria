@@ -65,6 +65,8 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 ## Notificações
 
 - **Inbox (sino)**: tabela `notifications` + API `/api/notifications` — eventos do app.
+- **Capacidade central**: `NotificationPermissionContext` (permission + opt-out + refresh no foreground). Gate de lembretes via `useEnsureReminderPermission` — não marcar reminder ativo sem `granted`.
+- **Onboarding**: etapa opcional pós-termos; “Agora não” seta skip de sessão/local para não reabrir o prompt da Home em seguida.
 - **Avisos locais** (`client/src/lib/local-notifications.ts`): calculados no client a partir do dashboard; não são push.
 - **Lembretes personalizados** (`preferencias.lembretes_personalizados`):
   - **Android/iOS**: Capacitor Local Notifications (`notification-scheduler.ts`).
@@ -74,6 +76,13 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - `quest_claims.user_id` aponta para `profiles(id)` (não `auth.users`). Claim usa RPC `claim_quest_slot` + `rewarded_at` para ser recuperável.
 - Web Push exige `VAPID_*`, `VITE_VAPID_PUBLIC_KEY`, `CRON_SECRET` (Vercel) e migration `20260902183000_push_hardening_and_supabase_cron.sql`.
 - Frozen Streak consumido no backend gera `streak_freeze_notice` / `streak_frozen_event` em `/stats` e celebração na Home — **não** cria mais item `streak_frozen` na Caixa de Entrada. A celebração usa `preserved_streak` (sequência protegida). Frozen nunca incrementa sozinho; ação válida posterior é que faz 10 → 11.
+
+## Missões
+
+- Seleção determinística em `shared/quests/catalog.ts` (`selectQuestsForUser`): 3 daily / 2 weekly / 1 monthly por `userId + periodKey` (fuso SP). Sem LLM.
+- Period keys: diário `YYYY-MM-DD`, semanal `WYYYY-MM-DD` (segunda SP), mensal `MYYYY-MM`. Sem migration — `quest_claims` já chaveia por `quest_id + period_key`.
+- Elegibilidade por contexto (rotinas, treino do dia, categorias, dias restantes no mês, etc.). XP via `awardQuestXp` fora do teto diário; budgets ~30/60/80.
+- Aba Atividades: Missões (alias `?tab=insights`). Insights de consistência ficam secundários em “Seu ritmo”.
 
 ## Home / Guia do dia
 

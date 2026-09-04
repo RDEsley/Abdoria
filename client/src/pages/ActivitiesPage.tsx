@@ -5,17 +5,17 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { useActivitiesData } from '@/features/activities/useActivitiesData';
 import { TodayTab } from '@/features/activities/TodayTab';
 import { RoutinesTab } from '@/features/activities/RoutinesTab';
-import { InsightsTab } from '@/features/activities/InsightsTab';
-import { useStickyTab } from '@/hooks/useStickyTab';
+import { MissionsTab } from '@/features/activities/MissionsTab';
+import { usePageTab } from '@/hooks/usePageTab';
 import { useClaimableQuestCount } from '@/hooks/useClaimableQuests';
 import { playTabSwitch } from '@/lib/sounds';
 
-const TABS = ['hoje', 'rotinas', 'insights'] as const;
+const TABS = ['hoje', 'rotinas', 'missoes'] as const;
 type Tab = (typeof TABS)[number];
 
 export function ActivitiesPage() {
   const data = useActivitiesData();
-  const [tab, setTab] = useStickyTab<Tab>('evolyn:activities-tab', TABS, 'hoje');
+  const [tab, setTab] = usePageTab<Tab>(TABS, 'hoje', { insights: 'missoes' });
   const claimableQuests = useClaimableQuestCount(data.logs.length);
 
   if (data.loading) return <PageLoader />;
@@ -39,7 +39,7 @@ export function ActivitiesPage() {
           [
             ['hoje', 'Hoje'],
             ['rotinas', 'Rotinas'],
-            ['insights', 'Insights'],
+            ['missoes', 'Missões'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -52,7 +52,7 @@ export function ActivitiesPage() {
             }}
           >
             {label}
-            {id === 'insights' && claimableQuests > 0 && (
+            {id === 'missoes' && claimableQuests > 0 && (
               <span
                 className="game-tab__badge"
                 aria-label={`${claimableQuests} missões para coletar`}
@@ -66,7 +66,7 @@ export function ActivitiesPage() {
 
       {tab === 'hoje' && <TodayTab data={data} />}
       {tab === 'rotinas' && <RoutinesTab data={data} />}
-      {tab === 'insights' && <InsightsTab data={data} />}
+      {tab === 'missoes' && <MissionsTab data={data} />}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { CreateSchemeModal } from '@/components/builder/CreateSchemeModal';
 import { SaveWorkoutModal } from '@/components/builder/SaveWorkoutModal';
-import { MAX_REP_SCHEMES, RepSchemeCarousel } from '@/components/builder/RepSchemeCarousel';
+import { MAX_REP_SCHEMES } from '@/components/builder/RepSchemeCarousel';
 import { SimilarWorkoutModal } from '@/components/builder/SimilarWorkoutModal';
 import { SimilarExerciseModal } from '@/components/builder/SimilarExerciseModal';
 import { ExercisePicker } from '@/components/builder/ExercisePicker';
@@ -27,6 +27,11 @@ import {
   listSimilarWorkoutChoices,
 } from '@/components/builder/similar-presets';
 import { filterSimilarExercises, pickPresetForCycle } from '@/components/builder/similar-exercises';
+import {
+  AB_INTENSITY_LABELS,
+  isCustomAbTrainingProfile,
+} from '@shared/ab-training-profile';
+import type { AbTrainingIntensity } from '@shared/types';
 import { GameButton } from '@/components/ui/GameButton';
 import { GamePageHeader } from '@/components/ui/GamePageHeader';
 import { showGameToast } from '@/lib/game-toast';
@@ -48,20 +53,17 @@ import type {
   Objetivo,
   RepSchemeRecommendation,
   SavedWorkoutPreset,
-  StoredRepScheme,
   TreinoBase,
   TreinoSugerido,
   WorkoutQueueItem,
 } from '@/types';
 import {
   CICLO_LABELS,
-  NIVEL_LABELS,
   formatExerciseName,
   fromSavedPresetId,
   getExerciseParamsForNivel,
   isSavedPresetId,
   normalizeCicloTreinos,
-  REP_SCHEME_BY_NIVEL,
   toSavedPresetId,
 } from '@/types';
 
@@ -79,9 +81,7 @@ export function TrainingPage() {
     setCustomWorkoutName,
     saveWorkoutPreset,
     getRepSchemes,
-    setRepSchemeConfiguration,
     addRepScheme,
-    removeRepScheme,
     selectedRepSchemeIds,
     setSelectedRepSchemeId,
     flushPendingUserDados,
@@ -380,63 +380,24 @@ export function TrainingPage() {
     [selectedPresetId, setCustomWorkout],
   );
 
-  const handleSelectScheme = (scheme: StoredRepScheme) => {
-    lastAppliedQueueKeyRef.current = '';
-    applyRepScheme(scheme, 'all', { force: true });
-  };
-
-  const handleDeleteScheme = (schemeId: string) => {
-    const next = removeRepScheme(nivel, schemeId);
-    if (selectedSchemeId === schemeId) {
-      lastAppliedQueueKeyRef.current = '';
-      const fallbackId = next[0]?.id ?? null;
-      setSelectedSchemeId(fallbackId);
-      if (fallbackId) setSelectedRepSchemeId(nivel, fallbackId);
-    }
-  };
-
-  const [schemeLevel, setSchemeLevel] = useState<NivelUsuario>(nivel);
   const [schemeLevelBusy, setSchemeLevelBusy] = useState(false);
 
-  // Nível trocado em outro lugar (Perfil, outro dispositivo) reflete no botão.
-  useEffect(() => {
-    setSchemeLevel(nivel);
-  }, [nivel]);
-
-  /**
-   * Troca o nível de TREINO inteiro: atualiza o nível do perfil (os treinos
-   * recomendados seguem o novo nível) e aplica os 3 esquemas recomendados
-   * dele — sobrescreve os salvos, comportamento documentado do botão.
-   */
-  const cycleSchemeLevel = async () => {
-    if (schemeLevelBusy) return;
-    const order: NivelUsuario[] = ['iniciante', 'intermediario', 'avancado'];
-    const nextLevel = order[(order.indexOf(schemeLevel) + 1) % order.length]!;
+  const applyPlanIntensity = async (intensity: AbTrainingIntensity) => {
+    if (!authUser?.ab_training_profile_v2 || schemeLevelBusy) return;
     setSchemeLevelBusy(true);
-    setSchemeLevel(nextLevel);
-
-    const recommended: StoredRepScheme[] = REP_SCHEME_BY_NIVEL[nextLevel].map((scheme) => ({
-      ...scheme,
-      isCustom: false,
-    }));
-    lastAppliedQueueKeyRef.current = '';
-    const first = recommended[0];
-    if (first) {
-      setRepSchemeConfiguration(nextLevel, recommended, first.id);
-      setSelectedSchemeId(first.id);
-      applyRepScheme(first, 'all', { force: true, persistSelection: false });
-    }
-
     try {
-      const atualizado = await updateMe({ nivel: nextLevel });
-      applyUser(atualizado);
+      const next = {
+        ...authUser.ab_training_profile_v2,
+        intensity,
+        mode: 'preset' as const,
+      };
+      const updated = await updateMe({ ab_training_profile_v2: next });
+      applyUser(updated);
+      showGameToast(`Intensidade: ${AB_INTENSITY_LABELS[intensity]}`, { variant: 'success' });
+      lastSyncedSuggestedRef.current = null;
       void loadRecommendations({ force: true });
-      showGameToast(`Nível ${NIVEL_LABELS[nextLevel]} — treinos e esquemas atualizados.`, {
-        variant: 'success',
-      });
-    } catch (err) {
-      setSchemeLevel(nivel);
-      showGameToast(getErrorMessage(err, 'Não foi possível trocar o nível.'), {
+    } catch (error) {
+      showGameToast(getErrorMessage(error, 'Não foi possível atualizar a intensidade.'), {
         variant: 'error',
       });
     } finally {
@@ -913,43 +874,69 @@ export function TrainingPage() {
           <details className="builder-advanced rounded-2xl border border-stone-200 bg-white/80 p-3">
             <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-extrabold text-stone-700">
               <GraduationCap size={18} aria-hidden />
-              Personalização avançada
+              Intensidade do plano
               <span className="ml-auto text-xs font-semibold text-stone-500">
-                {NIVEL_LABELS[schemeLevel]}
+                {authUser?.ab_training_profile_v2
+                  ? isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
+                    ? 'Personalizado'
+                    : AB_INTENSITY_LABELS[authUser.ab_training_profile_v2.intensity]
+                  : '—'}
               </span>
             </summary>
+            <p className="mt-2 text-xs font-semibold text-stone-500">
+              Controla o Plano de Core — não altera o nível geral da conta.
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {(['leve', 'moderado', 'evolyn'] as const).map((intensity) => {
+                const active =
+                  authUser?.ab_training_profile_v2?.mode !== 'custom' &&
+                  authUser?.ab_training_profile_v2?.intensity === intensity;
+                return (
+                  <button
+                    key={intensity}
+                    type="button"
+                    className={`builder-level-switch justify-center${active ? ' is-active' : ''}`}
+                    disabled={!authUser?.ab_training_profile_v2 || schemeLevelBusy}
+                    onClick={() => void applyPlanIntensity(intensity)}
+                  >
+                    {AB_INTENSITY_LABELS[intensity]}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className={`builder-level-switch justify-center${
+                  authUser?.ab_training_profile_v2 &&
+                  isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
+                    ? ' is-active'
+                    : ''
+                }`}
+                disabled={schemeLevelBusy}
+                onClick={() => {
+                  if (
+                    authUser?.ab_training_profile_v2 &&
+                    isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
+                  ) {
+                    return;
+                  }
+                  setShowAbPlan(true);
+                }}
+              >
+                {authUser?.ab_training_profile_v2 &&
+                isCustomAbTrainingProfile(authUser.ab_training_profile_v2)
+                  ? 'Personalizado'
+                  : 'Personalizado · configure no Plano'}
+              </button>
+            </div>
             <Link
               to="/configuracoes#ajustar-plano"
               state={{ highlightTrainingPlan: true }}
-              className="builder-plan-link"
+              className="builder-plan-link mt-3"
+              onClick={() => setShowAbPlan(true)}
             >
-              Ajustar Plano de Treino
+              Ajustar Plano de Core
               <ArrowRight size={16} aria-hidden />
             </Link>
-            <section className="mt-3 border-t border-stone-200 pt-3">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-extrabold text-stone-800">Esquemas de repetição</p>
-                <button
-                  type="button"
-                  className="builder-level-switch"
-                  aria-label="Trocar nível dos treinos e esquemas recomendados"
-                  title={`Trocar o nível dos treinos e esquemas (atual: ${NIVEL_LABELS[schemeLevel]})`}
-                  disabled={schemeLevelBusy}
-                  onClick={() => void cycleSchemeLevel()}
-                >
-                  <GraduationCap size={15} aria-hidden />
-                  <span>Trocar nível</span>
-                </button>
-              </div>
-              <RepSchemeCarousel
-                schemes={schemes}
-                selectedId={selectedSchemeId}
-                nivelLabel={NIVEL_LABELS[schemeLevel]}
-                onSelect={handleSelectScheme}
-                onDelete={handleDeleteScheme}
-                onCreateClick={() => setShowCreateScheme(true)}
-              />
-            </section>
           </details>
 
           <section id="builder-queue-preview">

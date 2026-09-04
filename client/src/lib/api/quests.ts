@@ -2,7 +2,7 @@ import { fetchJson } from './client';
 
 export interface QuestStatus {
   id: string;
-  scope: 'daily' | 'weekly';
+  scope: 'daily' | 'weekly' | 'monthly';
   title: string;
   description: string;
   goal: number;
