@@ -4,6 +4,7 @@ import {
   QUEST_DAILY_XP_BUDGET,
   QUEST_MONTHLY_COUNT,
   QUEST_MONTHLY_XP_BUDGET,
+  QUEST_TEMPLATE_POOL,
   QUEST_WEEKLY_COUNT,
   QUEST_WEEKLY_XP_BUDGET,
   getQuestPeriodKey,
@@ -44,6 +45,11 @@ function ctx(partial: Partial<QuestContext> = {}): QuestContext {
     daysRemainingInMonth: 20,
     dayOfMonth: 10,
     streakAtual: 3,
+    nutritionSetup: false,
+    mealsLoggedToday: 0,
+    nutritionDaysThisWeek: 0,
+    nutritionDaysThisMonth: 0,
+    recipesLoggedThisWeek: 0,
     ...partial,
   };
 }
@@ -100,5 +106,30 @@ describe('quest selection', () => {
       ctx({ hasRoutines: false, hasRoutineScheduledToday: false }),
     );
     expect(selected.some((q) => q.id.includes('routine'))).toBe(false);
+  });
+
+  it('nutrition meal quest only when setup is complete', () => {
+    const meal = QUEST_TEMPLATE_POOL.find((q) => q.id === 'daily_nutrition_meal')!;
+    expect(meal.eligible?.(ctx({ nutritionSetup: false }))).toBe(false);
+    expect(meal.eligible?.(ctx({ nutritionSetup: true }))).toBe(true);
+    expect(meal.progress(ctx({ mealsLoggedToday: 1 }))).toBe(1);
+  });
+
+  it('prefers mixed domains for daily when nutrition is eligible', () => {
+    const now = new Date('2026-09-04T15:00:00-03:00');
+    const selected = selectQuestsForUser(
+      'domain-mix-user',
+      ctx({
+        nutritionSetup: true,
+        trainingDayToday: true,
+        weeklyTrainingDays: 3,
+        hasActivities: true,
+      }),
+      now,
+    ).filter((q) => q.scope === 'daily');
+    const domains = new Set(
+      selected.map((q) => QUEST_TEMPLATE_POOL.find((t) => t.id === q.id)?.domain ?? 'general'),
+    );
+    expect(domains.size).toBeGreaterThanOrEqual(2);
   });
 });

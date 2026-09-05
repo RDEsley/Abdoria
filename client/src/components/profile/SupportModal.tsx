@@ -1,43 +1,51 @@
 import { useEffect, useState } from 'react';
 import { Bug, Mail, X } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/lib/game-toast';
 import { getErrorMessage } from '@/lib/api-errors';
-import { submitAppSuggestion } from '@/lib/api';
+import { submitSupportMessage, type SupportKind } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { getRunningRelease } from '@/lib/app-release';
 
 const SUPPORT_EMAIL = 'fateeightcontato@gmail.com';
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const KIND_OPTIONS: Array<{ id: SupportKind; label: string }> = [
+  { id: 'bug', label: 'Bug' },
+  { id: 'suggestion', label: 'Sugestão' },
+  { id: 'feedback', label: 'Feedback' },
+];
 
 /** Reportar bug/sugestão a partir do perfil — vai pro painel do ADM + contato direto. */
 export function SupportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { user, applyUser } = useAuth();
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
+  const [kind, setKind] = useState<SupportKind>('bug');
   const [texto, setTexto] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setNome((prev) => prev || user?.nome || '');
-    setEmail((prev) => prev || user?.email || '');
-  }, [open, user?.nome, user?.email]);
+    setKind('bug');
+    setTexto('');
+  }, [open]);
 
-  const nomeValido = nome.trim().length >= 2;
-  const emailValido = EMAIL_REGEX.test(email.trim());
-  const podeEnviar = nomeValido && emailValido && texto.trim().length >= 5;
+  const podeEnviar = texto.trim().length >= 5;
 
   const enviar = async () => {
     if (!podeEnviar) {
-      showGameToast('Preencha nome, e-mail e conte com um pouco mais de detalhe. 😊', {
-        variant: 'warn',
-      });
+      showGameToast('Conte com um pouco mais de detalhe. 😊', { variant: 'warn' });
       return;
     }
     setBusy(true);
     try {
-      const res = await submitAppSuggestion(texto.trim());
+      const release = getRunningRelease();
+      const res = await submitSupportMessage(kind, texto.trim(), {
+        route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        release: release.version,
+        build: release.build,
+        platform: Capacitor.isNativePlatform() ? Capacitor.getPlatform() : 'web',
+      });
       applyUser(res.user);
       setTexto('');
       showGameToast('Enviado! Obrigado por ajudar a melhorar o Evolyn. 💚', {
@@ -65,36 +73,42 @@ export function SupportModal({ open, onClose }: { open: boolean; onClose: () => 
           <Bug size={24} />
         </span>
         <h2 id="support-modal-title" className="mt-3 text-lg font-extrabold text-stone-900">
-          Reportar bug ou sugestão
+          Fale com o Evolyn
         </h2>
         <p className="mt-1.5 text-center text-sm font-medium leading-snug text-stone-500">
           Encontrou um problema ou tem uma ideia? Conta pra gente — sua mensagem chega direto pra
           quem desenvolve o app.
         </p>
 
-        <div className="mt-4 flex flex-col gap-2 text-left sm:flex-row">
-          <input
-            type="text"
-            value={nome}
-            onChange={(e) => setNome(e.target.value.slice(0, 80))}
-            placeholder="Seu nome"
-            className="w-full rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-left text-sm font-medium outline-none focus:border-emerald-500"
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value.slice(0, 120))}
-            placeholder="Seu e-mail"
-            className="w-full rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-left text-sm font-medium outline-none focus:border-emerald-500"
-          />
+        {user ? (
+          <p className="mt-3 text-xs font-semibold text-stone-500">
+            Enviando como <span className="text-stone-800">{user.nome}</span>
+          </p>
+        ) : null}
+
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {KIND_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setKind(option.id)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
+                kind === option.id
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                  : 'border-stone-200 bg-white text-stone-600'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
 
         <textarea
           value={texto}
           onChange={(e) => setTexto(e.target.value.slice(0, 800))}
           rows={4}
-          placeholder="Descreva o bug ou sua sugestão..."
-          className="mt-2 w-full rounded-xl border-2 border-stone-200 bg-white px-3 py-2 text-left text-sm font-medium outline-none focus:border-emerald-500"
+          placeholder="Descreva o bug, sugestão ou feedback..."
+          className="mt-3 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-left text-sm font-medium outline-none focus:border-emerald-500"
         />
         <p className="mt-1 text-right text-[0.62rem] font-semibold text-stone-400">
           {texto.length}/800

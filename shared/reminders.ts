@@ -439,7 +439,40 @@ function personalNotificationSchedulesEqual(
 }
 
 export function isDerivedActivityReminderId(id: string): boolean {
-  return id.startsWith('activity:') || id.startsWith('routine:') || id.startsWith('routine-item:');
+  return (
+    id.startsWith('activity:') ||
+    id.startsWith('routine:') ||
+    id.startsWith('routine-item:') ||
+    id.startsWith('nutrition:')
+  );
+}
+
+export type ReminderSourceKind = 'personal' | 'activity' | 'routine' | 'nutrition' | 'system';
+
+/** Classifica a origem de um lembrete pelo id (derivado ou pessoal). */
+export function normalizeReminderSource(id: string): ReminderSourceKind {
+  if (id.startsWith('nutrition:')) return 'nutrition';
+  if (id.startsWith('activity:') || id.startsWith('routine-item:')) return 'activity';
+  if (id.startsWith('routine:')) return 'routine';
+  if (id.startsWith('system:')) return 'system';
+  return 'personal';
+}
+
+/** Deep link in-app para lembretes derivados (web push / nativo). */
+export function reminderDeepLinkUrl(reminderId: string): string | undefined {
+  const source = normalizeReminderSource(reminderId);
+  if (source === 'nutrition') {
+    const parts = reminderId.split(':');
+    const meal = parts[2];
+    if (meal && meal !== 'custom') {
+      return `/alimentacao?acao=registrar&refeicao=${encodeURIComponent(meal)}`;
+    }
+    return '/alimentacao?acao=registrar';
+  }
+  if (source === 'activity' || source === 'routine') {
+    return '/atividades';
+  }
+  return undefined;
 }
 
 /** Entidade de origem de um lembrete derivado (activity/routine), se houver. */
@@ -637,4 +670,52 @@ export function summarizePersonalNotificationSchedule(reminder: PersonalizedRemi
       ? 'Todos os dias'
       : reminder.schedule.weekdays.map((day) => WEEKDAY_SHORT[day] ?? '?').join(', ');
   return `${dayPart} · ${formatTimesCompact(reminder.schedule.times)}`;
+}
+
+/**
+ * Lembretes derivados de `nutrition_profiles.preferences.meal_reminders`.
+ * Ids estáveis: `nutrition:meal:<meal_type>` (ou `:custom:<labelFold>`).
+ */
+export function deriveNutritionReminders(
+  mealReminders:
+    | Array<{
+        meal_type: string;
+        label: string;
+        time: string;
+        weekdays: number[];
+        enabled: boolean;
+      }>
+    | null
+    | undefined,
+  nowIso = new Date().toISOString(),
+): PersonalizedReminder[] {
+  if (!mealReminders?.length) return [];
+  const derived: PersonalizedReminder[] = [];
+  for (const entry of mealReminders) {
+    if (!entry.enabled) continue;
+    const time = String(entry.time ?? '').trim();
+    if (!/^\d{2}:\d{2}$/.test(time)) continue;
+    const weekdays = normalizeReminderWeekdays(entry.weekdays);
+    if (weekdays.length === 0) continue;
+    const mealType = String(entry.meal_type || 'custom');
+    const label = String(entry.label || mealType).trim() || 'Refeição';
+    const id =
+      mealType === 'custom'
+        ? `nutrition:meal:custom:${label.toLowerCase().replace(/\s+/g, '-').slice(0, 40)}`
+        : `nutrition:meal:${mealType}`;
+    derived.push({
+      version: PERSONAL_NOTIFICATION_VERSION,
+      id,
+      title: label,
+      message: 'Hora de registrar sua refeição no Evolyn.',
+      icon: 'health',
+      color: 'emerald',
+      sound: DEFAULT_REMINDER_SOUND,
+      schedule: { kind: 'recurring', times: [time], weekdays },
+      enabled: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+  }
+  return derived;
 }

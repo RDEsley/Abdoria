@@ -27,6 +27,7 @@ import {
 import { buildDeterministicInsights } from '../../../shared/activities/insights.js';
 import { periodFromHour } from '../../../shared/activities/schedule.js';
 import { selectQuestsForUser, type QuestContext } from '../../../shared/quests/catalog.js';
+import { FoodLogs, NutritionProfiles } from '../repositories/nutrition-repository.js';
 
 function emptyCategories(): Set<string> {
   return new Set();
@@ -65,6 +66,11 @@ function baseQuestContext(partial: Partial<QuestContext>): QuestContext {
     daysRemainingInMonth: 30,
     dayOfMonth: 1,
     streakAtual: 0,
+    nutritionSetup: false,
+    mealsLoggedToday: 0,
+    nutritionDaysThisWeek: 0,
+    nutritionDaysThisMonth: 0,
+    recipesLoggedThisWeek: 0,
     ...partial,
   };
 }
@@ -404,7 +410,7 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
   const monthFromIso = startOfDayKeySaoPaulo(monthStart).toISOString();
   const tomorrowIso = startOfDayKeySaoPaulo(addDaysSaoPaulo(today, 1)).toISOString();
 
-  const [user, activities, routines, logs, treinoHoje, weekDays, monthDays, weekWorkouts, monthWorkouts] =
+  const [user, activities, routines, logs, treinoHoje, weekDays, monthDays, weekWorkouts, monthWorkouts, nutritionProfile, foodLogsMonth] =
     await Promise.all([
       User.findById(userId),
       Activities.list(userId),
@@ -423,6 +429,8 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
         concluido_em: { $gte: monthFromIso, $lt: tomorrowIso },
         somenteTreino: true,
       }),
+      NutritionProfiles.getOrNull(userId).catch(() => null),
+      FoodLogs.listBetween(userId, monthStart, today).catch(() => []),
     ]);
 
   const todayLogs = logs.filter((log) => log.day_key === today);
@@ -521,6 +529,20 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
     }
   }
 
+  const foodToday = foodLogsMonth.filter((log) => log.day_key === today);
+  const foodWeek = foodLogsMonth.filter((log) => log.day_key >= weekStart);
+  const mealsLoggedToday = new Set(foodToday.map((log) => log.meal_type)).size;
+  const nutritionDaysThisWeek = new Set(foodWeek.map((log) => log.day_key)).size;
+  const nutritionDaysThisMonth = new Set(foodLogsMonth.map((log) => log.day_key)).size;
+  const recipeEventsWeek = new Set<string>();
+  for (const log of foodWeek) {
+    const note = log.note ?? '';
+    if (!note.startsWith('recipe:')) continue;
+    const recipeId = note.slice('recipe:'.length).split(/[\s—-]/)[0] ?? '';
+    if (!recipeId) continue;
+    recipeEventsWeek.add(`${log.day_key}|${log.meal_type}|${recipeId}`);
+  }
+
   return baseQuestContext({
     activitiesCompletedToday: doneLogs.length,
     activitiesCompletedThisWeek: weekLogs.filter((log) => log.activity_id).length,
@@ -554,5 +576,10 @@ export async function buildQuestContext(userId: string): Promise<QuestContext> {
     daysRemainingInMonth,
     dayOfMonth,
     streakAtual: user?.gamificacao?.streak_atual ?? 0,
+    nutritionSetup: Boolean(nutritionProfile?.setup_completed_at),
+    mealsLoggedToday,
+    nutritionDaysThisWeek,
+    nutritionDaysThisMonth,
+    recipesLoggedThisWeek: recipeEventsWeek.size,
   });
 }

@@ -5,6 +5,7 @@ export const ACTIVE_DAY_SOURCES = [
   'activity_completed',
   'activity_minimum_completed',
   'routine_completed',
+  'nutrition',
   'hydration_logged',
   'myplant_watered',
 ] as const;

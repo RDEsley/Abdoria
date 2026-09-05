@@ -5,6 +5,12 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
+import {
+  SupportMessages,
+  isSupportKind,
+  isSupportStatus,
+  type SupportStatus,
+} from '../repositories/support-repository.js';
 import { UserReports, type UserReportRow } from '../repositories/report-repository.js';
 import { removeAvatar } from '../services/avatar-storage.js';
 import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
@@ -72,12 +78,15 @@ function toAdminEntry(user: UserLean) {
 adminRouter.get('/overview', async (_req: AuthRequest, res) => {
   try {
     if (!requireAdmin(res)) return;
-    const [ratings, suggestions, users, pendingReports] = await Promise.all([
-      Ratings.listAll(),
-      Suggestions.listAll().catch(() => []),
-      User.find({ is_demo_npc: false }, { limit: 500 }),
-      UserReports.countPending().catch(() => 0),
-    ]);
+    const [ratings, suggestions, users, pendingReports, supportMessages, pendingSupport] =
+      await Promise.all([
+        Ratings.listAll(),
+        Suggestions.listAll().catch(() => []),
+        User.find({ is_demo_npc: false }, { limit: 500 }),
+        UserReports.countPending().catch(() => 0),
+        SupportMessages.list({ limit: 100 }).catch(() => []),
+        SupportMessages.countPending().catch(() => 0),
+      ]);
     const media =
       ratings.length > 0
         ? Math.round((ratings.reduce((sum, r) => sum + r.estrelas, 0) / ratings.length) * 10) / 10
@@ -85,9 +94,11 @@ adminRouter.get('/overview', async (_req: AuthRequest, res) => {
     res.json({
       ratings,
       suggestions,
+      support_messages: supportMessages,
       media_estrelas: media,
       total_usuarios: users.length,
       pending_reports: pendingReports,
+      pending_support: pendingSupport,
     });
   } catch (error) {
     console.error('GET /api/admin/overview error:', error);
@@ -95,12 +106,51 @@ adminRouter.get('/overview', async (_req: AuthRequest, res) => {
   }
 });
 
+adminRouter.get('/support', async (req: AuthRequest, res) => {
+  try {
+    if (!requireAdmin(res)) return;
+    const statusParam = String(req.query.status ?? 'pending');
+    const kindParam = String(req.query.kind ?? 'all');
+    const status =
+      statusParam === 'all' || isSupportStatus(statusParam) ? statusParam : 'pending';
+    const kind =
+      kindParam === 'all' || isSupportKind(kindParam) ? kindParam : 'all';
+    const messages = await SupportMessages.list({
+      status: status as SupportStatus | 'all',
+      kind: kind as 'all' | 'bug' | 'suggestion' | 'feedback',
+    });
+    res.json({ messages });
+  } catch (error) {
+    console.error('GET /api/admin/support error:', error);
+    res.status(500).json({ error: 'Erro ao listar mensagens de suporte.' });
+  }
+});
+
+adminRouter.patch('/support/:id', async (req: AuthRequest, res) => {
+  try {
+    if (!requireAdmin(res)) return;
+    const status = (req.body as { status?: string }).status;
+    if (!isSupportStatus(status)) {
+      res.status(400).json({ error: 'Status inválido.' });
+      return;
+    }
+    const message = await SupportMessages.updateStatus(String(req.params.id), status);
+    res.json({ message });
+  } catch (error) {
+    console.error('PATCH /api/admin/support/:id error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar mensagem.' });
+  }
+});
+
 /** Contador leve pro badge do botão de admin — sem puxar avaliações/sugestões. */
 adminRouter.get('/reports/pending-count', async (_req: AuthRequest, res) => {
   try {
     if (!requireAdmin(res)) return;
-    const count = await UserReports.countPending();
-    res.json({ count });
+    const [reports, support] = await Promise.all([
+      UserReports.countPending(),
+      SupportMessages.countPending().catch(() => 0),
+    ]);
+    res.json({ count: reports, pending_support: support });
   } catch (error) {
     console.error('GET /api/admin/reports/pending-count error:', error);
     res.status(500).json({ error: 'Erro ao contar denúncias.' });

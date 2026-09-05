@@ -2,6 +2,7 @@ import {
   PERSONAL_NOTIFICATION_MAX_REQUESTS,
   buildNativeNotificationSchedules,
   isReminderDue,
+  reminderDeepLinkUrl,
   type PersonalizedReminder,
 } from '@shared/reminders';
 import { buildWebPushNotificationPayload } from '@shared/notification-catalog';
@@ -161,6 +162,9 @@ const nativeNotificationScheduler: NotificationScheduler = {
                 icon: reminder.icon,
                 color: reminder.color,
                 sound: resolved,
+                ...(reminderDeepLinkUrl(reminder.id)
+                  ? { url: reminderDeepLinkUrl(reminder.id) }
+                  : {}),
               },
             };
           }),

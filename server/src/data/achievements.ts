@@ -320,6 +320,36 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     descricao: 'Tenha 4 semanas perfeitas (7/7 dias) na jornada',
     dificuldade: 'lendaria',
   },
+
+  // —— Nutrição ——
+  {
+    id: 'nutrition_first_meal',
+    titulo: 'Primeira refeição',
+    icon: 'sparkles',
+    descricao: 'Registre sua primeira refeição no Evolyn',
+    dificuldade: 'facil',
+  },
+  {
+    id: 'nutrition_7_days',
+    titulo: 'Semana na mesa',
+    icon: 'medal',
+    descricao: 'Registre alimentação em 7 dias diferentes',
+    dificuldade: 'media',
+  },
+  {
+    id: 'nutrition_first_recipe',
+    titulo: 'Chef iniciante',
+    icon: 'star',
+    descricao: 'Experimente uma receita do Evolyn',
+    dificuldade: 'facil',
+  },
+  {
+    id: 'nutrition_recipe_5',
+    titulo: 'Cardápio variado',
+    icon: 'trophy',
+    descricao: 'Registre 5 receitas do Evolyn',
+    dificuldade: 'media',
+  },
 ];
 
 export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a])) as Record<

@@ -42,6 +42,11 @@ function ctx(partial: Partial<QuestContext> = {}): QuestContext {
     daysRemainingInMonth: 20,
     dayOfMonth: 10,
     streakAtual: 3,
+    nutritionSetup: false,
+    mealsLoggedToday: 0,
+    nutritionDaysThisWeek: 0,
+    nutritionDaysThisMonth: 0,
+    recipesLoggedThisWeek: 0,
     ...partial,
   };
 }

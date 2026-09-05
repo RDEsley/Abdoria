@@ -1,6 +1,9 @@
 export type NutritionGoal = 'maintain' | 'gain' | 'lose' | 'track';
 export type NutritionTargetMode = 'none' | 'manual' | 'estimated';
 export type FoodSource = 'global' | 'user';
+export type RecipeSource = FoodSource;
+export type RecipeDifficulty = 'easy' | 'medium' | 'hard';
+export type DietStyle = 'omnivore' | 'vegetarian' | 'vegan' | 'lactose_free';
 export type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner' | 'supper' | 'other';
 
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
@@ -55,6 +58,8 @@ export interface NutritionMealReminder {
 }
 
 export interface NutritionPreferences {
+  /** Preferência agregada; booleanos abaixo permanecem para compatibilidade. */
+  diet_style?: DietStyle;
   vegetarian?: boolean;
   vegan?: boolean;
   lactose_free?: boolean;
@@ -135,8 +140,72 @@ export interface DayNutritionSummary {
   log_count: number;
 }
 
+export interface RecipeItemRecord {
+  id: string;
+  recipe_id: string;
+  food_id: string;
+  quantity: number;
+  grams: number | null;
+  position: number;
+  note: string | null;
+  food?: FoodRecord | null;
+  /** Macros do item (já escalados por quantity/grams da receita). */
+  macros?: NutritionMacros;
+}
+
+export interface RecipeRecord {
+  id: string;
+  owner_user_id: string | null;
+  source: RecipeSource;
+  name: string;
+  description: string | null;
+  servings: number;
+  prep_minutes: number | null;
+  difficulty: RecipeDifficulty;
+  meal_types: MealType[];
+  tags: string[];
+  instructions: string[];
+  verified: boolean;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  favorited?: boolean;
+  items?: RecipeItemRecord[];
+  /** Totais da receita completa (soma dos itens). */
+  macros_total?: NutritionMacros;
+  /** Macros por porção (totais / servings). */
+  macros_per_serving?: NutritionMacros;
+}
+
+export interface RecipeItemInput {
+  food_id: string;
+  quantity?: number;
+  grams?: number | null;
+  position?: number;
+  note?: string | null;
+}
+
+export interface RecipeWriteInput {
+  name: string;
+  description?: string | null;
+  servings?: number;
+  prep_minutes?: number | null;
+  difficulty?: RecipeDifficulty;
+  meal_types?: MealType[];
+  tags?: string[];
+  instructions?: string[];
+  items: RecipeItemInput[];
+}
+
 export const FOOD_NAME_MAX = 80;
 export const FOOD_BRAND_MAX = 60;
 export const FOOD_NOTE_MAX = 240;
 export const USER_FOODS_MAX = 200;
 export const FOOD_SEARCH_LIMIT = 40;
+export const RECIPE_NAME_MAX = 100;
+export const RECIPE_DESC_MAX = 400;
+export const RECIPE_NOTE_MAX = 240;
+export const USER_RECIPES_MAX = 100;
+export const RECIPE_SEARCH_LIMIT = 40;
+export const RECIPE_DIFFICULTIES: RecipeDifficulty[] = ['easy', 'medium', 'hard'];
+export const DIET_STYLES: DietStyle[] = ['omnivore', 'vegetarian', 'vegan', 'lactose_free'];

@@ -43,6 +43,25 @@ export interface WebPushNotificationPayload {
   tag: string;
   icon: string;
   badge: string;
+  data?: { url?: string };
+}
+
+function deepLinkForReminderId(id: string): string | undefined {
+  if (id.startsWith('nutrition:meal:')) {
+    const meal = id.split(':')[2];
+    if (meal && meal !== 'custom') {
+      return `/alimentacao?acao=registrar&refeicao=${encodeURIComponent(meal)}`;
+    }
+    return '/alimentacao?acao=registrar';
+  }
+  if (
+    id.startsWith('activity:') ||
+    id.startsWith('routine:') ||
+    id.startsWith('routine-item:')
+  ) {
+    return '/atividades';
+  }
+  return undefined;
 }
 
 export function buildWebPushNotificationPayload(
@@ -54,11 +73,13 @@ export function buildWebPushNotificationPayload(
   },
   _occurrenceKey: string,
 ): WebPushNotificationPayload {
+  const url = deepLinkForReminderId(reminder.id);
   return {
     title: reminder.title,
     body: reminder.message || 'Hora do seu lembrete no Evolyn.',
     tag: reminder.id,
     icon: EVOLYN_NOTIFICATION_ICON,
     badge: EVOLYN_NOTIFICATION_BADGE,
+    ...(url ? { data: { url } } : {}),
   };
 }

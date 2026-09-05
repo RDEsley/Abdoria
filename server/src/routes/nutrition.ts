@@ -4,6 +4,7 @@ import {
   FoodLogs,
   Foods,
   NutritionProfiles,
+  Recipes,
   WeightLogs,
 } from '../repositories/nutrition-repository.js';
 import {
@@ -13,14 +14,24 @@ import {
   FOOD_NOTE_MAX,
   FOOD_SEARCH_LIMIT,
   MEAL_TYPE_LABELS,
+  RECIPE_DESC_MAX,
+  RECIPE_DIFFICULTIES,
+  RECIPE_NAME_MAX,
+  RECIPE_NOTE_MAX,
+  RECIPE_SEARCH_LIMIT,
   USER_FOODS_MAX,
+  USER_RECIPES_MAX,
   validateFoodMacros,
   type MealType,
   type NutritionGoal,
   type NutritionTargetMode,
+  type RecipeDifficulty,
+  type RecipeItemInput,
 } from '../../../shared/nutrition/index.js';
 import { getTodaySaoPaulo, addDaysSaoPaulo } from '../../../shared/utils/timezone.js';
 import { User } from '../domain/User.js';
+import { recordValidDailyAction } from '../services/active-day.js';
+import { syncUserGamification } from '../services/gamification.js';
 
 export const nutritionRouter = Router();
 nutritionRouter.use(requireAuth);
@@ -271,6 +282,9 @@ nutritionRouter.post('/logs', async (req: AuthRequest, res) => {
       note:
         typeof req.body?.note === 'string' ? req.body.note.slice(0, FOOD_NOTE_MAX) : null,
     });
+    // Sem XP por alimento — só Dia Ativo (dedupe por day_key em ActiveDays.record).
+    await recordValidDailyAction(req.userId!, 'nutrition');
+    void syncUserGamification(req.userId!).catch(() => undefined);
     res.status(201).json(created);
   } catch (error) {
     console.error('POST /api/nutrition/logs error:', error);
@@ -337,6 +351,10 @@ nutritionRouter.post('/logs/repeat-meal', async (req: AuthRequest, res) => {
         }),
       );
     }
+    if (created.length > 0) {
+      await recordValidDailyAction(req.userId!, 'nutrition');
+      void syncUserGamification(req.userId!).catch(() => undefined);
+    }
     res.status(201).json(created);
   } catch (error) {
     console.error('POST /api/nutrition/logs/repeat-meal error:', error);
@@ -357,6 +375,19 @@ nutritionRouter.get('/weight', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('GET /api/nutrition/weight error:', error);
     res.status(500).json({ error: 'Erro ao carregar peso.' });
+  }
+});
+
+nutritionRouter.get('/stats', async (req: AuthRequest, res) => {
+  try {
+    const days = Math.min(90, Math.max(7, Number(req.query.days) || 30));
+    const to = getTodaySaoPaulo();
+    const from = addDaysSaoPaulo(to, -(days - 1));
+    const days_with_logs = await FoodLogs.countLoggedDays(req.userId!, from, to);
+    res.json({ from, to, days, days_with_logs });
+  } catch (error) {
+    console.error('GET /api/nutrition/stats error:', error);
+    res.status(500).json({ error: 'Erro ao carregar estatísticas.' });
   }
 });
 
@@ -388,5 +419,232 @@ nutritionRouter.post('/weight', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('POST /api/nutrition/weight error:', error);
     res.status(500).json({ error: 'Erro ao registrar peso.' });
+  }
+});
+
+function isRecipeDifficulty(value: unknown): value is RecipeDifficulty {
+  return typeof value === 'string' && (RECIPE_DIFFICULTIES as string[]).includes(value);
+}
+
+function parseRecipeItems(raw: unknown): RecipeItemInput[] | null {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const items: RecipeItemInput[] = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const row = raw[i] as Record<string, unknown>;
+    const food_id = String(row?.food_id ?? '').trim();
+    if (!food_id) return null;
+    items.push({
+      food_id,
+      quantity: row?.quantity != null ? Number(row.quantity) : 1,
+      grams: row?.grams != null ? Number(row.grams) : null,
+      position: row?.position != null ? Number(row.position) : i,
+      note: typeof row?.note === 'string' ? row.note.slice(0, RECIPE_NOTE_MAX) : null,
+    });
+  }
+  return items;
+}
+
+nutritionRouter.get('/recipes', async (req: AuthRequest, res) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q : '';
+    const meal_type = isMealType(req.query.meal_type) ? req.query.meal_type : undefined;
+    const tag = typeof req.query.tag === 'string' ? req.query.tag : undefined;
+    const sourceRaw = typeof req.query.source === 'string' ? req.query.source : 'all';
+    const source =
+      sourceRaw === 'global' || sourceRaw === 'user' || sourceRaw === 'all' ? sourceRaw : 'all';
+    const favorites_only =
+      req.query.favorites === '1' ||
+      req.query.favorites === 'true' ||
+      req.query.mode === 'favorites';
+    res.json(
+      await Recipes.list(req.userId!, {
+        q,
+        meal_type,
+        tag,
+        source,
+        favorites_only,
+        limit: RECIPE_SEARCH_LIMIT,
+      }),
+    );
+  } catch (error) {
+    console.error('GET /api/nutrition/recipes error:', error);
+    res.status(500).json({ error: 'Erro ao listar receitas.' });
+  }
+});
+
+nutritionRouter.get('/recipes/:id', async (req: AuthRequest, res) => {
+  try {
+    const recipe = await Recipes.getById(req.userId!, String(req.params.id));
+    if (!recipe) {
+      res.status(404).json({ error: 'Receita não encontrada.' });
+      return;
+    }
+    res.json(recipe);
+  } catch (error) {
+    console.error('GET /api/nutrition/recipes/:id error:', error);
+    res.status(500).json({ error: 'Erro ao carregar receita.' });
+  }
+});
+
+nutritionRouter.post('/recipes', async (req: AuthRequest, res) => {
+  try {
+    const existing = await Recipes.list(req.userId!, { source: 'user', limit: 500 });
+    if (existing.length >= USER_RECIPES_MAX) {
+      res.status(400).json({ error: 'Limite de receitas próprias atingido.' });
+      return;
+    }
+    const name = String(req.body?.name ?? '').trim().slice(0, RECIPE_NAME_MAX);
+    if (!name) {
+      res.status(400).json({ error: 'Nome obrigatório.' });
+      return;
+    }
+    const items = parseRecipeItems(req.body?.items);
+    if (!items) {
+      res.status(400).json({ error: 'Informe ao menos um alimento na receita.' });
+      return;
+    }
+    for (const item of items) {
+      const food = await Foods.get(item.food_id);
+      if (!food || food.archived_at) {
+        res.status(400).json({ error: 'Alimento inválido na receita.' });
+        return;
+      }
+      if (food.source === 'user' && food.owner_user_id !== req.userId) {
+        res.status(400).json({ error: 'Alimento inválido na receita.' });
+        return;
+      }
+    }
+    const created = await Recipes.createUserRecipe(req.userId!, {
+      name,
+      description:
+        typeof req.body?.description === 'string'
+          ? req.body.description.slice(0, RECIPE_DESC_MAX)
+          : null,
+      servings: req.body?.servings != null ? Number(req.body.servings) : 1,
+      prep_minutes: req.body?.prep_minutes != null ? Number(req.body.prep_minutes) : null,
+      difficulty: isRecipeDifficulty(req.body?.difficulty) ? req.body.difficulty : 'easy',
+      meal_types: Array.isArray(req.body?.meal_types)
+        ? req.body.meal_types.filter(isMealType)
+        : [],
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((t: unknown) => String(t).trim()).filter(Boolean).slice(0, 20)
+        : [],
+      instructions: Array.isArray(req.body?.instructions)
+        ? req.body.instructions.map((s: unknown) => String(s).trim()).filter(Boolean).slice(0, 40)
+        : [],
+      items,
+    });
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('POST /api/nutrition/recipes error:', error);
+    res.status(readErrorStatus(error)).json({ error: 'Erro ao criar receita.' });
+  }
+});
+
+nutritionRouter.patch('/recipes/:id', async (req: AuthRequest, res) => {
+  try {
+    const items = req.body?.items !== undefined ? parseRecipeItems(req.body.items) : undefined;
+    if (req.body?.items !== undefined && !items) {
+      res.status(400).json({ error: 'Itens da receita inválidos.' });
+      return;
+    }
+    if (items) {
+      for (const item of items) {
+        const food = await Foods.get(item.food_id);
+        if (!food || food.archived_at) {
+          res.status(400).json({ error: 'Alimento inválido na receita.' });
+          return;
+        }
+        if (food.source === 'user' && food.owner_user_id !== req.userId) {
+          res.status(400).json({ error: 'Alimento inválido na receita.' });
+          return;
+        }
+      }
+    }
+    const updated = await Recipes.updateUserRecipe(req.userId!, String(req.params.id), {
+      name:
+        typeof req.body?.name === 'string'
+          ? req.body.name.trim().slice(0, RECIPE_NAME_MAX)
+          : undefined,
+      description:
+        req.body?.description !== undefined
+          ? String(req.body.description ?? '').slice(0, RECIPE_DESC_MAX)
+          : undefined,
+      servings: req.body?.servings != null ? Number(req.body.servings) : undefined,
+      prep_minutes:
+        req.body?.prep_minutes !== undefined
+          ? req.body.prep_minutes == null
+            ? null
+            : Number(req.body.prep_minutes)
+          : undefined,
+      difficulty: isRecipeDifficulty(req.body?.difficulty) ? req.body.difficulty : undefined,
+      meal_types: Array.isArray(req.body?.meal_types)
+        ? req.body.meal_types.filter(isMealType)
+        : undefined,
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((t: unknown) => String(t).trim()).filter(Boolean).slice(0, 20)
+        : undefined,
+      instructions: Array.isArray(req.body?.instructions)
+        ? req.body.instructions.map((s: unknown) => String(s).trim()).filter(Boolean).slice(0, 40)
+        : undefined,
+      items: items ?? undefined,
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('PATCH /api/nutrition/recipes/:id error:', error);
+    res.status(500).json({ error: 'Erro ao editar receita.' });
+  }
+});
+
+nutritionRouter.delete('/recipes/:id', async (req: AuthRequest, res) => {
+  try {
+    await Recipes.archiveUserRecipe(req.userId!, String(req.params.id));
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('DELETE /api/nutrition/recipes/:id error:', error);
+    res.status(500).json({ error: 'Erro ao arquivar receita.' });
+  }
+});
+
+nutritionRouter.post('/recipes/:id/favorite', async (req: AuthRequest, res) => {
+  try {
+    const favorite = req.body?.favorite !== false;
+    await Recipes.setFavorite(req.userId!, String(req.params.id), favorite);
+    res.json({ ok: true, favorite });
+  } catch (error) {
+    console.error('POST /api/nutrition/recipes/:id/favorite error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar favorito.' });
+  }
+});
+
+nutritionRouter.post('/recipes/:id/log', async (req: AuthRequest, res) => {
+  try {
+    if (!isMealType(req.body?.meal_type)) {
+      res.status(400).json({ error: 'Tipo de refeição inválido.' });
+      return;
+    }
+    const dayKey =
+      typeof req.body?.day_key === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.body.day_key)
+        ? req.body.day_key
+        : getTodaySaoPaulo();
+    const created = await Recipes.logAsMeal(req.userId!, String(req.params.id), {
+      meal_type: req.body.meal_type,
+      day_key: dayKey,
+      servings: req.body?.servings != null ? Number(req.body.servings) : undefined,
+      eaten_at: typeof req.body?.eaten_at === 'string' ? req.body.eaten_at : undefined,
+      note:
+        typeof req.body?.note === 'string' ? req.body.note.slice(0, FOOD_NOTE_MAX) : null,
+    });
+    if (created.length > 0) {
+      await recordValidDailyAction(req.userId!, 'nutrition');
+      void syncUserGamification(req.userId!).catch(() => undefined);
+    }
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('POST /api/nutrition/recipes/:id/log error:', error);
+    const status = readErrorStatus(error);
+    const message =
+      error instanceof Error && status < 500 ? error.message : 'Erro ao registrar receita.';
+    res.status(status).json({ error: message });
   }
 });

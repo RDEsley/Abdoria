@@ -8,6 +8,7 @@
 import { getTodaySaoPaulo, getWeekStartSaoPaulo } from '../utils/timezone.js';
 
 export type QuestScope = 'daily' | 'weekly' | 'monthly';
+export type QuestDomain = 'training' | 'activity' | 'nutrition' | 'general';
 
 export interface QuestDefinition {
   id: string;
@@ -19,6 +20,8 @@ export interface QuestDefinition {
   progress: (ctx: QuestContext) => number;
   /** Se false, o template não entra no pool deste usuário neste período. */
   eligible?: (ctx: QuestContext) => boolean;
+  /** Domínio para variedade na seleção diária (opcional). */
+  domain?: QuestDomain;
 }
 
 export interface QuestContext {
@@ -55,6 +58,16 @@ export interface QuestContext {
   daysRemainingInMonth: number;
   dayOfMonth: number;
   streakAtual: number;
+  /** Setup de alimentação concluído (nutrition_profiles.setup_completed_at). */
+  nutritionSetup: boolean;
+  /** Refeições distintas (meal_type) com log hoje. */
+  mealsLoggedToday: number;
+  /** Dias distintos com food_log nesta semana civil SP. */
+  nutritionDaysThisWeek: number;
+  /** Dias distintos com food_log neste mês civil SP. */
+  nutritionDaysThisMonth: number;
+  /** Eventos de receita logados nesta semana (note recipe:<id>). */
+  recipesLoggedThisWeek: number;
 }
 
 export const QUEST_DAILY_XP_BUDGET = 30;
@@ -71,6 +84,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_1_activity',
     scope: 'daily',
+    domain: 'activity',
     title: 'Um passo',
     description: 'Conclua 1 atividade hoje',
     goal: 1,
@@ -81,6 +95,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_2_activities',
     scope: 'daily',
+    domain: 'activity',
     title: 'Dois passos',
     description: 'Conclua 2 atividades hoje',
     goal: 2,
@@ -91,6 +106,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_3_activities',
     scope: 'daily',
+    domain: 'activity',
     title: 'Três passos',
     description: 'Conclua 3 atividades hoje',
     goal: 3,
@@ -101,6 +117,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_scheduled_activity',
     scope: 'daily',
+    domain: 'activity',
     title: 'No horário',
     description: 'Conclua uma atividade programada para hoje',
     goal: 1,
@@ -111,6 +128,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_routine',
     scope: 'daily',
+    domain: 'activity',
     title: 'Rotina completa',
     description: 'Conclua uma rotina hoje',
     goal: 1,
@@ -121,6 +139,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_routine_scheduled',
     scope: 'daily',
+    domain: 'activity',
     title: 'Rotina do dia',
     description: 'Conclua uma rotina programada para hoje',
     goal: 1,
@@ -131,6 +150,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_train',
     scope: 'daily',
+    domain: 'training',
     title: 'Treino do dia',
     description: 'Faça um treino hoje',
     goal: 1,
@@ -141,6 +161,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_mente',
     scope: 'daily',
+    domain: 'activity',
     title: 'Mente em foco',
     description: 'Conclua uma atividade de Mente',
     goal: 1,
@@ -151,6 +172,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_corpo',
     scope: 'daily',
+    domain: 'activity',
     title: 'Corpo em movimento',
     description: 'Conclua uma atividade de Corpo',
     goal: 1,
@@ -161,6 +183,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_vida',
     scope: 'daily',
+    domain: 'activity',
     title: 'Vida em ordem',
     description: 'Conclua uma atividade de Vida',
     goal: 1,
@@ -171,6 +194,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_morning_block',
     scope: 'daily',
+    domain: 'activity',
     title: 'Bloco da manhã',
     description: 'Complete o bloco da manhã',
     goal: 1,
@@ -181,6 +205,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'daily_any_block',
     scope: 'daily',
+    domain: 'activity',
     title: 'Um bloco do dia',
     description: 'Complete manhã, tarde ou noite',
     goal: 1,
@@ -189,11 +214,23 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
     progress: (ctx) =>
       ctx.morningComplete || ctx.afternoonComplete || ctx.eveningComplete ? 1 : 0,
   },
+  {
+    id: 'daily_nutrition_meal',
+    scope: 'daily',
+    domain: 'nutrition',
+    title: 'Refeição do dia',
+    description: 'Registre uma refeição hoje',
+    goal: 1,
+    xp: 10,
+    eligible: (ctx) => ctx.nutritionSetup,
+    progress: (ctx) => Math.min(ctx.mealsLoggedToday, 1),
+  },
 
   // ——— Weekly ———
   {
     id: 'weekly_3_active_days',
     scope: 'weekly',
+    domain: 'general',
     title: 'Três dias vivos',
     description: 'Tenha 3 dias ativos esta semana',
     goal: 3,
@@ -203,6 +240,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_5_active_days',
     scope: 'weekly',
+    domain: 'general',
     title: 'Semana forte',
     description: 'Tenha 5 dias ativos esta semana',
     goal: 5,
@@ -212,6 +250,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_2_workouts',
     scope: 'weekly',
+    domain: 'training',
     title: 'Dupla de treinos',
     description: 'Treine 2 vezes esta semana',
     goal: 2,
@@ -222,6 +261,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_3_workouts',
     scope: 'weekly',
+    domain: 'training',
     title: 'Trio de treinos',
     description: 'Treine 3 vezes esta semana',
     goal: 3,
@@ -232,6 +272,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_plan_workouts',
     scope: 'weekly',
+    domain: 'training',
     title: 'Plano da semana',
     description: 'Cumpra os treinos do seu plano nesta semana',
     goal: 1,
@@ -246,6 +287,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_5_activities',
     scope: 'weekly',
+    domain: 'activity',
     title: 'Cinco ações',
     description: 'Conclua 5 atividades esta semana',
     goal: 5,
@@ -256,6 +298,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_2_routines',
     scope: 'weekly',
+    domain: 'activity',
     title: 'Rotinas em série',
     description: 'Conclua 2 rotinas esta semana',
     goal: 2,
@@ -266,6 +309,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'weekly_categories',
     scope: 'weekly',
+    domain: 'activity',
     title: 'Variedade',
     description: 'Atue em 2 categorias diferentes esta semana',
     goal: 2,
@@ -273,11 +317,34 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
     eligible: (ctx) => (ctx.categoriesUsed?.size ?? 0) >= 2,
     progress: (ctx) => Math.min(ctx.distinctCategoriesThisWeek, 2),
   },
+  {
+    id: 'weekly_nutrition_3_days',
+    scope: 'weekly',
+    domain: 'nutrition',
+    title: 'Alimentação da semana',
+    description: 'Cuide da alimentação em 3 dias desta semana',
+    goal: 3,
+    xp: 30,
+    eligible: (ctx) => ctx.nutritionSetup,
+    progress: (ctx) => Math.min(ctx.nutritionDaysThisWeek, 3),
+  },
+  {
+    id: 'weekly_nutrition_recipe',
+    scope: 'weekly',
+    domain: 'nutrition',
+    title: 'Receita da semana',
+    description: 'Experimente uma receita do Evolyn',
+    goal: 1,
+    xp: 30,
+    eligible: (ctx) => ctx.nutritionSetup,
+    progress: (ctx) => Math.min(ctx.recipesLoggedThisWeek, 1),
+  },
 
   // ——— Monthly ———
   {
     id: 'monthly_20_active_days',
     scope: 'monthly',
+    domain: 'general',
     title: 'Mês com raízes',
     description: 'Tenha 20 dias ativos neste mês',
     goal: 20,
@@ -288,6 +355,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'monthly_15_active_days',
     scope: 'monthly',
+    domain: 'general',
     title: 'Presença mensal',
     description: 'Tenha 15 dias ativos neste mês',
     goal: 15,
@@ -298,6 +366,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'monthly_10_active_days',
     scope: 'monthly',
+    domain: 'general',
     title: 'Começo de mês',
     description: 'Tenha 10 dias ativos neste mês',
     goal: 10,
@@ -308,6 +377,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'monthly_12_activities',
     scope: 'monthly',
+    domain: 'activity',
     title: 'Hábitos do mês',
     description: 'Conclua 12 atividades neste mês',
     goal: 12,
@@ -318,6 +388,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'monthly_8_routines',
     scope: 'monthly',
+    domain: 'activity',
     title: 'Rotinas do mês',
     description: 'Conclua 8 rotinas neste mês',
     goal: 8,
@@ -328,6 +399,7 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
   {
     id: 'monthly_workouts_plan',
     scope: 'monthly',
+    domain: 'training',
     title: 'Constância no treino',
     description: 'Complete os treinos do mês conforme seu plano',
     goal: 1,
@@ -338,6 +410,18 @@ export const QUEST_TEMPLATE_POOL: readonly QuestDefinition[] = [
       const target = Math.min(16, Math.max(4, ctx.weeklyTrainingDays * Math.min(4, weeksLeft)));
       return Math.min(ctx.workoutsThisMonth, target);
     },
+  },
+  {
+    id: 'monthly_nutrition_10_days',
+    scope: 'monthly',
+    domain: 'nutrition',
+    title: 'Mês na alimentação',
+    description: 'Registre alimentação em 10 dias neste mês',
+    goal: 10,
+    xp: 80,
+    eligible: (ctx) =>
+      ctx.nutritionSetup && ctx.daysRemainingInMonth + ctx.nutritionDaysThisMonth >= 10,
+    progress: (ctx) => Math.min(ctx.nutritionDaysThisMonth, 10),
   },
 ] as const;
 
@@ -363,6 +447,44 @@ function stablePick<T extends { id: string }>(
     .map((item) => ({ item, rank: fnv1a(`${seed}:${item.id}`) }))
     .sort((a, b) => a.rank - b.rank || a.item.id.localeCompare(b.item.id));
   return ranked.slice(0, Math.min(count, ranked.length)).map((entry) => entry.item);
+}
+
+/**
+ * Seleção diária: ranking estável + preferência por misturar domínios
+ * (training / activity / nutrition) quando há opções elegíveis — sem forçar
+ * domínio ausente no pool.
+ */
+function stablePickDaily(
+  items: readonly QuestDefinition[],
+  seed: string,
+  count: number,
+): QuestDefinition[] {
+  if (items.length === 0 || count <= 0) return [];
+  const ranked = items
+    .map((item) => ({ item, rank: fnv1a(`${seed}:${item.id}`) }))
+    .sort((a, b) => a.rank - b.rank || a.item.id.localeCompare(b.item.id));
+
+  const picked: QuestDefinition[] = [];
+  const pickedIds = new Set<string>();
+  const domains = new Set<QuestDomain>();
+
+  for (const { item } of ranked) {
+    if (picked.length >= count) break;
+    const domain = item.domain ?? 'general';
+    if (domains.has(domain)) continue;
+    picked.push(item);
+    pickedIds.add(item.id);
+    domains.add(domain);
+  }
+
+  for (const { item } of ranked) {
+    if (picked.length >= count) break;
+    if (pickedIds.has(item.id)) continue;
+    picked.push(item);
+    pickedIds.add(item.id);
+  }
+
+  return picked;
 }
 
 function resolveMonthlyWorkoutGoal(ctx: QuestContext): number {
@@ -459,7 +581,11 @@ export function selectQuestsForUser(
     const eligible = QUEST_TEMPLATE_POOL.filter(
       (q) => q.scope === scope && (q.eligible?.(ctx) ?? true),
     );
-    const picked = stablePick(eligible, `${userId}:${periodKey}`, count);
+    const seed = `${userId}:${periodKey}`;
+    const picked =
+      scope === 'daily'
+        ? stablePickDaily(eligible, seed, count)
+        : stablePick(eligible, seed, count);
     if (picked.length >= count) return picked.map((q) => materializeQuest(q, ctx));
     const extras = fallback().filter((f) => !picked.some((p) => p.id === f.id));
     return [...picked, ...extras].slice(0, count).map((q) => materializeQuest(q, ctx));
