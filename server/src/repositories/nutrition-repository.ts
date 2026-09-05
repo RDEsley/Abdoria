@@ -9,11 +9,20 @@ import {
   type FoodLogRecord,
   type FoodRecord,
   type MealType,
+  type NutritionMacros,
   type NutritionPreferences,
   type NutritionProfile,
+  type RecipeDifficulty,
+  type RecipeItemInput,
+  type RecipeItemRecord,
+  type RecipeRecord,
+  type RecipeWriteInput,
   type WeightLogRecord,
 } from '../../../shared/nutrition/index.js';
 import { throwIfMissingRelation } from '../utils/schema-errors.js';
+
+const RECIPE_LOG_NOTE_PREFIX = 'recipe:';
+const RECIPE_DOUBLE_TAP_MS = 2000;
 
 function num(value: unknown, fallback = 0): number {
   const n = Number(value);
@@ -343,6 +352,69 @@ export const FoodLogs = {
     return (data ?? []).map((row) => rowToLog(row as Record<string, unknown>));
   },
 
+  /** Logs inclusivos por day_key (America/Sao_Paulo civil). */
+  async listBetween(userId: string, fromDay: string, toDay: string): Promise<FoodLogRecord[]> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('food_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('day_key', fromDay)
+      .lte('day_key', toDay)
+      .order('day_key', { ascending: true })
+      .order('eaten_at', { ascending: true });
+    throwIfMissingRelation(error, 'food_logs');
+    if (error) throw error;
+    return (data ?? []).map((row) => rowToLog(row as Record<string, unknown>));
+  },
+
+  async countAll(userId: string): Promise<number> {
+    const sb = getSupabase();
+    const { count, error } = await sb
+      .from('food_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    throwIfMissingRelation(error, 'food_logs');
+    if (error) throw error;
+    return count ?? 0;
+  },
+
+  /** Contadores leves para conquistas/quests de nutrição. */
+  async nutritionStats(userId: string): Promise<{
+    totalLogs: number;
+    distinctDays: number;
+    recipeMealEvents: number;
+    distinctRecipeIds: number;
+  }> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('food_logs')
+      .select('day_key, meal_type, note')
+      .eq('user_id', userId);
+    throwIfMissingRelation(error, 'food_logs');
+    if (error) throw error;
+    const rows = data ?? [];
+    const days = new Set<string>();
+    const recipeEvents = new Set<string>();
+    const recipeIds = new Set<string>();
+    for (const row of rows) {
+      const dayKey = String(row.day_key ?? '');
+      if (dayKey) days.add(dayKey);
+      const note = row.note ? String(row.note) : '';
+      if (!note.startsWith(RECIPE_LOG_NOTE_PREFIX)) continue;
+      const recipeId = note.slice(RECIPE_LOG_NOTE_PREFIX.length).split(/[\s—-]/)[0] ?? '';
+      if (!recipeId) continue;
+      recipeIds.add(recipeId);
+      recipeEvents.add(`${dayKey}|${String(row.meal_type)}|${recipeId}`);
+    }
+    return {
+      totalLogs: rows.length,
+      distinctDays: days.size,
+      recipeMealEvents: recipeEvents.size,
+      distinctRecipeIds: recipeIds.size,
+    };
+  },
+
   async create(
     userId: string,
     input: {
@@ -505,6 +577,21 @@ export const FoodLogs = {
       log_count: logs.length,
     };
   },
+
+  /** Dias distintos com pelo menos um log no intervalo [from, to] (chaves SP). */
+  async countLoggedDays(userId: string, from: string, to: string): Promise<number> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('food_logs')
+      .select('day_key')
+      .eq('user_id', userId)
+      .gte('day_key', from)
+      .lte('day_key', to);
+    throwIfMissingRelation(error, 'food_logs');
+    if (error) throw error;
+    const keys = new Set((data ?? []).map((row) => String((row as { day_key: string }).day_key)));
+    return keys.size;
+  },
 };
 
 export const WeightLogs = {
@@ -557,5 +644,408 @@ export const WeightLogs = {
       .maybeSingle();
     if (error) throw error;
     return data ? rowToWeight(data as Record<string, unknown>) : null;
+  },
+};
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item)).filter(Boolean);
+}
+
+function asMealTypes(value: unknown): MealType[] {
+  return asStringArray(value).filter((item): item is MealType =>
+    MEAL_TYPE_ORDER.includes(item as MealType),
+  );
+}
+
+function asInstructions(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function asDifficulty(value: unknown): RecipeDifficulty {
+  if (value === 'medium' || value === 'hard' || value === 'easy') return value;
+  return 'easy';
+}
+
+function rowToRecipeItem(
+  row: Record<string, unknown>,
+  food: FoodRecord | null = null,
+): RecipeItemRecord {
+  const quantity = num(row.quantity, 1);
+  const grams = row.grams != null ? num(row.grams) : null;
+  let macros: NutritionMacros | undefined;
+  if (food) {
+    const multiplier = resolveServingMultiplier({
+      quantity,
+      grams,
+      serving_grams: food.serving_grams,
+    });
+    macros = scaleMacros(
+      {
+        calories: food.calories,
+        protein_g: food.protein_g,
+        carbs_g: food.carbs_g,
+        fat_g: food.fat_g,
+        fiber_g: food.fiber_g,
+      },
+      multiplier,
+    );
+  }
+  return {
+    id: String(row.id),
+    recipe_id: String(row.recipe_id),
+    food_id: String(row.food_id),
+    quantity,
+    grams,
+    position: Math.round(num(row.position, 0)),
+    note: row.note ? String(row.note) : null,
+    food,
+    macros,
+  };
+}
+
+function rowToRecipe(row: Record<string, unknown>, favorited = false): RecipeRecord {
+  return {
+    id: String(row.id),
+    owner_user_id: row.owner_user_id ? String(row.owner_user_id) : null,
+    source: row.source === 'global' ? 'global' : 'user',
+    name: String(row.name),
+    description: row.description != null ? String(row.description) : null,
+    servings: Math.max(0.01, num(row.servings, 1)),
+    prep_minutes: row.prep_minutes != null ? Math.round(num(row.prep_minutes)) : null,
+    difficulty: asDifficulty(row.difficulty),
+    meal_types: asMealTypes(row.meal_types),
+    tags: asStringArray(row.tags),
+    instructions: asInstructions(row.instructions),
+    verified: Boolean(row.verified),
+    archived_at: row.archived_at ? String(row.archived_at) : null,
+    created_at: String(row.created_at),
+    updated_at: String(row.updated_at),
+    favorited,
+  };
+}
+
+function attachRecipeMacros(recipe: RecipeRecord, items: RecipeItemRecord[]): RecipeRecord {
+  const itemMacros = items.map(
+    (item) => item.macros ?? { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0 },
+  );
+  const macros_total = sumMacros(itemMacros);
+  const servings = Math.max(recipe.servings, 0.01);
+  const macros_per_serving = scaleMacros(macros_total, 1 / servings);
+  return {
+    ...recipe,
+    items,
+    macros_total,
+    macros_per_serving,
+  };
+}
+
+export type RecipeListFilters = {
+  q?: string;
+  meal_type?: MealType;
+  tag?: string;
+  source?: 'global' | 'user' | 'all';
+  favorites_only?: boolean;
+  limit?: number;
+};
+
+async function loadRecipeItems(recipeId: string): Promise<RecipeItemRecord[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('nutrition_recipe_items')
+    .select('*')
+    .eq('recipe_id', recipeId)
+    .order('position', { ascending: true });
+  throwIfMissingRelation(error, 'nutrition_recipe_items');
+  if (error) throw error;
+  const rows = data ?? [];
+  const foodIds = [...new Set(rows.map((row) => String(row.food_id)))];
+  const foods =
+    foodIds.length > 0
+      ? await sb.from('foods').select('*').in('id', foodIds)
+      : { data: [], error: null };
+  if (foods.error) throw foods.error;
+  const foodMap = new Map(
+    (foods.data ?? []).map((row) => [String(row.id), rowToFood(row as Record<string, unknown>)]),
+  );
+  return rows.map((row) =>
+    rowToRecipeItem(row as Record<string, unknown>, foodMap.get(String(row.food_id)) ?? null),
+  );
+}
+
+async function replaceRecipeItems(recipeId: string, items: RecipeItemInput[]): Promise<void> {
+  const sb = getSupabase();
+  const { error: deleteError } = await sb
+    .from('nutrition_recipe_items')
+    .delete()
+    .eq('recipe_id', recipeId);
+  if (deleteError) throw deleteError;
+  if (items.length === 0) return;
+  const payload = items.map((item, index) => ({
+    recipe_id: recipeId,
+    food_id: item.food_id,
+    quantity: item.quantity != null && item.quantity > 0 ? item.quantity : 1,
+    grams: item.grams != null && item.grams > 0 ? item.grams : null,
+    position: item.position != null ? Math.round(item.position) : index,
+    note: item.note ?? null,
+  }));
+  const { error } = await sb.from('nutrition_recipe_items').insert(payload);
+  if (error) throw error;
+}
+
+export const Recipes = {
+  async list(userId: string, filters: RecipeListFilters = {}): Promise<RecipeRecord[]> {
+    const sb = getSupabase();
+    const limit = Math.min(100, Math.max(1, filters.limit ?? 40));
+    const { data: favRows, error: favError } = await sb
+      .from('nutrition_recipe_favorites')
+      .select('recipe_id')
+      .eq('user_id', userId);
+    throwIfMissingRelation(favError, 'nutrition_recipe_favorites');
+    if (favError) throw favError;
+    const favSet = new Set((favRows ?? []).map((row) => String(row.recipe_id)));
+
+    if (filters.favorites_only) {
+      if (favSet.size === 0) return [];
+      const { data, error } = await sb
+        .from('nutrition_recipes')
+        .select('*')
+        .in('id', [...favSet])
+        .is('archived_at', null)
+        .order('name', { ascending: true })
+        .limit(limit);
+      throwIfMissingRelation(error, 'nutrition_recipes');
+      if (error) throw error;
+      return (data ?? []).map((row) => rowToRecipe(row as Record<string, unknown>, true));
+    }
+
+    let q = sb
+      .from('nutrition_recipes')
+      .select('*')
+      .is('archived_at', null)
+      .limit(limit);
+
+    const source = filters.source ?? 'all';
+    if (source === 'global') {
+      q = q.eq('source', 'global');
+    } else if (source === 'user') {
+      q = q.eq('source', 'user').eq('owner_user_id', userId);
+    } else {
+      q = q.or(`source.eq.global,owner_user_id.eq.${userId}`);
+    }
+
+    if (filters.meal_type) {
+      q = q.contains('meal_types', [filters.meal_type]);
+    }
+    if (filters.tag) {
+      q = q.contains('tags', [filters.tag]);
+    }
+    const query = (filters.q ?? '').trim();
+    if (query) {
+      q = q.ilike('name', `%${query}%`);
+    } else {
+      q = q.order('verified', { ascending: false }).order('name', { ascending: true });
+    }
+
+    const { data, error } = await q;
+    throwIfMissingRelation(error, 'nutrition_recipes');
+    if (error) throw error;
+    return (data ?? []).map((row) =>
+      rowToRecipe(row as Record<string, unknown>, favSet.has(String(row.id))),
+    );
+  },
+
+  async getById(userId: string, id: string): Promise<RecipeRecord | null> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('nutrition_recipes')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    throwIfMissingRelation(error, 'nutrition_recipes');
+    if (error) throw error;
+    if (!data) return null;
+    const row = data as Record<string, unknown>;
+    if (row.source === 'user' && String(row.owner_user_id) !== userId) return null;
+    const { data: fav } = await sb
+      .from('nutrition_recipe_favorites')
+      .select('recipe_id')
+      .eq('user_id', userId)
+      .eq('recipe_id', id)
+      .maybeSingle();
+    const items = await loadRecipeItems(id);
+    return attachRecipeMacros(rowToRecipe(row, Boolean(fav)), items);
+  },
+
+  async createUserRecipe(userId: string, input: RecipeWriteInput): Promise<RecipeRecord> {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('nutrition_recipes')
+      .insert({
+        owner_user_id: userId,
+        source: 'user',
+        name: input.name.trim(),
+        description: input.description ?? null,
+        servings: input.servings != null && input.servings > 0 ? input.servings : 1,
+        prep_minutes: input.prep_minutes ?? null,
+        difficulty: asDifficulty(input.difficulty),
+        meal_types: input.meal_types ?? [],
+        tags: input.tags ?? [],
+        instructions: input.instructions ?? [],
+        verified: false,
+      })
+      .select('*')
+      .single();
+    throwIfMissingRelation(error, 'nutrition_recipes');
+    if (error) throw error;
+    const recipe = rowToRecipe(data as Record<string, unknown>);
+    await replaceRecipeItems(recipe.id, input.items);
+    const items = await loadRecipeItems(recipe.id);
+    return attachRecipeMacros(recipe, items);
+  },
+
+  async updateUserRecipe(
+    userId: string,
+    id: string,
+    patch: Partial<RecipeWriteInput>,
+  ): Promise<RecipeRecord> {
+    const sb = getSupabase();
+    const payload: Record<string, unknown> = {};
+    if (patch.name != null) payload.name = patch.name.trim();
+    if (patch.description !== undefined) payload.description = patch.description;
+    if (patch.servings != null && patch.servings > 0) payload.servings = patch.servings;
+    if (patch.prep_minutes !== undefined) payload.prep_minutes = patch.prep_minutes;
+    if (patch.difficulty != null) payload.difficulty = asDifficulty(patch.difficulty);
+    if (patch.meal_types != null) payload.meal_types = patch.meal_types;
+    if (patch.tags != null) payload.tags = patch.tags;
+    if (patch.instructions != null) payload.instructions = patch.instructions;
+
+    if (Object.keys(payload).length > 0) {
+      const { error } = await sb
+        .from('nutrition_recipes')
+        .update(payload)
+        .eq('id', id)
+        .eq('owner_user_id', userId)
+        .eq('source', 'user');
+      if (error) throw error;
+    }
+    if (patch.items) {
+      await replaceRecipeItems(id, patch.items);
+    }
+    const full = await this.getById(userId, id);
+    if (!full) throw new Error('Receita não encontrada.');
+    return full;
+  },
+
+  async archiveUserRecipe(userId: string, id: string): Promise<void> {
+    const sb = getSupabase();
+    const { error } = await sb
+      .from('nutrition_recipes')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('owner_user_id', userId)
+      .eq('source', 'user');
+    if (error) throw error;
+  },
+
+  async setFavorite(userId: string, recipeId: string, favorite: boolean): Promise<void> {
+    const sb = getSupabase();
+    if (favorite) {
+      const { error } = await sb.from('nutrition_recipe_favorites').upsert(
+        { user_id: userId, recipe_id: recipeId },
+        { onConflict: 'user_id,recipe_id' },
+      );
+      throwIfMissingRelation(error, 'nutrition_recipe_favorites');
+      if (error) throw error;
+      return;
+    }
+    const { error } = await sb
+      .from('nutrition_recipe_favorites')
+      .delete()
+      .eq('user_id', userId)
+      .eq('recipe_id', recipeId);
+    if (error) throw error;
+  },
+
+  /**
+   * Registra todos os itens da receita como food_logs, escalados por servingsMultiplier.
+   * servingsMultiplier = porções consumidas (ex.: 1 = receita inteira / servings da receita).
+   * Guard anti double-tap: rejeita se já logou a mesma receita+meal+day nos últimos 2s.
+   */
+  async logAsMeal(
+    userId: string,
+    recipeId: string,
+    input: {
+      meal_type: MealType;
+      day_key: string;
+      servings?: number;
+      eaten_at?: string;
+      note?: string | null;
+    },
+  ): Promise<FoodLogRecord[]> {
+    const recipe = await this.getById(userId, recipeId);
+    if (!recipe || recipe.archived_at) {
+      const err = new Error('Receita não encontrada.') as Error & { status?: number };
+      err.status = 404;
+      throw err;
+    }
+    const items = recipe.items ?? [];
+    if (items.length === 0) {
+      const err = new Error('Receita sem itens.') as Error & { status?: number };
+      err.status = 400;
+      throw err;
+    }
+
+    const sb = getSupabase();
+    const marker = `${RECIPE_LOG_NOTE_PREFIX}${recipeId}`;
+    const since = new Date(Date.now() - RECIPE_DOUBLE_TAP_MS).toISOString();
+    const { data: recent } = await sb
+      .from('food_logs')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('day_key', input.day_key)
+      .eq('meal_type', input.meal_type)
+      .gte('created_at', since)
+      .ilike('note', `${marker}%`)
+      .limit(1);
+    if ((recent ?? []).length > 0) {
+      const err = new Error('Receita já registrada há pouco. Aguarde um instante.') as Error & {
+        status?: number;
+      };
+      err.status = 409;
+      throw err;
+    }
+
+    const consumedServings =
+      input.servings != null && Number.isFinite(input.servings) && input.servings > 0
+        ? input.servings
+        : 1;
+    const scale = consumedServings / Math.max(recipe.servings, 0.01);
+    const eatenAt = input.eaten_at ?? new Date().toISOString();
+    const userNote = input.note?.trim() ? ` — ${input.note.trim()}` : '';
+    const note = `${marker}${userNote}`.slice(0, 240);
+
+    const created: FoodLogRecord[] = [];
+    for (const item of items) {
+      const food = item.food ?? (await Foods.get(item.food_id));
+      if (!food || food.archived_at) continue;
+      const baseQty = item.quantity > 0 ? item.quantity : 1;
+      const quantity = baseQty * scale;
+      const grams =
+        item.grams != null && item.grams > 0 ? item.grams * scale : undefined;
+      created.push(
+        await FoodLogs.create(userId, {
+          food,
+          meal_type: input.meal_type,
+          quantity,
+          grams,
+          day_key: input.day_key,
+          eaten_at: eatenAt,
+          note,
+        }),
+      );
+    }
+    return created;
   },
 };

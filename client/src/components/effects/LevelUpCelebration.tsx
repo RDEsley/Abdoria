@@ -1,6 +1,4 @@
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { playLevelUp } from '@/lib/sounds';
 
 interface Props {
   previousLevel: number;
@@ -15,13 +13,9 @@ const SPARKS = Array.from({ length: 12 }, (_, i) => ({
   distance: 36 + (i % 3) * 10,
 }));
 
+/** Visual-only — som global fica em LevelUpOverlay (`abdoria:level-up`). */
 export function LevelUpCelebration({ level, compact = false }: Props) {
   const label = `Subiu para o nível ${level}!`;
-
-  useEffect(() => {
-    const t = window.setTimeout(() => playLevelUp(), 220);
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div

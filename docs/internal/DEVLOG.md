@@ -8,6 +8,14 @@ O Git continua sendo a fonte de verdade do histórico detalhado.
 
 ## 2026-09-04
 
+### Alimentação 2.0 + Core polish + plataforma
+
+- Nutrition: wizard obrigatório, tabs Hoje/Receitas/Progresso, recipes (migration nova), meal reminders derivados, skeleton.
+- Quests/achievements de nutrição; active day `nutrition` (sem XP por log).
+- Core: intro Lottie `monte-seu-ritmo`, sliders energéticos, sons free extras.
+- Admin support_messages; DaySummary contraste; LevelUp sem double sound.
+- Adiados: foto/barcode IA; ownership de e-mail / Supabase Auth.
+
 ### Rotinas + Treino 3.0 + tela branca
 
 - Health derivado Activity↔Routine (`resolveRoutineHealth`); Runner/editor/arquivadas; archive sem `confirm` + Desfazer; Day Guide só healthy; reminders ignoram item arquivado.

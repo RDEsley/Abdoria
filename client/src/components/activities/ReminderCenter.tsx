@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BellRing, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useEnsureReminderPermission } from '@/hooks/useEnsureReminderPermission';
@@ -12,17 +13,35 @@ import {
   PERSONAL_NOTIFICATION_VERSION,
   summarizePersonalNotificationSchedule,
   normalizePersonalizedReminders,
+  normalizeReminderSource,
   normalizeReminderTimes,
   normalizeReminderWeekdays,
+  deriveActivityReminders,
+  deriveNutritionReminders,
   type PersonalNotificationColor,
   type PersonalNotificationIcon,
   type PersonalizedReminder,
 } from '@shared/reminders';
 import { DEFAULT_REMINDER_SOUND, listUnlockedReminderPacks, type ReminderSoundId } from '@shared/reminder-sounds';
+import { listActivities, listRoutines } from '@/lib/api/activities';
+import { getNutritionProfile } from '@/lib/api/nutrition';
+import type { ActivityRecord, RoutineRecord } from '@shared/activities';
+import type { NutritionMealReminder } from '@shared/nutrition';
 import { ReminderIcon } from './reminder-icons';
 import { ReminderNotificationPreview } from './ReminderNotificationPreview';
 import { ReminderPersonalizePanel } from './ReminderPersonalizePanel';
 import type { RecurrenceDraft } from './reminder-form-types';
+
+const SOURCE_BADGE: Record<
+  ReturnType<typeof normalizeReminderSource>,
+  { label: string; className: string } | null
+> = {
+  personal: null,
+  activity: { label: 'Atividade', className: 'reminder-source-badge reminder-source-badge--activity' },
+  routine: { label: 'Rotina', className: 'reminder-source-badge reminder-source-badge--routine' },
+  nutrition: { label: 'Alimentação', className: 'reminder-source-badge reminder-source-badge--nutrition' },
+  system: { label: 'Sistema', className: 'reminder-source-badge' },
+};
 
 const REMINDER_DELETE_SKIP_KEY = 'evolyn:reminder-delete-skip-confirm';
 
@@ -134,6 +153,9 @@ export function ReminderCenter() {
     () => normalizePersonalizedReminders(user?.preferencias?.lembretes_personalizados),
     [user?.preferencias?.lembretes_personalizados],
   );
+  const [activities, setActivities] = useState<ActivityRecord[]>([]);
+  const [routines, setRoutines] = useState<RoutineRecord[]>([]);
+  const [mealReminders, setMealReminders] = useState<NutritionMealReminder[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState('');
@@ -141,6 +163,31 @@ export function ReminderCenter() {
   const [pendingDelete, setPendingDelete] = useState<PersonalizedReminder | null>(null);
   const [skipConfirmChecked, setSkipConfirmChecked] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    let cancelled = false;
+    Promise.all([listActivities(), listRoutines(), getNutritionProfile().catch(() => null)])
+      .then(([nextActivities, nextRoutines, profile]) => {
+        if (cancelled) return;
+        setActivities(nextActivities);
+        setRoutines(nextRoutines);
+        setMealReminders(profile?.preferences?.meal_reminders ?? []);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const derivedReminders = useMemo(
+    () => [
+      ...deriveActivityReminders(activities, routines),
+      ...deriveNutritionReminders(mealReminders),
+    ],
+    [activities, routines, mealReminders],
+  );
+
   const closeForm = () => {
     setEditing(false);
     setDraft(emptyDraft());
@@ -477,6 +524,50 @@ export function ReminderCenter() {
           </article>
         ))}
       </div>
+
+      {derivedReminders.length > 0 ? (
+        <div className="personal-notifications__list personal-notifications__list--derived">
+          <p className="personal-notifications__list-label">Lembretes derivados</p>
+          {derivedReminders.map((reminder) => {
+            const source = normalizeReminderSource(reminder.id);
+            const badge = SOURCE_BADGE[source];
+            const editHref =
+              source === 'nutrition'
+                ? '/alimentacao'
+                : source === 'routine'
+                  ? '/atividades?tab=rotinas'
+                  : '/atividades';
+            const editLabel =
+              source === 'nutrition'
+                ? 'Editar na Alimentação'
+                : source === 'routine'
+                  ? 'Editar rotina'
+                  : 'Editar atividade';
+            return (
+              <article
+                key={reminder.id}
+                className={`personal-notification-card personal-notification-card--derived personal-notification-card--${reminder.color}`}
+              >
+                <div className="personal-notification-card__hit personal-notification-card__hit--static">
+                  <span className="personal-notification-card__icon" aria-hidden>
+                    <ReminderIcon icon={reminder.icon} />
+                  </span>
+                  <span className="personal-notification-card__content">
+                    <strong>
+                      {reminder.title}
+                      {badge ? <span className={badge.className}>{badge.label}</span> : null}
+                    </strong>
+                    <small>{summarizePersonalNotificationSchedule(reminder)}</small>
+                  </span>
+                </div>
+                <Link to={editHref} className="personal-notification-card__cta">
+                  {editLabel}
+                </Link>
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
 
       <Modal
         open={Boolean(pendingDelete)}

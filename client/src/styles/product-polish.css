@@ -1136,40 +1136,52 @@ body {
 
 .builder-level-switch--leve {
   color: #0f766e;
-  border-color: rgba(45, 212, 191, 0.35);
-  background: linear-gradient(145deg, #f7fffc, #ecfdf5);
+  border-color: rgba(45, 212, 191, 0.42);
+  background:
+    radial-gradient(circle at 12% 18%, rgb(45 212 191 / 16%), transparent 42%),
+    linear-gradient(145deg, #f3fffb, #d9faf0 58%, #ecfdf5);
 }
 
 .builder-level-switch--leve.is-active {
   color: #0f766e;
-  border-color: #2dd4bf;
-  background: linear-gradient(145deg, #ccfbf1, #ecfdf5);
-  box-shadow: 0 8px 18px rgba(45, 212, 191, 0.18);
+  border-color: #14b8a6;
+  background:
+    radial-gradient(circle at 88% 12%, rgb(45 212 191 / 22%), transparent 40%),
+    linear-gradient(145deg, #99f6e4, #ccfbf1 55%, #ecfdf5);
+  box-shadow: 0 8px 18px rgba(45, 212, 191, 0.2);
 }
 
 .builder-level-switch--moderado {
   color: #3f6212;
-  border-color: rgba(163, 230, 53, 0.4);
-  background: linear-gradient(145deg, #fcfff5, #f7fee7);
+  border-color: rgba(163, 230, 53, 0.48);
+  background:
+    radial-gradient(circle at 14% 16%, rgb(163 230 53 / 18%), transparent 44%),
+    linear-gradient(145deg, #fcfff6, #eefcc8 58%, #f7fee7);
 }
 
 .builder-level-switch--moderado.is-active {
   color: #3f6212;
   border-color: #84cc16;
-  background: linear-gradient(145deg, #ecfccb, #fef9c3);
-  box-shadow: 0 8px 18px rgba(132, 204, 22, 0.16);
+  background:
+    radial-gradient(circle at 86% 14%, rgb(250 204 21 / 18%), transparent 42%),
+    linear-gradient(145deg, #d9f99d, #ecfccb 52%, #fef9c3);
+  box-shadow: 0 8px 18px rgba(132, 204, 22, 0.18);
 }
 
 .builder-level-switch--evolyn {
   color: #7f1d1d;
-  border-color: rgba(248, 113, 113, 0.38);
-  background: linear-gradient(145deg, #fff7f5, #fee2e2);
+  border-color: rgba(248, 113, 113, 0.44);
+  background:
+    radial-gradient(circle at 12% 18%, rgb(248 113 113 / 16%), transparent 42%),
+    linear-gradient(145deg, #fff8f6, #fecaca 58%, #fee2e2);
 }
 
 .builder-level-switch--evolyn.is-active {
   color: #fff7ed;
   border-color: #b91c1c;
-  background: linear-gradient(145deg, #9f1239, #7f1d1d 55%, #451a03);
+  background:
+    radial-gradient(circle at 82% 10%, rgb(251 146 60 / 28%), transparent 38%),
+    linear-gradient(145deg, #9f1239, #7f1d1d 55%, #451a03);
   box-shadow:
     0 0 0 1px rgba(251, 146, 60, 0.25),
     0 10px 24px rgba(127, 29, 29, 0.28);
@@ -1181,15 +1193,88 @@ body {
 
 .builder-level-switch--custom {
   color: #5b21b6;
-  border-color: rgba(167, 139, 250, 0.4);
-  background: linear-gradient(145deg, #faf5ff, #ede9fe);
+  border-color: rgba(167, 139, 250, 0.46);
+  background:
+    radial-gradient(circle at 14% 16%, rgb(167 139 250 / 16%), transparent 44%),
+    linear-gradient(145deg, #faf6ff, #ddd6fe 58%, #ede9fe);
 }
 
 .builder-level-switch--custom.is-active {
   color: #4c1d95;
   border-color: #7c3aed;
-  background: linear-gradient(145deg, #ddd6fe, #f5f3ff);
-  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.16);
+  background:
+    radial-gradient(circle at 88% 12%, rgb(196 181 253 / 28%), transparent 40%),
+    linear-gradient(145deg, #c4b5fd, #ddd6fe 52%, #f5f3ff);
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.18);
+}
+
+/* Wizard intensity cards — soft tint personality without heavy saturation. */
+.ab-plan-option--leve {
+  background:
+    radial-gradient(circle at 8% 12%, rgb(45 212 191 / 12%), transparent 38%),
+    linear-gradient(145deg, #f7fffc, #eefbf7);
+  border-color: rgba(45, 212, 191, 0.28);
+}
+
+.ab-plan-option--leve.is-selected {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(45 212 191 / 16%), transparent 36%),
+    linear-gradient(135deg, #ccfbf1, #f0fdf8);
+  border-color: #14b8a6;
+  box-shadow:
+    0 0 0 2px rgba(20, 184, 166, 0.12),
+    0 8px 22px rgba(13, 148, 136, 0.1);
+}
+
+.ab-plan-option--moderado {
+  background:
+    radial-gradient(circle at 8% 12%, rgb(163 230 53 / 14%), transparent 38%),
+    linear-gradient(145deg, #fcfff7, #f5fce8);
+  border-color: rgba(132, 204, 22, 0.3);
+}
+
+.ab-plan-option--moderado.is-selected {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(250 204 21 / 14%), transparent 36%),
+    linear-gradient(135deg, #ecfccb, #fefce8);
+  border-color: #84cc16;
+  box-shadow:
+    0 0 0 2px rgba(132, 204, 22, 0.12),
+    0 8px 22px rgba(101, 163, 13, 0.1);
+}
+
+.ab-plan-option--evolyn {
+  background:
+    radial-gradient(circle at 8% 12%, rgb(248 113 113 / 12%), transparent 38%),
+    linear-gradient(145deg, #fff8f6, #fff1f0);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.ab-plan-option--evolyn.is-selected {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(251 146 60 / 14%), transparent 36%),
+    linear-gradient(135deg, #fecaca, #fff5f2);
+  border-color: #eb4b52;
+  box-shadow:
+    0 0 0 2px rgba(232, 93, 74, 0.12),
+    0 8px 24px rgba(217, 47, 69, 0.1);
+}
+
+.ab-plan-option--custom {
+  background:
+    radial-gradient(circle at 8% 12%, rgb(167 139 250 / 12%), transparent 38%),
+    linear-gradient(145deg, #faf7ff, #f3f0ff);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.ab-plan-option--custom.is-selected {
+  background:
+    radial-gradient(circle at 92% 10%, rgb(196 181 253 / 16%), transparent 36%),
+    linear-gradient(135deg, #ddd6fe, #f5f3ff);
+  border-color: #7c3aed;
+  box-shadow:
+    0 0 0 2px rgba(124, 58, 237, 0.12),
+    0 8px 22px rgba(109, 40, 217, 0.1);
 }
 
 .builder-recommend-empty {
@@ -1648,11 +1733,6 @@ body {
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.route-fallback {
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #10b981, transparent);
 }
 
 .reminder-preview__avatar--user {

@@ -26,9 +26,27 @@ interface AppSuggestionEntry {
 export interface AdminOverviewResponse {
   ratings: AppRatingEntry[];
   suggestions: AppSuggestionEntry[];
+  support_messages?: SupportMessageEntry[];
   media_estrelas: number | null;
   total_usuarios: number;
   pending_reports: number;
+  pending_support?: number;
+}
+
+export type SupportKind = 'bug' | 'suggestion' | 'feedback';
+export type SupportStatus = 'pending' | 'in_progress' | 'resolved' | 'archived';
+
+export interface SupportMessageEntry {
+  id: string;
+  user_id: string;
+  kind: SupportKind;
+  status: SupportStatus;
+  texto: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+  nome?: string;
 }
 
 export interface AdminReportEntry {
@@ -110,5 +128,37 @@ export function submitAppSuggestion(
   return fetchJson('/users/me/suggestion', {
     method: 'POST',
     body: JSON.stringify({ texto }),
+  });
+}
+
+export function submitSupportMessage(
+  kind: SupportKind,
+  texto: string,
+  metadata?: Record<string, unknown>,
+): Promise<{ ok: boolean; user: import('@/types').IUserDocument }> {
+  return fetchJson('/users/me/support', {
+    method: 'POST',
+    body: JSON.stringify({ kind, texto, metadata }),
+  });
+}
+
+export function getAdminSupport(params?: {
+  status?: SupportStatus | 'all';
+  kind?: SupportKind | 'all';
+}): Promise<{ messages: SupportMessageEntry[] }> {
+  const q = new URLSearchParams();
+  if (params?.status) q.set('status', params.status);
+  if (params?.kind) q.set('kind', params.kind);
+  const suffix = q.toString() ? `?${q}` : '';
+  return fetchJson(`/admin/support${suffix}`);
+}
+
+export function patchAdminSupport(
+  id: string,
+  status: SupportStatus,
+): Promise<{ message: SupportMessageEntry }> {
+  return fetchJson(`/admin/support/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
   });
 }

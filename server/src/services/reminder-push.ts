@@ -2,6 +2,7 @@ import webpush from 'web-push';
 import { buildWebPushNotificationPayload } from '../../../shared/notification-catalog.js';
 import {
   deriveActivityReminders,
+  deriveNutritionReminders,
   derivedReminderSource,
   isFollowUpReminderId,
   listReminderOccurrencesInLookback,
@@ -10,6 +11,7 @@ import {
 } from '../../../shared/reminders.js';
 import { getTodaySaoPaulo } from '../../../shared/utils/timezone.js';
 import { Activities, ActivityLogs, Routines } from '../repositories/activities-repository.js';
+import { NutritionProfiles } from '../repositories/nutrition-repository.js';
 import { User } from '../domain/User.js';
 import { isExpiredPushSubscriptionStatus, isTransientPushFailure } from './push-delivery-claim.js';
 import {
@@ -76,11 +78,15 @@ export async function dispatchDuePersonalReminders(now = new Date()): Promise<{
     let derived = derivedCache.get(user.id);
     if (!derived) {
       try {
-        const [activities, routines] = await Promise.all([
+        const [activities, routines, nutritionProfile] = await Promise.all([
           Activities.list(user.id),
           Routines.list(user.id),
+          NutritionProfiles.getOrNull(user.id).catch(() => null),
         ]);
-        derived = deriveActivityReminders(activities, routines);
+        derived = [
+          ...deriveActivityReminders(activities, routines),
+          ...deriveNutritionReminders(nutritionProfile?.preferences?.meal_reminders),
+        ];
       } catch (error) {
         console.error('Falha ao derivar lembretes de atividade:', error);
         derived = [];

@@ -26,16 +26,33 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   getAdminOverview,
   getAdminReports,
+  getAdminSupport,
   getAdminUsers,
+  patchAdminSupport,
   patchAdminUser,
   resolveAdminReport,
   type AdminOverviewResponse,
   type AdminReportEntry,
   type AdminUserEntry,
+  type SupportMessageEntry,
+  type SupportStatus,
 } from '@/lib/api';
 import { isBanimentoAtivo, NOME_MAX_LENGTH, REPORT_MOTIVO_LABELS, type UserRole } from '@/types';
 
-type Tab = 'avaliacoes' | 'sugestoes' | 'usuarios' | 'denuncias';
+type Tab = 'avaliacoes' | 'inbox' | 'usuarios' | 'denuncias';
+
+const SUPPORT_KIND_LABEL: Record<string, string> = {
+  bug: 'Bug',
+  suggestion: 'Sugestão',
+  feedback: 'Feedback',
+};
+
+const SUPPORT_STATUS_LABEL: Record<SupportStatus, string> = {
+  pending: 'Pendente',
+  in_progress: 'Em andamento',
+  resolved: 'Resolvido',
+  archived: 'Arquivado',
+};
 
 const ROLE_LABELS: Record<UserRole, string> = {
   user: 'Jogador',
@@ -66,6 +83,8 @@ export function AdminPage() {
   const [overview, setOverview] = useState<AdminOverviewResponse | null>(null);
   const [users, setUsers] = useState<AdminUserEntry[]>([]);
   const [reports, setReports] = useState<AdminReportEntry[]>([]);
+  const [inbox, setInbox] = useState<SupportMessageEntry[]>([]);
+  const [inboxStatus, setInboxStatus] = useState<SupportStatus | 'all'>('pending');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<AdminUserEntry | null>(null);
@@ -77,14 +96,16 @@ export function AdminPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [ov, list, reportList] = await Promise.all([
+      const [ov, list, reportList, supportList] = await Promise.all([
         getAdminOverview(),
         getAdminUsers(),
         getAdminReports('pendente'),
+        getAdminSupport({ status: 'pending' }).catch(() => ({ messages: [] as SupportMessageEntry[] })),
       ]);
       setOverview(ov);
       setUsers(list.users);
       setReports(reportList.reports);
+      setInbox(supportList.messages.length ? supportList.messages : ov.support_messages ?? []);
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível carregar o painel.'), {
         variant: 'error',
@@ -97,6 +118,13 @@ export function AdminPage() {
   useEffect(() => {
     if (isAdmin) void load();
   }, [isAdmin, load]);
+
+  useEffect(() => {
+    if (!isAdmin || tab !== 'inbox') return;
+    void getAdminSupport({ status: inboxStatus })
+      .then((res) => setInbox(res.messages))
+      .catch(() => undefined);
+  }, [isAdmin, tab, inboxStatus]);
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -119,6 +147,32 @@ export function AdminPage() {
       setReports((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       showGameToast(getErrorMessage(err, 'Não foi possível atualizar a denúncia.'), {
+        variant: 'error',
+      });
+    }
+  };
+
+  const updateSupportStatus = async (id: string, status: SupportStatus) => {
+    try {
+      const res = await patchAdminSupport(id, status);
+      setInbox((prev) =>
+        inboxStatus === 'all' || res.message.status === inboxStatus
+          ? prev.map((item) => (item.id === id ? res.message : item))
+          : prev.filter((item) => item.id !== id),
+      );
+      setOverview((prev) =>
+        prev
+          ? {
+              ...prev,
+              pending_support:
+                status === 'pending'
+                  ? (prev.pending_support ?? 0) + 1
+                  : Math.max(0, (prev.pending_support ?? 0) - (inbox.find((m) => m.id === id)?.status === 'pending' ? 1 : 0)),
+            }
+          : prev,
+      );
+    } catch (err) {
+      showGameToast(getErrorMessage(err, 'Não foi possível atualizar a mensagem.'), {
         variant: 'error',
       });
     }
@@ -160,7 +214,12 @@ export function AdminPage() {
         {(
           [
             { id: 'avaliacoes', label: 'Avaliações', Icon: Star, count: 0 },
-            { id: 'sugestoes', label: 'Sugestões', Icon: Lightbulb, count: 0 },
+            {
+              id: 'inbox',
+              label: 'Inbox',
+              Icon: Lightbulb,
+              count: overview?.pending_support ?? inbox.filter((m) => m.status === 'pending').length,
+            },
             { id: 'usuarios', label: 'Usuários', Icon: Users, count: 0 },
             { id: 'denuncias', label: 'Denúncias', Icon: Flag, count: reports.length },
           ] as const
@@ -169,10 +228,10 @@ export function AdminPage() {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`relative flex cursor-pointer items-center justify-center gap-1 rounded-full border-2 py-2 text-[0.7rem] font-bold ${
+            className={`relative flex cursor-pointer items-center justify-center gap-1 rounded-full border py-2 text-[0.7rem] font-bold ${
               tab === id
-                ? 'border-stone-900 bg-emerald-500 text-white shadow-[2px_2px_0_#1c1917]'
-                : 'border-stone-900 bg-white text-stone-700'
+                ? 'border-emerald-600 bg-emerald-500 text-white shadow-sm'
+                : 'border-stone-200 bg-white text-stone-700'
             }`}
           >
             <Icon size={14} /> {label}
@@ -207,24 +266,73 @@ export function AdminPage() {
             </article>
           ))}
         </section>
-      ) : tab === 'sugestoes' ? (
+      ) : tab === 'inbox' ? (
         <section className="flex flex-col gap-2">
-          {(overview?.suggestions?.length ?? 0) === 0 && (
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ['pending', 'Pendentes'],
+                ['in_progress', 'Andamento'],
+                ['resolved', 'Resolvidos'],
+                ['archived', 'Arquivados'],
+                ['all', 'Todos'],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setInboxStatus(id)}
+                className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold ${
+                  inboxStatus === id
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                    : 'border-stone-200 bg-white text-stone-600'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {inbox.length === 0 && (
             <p className="py-8 text-center text-sm font-bold text-stone-500">
-              Nenhuma sugestão ainda — o popup aparece quando o jogador atinge 7 dias de streak.
+              Nenhuma mensagem neste filtro.
             </p>
           )}
-          {overview?.suggestions?.map((suggestion) => (
-            <article key={suggestion.id} className="glass-card p-3">
+          {inbox.map((message) => (
+            <article key={message.id} className="rounded-xl border border-stone-200 bg-white p-3 shadow-sm">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-extrabold text-stone-800">{suggestion.nome}</p>
-                <span className="shrink-0 text-[0.62rem] font-bold text-stone-400">
-                  {new Date(suggestion.criada_em).toLocaleDateString('pt-BR')}
+                <p className="truncate text-sm font-extrabold text-stone-800">
+                  {message.nome ?? 'Jogador'}
+                </p>
+                <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-[0.62rem] font-bold text-stone-600">
+                  {SUPPORT_KIND_LABEL[message.kind] ?? message.kind}
                 </span>
               </div>
               <p className="mt-1.5 text-xs font-medium leading-relaxed text-stone-600">
-                {suggestion.texto}
+                {message.texto}
               </p>
+              <p className="mt-1 text-[0.62rem] font-bold text-stone-400">
+                {SUPPORT_STATUS_LABEL[message.status]} ·{' '}
+                {new Date(message.created_at).toLocaleDateString('pt-BR')}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(
+                  [
+                    ['in_progress', 'Andamento'],
+                    ['resolved', 'Resolver'],
+                    ['archived', 'Arquivar'],
+                  ] as const
+                ).map(([status, label]) => (
+                  <button
+                    key={status}
+                    type="button"
+                    disabled={message.status === status}
+                    onClick={() => void updateSupportStatus(message.id, status)}
+                    className="rounded-lg border border-stone-200 px-2 py-1 text-[0.65rem] font-bold text-stone-700 disabled:opacity-40"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </article>
           ))}
         </section>

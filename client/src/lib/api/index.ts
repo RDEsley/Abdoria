@@ -9,3 +9,4 @@ export * from './admin';
 export * from './activities';
 export * from './day';
 export * from './quests';
+export * from './nutrition';

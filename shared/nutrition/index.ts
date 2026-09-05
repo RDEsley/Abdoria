@@ -1,5 +1,6 @@
 export type {
   DayNutritionSummary,
+  DietStyle,
   FoodLogRecord,
   FoodRecord,
   FoodSource,
@@ -10,16 +11,29 @@ export type {
   NutritionPreferences,
   NutritionProfile,
   NutritionTargetMode,
+  RecipeDifficulty,
+  RecipeItemInput,
+  RecipeItemRecord,
+  RecipeRecord,
+  RecipeSource,
+  RecipeWriteInput,
   WeightLogRecord,
 } from './types.js';
 export {
+  DIET_STYLES,
   FOOD_BRAND_MAX,
   FOOD_NAME_MAX,
   FOOD_NOTE_MAX,
   FOOD_SEARCH_LIMIT,
   MEAL_TYPE_LABELS,
   MEAL_TYPE_ORDER,
+  RECIPE_DESC_MAX,
+  RECIPE_DIFFICULTIES,
+  RECIPE_NAME_MAX,
+  RECIPE_NOTE_MAX,
+  RECIPE_SEARCH_LIMIT,
   USER_FOODS_MAX,
+  USER_RECIPES_MAX,
 } from './types.js';
 export {
   foldFoodName,

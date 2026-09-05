@@ -21,6 +21,7 @@ import { User, type UserRecord } from '../domain/User.js';
 import type { UserMutable } from '../repositories/user-repository.js';
 import { WorkoutHistory } from '../domain/WorkoutHistory.js';
 import { ActivityLogs } from '../repositories/activities-repository.js';
+import { FoodLogs } from '../repositories/nutrition-repository.js';
 import { COSMETIC_BY_ID } from '../../../shared/cosmetics.js';
 import {
   getTodaySaoPaulo,
@@ -215,6 +216,11 @@ function evaluateAchievementsFromHistories(
   user: UserRecord,
   histories: HistorySummary[],
   atividadesTotal: number,
+  nutrition?: {
+    totalLogs: number;
+    distinctDays: number;
+    recipeMealEvents: number;
+  },
 ): string[] {
   const weekStart = getWeekStart(new Date());
   const resetDate = user.muscle_map_reset_at ? new Date(user.muscle_map_reset_at) : null;
@@ -322,6 +328,13 @@ function evaluateAchievementsFromHistories(
   if (ownsMythicItem(user)) unlocked.add('item_mitico');
   if (perfectWeeks >= 4) unlocked.add('semanas_perfeitas_4');
 
+  if (nutrition) {
+    if (nutrition.totalLogs > 0) unlocked.add('nutrition_first_meal');
+    if (nutrition.distinctDays >= 7) unlocked.add('nutrition_7_days');
+    if (nutrition.recipeMealEvents > 0) unlocked.add('nutrition_first_recipe');
+    if (nutrition.recipeMealEvents >= 5) unlocked.add('nutrition_recipe_5');
+  }
+
   return [...unlocked];
 }
 
@@ -389,8 +402,21 @@ export async function syncUserGamification(userId: string): Promise<UserMutable 
     persistedStreak,
   );
   const conquistasAntes = new Set(user.gamificacao.conquistas);
-  const atividadesTotal = await ActivityLogs.count(userId);
-  user.gamificacao.conquistas = evaluateAchievementsFromHistories(user, histories, atividadesTotal);
+  const [atividadesTotal, nutritionStats] = await Promise.all([
+    ActivityLogs.count(userId),
+    FoodLogs.nutritionStats(userId).catch(() => ({
+      totalLogs: 0,
+      distinctDays: 0,
+      recipeMealEvents: 0,
+      distinctRecipeIds: 0,
+    })),
+  ]);
+  user.gamificacao.conquistas = evaluateAchievementsFromHistories(
+    user,
+    histories,
+    atividadesTotal,
+    nutritionStats,
+  );
   // Ordem de desbloqueio (mais recente por último) — só pra saber "quais são
   // as últimas 3" no preview do Início; `evaluateAchievementsFromHistories`
   // é cumulativo (nunca remove), então o que é novo aqui é o que acabou de

@@ -17,6 +17,10 @@ import { COSMETICS } from '../data/cosmetics.js';
 import { syncAdminMoldura, unlockEverythingForUser } from '../services/shop.js';
 import { Ratings } from '../repositories/rating-repository.js';
 import { Suggestions } from '../repositories/suggestion-repository.js';
+import {
+  SupportMessages,
+  isSupportKind,
+} from '../repositories/support-repository.js';
 import { ensureMoedaWallet, readMoedaBalance } from '../services/economy.js';
 import { parseAvatarDataUrl, removeAvatar, uploadAvatar } from '../services/avatar-storage.js';
 import { molduraStatusForUser } from '../services/molduras.js';
@@ -136,13 +140,66 @@ usersRouter.post('/me/suggestion', async (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Escreva pelo menos 5 caracteres.' });
       return;
     }
-    await Suggestions.create(user.id, censorProfanity(texto));
+    const clean = censorProfanity(texto);
+    await Suggestions.create(user.id, clean);
+    // Dual-write: inbox de suporte também recebe sugestões legadas.
+    await SupportMessages.create(user.id, {
+      kind: 'suggestion',
+      texto: clean,
+      metadata: { source: 'suggestion_prompt' },
+    }).catch(() => undefined);
     user.preferencias = { ...user.preferencias, sugestao_respondida: true };
     await user.saveColumns(['preferencias']);
     res.json({ ok: true, user: sanitizeUser(user) });
   } catch (error) {
     console.error('POST /api/users/me/suggestion error:', error);
     res.status(500).json({ error: 'Erro ao enviar sugestão.' });
+  }
+});
+
+/** Inbox de suporte — bug / sugestão / feedback (usuário autenticado). */
+usersRouter.post('/me/support', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.userId!);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
+    const body = req.body as {
+      kind?: string;
+      texto?: string;
+      metadata?: Record<string, unknown>;
+    };
+    if (!isSupportKind(body.kind)) {
+      res.status(400).json({ error: 'Tipo de mensagem inválido.' });
+      return;
+    }
+    const texto = String(body.texto ?? '')
+      .trim()
+      .slice(0, 800);
+    if (texto.length < 5) {
+      res.status(400).json({ error: 'Escreva pelo menos 5 caracteres.' });
+      return;
+    }
+    const clean = censorProfanity(texto);
+    const metadata =
+      body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
+        ? body.metadata
+        : {};
+    const row = await SupportMessages.create(user.id, {
+      kind: body.kind,
+      texto: clean,
+      metadata,
+    });
+    if (body.kind === 'suggestion') {
+      await Suggestions.create(user.id, clean).catch(() => undefined);
+      user.preferencias = { ...user.preferencias, sugestao_respondida: true };
+      await user.saveColumns(['preferencias']);
+    }
+    res.status(201).json({ ok: true, message: row, user: sanitizeUser(user) });
+  } catch (error) {
+    console.error('POST /api/users/me/support error:', error);
+    res.status(500).json({ error: 'Erro ao enviar mensagem de suporte.' });
   }
 });
 

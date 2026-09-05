@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { notificationScheduler } from '@/lib/platform/notification-scheduler';
-import { deriveActivityReminders, normalizePersonalizedReminders } from '@shared/reminders';
+import {
+  deriveActivityReminders,
+  deriveNutritionReminders,
+  normalizePersonalizedReminders,
+} from '@shared/reminders';
 import { listUnlockedReminderPacks } from '@shared/reminder-sounds';
 import { Capacitor } from '@capacitor/core';
 import { listActivities, listRoutines } from '@/lib/api/activities';
+import { getNutritionProfile } from '@/lib/api/nutrition';
 import type { ActivityRecord, RoutineRecord } from '@shared/activities';
+import type { NutritionMealReminder } from '@shared/nutrition';
 
 export function usePersonalizedReminders() {
   const { user } = useAuth();
@@ -17,15 +23,17 @@ export function usePersonalizedReminders() {
   );
   const [activities, setActivities] = useState<ActivityRecord[]>([]);
   const [routines, setRoutines] = useState<RoutineRecord[]>([]);
+  const [mealReminders, setMealReminders] = useState<NutritionMealReminder[]>([]);
 
   useEffect(() => {
     if (!user) return undefined;
     let cancelled = false;
-    Promise.all([listActivities(), listRoutines()])
-      .then(([nextActivities, nextRoutines]) => {
+    Promise.all([listActivities(), listRoutines(), getNutritionProfile().catch(() => null)])
+      .then(([nextActivities, nextRoutines, profile]) => {
         if (cancelled) return;
         setActivities(nextActivities);
         setRoutines(nextRoutines);
+        setMealReminders(profile?.preferences?.meal_reminders ?? []);
       })
       .catch(() => {
         /* dispatcher ainda funciona com lembretes livres */
@@ -36,8 +44,12 @@ export function usePersonalizedReminders() {
   }, [user]);
 
   const reminders = useMemo(
-    () => [...personal, ...deriveActivityReminders(activities, routines)],
-    [personal, activities, routines],
+    () => [
+      ...personal,
+      ...deriveActivityReminders(activities, routines),
+      ...deriveNutritionReminders(mealReminders),
+    ],
+    [personal, activities, routines, mealReminders],
   );
 
   useEffect(() => {

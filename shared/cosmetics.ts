@@ -242,7 +242,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Beeps retrô estilo fliperama.',
     icon: 'rocket',
     raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 3 },
+    unlock: { tipo: 'gratis' },
   },
   {
     id: 'som_retro',
@@ -314,7 +314,7 @@ export const COSMETICS: CosmeticDefinition[] = [
     descricao: 'Beeps de fliperama retrô.',
     icon: 'rocket',
     raridade: 'raro',
-    unlock: { tipo: 'moedas', preco_moedas: 4 },
+    unlock: { tipo: 'gratis' },
   },
   {
     id: 'som_treino',

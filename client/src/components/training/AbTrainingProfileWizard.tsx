@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Flame,
   Gauge,
+  Info,
   LoaderCircle,
   Lock,
   Music2,
@@ -46,7 +47,12 @@ import type {
 } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { equipShopItem, getShop, updateAbTrainingProfileV2 } from '@/lib/api';
-import { errorHaptic, selectionHaptic, successHaptic } from '@/lib/platform/native-runtime';
+import {
+  actionHaptic,
+  errorHaptic,
+  selectionHaptic,
+  successHaptic,
+} from '@/lib/platform/native-runtime';
 import { Modal } from '@/components/ui/Modal';
 import { GameButton } from '@/components/ui/GameButton';
 import { showGameToast } from '@/lib/game-toast';
@@ -54,6 +60,41 @@ import { LottieView } from '@/components/ui/LottieView';
 import { useLottieAsset } from '@/hooks/useLottieAsset';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { getSfxPack, previewSfxPack, restoreSfxPack, setSfxPack } from '@/lib/sounds';
+
+type FieldTipKey = 'exercises' | 'series' | 'reps' | 'rest';
+type RangeBand = 'neutral' | 'green' | 'yellow' | 'orange' | 'max';
+
+const FIELD_TIPS: Record<FieldTipKey, { title: string; body: string }> = {
+  exercises: {
+    title: 'Exercícios',
+    body: 'Quantos exercícios entram em cada treino de core.',
+  },
+  series: {
+    title: 'Séries',
+    body: 'Quantas vezes você repete cada exercício na sessão.',
+  },
+  reps: {
+    title: 'Repetições',
+    body: 'Meta de repetições por série. Em exercícios de tempo, o Evolyn adapta o alvo.',
+  },
+  rest: {
+    title: 'Descanso',
+    body: 'Pausa entre uma série e a próxima.',
+  },
+};
+
+function rangePercent(value: number, min: number, max: number): number {
+  if (max <= min) return 0;
+  return Math.round(((value - min) / (max - min)) * 100);
+}
+
+function rangeBand(percent: number): RangeBand {
+  if (percent >= 100) return 'max';
+  if (percent >= 80) return 'orange';
+  if (percent >= 60) return 'yellow';
+  if (percent >= 35) return 'green';
+  return 'neutral';
+}
 
 interface Props {
   open: boolean;
@@ -184,10 +225,15 @@ export function AbTrainingProfileWizard({
   const [shakeNonce, setShakeNonce] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [leafBurst, setLeafBurst] = useState(0);
+  const [fieldTip, setFieldTip] = useState<FieldTipKey | null>(null);
+  const lastSliderValue = useRef<Partial<Record<FieldTipKey, number>>>({});
+  const maxHapticOnce = useRef<Partial<Record<FieldTipKey, boolean>>>({});
   const finalStep = step === TOTAL_STEPS - 1;
+  const showIntro = open && phase === 'intro';
   const confetti = useLottieAsset('/assets/Confetti.json', open && finalStep);
-  const lesgo = useLottieAsset('/assets/lesgo.json', open && finalStep);
+  const lesgo = useLottieAsset('/assets/lesgo.json', open && (finalStep || step === 3));
   const weekPlan = useLottieAsset('/assets/monte-sua-semana.json', open && step === 1);
+  const ritmoIntro = useLottieAsset('/assets/monte-seu-ritmo.json', showIntro);
   const customScreen = draft.mode === 'custom' && step === 0;
 
   useEffect(() => {
@@ -232,6 +278,30 @@ export function AbTrainingProfileWizard({
   const profilePreview = toProfile(draft, user?.ab_training_profile_v2 ?? null);
   const choose = (update: Partial<WizardDraft>) => {
     void selectionHaptic();
+    setHint(null);
+    setDraft((current) => ({ ...current, ...update }));
+  };
+
+  const beginSliderDrag = (key: FieldTipKey) => {
+    maxHapticOnce.current[key] = false;
+  };
+
+  const setCustomRange = (
+    key: FieldTipKey,
+    nextValue: number,
+    max: number,
+    update: Partial<WizardDraft>,
+  ) => {
+    const previous = lastSliderValue.current[key];
+    if (previous !== nextValue) {
+      lastSliderValue.current[key] = nextValue;
+      if (nextValue >= max && !maxHapticOnce.current[key]) {
+        maxHapticOnce.current[key] = true;
+        void actionHaptic();
+      } else {
+        void selectionHaptic();
+      }
+    }
     setHint(null);
     setDraft((current) => ({ ...current, ...update }));
   };
@@ -345,7 +415,13 @@ export function AbTrainingProfileWizard({
             <button type="button" className="game-icon-btn ab-plan-intro__close" onClick={close} aria-label="Fechar">
               <X size={18} aria-hidden />
             </button>
-            <BrandMark size={120} alt="" />
+            {ritmoIntro ? (
+              <div className="ab-plan-intro__lottie" aria-hidden>
+                <LottieView data={ritmoIntro} loop={!reduceMotion} contain />
+              </div>
+            ) : (
+              <BrandMark size={120} alt="" />
+            )}
             <h2 id="ab-plan-title">Monte seu ritmo</h2>
             <p className="ab-plan-intro__tag">Um plano que cresce com você.</p>
             <p>
@@ -399,7 +475,7 @@ export function AbTrainingProfileWizard({
                         role="radio"
                         aria-checked={selected}
                         key={intensity}
-                        className={`ab-plan-option ${selected ? 'is-selected' : ''} ${intensity === 'evolyn' ? 'is-evolyn' : ''}`}
+                        className={`ab-plan-option ab-plan-option--${intensity} ${selected ? 'is-selected' : ''}`}
                         whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                         onClick={() => choose({ mode: 'preset', intensity })}
                       >
@@ -422,7 +498,7 @@ export function AbTrainingProfileWizard({
                     type="button"
                     role="radio"
                     aria-checked={false}
-                    className="ab-plan-option"
+                    className="ab-plan-option ab-plan-option--custom"
                     whileTap={reduceMotion ? undefined : { scale: 0.985 }}
                     onClick={() => choose({ mode: 'custom', intensity: null })}
                   >
@@ -442,58 +518,100 @@ export function AbTrainingProfileWizard({
                     className="ab-plan-custom-screen__back"
                     onClick={() => choose({ mode: null, intensity: null })}
                   >
-                    <ChevronLeft size={16} aria-hidden /> Voltar para opções prontas
+                    <ChevronLeft size={16} aria-hidden /> Voltar
                   </button>
-                  <p className="ab-plan-helper">
-                    Ajuste o ritmo da sessão. Exercícios de tempo usam o alvo como referência de
-                    intensidade.
-                  </p>
-                  <label className="ab-plan-custom-control">
-                    <span>Exercícios por treino</span>
-                    <strong>{draft.customCount}</strong>
-                    <input
-                      type="range"
-                      min={AB_CUSTOM_EXERCISE_MIN}
-                      max={AB_CUSTOM_EXERCISE_MAX}
-                      value={draft.customCount}
-                      onChange={(event) => choose({ customCount: Number(event.target.value) })}
-                    />
-                  </label>
-                  <label className="ab-plan-custom-control">
-                    <span>Séries por exercício</span>
-                    <strong>{draft.customSeries}</strong>
-                    <input
-                      type="range"
-                      min={AB_CUSTOM_SERIES_MIN}
-                      max={AB_CUSTOM_SERIES_MAX}
-                      value={draft.customSeries}
-                      onChange={(event) => choose({ customSeries: Number(event.target.value) })}
-                    />
-                  </label>
-                  <label className="ab-plan-custom-control">
-                    <span>Repetições alvo</span>
-                    <strong>{draft.customReps}</strong>
-                    <input
-                      type="range"
-                      min={AB_CUSTOM_REPS_MIN}
-                      max={AB_CUSTOM_REPS_MAX}
-                      value={draft.customReps}
-                      onChange={(event) => choose({ customReps: Number(event.target.value) })}
-                    />
-                    <small>Em exercícios cronometrados, o Evolyn adapta o tempo com base nesse alvo.</small>
-                  </label>
-                  <label className="ab-plan-custom-control">
-                    <span>Descanso entre séries</span>
-                    <strong>{draft.customRest}s</strong>
-                    <input
-                      type="range"
-                      min={AB_CUSTOM_REST_MIN}
-                      max={AB_CUSTOM_REST_MAX}
-                      step={5}
-                      value={draft.customRest}
-                      onChange={(event) => choose({ customRest: Number(event.target.value) })}
-                    />
-                  </label>
+                  {(
+                    [
+                      {
+                        key: 'exercises' as const,
+                        label: 'Exercícios por treino',
+                        value: draft.customCount,
+                        min: AB_CUSTOM_EXERCISE_MIN,
+                        max: AB_CUSTOM_EXERCISE_MAX,
+                        display: String(draft.customCount),
+                      },
+                      {
+                        key: 'series' as const,
+                        label: 'Séries por exercício',
+                        value: draft.customSeries,
+                        min: AB_CUSTOM_SERIES_MIN,
+                        max: AB_CUSTOM_SERIES_MAX,
+                        display: String(draft.customSeries),
+                      },
+                      {
+                        key: 'reps' as const,
+                        label: 'Repetições por série',
+                        value: draft.customReps,
+                        min: AB_CUSTOM_REPS_MIN,
+                        max: AB_CUSTOM_REPS_MAX,
+                        display: String(draft.customReps),
+                      },
+                      {
+                        key: 'rest' as const,
+                        label: 'Descanso entre séries',
+                        value: draft.customRest,
+                        min: AB_CUSTOM_REST_MIN,
+                        max: AB_CUSTOM_REST_MAX,
+                        step: 5,
+                        display: `${draft.customRest}s`,
+                      },
+                    ] as const
+                  ).map((control) => {
+                    const percent = rangePercent(control.value, control.min, control.max);
+                    const band = rangeBand(percent);
+                    const atMax = band === 'max';
+                    return (
+                      <div key={control.key} className="ab-plan-custom-control">
+                        <div className="ab-plan-custom-control__label">
+                          <span>{control.label}</span>
+                          <button
+                            type="button"
+                            className="ab-plan-custom-control__info"
+                            aria-label={`Sobre ${control.label}`}
+                            onClick={() => setFieldTip(control.key)}
+                          >
+                            <Info size={14} aria-hidden />
+                          </button>
+                        </div>
+                        <strong className={`ab-plan-custom-control__value is-${band}`}>
+                          {atMax ? (
+                            <>
+                              <Flame size={14} aria-hidden /> MAX
+                            </>
+                          ) : (
+                            control.display
+                          )}
+                        </strong>
+                        <div
+                          className={`ab-plan-custom-slider is-${band}${reduceMotion ? ' is-static' : ''}`}
+                          style={{ '--range-pct': `${percent}%` } as CSSProperties}
+                        >
+                          <input
+                            type="range"
+                            min={control.min}
+                            max={control.max}
+                            step={'step' in control ? control.step : 1}
+                            value={control.value}
+                            aria-label={control.label}
+                            onPointerDown={() => beginSliderDrag(control.key)}
+                            onTouchStart={() => beginSliderDrag(control.key)}
+                            onChange={(event) => {
+                              const nextValue = Number(event.target.value);
+                              const patch =
+                                control.key === 'exercises'
+                                  ? { customCount: nextValue }
+                                  : control.key === 'series'
+                                    ? { customSeries: nextValue }
+                                    : control.key === 'reps'
+                                      ? { customReps: nextValue }
+                                      : { customRest: nextValue };
+                              setCustomRange(control.key, nextValue, control.max, patch);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -505,7 +623,7 @@ export function AbTrainingProfileWizard({
                     </div>
                   ) : null}
                   <p className="ab-plan-helper">
-                    Escolha pelo menos dois dias. Fora da agenda, você ainda pode treinar quando quiser.
+                    Escolha pelo menos dois dias na semana para treinar.
                   </p>
                   <div className="ab-plan-days" aria-label="Dias de treino">
                     {DAYS.map((label, day) => (
@@ -629,15 +747,9 @@ export function AbTrainingProfileWizard({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.24 }}
                 >
-                  {lesgo ? (
-                    <div className="ab-plan-summary__lesgo">
-                      <LottieView data={lesgo} loop={!reduceMotion} contain />
-                    </div>
-                  ) : (
-                    <span className="ab-plan-summary__success">
-                      <Sparkles size={32} aria-hidden />
-                    </span>
-                  )}
+                  <div className="ab-plan-summary__lesgo" aria-hidden>
+                    {lesgo ? <LottieView data={lesgo} loop={!reduceMotion} contain /> : null}
+                  </div>
                   <p className="ab-plan-summary__eyebrow">
                     <Sparkles size={13} /> Tudo preparado
                   </p>
@@ -681,31 +793,29 @@ export function AbTrainingProfileWizard({
               {hint && <p className="ab-plan-wizard__hint">{hint}</p>}
             </div>
 
-            <footer className="ab-plan-wizard__footer">
-              <GameButton
-                variant="secondary"
-                className={
-                  step === 0 && !firstVisit && !customScreen
-                    ? 'ab-plan-wizard__back is-placeholder'
-                    : 'ab-plan-wizard__back'
-                }
-                disabled={(step === 0 && !firstVisit && !customScreen) || saving}
-                aria-hidden={step === 0 && !firstVisit && !customScreen}
-                tabIndex={step === 0 && !firstVisit && !customScreen ? -1 : undefined}
-                onClick={() => {
-                  if (customScreen) {
-                    choose({ mode: null, intensity: null });
-                    return;
+            <footer className={`ab-plan-wizard__footer${customScreen ? ' is-custom-only' : ''}`}>
+              {!customScreen && (
+                <GameButton
+                  variant="secondary"
+                  className={
+                    step === 0 && !firstVisit
+                      ? 'ab-plan-wizard__back is-placeholder'
+                      : 'ab-plan-wizard__back'
                   }
-                  if (step === 0 && firstVisit) {
-                    setPhase('intro');
-                    return;
-                  }
-                  setStep((current) => (current - 1) as NumberedStep);
-                }}
-              >
-                <ChevronLeft size={18} aria-hidden /> Voltar
-              </GameButton>
+                  disabled={(step === 0 && !firstVisit) || saving}
+                  aria-hidden={step === 0 && !firstVisit}
+                  tabIndex={step === 0 && !firstVisit ? -1 : undefined}
+                  onClick={() => {
+                    if (step === 0 && firstVisit) {
+                      setPhase('intro');
+                      return;
+                    }
+                    setStep((current) => (current - 1) as NumberedStep);
+                  }}
+                >
+                  <ChevronLeft size={18} aria-hidden /> Voltar
+                </GameButton>
+              )}
               <GameButton
                 className="ab-plan-wizard__next"
                 disabled={saving}
@@ -728,6 +838,20 @@ export function AbTrainingProfileWizard({
             </footer>
           </>
         )}
+      </Modal>
+      <Modal
+        open={fieldTip != null}
+        onClose={() => setFieldTip(null)}
+        labelledBy="ab-plan-field-tip-title"
+        panelClassName="ab-plan-field-tip"
+      >
+        {fieldTip ? (
+          <>
+            <h3 id="ab-plan-field-tip-title">{FIELD_TIPS[fieldTip].title}</h3>
+            <p>{FIELD_TIPS[fieldTip].body}</p>
+            <GameButton onClick={() => setFieldTip(null)}>Entendi</GameButton>
+          </>
+        ) : null}
       </Modal>
       {celebration}
       {fallingLeaves}

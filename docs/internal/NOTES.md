@@ -76,12 +76,27 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 
 ## Alimentação / Nutrição
 
-- Domínio próprio: tabelas `nutrition_profiles`, `foods`, `food_favorites`, `food_logs`, `weight_logs` (não em `preferencias`).
-- Fonte de verdade: Express + service_role; macros do log são snapshot no registro.
+- Domínio próprio: tabelas `nutrition_profiles`, `foods`, `food_favorites`, `food_logs`, `weight_logs`, `nutrition_recipes`, `nutrition_recipe_items`, `nutrition_recipe_favorites` (não em `preferencias`).
+- Fonte de verdade: Express + service_role; macros do log são snapshot no registro; macros de receita são calculados nos itens em leitura (não persistidos na receita).
 - Metas: `none` | `manual` | `estimated` (Mifflin–St Jeor conservador). Wellness — não é orientação clínica.
 - Rota `/alimentacao` no primary nav; Perfil via avatar TopNavbar.
-- Busca usa `name_fold` + `foldText`. Catálogo global enxuto BR; alimentos do usuário privados.
+- Busca usa `name_fold` + `foldText`. Catálogo global enxuto BR; alimentos/receitas do usuário privados.
+- Preferências: booleanos `vegetarian` / `vegan` / `lactose_free` + opcional `diet_style`.
 - Sem XP por alimento nesta entrega (evitar farm). Hidratação continua no MyPlant.
+- Food log / recipe log conta como Dia Ativo (`recordValidDailyAction(..., 'nutrition')`), sem XP.
+- Receitas logadas usam `note` com prefixo `recipe:<id>` (quests/achievements leem isso).
+- Lembretes de refeição vêm de `nutrition_profiles.preferences.meal_reminders` via `deriveNutritionReminders` (ids `nutrition:meal:*`) — não materializar em `lembretes_personalizados`.
+- Foto de alimento / barcode: **adiado**. Fase A = barcode + Open Food Facts; Fase B = candidatos por foto. Não implementar nesta entrega.
+- `support_messages`: feedback/bug/sugestão via service_role (`POST /users/me/support`); dual-write com `app_suggestions` quando kind=suggestion. Admin Inbox em `/admin`.
+
+## Autenticação / e-mail
+
+- Auth atual: bcrypt + JWT próprio (não Supabase Auth). Verificação de **posse** de e-mail (ownership) está **adiada** nesta entrega.
+- AbstractAPI (ou similar) de deliverability ≠ prova de ownership. Sem migração para Supabase Auth neste PR.
+
+## Atualização / chunks
+
+- **Chunk recovery ≠ version banner**: falha de dynamic import após deploy usa reload único com guard (`shared/lazy/chunk-recovery.ts`). Não confundir com “Nova versão disponível” (só `version` remota mais nova). Ver seção Atualização do app (PWA).
 
 ## Missões (quests)
 
@@ -149,3 +164,4 @@ Este arquivo contém apenas decisões e riscos que continuam relevantes para man
 - Entrada sem sessão: `/welcome`. Rotas protegidas (exceto `/`) redirecionam para `/login` com `state.from`.
 - Conta visitante foi removida da API (`POST /auth/guest`) e da UI. `is_guest` permanece no banco para linhas antigas e filtros de ranking.
 - Animação da Welcome é local (`evolyn:welcome-animation-seen`); não vai para o perfil.
+- Verificação de ownership de e-mail: adiada (ver seção Autenticação / e-mail acima).

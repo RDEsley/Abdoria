@@ -549,6 +549,10 @@ export function PlayerPage() {
       }
       if (result.level_up) {
         setLevelUpCelebration(result.level_up);
+        // Overlay global dono do som; Celebration no victory fica visual-only.
+        window.dispatchEvent(
+          new CustomEvent('abdoria:level-up', { detail: result.level_up }),
+        );
       }
       webWorkoutSessionStorage.clear();
       clearWorkoutDurationSession();
